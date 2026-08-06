@@ -9,7 +9,7 @@ export default defineConfig([
     ignores: ['dist/**', '.vite/**', 'out/**'],
   },
   {
-    files: ['**/*.{js,ts}'],
+    files: ['**/*.{js,ts,jsx,tsx}'],
     extends: [js.configs.recommended, tseslint.configs.strict],
   },
 ]);
