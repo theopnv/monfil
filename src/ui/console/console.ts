@@ -1,7 +1,7 @@
-import type { IUserInterface } from "../IUserInterface";
+import type { UserInterface } from "../UserInterface";
 
-export const consoleUI: IUserInterface = {
-  displayMessage(message: string): void {
+export const consoleUI: UserInterface = {
+  displayMessage<T>(message: T): void {
     console.log(message);
   },
   displayError(error: Error): void {

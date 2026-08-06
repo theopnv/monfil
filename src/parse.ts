@@ -1,19 +1,22 @@
 import { parseFeed } from 'feedsmith'
 
-export function getFeed(content: string, maxItems: number = 10) {
+type FeedItem = {
+  title: string;
+  link: string;
+  pubDate: string;
+};
+
+export function getFeed(content: string, maxItems: number = 10): FeedItem[] {
   const { format, feed } = parseFeed(content, { maxItems });
 
-  console.log('Feed format:', format)
-  console.log('Feed title:', feed.title)
-
   if (format === 'rss') {
-    console.log('RSS feed link:', feed.link);
     if (feed.items) {
-      console.log(feed.items.map(item => ({
-        title: item.title,
-        link: item.link,
-        pubDate: item.pubDate
-      })));
+      return feed.items.map(item => ({
+        title: item.title ?? 'No title',
+        link: item.link ?? 'No link',
+        pubDate: item.pubDate ?? 'No publication date'
+      }));
     }
   }
+  return [];
 }
