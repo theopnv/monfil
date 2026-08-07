@@ -24,6 +24,8 @@ jobs:
 
       - run: npm run lint
 
+      - run: npm run package
+
       - run: npx playwright install-deps
 
       - run: xvfb-run -a npm test
