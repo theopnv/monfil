@@ -1,7 +1,8 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { registerIpcHandlers } from './api';
+import { registerIpcHandlers } from './ipcHandlers';
+import { run } from './run';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -29,15 +30,19 @@ const createWindow = () => {
   if (import.meta.env.DEV) {
     mainWindow.webContents.openDevTools();
   }
+  return mainWindow;
 };
+
+const main = () => {
+  registerIpcHandlers();
+  const mainWindow = createWindow();
+  mainWindow.webContents.once('did-finish-load', () => run(mainWindow));
+}
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => {
-  registerIpcHandlers();
-  createWindow();
-});
+app.on('ready', () => main);
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -52,7 +57,6 @@ app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
-    registerIpcHandlers();
-    createWindow();
+    main();
   }
 });
