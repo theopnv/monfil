@@ -2,7 +2,7 @@ import { parseFeed } from 'feedsmith'
 
 export type FeedItem = {
   title: string;
-  link: string;
+  link: string | undefined;
   pubDate: string;
 };
 
@@ -13,7 +13,7 @@ export function getFeed(content: string, maxItems: number = 10): FeedItem[] {
     if (feed.items) {
       return feed.items.map(item => ({
         title: item.title ?? 'No title',
-        link: item.link ?? 'No link',
+        link: item.link,
         pubDate: item.pubDate ?? 'No publication date'
       }));
     }
