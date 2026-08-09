@@ -2,9 +2,11 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "light" | "dark" | "system";
+export type ResolvedTheme = "light" | "dark";
 
 interface ThemeContextType {
     theme: Theme;
+    resolvedTheme: ResolvedTheme;
     setTheme: (theme: Theme) => void;
 }
 
@@ -47,18 +49,20 @@ export const ThemeProvider = ({ children, defaultTheme = "system", storageKey = 
         }
         return defaultTheme;
     });
+    const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
 
     useEffect(() => {
         const applyTheme = () => {
             const root = window.document.documentElement;
+            const effectiveTheme: ResolvedTheme =
+                theme === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : theme;
+
+            root.classList.toggle(darkModeClass, effectiveTheme === "dark");
+            setResolvedTheme(effectiveTheme);
 
             if (theme === "system") {
-                const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-
-                root.classList.toggle(darkModeClass, systemTheme === "dark");
                 localStorage.removeItem(storageKey);
             } else {
-                root.classList.toggle(darkModeClass, theme === "dark");
                 localStorage.setItem(storageKey, theme);
             }
         };
@@ -78,5 +82,5 @@ export const ThemeProvider = ({ children, defaultTheme = "system", storageKey = 
         return () => mediaQuery.removeEventListener("change", handleChange);
     }, [theme]);
 
-    return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
+    return <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>{children}</ThemeContext.Provider>;
 };
