@@ -1,0 +1,23 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    // Untitled UI's CLI generates components against a standard strict
+    // template, not this project's additional exactOptionalPropertyTypes.
+    // Vendored files intentionally pass `undefined` to optional Aria props
+    // when omitting them conditionally, which that flag forbids.
+    "exactOptionalPropertyTypes": false,
+
+    // Project reference: makes this folder its own TS Program with its own
+    // rules. The root project consumes only the emitted .d.ts, so importing
+    // app code never re-checks this source under the root's stricter
+    // settings (which a plain tsconfig `exclude` can't do — TS shares one
+    // rule set across any files pulled into the same connected Program).
+    "composite": true,
+    "declaration": true,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "outDir": "../../../../dist/untitled-ui-types"
+  },
+  "include": ["**/*"],
+  "exclude": []
+}

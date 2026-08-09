@@ -6,7 +6,8 @@
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
-    "lint": "tsc && eslint --ext .ts,.tsx .",
+    "lint": "tsc -b . && eslint --ext .ts,.tsx .",
+    "pretest": "npm run package",
     "test": "vitest --run && npx playwright test",
     "start": "electron-forge start",
     "package": "electron-forge package",
@@ -33,6 +34,7 @@
     "@electron/fuses": "^1.8.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.1",
+    "@tanstack/router-plugin": "^1.168.28",
     "@types/electron-squirrel-startup": "^1.0.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
@@ -45,13 +47,29 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
+    "@react-stately/utils": "^3.12.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-router": "^1.170.24",
+    "@tanstack/react-router-devtools": "^1.167.1",
+    "@untitledui/icons": "^0.0.22",
+    "@vitejs/plugin-react": "^5.2.0",
     "electron-squirrel-startup": "^1.0.1",
+    "feedsmith": "^3.0.0-beta.5",
+    "input-otp": "^1.4.2",
+    "motion": "^13.0.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-aria": "^3.51.0",
+    "react-aria-components": "^1.20.0",
+    "react-dom": "^19.2.8",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.3.3",
+    "tailwindcss-animate": "^1.0.7",
+    "tailwindcss-react-aria-components": "^2.2.0"
   },
   "allowScripts": {
     "electron-winstaller@5.4.4": true,
     "esbuild@0.21.5": true,
-    "fsevents@2.3.3": true
+    "fsevents@2.3.3": true,
+    "fsevents@2.3.2": true
   }
 }

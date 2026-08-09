@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer } from "electron/renderer";
 import type { IpcRendererEvent } from "electron";
 import type { Channels } from "./channels";
 

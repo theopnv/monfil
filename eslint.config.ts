@@ -11,5 +11,8 @@ export default defineConfig([
   {
     files: ['**/*.{js,ts,jsx,tsx}'],
     extends: [js.configs.recommended, tseslint.configs.strict],
+    rules: {
+      'no-empty-pattern': ['error', { allowObjectPatternsAsParameters: true }],
+    },
   },
 ]);

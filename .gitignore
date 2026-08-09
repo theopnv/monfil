@@ -94,3 +94,6 @@ dist/
 
 # Playwright
 test-results/
+
+# TanStack Router
+src/renderer/routeTree.gen.ts
