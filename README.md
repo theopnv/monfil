@@ -6,6 +6,15 @@ Monfil means "My feed" in french.
 
 ## Contributing
 
+This is an Electron project:
+- `src/main`: the backend
+- `src/preload`: preload scripts
+- `src/renderer`: a react project
+
+### Front-end
+
+The renderer uses [Untitled UI](https://www.untitledui.com/react). See [doc/UntitledUI.md](doc/UntitledUI.md) for this project's setup and conventions.
+
 ### Debugging
 
 #### vs-code

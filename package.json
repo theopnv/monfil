@@ -45,10 +45,19 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@untitledui/icons": "^0.0.22",
+    "@vitejs/plugin-react": "^5.2.0",
     "electron-squirrel-startup": "^1.0.1",
     "feedsmith": "^3.0.0-beta.5",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-aria-components": "^1.20.0",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.2",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.3.3",
+    "tailwindcss-animate": "^1.0.7",
+    "tailwindcss-react-aria-components": "^2.2.0"
   },
   "allowScripts": {
     "electron-winstaller@5.4.4": true,
