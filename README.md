@@ -6,14 +6,16 @@ Monfil means "My feed" in french.
 
 ## Contributing
 
-This is an Electron project:
+This is an Electron project based on [Vite](https://vite.dev):
 - `src/main`: the backend
 - `src/preload`: preload scripts
 - `src/renderer`: a react project
 
 ### Front-end
 
-The renderer uses [Untitled UI](https://www.untitledui.com/react). See [doc/UntitledUI.md](doc/UntitledUI.md) for this project's setup and conventions.
+Dependencies:
+- CSS framework: [Untitled UI](https://www.untitledui.com/react). See [doc/UntitledUI.md](doc/UntitledUI.md) for this project's setup and conventions.
+- [TanStack](https://tanstack.com) for routing.
 
 ### Debugging
 
@@ -24,6 +26,10 @@ Use the `Main + Renderer` debugging configuration.
 ### Packaging
 
 Run `npm run make` to exercise the electron-forge packaging command. It will output binaries in `out/<os>`.
+
+### Testing
+
+The projects uses [vitest](https://vitest.dev) for unit tests, and [playwright](https://playwright.dev/) for end-to-end (e2e) tests. Run `npm run test`.
 
 ### Publishing
 

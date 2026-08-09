@@ -1,21 +1,23 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { RouteProvider } from '@/providers/route-provider';
-import { ThemeProvider } from './providers/theme-provider';
+import { RouterProvider, createHashHistory, createRouter } from '@tanstack/react-router';
+import { routeTree } from './routeTree.gen.ts';
 import '@/styles/globals.css';
-import App from './App';
+
+// The renderer is loaded via the `file://` protocol in production, so browser
+// history (path-based routing) can't resolve routes against the filesystem path.
+const router = createRouter({ routeTree, history: createHashHistory() });
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
 root.render(
   <StrictMode>
-    <BrowserRouter>
-      <RouteProvider>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
-      </RouteProvider>
-    </BrowserRouter>
+    <RouterProvider router={router} />
   </StrictMode>
 );

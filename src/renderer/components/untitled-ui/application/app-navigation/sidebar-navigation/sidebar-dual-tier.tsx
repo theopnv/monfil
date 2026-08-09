@@ -24,15 +24,15 @@ interface SidebarNavigationDualTierProps {
     hideBorder?: boolean;
 }
 
+export const MAIN_SIDEBAR_WIDTH = 296;
+const SECONDARY_SIDEBAR_WIDTH = 256;
+
 export const SidebarNavigationDualTier = ({ activeUrl, hideBorder, items, footerItems = [], featureCard, logo }: SidebarNavigationDualTierProps) => {
     const activeItem = [...items, ...footerItems].find((item) => item.href === activeUrl || item.items?.some((subItem) => subItem.href === activeUrl));
     const [currentItem, setCurrentItem] = useState(activeItem || (items[1] as NavItemType));
     const [isHovering, setIsHovering] = useState(false);
 
     const isSecondarySidebarVisible = isHovering && Boolean(currentItem.items?.length);
-
-    const MAIN_SIDEBAR_WIDTH = 296;
-    const SECONDARY_SIDEBAR_WIDTH = 256;
 
     const mainSidebar = (
         <aside className="group flex h-full max-h-full max-w-full overflow-y-auto bg-primary">

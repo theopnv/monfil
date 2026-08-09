@@ -1,6 +1,8 @@
 import { HomeLine, Settings01 } from "@untitledui/icons";
 import type { NavItemType } from "@/components/untitled-ui/application/app-navigation/config";
-import { SidebarNavigationDualTier } from "@/components/untitled-ui/application/app-navigation/sidebar-navigation/sidebar-dual-tier";
+import { MAIN_SIDEBAR_WIDTH, SidebarNavigationDualTier } from "@/components/untitled-ui/application/app-navigation/sidebar-navigation/sidebar-dual-tier";
+
+export { MAIN_SIDEBAR_WIDTH };
 
 const navItemsDualTier: (NavItemType)[] = [
     {

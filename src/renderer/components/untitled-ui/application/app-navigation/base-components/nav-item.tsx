@@ -1,8 +1,9 @@
 "use client";
 
 import type { FC, HTMLAttributes, MouseEventHandler, ReactNode } from "react";
+import { useContext } from "react";
 import { ChevronDown, Share04 } from "@untitledui/icons";
-import { Link as AriaLink } from "react-aria-components";
+import { Link as AriaLink, OverlayTriggerStateContext } from "react-aria-components";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx, sortCx } from "@/components/untitled-ui/utils/cx";
 
@@ -35,6 +36,13 @@ interface NavItemBaseProps {
 }
 
 export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, truncate = true, onClick }: NavItemBaseProps) => {
+    // Present only when rendered inside the mobile off-canvas menu's dialog; closes it on navigation.
+    const overlayTriggerState = useContext(OverlayTriggerStateContext);
+    const handleNavigate: MouseEventHandler = (event) => {
+        onClick?.(event);
+        overlayTriggerState?.close();
+    };
+
     const iconElement = Icon && (
         <Icon
             aria-hidden="true"
@@ -90,7 +98,7 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
                 target={isExternal ? "_blank" : "_self"}
                 rel="noopener noreferrer"
                 className={cx("py-2 pr-3 pl-10", styles.root, current && styles.rootSelected)}
-                onClick={onClick}
+                onClick={handleNavigate}
                 aria-current={current ? "page" : undefined}
             >
                 {labelElement}
@@ -106,7 +114,7 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
             target={isExternal ? "_blank" : "_self"}
             rel="noopener noreferrer"
             className={cx("group/item p-2", styles.root, current && styles.rootSelected)}
-            onClick={onClick}
+            onClick={handleNavigate}
             aria-current={current ? "page" : undefined}
         >
             {iconElement}

@@ -1,19 +1,24 @@
 import { type PropsWithChildren } from "react";
 import { RouterProvider } from "react-aria-components";
-import { useHref, useNavigate } from "react-router-dom";
-import type { NavigateOptions } from "react-router-dom";
+import { useRouter } from "@tanstack/react-router";
+import type { NavigateOptions, RegisteredRouter, ToPathOption } from "@tanstack/react-router";
 
 declare module "react-aria-components" {
     interface RouterConfig {
-        routerOptions: NavigateOptions;
+        routerOptions: Omit<NavigateOptions, "to">;
     }
 }
 
 export const RouteProvider = ({ children }: PropsWithChildren) => {
-    const navigate = useNavigate();
+    const router = useRouter();
 
     return (
-        <RouterProvider navigate={navigate} useHref={useHref}>
+        <RouterProvider
+            navigate={(to, options) =>
+                router.navigate({ ...options, to: to as ToPathOption<RegisteredRouter, "/", "/"> })
+            }
+            useHref={(to) => router.buildLocation({ to: to as ToPathOption<RegisteredRouter, "/", "/"> }).href}
+        >
             {children}
         </RouterProvider>
     );
