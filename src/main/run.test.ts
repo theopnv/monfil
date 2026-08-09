@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getFeed } from './parse';
+import { getFeed } from './run';
 
 describe('getFeed', () => {
   test('should be empty when format is not rss', () => {

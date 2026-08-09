@@ -1,26 +1,26 @@
 import { contextBridge, ipcRenderer } from "electron/renderer";
 import type { IpcRendererEvent } from "electron";
-import type { Channels } from "./channels";
+import type { ChannelPayloads, Channels, InvokeChannels } from "./channels";
 
 const electronHandler = {
   ipcRenderer: {
-    sendMessage(channel: Channels, ...args: unknown[]) {
-      ipcRenderer.send(channel, ...args);
+    sendMessage<C extends Channels>(channel: C, payload: ChannelPayloads[C]) {
+      ipcRenderer.send(channel, payload);
     },
-    on(channel: Channels, func: (...args: unknown[]) => void) {
-      const subscription = (_event: IpcRendererEvent, ...args: unknown[]) =>
-        func(...args);
+    on<C extends Channels>(channel: C, func: (payload: ChannelPayloads[C]) => void) {
+      const subscription = (_event: IpcRendererEvent, payload: ChannelPayloads[C]) =>
+        func(payload);
       ipcRenderer.on(channel, subscription);
 
       return () => {
         ipcRenderer.removeListener(channel, subscription);
       };
     },
-    once(channel: Channels, func: (...args: unknown[]) => void) {
-      ipcRenderer.once(channel, (_event, ...args) => func(...args));
+    once<C extends Channels>(channel: C, func: (payload: ChannelPayloads[C]) => void) {
+      ipcRenderer.once(channel, (_event, payload: ChannelPayloads[C]) => func(payload));
     },
-    invoke(channel: Channels, ...args: unknown[]) {
-      return ipcRenderer.invoke(channel, ...args);
+    invoke<C extends InvokeChannels>(channel: C): Promise<ChannelPayloads[C]> {
+      return ipcRenderer.invoke(channel);
     }
   },
 };

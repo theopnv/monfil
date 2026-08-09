@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { registerIpcHandlers } from './ipcHandlers';
+import { registerIpcHandlers } from './ipcHandle';
 import { run } from './run';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -28,7 +28,8 @@ const createWindow = () => {
   }
 
   if (import.meta.env.DEV) {
-    mainWindow.webContents.openDevTools();
+    // Uncomment this line to open the DevTools automatically when the app is launched in development mode.
+    // mainWindow.webContents.openDevTools();
   }
   return mainWindow;
 };
