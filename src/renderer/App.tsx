@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/untitled-ui/base/buttons/button";
+import { useEffect, useState } from "react";
 import type { FeedItem } from "../main/parse";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { SidebarSectionDualTier } from "./components/Navigation";
 
 type FeedError = { name: string; message: string };
 type FeedResult =
@@ -9,15 +9,7 @@ type FeedResult =
   | { success: false; error: FeedError };
 
 export default function App() {
-  const [nodeVersion, setNodeVersion] = useState<string | undefined>(undefined);
   const [feeds, setFeeds] = useState<Record<string, FeedResult>>({});
-
-  const updateNodeVersion = useCallback(
-    async () => {
-      const nodeVersion = await window.electron.ipcRenderer.invoke('utils:get-node-version');
-      setNodeVersion(nodeVersion) },
-    []
-  );
 
   useEffect(() => {
     return window.electron.ipcRenderer.on('feeds:result', (payload) => {
@@ -29,10 +21,8 @@ export default function App() {
   return (
     <div className="App min-h-screen bg-primary text-primary">
       <div className="container mx-auto p-4">
+        <SidebarSectionDualTier />
         <ThemeToggle />
-        <Button onClick={updateNodeVersion} className="mt-2">
-          Node version is {nodeVersion}
-        </Button>
 
         {Object.entries(feeds).map(([url, result]) => (
           <section key={url} className="mt-6 border-b border-secondary pb-6">

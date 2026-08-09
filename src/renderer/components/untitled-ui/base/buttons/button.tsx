@@ -4,8 +4,8 @@ import type { FC, ReactElement, ReactNode } from "react";
 import { isValidElement } from "react";
 import type { ButtonProps as AriaButtonProps, LinkProps as AriaLinkProps } from "react-aria-components";
 import { Button as AriaButton, Link as AriaLink } from "react-aria-components";
-import { cx, sortCx } from "@/utils/cx";
-import { isReactComponent } from "@/utils/is-react-component";
+import { cx, sortCx } from "@/components/untitled-ui/utils/cx";
+import { isReactComponent } from "@/components/untitled-ui/utils/is-react-component";
 
 export const styles = sortCx({
     common: {
@@ -236,7 +236,8 @@ export const Button: {
     const commonProps = {
         "data-loading": loading ? true : undefined,
         "data-icon-only": isIcon ? true : undefined,
-        isDisabled: disabled ?? false,
+        ...props,
+        isDisabled: disabled,
         className: cx(
             styles.common.root,
             styles.sizes[size].root,
@@ -250,14 +251,9 @@ export const Button: {
         children: commonChildren,
     };
 
-    if ("href" in props) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructured to omit `href` from the spread below
-        const { href: _href, ...linkProps } = props;
-        if (disabled) {
-            return <AriaLink {...linkProps} {...commonProps} />;
-        }
-        return <AriaLink {...linkProps} {...commonProps} href={props.href} />;
+    if ("href" in commonProps) {
+        return <AriaLink {...commonProps} href={disabled ? undefined : href} />;
     }
 
-    return <AriaButton {...props} {...commonProps} type={props.type || "button"} isPending={loading ?? false} />;
+    return <AriaButton {...commonProps} type={commonProps.type || "button"} isPending={loading} />;
 };

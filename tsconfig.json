@@ -40,5 +40,7 @@
     "paths": {
       "@/*": ["./src/renderer/*"]
     }
-  }
+  },
+  "exclude": ["src/renderer/components/untitled-ui/**"],
+  "references": [{ "path": "./src/renderer/components/untitled-ui" }]
 }
