@@ -4,6 +4,8 @@ RSS feed reader and more.
 
 Monfil means "My feed" in french.
 
+[![Publish](https://github.com/theopnv/monfil/actions/workflows/publish.yml/badge.svg)](https://github.com/theopnv/monfil/actions/workflows/publish.yml)
+
 ## Contributing
 
 This is an Electron project based on [Vite](https://vite.dev):
