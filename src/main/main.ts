@@ -12,12 +12,13 @@ if (started) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    show: false,
+    titleBarStyle: 'hidden',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+  mainWindow.maximize();
 
   if (import.meta.env.DEV && MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
@@ -29,7 +30,7 @@ const createWindow = () => {
 
   if (import.meta.env.DEV) {
     // Uncomment this line to open the DevTools automatically when the app is launched in development mode.
-    // mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
   }
   return mainWindow;
 };

@@ -1,6 +1,6 @@
 import { useFeeds } from "@/providers/feeds-provider";
 
-export default function App() {
+export default function River() {
   const feeds = useFeeds();
 
   return (

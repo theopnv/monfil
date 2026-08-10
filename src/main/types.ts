@@ -48,4 +48,3 @@ export interface FeedItemTable {
 export type FeedItem = Selectable<FeedItemTable>;
 export type NewFeedItem = Insertable<FeedItemTable>;
 export type UpdateFeedItem = Updateable<FeedItemTable>;
-
