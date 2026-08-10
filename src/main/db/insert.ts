@@ -59,16 +59,18 @@ export function addFeedsToDatabase(feedMetadata: typeof listOfFeeds) {
         const parsedFeed = await getFeedItems(feedMetadata.link);
         if (parsedFeed.success) {
           const feedItems = parsedFeed.data;
-          await db
-            .insertInto('feedItem')
-            .values(feedItems.map(item => ({
-              feed_id: feedMetadataResult.id,
-              title: item.title,
-              link: item.link,
-              pubDate: item.pubDate
-            })))
-            .onConflict((oc) => oc.column('link').doNothing())
-            .execute();
+          if (feedItems.length > 0) {
+            await db
+              .insertInto('feedItem')
+              .values(feedItems.map(item => ({
+                feed_id: feedMetadataResult.id,
+                title: item.title,
+                link: item.link,
+                pubDate: item.pubDate
+              })))
+              .onConflict((oc) => oc.column('link').doNothing())
+              .execute();
+          }
         } else if (!parsedFeed.success) {
           console.error(`Error fetching feed items for ${feedMetadata.link}: ${parsedFeed.error.name} - ${parsedFeed.error.message}`);
         }

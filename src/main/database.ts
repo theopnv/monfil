@@ -10,9 +10,7 @@ export const db = new Kysely<Database>({
   dialect,
 })
 
-// The database is in-memory and rebuilt on every process start, so schema
-// creation runs here once instead of through a versioned migrator.
-export const dbReady = (async () => {
+export async function createSchema(db: Kysely<Database>): Promise<void> {
   await db.schema
     .createTable('feedCategory')
     .ifNotExists()
@@ -38,4 +36,8 @@ export const dbReady = (async () => {
     .addColumn('link', 'text', (col) => col.unique())
     .addColumn('pubDate', 'text', (col) => col.notNull())
     .execute();
-})();
+}
+
+// The database is in-memory and rebuilt on every process start, so schema
+// creation runs here once instead of through a versioned migrator.
+export const dbReady = createSchema(db);
