@@ -1,11 +1,11 @@
-import type { Feed, FeedItem } from '../main/types';
+import type { FeedMetadata, FeedItem } from '../main/types';
 import type { FetchUrlError } from '../main/fetch';
 
 export type FeedError = FetchUrlError | { name: 'PARSE_ERROR'; message: string };
 
-export type PopulatedFeed = Feed & { items: FeedItem[] };
+export type Feed = FeedMetadata & { items: FeedItem[] };
 export type FeedResult =
-  | { success: true; value: PopulatedFeed }
+  | { success: true; value: Feed }
   | { success: false; error: FeedError };
 
 // Single source of truth for every IPC channel's payload, shared by preload

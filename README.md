@@ -13,6 +13,11 @@ This is an Electron project based on [Vite](https://vite.dev):
 - `src/preload`: preload scripts
 - `src/renderer`: a react project
 
+### Back-end
+
+Dependencies:
+- Database: [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) as the driver and [Kysely](https://kysely.dev) for type support.
+
 ### Front-end
 
 Dependencies:

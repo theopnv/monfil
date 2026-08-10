@@ -1,53 +1,51 @@
-export type FeedCategory = {
+import type {
+  Generated,
+  Insertable,
+  Selectable,
+  Updateable,
+} from 'kysely'
+
+export interface Database {
+  feedCategory: FeedCategoryTable
+  feedMetadata: FeedMetadataTable
+  feedItem: FeedItemTable
+}
+
+// =============== Feed Category ===============
+
+export interface FeedCategoryTable {
+  id: Generated<number>;
   name: string;
 };
 
-export type Feed = {
+export type FeedCategory = Selectable<FeedCategoryTable>;
+export type NewFeedCategory = Insertable<FeedCategoryTable>;
+export type UpdateFeedCategory = Updateable<FeedCategoryTable>;
+
+// =============== Feed ===============
+
+export interface FeedMetadataTable {
+  id: Generated<number>;
   link: string;
   title: string;
-  category: FeedCategory;
+  category_id: number;
 }
 
-export type FeedItem = {
+export type FeedMetadata = Selectable<FeedMetadataTable>;
+export type NewFeedMetadata = Insertable<FeedMetadataTable>;
+export type UpdateFeedMetadata = Updateable<FeedMetadataTable>;
+
+// =============== Feed Item ===============
+
+export interface FeedItemTable {
+  id: Generated<number>;
+  feed_id: number;
   title: string;
   link: string | undefined;
   pubDate: string;
 };
 
-export const listOfFeeds = [
-  {
-    link: 'https://aws.amazon.com/blogs/architecture/feed/',
-    title: 'AWS Architecture Blog',
-    category: {
-      name: 'tech'
-    },
-  },
-  {
-    link: 'https://netflixtechblog.com/feed',
-    title: 'Netflix Tech Blog',
-    category: {
-      name: 'tech'
-    },
-  },
-  {
-    link: 'https://research.google/blog/rss/',
-    title: 'Google Research Blog',
-    category: {
-      name: 'tech'
-    },
-  },
-  {
-    link: 'https://engineering.fb.com/feed/',
-    title: 'Facebook Engineering Blog',
-    category: {
-      name: 'tech'
-    },
-  },
-  {
-    link: 'https://medium.com/feed/airbnb-engineering',
-    title: 'Airbnb Engineering Blog',
-    category: {
-      name: 'tech'
-    },
-  },
-];
+export type FeedItem = Selectable<FeedItemTable>;
+export type NewFeedItem = Insertable<FeedItemTable>;
+export type UpdateFeedItem = Updateable<FeedItemTable>;
+

@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from "react";
-import type { PopulatedFeed } from "../../preload/channels";
+import type { Feed } from "../../preload/channels";
 
-const FeedsContext = createContext<PopulatedFeed[] | undefined>(undefined);
+const FeedsContext = createContext<Feed[] | undefined>(undefined);
 
-export const useFeeds = (): PopulatedFeed[] => {
+export const useFeeds = (): Feed[] => {
   const context = useContext(FeedsContext);
 
   if (context === undefined) {
@@ -14,7 +14,7 @@ export const useFeeds = (): PopulatedFeed[] => {
 };
 
 export const FeedsProvider = ({ children }: PropsWithChildren) => {
-  const [feeds, setFeeds] = useState<PopulatedFeed[]>([]);
+  const [feeds, setFeeds] = useState<Feed[]>([]);
 
   useEffect(() => {
     return window.electron.ipcRenderer.on('feeds:result', (result) => {

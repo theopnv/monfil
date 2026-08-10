@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { getFeed } from './run';
+import { parseFeedItems } from './parse';
 
-describe('getFeed', () => {
+describe('parseFeedItems', () => {
   test('should be empty when format is not rss', () => {
     const content = '<feed><title>Test Feed</title></feed>';
-    const result = getFeed(content);
+    const result = parseFeedItems(content);
     expect(result).toEqual([]);
   })
 
@@ -26,7 +26,7 @@ describe('getFeed', () => {
   `;
 
   test('should return feed items when format is rss', () => {
-    const result = getFeed(validRssFeed);
+    const result = parseFeedItems(validRssFeed);
     expect(result).toEqual([
       {
         title: 'Item 1',
