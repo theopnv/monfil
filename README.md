@@ -15,13 +15,17 @@ This is an Electron project based on [Vite](https://vite.dev):
 
 ### Back-end
 
+See [doc/backend.md](doc/backend.md).
+
 Dependencies:
-- Database: [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) as the driver and [Kysely](https://kysely.dev) for type support.
+- Database: [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) as the driver and [Kysely](https://kysely.dev) for type support. See [doc/database.md](doc/database.md).
 
 ### Front-end
 
+See [doc/frontend.md](doc/frontend.md).
+
 Dependencies:
-- CSS framework: [Untitled UI](https://www.untitledui.com/react). See [doc/UntitledUI.md](doc/UntitledUI.md) for this project's setup and conventions.
+- CSS framework: [Untitled UI](https://www.untitledui.com/react). See [doc/untitled-ui.md](doc/untitled-ui.md) for this project's setup and conventions.
 - [TanStack](https://tanstack.com) for routing.
 
 ### Debugging
