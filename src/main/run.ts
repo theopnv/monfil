@@ -1,17 +1,25 @@
 import { sendToRenderer } from './ipcSend';
 import { dbReady } from './database';
 import { listOfFeeds, addFeedsToDatabase } from './db/insert';
-import { queryFeedMetadata, queryFeedItems } from './db/query';
+import { queryFeedMetadata, queryFeedItems, queryFeedCategory } from './db/query';
 import type { Feed } from '../preload/channels';
 
 async function queryAndSendFeeds(mainWindow: Electron.BrowserWindow) {
   const queryFeeds: Promise<Feed[]> = (async () => {
     const feedMetadataList = await queryFeedMetadata({});
+    const categories = await queryFeedCategory({});
+    const categoriesById = new Map(categories.map((category) => [category.id, category]));
     const feedsWithItems: Feed[] = [];
 
     for (const feedMetadata of feedMetadataList) {
+      const category = categoriesById.get(feedMetadata.category_id);
+      if (!category) {
+        console.error(`No category found for feed "${feedMetadata.title}" (category_id: ${feedMetadata.category_id})`);
+        continue;
+      }
+
       const feedItems = await queryFeedItems({ feed_id: feedMetadata.id });
-      feedsWithItems.push({ ...feedMetadata, items: feedItems });
+      feedsWithItems.push({ ...feedMetadata, items: feedItems, category });
     }
 
     return feedsWithItems;

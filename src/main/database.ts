@@ -35,6 +35,7 @@ export async function createSchema(db: Kysely<Database>): Promise<void> {
     .addColumn('title', 'text', (col) => col.notNull())
     .addColumn('link', 'text', (col) => col.unique())
     .addColumn('pubDate', 'text', (col) => col.notNull())
+    .addColumn('description', 'text', (col) => col.notNull())
     .execute();
 }
 

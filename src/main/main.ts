@@ -30,7 +30,7 @@ const createWindow = () => {
 
   if (import.meta.env.DEV) {
     // Uncomment this line to open the DevTools automatically when the app is launched in development mode.
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
   }
   return mainWindow;
 };

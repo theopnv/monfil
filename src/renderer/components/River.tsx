@@ -1,45 +1,51 @@
+import { useMemo, useState } from "react";
+import RiverControls, { type Density } from "@/components/RiverControls";
+import RiverHeader from "@/components/RiverHeader";
+import RiverList from "@/components/RiverList";
+import RiverSidebar from "@/components/RiverSidebar";
+import { toRiverItems } from "@/lib/river";
 import { useFeeds } from "@/providers/feeds-provider";
 
 export default function River() {
   const feeds = useFeeds();
+  const riverItems = useMemo(() => toRiverItems(feeds), [feeds]);
+
+  const [density, setDensity] = useState<Density>("Cards");
+  const [read, setRead] = useState<Record<number, boolean>>({});
+
+  const isRead = (id: number) => !!read[id];
+  const toggleRead = (id: number) => setRead((prev) => ({ ...prev, [id]: !prev[id] }));
+  const markAllRead = () => {
+    setRead(
+      riverItems.reduce<Record<number, boolean>>((acc, item) => {
+        acc[item.id] = true;
+        return acc;
+      }, {}),
+    );
+  };
+
+  const unreadCount = riverItems.filter((item) => !isRead(item.id)).length;
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <div className="flex h-full w-64 flex-none flex-col items-left gap-1.5 overflow-y-auto border-r border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))]">
-        <>
-          {feeds.map((feed) => (
-            <section key={feed.link} className="mt-6 p-2">
-              <h1 className="text-brand-secondary">{feed.title}</h1>
-            </section>
-          ))}
-        </>
-      </div>
-      <div className="flex-1 overflow-y-auto">
-        <>
-          {feeds.map((feed) => (
-            <section key={feed.link} className="mt-6 border-b border-secondary pb-6">
-              <h1 className="text-2xl font-bold text-brand-secondary">{feed.title}</h1>
-              <ul className="mt-2 space-y-1">
-                {feed.items.map((item) => (
-                  <li key={item.link} className="text-secondary">
-                    <a
-                      href={item.link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-brand-secondary hover:text-brand-secondary_hover"
-                    >
-                      {item.title}
-                    </a>{' '}
-                    — {item.pubDate}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </>
-      </div>
+      <RiverSidebar feeds={feeds} />
 
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <RiverHeader />
+        <RiverControls
+          density={density}
+          onDensityChange={setDensity}
+          unreadCount={unreadCount}
+          sourceCount={feeds.length}
+          onMarkAllRead={markAllRead}
+        />
+
+        <div className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
+          <div className="mx-auto max-w-[860px]">
+            <RiverList items={riverItems} density={density} isRead={isRead} onToggleRead={toggleRead} />
+          </div>
+        </div>
+      </div>
     </div>
-
   );
 }

@@ -99,8 +99,8 @@ describe('queryFeedItems', () => {
     await db
       .insertInto('feedItem')
       .values([
-        { feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', pubDate: '2024-01-01' },
-        { feed_id: feed.id, title: 'Item 2', link: 'https://a.example/2', pubDate: '2024-01-02' },
+        { feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', pubDate: '2024-01-01', description: 'Description 1' },
+        { feed_id: feed.id, title: 'Item 2', link: 'https://a.example/2', pubDate: '2024-01-02', description: 'Description 2' },
       ])
       .execute();
 

@@ -45,7 +45,7 @@ describe('createSchema', () => {
 
     expect(columnsOf('feedCategory')).toEqual(['id', 'name']);
     expect(columnsOf('feedMetadata')).toEqual(['category_id', 'id', 'link', 'title']);
-    expect(columnsOf('feedItem')).toEqual(['feed_id', 'id', 'link', 'pubDate', 'title']);
+    expect(columnsOf('feedItem')).toEqual(['description', 'feed_id', 'id', 'link', 'pubDate', 'title']);
   });
 
   test('is safe to run more than once', async () => {

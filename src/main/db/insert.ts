@@ -37,6 +37,20 @@ export const listOfFeeds = [
       name: 'tech'
     },
   },
+  {
+    link: 'https://siddhantkhare.com/rss.xml',
+    title: 'Siddhant Khare Blog',
+    category: {
+      name: 'blog'
+    },
+  },
+  {
+    link: 'https://writing.antonleicht.me/feed',
+    title: 'Threading the Needle | Anton Leicht Blog',
+    category: {
+      name: 'blog'
+    },
+  },
 ];
 
 export function addFeedsToDatabase(feedMetadata: typeof listOfFeeds) {
@@ -66,7 +80,8 @@ export function addFeedsToDatabase(feedMetadata: typeof listOfFeeds) {
                 feed_id: feedMetadataResult.id,
                 title: item.title,
                 link: item.link,
-                pubDate: item.pubDate
+                pubDate: item.pubDate,
+                description: item.description
               })))
               .onConflict((oc) => oc.column('link').doNothing())
               .execute();

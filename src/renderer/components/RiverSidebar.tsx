@@ -1,0 +1,69 @@
+import { useState } from "react";
+import { ChevronRight } from "@untitledui/icons";
+import FeedAvatar from "@/components/FeedAvatar";
+import { cx } from "@/components/untitled-ui/utils/cx";
+import type { Feed } from "../../preload/channels";
+
+export interface RiverSidebarProps {
+  feeds: Feed[];
+}
+
+interface Folder {
+  name: string;
+  feeds: Feed[];
+  count: number;
+}
+
+function groupByCategory(feeds: Feed[]): Folder[] {
+  const folders = new Map<string, Folder>();
+  for (const feed of feeds) {
+    const name = feed.category.name;
+    const folder = folders.get(name) ?? { name, feeds: [], count: 0 };
+    folder.feeds.push(feed);
+    folder.count += feed.items.length;
+    folders.set(name, folder);
+  }
+  return [...folders.values()];
+}
+
+export default function RiverSidebar({ feeds }: RiverSidebarProps) {
+  const folders = groupByCategory(feeds);
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+
+  return (
+    <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-r border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
+      <div className="px-4.5 pb-2 text-xs font-bold tracking-wide text-quaternary uppercase">Feeds</div>
+      <div className="flex flex-col gap-px px-2.5">
+        {folders.map((folder) => {
+          const isOpen = open[folder.name] ?? false;
+
+          return (
+            <div key={folder.name} className="flex flex-col">
+              <button
+                type="button"
+                onClick={() => setOpen((prev) => ({ ...prev, [folder.name]: !isOpen }))}
+                className="flex w-full items-center gap-1.5 rounded-xl px-2.25 py-1.75 text-left text-sm font-semibold text-primary hover:bg-primary_hover"
+              >
+                <ChevronRight className={cx("size-3.25 flex-none text-quaternary transition-transform", isOpen && "rotate-90")} />
+                <span className="flex-1">{folder.name}</span>
+                <span className="text-xs font-bold text-quaternary tabular-nums">{folder.count}</span>
+              </button>
+
+              {isOpen && (
+                <div className="flex flex-col gap-px pl-2">
+                  {folder.feeds.map((feed) => (
+                    <div key={feed.link} className="flex w-full items-center gap-2.25 rounded-xl px-2.25 py-1.5 text-sm text-secondary">
+                      <FeedAvatar title={feed.title} size="sm" />
+                      <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{feed.title}</span>
+                      <span className="text-xs text-quaternary tabular-nums">{feed.items.length}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

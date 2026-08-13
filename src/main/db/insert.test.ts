@@ -15,7 +15,7 @@ const feedB = { link: 'https://b.example/feed', title: 'Feed B', category: { nam
 // One distinct item per feed link, so items from different feeds never collide
 // on the feedItem.link unique constraint.
 async function itemsFor(link: string) {
-  return { success: true as const, data: [{ title: `${link} item`, link: `${link}#1`, pubDate: '2024-01-01' }] };
+  return { success: true as const, data: [{ title: `${link} item`, link: `${link}#1`, pubDate: '2024-01-01', description: `${link} description` }] };
 }
 
 beforeAll(async () => {
@@ -96,8 +96,8 @@ describe('addFeedsToDatabase', () => {
     mockedGetFeedItems.mockResolvedValue({
       success: true,
       data: [
-        { title: 'Item 1', link: undefined, pubDate: '2024-01-01' },
-        { title: 'Item 2', link: undefined, pubDate: '2024-01-02' },
+        { title: 'Item 1', link: undefined, pubDate: '2024-01-01', description: '' },
+        { title: 'Item 2', link: undefined, pubDate: '2024-01-02', description: '' },
       ],
     });
 

@@ -16,6 +16,7 @@ describe('parseFeedItems', () => {
           <title>Item 1</title>
           <link>http://example.com/item1</link>
           <pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate>
+          <description>Item 1 description</description>
         </item>
         <item>
           <title>Item 2</title>
@@ -31,12 +32,14 @@ describe('parseFeedItems', () => {
       {
         title: 'Item 1',
         link: 'http://example.com/item1',
-        pubDate: 'Mon, 01 Jan 2024 00:00:00 GMT'
+        pubDate: 'Mon, 01 Jan 2024 00:00:00 GMT',
+        description: 'Item 1 description'
       },
       {
         title: 'Item 2',
         link: undefined,
-        pubDate: 'Tue, 02 Jan 2024 00:00:00 GMT'
+        pubDate: 'Tue, 02 Jan 2024 00:00:00 GMT',
+        description: ''
       }
     ]);
   });

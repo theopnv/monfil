@@ -11,7 +11,8 @@ export function parseFeedItems(content: string, maxItems: number = 10) {
       return feed.items.map(item => ({
         title: item.title ?? 'No title',
         link: item.link,
-        pubDate: item.pubDate ?? 'No publication date'
+        pubDate: item.pubDate ?? 'No publication date',
+        description: item.description ?? ''
       }));
     }
   }
