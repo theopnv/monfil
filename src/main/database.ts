@@ -25,6 +25,7 @@ export async function createSchema(db: Kysely<Database>): Promise<void> {
     .addColumn('link', 'text', (col) => col.notNull().unique())
     .addColumn('title', 'text', (col) => col.notNull())
     .addColumn('category_id', 'integer', (col) => col.notNull().references('feedCategory.id'))
+    .addColumn('showInHome', 'integer', (col) => col.notNull().defaultTo(1))
     .execute();
 
   await db.schema

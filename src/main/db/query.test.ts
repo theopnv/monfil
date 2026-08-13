@@ -89,6 +89,21 @@ describe('queryFeedMetadata', () => {
     // Assert
     expect(result).toHaveLength(2);
   });
+
+  test('filters by showInHome', async () => {
+    // Arrange
+    await db
+      .insertInto('feedMetadata')
+      .values({ link: 'https://c.example/feed', title: 'Feed C', category_id: category.id, showInHome: 0 })
+      .execute();
+
+    // Act
+    const result = await queryFeedMetadata({ showInHome: 0 });
+
+    // Assert
+    expect(result).toHaveLength(1);
+    expect(result[0]?.title).toBe('Feed C');
+  });
 });
 
 describe('queryFeedItems', () => {

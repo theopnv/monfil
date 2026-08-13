@@ -6,6 +6,7 @@ import type { Feed } from '../../../preload/channels';
 
 vi.mock(import('@/providers/feeds-provider'), () => ({
   useFeeds: vi.fn(),
+  useAddFeed: vi.fn(() => vi.fn()),
 }));
 
 const mockedUseFeeds = vi.mocked(useFeeds);
@@ -35,6 +36,7 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
     link: `https://example.com/feed-${id}`,
     title: `Feed ${id}`,
     category_id: 1,
+    showInHome: 1,
     category: { id: 1, name: 'Tech' },
     items: [],
     ...overrides,

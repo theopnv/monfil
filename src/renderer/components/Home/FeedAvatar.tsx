@@ -2,13 +2,14 @@ import { cx } from "@/components/untitled-ui/utils/cx";
 
 export interface FeedAvatarProps {
   title: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
 const sizeClasses = {
   sm: "size-4.5 text-[9px]",
   md: "size-5 text-[10px]",
+  lg: "size-11.5 text-base",
 };
 
 function getInitials(title: string): string {

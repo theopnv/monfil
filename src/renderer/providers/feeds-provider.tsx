@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type PropsWithChildren } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type PropsWithChildren } from "react";
 import type { Feed } from "../../preload/channels";
 
 const FeedsContext = createContext<Feed[] | undefined>(undefined);
@@ -13,8 +13,24 @@ export const useFeeds = (): Feed[] => {
   return context;
 };
 
+const AddFeedContext = createContext<((feed: Feed) => void) | undefined>(undefined);
+
+export const useAddFeed = (): ((feed: Feed) => void) => {
+  const context = useContext(AddFeedContext);
+
+  if (context === undefined) {
+    throw new Error("useAddFeed must be used within a FeedsProvider");
+  }
+
+  return context;
+};
+
 export const FeedsProvider = ({ children }: PropsWithChildren) => {
   const [feeds, setFeeds] = useState<Feed[]>([]);
+
+  const addFeed = useCallback((feed: Feed) => {
+    setFeeds((prev) => [...prev.filter((f) => f.link !== feed.link), feed]);
+  }, []);
 
   useEffect(() => {
     return window.electron.ipcRenderer.on('feeds:result', (result) => {
@@ -26,5 +42,9 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
     });
   }, []);
 
-  return <FeedsContext.Provider value={feeds}>{children}</FeedsContext.Provider>;
+  return (
+    <FeedsContext.Provider value={feeds}>
+      <AddFeedContext.Provider value={addFeed}>{children}</AddFeedContext.Provider>
+    </FeedsContext.Provider>
+  );
 };

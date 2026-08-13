@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { ChevronRight } from "@untitledui/icons";
+import { ChevronRight, Plus } from "@untitledui/icons";
+import AddFeedModal from "@/components/AddFeed/AddFeedModal";
 import FeedAvatar from "@/components/Home/FeedAvatar";
+import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import type { Feed } from "../../../preload/channels";
 
@@ -31,10 +33,15 @@ function groupByCategory(feeds: Feed[]): Folder[] {
 export default function RiverSidebar({ feeds, selectedFeedLink, onSelectFeed }: RiverSidebarProps) {
   const folders = groupByCategory(feeds);
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
 
   return (
     <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-r border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
-      <div className="px-4.5 pb-2 text-xs font-bold tracking-wide text-quaternary uppercase">Feeds</div>
+      <div className="flex items-center justify-between px-4.5 pb-2">
+        <span className="text-xs font-bold tracking-wide text-quaternary uppercase">Feeds</span>
+        <Button aria-label="Add feed" size="xs" color="tertiary" iconLeading={Plus} onPress={() => setIsAddFeedOpen(true)} />
+      </div>
+      <AddFeedModal isOpen={isAddFeedOpen} onOpenChange={setIsAddFeedOpen} />
       <div className="flex flex-col gap-px px-2.5">
         {folders.map((folder) => {
           const isOpen = open[folder.name] ?? false;

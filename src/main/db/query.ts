@@ -44,6 +44,7 @@ const feedMetadataHandlers = {
   link: (q, v) => q.where('link', '=', v),
   title: (q, v) => q.where('title', '=', v),
   category_id: (q, v) => q.where('category_id', '=', v),
+  showInHome: (q, v) => q.where('showInHome', '=', v),
 } satisfies CriteriaHandlers<'feedMetadata', FeedMetadata>;
 
 export function queryFeedMetadata(criteria: Partial<FeedMetadata>): Promise<FeedMetadata[]> {

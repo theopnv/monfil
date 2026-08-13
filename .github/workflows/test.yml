@@ -26,9 +26,12 @@ jobs:
 
       - run: npm run lint
 
+      - run: npx playwright install
+
       - run: npx playwright install-deps
 
       - run: xvfb-run -a npm test
+
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:

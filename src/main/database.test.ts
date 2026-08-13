@@ -52,7 +52,7 @@ describe('createSchema', () => {
 
     // Assert
     expect(columnsOf('feedCategory')).toEqual(['id', 'name']);
-    expect(columnsOf('feedMetadata')).toEqual(['category_id', 'id', 'link', 'title']);
+    expect(columnsOf('feedMetadata')).toEqual(['category_id', 'id', 'link', 'showInHome', 'title']);
     expect(columnsOf('feedItem')).toEqual(['description', 'feed_id', 'id', 'link', 'pubDate', 'title']);
   });
 

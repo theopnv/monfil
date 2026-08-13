@@ -1,13 +1,20 @@
 import { ipcMain, shell } from "electron";
 import type { IpcMainEvent, IpcMainInvokeEvent } from "electron";
-import type { ChannelPayloads, InvokeChannels, SendChannels } from "../preload/channels";
+import type { ChannelPayloads, InvokeArgs, InvokeChannels, SendChannels } from "../preload/channels";
+import { fetchFeed } from "./feed/parse";
+import { queryFeedCategory } from "./db/query";
+import { addFeedToDatabase } from "./db/insert";
+import { dbReady } from "./database";
 
 type Handler<C extends InvokeChannels> = (
   event: IpcMainInvokeEvent,
+  arg: InvokeArgs[C],
 ) => ChannelPayloads[C] | Promise<ChannelPayloads[C]>;
 
 const handlers: { [C in InvokeChannels]: Handler<C> } = {
-  "utils:get-node-version": () => process.versions.node
+  "feeds:validate-feed-url": (_event, query) => fetchFeed(query),
+  "feeds:list-categories": async () => { await dbReady; return queryFeedCategory({}); },
+  "feeds:submit-add-feed": (_event, payload) => addFeedToDatabase(payload),
 };
 
 type Listener<C extends SendChannels> = (

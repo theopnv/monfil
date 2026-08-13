@@ -1,0 +1,43 @@
+import { useEffect, useState } from 'react';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import type { ParsedFeed, FeedFetchError } from '../../../main/feed/parse';
+
+export type FeedValidationStatus = 'idle' | 'loading' | 'found' | 'not-found';
+
+interface FeedValidationState {
+  status: FeedValidationStatus;
+  feed: ParsedFeed | null;
+  error: FeedFetchError | null;
+}
+
+const idleState: FeedValidationState = { status: 'idle', feed: null, error: null };
+
+export function useFeedValidation(query: string): FeedValidationState {
+  const debouncedQuery = useDebouncedValue(query.trim(), 450);
+  const [state, setState] = useState<FeedValidationState>(idleState);
+
+  useEffect(() => {
+    if (!debouncedQuery) {
+      setState(idleState);
+      return;
+    }
+
+    let cancelled = false;
+    setState((prev) => ({ ...prev, status: 'loading' }));
+
+    window.electron.ipcRenderer.invoke('feeds:validate-feed-url', debouncedQuery).then((result) => {
+      if (cancelled) return;
+      setState(
+        result.success
+          ? { status: 'found', feed: result.data, error: null }
+          : { status: 'not-found', feed: null, error: result.error },
+      );
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedQuery]);
+
+  return state;
+}

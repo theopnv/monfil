@@ -29,6 +29,7 @@ export interface FeedMetadataTable {
   link: string;
   title: string;
   category_id: number;
+  showInHome: Generated<number>;
 }
 
 export type FeedMetadata = Selectable<FeedMetadataTable>;
