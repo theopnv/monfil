@@ -1,0 +1,175 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Monfil — Organic palette override for Untitled UI
+   ═══════════════════════════════════════════════════════════════════════
+
+   Drop this file next to theme.css, then in globals.css:
+
+       @import "tailwindcss";
+       @import "./theme.css";
+       @import "./monfil-theme.css";   <-- add this, AFTER theme.css
+
+   Why an override file and not an edit to theme.css: theme.css is
+   vendored from Untitled UI. Keeping the retune in its own file means
+   you can re-pull their theme without losing the palette, and the whole
+   visual identity is one reviewable diff.
+
+   Two things happen here:
+   1. The `--color-neutral-*` and `--color-brand-*` ramps are replaced.
+      Every semantic variable in theme.css resolves through those two, so
+      this alone moves the entire app. Dark mode comes along for free —
+      their dark block remaps the same ramps.
+   2. A handful of semantic variables are overridden directly, because
+      Untitled UI hard-codes `white` for the page ground and Organic's
+      ground is cream. That is the single most visible change.
+
+   Fonts: Figtree (body) + Caprasimo (display headings only — page
+   titles, article headlines, section headings; never UI labels or body).
+   ══════════════════════════════════════════════════════════════════ */
+
+@theme {
+    /* ─── TYPE ─────────────────────────────────────────────────────── */
+    --font-body: "Figtree", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-display: "Caprasimo", Georgia, serif;
+
+    /* ─── RADIUS ───────────────────────────────────────────────────────
+       Organic over-rounds. xs/sm/md are left alone so Untitled UI's
+       small controls keep their proportions; the container steps grow.
+       Buttons and inputs use `rounded-full` (999px) directly.          */
+    --radius-lg: 0.75rem;   /*  12px — was 8px  */
+    --radius-xl: 1rem;      /*  16px — was 12px */
+    --radius-2xl: 1.75rem;  /*  28px — was 16px : the container radius  */
+    --radius-3xl: 2.25rem;  /*  36px — was 24px */
+
+    /* ─── BRAND RAMP — terracotta ──────────────────────────────────────
+       Organic --color-accent-*. 50 and 950 are extrapolated; Untitled
+       UI's scale has two more steps than Organic's.                   */
+    --color-brand-50: #fff8f3;
+    --color-brand-100: #fff2eb;
+    --color-brand-200: #ffe1d0;
+    --color-brand-300: #ffc6a5;
+    --color-brand-400: #f6a06b;
+    --color-brand-500: #d67f48;
+    --color-brand-600: #b2622d;
+    --color-brand-700: #8c491a;
+    --color-brand-800: #643312;
+    --color-brand-900: #402310;
+    --color-brand-950: #2a1709;
+
+    /* ─── NEUTRAL RAMP — warm sand ─────────────────────────────────────
+       Organic --color-neutral-*, shifted one step to fit Untitled UI's
+       12-step scale. These are NOT greys, and that is the point: the
+       warmth is what makes the palette read as desert rather than as a
+       dashboard. Do not "fix" them toward neutral.                    */
+    --color-neutral-25: #fdfaf5;
+    --color-neutral-50: #f9f4ed;
+    --color-neutral-100: #eee7db;
+    --color-neutral-200: #dcd3c4;
+    --color-neutral-300: #c0b6a5;
+    --color-neutral-400: #a19786;
+    --color-neutral-500: #82796a;
+    --color-neutral-600: #645c50;
+    --color-neutral-700: #554e44;
+    --color-neutral-800: #474238;
+    --color-neutral-900: #2e2b25;
+    --color-neutral-950: #1d1b17;
+
+    /* ─── SAGE — the second accent ─────────────────────────────────────
+       Untitled UI has no second-accent role, so this is a new ramp.
+       Organic treats sage as a genuine second voice, not a highlight:
+       in Monfil it carries clustering, success states and topic pills.
+       Use as `bg-sage-200`, `text-sage-800`, etc.                     */
+    --color-sage-50: #f7fcee;
+    --color-sage-100: #f0fae1;
+    --color-sage-200: #e1eecc;
+    --color-sage-300: #ccdbb2;
+    --color-sage-400: #aebf92;
+    --color-sage-500: #8fa073;
+    --color-sage-600: #728157;
+    --color-sage-700: #56633f;
+    --color-sage-800: #3d472b;
+    --color-sage-900: #272e1b;
+    --color-sage-950: #171b10;
+
+    /* ─── GROUND ───────────────────────────────────────────────────────
+       Untitled UI resolves the page ground to literal `white`. Organic's
+       ground is cream (#f5ead8) with a sand surface (#ebddc5) above it.
+       Without these six lines the app stays white and none of the rest
+       reads correctly.                                                */
+    --color-bg-primary: #f5ead8;
+    --color-bg-primary_alt: #f5ead8;
+    --color-bg-primary_hover: #efe2cc;
+    --color-bg-secondary: #ebddc5;
+    --color-bg-secondary_alt: #ebddc5;
+    --color-bg-secondary_hover: #e3d3b6;
+    --color-bg-tertiary: #e3d3b6;
+    --color-bg-active: #efe2cc;
+
+    /* Organic's text is very slightly warmer and darker than the ramp
+       top; use the token value exactly for body copy. */
+    --color-text-primary: #201e1d;
+    --color-fg-primary: #201e1d;
+
+    /* Organic's divider is ink at 16%, not a ramp step — it disappears
+       against the cream ground more gracefully than a solid border. */
+    --color-border-secondary_alt: rgb(32 30 29 / 0.16);
+
+    /* Brand text at body size needs 700, not 500: accent-on-cream clears
+       3:1, which is fine for icons and chrome but not for paragraphs. */
+    --color-text-brand-secondary: var(--color-brand-700);
+}
+
+@layer base {
+    /* ─── DARK MODE ────────────────────────────────────────────────────
+       theme.css already remaps the ramps for `.dark-mode`, so replacing
+       the ramps above gives you a warm espresso dark mode with no extra
+       work. These are the few places where the automatic result is
+       wrong on a dark warm ground.
+
+       Honest caveat: Organic is a light-only system. This dark mode is
+       derived, not authored — good enough to ship, worth a proper tuning
+       pass once you've lived with it in the evening.                  */
+
+    .dark-mode {
+        /* The auto-derived ground is #1d1b17 / #2e2b25 — already warm.
+           These nudge it a touch browner, matching the mockups. */
+        --color-bg-primary: #1d1815;
+        --color-bg-primary_alt: #1d1815;
+        --color-bg-primary_hover: #272019;
+        --color-bg-secondary: #272019;
+        --color-bg-secondary_alt: #272019;
+        --color-bg-secondary_hover: #322a21;
+        --color-bg-tertiary: #322a21;
+        --color-bg-active: #322a21;
+        --color-bg-overlay: #120f0d;
+
+        /* brand-600 is too dark to sit on an espresso ground. */
+        --color-bg-brand-solid: var(--color-brand-500);
+        --color-bg-brand-solid_hover: var(--color-brand-400);
+        --color-bg-brand-primary: var(--color-brand-900);
+        --color-bg-brand-secondary: var(--color-brand-800);
+
+        /* theme.css sends brand text to the neutral ramp in dark mode,
+           which throws away the accent entirely. Put it back. */
+        --color-text-brand-secondary: var(--color-brand-300);
+        --color-text-brand-tertiary: var(--color-brand-400);
+        --color-fg-brand-primary: var(--color-brand-400);
+        --color-fg-brand-secondary: var(--color-brand-400);
+
+        --color-border-secondary_alt: rgb(242 231 214 / 0.18);
+    }
+}
+
+/* ─── FOCUS ────────────────────────────────────────────────────────────
+   Untitled UI's focus ring follows --color-focus-ring, which now
+   resolves to the terracotta. This rule is the safety net for anything
+   that slipped through with a browser default — an Electron window with
+   a stray blue ring is the tell that gives away an unfinished app.    */
+@layer base {
+    :focus-visible {
+        outline: 2px solid var(--color-focus-ring);
+        outline-offset: 2px;
+    }
+    ::selection {
+        background: color-mix(in srgb, var(--color-brand-500) 30%, transparent);
+    }
+}

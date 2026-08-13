@@ -92,6 +92,12 @@ typings/
 out/
 dist/
 
+# Vitest
+**.vitest-attachments/*
+**/__screenshots__/*
+**/__screenshots__/*
+**/__screenshots__/*
+
 # Playwright
 test-results/
 

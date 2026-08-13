@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { registerIpcHandlers } from './ipcHandlers';
+import { registerIpcObservers } from './registerIpcObservers';
 import { run } from './run';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -12,12 +12,12 @@ if (started) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    titleBarStyle: 'hidden',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+  mainWindow.maximize();
 
   if (import.meta.env.DEV && MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
@@ -28,13 +28,14 @@ const createWindow = () => {
   }
 
   if (import.meta.env.DEV) {
-    mainWindow.webContents.openDevTools();
+    // Uncomment this line to open the DevTools automatically when the app is launched in development mode.
+    // mainWindow.webContents.openDevTools();
   }
   return mainWindow;
 };
 
 const main = () => {
-  registerIpcHandlers();
+  registerIpcObservers();
   const mainWindow = createWindow();
   mainWindow.webContents.once('did-finish-load', () => run(mainWindow));
 }

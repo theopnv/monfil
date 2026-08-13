@@ -12,7 +12,7 @@ interface NotAllowedOrAbortedError extends Error {
   name: 'NOT_ALLOWED_OR_ABORTED_ERROR';
 }
 
-type FetchUrlError = GenericFetchError | NetworkError | NotAllowedOrAbortedError;
+export type FetchUrlError = GenericFetchError | NetworkError | NotAllowedOrAbortedError;
 type FetchUrlResult = Result<string, FetchUrlError>;
 
 export async function fetchUrl(url: string): Promise<FetchUrlResult> {
@@ -21,7 +21,7 @@ export async function fetchUrl(url: string): Promise<FetchUrlResult> {
     if (!response.ok) {
       return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: `${response.status}: ${response.statusText}` } }
     }
-    return { success: true, value: await response.text() };
+    return { success: true, data: await response.text() };
 
   } catch (error) {
     if (error instanceof TypeError) {

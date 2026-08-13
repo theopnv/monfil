@@ -1,5 +1,5 @@
 // Result
-type Success<T> = { success: true; value: T };
+type Success<S> = { success: true; data: S };
 type Failure<E> = { success: false; error: E };
 
-export type Result<T, E = Error> = Success<T> | Failure<E>;
+export type Result<S, E = Error> = Success<S> | Failure<E>;

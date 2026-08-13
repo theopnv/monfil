@@ -13,10 +13,19 @@ This is an Electron project based on [Vite](https://vite.dev):
 - `src/preload`: preload scripts
 - `src/renderer`: a react project
 
-### Front-end
+### Back-end
+
+See [doc/backend.md](doc/backend.md).
 
 Dependencies:
-- CSS framework: [Untitled UI](https://www.untitledui.com/react). See [doc/UntitledUI.md](doc/UntitledUI.md) for this project's setup and conventions.
+- Database: [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) as the driver and [Kysely](https://kysely.dev) for type support. See [doc/database.md](doc/database.md).
+
+### Front-end
+
+See [doc/frontend.md](doc/frontend.md).
+
+Dependencies:
+- CSS framework: [Untitled UI](https://www.untitledui.com/react). See [doc/untitled-ui.md](doc/untitled-ui.md) for this project's setup and conventions.
 - [TanStack](https://tanstack.com) for routing.
 
 ### Debugging
@@ -31,7 +40,12 @@ Run `npm run make` to exercise the electron-forge packaging command. It will out
 
 ### Testing
 
-The projects uses [vitest](https://vitest.dev) for unit tests, and [playwright](https://playwright.dev/) for end-to-end (e2e) tests. Run `npm run test`.
+The projects uses different frameworks for each domain of the test pyramid:
+- Unit tests: [vitest](https://vitest.dev). Test only one function. Mostly used for testing the backend.
+- Integration tests: [vitest browser mode](https://vitest.dev/guide/browser/component-testing.html). Test react components inside the browser.
+- End to End (E2E): [playwright](https://playwright.dev/). Test entire user stories.
+
+Run `npm run test` to run all of them.
 
 ### Publishing
 
