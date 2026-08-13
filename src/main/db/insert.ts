@@ -57,7 +57,8 @@ export const listOfFeeds = [
   },
 ];
 
-export function addFeedsToDatabase(feedMetadata: typeof listOfFeeds) {
+export async function addFeedsToDatabase(feedMetadata: typeof listOfFeeds) {
+  await dbReady;
   return Promise.all(feedMetadata.map(async (feedMetadata) => {
     const categoryResult = await db
       .insertInto('feedCategory')

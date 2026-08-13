@@ -25,14 +25,27 @@ export function useFeedValidation(query: string): FeedValidationState {
     let cancelled = false;
     setState((prev) => ({ ...prev, status: 'loading' }));
 
-    window.electron.ipcRenderer.invoke('feeds:validate-feed-url', debouncedQuery).then((result) => {
-      if (cancelled) return;
-      setState(
-        result.success
-          ? { status: 'found', feed: result.data, error: null }
-          : { status: 'not-found', feed: null, error: result.error },
-      );
-    });
+    window.electron.ipcRenderer
+      .invoke('feeds:validate-feed-url', debouncedQuery)
+      .then((result) => {
+        if (cancelled) return;
+        setState(
+          result.success
+            ? { status: 'found', feed: result.data, error: null }
+            : { status: 'not-found', feed: null, error: result.error },
+        );
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setState({
+          status: 'not-found',
+          feed: null,
+          error: {
+            name: 'UNKNOWN_ERROR',
+            message: error instanceof Error ? error.message : 'An unknown error occurred',
+          },
+        });
+      });
 
     return () => {
       cancelled = true;

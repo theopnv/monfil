@@ -25,7 +25,7 @@ async function queryAndSendFeeds(mainWindow: Electron.BrowserWindow) {
     return feedsWithItems;
   })();
 
-  queryFeeds.then((feeds) => {
+  await queryFeeds.then((feeds) => {
     feeds.forEach((feed) => {
       sendToRenderer(mainWindow, 'feeds:result', { success: true, value: feed });
     });

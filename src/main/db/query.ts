@@ -3,7 +3,7 @@ import { type Database, type FeedCategory, type FeedItem, type FeedMetadata } fr
 import { db } from '../database';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
-// Adding a new field to a table object and forgeting to add it here will result in a compilation error.
+// Adding a new field to a table object and forgetting to add it here will result in a compilation error.
 type CriteriaHandlers<TB extends keyof Database, T> = {
   [K in keyof T]: (
     query: SelectQueryBuilder<Database, TB, T>,

@@ -10,7 +10,7 @@ never reach for them.
 | --- | --- |
 | `src/main/main.ts` | App lifecycle and window creation. |
 | `src/main/run.ts` | The work done once the window is ready. |
-| `src/main/ipcHandle.ts` | Handlers for channels the renderer invokes. |
+| `src/main/registerIpcObservers.ts` | IPC handlers/listeners for channels the renderer invokes or sends. |
 | `src/main/ipcSend.ts` | The typed wrapper for pushing to the renderer. |
 | `src/main/fetch.ts` | Network access. |
 | `src/main/feed/` | Feed parsing. |

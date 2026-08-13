@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm start                 # electron-forge dev run (Vite dev server + Electron)
 npm run lint              # tsc -b . && eslint  (also the pre-commit hook)
-npm test                  # vitest --run, then playwright; `pretest` packages first
+npm test                  # unit (vitest), integration (vitest browser mode), then e2e (playwright); packaging runs in pretest
 npm run package           # build into .vite/build ; required before e2e tests
 npm run make              # platform installers in out/<os>
 ```
