@@ -6,5 +6,6 @@ export default defineConfig({
       '**/test/e2e/**',
       '**/node_modules/**',
     ],
+    restoreMocks: true,
   },
 })

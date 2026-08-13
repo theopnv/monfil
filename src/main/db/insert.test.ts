@@ -3,7 +3,7 @@ import { db, dbReady } from '../database';
 import { addFeedsToDatabase } from './insert';
 import { getFeedItems } from '../feed/parse';
 
-vi.mock('../feed/parse', () => ({
+vi.mock(import('../feed/parse'), () => ({
   getFeedItems: vi.fn(),
 }));
 

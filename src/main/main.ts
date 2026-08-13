@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { registerIpcHandlers } from './ipcHandle';
+import { registerIpcObservers } from './registerIpcObservers';
 import { run } from './run';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -36,7 +36,7 @@ const createWindow = () => {
 };
 
 const main = () => {
-  registerIpcHandlers();
+  registerIpcObservers();
   const mainWindow = createWindow();
   mainWindow.webContents.once('did-finish-load', () => run(mainWindow));
 }

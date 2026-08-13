@@ -31,7 +31,7 @@ const listeners: { [C in SendChannels]: Listener<C> } = {
   },
 };
 
-export function registerIpcHandlers() {
+export function registerIpcObservers() {
   for (const [channel, handler] of Object.entries(handlers) as [InvokeChannels, Handler<InvokeChannels>][]) {
     ipcMain.handle(channel, handler);
   }
