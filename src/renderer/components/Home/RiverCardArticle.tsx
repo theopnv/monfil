@@ -1,5 +1,5 @@
 import { Bookmark } from "@untitledui/icons";
-import FeedAvatar from "@/components/FeedAvatar";
+import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
@@ -42,7 +42,7 @@ export default function RiverCardArticle({ item, read, onToggleRead }: RiverCard
             iconLeading={Bookmark}
             // react-aria's Button stops the press event from bubbling to the
             // card's onClick by default, so this never toggles read state.
-            onPress={() => {}}
+            onPress={() => { }}
           />
         </div>
       </div>

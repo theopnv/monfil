@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { Outlet } from '@tanstack/react-router';
 import { FeedsProvider } from '@/providers/feeds-provider';
-import Toolbar from '@/components/Toolbar';
+import Toolbar from '@/components/Home/Toolbar';
 
 export default function AppShell() {
   return (

@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import RiverControls, { type Density } from "@/components/RiverControls";
-import RiverHeader from "@/components/RiverHeader";
-import RiverList from "@/components/RiverList";
-import RiverSidebar from "@/components/RiverSidebar";
+import RiverControls, { type Density } from "@/components/Home/RiverControls";
+import RiverHeader from "@/components/Home/RiverHeader";
+import RiverList from "@/components/Home/RiverList";
+import RiverSidebar from "@/components/Home/RiverSidebar";
 import { toRiverItems } from "@/lib/river";
 import { useFeeds } from "@/providers/feeds-provider";
 

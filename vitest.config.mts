@@ -5,6 +5,7 @@ export default defineConfig({
     exclude: [
       '**/test/e2e/**',
       '**/node_modules/**',
+      '**/src/renderer/**' // Exclude renderer tests (integration), covered by Browser Mode
     ],
     restoreMocks: true,
   },

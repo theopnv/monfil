@@ -1,6 +1,6 @@
-import River from '@/components/River';
+import River from '@/components/Home/River';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({
-  component: River,
+    component: River,
 });
