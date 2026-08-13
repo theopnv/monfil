@@ -7,11 +7,11 @@ export function ThemeToggle() {
 
   return (
     <Button
-        aria-label="Toggle theme"
-        color="tertiary"
-        size="sm"
-        iconLeading={resolvedTheme === "light" ? Moon01 : Sun}
-        onPress={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
+      aria-label="Toggle theme"
+      color="tertiary"
+      size="sm"
+      iconLeading={resolvedTheme === "light" ? Moon01 : Sun}
+      onPress={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
     />
   );
 }

@@ -12,23 +12,30 @@ export default function River() {
 
   const [density, setDensity] = useState<Density>("Cards");
   const [read, setRead] = useState<Record<number, boolean>>({});
+  const [selectedFeedLink, setSelectedFeedLink] = useState<string | null>(null);
+
+  const visibleItems = useMemo(
+    () => (selectedFeedLink ? riverItems.filter((item) => item.feedLink === selectedFeedLink) : riverItems),
+    [riverItems, selectedFeedLink],
+  );
 
   const isRead = (id: number) => !!read[id];
   const toggleRead = (id: number) => setRead((prev) => ({ ...prev, [id]: !prev[id] }));
   const markAllRead = () => {
-    setRead(
-      riverItems.reduce<Record<number, boolean>>((acc, item) => {
+    setRead((prev) => ({
+      ...prev,
+      ...visibleItems.reduce<Record<number, boolean>>((acc, item) => {
         acc[item.id] = true;
         return acc;
       }, {}),
-    );
+    }));
   };
 
-  const unreadCount = riverItems.filter((item) => !isRead(item.id)).length;
+  const unreadCount = visibleItems.filter((item) => !isRead(item.id)).length;
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <RiverSidebar feeds={feeds} />
+      <RiverSidebar feeds={feeds} selectedFeedLink={selectedFeedLink} onSelectFeed={setSelectedFeedLink} />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <RiverHeader />
@@ -42,7 +49,7 @@ export default function River() {
 
         <div className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">
-            <RiverList items={riverItems} density={density} isRead={isRead} onToggleRead={toggleRead} />
+            <RiverList items={visibleItems} density={density} isRead={isRead} onToggleRead={toggleRead} />
           </div>
         </div>
       </div>

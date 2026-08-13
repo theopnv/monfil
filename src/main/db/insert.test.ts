@@ -74,7 +74,7 @@ describe('addFeedsToDatabase', () => {
   });
 
   test('logs and skips item insertion when the feed fetch fails', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => { });
     mockedGetFeedItems.mockResolvedValue({
       success: false,
       error: { name: 'NETWORK_ERROR', message: 'boom' },

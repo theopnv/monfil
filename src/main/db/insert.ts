@@ -67,7 +67,7 @@ export function addFeedsToDatabase(feedMetadata: typeof listOfFeeds) {
         .values({ link: feedMetadata.link, title: feedMetadata.title, category_id: categoryResult.id })
         .onConflict((oc) => oc.column('link').doUpdateSet((eb) => ({ title: eb.ref('excluded.title') })))
         .returning(['id'])
-      .executeTakeFirstOrThrow();
+        .executeTakeFirstOrThrow();
 
       if (feedMetadataResult) {
         const parsedFeed = await getFeedItems(feedMetadata.link);
