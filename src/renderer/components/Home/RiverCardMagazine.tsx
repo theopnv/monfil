@@ -1,6 +1,7 @@
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx } from "@/components/untitled-ui/utils/cx";
+import { getFaviconUrl } from "@/lib/favicon";
 import { formatRelativeTime, openLink, type RiverCardProps } from "@/lib/river";
 
 export default function RiverCardMagazine({ item, read, onToggleRead }: RiverCardProps) {
@@ -21,7 +22,7 @@ export default function RiverCardMagazine({ item, read, onToggleRead }: RiverCar
 
       <div className="flex flex-1 flex-col p-4.25">
         <div className="mb-2 flex items-center gap-1.75">
-          <FeedAvatar title={item.feedTitle} size="sm" />
+          <FeedAvatar title={item.feedTitle} faviconUrl={getFaviconUrl(item.feedLink)} size="sm" />
           <span className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
           <span className="ml-auto flex-none text-xs text-quaternary">{formatRelativeTime(item.pubDate)}</span>
         </div>

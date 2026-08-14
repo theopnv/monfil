@@ -1,5 +1,6 @@
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Toggle } from "@/components/untitled-ui/base/toggle/toggle";
+import { getFaviconUrl } from "@/lib/favicon";
 import { computeFeedContentType, computePublishRate } from "@/lib/feedStats";
 import CategoryPicker from "./CategoryPicker";
 import FeedMatchCard from "./FeedMatchCard";
@@ -34,7 +35,7 @@ export default function Step2Configure({
       {feed ? (
         <div className="rounded-xl border border-secondary bg-secondary px-5 py-4.5">
           <div className="flex items-start gap-3.5">
-            <FeedAvatar title={feed.title || feed.link} size="lg" />
+            <FeedAvatar title={feed.title || feed.link} faviconUrl={getFaviconUrl(feed.link)} size="lg" />
             <div className="min-w-0 flex-1">
               <div className="text-lg leading-tight font-bold text-primary">{feed.title || feed.link}</div>
               <div className="mb-1.75 text-xs text-tertiary">{feed.link}</div>

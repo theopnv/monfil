@@ -4,6 +4,7 @@ import AddFeedModal from "@/components/AddFeed/AddFeedModal";
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
+import { getFaviconUrl } from "@/lib/favicon";
 import type { Feed } from "../../../preload/channels";
 
 export interface RiverSidebarProps {
@@ -74,7 +75,7 @@ export default function RiverSidebar({ feeds, selectedFeedLink, onSelectFeed }: 
                           isSelected ? "bg-primary_hover font-semibold text-primary" : "text-secondary",
                         )}
                       >
-                        <FeedAvatar title={feed.title} size="sm" />
+                        <FeedAvatar title={feed.title} faviconUrl={getFaviconUrl(feed.link)} size="sm" />
                         <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{feed.title}</span>
                         <span className="text-xs text-quaternary tabular-nums">{feed.items.length}</span>
                       </button>

@@ -1,6 +1,7 @@
 import { Link02 } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
+import { getFaviconUrl } from "@/lib/favicon";
 import FeedMatchCard from "./FeedMatchCard";
 import type { FeedValidationStatus } from "./useFeedValidation";
 import type { ParsedFeed, FeedFetchError } from "../../../main/feed/parse";
@@ -59,7 +60,12 @@ export default function Step1Find({ query, onQueryChange, kind, onKindChange, st
 
       {status === "loading" && <FeedMatchCard title="Searching…" detail={query} status="loading" />}
       {status === "found" && feed && (
-        <FeedMatchCard title={feed.title || feed.link} detail={`${feed.link} — ${feed.items.length} items`} status="found" />
+        <FeedMatchCard
+          title={feed.title || feed.link}
+          detail={`${feed.link} — ${feed.items.length} items`}
+          status="found"
+          faviconUrl={getFaviconUrl(feed.link)}
+        />
       )}
       {status === "not-found" && (
         <FeedMatchCard title="No feed found" detail={error?.message ?? "Couldn't find a feed at that address."} status="not-found" />

@@ -1,5 +1,6 @@
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { cx } from "@/components/untitled-ui/utils/cx";
+import { getFaviconUrl } from "@/lib/favicon";
 import { formatRelativeTime, openLink, type RiverCardProps } from "@/lib/river";
 
 export default function RiverCardCompact({ item, read, onToggleRead }: RiverCardProps) {
@@ -15,7 +16,7 @@ export default function RiverCardCompact({ item, read, onToggleRead }: RiverCard
       )}
     >
       <span className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
-      <FeedAvatar title={item.feedTitle} size="sm" />
+      <FeedAvatar title={item.feedTitle} faviconUrl={getFaviconUrl(item.feedLink)} size="sm" />
       <span className="w-33 flex-none overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-primary">{item.feedTitle}</span>
       <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-secondary">{item.title}</span>
       <span className="flex-none rounded-full bg-sage-200 px-2 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>
