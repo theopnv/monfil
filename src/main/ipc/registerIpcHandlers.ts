@@ -2,7 +2,7 @@ import { ipcMain } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
 import type { ChannelPayloads, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../preload/channels";
 import { fetchFeed } from "../feed/parse";
-import { queryFeedCategory } from "../db/query";
+import { queryFeedCategory, queryFeeds } from "../db/query";
 import { addFeedToDatabase } from "../db/insert";
 import { dbReady } from "../database";
 
@@ -20,6 +20,7 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   // handler functions could be moved to a separate handlers.ts file if they grow too large.
   "feeds:validate-feed-url": (_event, query) => fetchFeed(query),
   "feeds:list-categories": async () => { await dbReady; return queryFeedCategory({}); },
+  "feeds:list": async () => { await dbReady; return queryFeeds(); },
   "feeds:submit-add-feed": (_event, payload) => addFeedToDatabase(payload),
 };
 

@@ -50,7 +50,7 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
 beforeEach(() => {
   window.electron = {
     ipcRenderer: {
-      invoke: vi.fn(),
+      invoke: vi.fn().mockResolvedValue([]),
       on: vi.fn(() => vi.fn()),
       sendMessage: vi.fn(),
       once: vi.fn(),

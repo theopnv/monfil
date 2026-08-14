@@ -1,4 +1,7 @@
 import { test as base, expect, _electron as electron, type ElectronApplication } from '@playwright/test';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 
 type SmokeTestFixtures = {
   electronApp: ElectronApplication;
@@ -6,9 +9,11 @@ type SmokeTestFixtures = {
 
 const smokeTest = base.extend<SmokeTestFixtures>({
   electronApp: async ({}, use) => {
-    const electronApp = await electron.launch({ args: ['.'] });
+    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'));
+    const electronApp = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
     await use(electronApp);
     await electronApp.close();
+    await rm(userDataDir, { recursive: true });
   }
 });
 

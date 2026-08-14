@@ -1,12 +1,12 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
-import { db, dbReady } from '../database';
+import { db, initializeDatabase } from '../database';
 import { addFeedToDatabase, type NewFeedInput } from './insert';
 
 const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', items: [], categoryName: 'tech', showInHome: true };
 const feedB: NewFeedInput = { link: 'https://b.example/feed', title: 'Feed B', items: [], categoryName: 'tech', showInHome: true };
 
 beforeAll(async () => {
-  await dbReady;
+  await initializeDatabase(':memory:');
 });
 
 afterEach(async () => {

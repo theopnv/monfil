@@ -1,17 +1,11 @@
 import type { FeedMetadata, FeedItem, FeedCategory } from '../main/db/types';
-import type { FetchUrlError } from '../main/fetch';
 import type { NewFeedInput, AddFeedError } from '../main/db/insert';
 import type { ParsedFeed, FeedFetchError } from '../main/feed/parse';
 import type { Result } from '../utils';
 
 export type { FeedCategory } from '../main/db/types';
 
-export type FeedError = FetchUrlError | { name: 'PARSE_ERROR'; message: string };
-
 export type Feed = FeedMetadata & { items: FeedItem[]; category: FeedCategory };
-export type FeedResult =
-  | { success: true; value: Feed }
-  | { success: false; error: FeedError };
 
 // ============= One-way channels (renderer -> main) ==============
 export type OneWayRendererToMainChannelPayloads = {
@@ -20,9 +14,11 @@ export type OneWayRendererToMainChannelPayloads = {
 export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayloads;
 
 // ============= One-way channels (main -> renderer) ==============
-export type OneWayMainToRendererChannelPayloads = {
-  'feeds:result': FeedResult;
-}
+
+// No channels currently use this direction. See doc/backend.md's "Talking to the renderer" section before adding one:
+// webContents.send does not buffer, so the renderer's listener must attach before it is sent.
+export type OneWayMainToRendererChannelPayloads = Record<never, never>;
+// Add channels above like: 'example:channel': ExamplePayload;
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
 
@@ -30,6 +26,7 @@ export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayl
 export type TwoWayRendererMainChannelPayloads = {
   'feeds:validate-feed-url': Result<ParsedFeed, FeedFetchError>;
   'feeds:list-categories': FeedCategory[];
+  'feeds:list': Feed[];
   'feeds:submit-add-feed': Result<Feed, AddFeedError>;
 }
 
@@ -38,6 +35,7 @@ export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads
 export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:validate-feed-url': string;
   'feeds:list-categories': undefined;
+  'feeds:list': undefined;
   'feeds:submit-add-feed': NewFeedInput;
 };
 

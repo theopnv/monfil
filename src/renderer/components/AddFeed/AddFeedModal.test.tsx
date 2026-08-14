@@ -37,6 +37,8 @@ function stubElectron(overrides: {
     switch (channel) {
       case 'feeds:list-categories':
         return Promise.resolve(categories) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+      case 'feeds:list':
+        return Promise.resolve([] as Feed[]) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:validate-feed-url':
         return Promise.resolve(overrides.validateFeedUrl ?? { success: true, data: parsedFeed }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:submit-add-feed':

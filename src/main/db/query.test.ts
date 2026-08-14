@@ -1,9 +1,9 @@
 import { beforeEach, afterEach, beforeAll, describe, expect, test } from 'vitest';
-import { db, dbReady } from '../database';
+import { db, initializeDatabase } from '../database';
 import { queryFeedCategory, queryFeedItems, queryFeedMetadata } from './query';
 
 beforeAll(async () => {
-  await dbReady;
+  await initializeDatabase(':memory:');
 });
 
 afterEach(async () => {
