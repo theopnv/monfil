@@ -27,7 +27,7 @@ test('falls back to the placeholder when the image fails to load', async () => {
   const { getByText, getByTestId } = await render(<RiverCardImage src="/definitely-not-a-real-image.jpg" />);
 
   // Act
-  getByTestId('river-card-image').dispatchEvent(new Event('error'));
+  getByTestId('river-card-image').element().dispatchEvent(new Event('error'));
 
   // Assert
   await expect.element(getByText('article image')).toBeInTheDocument();

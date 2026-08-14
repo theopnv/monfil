@@ -11,9 +11,12 @@ const smokeTest = base.extend<SmokeTestFixtures>({
   electronApp: async ({}, use) => {
     const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'));
     const electronApp = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-    await use(electronApp);
-    await electronApp.close();
-    await rm(userDataDir, { recursive: true });
+    try {
+      await use(electronApp);
+    } finally {
+      await electronApp.close();
+      await rm(userDataDir, { recursive: true });
+    }
   }
 });
 

@@ -4,16 +4,6 @@
 
 ## Files
 
-| File | Holds |
-| --- | --- |
-| `src/main/types.ts` | The `Database` interface and one table interface per table. |
-| `src/main/database.ts` | The `db` singleton, `dbReady`, and `initializeDatabase`. |
-| `src/main/db/migrations/` | The versioned schema migrations and the `MigrationProvider`. |
-| `src/main/db/insert.ts` | Writes. |
-| `src/main/db/query.ts` | Reads. |
-
-Table interfaces use Kysely's `Generated`, and each one exports the `Selectable`/`Insertable`/`Updateable` aliases. Use those aliases in call signatures instead of the raw table interface.
-
 ## Await `dbReady` first
 
 `src/main/database.ts` exports `dbReady`, a promise that resolves once the migrator has brought the schema up to date.

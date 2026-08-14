@@ -35,7 +35,7 @@ test('falls back to initials when the favicon fails to load', async () => {
   );
 
   // Act
-  getByTestId('favicon-img').dispatchEvent(new Event('error'));
+  getByTestId('favicon-img').element().dispatchEvent(new Event('error'));
 
   // Assert
   await expect.element(getByText('EF', { exact: true })).toBeInTheDocument();
