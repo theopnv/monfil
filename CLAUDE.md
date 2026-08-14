@@ -39,11 +39,6 @@ Electron with three source trees, each built by its own Vite config. See `forge.
 
 `src/preload/channels.ts` declares the payload of every channel. Both sides import it, so a mismatch fails to compile. Do not type a payload at a call site.
 
-To add a channel, add its payload to `ChannelPayloads`. If the renderer calls it with `invoke`, also add the name to `InvokeChannels` and add an entry to the `handlers` map in
-`src/main/ipcHandle.ts`. The map is keyed by that union, so a missing handler is a compile error.
-
-Main sends to the renderer through `sendToRenderer`, never through `webContents.send` directly. Wait for the window to finish loading before the first send. The renderer subscribes when it mounts, and anything sent earlier is lost.
-
 ## Conventions
 
 - Type-only imports need the `type` keyword. The root `tsconfig.json` is strict: `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noPropertyAccessFromIndexSignature`, `noUnusedLocals`, `verbatimModuleSyntax`.

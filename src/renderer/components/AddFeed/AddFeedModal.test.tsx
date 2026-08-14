@@ -6,7 +6,7 @@ import type { ParsedFeed, FeedFetchError } from '../../../main/feed/parse';
 import type { Feed, FeedCategory } from '../../../preload/channels';
 import type { Result } from '../../../utils';
 import type { AddFeedError } from '../../../main/db/insert';
-import type { InvokeArgs, ChannelPayloads } from '../../../preload/channels';
+import type { TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannelPayloads } from '../../../preload/channels';
 
 const categories: FeedCategory[] = [{ id: 1, name: 'Tech' }];
 
@@ -14,7 +14,7 @@ const parsedFeed: ParsedFeed = {
   link: 'https://example.com/feed',
   title: 'Example Feed',
   description: 'A feed about examples.',
-  items: [{ title: 'Item 1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd' }],
+  items: [{ title: 'Item 1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd', image: undefined }],
 };
 
 const insertedFeed: Feed = {
@@ -24,7 +24,7 @@ const insertedFeed: Feed = {
   category_id: 1,
   showInHome: 1,
   category: { id: 1, name: 'Tech' },
-  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd' }],
+  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd', image: undefined }],
 };
 
 let invokeMock: ReturnType<typeof vi.fn>;
@@ -33,16 +33,18 @@ function stubElectron(overrides: {
   validateFeedUrl?: Result<ParsedFeed, FeedFetchError>;
   submitAddFeed?: Result<Feed, AddFeedError>;
 } = {}) {
-  invokeMock = vi.fn(<C extends keyof InvokeArgs>(channel: C): Promise<ChannelPayloads[C]> => {
+  invokeMock = vi.fn(<C extends keyof TwoWayRendererMainChannelsInvokeArgs>(channel: C): Promise<TwoWayRendererMainChannelPayloads[C]> => {
     switch (channel) {
       case 'feeds:list-categories':
-        return Promise.resolve(categories) as Promise<ChannelPayloads[C]>;
+        return Promise.resolve(categories) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+      case 'feeds:list':
+        return Promise.resolve([] as Feed[]) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:validate-feed-url':
-        return Promise.resolve(overrides.validateFeedUrl ?? { success: true, data: parsedFeed }) as Promise<ChannelPayloads[C]>;
+        return Promise.resolve(overrides.validateFeedUrl ?? { success: true, data: parsedFeed }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:submit-add-feed':
-        return Promise.resolve(overrides.submitAddFeed ?? { success: true, data: insertedFeed }) as Promise<ChannelPayloads[C]>;
+        return Promise.resolve(overrides.submitAddFeed ?? { success: true, data: insertedFeed }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       default:
-        return Promise.resolve(undefined) as unknown as Promise<ChannelPayloads[C]>;
+        return Promise.resolve(undefined) as unknown as Promise<TwoWayRendererMainChannelPayloads[C]>;
     }
   });
 

@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { cx } from "@/components/untitled-ui/utils/cx";
 
 export interface FeedAvatarProps {
   title: string;
+  faviconUrl?: string | undefined;
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -20,16 +22,22 @@ function getInitials(title: string): string {
   return (words[0] ?? "").slice(0, 2).toUpperCase();
 }
 
-export default function FeedAvatar({ title, size = "sm", className }: FeedAvatarProps) {
+export default function FeedAvatar({ title, faviconUrl, size = "sm", className }: FeedAvatarProps) {
+  const [isFailed, setIsFailed] = useState(false);
+
   return (
     <span
       className={cx(
-        "flex flex-none items-center justify-center rounded-md bg-brand-secondary font-bold text-brand-secondary",
+        "flex flex-none items-center justify-center overflow-hidden rounded-md bg-brand-secondary font-bold text-brand-secondary",
         sizeClasses[size],
         className,
       )}
     >
-      {getInitials(title)}
+      {faviconUrl && !isFailed ? (
+        <img data-testid="favicon-img" className="size-full object-cover" src={faviconUrl} alt="" onError={() => setIsFailed(true)} />
+      ) : (
+        getInitials(title)
+      )}
     </span>
   );
 }

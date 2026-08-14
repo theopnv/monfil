@@ -1,6 +1,7 @@
 import { type SelectQueryBuilder } from 'kysely';
-import { type Database, type FeedCategory, type FeedItem, type FeedMetadata } from '../types';
+import { type Database, type FeedCategory, type FeedItem, type FeedMetadata } from './types';
 import { db } from '../database';
+import type { Feed } from '../../preload/channels';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
 // Adding a new field to a table object and forgetting to add it here will result in a compilation error.
@@ -33,6 +34,7 @@ const feedItemHandlers = {
   link: (q, v) => q.where('link', '=', v),
   pubDate: (q, v) => q.where('pubDate', '=', v),
   description: (q, v) => q.where('description', '=', v),
+  image: (q, v) => q.where('image', '=', v),
 } satisfies CriteriaHandlers<'feedItem', FeedItem>;
 
 export function queryFeedItems(criteria: Partial<FeedItem>): Promise<FeedItem[]> {
@@ -58,4 +60,26 @@ const feedCategoryHandlers = {
 
 export function queryFeedCategory(criteria: Partial<FeedCategory>): Promise<FeedCategory[]> {
   return applyCriteria(db.selectFrom('feedCategory').selectAll(), criteria, feedCategoryHandlers).execute();
+}
+
+export async function queryFeeds(): Promise<Feed[]> {
+  const [feedMetadataList, categories] = await Promise.all([
+    queryFeedMetadata({}),
+    queryFeedCategory({}),
+  ]);
+  const categoriesById = new Map(categories.map((category) => [category.id, category]));
+  const feeds: Feed[] = [];
+
+  for (const feedMetadata of feedMetadataList) {
+    const category = categoriesById.get(feedMetadata.category_id);
+    if (!category) {
+      console.error(`No category found for feed "${feedMetadata.title}" (category_id: ${feedMetadata.category_id})`);
+      continue;
+    }
+
+    const items = await queryFeedItems({ feed_id: feedMetadata.id });
+    feeds.push({ ...feedMetadata, items, category });
+  }
+
+  return feeds;
 }

@@ -9,6 +9,7 @@ export interface RiverItem {
   feedTitle: string;
   feedLink: string;
   categoryName: string;
+  image: string | undefined;
 }
 
 export interface RiverCardProps {
@@ -32,18 +33,21 @@ function stripHtml(html: string): string {
 }
 
 export function toRiverItems(feeds: Feed[]): RiverItem[] {
-  const items = feeds.flatMap((feed) =>
-    feed.items.map((item) => ({
-      id: item.id,
-      title: item.title,
-      link: item.link,
-      pubDate: item.pubDate,
-      description: stripHtml(item.description),
-      feedTitle: feed.title,
-      feedLink: feed.link,
-      categoryName: feed.category.name,
-    }))
-  );
+  const items = feeds
+    .filter((feed) => feed.showInHome !== 0)
+    .flatMap((feed) =>
+      feed.items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        link: item.link,
+        pubDate: item.pubDate,
+        description: stripHtml(item.description),
+        feedTitle: feed.title,
+        feedLink: feed.link,
+        categoryName: feed.category.name,
+        image: item.image,
+      }))
+    );
 
   return items.sort((a, b) => parseTimestamp(b.pubDate) - parseTimestamp(a.pubDate));
 }

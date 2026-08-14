@@ -15,9 +15,9 @@ interface NotAllowedOrAbortedError extends Error {
 export type FetchUrlError = GenericFetchError | NetworkError | NotAllowedOrAbortedError;
 type FetchUrlResult = Result<string, FetchUrlError>;
 
-export async function fetchUrl(url: string): Promise<FetchUrlResult> {
+export async function fetchUrl(url: string, signal?: AbortSignal): Promise<FetchUrlResult> {
   try {
-    const response = await fetch(url)
+    const response = await fetch(url, signal ? { signal } : undefined)
     if (!response.ok) {
       return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: `${response.status}: ${response.statusText}` } }
     }
@@ -26,7 +26,7 @@ export async function fetchUrl(url: string): Promise<FetchUrlResult> {
   } catch (error) {
     if (error instanceof TypeError) {
       return { success: false, error: { name: 'NETWORK_ERROR', message: error.message } }
-    } else if (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')) {
+    } else if (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError' || error.name === 'TimeoutError')) {
       return { success: false, error: { name: 'NOT_ALLOWED_OR_ABORTED_ERROR', message: 'Request was aborted or not allowed' } }
     }
     else {

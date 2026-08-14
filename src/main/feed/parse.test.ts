@@ -16,7 +16,7 @@ describe('parseFeedContent', () => {
   })
 
   const validRssFeed = `
-    <rss version="2.0">
+    <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
       <channel>
         <title>Test Feed</title>
         <description>A feed for testing</description>
@@ -29,6 +29,11 @@ describe('parseFeedContent', () => {
         <item>
           <title>Item 2</title>
           <pubDate>Tue, 02 Jan 2024 00:00:00 GMT</pubDate>
+        </item>
+        <item>
+          <title>Item 3</title>
+          <pubDate>Wed, 03 Jan 2024 00:00:00 GMT</pubDate>
+          <media:thumbnail url="http://example.com/item3-thumb.jpg" />
         </item>
       </channel>
     </rss>
@@ -45,13 +50,22 @@ describe('parseFeedContent', () => {
           title: 'Item 1',
           link: 'http://example.com/item1',
           pubDate: 'Mon, 01 Jan 2024 00:00:00 GMT',
-          description: 'Item 1 description'
+          description: 'Item 1 description',
+          image: undefined,
         },
         {
           title: 'Item 2',
           link: undefined,
           pubDate: 'Tue, 02 Jan 2024 00:00:00 GMT',
-          description: ''
+          description: '',
+          image: undefined,
+        },
+        {
+          title: 'Item 3',
+          link: undefined,
+          pubDate: 'Wed, 03 Jan 2024 00:00:00 GMT',
+          description: '',
+          image: 'http://example.com/item3-thumb.jpg',
         }
       ]
     });

@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react';
-import { Outlet } from '@tanstack/react-router';
-import { FeedsProvider } from '@/providers/feeds-provider';
 import Toolbar from '@/components/Home/Toolbar';
+import { Outlet } from '@tanstack/react-router';
 
 export default function AppShell() {
   return (
@@ -12,11 +11,9 @@ export default function AppShell() {
       />
       <div className="flex flex-1 overflow-hidden">
         <Toolbar />
-        <FeedsProvider>
           <main className="flex-1 overflow-hidden">
             <Outlet />
           </main>
-        </FeedsProvider>
       </div>
     </div>
   );

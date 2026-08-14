@@ -8,6 +8,7 @@ export interface FeedMatchCardProps {
   title: string;
   detail: string;
   status: FeedMatchStatus;
+  faviconUrl?: string | undefined;
 }
 
 const badgeLabel: Record<Exclude<FeedMatchStatus, "loading">, string> = {
@@ -15,7 +16,7 @@ const badgeLabel: Record<Exclude<FeedMatchStatus, "loading">, string> = {
   "not-found": "Not found",
 };
 
-export default function FeedMatchCard({ title, detail, status }: FeedMatchCardProps) {
+export default function FeedMatchCard({ title, detail, status, faviconUrl }: FeedMatchCardProps) {
   return (
     <div
       className={cx(
@@ -25,7 +26,7 @@ export default function FeedMatchCard({ title, detail, status }: FeedMatchCardPr
         status === "loading" && "border-secondary opacity-60",
       )}
     >
-      <FeedAvatar title={title} size="md" />
+      <FeedAvatar title={title} faviconUrl={faviconUrl} size="md" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-primary">{title}</p>
         <p className="truncate text-xs text-tertiary">{detail}</p>

@@ -1,8 +1,10 @@
 import { Bookmark } from "@untitledui/icons";
 import FeedAvatar from "@/components/Home/FeedAvatar";
+import RiverCardImage from "@/components/Home/RiverCardImage";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
+import { getFaviconUrl } from "@/lib/favicon";
 import { estimateReadTime, formatRelativeTime, openLink, type RiverCardProps } from "@/lib/river";
 
 export default function RiverCardArticle({ item, read, onToggleRead }: RiverCardProps) {
@@ -19,7 +21,7 @@ export default function RiverCardArticle({ item, read, onToggleRead }: RiverCard
     >
       <div className="min-w-0 flex-1">
         <div className="mb-2.25 flex items-center gap-2">
-          <FeedAvatar title={item.feedTitle} size="md" />
+          <FeedAvatar title={item.feedTitle} faviconUrl={getFaviconUrl(item.feedLink)} size="md" />
           <span className="text-sm font-bold text-primary">{item.feedTitle}</span>
           <span className="text-sm text-quaternary">{formatRelativeTime(item.pubDate)}</span>
           <Badge color="brand" size="sm">
@@ -47,9 +49,7 @@ export default function RiverCardArticle({ item, read, onToggleRead }: RiverCard
         </div>
       </div>
 
-      <div className="flex h-28 w-37.5 flex-none items-center justify-center rounded-lg bg-brand-secondary bg-[repeating-linear-gradient(118deg,transparent_0_9px,color-mix(in_srgb,var(--color-brand-500)_22%,transparent)_9px_18px)]">
-        <span className="rounded-full bg-primary px-1.5 py-0.5 font-mono text-[9.5px] text-brand-tertiary">article image</span>
-      </div>
+      <RiverCardImage src={item.image} className="h-28 w-37.5 flex-none rounded-lg" />
     </article>
   );
 }

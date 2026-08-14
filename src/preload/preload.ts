@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron/renderer";
 import type { IpcRendererEvent } from "electron";
-import type { ChannelPayloads, Channels, InvokeArgs, InvokeChannels } from "./channels";
+import type { ChannelPayloads, Channels, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels, TwoWayRendererMainChannelPayloads } from "./channels";
 
 const electronHandler = {
   ipcRenderer: {
@@ -19,7 +19,7 @@ const electronHandler = {
     once<C extends Channels>(channel: C, func: (payload: ChannelPayloads[C]) => void) {
       ipcRenderer.once(channel, (_event, payload: ChannelPayloads[C]) => func(payload));
     },
-    invoke<C extends InvokeChannels>(channel: C, arg: InvokeArgs[C]): Promise<ChannelPayloads[C]> {
+    invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<TwoWayRendererMainChannelPayloads[C]> {
       return ipcRenderer.invoke(channel, arg);
     }
   },

@@ -45,6 +45,7 @@ export interface FeedItemTable {
   link: string | undefined;
   pubDate: string;
   description: string;
+  image: string | undefined;
 };
 
 export type FeedItem = Selectable<FeedItemTable>;

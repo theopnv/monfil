@@ -39,11 +39,30 @@ function AddFeedButton({ feed }: { feed: Feed }) {
   );
 }
 
+function ItemImages() {
+  const feeds = useFeeds();
+  return (
+    <ul>
+      {feeds.flatMap((feed) => feed.items.map((item) => (
+        <li key={item.id}>{item.title}: {item.image ?? 'no-image'}</li>
+      )))}
+    </ul>
+  );
+}
+
+let itemImageFetchedHandler: ((payload: { feedId: number; itemId: number; image: string }) => void) | undefined;
+
 beforeEach(() => {
+  itemImageFetchedHandler = undefined;
   window.electron = {
     ipcRenderer: {
-      invoke: vi.fn(),
-      on: vi.fn(() => vi.fn()),
+      invoke: vi.fn().mockResolvedValue([]),
+      on: vi.fn((channel: string, handler: (payload: never) => void) => {
+        if (channel === 'feeds:item-image-fetched') {
+          itemImageFetchedHandler = handler as typeof itemImageFetchedHandler;
+        }
+        return vi.fn();
+      }),
       sendMessage: vi.fn(),
       once: vi.fn(),
     },
@@ -86,4 +105,31 @@ test('re-adding the same link replaces the existing feed instead of duplicating 
   // Assert
   await expect.element(getByText('Updated title', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Original title', { exact: true })).not.toBeInTheDocument();
+});
+
+test('an item-image-fetched push merges the image into the matching feed item, leaving others untouched', async () => {
+  // Arrange
+  const targetItem = { id: 1, feed_id: 1, title: 'Target item', link: 'https://example.com/target', pubDate: '2024-01-01', description: '', image: undefined };
+  const otherItemInSameFeed = { id: 2, feed_id: 1, title: 'Other item', link: 'https://example.com/other', pubDate: '2024-01-01', description: '', image: undefined };
+  const itemInOtherFeed = { id: 3, feed_id: 2, title: 'Item in other feed', link: 'https://example.com/other-feed-item', pubDate: '2024-01-01', description: '', image: undefined };
+  const targetFeed = createFeed({ title: 'Target feed', items: [targetItem, otherItemInSameFeed] });
+  const otherFeed = createFeed({ title: 'Other feed', items: [itemInOtherFeed] });
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <AddFeedButton feed={targetFeed} />
+      <AddFeedButton feed={otherFeed} />
+      <ItemImages />
+    </FeedsProvider>,
+  );
+  await getByRole('button', { name: 'Add Target feed' }).click();
+  await getByRole('button', { name: 'Add Other feed' }).click();
+  await expect.element(getByText('Target item: no-image', { exact: true })).toBeInTheDocument();
+
+  // Act
+  itemImageFetchedHandler?.({ feedId: targetFeed.id, itemId: targetItem.id, image: 'https://example.com/fetched.jpg' });
+
+  // Assert
+  await expect.element(getByText('Target item: https://example.com/fetched.jpg', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Other item: no-image', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item in other feed: no-image', { exact: true })).toBeInTheDocument();
 });

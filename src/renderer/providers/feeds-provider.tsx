@@ -33,12 +33,20 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   useEffect(() => {
-    return window.electron.ipcRenderer.on('feeds:result', (result) => {
-      if (result.success) {
-        setFeeds((prev) => [...prev.filter((feed) => feed.link !== result.value.link), result.value]);
-      } else {
-        console.error(`Error fetching feed: ${result.error.name} - ${result.error.message}`);
-      }
+    window.electron.ipcRenderer.invoke('feeds:list', undefined)
+      .then(setFeeds)
+      .catch((error: unknown) => {
+        console.error('Error loading feeds:', error);
+      });
+  }, []);
+
+  useEffect(() => {
+    return window.electron.ipcRenderer.on('feeds:item-image-fetched', ({ feedId, itemId, image }) => {
+      setFeeds((prev) => prev.map((feed) =>
+        feed.id !== feedId
+          ? feed
+          : { ...feed, items: feed.items.map((item) => (item.id === itemId ? { ...item, image } : item)) }
+      ));
     });
   }, []);
 
