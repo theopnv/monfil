@@ -23,8 +23,11 @@ test('falls back to the placeholder when src is undefined', async () => {
 });
 
 test('falls back to the placeholder when the image fails to load', async () => {
+  // Arrange
+  const { getByText, getByTestId } = await render(<RiverCardImage src="/definitely-not-a-real-image.jpg" />);
+
   // Act
-  const { getByText } = await render(<RiverCardImage src="/definitely-not-a-real-image.jpg" />);
+  getByTestId('river-card-image').dispatchEvent(new Event('error'));
 
   // Assert
   await expect.element(getByText('article image')).toBeInTheDocument();

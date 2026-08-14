@@ -29,8 +29,13 @@ test('renders the favicon image when it loads', async () => {
 });
 
 test('falls back to initials when the favicon fails to load', async () => {
+  // Arrange
+  const { getByText, getByTestId } = await render(
+    <FeedAvatar title="Example Feed" faviconUrl="/definitely-not-a-real-favicon.ico" />,
+  );
+
   // Act
-  const { getByText } = await render(<FeedAvatar title="Example Feed" faviconUrl="/definitely-not-a-real-favicon.ico" />);
+  getByTestId('favicon-img').dispatchEvent(new Event('error'));
 
   // Assert
   await expect.element(getByText('EF', { exact: true })).toBeInTheDocument();
