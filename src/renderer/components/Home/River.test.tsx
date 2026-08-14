@@ -29,6 +29,7 @@ function createFeedItem(overrides: Partial<FeedItem> = {}): FeedItem {
     link: `https://example.com/item-${id}`,
     pubDate: '2024-01-01',
     description: `Item ${id} description`,
+    image: undefined,
     ...overrides,
   };
 }

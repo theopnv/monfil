@@ -1,4 +1,5 @@
 import FeedAvatar from "@/components/Home/FeedAvatar";
+import RiverCardImage from "@/components/Home/RiverCardImage";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { getFaviconUrl } from "@/lib/favicon";
@@ -16,9 +17,7 @@ export default function RiverCardMagazine({ item, read, onToggleRead }: RiverCar
         read && "opacity-50",
       )}
     >
-      <div className="flex h-33 items-center justify-center bg-brand-secondary bg-[repeating-linear-gradient(118deg,transparent_0_9px,color-mix(in_srgb,var(--color-brand-500)_22%,transparent)_9px_18px)]">
-        <span className="rounded-full bg-primary px-1.5 py-0.5 font-mono text-[9.5px] text-brand-tertiary">article image</span>
-      </div>
+      <RiverCardImage src={item.image} className="h-33 w-full" />
 
       <div className="flex flex-1 flex-col p-4.25">
         <div className="mb-2 flex items-center gap-1.75">

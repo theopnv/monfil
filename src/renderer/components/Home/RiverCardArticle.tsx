@@ -1,5 +1,6 @@
 import { Bookmark } from "@untitledui/icons";
 import FeedAvatar from "@/components/Home/FeedAvatar";
+import RiverCardImage from "@/components/Home/RiverCardImage";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
@@ -48,9 +49,7 @@ export default function RiverCardArticle({ item, read, onToggleRead }: RiverCard
         </div>
       </div>
 
-      <div className="flex h-28 w-37.5 flex-none items-center justify-center rounded-lg bg-brand-secondary bg-[repeating-linear-gradient(118deg,transparent_0_9px,color-mix(in_srgb,var(--color-brand-500)_22%,transparent)_9px_18px)]">
-        <span className="rounded-full bg-primary px-1.5 py-0.5 font-mono text-[9.5px] text-brand-tertiary">article image</span>
-      </div>
+      <RiverCardImage src={item.image} className="h-28 w-37.5 flex-none rounded-lg" />
     </article>
   );
 }

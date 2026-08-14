@@ -40,6 +40,16 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
       });
   }, []);
 
+  useEffect(() => {
+    return window.electron.ipcRenderer.on('feeds:item-image-fetched', ({ feedId, itemId, image }) => {
+      setFeeds((prev) => prev.map((feed) =>
+        feed.id !== feedId
+          ? feed
+          : { ...feed, items: feed.items.map((item) => (item.id === itemId ? { ...item, image } : item)) }
+      ));
+    });
+  }, []);
+
   return (
     <FeedsContext.Provider value={feeds}>
       <AddFeedContext.Provider value={addFeed}>{children}</AddFeedContext.Provider>

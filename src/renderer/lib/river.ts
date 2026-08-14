@@ -9,6 +9,7 @@ export interface RiverItem {
   feedTitle: string;
   feedLink: string;
   categoryName: string;
+  image: string | undefined;
 }
 
 export interface RiverCardProps {
@@ -44,6 +45,7 @@ export function toRiverItems(feeds: Feed[]): RiverItem[] {
         feedTitle: feed.title,
         feedLink: feed.link,
         categoryName: feed.category.name,
+        image: item.image,
       }))
     );
 

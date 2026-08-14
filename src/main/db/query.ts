@@ -34,6 +34,7 @@ const feedItemHandlers = {
   link: (q, v) => q.where('link', '=', v),
   pubDate: (q, v) => q.where('pubDate', '=', v),
   description: (q, v) => q.where('description', '=', v),
+  image: (q, v) => q.where('image', '=', v),
 } satisfies CriteriaHandlers<'feedItem', FeedItem>;
 
 export function queryFeedItems(criteria: Partial<FeedItem>): Promise<FeedItem[]> {

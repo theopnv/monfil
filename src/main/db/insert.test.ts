@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { addFeedToDatabase, type NewFeedInput } from './insert';
+import { addFeedToDatabase, updateFeedItemImage, type NewFeedInput } from './insert';
 
 const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', items: [], categoryName: 'tech', showInHome: true };
 const feedB: NewFeedInput = { link: 'https://b.example/feed', title: 'Feed B', items: [], categoryName: 'tech', showInHome: true };
@@ -20,7 +20,7 @@ describe('addFeedToDatabase', () => {
     const result = await addFeedToDatabase({
       link: feedA.link,
       title: feedA.title,
-      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: 'Item 1 description' }],
+      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: 'Item 1 description', image: undefined }],
       categoryName: 'tech',
       showInHome: true,
     });
@@ -51,8 +51,8 @@ describe('addFeedToDatabase', () => {
       link: feedA.link,
       title: feedA.title,
       items: [
-        { title: 'Item 1', link: undefined, pubDate: '2024-01-01', description: '' },
-        { title: 'Item 2', link: undefined, pubDate: '2024-01-02', description: '' },
+        { title: 'Item 1', link: undefined, pubDate: '2024-01-01', description: '', image: undefined },
+        { title: 'Item 2', link: undefined, pubDate: '2024-01-02', description: '', image: undefined },
       ],
       categoryName: 'tech',
       showInHome: true,
@@ -101,5 +101,52 @@ describe('addFeedToDatabase', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.data.showInHome).toBe(0);
+  });
+});
+
+describe('updateFeedItemImage', () => {
+  test('updates the image column for the given item id', async () => {
+    const result = await addFeedToDatabase({
+      link: feedA.link,
+      title: feedA.title,
+      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined }],
+      categoryName: 'tech',
+      showInHome: true,
+    });
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const itemId = result.data.items[0]?.id;
+    if (itemId === undefined) throw new Error('expected an item id');
+
+    await updateFeedItemImage(itemId, 'https://example.com/new.jpg');
+
+    const updated = await db.selectFrom('feedItem').selectAll().where('id', '=', itemId).executeTakeFirst();
+    expect(updated?.image).toBe('https://example.com/new.jpg');
+  });
+
+  test("leaves other items' image untouched", async () => {
+    const result = await addFeedToDatabase({
+      link: feedA.link,
+      title: feedA.title,
+      items: [
+        { title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined },
+        { title: 'Item 2', link: `${feedA.link}#2`, pubDate: '2024-01-02', description: '', image: 'https://example.com/existing.jpg' },
+      ],
+      categoryName: 'tech',
+      showInHome: true,
+    });
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const [item1, item2] = result.data.items;
+    if (item1 === undefined || item2 === undefined) throw new Error('expected two items');
+
+    await updateFeedItemImage(item1.id, 'https://example.com/new.jpg');
+
+    const untouched = await db.selectFrom('feedItem').selectAll().where('id', '=', item2.id).executeTakeFirst();
+    expect(untouched?.image).toBe('https://example.com/existing.jpg');
+  });
+
+  test('does not throw when the id matches no row', async () => {
+    await expect(updateFeedItemImage(999999, 'https://example.com/new.jpg')).resolves.toBeUndefined();
   });
 });

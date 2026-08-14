@@ -14,7 +14,7 @@ const parsedFeed: ParsedFeed = {
   link: 'https://example.com/feed',
   title: 'Example Feed',
   description: 'A feed about examples.',
-  items: [{ title: 'Item 1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd' }],
+  items: [{ title: 'Item 1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd', image: undefined }],
 };
 
 const insertedFeed: Feed = {
@@ -24,7 +24,7 @@ const insertedFeed: Feed = {
   category_id: 1,
   showInHome: 1,
   category: { id: 1, name: 'Tech' },
-  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd' }],
+  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd', image: undefined }],
 };
 
 let invokeMock: ReturnType<typeof vi.fn>;

@@ -27,6 +27,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('link', 'text', (col) => col.unique())
     .addColumn('pubDate', 'text', (col) => col.notNull())
     .addColumn('description', 'text', (col) => col.notNull())
+    .addColumn('image', 'text')
     .execute();
 }
 

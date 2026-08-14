@@ -15,10 +15,11 @@ export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayl
 
 // ============= One-way channels (main -> renderer) ==============
 
-// No channels currently use this direction. See doc/backend.md's "Talking to the renderer" section before adding one:
+// See doc/backend.md's "Talking to the renderer" section before adding another one:
 // webContents.send does not buffer, so the renderer's listener must attach before it is sent.
-export type OneWayMainToRendererChannelPayloads = Record<never, never>;
-// Add channels above like: 'example:channel': ExamplePayload;
+export type OneWayMainToRendererChannelPayloads = {
+  'feeds:item-image-fetched': { feedId: number; itemId: number; image: string };
+};
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
 

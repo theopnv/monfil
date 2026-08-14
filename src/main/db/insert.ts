@@ -43,6 +43,15 @@ export interface NewFeedInput {
 
 export type AddFeedError = { name: 'DB_ERROR'; message: string };
 
+export async function updateFeedItemImage(itemId: number, image: string): Promise<void> {
+  await dbReady;
+  try {
+    await db.updateTable('feedItem').set({ image }).where('id', '=', itemId).execute();
+  } catch (error) {
+    console.error(`Failed to persist image for feed item ${itemId}.`, error);
+  }
+}
+
 export async function addFeedToDatabase(input: NewFeedInput): Promise<Result<Feed, AddFeedError>> {
   await dbReady;
   try {

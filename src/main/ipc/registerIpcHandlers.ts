@@ -3,8 +3,8 @@ import type { IpcMainInvokeEvent } from "electron";
 import type { ChannelPayloads, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../preload/channels";
 import { fetchFeed } from "../feed/parse";
 import { queryFeedCategory, queryFeeds } from "../db/query";
-import { addFeedToDatabase } from "../db/insert";
 import { dbReady } from "../database";
+import { handleFeedsSubmitAddFeed } from "./handlers";
 
 // IPC Handlers - Main from and to Renderer (two ways)
 // On the renderer side (exposed through preload): ipcRenderer.invoke(channel, ...args)
@@ -21,7 +21,7 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "feeds:validate-feed-url": (_event, query) => fetchFeed(query),
   "feeds:list-categories": async () => { await dbReady; return queryFeedCategory({}); },
   "feeds:list": async () => { await dbReady; return queryFeeds(); },
-  "feeds:submit-add-feed": (_event, payload) => addFeedToDatabase(payload),
+  "feeds:submit-add-feed": handleFeedsSubmitAddFeed,
 };
 
 export function registerIpcHandlers() {

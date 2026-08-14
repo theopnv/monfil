@@ -3,6 +3,7 @@ import { fetchUrl } from '../fetch';
 import type { FetchUrlError } from '../fetch';
 import { parseFeed } from 'feedsmith';
 import type { Result } from '../../utils';
+import { extractImageUrl } from './extractImage';
 
 interface ParsedFeedContent {
   title: string;
@@ -22,6 +23,7 @@ export function parseFeedContent(content: string, maxItems: number = 0): ParsedF
         link: item.link,
         pubDate: item.pubDate ?? 'No publication date',
         description: item.description ?? '',
+        image: extractImageUrl(item),
       }))
       : [],
   };
