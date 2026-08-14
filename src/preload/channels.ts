@@ -13,27 +13,37 @@ export type FeedResult =
   | { success: true; value: Feed }
   | { success: false; error: FeedError };
 
-// Single source of truth for every IPC channel's payload, shared by preload
-// (renderer side) and main (send/handle call sites) so a mismatch fails to compile.
-export type ChannelPayloads = {
-  'feeds:result': FeedResult;
+// ============= One-way channels (renderer -> main) ==============
+export type OneWayRendererToMainChannelPayloads = {
   'link:open': string;
+}
+export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayloads;
+
+// ============= One-way channels (main -> renderer) ==============
+export type OneWayMainToRendererChannelPayloads = {
+  'feeds:result': FeedResult;
+}
+
+export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
+
+// ============ Two-way channels (renderer <-> main) ==============
+export type TwoWayRendererMainChannelPayloads = {
   'feeds:validate-feed-url': Result<ParsedFeed, FeedFetchError>;
   'feeds:list-categories': FeedCategory[];
   'feeds:submit-add-feed': Result<Feed, AddFeedError>;
-};
+}
 
-export type Channels = keyof ChannelPayloads;
+export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
 
-// Channels invoked by the renderer via ipcRenderer.invoke, requiring an ipcMain.handle.
-export type InvokeChannels = Extract<Channels, 'feeds:validate-feed-url' | 'feeds:list-categories' | 'feeds:submit-add-feed'>;
-
-// Argument passed to ipcRenderer.invoke for each invoke channel.
-export type InvokeArgs = {
+export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:validate-feed-url': string;
   'feeds:list-categories': undefined;
   'feeds:submit-add-feed': NewFeedInput;
 };
 
-// Channels sent one-way by the renderer via ipcRenderer.send, requiring an ipcMain.on.
-export type SendChannels = Extract<Channels, 'link:open'>;
+// ============= Combined channel types ==============
+export type ChannelPayloads = OneWayRendererToMainChannelPayloads
+& OneWayMainToRendererChannelPayloads
+  & TwoWayRendererMainChannelPayloads;
+
+export type Channels = keyof ChannelPayloads;

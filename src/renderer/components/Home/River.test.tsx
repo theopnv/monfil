@@ -1,13 +1,17 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { useFeeds } from '@/providers/feeds-provider';
+import { FeedsProvider, useFeeds } from '@/providers/feeds-provider';
 import River from './River';
 import type { Feed } from '../../../preload/channels';
 
-vi.mock(import('@/providers/feeds-provider'), () => ({
-  useFeeds: vi.fn(),
-  useAddFeed: vi.fn(() => vi.fn()),
-}));
+vi.mock(import('@/providers/feeds-provider'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useFeeds: vi.fn(),
+    useAddFeed: vi.fn(() => vi.fn()),
+  };
+});
 
 const mockedUseFeeds = vi.mocked(useFeeds);
 
@@ -44,6 +48,15 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
 }
 
 beforeEach(() => {
+  window.electron = {
+    ipcRenderer: {
+      invoke: vi.fn(),
+      on: vi.fn(() => vi.fn()),
+      sendMessage: vi.fn(),
+      once: vi.fn(),
+    },
+  } as unknown as typeof window.electron;
+
   const feedA = createFeed({
     title: 'Feed A',
     link: 'https://a.example/feed',
@@ -73,7 +86,11 @@ test('shows items from every feed by default', async () => {
 
 test('selecting a feed only shows items from that feed', async () => {
   // Arrange
-  const { getByText, getByRole } = await render(<River />);
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <River />
+    </FeedsProvider>
+  );
 
   // Act
   await getByRole('button', { name: 'Tech' }).click();
@@ -83,4 +100,24 @@ test('selecting a feed only shows items from that feed', async () => {
   await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Item A2', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Item B1', { exact: true })).not.toBeInTheDocument();
+});
+
+test('hides feed items when showInHome is set to 0', async () => {
+  // Arrange
+  const feedC = createFeed({
+    title: 'Feed C',
+    link: 'https://c.example/feed',
+    showInHome: 0,
+    items: [createFeedItem({ title: 'Item C1', description: 'Item C1 description' })],
+  });
+  mockedUseFeeds.mockReturnValue((mockedUseFeeds() as Feed[]).concat(feedC));
+
+  const { getByText } = await render(
+    <FeedsProvider>
+      <River />
+    </FeedsProvider>
+  );
+
+  // Assert
+  await expect.element(getByText('Item C1', { exact: true })).not.toBeInTheDocument();
 });

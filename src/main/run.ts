@@ -1,4 +1,4 @@
-import { sendToRenderer } from './ipcSend';
+import { sendToRenderer } from './ipc/sendToRenderer';
 import { dbReady } from './database';
 import { listOfFeeds, addFeedsToDatabase } from './db/insert';
 import { queryFeedMetadata, queryFeedItems, queryFeedCategory } from './db/query';

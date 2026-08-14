@@ -6,7 +6,7 @@ import type { ParsedFeed, FeedFetchError } from '../../../main/feed/parse';
 import type { Feed, FeedCategory } from '../../../preload/channels';
 import type { Result } from '../../../utils';
 import type { AddFeedError } from '../../../main/db/insert';
-import type { InvokeArgs, ChannelPayloads } from '../../../preload/channels';
+import type { TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannelPayloads } from '../../../preload/channels';
 
 const categories: FeedCategory[] = [{ id: 1, name: 'Tech' }];
 
@@ -33,16 +33,16 @@ function stubElectron(overrides: {
   validateFeedUrl?: Result<ParsedFeed, FeedFetchError>;
   submitAddFeed?: Result<Feed, AddFeedError>;
 } = {}) {
-  invokeMock = vi.fn(<C extends keyof InvokeArgs>(channel: C): Promise<ChannelPayloads[C]> => {
+  invokeMock = vi.fn(<C extends keyof TwoWayRendererMainChannelsInvokeArgs>(channel: C): Promise<TwoWayRendererMainChannelPayloads[C]> => {
     switch (channel) {
       case 'feeds:list-categories':
-        return Promise.resolve(categories) as Promise<ChannelPayloads[C]>;
+        return Promise.resolve(categories) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:validate-feed-url':
-        return Promise.resolve(overrides.validateFeedUrl ?? { success: true, data: parsedFeed }) as Promise<ChannelPayloads[C]>;
+        return Promise.resolve(overrides.validateFeedUrl ?? { success: true, data: parsedFeed }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:submit-add-feed':
-        return Promise.resolve(overrides.submitAddFeed ?? { success: true, data: insertedFeed }) as Promise<ChannelPayloads[C]>;
+        return Promise.resolve(overrides.submitAddFeed ?? { success: true, data: insertedFeed }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       default:
-        return Promise.resolve(undefined) as unknown as Promise<ChannelPayloads[C]>;
+        return Promise.resolve(undefined) as unknown as Promise<TwoWayRendererMainChannelPayloads[C]>;
     }
   });
 
