@@ -32,7 +32,7 @@ describe('initializeDatabase', () => {
     // Assert
     expect(columnsOf('feedCategory')).toEqual(['id', 'name']);
     expect(columnsOf('feedMetadata')).toEqual(['category_id', 'id', 'link', 'showInHome', 'title']);
-    expect(columnsOf('feedItem')).toEqual(['description', 'feed_id', 'id', 'link', 'pubDate', 'title']);
+    expect(columnsOf('feedItem')).toEqual(['description', 'feed_id', 'id', 'image', 'link', 'pubDate', 'title']);
   });
 
   test('the shared db is queryable once dbReady resolves', async () => {
