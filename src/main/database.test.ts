@@ -1,7 +1,7 @@
 import { describe, beforeEach, expect, test } from 'vitest';
 import SQLite from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
-import type { Database } from './types';
+import type { Database } from './db/types';
 import { createSchema, db, dbReady } from './database';
 
 function freshTestDatabase() {

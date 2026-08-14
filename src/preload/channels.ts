@@ -1,10 +1,10 @@
-import type { FeedMetadata, FeedItem, FeedCategory } from '../main/types';
+import type { FeedMetadata, FeedItem, FeedCategory } from '../main/db/types';
 import type { FetchUrlError } from '../main/fetch';
 import type { NewFeedInput, AddFeedError } from '../main/db/insert';
 import type { ParsedFeed, FeedFetchError } from '../main/feed/parse';
 import type { Result } from '../utils';
 
-export type { FeedCategory } from '../main/types';
+export type { FeedCategory } from '../main/db/types';
 
 export type FeedError = FetchUrlError | { name: 'PARSE_ERROR'; message: string };
 
@@ -43,7 +43,7 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
 
 // ============= Combined channel types ==============
 export type ChannelPayloads = OneWayRendererToMainChannelPayloads
-& OneWayMainToRendererChannelPayloads
+  & OneWayMainToRendererChannelPayloads
   & TwoWayRendererMainChannelPayloads;
 
 export type Channels = keyof ChannelPayloads;

@@ -1,6 +1,5 @@
 import { sendToRenderer } from './ipc/sendToRenderer';
 import { dbReady } from './database';
-import { listOfFeeds, addFeedsToDatabase } from './db/insert';
 import { queryFeedMetadata, queryFeedItems, queryFeedCategory } from './db/query';
 import type { Feed } from '../preload/channels';
 
@@ -38,6 +37,5 @@ async function queryAndSendFeeds(mainWindow: Electron.BrowserWindow) {
 
 export async function run(mainWindow: Electron.BrowserWindow) {
   await dbReady;
-  await addFeedsToDatabase(listOfFeeds);
   await queryAndSendFeeds(mainWindow);
 }

@@ -1,5 +1,5 @@
 import { type SelectQueryBuilder } from 'kysely';
-import { type Database, type FeedCategory, type FeedItem, type FeedMetadata } from '../types';
+import { type Database, type FeedCategory, type FeedItem, type FeedMetadata } from './types';
 import { db } from '../database';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.

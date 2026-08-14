@@ -1,4 +1,4 @@
-import { type FeedItem, type FeedMetadata } from '../types';
+import { type FeedItem, type FeedMetadata } from '../db/types';
 import { fetchUrl } from '../fetch';
 import type { FetchUrlError } from '../fetch';
 import { parseFeed } from 'feedsmith';
