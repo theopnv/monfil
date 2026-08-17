@@ -1,5 +1,5 @@
 import { type SelectQueryBuilder } from 'kysely';
-import { type Database, type FeedCategory, type FeedItem, type FeedMetadata } from './types';
+import { type Database, type FeedCategory, type FeedItem, type FeedMetadata, type Setting } from './types';
 import { db } from '../database';
 import type { Feed } from '../../preload/channels';
 
@@ -60,6 +60,15 @@ const feedCategoryHandlers = {
 
 export function queryFeedCategory(criteria: Partial<FeedCategory>): Promise<FeedCategory[]> {
   return applyCriteria(db.selectFrom('feedCategory').selectAll(), criteria, feedCategoryHandlers).execute();
+}
+
+const settingHandlers = {
+  key: (q, v) => q.where('key', '=', v),
+  value: (q, v) => q.where('value', '=', v),
+} satisfies CriteriaHandlers<'setting', Setting>;
+
+export function querySettings(criteria: Partial<Setting>): Promise<Setting[]> {
+  return applyCriteria(db.selectFrom('setting').selectAll(), criteria, settingHandlers).execute();
 }
 
 export async function queryFeeds(): Promise<Feed[]> {

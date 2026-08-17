@@ -9,6 +9,7 @@ export interface Database {
   feedCategory: FeedCategoryTable
   feedMetadata: FeedMetadataTable
   feedItem: FeedItemTable
+  setting: SettingTable
 }
 
 // =============== Feed Category ===============
@@ -51,3 +52,14 @@ export interface FeedItemTable {
 export type FeedItem = Selectable<FeedItemTable>;
 export type NewFeedItem = Insertable<FeedItemTable>;
 export type UpdateFeedItem = Updateable<FeedItemTable>;
+
+// =============== Setting ===============
+
+export interface SettingTable {
+  key: string;
+  value: string;
+};
+
+export type Setting = Selectable<SettingTable>;
+export type NewSetting = Insertable<SettingTable>;
+export type UpdateSetting = Updateable<SettingTable>;

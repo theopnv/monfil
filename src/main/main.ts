@@ -4,6 +4,7 @@ import started from 'electron-squirrel-startup';
 import { registerIpcHandlers } from './ipc/registerIpcHandlers';
 import { registerIpcListeners } from './ipc/registerIpcListeners';
 import { closeDatabase, DB_FILE_NAME, initializeDatabase } from './database';
+import { startRefreshScheduler, stopRefreshScheduler } from './feed/scheduler';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // app.quit() only schedules an exit, so without this return the rest of the module (and its app.on(...) wiring)
@@ -45,6 +46,9 @@ function bootstrap() {
     registerIpcListeners();
     registerIpcHandlers();
     createWindow();
+    startRefreshScheduler().catch((error: unknown) => {
+      console.error('Failed to start the feed refresh scheduler.', error);
+    });
   }
 
   // This method will be called when Electron has finished initialization and is ready to create browser windows.
@@ -66,6 +70,7 @@ function bootstrap() {
   });
 
   app.on('before-quit', () => {
+    stopRefreshScheduler();
     closeDatabase().catch((error) => {
       console.error('Failed to close the database cleanly.', error);
     });

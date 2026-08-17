@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { FeedsProvider, useAddFeed, useFeeds, useReadState } from './feeds-provider';
+import { FeedsProvider, useAddFeed, useFeeds, useFeedsRefresh, useReadState } from './feeds-provider';
 import type { Feed } from '../../preload/channels';
 
 let nextFeedId = 1;
@@ -50,6 +50,15 @@ function ItemImages() {
   );
 }
 
+function RefreshButton() {
+  const { refreshNow, isRefreshing } = useFeedsRefresh();
+  return (
+    <button type="button" onClick={refreshNow}>
+      {isRefreshing ? 'Refreshing' : 'Refresh'}
+    </button>
+  );
+}
+
 function ReadStateProbe({ id }: { id: number }) {
   const { isRead, markRead, toggleRead } = useReadState();
   return (
@@ -62,15 +71,22 @@ function ReadStateProbe({ id }: { id: number }) {
 }
 
 let itemImageFetchedHandler: ((payload: { feedId: number; itemId: number; image: string }) => void) | undefined;
+let feedsListPushHandler: ((payload: Feed[]) => void) | undefined;
+let invokeImpl: (channel: string) => Promise<unknown>;
 
 beforeEach(() => {
   itemImageFetchedHandler = undefined;
+  feedsListPushHandler = undefined;
+  invokeImpl = () => Promise.resolve([]);
   window.electron = {
     ipcRenderer: {
-      invoke: vi.fn().mockResolvedValue([]),
+      invoke: vi.fn((channel: string) => invokeImpl(channel)),
       on: vi.fn((channel: string, handler: (payload: never) => void) => {
         if (channel === 'feeds:item-image-fetched') {
           itemImageFetchedHandler = handler as typeof itemImageFetchedHandler;
+        }
+        if (channel === 'feeds:list') {
+          feedsListPushHandler = handler as typeof feedsListPushHandler;
         }
         return vi.fn();
       }),
@@ -143,6 +159,86 @@ test('an item-image-fetched push merges the image into the matching feed item, l
   await expect.element(getByText('Target item: https://example.com/fetched.jpg', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Other item: no-image', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Item in other feed: no-image', { exact: true })).toBeInTheDocument();
+});
+
+test('a feeds:list push replaces the list', async () => {
+  // Arrange
+  const pushedFeed = createFeed({ title: 'Pushed feed' });
+  const { getByText } = await render(
+    <FeedsProvider>
+      <FeedsList />
+    </FeedsProvider>,
+  );
+
+  // Act
+  feedsListPushHandler?.([pushedFeed]);
+
+  // Assert
+  await expect.element(getByText('Pushed feed', { exact: true })).toBeInTheDocument();
+});
+
+test('a feeds:list invoke response that lands after a push does not overwrite it', async () => {
+  // Arrange
+  const pushedFeed = createFeed({ title: 'Pushed feed' });
+  const staleFeed = createFeed({ title: 'Stale feed' });
+  let answerTheInvoke!: (feeds: Feed[]) => void;
+  const pendingList = new Promise<Feed[]>((resolve) => {
+    answerTheInvoke = resolve;
+  });
+  invokeImpl = (channel) => (channel === 'feeds:list' ? pendingList : Promise.resolve([]));
+  const { getByText } = await render(
+    <FeedsProvider>
+      <FeedsList />
+    </FeedsProvider>,
+  );
+  feedsListPushHandler?.([pushedFeed]);
+  await expect.element(getByText('Pushed feed', { exact: true })).toBeInTheDocument();
+
+  // Act
+  answerTheInvoke([staleFeed]);
+  await pendingList;
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // Assert
+  await expect.element(getByText('Pushed feed', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Stale feed', { exact: true })).not.toBeInTheDocument();
+});
+
+test('refreshNow asks main for a refresh and shows the list it answers with', async () => {
+  // Arrange
+  const refreshedFeed = createFeed({ title: 'Refreshed feed' });
+  invokeImpl = (channel) => Promise.resolve(channel === 'feeds:refresh' ? [refreshedFeed] : []);
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <RefreshButton />
+      <FeedsList />
+    </FeedsProvider>,
+  );
+
+  // Act
+  await getByRole('button', { name: 'Refresh' }).click();
+
+  // Assert
+  await expect.element(getByText('Refreshed feed', { exact: true })).toBeInTheDocument();
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('feeds:refresh', undefined);
+});
+
+test('refreshNow stops reporting a refresh once it fails', async () => {
+  // Arrange
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  invokeImpl = (channel) => (channel === 'feeds:refresh' ? Promise.reject(new Error('offline')) : Promise.resolve([]));
+  const { getByRole } = await render(
+    <FeedsProvider>
+      <RefreshButton />
+    </FeedsProvider>,
+  );
+
+  // Act
+  await getByRole('button', { name: 'Refresh' }).click();
+
+  // Assert
+  await vi.waitFor(() => { expect(consoleError).toHaveBeenCalled(); });
+  await expect.element(getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
 });
 
 test('a fresh provider starts with nothing read', async () => {

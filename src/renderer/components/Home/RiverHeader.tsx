@@ -1,6 +1,7 @@
-import { FilterLines, SearchLg } from "@untitledui/icons";
+import { FilterLines, RefreshCw01, SearchLg } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
+import { useFeedsRefresh } from "@/providers/feeds-provider";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -17,6 +18,8 @@ function SearchIcon({ className }: { className?: string | undefined }) {
 }
 
 export default function RiverHeader() {
+  const { refreshNow, isRefreshing } = useFeedsRefresh();
+
   return (
     <header className="flex flex-none items-end gap-5 border-b border-secondary px-8.5 py-4.5">
       <div className="min-w-0 flex-1">
@@ -29,6 +32,15 @@ export default function RiverHeader() {
         <Button color="secondary" iconLeading={FilterLines} className="flex-none rounded-full">
           Filter
         </Button>
+        <Button
+          aria-label="Refresh feeds"
+          color="secondary"
+          iconLeading={RefreshCw01}
+          className="flex-none rounded-full"
+          isLoading={isRefreshing}
+          isDisabled={isRefreshing}
+          onPress={refreshNow}
+        />
       </div>
     </header>
   );

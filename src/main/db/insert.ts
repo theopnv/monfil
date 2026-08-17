@@ -25,11 +25,19 @@ async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, ti
     .executeTakeFirstOrThrow();
 }
 
-async function addFeedItemsToDatabase(trx: Kysely<Database>, feedId: number, items: Omit<FeedItem, 'id' | 'feed_id'>[]) {
-  if (items.length === 0) return;
-  return trx.insertInto('feedItem')
+/**
+ * Inserts the items of one feed, skipping the links that are already stored.
+ * @param executor the `db` singleton, or a transaction to insert within
+ * @param feedId the id of the feed the items belong to
+ * @param items the items to insert
+ * @returns only the rows it wrote, since `ON CONFLICT DO NOTHING ... RETURNING *` leaves out the skipped ones
+ */
+export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId: number, items: Omit<FeedItem, 'id' | 'feed_id'>[]): Promise<FeedItem[]> {
+  if (items.length === 0) return [];
+  return executor.insertInto('feedItem')
     .values(items.map((item) => ({ feed_id: feedId, ...item })))
     .onConflict((oc) => oc.column('link').doNothing())
+    .returningAll()
     .execute();
 }
 

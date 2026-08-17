@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from "react";
 import type { Feed } from "../../preload/channels";
 
 const FeedsContext = createContext<Feed[] | undefined>(undefined);
@@ -25,6 +25,23 @@ export const useAddFeed = (): ((feed: Feed) => void) => {
   return context;
 };
 
+interface FeedsRefresh {
+  refreshNow: () => void;
+  isRefreshing: boolean;
+}
+
+const FeedsRefreshContext = createContext<FeedsRefresh | undefined>(undefined);
+
+export const useFeedsRefresh = (): FeedsRefresh => {
+  const context = useContext(FeedsRefreshContext);
+
+  if (context === undefined) {
+    throw new Error("useFeedsRefresh must be used within a FeedsProvider");
+  }
+
+  return context;
+};
+
 interface ReadState {
   isRead: (id: number) => boolean;
   markRead: (id: number) => void;
@@ -46,6 +63,10 @@ export const useReadState = (): ReadState => {
 export const FeedsProvider = ({ children }: PropsWithChildren) => {
   const [feeds, setFeeds] = useState<Feed[]>([]);
   const [readIds, setReadIds] = useState<Set<number>>(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  // The mount-time invoke and a launch-refresh push resolve in either order. Once a refreshed list
+  // has arrived, an older snapshot must not land on top of it.
+  const hasFreshList = useRef(false);
 
   const addFeed = useCallback((feed: Feed) => {
     setFeeds((prev) => [...prev.filter((f) => f.link !== feed.link), feed]);
@@ -71,12 +92,39 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
 
   const readState = useMemo<ReadState>(() => ({ isRead, markRead, toggleRead }), [isRead, markRead, toggleRead]);
 
+  const refreshNow = useCallback(() => {
+    setIsRefreshing(true);
+    window.electron.ipcRenderer.invoke('feeds:refresh', undefined)
+      .then((refreshed) => {
+        hasFreshList.current = true;
+        setFeeds(refreshed);
+      })
+      .catch((error: unknown) => {
+        console.error('Error refreshing feeds:', error);
+      })
+      .finally(() => {
+        setIsRefreshing(false);
+      });
+  }, []);
+
+  const refresh = useMemo<FeedsRefresh>(() => ({ refreshNow, isRefreshing }), [refreshNow, isRefreshing]);
+
   useEffect(() => {
     window.electron.ipcRenderer.invoke('feeds:list', undefined)
-      .then(setFeeds)
+      .then((listed) => {
+        if (hasFreshList.current) return;
+        setFeeds(listed);
+      })
       .catch((error: unknown) => {
         console.error('Error loading feeds:', error);
       });
+  }, []);
+
+  useEffect(() => {
+    return window.electron.ipcRenderer.on('feeds:list', (pushed) => {
+      hasFreshList.current = true;
+      setFeeds(pushed);
+    });
   }, []);
 
   useEffect(() => {
@@ -92,7 +140,9 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
   return (
     <FeedsContext.Provider value={feeds}>
       <AddFeedContext.Provider value={addFeed}>
-        <ReadStateContext.Provider value={readState}>{children}</ReadStateContext.Provider>
+        <FeedsRefreshContext.Provider value={refresh}>
+          <ReadStateContext.Provider value={readState}>{children}</ReadStateContext.Provider>
+        </FeedsRefreshContext.Provider>
       </AddFeedContext.Provider>
     </FeedsContext.Provider>
   );
