@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { addFeedToDatabase, updateFeedItemImage, type NewFeedInput } from './insert';
+import { addFeedItemsToDatabase, addFeedToDatabase, updateFeedItemImage, type NewFeedInput } from './insert';
+import type { FeedItem } from './types';
 
 const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', items: [], categoryName: 'tech', showInHome: true };
 const feedB: NewFeedInput = { link: 'https://b.example/feed', title: 'Feed B', items: [], categoryName: 'tech', showInHome: true };
@@ -101,6 +102,74 @@ describe('addFeedToDatabase', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.data.showInHome).toBe(0);
+  });
+});
+
+describe('addFeedItemsToDatabase', () => {
+  function feedItem(overrides: Partial<Omit<FeedItem, 'id' | 'feed_id'>> = {}): Omit<FeedItem, 'id' | 'feed_id'> {
+    return { title: 'Item', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, ...overrides };
+  }
+
+  async function createFeed(): Promise<number> {
+    const result = await addFeedToDatabase(feedA);
+    if (!result.success) throw new Error('expected the feed to be created');
+    return result.data.id;
+  }
+
+  test('returns the rows it inserted, with their assigned ids', async () => {
+    // Arrange
+    const feedId = await createFeed();
+
+    // Act
+    const inserted = await addFeedItemsToDatabase(db, feedId, [
+      feedItem({ title: 'Item 1', link: `${feedA.link}#1` }),
+      feedItem({ title: 'Item 2', link: `${feedA.link}#2` }),
+    ]);
+
+    // Assert
+    expect(inserted.map((item) => item.title)).toEqual(['Item 1', 'Item 2']);
+    expect(inserted.every((item) => typeof item.id === 'number')).toBe(true);
+    expect(inserted.every((item) => item.feed_id === feedId)).toBe(true);
+  });
+
+  test('leaves out the rows it skipped as duplicates', async () => {
+    // Arrange
+    const feedId = await createFeed();
+    await addFeedItemsToDatabase(db, feedId, [feedItem({ title: 'Already stored', link: `${feedA.link}#1` })]);
+
+    // Act
+    const inserted = await addFeedItemsToDatabase(db, feedId, [
+      feedItem({ title: 'Already stored', link: `${feedA.link}#1` }),
+      feedItem({ title: 'Brand new', link: `${feedA.link}#2` }),
+    ]);
+
+    // Assert
+    expect(inserted.map((item) => item.title)).toEqual(['Brand new']);
+    const stored = await db.selectFrom('feedItem').selectAll().execute();
+    expect(stored).toHaveLength(2);
+  });
+
+  test('returns an empty array when every item is a duplicate', async () => {
+    // Arrange
+    const feedId = await createFeed();
+    await addFeedItemsToDatabase(db, feedId, [feedItem({ link: `${feedA.link}#1` })]);
+
+    // Act
+    const inserted = await addFeedItemsToDatabase(db, feedId, [feedItem({ link: `${feedA.link}#1` })]);
+
+    // Assert
+    expect(inserted).toEqual([]);
+  });
+
+  test('returns an empty array when there is nothing to insert', async () => {
+    // Arrange
+    const feedId = await createFeed();
+
+    // Act
+    const inserted = await addFeedItemsToDatabase(db, feedId, []);
+
+    // Assert
+    expect(inserted).toEqual([]);
   });
 });
 

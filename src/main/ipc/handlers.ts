@@ -1,5 +1,10 @@
 import { enrichItemImages } from "../feed/enrichItemImages";
+import { refreshAllFeeds } from "../feed/refresh";
+import { rescheduleRefresh } from "../feed/scheduler";
 import { addFeedToDatabase, updateFeedItemImage, type AddFeedError, type NewFeedInput } from "../db/insert";
+import { deleteFeedFromDatabase, type DeleteFeedError } from "../db/delete";
+import { queryFeeds } from "../db/query";
+import { setRefreshInterval, toRefreshInterval, type RefreshInterval } from "../settings";
 import { sendToRenderer } from "./sendToRenderer";
 import type { IpcMainInvokeEvent } from "electron";
 import type { Feed } from "../../preload/channels";
@@ -15,4 +20,21 @@ export async function handleFeedsSubmitAddFeed(event: IpcMainInvokeEvent, payloa
     });
   }
   return result;
+}
+
+export function handleFeedsRefresh(): Promise<Feed[]> {
+  return refreshAllFeeds();
+}
+
+export async function handleFeedsDeleteFeed(_event: IpcMainInvokeEvent, feedId: number): Promise<Result<Feed[], DeleteFeedError>> {
+  const result = await deleteFeedFromDatabase(feedId);
+  if (!result.success) return result;
+  return { success: true, data: await queryFeeds() };
+}
+
+export async function handleSettingsSetRefreshInterval(_event: IpcMainInvokeEvent, payload: RefreshInterval): Promise<RefreshInterval> {
+  const interval = toRefreshInterval(payload);
+  await setRefreshInterval(interval);
+  rescheduleRefresh(interval);
+  return interval;
 }

@@ -5,15 +5,12 @@ import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { getFaviconUrl } from "@/lib/favicon";
-import { estimateReadTime, formatRelativeTime, openLink, type RiverCardProps } from "@/lib/river";
+import { estimateReadTime, formatRelativeTime, type RiverCardProps } from "@/lib/river";
 
-export default function RiverCardArticle({ item, read, onToggleRead }: RiverCardProps) {
+export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps) {
   return (
     <article
-      onClick={() => {
-        openLink(item.link);
-        onToggleRead(item.id);
-      }}
+      onClick={() => onOpen(item.id)}
       className={cx(
         "flex cursor-pointer gap-4.5 rounded-xl border border-secondary bg-primary p-5 transition hover:border-brand hover:shadow-md",
         read && "opacity-50",
@@ -43,7 +40,7 @@ export default function RiverCardArticle({ item, read, onToggleRead }: RiverCard
             className="ml-auto rounded-full"
             iconLeading={Bookmark}
             // react-aria's Button stops the press event from bubbling to the
-            // card's onClick by default, so this never toggles read state.
+            // card's onClick by default, so this never opens the article.
             onPress={() => { }}
           />
         </div>

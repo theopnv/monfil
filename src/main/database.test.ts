@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, beforeEach } from 'vitest';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { closeDatabase, db, dbReady, initializeDatabase } from './database';
@@ -13,13 +13,13 @@ describe('initializeDatabase', () => {
     await closeDatabase();
   });
 
-  test('creates the feedCategory, feedMetadata and feedItem tables', async () => {
+  test('creates the feedCategory, feedMetadata, feedItem and setting tables', async () => {
     // Act
     const tables = await db.introspection.getTables();
 
     // Assert
     expect(tables.map((table) => table.name).sort()).toEqual([
-      'feedCategory', 'feedItem', 'feedMetadata',
+      'feedCategory', 'feedItem', 'feedMetadata', 'setting',
     ]);
   });
 
@@ -33,6 +33,7 @@ describe('initializeDatabase', () => {
     expect(columnsOf('feedCategory')).toEqual(['id', 'name']);
     expect(columnsOf('feedMetadata')).toEqual(['category_id', 'id', 'link', 'showInHome', 'title']);
     expect(columnsOf('feedItem')).toEqual(['description', 'feed_id', 'id', 'image', 'link', 'pubDate', 'title']);
+    expect(columnsOf('setting')).toEqual(['key', 'value']);
   });
 
   test('the shared db is queryable once dbReady resolves', async () => {
@@ -79,5 +80,33 @@ describe('reopening an already-migrated file', () => {
 
     // Assert
     expect(categories.map((category) => category.name)).toEqual(['tech']);
+  });
+});
+
+describe('recovering from a corrupted database file', () => {
+  let dir: string;
+  let filePath: string;
+
+  beforeEach(async () => {
+    dir = await mkdtemp(path.join(tmpdir(), 'monfil-db-'));
+    filePath = path.join(dir, 'monfil.db');
+  });
+
+  afterEach(async () => {
+    await closeDatabase();
+    await rm(dir, { recursive: true });
+  });
+
+  // The recovery branching itself is covered in detail by db/recovery.test.ts. This is an end-to-end
+  // check that initializeDatabase really is wired to it, against a real (not simulated) SQLite error.
+  test('resets a database file that is not valid SQLite instead of throwing', async () => {
+    // Arrange
+    await writeFile(filePath, 'not a sqlite database');
+
+    // Act
+    await expect(initializeDatabase(filePath)).resolves.toBeUndefined();
+
+    // Assert
+    await expect(db.selectFrom('feedCategory').selectAll().execute()).resolves.toEqual([]);
   });
 });

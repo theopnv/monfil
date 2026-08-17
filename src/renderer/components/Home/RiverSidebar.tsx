@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, Plus } from "@untitledui/icons";
 import AddFeedModal from "@/components/AddFeed/AddFeedModal";
+import DeleteFeedDialog from "@/components/Home/DeleteFeedDialog";
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
@@ -35,6 +36,19 @@ export default function RiverSidebar({ feeds, selectedFeedLink, onSelectFeed }: 
   const folders = groupByCategory(feeds);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
+  const [feedPendingDelete, setFeedPendingDelete] = useState<Feed | null>(null);
+
+  useEffect(() => {
+    return window.electron.ipcRenderer.on('feeds:delete-feed-requested', (feedId) => {
+      setFeedPendingDelete((prev) => feeds.find((feed) => feed.id === feedId) ?? prev);
+    });
+  }, [feeds]);
+
+  function handleFeedDeleted(deleted: Feed) {
+    if (deleted.link === selectedFeedLink) {
+      onSelectFeed(null);
+    }
+  }
 
   return (
     <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-r border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
@@ -43,6 +57,11 @@ export default function RiverSidebar({ feeds, selectedFeedLink, onSelectFeed }: 
         <Button aria-label="Add feed" size="xs" color="tertiary" iconLeading={Plus} onPress={() => setIsAddFeedOpen(true)} />
       </div>
       <AddFeedModal isOpen={isAddFeedOpen} onOpenChange={setIsAddFeedOpen} />
+      <DeleteFeedDialog
+        feed={feedPendingDelete}
+        onOpenChange={(isOpen) => { if (!isOpen) setFeedPendingDelete(null); }}
+        onDeleted={handleFeedDeleted}
+      />
       <div className="flex flex-col gap-px px-2.5">
         {folders.map((folder) => {
           const isOpen = open[folder.name] ?? false;
@@ -70,6 +89,10 @@ export default function RiverSidebar({ feeds, selectedFeedLink, onSelectFeed }: 
                         type="button"
                         aria-pressed={isSelected}
                         onClick={() => onSelectFeed(isSelected ? null : feed.link)}
+                        onContextMenu={(event) => {
+                          event.preventDefault();
+                          window.electron.ipcRenderer.sendMessage('feeds:show-feed-context-menu', feed.id);
+                        }}
                         className={cx(
                           "flex w-full items-center gap-2.25 rounded-xl px-2.25 py-1.5 text-left text-sm hover:bg-primary_hover",
                           isSelected ? "bg-primary_hover font-semibold text-primary" : "text-secondary",

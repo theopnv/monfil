@@ -15,7 +15,7 @@ export interface RiverItem {
 export interface RiverCardProps {
   item: RiverItem;
   read: boolean;
-  onToggleRead: (id: number) => void;
+  onOpen: (id: number) => void;
 }
 
 function parseTimestamp(pubDate: string): number {

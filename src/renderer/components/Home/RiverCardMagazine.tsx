@@ -3,15 +3,12 @@ import RiverCardImage from "@/components/Home/RiverCardImage";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { getFaviconUrl } from "@/lib/favicon";
-import { formatRelativeTime, openLink, type RiverCardProps } from "@/lib/river";
+import { formatRelativeTime, type RiverCardProps } from "@/lib/river";
 
-export default function RiverCardMagazine({ item, read, onToggleRead }: RiverCardProps) {
+export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps) {
   return (
     <article
-      onClick={() => {
-        openLink(item.link);
-        onToggleRead(item.id);
-      }}
+      onClick={() => onOpen(item.id)}
       className={cx(
         "flex cursor-pointer flex-col overflow-hidden rounded-xl border border-secondary bg-primary transition hover:border-brand hover:shadow-md",
         read && "opacity-50",
