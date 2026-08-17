@@ -9,10 +9,10 @@ export default defineConfig({
       '@': `${import.meta.dirname}/src/renderer`,
     },
   },
-  // Pre-bundle up front so concurrent browser instances (chromium/firefox/webkit)
-  // never race a mid-run dependency discovery against each other.
+  // Pre-bundle up front. A dep discovered mid-run forces Vite to reload the page, which breaks whatever test is in flight at that moment (vitest-dev/vitest#9509, #9473, #8447).
+  // Vitest's own "unexpectedly reloaded a test" warning names the late-discovered deps. List them here so the reload never happens.
   optimizeDeps: {
-    include: ['react-aria-components'],
+    include: ['react-aria-components', '@tanstack/react-router-devtools', '@tanstack/react-router', 'react-dom/client'],
   },
   test: {
     include: [
@@ -28,6 +28,8 @@ export default defineConfig({
         { browser: 'firefox' },
         { browser: 'webkit' },
       ],
+      // Concurrent instances hitting one dev server cause flaky "failed to import" and "failed to find the runner" errors in CI: vitest-dev/vitest#9509, #9473, #8447
+      fileParallelism: false,
     },
   },
 })
