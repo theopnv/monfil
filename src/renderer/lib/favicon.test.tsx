@@ -41,4 +41,12 @@ describe('getFaviconUrl', () => {
     // Assert
     expect(result).toBeUndefined();
   });
+
+  test('returns the root domain favicon path for a subdomain link', () => {
+    // Act
+    const result = getFaviconUrl('https://sub.example.com/blog');
+
+    // Assert
+    expect(result).toBe('https://example.com/favicon.ico');
+  });
 });

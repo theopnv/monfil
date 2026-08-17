@@ -1,15 +1,12 @@
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { getFaviconUrl } from "@/lib/favicon";
-import { formatRelativeTime, openLink, type RiverCardProps } from "@/lib/river";
+import { formatRelativeTime, type RiverCardProps } from "@/lib/river";
 
-export default function RiverCardCompact({ item, read, onToggleRead }: RiverCardProps) {
+export default function RiverCardCompact({ item, read, onOpen }: RiverCardProps) {
   return (
     <div
-      onClick={() => {
-        openLink(item.link);
-        onToggleRead(item.id);
-      }}
+      onClick={() => onOpen(item.id)}
       className={cx(
         "flex cursor-pointer items-center gap-3 border-b border-secondary px-4 py-2.75 transition last:border-b-0 hover:bg-brand-secondary",
         read && "opacity-50",

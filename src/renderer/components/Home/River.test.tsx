@@ -10,6 +10,7 @@ vi.mock(import('@/providers/feeds-provider'), async (importOriginal) => {
     ...actual,
     useFeeds: vi.fn(),
     useAddFeed: vi.fn(() => vi.fn()),
+    useReadState: vi.fn(() => ({ isRead: () => false, markRead: vi.fn(), toggleRead: vi.fn() })),
   };
 });
 
@@ -77,7 +78,7 @@ beforeEach(() => {
 
 test('shows items from every feed by default', async () => {
   // Arrange
-  const { getByText } = await render(<River />);
+  const { getByText } = await render(<River onOpenItem={vi.fn()} />);
 
   // Assert
   await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
@@ -89,7 +90,7 @@ test('selecting a feed only shows items from that feed', async () => {
   // Arrange
   const { getByText, getByRole } = await render(
     <FeedsProvider>
-      <River />
+      <River onOpenItem={vi.fn()} />
     </FeedsProvider>
   );
 
@@ -115,10 +116,25 @@ test('hides feed items when showInHome is set to 0', async () => {
 
   const { getByText } = await render(
     <FeedsProvider>
-      <River />
+      <River onOpenItem={vi.fn()} />
     </FeedsProvider>
   );
 
   // Assert
   await expect.element(getByText('Item C1', { exact: true })).not.toBeInTheDocument();
+});
+
+test('clicking a card invokes onOpenItem with the item id', async () => {
+  // Arrange
+  const item = createFeedItem({ title: 'Clickable item' });
+  const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [item] });
+  mockedUseFeeds.mockReturnValue([feed]);
+  const onOpenItem = vi.fn();
+  const { getByText } = await render(<River onOpenItem={onOpenItem} />);
+
+  // Act
+  await getByText('Clickable item', { exact: true }).click();
+
+  // Assert
+  expect(onOpenItem).toHaveBeenCalledWith(item.id);
 });

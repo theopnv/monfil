@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, type PropsWithChildren } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 import type { Feed } from "../../preload/channels";
 
 const FeedsContext = createContext<Feed[] | undefined>(undefined);
@@ -25,12 +25,51 @@ export const useAddFeed = (): ((feed: Feed) => void) => {
   return context;
 };
 
+interface ReadState {
+  isRead: (id: number) => boolean;
+  markRead: (id: number) => void;
+  toggleRead: (id: number) => void;
+}
+
+const ReadStateContext = createContext<ReadState | undefined>(undefined);
+
+export const useReadState = (): ReadState => {
+  const context = useContext(ReadStateContext);
+
+  if (context === undefined) {
+    throw new Error("useReadState must be used within a FeedsProvider");
+  }
+
+  return context;
+};
+
 export const FeedsProvider = ({ children }: PropsWithChildren) => {
   const [feeds, setFeeds] = useState<Feed[]>([]);
+  const [readIds, setReadIds] = useState<Set<number>>(new Set());
 
   const addFeed = useCallback((feed: Feed) => {
     setFeeds((prev) => [...prev.filter((f) => f.link !== feed.link), feed]);
   }, []);
+
+  const isRead = useCallback((id: number) => readIds.has(id), [readIds]);
+
+  const markRead = useCallback((id: number) => {
+    setReadIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+  }, []);
+
+  const toggleRead = useCallback((id: number) => {
+    setReadIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const readState = useMemo<ReadState>(() => ({ isRead, markRead, toggleRead }), [isRead, markRead, toggleRead]);
 
   useEffect(() => {
     window.electron.ipcRenderer.invoke('feeds:list', undefined)
@@ -52,7 +91,9 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
 
   return (
     <FeedsContext.Provider value={feeds}>
-      <AddFeedContext.Provider value={addFeed}>{children}</AddFeedContext.Provider>
+      <AddFeedContext.Provider value={addFeed}>
+        <ReadStateContext.Provider value={readState}>{children}</ReadStateContext.Provider>
+      </AddFeedContext.Provider>
     </FeedsContext.Provider>
   );
 };

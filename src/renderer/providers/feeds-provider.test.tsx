@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { FeedsProvider, useAddFeed, useFeeds } from './feeds-provider';
+import { FeedsProvider, useAddFeed, useFeeds, useReadState } from './feeds-provider';
 import type { Feed } from '../../preload/channels';
 
 let nextFeedId = 1;
@@ -47,6 +47,17 @@ function ItemImages() {
         <li key={item.id}>{item.title}: {item.image ?? 'no-image'}</li>
       )))}
     </ul>
+  );
+}
+
+function ReadStateProbe({ id }: { id: number }) {
+  const { isRead, markRead, toggleRead } = useReadState();
+  return (
+    <div>
+      <span>Item {id} is {isRead(id) ? 'read' : 'unread'}</span>
+      <button type="button" onClick={() => markRead(id)}>Mark {id} read</button>
+      <button type="button" onClick={() => toggleRead(id)}>Toggle {id}</button>
+    </div>
   );
 }
 
@@ -132,4 +143,68 @@ test('an item-image-fetched push merges the image into the matching feed item, l
   await expect.element(getByText('Target item: https://example.com/fetched.jpg', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Other item: no-image', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Item in other feed: no-image', { exact: true })).toBeInTheDocument();
+});
+
+test('a fresh provider starts with nothing read', async () => {
+  // Arrange
+  const { getByText } = await render(
+    <FeedsProvider>
+      <ReadStateProbe id={1} />
+    </FeedsProvider>,
+  );
+
+  // Assert
+  await expect.element(getByText('Item 1 is unread', { exact: true })).toBeInTheDocument();
+});
+
+test('markRead marks an item read', async () => {
+  // Arrange
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <ReadStateProbe id={1} />
+    </FeedsProvider>,
+  );
+
+  // Act
+  await getByRole('button', { name: 'Mark 1 read' }).click();
+
+  // Assert
+  await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
+});
+
+test('marking an already-read item again is a no-op', async () => {
+  // Arrange
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <ReadStateProbe id={1} />
+    </FeedsProvider>,
+  );
+
+  // Act
+  await getByRole('button', { name: 'Mark 1 read' }).click();
+  await getByRole('button', { name: 'Mark 1 read' }).click();
+
+  // Assert
+  await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
+});
+
+test('toggleRead flips the read state both ways', async () => {
+  // Arrange
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <ReadStateProbe id={1} />
+    </FeedsProvider>,
+  );
+
+  // Act
+  await getByRole('button', { name: 'Toggle 1' }).click();
+
+  // Assert
+  await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
+
+  // Act
+  await getByRole('button', { name: 'Toggle 1' }).click();
+
+  // Assert
+  await expect.element(getByText('Item 1 is unread', { exact: true })).toBeInTheDocument();
 });
