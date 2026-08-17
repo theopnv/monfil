@@ -9,6 +9,11 @@ export default defineConfig({
       '@': `${import.meta.dirname}/src/renderer`,
     },
   },
+  // Pre-bundle up front so concurrent browser instances (chromium/firefox/webkit)
+  // never race a mid-run dependency discovery against each other.
+  optimizeDeps: {
+    include: ['react-aria-components'],
+  },
   test: {
     include: [
       'src/renderer/**/*.{test,spec}.?(c|m)[jt]s?(x)',
