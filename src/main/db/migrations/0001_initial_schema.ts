@@ -22,16 +22,23 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('feedItem')
     .addColumn('id', 'integer', (col) => col.primaryKey().autoIncrement())
-    .addColumn('feed_id', 'integer', (col) => col.notNull().references('feedMetadata.id'))
+    .addColumn('feed_id', 'integer', (col) => col.notNull().references('feedMetadata.id').onDelete('cascade'))
     .addColumn('title', 'text', (col) => col.notNull())
     .addColumn('link', 'text', (col) => col.unique())
     .addColumn('pubDate', 'text', (col) => col.notNull())
     .addColumn('description', 'text', (col) => col.notNull())
     .addColumn('image', 'text')
     .execute();
+
+  await db.schema
+    .createTable('setting')
+    .addColumn('key', 'text', (col) => col.primaryKey())
+    .addColumn('value', 'text', (col) => col.notNull())
+    .execute();
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
+  await db.schema.dropTable('setting').execute();
   await db.schema.dropTable('feedItem').execute();
   await db.schema.dropTable('feedMetadata').execute();
   await db.schema.dropTable('feedCategory').execute();

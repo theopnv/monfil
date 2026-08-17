@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { FeedsProvider, useAddFeed, useFeeds, useFeedsRefresh, useReadState } from './feeds-provider';
+import { FeedsProvider, useAddFeed, useDeleteFeed, useFeeds, useFeedsRefresh, useReadState } from './feeds-provider';
 import type { Feed } from '../../preload/channels';
 
 let nextFeedId = 1;
@@ -35,6 +35,15 @@ function AddFeedButton({ feed }: { feed: Feed }) {
   return (
     <button type="button" onClick={() => addFeed(feed)}>
       Add {feed.title}
+    </button>
+  );
+}
+
+function DeleteFeedButton({ feedId }: { feedId: number }) {
+  const deleteFeed = useDeleteFeed();
+  return (
+    <button type="button" onClick={() => { void deleteFeed(feedId); }}>
+      Delete {feedId}
     </button>
   );
 }
@@ -202,6 +211,56 @@ test('a feeds:list invoke response that lands after a push does not overwrite it
   // Assert
   await expect.element(getByText('Pushed feed', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Stale feed', { exact: true })).not.toBeInTheDocument();
+});
+
+test('useDeleteFeed replaces the list from the reply', async () => {
+  // Arrange
+  const feedA = createFeed({ title: 'Feed A' });
+  const feedC = createFeed({ title: 'Feed C' });
+  invokeImpl = (channel) => Promise.resolve(channel === 'feeds:delete-feed' ? { success: true, data: [feedC] } : []);
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <DeleteFeedButton feedId={feedA.id} />
+      <FeedsList />
+    </FeedsProvider>,
+  );
+
+  // Act
+  await getByRole('button', { name: `Delete ${feedA.id}` }).click();
+
+  // Assert
+  await expect.element(getByText('Feed C', { exact: true })).toBeInTheDocument();
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('feeds:delete-feed', feedA.id);
+});
+
+test('a stale feeds:list invoke does not restore a feed removed by useDeleteFeed', async () => {
+  // Arrange
+  const feedA = createFeed({ title: 'Feed A' });
+  let answerTheInvoke!: (feeds: Feed[]) => void;
+  const pendingList = new Promise<Feed[]>((resolve) => {
+    answerTheInvoke = resolve;
+  });
+  invokeImpl = (channel) => {
+    if (channel === 'feeds:list') return pendingList;
+    if (channel === 'feeds:delete-feed') return Promise.resolve({ success: true, data: [] });
+    return Promise.resolve([]);
+  };
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <DeleteFeedButton feedId={feedA.id} />
+      <FeedsList />
+    </FeedsProvider>,
+  );
+  await getByRole('button', { name: `Delete ${feedA.id}` }).click();
+  await expect.element(getByText('Feed A', { exact: true })).not.toBeInTheDocument();
+
+  // Act
+  answerTheInvoke([feedA]);
+  await pendingList;
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // Assert
+  await expect.element(getByText('Feed A', { exact: true })).not.toBeInTheDocument();
 });
 
 test('refreshNow asks main for a refresh and shows the list it answers with', async () => {

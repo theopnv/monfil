@@ -10,3 +10,9 @@ It means "My feed" in french.
 
 [![Publish](https://github.com/theopnv/monfil/actions/workflows/publish.yml/badge.svg)](https://github.com/theopnv/monfil/actions/workflows/publish.yml)
 
+![Home](./doc/gallery/home.png)
+
+## Usage
+
+- Add a feed with the '+' button at the top.
+- Remove a feed with a right-click in the sidebar.

@@ -1,5 +1,6 @@
-import { shell, type IpcMainEvent } from "electron";
+import { BrowserWindow, Menu, shell, type IpcMainEvent } from "electron";
 import type { OneWayRendererToMainChannelPayloads } from "../../preload/channels";
+import { sendToRenderer } from "./sendToRenderer";
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {
   let parsed: URL;
@@ -13,4 +14,15 @@ export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMain
   if (parsed.protocol === "http:" || parsed.protocol === "https:") {
     void shell.openExternal(url);
   }
+}
+
+export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayRendererToMainChannelPayloads["feeds:show-feed-context-menu"]) {
+  const menu = Menu.buildFromTemplate([
+    {
+      label: "Delete feed…",
+      click: () => sendToRenderer(event.sender, "feeds:delete-feed-requested", feedId),
+    },
+  ]);
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) menu.popup({ window });
 }

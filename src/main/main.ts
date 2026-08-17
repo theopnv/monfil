@@ -16,7 +16,9 @@ if (started) {
 }
 
 function bootstrap() {
-  initializeDatabase(path.join(app.getPath('userData'), DB_FILE_NAME));
+  initializeDatabase(path.join(app.getPath('userData'), DB_FILE_NAME)).catch((error: unknown) => {
+    console.error('Failed to initialize the database.', error);
+  });
 
   const createWindow = () => {
     const mainWindow = new BrowserWindow({

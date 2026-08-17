@@ -10,6 +10,7 @@ vi.mock(import('@/providers/feeds-provider'), async (importOriginal) => {
     ...actual,
     useFeeds: vi.fn(),
     useAddFeed: vi.fn(() => vi.fn()),
+    useDeleteFeed: vi.fn(() => vi.fn()),
     useFeedsRefresh: vi.fn(() => ({ refreshNow: vi.fn(), isRefreshing: false })),
     useReadState: vi.fn(() => ({ isRead: () => false, markRead: vi.fn(), toggleRead: vi.fn() })),
   };

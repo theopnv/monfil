@@ -1,5 +1,6 @@
 import type { FeedMetadata, FeedItem, FeedCategory } from '../main/db/types';
 import type { NewFeedInput, AddFeedError } from '../main/db/insert';
+import type { DeleteFeedError } from '../main/db/delete';
 import type { ParsedFeed, FeedFetchError } from '../main/feed/parse';
 import type { RefreshInterval } from '../main/settings';
 import type { Result } from '../utils';
@@ -13,6 +14,7 @@ export type Feed = FeedMetadata & { items: FeedItem[]; category: FeedCategory };
 // ============= One-way channels (renderer -> main) ==============
 export type OneWayRendererToMainChannelPayloads = {
   'link:open': string;
+  'feeds:show-feed-context-menu': number;
 }
 export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayloads;
 
@@ -23,6 +25,7 @@ export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayl
 export type OneWayMainToRendererChannelPayloads = {
   'feeds:item-image-fetched': { feedId: number; itemId: number; image: string };
   'feeds:list': Feed[];
+  'feeds:delete-feed-requested': number;
 };
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
@@ -34,6 +37,7 @@ export type TwoWayRendererMainChannelPayloads = {
   'feeds:list': Feed[];
   'feeds:refresh': Feed[];
   'feeds:submit-add-feed': Result<Feed, AddFeedError>;
+  'feeds:delete-feed': Result<Feed[], DeleteFeedError>;
   'settings:get-refresh-interval': RefreshInterval;
   'settings:set-refresh-interval': RefreshInterval;
 }
@@ -46,6 +50,7 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:list': undefined;
   'feeds:refresh': undefined;
   'feeds:submit-add-feed': NewFeedInput;
+  'feeds:delete-feed': number;
   'settings:get-refresh-interval': undefined;
   'settings:set-refresh-interval': RefreshInterval;
 };

@@ -17,6 +17,8 @@ Migrations are supplied by a hand-written `MigrationProvider` in `src/main/db/mi
 
 Call `closeDatabase()` before the process exits so `better-sqlite3` closes its connection cleanly. `src/main/main.ts` already does this in its `before-quit` handler.
 
+`initializeDatabase` runs its open-and-migrate step through `withCorruptionRecovery` (`src/main/db/recovery.ts`). If the process was killed rather than closed cleanly, the WAL sidecar files (`-wal`, `-shm`) can outlive a database file that was deleted or replaced by hand, which SQLite reports as a disk I/O error rather than "file not found". `withCorruptionRecovery` recognizes that error shape, deletes the stale files, and retries once. This only applies to file-backed databases; `:memory:` connections used by tests skip it.
+
 ## Query criteria must stay exhaustive
 
 `src/main/db/query.ts` builds each query through a `CriteriaHandlers` mapped type. The type requires one handler per column of the table.

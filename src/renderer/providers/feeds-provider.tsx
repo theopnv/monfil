@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from "react";
 import type { Feed } from "../../preload/channels";
+import type { DeleteFeedError } from "../../main/db/delete";
+import type { Result } from "../../utils";
 
 const FeedsContext = createContext<Feed[] | undefined>(undefined);
 
@@ -20,6 +22,18 @@ export const useAddFeed = (): ((feed: Feed) => void) => {
 
   if (context === undefined) {
     throw new Error("useAddFeed must be used within a FeedsProvider");
+  }
+
+  return context;
+};
+
+const DeleteFeedContext = createContext<((feedId: number) => Promise<Result<Feed[], DeleteFeedError>>) | undefined>(undefined);
+
+export const useDeleteFeed = (): ((feedId: number) => Promise<Result<Feed[], DeleteFeedError>>) => {
+  const context = useContext(DeleteFeedContext);
+
+  if (context === undefined) {
+    throw new Error("useDeleteFeed must be used within a FeedsProvider");
   }
 
   return context;
@@ -70,6 +84,15 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
 
   const addFeed = useCallback((feed: Feed) => {
     setFeeds((prev) => [...prev.filter((f) => f.link !== feed.link), feed]);
+  }, []);
+
+  const deleteFeed = useCallback(async (feedId: number) => {
+    const response = await window.electron.ipcRenderer.invoke('feeds:delete-feed', feedId);
+    if (response.success) {
+      hasFreshList.current = true;
+      setFeeds(response.data);
+    }
+    return response;
   }, []);
 
   const isRead = useCallback((id: number) => readIds.has(id), [readIds]);
@@ -140,9 +163,11 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
   return (
     <FeedsContext.Provider value={feeds}>
       <AddFeedContext.Provider value={addFeed}>
-        <FeedsRefreshContext.Provider value={refresh}>
-          <ReadStateContext.Provider value={readState}>{children}</ReadStateContext.Provider>
-        </FeedsRefreshContext.Provider>
+        <DeleteFeedContext.Provider value={deleteFeed}>
+          <FeedsRefreshContext.Provider value={refresh}>
+            <ReadStateContext.Provider value={readState}>{children}</ReadStateContext.Provider>
+          </FeedsRefreshContext.Provider>
+        </DeleteFeedContext.Provider>
       </AddFeedContext.Provider>
     </FeedsContext.Provider>
   );
