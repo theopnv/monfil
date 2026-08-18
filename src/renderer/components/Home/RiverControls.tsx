@@ -1,4 +1,3 @@
-import { ChevronDown } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 
 export type Density = "Cards" | "Magazine" | "Compact";
@@ -37,9 +36,6 @@ export default function RiverControls({ density, onDensityChange, unreadCount, s
       <div className="ml-auto flex items-center gap-2">
         <Button color="link-color" size="sm" onPress={onMarkAllRead}>
           Mark all read
-        </Button>
-        <Button color="tertiary" size="sm" iconTrailing={ChevronDown} className="rounded-full">
-          Newest
         </Button>
       </div>
     </div>
