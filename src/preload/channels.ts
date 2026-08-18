@@ -1,8 +1,10 @@
 import type { FeedMetadata, FeedItem, FeedCategory } from '../main/db/types';
 import type { NewFeedInput, AddFeedError } from '../main/db/insert';
 import type { DeleteFeedError } from '../main/db/delete';
+import type { UpdateFeedError, UpdateItemError } from '../main/db/update';
 import type { ParsedFeed, FeedFetchError } from '../main/feed/parse';
 import type { RefreshInterval } from '../main/settings';
+import type { AppInfo } from '../main/app-info';
 import type { Result } from '../utils';
 
 export type { RefreshInterval } from '../main/settings';
@@ -15,6 +17,7 @@ export type Feed = FeedMetadata & { items: FeedItem[]; category: FeedCategory };
 export type OneWayRendererToMainChannelPayloads = {
   'link:open': string;
   'feeds:show-feed-context-menu': number;
+  'app:reveal-database-file': undefined;
 }
 export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayloads;
 
@@ -38,8 +41,13 @@ export type TwoWayRendererMainChannelPayloads = {
   'feeds:refresh': Feed[];
   'feeds:submit-add-feed': Result<Feed, AddFeedError>;
   'feeds:delete-feed': Result<Feed[], DeleteFeedError>;
+  'feeds:set-show-in-home': Result<Feed[], UpdateFeedError>;
   'settings:get-refresh-interval': RefreshInterval;
   'settings:set-refresh-interval': RefreshInterval;
+  'items:set-read': Result<void, UpdateItemError>;
+  'settings:get-refresh-on-launch': boolean;
+  'settings:set-refresh-on-launch': boolean;
+  'app:get-info': AppInfo;
 }
 
 export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
@@ -51,8 +59,13 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:refresh': undefined;
   'feeds:submit-add-feed': NewFeedInput;
   'feeds:delete-feed': number;
+  'feeds:set-show-in-home': { feedIds: number[]; showInHome: boolean };
   'settings:get-refresh-interval': undefined;
   'settings:set-refresh-interval': RefreshInterval;
+  'items:set-read': { itemIds: number[]; read: boolean };
+  'settings:get-refresh-on-launch': undefined;
+  'settings:set-refresh-on-launch': boolean;
+  'app:get-info': undefined;
 };
 
 // ============= Combined channel types ==============

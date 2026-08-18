@@ -1,5 +1,9 @@
 import type { Feed } from '../../preload/channels';
 
+export type Density = "Cards" | "Magazine" | "Compact";
+
+export const DENSITIES: readonly Density[] = ["Cards", "Magazine", "Compact"];
+
 export interface RiverItem {
   id: number;
   title: string;
@@ -29,12 +33,14 @@ function parseTimestamp(pubDate: string): number {
 function stripHtml(html: string): string {
   const container = document.createElement('div');
   container.innerHTML = html;
+  // textContent includes <style>/<script> text nodes even though they never render;
+  // Blogger/Blogspot feeds in particular embed a <style> block ahead of the article body.
+  container.querySelectorAll('style, script').forEach((el) => el.remove());
   return (container.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
 export function toRiverItems(feeds: Feed[]): RiverItem[] {
   const items = feeds
-    .filter((feed) => feed.showInHome !== 0)
     .flatMap((feed) =>
       feed.items.map((item) => ({
         id: item.id,

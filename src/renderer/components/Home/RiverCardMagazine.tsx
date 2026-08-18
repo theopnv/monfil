@@ -8,6 +8,7 @@ import { formatRelativeTime, type RiverCardProps } from "@/lib/river";
 export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps) {
   return (
     <article
+      data-item-id={item.id}
       onClick={() => onOpen(item.id)}
       className={cx(
         "flex cursor-pointer flex-col overflow-hidden rounded-xl border border-secondary bg-primary transition hover:border-brand hover:shadow-md",

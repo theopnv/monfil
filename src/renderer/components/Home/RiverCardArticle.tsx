@@ -10,6 +10,7 @@ import { estimateReadTime, formatRelativeTime, type RiverCardProps } from "@/lib
 export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps) {
   return (
     <article
+      data-item-id={item.id}
       onClick={() => onOpen(item.id)}
       className={cx(
         "flex cursor-pointer gap-4.5 rounded-xl border border-secondary bg-primary p-5 transition hover:border-brand hover:shadow-md",

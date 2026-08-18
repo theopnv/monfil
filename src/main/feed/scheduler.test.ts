@@ -1,16 +1,17 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
-import { getRefreshInterval } from '../settings';
+import { getRefreshInterval, getRefreshOnLaunch } from '../settings';
 import { refreshAllFeeds } from './refresh';
 import { rescheduleRefresh, startRefreshScheduler, stopRefreshScheduler } from './scheduler';
 import type { Feed } from '../../preload/channels';
 
 vi.mock(import('./refresh'), () => ({ refreshAllFeeds: vi.fn() }));
-vi.mock(import('../settings'), () => ({ getRefreshInterval: vi.fn() }));
+vi.mock(import('../settings'), () => ({ getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn() }));
 vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedRefreshAllFeeds = vi.mocked(refreshAllFeeds);
 const mockedGetRefreshInterval = vi.mocked(getRefreshInterval);
+const mockedGetRefreshOnLaunch = vi.mocked(getRefreshOnLaunch);
 const mockedBroadcast = vi.mocked(broadcastToRenderers);
 
 const MINUTE = 60 * 1000;
@@ -29,6 +30,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   mockedRefreshAllFeeds.mockResolvedValue([feed]);
   mockedGetRefreshInterval.mockResolvedValue(15);
+  mockedGetRefreshOnLaunch.mockResolvedValue(true);
 });
 
 afterEach(() => {
@@ -36,6 +38,7 @@ afterEach(() => {
   vi.useRealTimers();
   mockedRefreshAllFeeds.mockReset();
   mockedGetRefreshInterval.mockReset();
+  mockedGetRefreshOnLaunch.mockReset();
   mockedBroadcast.mockReset();
 });
 
@@ -69,6 +72,23 @@ describe('startRefreshScheduler', () => {
     // Act
     await startRefreshScheduler();
     await vi.advanceTimersByTimeAsync(24 * 60 * MINUTE);
+
+    // Assert
+    expect(mockedRefreshAllFeeds).toHaveBeenCalledTimes(1);
+  });
+
+  test('skips the launch refresh but still arms the timer when refresh-on-launch is off', async () => {
+    // Arrange
+    mockedGetRefreshOnLaunch.mockResolvedValue(false);
+
+    // Act
+    await startRefreshScheduler();
+
+    // Assert
+    expect(mockedRefreshAllFeeds).not.toHaveBeenCalled();
+
+    // Act
+    await vi.advanceTimersByTimeAsync(15 * MINUTE);
 
     // Assert
     expect(mockedRefreshAllFeeds).toHaveBeenCalledTimes(1);

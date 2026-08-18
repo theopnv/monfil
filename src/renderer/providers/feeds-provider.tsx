@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from "react";
 import type { Feed } from "../../preload/channels";
 import type { DeleteFeedError } from "../../main/db/delete";
+import type { UpdateFeedError } from "../../main/db/update";
 import type { Result } from "../../utils";
 
 const FeedsContext = createContext<Feed[] | undefined>(undefined);
@@ -39,6 +40,18 @@ export const useDeleteFeed = (): ((feedId: number) => Promise<Result<Feed[], Del
   return context;
 };
 
+const SetShowInHomeContext = createContext<((feedIds: number[], showInHome: boolean) => Promise<Result<Feed[], UpdateFeedError>>) | undefined>(undefined);
+
+export const useSetShowInHome = (): ((feedIds: number[], showInHome: boolean) => Promise<Result<Feed[], UpdateFeedError>>) => {
+  const context = useContext(SetShowInHomeContext);
+
+  if (context === undefined) {
+    throw new Error("useSetShowInHome must be used within a FeedsProvider");
+  }
+
+  return context;
+};
+
 interface FeedsRefresh {
   refreshNow: () => void;
   isRefreshing: boolean;
@@ -60,6 +73,7 @@ interface ReadState {
   isRead: (id: number) => boolean;
   markRead: (id: number) => void;
   toggleRead: (id: number) => void;
+  markAllRead: (ids: number[]) => void;
 }
 
 const ReadStateContext = createContext<ReadState | undefined>(undefined);
@@ -76,7 +90,6 @@ export const useReadState = (): ReadState => {
 
 export const FeedsProvider = ({ children }: PropsWithChildren) => {
   const [feeds, setFeeds] = useState<Feed[]>([]);
-  const [readIds, setReadIds] = useState<Set<number>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
   // The mount-time invoke and a launch-refresh push resolve in either order. Once a refreshed list
   // has arrived, an older snapshot must not land on top of it.
@@ -95,25 +108,43 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
     return response;
   }, []);
 
-  const isRead = useCallback((id: number) => readIds.has(id), [readIds]);
-
-  const markRead = useCallback((id: number) => {
-    setReadIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+  const setShowInHome = useCallback(async (feedIds: number[], showInHome: boolean) => {
+    const response = await window.electron.ipcRenderer.invoke('feeds:set-show-in-home', { feedIds, showInHome });
+    if (response.success) {
+      hasFreshList.current = true;
+      setFeeds(response.data);
+    }
+    return response;
   }, []);
 
-  const toggleRead = useCallback((id: number) => {
-    setReadIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
+  // `feedItem.read_at` is the one source of truth for read state, so it survives a restart.
+  const readIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const feed of feeds) for (const item of feed.items) if (item.read_at) ids.add(item.id);
+    return ids;
+  }, [feeds]);
+
+  const isRead = useCallback((id: number) => readIds.has(id), [readIds]);
+
+  const setRead = useCallback((itemIds: number[], read: boolean) => {
+    if (itemIds.length === 0) return;
+    const targetIds = new Set(itemIds);
+    const readAt = read ? new Date().toISOString() : undefined;
+    setFeeds((prev) => prev.map((feed) => (
+      feed.items.some((item) => targetIds.has(item.id))
+        ? { ...feed, items: feed.items.map((item) => (targetIds.has(item.id) ? { ...item, read_at: readAt } : item)) }
+        : feed
+    )));
+    window.electron.ipcRenderer.invoke('items:set-read', { itemIds, read }).catch((error: unknown) => {
+      console.error('Error persisting read state:', error);
     });
   }, []);
 
-  const readState = useMemo<ReadState>(() => ({ isRead, markRead, toggleRead }), [isRead, markRead, toggleRead]);
+  const markRead = useCallback((id: number) => setRead([id], true), [setRead]);
+  const toggleRead = useCallback((id: number) => setRead([id], !isRead(id)), [setRead, isRead]);
+  const markAllRead = useCallback((ids: number[]) => setRead(ids, true), [setRead]);
+
+  const readState = useMemo<ReadState>(() => ({ isRead, markRead, toggleRead, markAllRead }), [isRead, markRead, toggleRead, markAllRead]);
 
   const refreshNow = useCallback(() => {
     setIsRefreshing(true);
@@ -164,9 +195,11 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
     <FeedsContext.Provider value={feeds}>
       <AddFeedContext.Provider value={addFeed}>
         <DeleteFeedContext.Provider value={deleteFeed}>
-          <FeedsRefreshContext.Provider value={refresh}>
-            <ReadStateContext.Provider value={readState}>{children}</ReadStateContext.Provider>
-          </FeedsRefreshContext.Provider>
+          <SetShowInHomeContext.Provider value={setShowInHome}>
+            <FeedsRefreshContext.Provider value={refresh}>
+              <ReadStateContext.Provider value={readState}>{children}</ReadStateContext.Provider>
+            </FeedsRefreshContext.Provider>
+          </SetShowInHomeContext.Provider>
         </DeleteFeedContext.Provider>
       </AddFeedContext.Provider>
     </FeedsContext.Provider>

@@ -42,3 +42,40 @@ export async function setRefreshInterval(value: RefreshInterval): Promise<void> 
     .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
     .execute();
 }
+
+export const DEFAULT_REFRESH_ON_LAUNCH = true;
+
+const REFRESH_ON_LAUNCH_KEY = 'refreshOnLaunch';
+
+/**
+ * Narrows an untrusted value, such as a hand-edited database row or an IPC payload, to a boolean.
+ * @param value anything that is meant to be the refresh-on-launch preference
+ * @returns the matching boolean, or `DEFAULT_REFRESH_ON_LAUNCH` when there is no match
+ */
+export function toRefreshOnLaunch(value: unknown): boolean {
+  if (value === 'true' || value === true) return true;
+  if (value === 'false' || value === false) return false;
+  return DEFAULT_REFRESH_ON_LAUNCH;
+}
+
+/**
+ * Reads whether feeds refresh once at launch, in addition to the repeating timer.
+ * @returns the stored preference, or `DEFAULT_REFRESH_ON_LAUNCH` when none is stored
+ */
+export async function getRefreshOnLaunch(): Promise<boolean> {
+  await dbReady;
+  const [row] = await querySettings({ key: REFRESH_ON_LAUNCH_KEY });
+  return toRefreshOnLaunch(row?.value);
+}
+
+/**
+ * Stores whether feeds refresh once at launch.
+ * @param value the preference to store
+ */
+export async function setRefreshOnLaunch(value: boolean): Promise<void> {
+  await dbReady;
+  await db.insertInto('setting')
+    .values({ key: REFRESH_ON_LAUNCH_KEY, value: String(value) })
+    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
+    .execute();
+}

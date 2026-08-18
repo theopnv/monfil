@@ -1,10 +1,12 @@
-import { describe, afterEach, test, expect, vi } from 'vitest';
-import { listenToLinkOpen, listenToShowFeedContextMenu } from './listeners';
+import { beforeAll, describe, afterEach, test, expect, vi } from 'vitest';
+import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowFeedContextMenu } from './listeners';
+import { initializeDatabase } from '../database';
 import { BrowserWindow, Menu, shell } from 'electron';
 
 vi.mock(import('electron'), () => ({
   shell: {
     openExternal: vi.fn(),
+    showItemInFolder: vi.fn(),
   } as unknown as Electron.Shell,
   Menu: {
     buildFromTemplate: vi.fn(),
@@ -15,6 +17,7 @@ vi.mock(import('electron'), () => ({
 }));
 
 const mockedOpenExternal = vi.mocked(shell.openExternal);
+const mockedShowItemInFolder = vi.mocked(shell.showItemInFolder);
 const mockedBuildFromTemplate = vi.mocked(Menu.buildFromTemplate);
 const mockedFromWebContents = vi.mocked(BrowserWindow.fromWebContents);
 
@@ -39,6 +42,24 @@ describe('link:open IPC listener', () => {
 
     // Assert
     expect(mockedOpenExternal).not.toHaveBeenCalled();
+  });
+});
+
+describe('app:reveal-database-file IPC listener', () => {
+  beforeAll(async () => {
+    await initializeDatabase(':memory:');
+  });
+
+  afterEach(() => {
+    mockedShowItemInFolder.mockReset();
+  });
+
+  test('reveals the database file in the OS file browser', () => {
+    // Act
+    listenToRevealDatabaseFile();
+
+    // Assert
+    expect(mockedShowItemInFolder).toHaveBeenCalledWith(':memory:');
   });
 });
 

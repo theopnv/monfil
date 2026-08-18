@@ -1,5 +1,6 @@
 import { BrowserWindow, Menu, shell, type IpcMainEvent } from "electron";
 import type { OneWayRendererToMainChannelPayloads } from "../../preload/channels";
+import { dbFilePath } from "../database";
 import { sendToRenderer } from "./sendToRenderer";
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {
@@ -14,6 +15,10 @@ export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMain
   if (parsed.protocol === "http:" || parsed.protocol === "https:") {
     void shell.openExternal(url);
   }
+}
+
+export function listenToRevealDatabaseFile() {
+  shell.showItemInFolder(dbFilePath);
 }
 
 export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayRendererToMainChannelPayloads["feeds:show-feed-context-menu"]) {

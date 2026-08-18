@@ -3,7 +3,7 @@ import { fetchUrl } from '../fetch';
 import type { FetchUrlError } from '../fetch';
 import { parseFeed } from 'feedsmith';
 import type { Result } from '../../utils';
-import { extractImageUrl } from './extractImage';
+import { extractAtomImageUrl, extractImageUrl } from './extractImage';
 
 interface ParsedFeedContent {
   title: string;
@@ -13,20 +13,45 @@ interface ParsedFeedContent {
 
 export function parseFeedContent(content: string, maxItems: number = 0): ParsedFeedContent | null {
   const { format, feed } = parseFeed(content, { maxItems });
-  if (format !== 'rss') return null;
-  return {
-    title: feed.title ?? '',
-    description: feed.description ?? '',
-    items: feed.items
-      ? feed.items.map(item => ({
-        title: item.title ?? 'No title',
-        link: item.link,
-        pubDate: item.pubDate ?? 'No publication date',
-        description: item.description ?? '',
-        image: extractImageUrl(item),
-      }))
-      : [],
-  };
+  switch (format) {
+    case 'rss':
+      return {
+        title: feed.title ?? '',
+        description: feed.description ?? '',
+        items: feed.items
+          ? feed.items.map(item => ({
+            title: item.title ?? 'No title',
+            link: item.link,
+            pubDate: item.pubDate ?? 'No publication date',
+            description: item.description ?? '',
+            image: extractImageUrl(item),
+            read_at: undefined,
+          }))
+          : [],
+      };
+    case 'atom':
+      return {
+        title: feed.title?.value ?? '',
+        description: feed.subtitle?.value ?? '',
+        items: feed.entries
+          ? feed.entries.map(entry => ({
+            title: entry.title?.value ?? 'No title',
+            link: entry.links?.find(link => link.rel === 'alternate' || !link.rel)?.href ?? entry.links?.[0]?.href,
+            pubDate: entry.published ?? entry.updated ?? 'No publication date',
+            description: entry.summary?.value ?? entry.content?.value ?? '',
+            image: extractAtomImageUrl(entry),
+            read_at: undefined,
+          }))
+          : [],
+      };
+    case 'rdf':
+    case 'json':
+      return null;
+    default: {
+      const exhaustiveCheck: never = format;
+      return exhaustiveCheck;
+    }
+  }
 }
 
 export type ParsedFeed = Omit<FeedMetadata, 'id' | 'category_id' | 'showInHome'> & {
@@ -57,7 +82,7 @@ export async function fetchFeed(link: string, maxItems: number = 30): Promise<Re
     }
     const parsed = parseFeedContent(result.data, maxItems);
     if (!parsed) {
-      return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported RSS feed." } };
+      return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported RSS or Atom feed." } };
     }
     return { success: true, data: { link: normalizedLink, title: parsed.title, description: parsed.description, items: parsed.items } };
   } catch (error) {

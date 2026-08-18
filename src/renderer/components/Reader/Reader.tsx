@@ -30,6 +30,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
   const rawDescription = useMemo(() => findRawDescription(feeds, id), [feeds, id]);
   const navigation = useMemo(() => getReaderNavigation(riverItems, id, isRead), [riverItems, id, isRead]);
   const standfirst = useMemo(() => (currentItem ? deriveStandfirst(currentItem.description) : undefined), [currentItem]);
+  const readerHighlightedLinks = useMemo(() => new Set(currentItem ? [currentItem.feedLink] : []), [currentItem]);
 
   useEffect(() => {
     if (currentItem) {
@@ -73,7 +74,12 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <RiverSidebar feeds={feeds} selectedFeedLink={currentItem.feedLink} onSelectFeed={() => onNavigateHome()} />
+      <RiverSidebar
+        feeds={feeds}
+        showOnlyLinks={readerHighlightedLinks}
+        onSetVisibility={() => onNavigateHome()}
+        onFeedDeleted={() => onNavigateHome()}
+      />
 
       <div className="relative flex flex-1 flex-col overflow-hidden">
         <ReadingProgressBar progress={progress} />

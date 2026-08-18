@@ -1,4 +1,4 @@
-import type { RssFeed } from 'feedsmith';
+import type { AtomFeed, RssFeed } from 'feedsmith';
 
 const IMG_SRC_REGEX = /<img[^>]+src=["']([^"']+)["']/i;
 
@@ -14,5 +14,16 @@ export function extractImageUrl(item: RssFeed.Item<string>): string | undefined 
     ?? item.itunes?.image
     ?? firstImgSrc(item.content?.encoded)
     ?? firstImgSrc(item.description)
+  );
+}
+
+export function extractAtomImageUrl(entry: AtomFeed.Entry<string>): string | undefined {
+  return (
+    entry.media?.thumbnails?.[0]?.url
+    ?? entry.media?.contents?.find((content) => content.medium === 'image' || content.type?.startsWith('image/'))?.url
+    ?? entry.links?.find((link) => link.rel === 'enclosure' && link.type?.startsWith('image/'))?.href
+    ?? entry.itunes?.image
+    ?? firstImgSrc(entry.content?.value)
+    ?? firstImgSrc(entry.summary?.value)
   );
 }

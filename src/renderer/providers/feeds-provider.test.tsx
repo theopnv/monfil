@@ -19,6 +19,14 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
   };
 }
 
+function createFeedWithItem(itemId: number): Feed {
+  const feed = createFeed();
+  return {
+    ...feed,
+    items: [{ id: itemId, feed_id: feed.id, title: 'Item', link: `https://example.com/item-${itemId}`, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+  };
+}
+
 function FeedsList() {
   const feeds = useFeeds();
   return (
@@ -76,6 +84,13 @@ function ReadStateProbe({ id }: { id: number }) {
       <button type="button" onClick={() => markRead(id)}>Mark {id} read</button>
       <button type="button" onClick={() => toggleRead(id)}>Toggle {id}</button>
     </div>
+  );
+}
+
+function MarkAllReadButton({ ids }: { ids: number[] }) {
+  const { markAllRead } = useReadState();
+  return (
+    <button type="button" onClick={() => markAllRead(ids)}>Mark all read</button>
   );
 }
 
@@ -145,9 +160,9 @@ test('re-adding the same link replaces the existing feed instead of duplicating 
 
 test('an item-image-fetched push merges the image into the matching feed item, leaving others untouched', async () => {
   // Arrange
-  const targetItem = { id: 1, feed_id: 1, title: 'Target item', link: 'https://example.com/target', pubDate: '2024-01-01', description: '', image: undefined };
-  const otherItemInSameFeed = { id: 2, feed_id: 1, title: 'Other item', link: 'https://example.com/other', pubDate: '2024-01-01', description: '', image: undefined };
-  const itemInOtherFeed = { id: 3, feed_id: 2, title: 'Item in other feed', link: 'https://example.com/other-feed-item', pubDate: '2024-01-01', description: '', image: undefined };
+  const targetItem = { id: 1, feed_id: 1, title: 'Target item', link: 'https://example.com/target', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined };
+  const otherItemInSameFeed = { id: 2, feed_id: 1, title: 'Other item', link: 'https://example.com/other', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined };
+  const itemInOtherFeed = { id: 3, feed_id: 2, title: 'Item in other feed', link: 'https://example.com/other-feed-item', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined };
   const targetFeed = createFeed({ title: 'Target feed', items: [targetItem, otherItemInSameFeed] });
   const otherFeed = createFeed({ title: 'Other feed', items: [itemInOtherFeed] });
   const { getByText, getByRole } = await render(
@@ -302,11 +317,14 @@ test('refreshNow stops reporting a refresh once it fails', async () => {
 
 test('a fresh provider starts with nothing read', async () => {
   // Arrange
-  const { getByText } = await render(
+  const feed = createFeedWithItem(1);
+  const { getByText, getByRole } = await render(
     <FeedsProvider>
+      <AddFeedButton feed={feed} />
       <ReadStateProbe id={1} />
     </FeedsProvider>,
   );
+  await getByRole('button', { name: `Add ${feed.title}` }).click();
 
   // Assert
   await expect.element(getByText('Item 1 is unread', { exact: true })).toBeInTheDocument();
@@ -314,11 +332,14 @@ test('a fresh provider starts with nothing read', async () => {
 
 test('markRead marks an item read', async () => {
   // Arrange
+  const feed = createFeedWithItem(1);
   const { getByText, getByRole } = await render(
     <FeedsProvider>
+      <AddFeedButton feed={feed} />
       <ReadStateProbe id={1} />
     </FeedsProvider>,
   );
+  await getByRole('button', { name: `Add ${feed.title}` }).click();
 
   // Act
   await getByRole('button', { name: 'Mark 1 read' }).click();
@@ -327,13 +348,34 @@ test('markRead marks an item read', async () => {
   await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
 });
 
-test('marking an already-read item again is a no-op', async () => {
+test('markRead invokes items:set-read with the item id', async () => {
   // Arrange
-  const { getByText, getByRole } = await render(
+  const feed = createFeedWithItem(1);
+  const { getByRole } = await render(
     <FeedsProvider>
+      <AddFeedButton feed={feed} />
       <ReadStateProbe id={1} />
     </FeedsProvider>,
   );
+  await getByRole('button', { name: `Add ${feed.title}` }).click();
+
+  // Act
+  await getByRole('button', { name: 'Mark 1 read' }).click();
+
+  // Assert
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('items:set-read', { itemIds: [1], read: true });
+});
+
+test('marking an already-read item again is a no-op', async () => {
+  // Arrange
+  const feed = createFeedWithItem(1);
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <AddFeedButton feed={feed} />
+      <ReadStateProbe id={1} />
+    </FeedsProvider>,
+  );
+  await getByRole('button', { name: `Add ${feed.title}` }).click();
 
   // Act
   await getByRole('button', { name: 'Mark 1 read' }).click();
@@ -345,11 +387,14 @@ test('marking an already-read item again is a no-op', async () => {
 
 test('toggleRead flips the read state both ways', async () => {
   // Arrange
+  const feed = createFeedWithItem(1);
   const { getByText, getByRole } = await render(
     <FeedsProvider>
+      <AddFeedButton feed={feed} />
       <ReadStateProbe id={1} />
     </FeedsProvider>,
   );
+  await getByRole('button', { name: `Add ${feed.title}` }).click();
 
   // Act
   await getByRole('button', { name: 'Toggle 1' }).click();
@@ -362,4 +407,25 @@ test('toggleRead flips the read state both ways', async () => {
 
   // Assert
   await expect.element(getByText('Item 1 is unread', { exact: true })).toBeInTheDocument();
+});
+
+test('markAllRead sends one items:set-read call for every id', async () => {
+  // Arrange
+  const feedA = createFeedWithItem(1);
+  const feedB = createFeedWithItem(2);
+  const { getByRole } = await render(
+    <FeedsProvider>
+      <AddFeedButton feed={feedA} />
+      <AddFeedButton feed={feedB} />
+      <MarkAllReadButton ids={[1, 2]} />
+    </FeedsProvider>,
+  );
+  await getByRole('button', { name: `Add ${feedA.title}` }).click();
+  await getByRole('button', { name: `Add ${feedB.title}` }).click();
+
+  // Act
+  await getByRole('button', { name: 'Mark all read' }).click();
+
+  // Assert
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('items:set-read', { itemIds: [1, 2], read: true });
 });
