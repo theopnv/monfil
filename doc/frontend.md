@@ -20,6 +20,8 @@ This is deliberate: `webContents.send` (a main -> renderer push) has no bufferin
 
 Main pushes only what the renderer cannot ask for, because main decided it on its own. The refresh scheduler is the case today: it broadcasts the new list on `feeds:list`, the same channel the provider invokes on mount. A lost push is harmless there, since it can only be lost before the provider mounts, and the mount-time invoke then returns the refreshed list anyway. The reverse order is the one to watch: the mount-time invoke can answer with a snapshot taken before the refresh landed, so `FeedsProvider` drops that answer once a push has arrived.
 
+"Renderer-only" data that needs to be stored between sessions should go to the localStorage, and not the database, to avoid the overload of setting up an extra channel between the renderer and main.
+
 ## Styling
 
 `src/renderer/styles/globals.css` is the entry point. It imports Tailwind, then `theme.css`, then `monfil-theme.css`.

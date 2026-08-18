@@ -67,6 +67,7 @@ function setUpThreeItemRiver() {
 let markRead: Mock<(id: number) => void>;
 
 beforeEach(() => {
+  localStorage.clear();
   window.electron = {
     ipcRenderer: {
       invoke: vi.fn().mockResolvedValue([]),

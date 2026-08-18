@@ -52,6 +52,7 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
 }
 
 beforeEach(() => {
+  localStorage.clear();
   window.electron = {
     ipcRenderer: {
       invoke: vi.fn().mockResolvedValue([]),

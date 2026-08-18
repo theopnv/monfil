@@ -69,6 +69,7 @@ function ConnectedSidebar({ selectedFeedLink, onSelectFeed }: { selectedFeedLink
 
 beforeEach(() => {
   stubElectron();
+  localStorage.clear();
 });
 
 test('clicking "Add feed" opens the add-feed modal', async () => {

@@ -6,6 +6,7 @@ import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { getFaviconUrl } from "@/lib/favicon";
+import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import type { Feed } from "../../../preload/channels";
 
 export interface RiverSidebarProps {
@@ -18,13 +19,26 @@ interface Folder {
   name: string;
   feeds: Feed[];
   count: number;
+  open: boolean;
+}
+
+const OPEN_FOLDERS_STORAGE_KEY = 'sidebar-open-folders';
+
+function loadOpenFolderNames(): Set<string> {
+  const parsed = readLocalStorageJSON(OPEN_FOLDERS_STORAGE_KEY);
+  return new Set(Array.isArray(parsed) ? parsed.filter((name): name is string => typeof name === 'string') : []);
+}
+
+function saveOpenFolderNames(names: Iterable<string>): void {
+  writeLocalStorageJSON(OPEN_FOLDERS_STORAGE_KEY, [...names]);
 }
 
 function groupByCategory(feeds: Feed[]): Folder[] {
+  const openFolderNames = loadOpenFolderNames();
   const folders = new Map<string, Folder>();
   for (const feed of feeds) {
     const name = feed.category.name;
-    const folder = folders.get(name) ?? { name, feeds: [], count: 0 };
+    const folder = folders.get(name) ?? { name, feeds: [], count: 0, open: openFolderNames.has(name) };
     folder.feeds.push(feed);
     folder.count += feed.items.length;
     folders.set(name, folder);
@@ -33,10 +47,16 @@ function groupByCategory(feeds: Feed[]): Folder[] {
 }
 
 export default function RiverSidebar({ feeds, selectedFeedLink, onSelectFeed }: RiverSidebarProps) {
-  const folders = groupByCategory(feeds);
-  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [folders, setFolders] = useState(() => groupByCategory(feeds));
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
   const [feedPendingDelete, setFeedPendingDelete] = useState<Feed | null>(null);
+
+  useEffect(() => {
+    setFolders((prev) => {
+      const openByName = new Map(prev.map((folder) => [folder.name, folder.open]));
+      return groupByCategory(feeds).map((folder) => ({ ...folder, open: openByName.get(folder.name) ?? folder.open }));
+    });
+  }, [feeds]);
 
   useEffect(() => {
     return window.electron.ipcRenderer.on('feeds:delete-feed-requested', (feedId) => {
@@ -64,21 +84,23 @@ export default function RiverSidebar({ feeds, selectedFeedLink, onSelectFeed }: 
       />
       <div className="flex flex-col gap-px px-2.5">
         {folders.map((folder) => {
-          const isOpen = open[folder.name] ?? false;
-
           return (
             <div key={folder.name} className="flex flex-col">
               <button
                 type="button"
-                onClick={() => setOpen((prev) => ({ ...prev, [folder.name]: !isOpen }))}
+                onClick={() => setFolders((prev) => {
+                  const next = prev.map((f) => (f.name === folder.name ? { ...f, open: !f.open } : f));
+                  saveOpenFolderNames(next.filter((f) => f.open).map((f) => f.name));
+                  return next;
+                })}
                 className="flex w-full items-center gap-1.5 rounded-xl px-2.25 py-1.75 text-left text-sm font-semibold text-primary hover:bg-primary_hover"
               >
-                <ChevronRight className={cx("size-3.25 flex-none text-quaternary transition-transform", isOpen && "rotate-90")} />
+                <ChevronRight className={cx("size-3.25 flex-none text-quaternary transition-transform", folder.open && "rotate-90")} />
                 <span className="flex-1">{folder.name}</span>
                 <span className="text-xs font-bold text-quaternary tabular-nums">{folder.count}</span>
               </button>
 
-              {isOpen && (
+              {folder.open && (
                 <div className="flex flex-col gap-px pl-2">
                   {folder.feeds.map((feed) => {
                     const isSelected = feed.link === selectedFeedLink;
