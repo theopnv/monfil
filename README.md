@@ -16,3 +16,4 @@ It means "My feed" in french.
 
 - Add a feed with the '+' button at the top.
 - Remove a feed with a right-click in the sidebar.
+- Set a feed/folder visibility on hovering from the sidebar.

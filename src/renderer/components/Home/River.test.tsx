@@ -11,6 +11,7 @@ vi.mock(import('@/providers/feeds-provider'), async (importOriginal) => {
     useFeeds: vi.fn(),
     useAddFeed: vi.fn(() => vi.fn()),
     useDeleteFeed: vi.fn(() => vi.fn()),
+    useSetShowInHome: vi.fn(() => vi.fn()),
     useFeedsRefresh: vi.fn(() => ({ refreshNow: vi.fn(), isRefreshing: false })),
     useReadState: vi.fn(() => ({ isRead: () => false, markRead: vi.fn(), toggleRead: vi.fn() })),
   };
@@ -89,22 +90,36 @@ test('shows items from every feed by default', async () => {
   await expect.element(getByText('Item B1', { exact: true })).toBeInTheDocument();
 });
 
-test('selecting a feed only shows items from that feed', async () => {
+test('rotating feed visibility narrows, widens, then narrows home again', async () => {
   // Arrange
   const { getByText, getByRole } = await render(
     <FeedsProvider>
       <River onOpenItem={vi.fn()} />
     </FeedsProvider>
   );
+  await getByRole('button', { name: 'Tech', exact: true }).click();
 
-  // Act
-  await getByRole('button', { name: 'Tech' }).click();
+  // Act: one click on Feed A shows only Feed A.
   await getByRole('button', { name: /Feed A/ }).click();
 
   // Assert
   await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Item A2', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Item B1', { exact: true })).not.toBeInTheDocument();
+
+  // Act: focusing Feed B too shows both.
+  await getByRole('button', { name: /Feed B/ }).click();
+
+  // Assert
+  await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item B1', { exact: true })).toBeInTheDocument();
+
+  // Act: clicking Feed A again drops it from the only set, leaving Feed B alone.
+  await getByRole('button', { name: /Feed A/ }).click();
+
+  // Assert
+  await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
+  await expect.element(getByText('Item B1', { exact: true })).toBeInTheDocument();
 });
 
 test('hides feed items when showInHome is set to 0', async () => {

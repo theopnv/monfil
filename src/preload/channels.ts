@@ -1,6 +1,7 @@
 import type { FeedMetadata, FeedItem, FeedCategory } from '../main/db/types';
 import type { NewFeedInput, AddFeedError } from '../main/db/insert';
 import type { DeleteFeedError } from '../main/db/delete';
+import type { UpdateFeedError } from '../main/db/update';
 import type { ParsedFeed, FeedFetchError } from '../main/feed/parse';
 import type { RefreshInterval } from '../main/settings';
 import type { Result } from '../utils';
@@ -38,6 +39,7 @@ export type TwoWayRendererMainChannelPayloads = {
   'feeds:refresh': Feed[];
   'feeds:submit-add-feed': Result<Feed, AddFeedError>;
   'feeds:delete-feed': Result<Feed[], DeleteFeedError>;
+  'feeds:set-show-in-home': Result<Feed[], UpdateFeedError>;
   'settings:get-refresh-interval': RefreshInterval;
   'settings:set-refresh-interval': RefreshInterval;
 }
@@ -51,6 +53,7 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:refresh': undefined;
   'feeds:submit-add-feed': NewFeedInput;
   'feeds:delete-feed': number;
+  'feeds:set-show-in-home': { feedIds: number[]; showInHome: boolean };
   'settings:get-refresh-interval': undefined;
   'settings:set-refresh-interval': RefreshInterval;
 };

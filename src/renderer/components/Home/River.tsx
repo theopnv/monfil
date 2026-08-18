@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import RiverControls, { type Density } from "@/components/Home/RiverControls";
 import RiverHeader from "@/components/Home/RiverHeader";
 import RiverList from "@/components/Home/RiverList";
 import RiverSidebar from "@/components/Home/RiverSidebar";
+import { type FeedVisibility, visibleFeedLinks } from "@/lib/feed-visibility";
 import { toRiverItems } from "@/lib/river";
-import { useFeeds, useReadState } from "@/providers/feeds-provider";
+import { useFeeds, useReadState, useSetShowInHome } from "@/providers/feeds-provider";
+import type { Feed } from "../../../preload/channels";
 
 export interface RiverProps {
   onOpenItem: (id: number) => void;
@@ -13,15 +15,44 @@ export interface RiverProps {
 export default function River({ onOpenItem }: RiverProps) {
   const feeds = useFeeds();
   const { isRead, markRead } = useReadState();
+  const setShowInHome = useSetShowInHome();
   const riverItems = useMemo(() => toRiverItems(feeds), [feeds]);
 
   const [density, setDensity] = useState<Density>("Cards");
-  const [selectedFeedLink, setSelectedFeedLink] = useState<string | null>(null);
+  const [showOnlyLinks, setShowOnlyLinks] = useState<ReadonlySet<string>>(() => new Set());
 
-  const visibleItems = useMemo(
-    () => (selectedFeedLink ? riverItems.filter((item) => item.feedLink === selectedFeedLink) : riverItems),
-    [riverItems, selectedFeedLink],
-  );
+  const visibleItems = useMemo(() => {
+    const links = visibleFeedLinks(feeds, showOnlyLinks);
+    return riverItems.filter((item) => links.has(item.feedLink));
+  }, [riverItems, feeds, showOnlyLinks]);
+
+  const applyVisibility = useCallback(async (targets: Feed[], target: FeedVisibility) => {
+    setShowOnlyLinks((prev) => {
+      const next = new Set(prev);
+      for (const feed of targets) {
+        if (target === "only") {
+          next.add(feed.link);
+        } else {
+          next.delete(feed.link);
+        }
+      }
+      return next;
+    });
+
+    const needsWrite = targets.filter((feed) => (feed.showInHome !== 0) === (target === "hidden"));
+    if (needsWrite.length > 0) {
+      await setShowInHome(needsWrite.map((feed) => feed.id), target !== "hidden");
+    }
+  }, [setShowInHome]);
+
+  const handleFeedDeleted = useCallback((feed: Feed) => {
+    setShowOnlyLinks((prev) => {
+      if (!prev.has(feed.link)) return prev;
+      const next = new Set(prev);
+      next.delete(feed.link);
+      return next;
+    });
+  }, []);
 
   const markAllRead = () => {
     for (const item of visibleItems) {
@@ -33,7 +64,12 @@ export default function River({ onOpenItem }: RiverProps) {
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <RiverSidebar feeds={feeds} selectedFeedLink={selectedFeedLink} onSelectFeed={setSelectedFeedLink} />
+      <RiverSidebar
+        feeds={feeds}
+        showOnlyLinks={showOnlyLinks}
+        onSetVisibility={applyVisibility}
+        onFeedDeleted={handleFeedDeleted}
+      />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <RiverHeader />

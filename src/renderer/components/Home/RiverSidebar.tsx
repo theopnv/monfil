@@ -5,14 +5,16 @@ import DeleteFeedDialog from "@/components/Home/DeleteFeedDialog";
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
+import { feedVisibility, folderVisibility, nextVisibility, VISIBILITY_ICON, VISIBILITY_LABEL, type FeedVisibility } from "@/lib/feed-visibility";
 import { getFaviconUrl } from "@/lib/favicon";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import type { Feed } from "../../../preload/channels";
 
 export interface RiverSidebarProps {
   feeds: Feed[];
-  selectedFeedLink: string | null;
-  onSelectFeed: (link: string | null) => void;
+  showOnlyLinks: ReadonlySet<string>;
+  onSetVisibility: (feeds: Feed[], target: FeedVisibility) => void;
+  onFeedDeleted: (feed: Feed) => void;
 }
 
 interface Folder {
@@ -46,7 +48,7 @@ function groupByCategory(feeds: Feed[]): Folder[] {
   return [...folders.values()];
 }
 
-export default function RiverSidebar({ feeds, selectedFeedLink, onSelectFeed }: RiverSidebarProps) {
+export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, onFeedDeleted }: RiverSidebarProps) {
   const [folders, setFolders] = useState(() => groupByCategory(feeds));
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
   const [feedPendingDelete, setFeedPendingDelete] = useState<Feed | null>(null);
@@ -64,12 +66,6 @@ export default function RiverSidebar({ feeds, selectedFeedLink, onSelectFeed }: 
     });
   }, [feeds]);
 
-  function handleFeedDeleted(deleted: Feed) {
-    if (deleted.link === selectedFeedLink) {
-      onSelectFeed(null);
-    }
-  }
-
   return (
     <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-r border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
       <div className="flex items-center justify-between px-4.5 pb-2">
@@ -80,48 +76,73 @@ export default function RiverSidebar({ feeds, selectedFeedLink, onSelectFeed }: 
       <DeleteFeedDialog
         feed={feedPendingDelete}
         onOpenChange={(isOpen) => { if (!isOpen) setFeedPendingDelete(null); }}
-        onDeleted={handleFeedDeleted}
+        onDeleted={onFeedDeleted}
       />
       <div className="flex flex-col gap-px px-2.5">
         {folders.map((folder) => {
+          const folderState = folderVisibility(folder.feeds, showOnlyLinks);
+          const folderNext = nextVisibility(folderState);
+          const FolderNextIcon = VISIBILITY_ICON[folderNext];
+
           return (
             <div key={folder.name} className="flex flex-col">
-              <button
-                type="button"
-                onClick={() => setFolders((prev) => {
-                  const next = prev.map((f) => (f.name === folder.name ? { ...f, open: !f.open } : f));
-                  saveOpenFolderNames(next.filter((f) => f.open).map((f) => f.name));
-                  return next;
-                })}
-                className="flex w-full items-center gap-1.5 rounded-xl px-2.25 py-1.75 text-left text-sm font-semibold text-primary hover:bg-primary_hover"
+              <div
+                className={cx(
+                  "group flex w-full items-center gap-1.5 rounded-xl px-2.25 py-1.75 text-sm font-semibold hover:bg-primary_hover",
+                  folderState === "hidden" ? "text-quaternary opacity-60" : "text-primary",
+                )}
               >
-                <ChevronRight className={cx("size-3.25 flex-none text-quaternary transition-transform", folder.open && "rotate-90")} />
-                <span className="flex-1">{folder.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setFolders((prev) => {
+                    const next = prev.map((f) => (f.name === folder.name ? { ...f, open: !f.open } : f));
+                    saveOpenFolderNames(next.filter((f) => f.open).map((f) => f.name));
+                    return next;
+                  })}
+                  className="flex flex-1 items-center gap-1.5 text-left"
+                >
+                  <ChevronRight className={cx("size-3.25 flex-none text-quaternary transition-transform", folder.open && "rotate-90")} />
+                  <span className="flex-1">{folder.name}</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label={`${VISIBILITY_LABEL[folderNext]}: ${folder.name}`}
+                  onClick={() => onSetVisibility(folder.feeds, folderNext)}
+                  className="flex-none opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                >
+                  <FolderNextIcon aria-hidden className="size-3.5 text-quaternary" />
+                </button>
                 <span className="text-xs font-bold text-quaternary tabular-nums">{folder.count}</span>
-              </button>
+              </div>
 
               {folder.open && (
                 <div className="flex flex-col gap-px pl-2">
                   {folder.feeds.map((feed) => {
-                    const isSelected = feed.link === selectedFeedLink;
+                    const state = feedVisibility(feed, showOnlyLinks);
+                    const next = nextVisibility(state);
+                    const NextIcon = VISIBILITY_ICON[next];
 
                     return (
                       <button
                         key={feed.link}
                         type="button"
-                        aria-pressed={isSelected}
-                        onClick={() => onSelectFeed(isSelected ? null : feed.link)}
+                        title={`${feed.title} — ${VISIBILITY_LABEL[next]}`}
+                        data-visibility={state}
+                        onClick={() => onSetVisibility([feed], next)}
                         onContextMenu={(event) => {
                           event.preventDefault();
                           window.electron.ipcRenderer.sendMessage('feeds:show-feed-context-menu', feed.id);
                         }}
                         className={cx(
-                          "flex w-full items-center gap-2.25 rounded-xl px-2.25 py-1.5 text-left text-sm hover:bg-primary_hover",
-                          isSelected ? "bg-primary_hover font-semibold text-primary" : "text-secondary",
+                          "group flex w-full items-center gap-2.25 rounded-xl px-2.25 py-1.5 text-left text-sm hover:bg-primary_hover",
+                          state === "only" && "bg-primary_hover font-semibold text-primary",
+                          state === "hidden" && "text-quaternary opacity-60",
+                          state === "home" && "text-secondary",
                         )}
                       >
                         <FeedAvatar title={feed.title} faviconUrl={getFaviconUrl(feed.link)} size="sm" />
                         <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{feed.title}</span>
+                        <NextIcon aria-hidden className="size-3.5 flex-none text-quaternary opacity-0 group-hover:opacity-100" />
                         <span className="text-xs text-quaternary tabular-nums">{feed.items.length}</span>
                       </button>
                     );

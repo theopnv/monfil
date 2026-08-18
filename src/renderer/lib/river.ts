@@ -37,7 +37,6 @@ function stripHtml(html: string): string {
 
 export function toRiverItems(feeds: Feed[]): RiverItem[] {
   const items = feeds
-    .filter((feed) => feed.showInHome !== 0)
     .flatMap((feed) =>
       feed.items.map((item) => ({
         id: item.id,

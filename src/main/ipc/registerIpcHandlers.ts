@@ -5,7 +5,7 @@ import { fetchFeed } from "../feed/parse";
 import { queryFeedCategory, queryFeeds } from "../db/query";
 import { dbReady } from "../database";
 import { getRefreshInterval } from "../settings";
-import { handleFeedsDeleteFeed, handleFeedsRefresh, handleFeedsSubmitAddFeed, handleSettingsSetRefreshInterval } from "./handlers";
+import { handleFeedsDeleteFeed, handleFeedsRefresh, handleFeedsSetShowInHome, handleFeedsSubmitAddFeed, handleSettingsSetRefreshInterval } from "./handlers";
 
 // IPC Handlers - Main from and to Renderer (two ways)
 // On the renderer side (exposed through preload): ipcRenderer.invoke(channel, ...args)
@@ -25,6 +25,7 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "feeds:refresh": handleFeedsRefresh,
   "feeds:submit-add-feed": handleFeedsSubmitAddFeed,
   "feeds:delete-feed": handleFeedsDeleteFeed,
+  "feeds:set-show-in-home": handleFeedsSetShowInHome,
   "settings:get-refresh-interval": () => getRefreshInterval(),
   "settings:set-refresh-interval": handleSettingsSetRefreshInterval,
 };

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from "react";
 import type { Feed } from "../../preload/channels";
 import type { DeleteFeedError } from "../../main/db/delete";
+import type { UpdateFeedError } from "../../main/db/update";
 import type { Result } from "../../utils";
 
 const FeedsContext = createContext<Feed[] | undefined>(undefined);
@@ -34,6 +35,18 @@ export const useDeleteFeed = (): ((feedId: number) => Promise<Result<Feed[], Del
 
   if (context === undefined) {
     throw new Error("useDeleteFeed must be used within a FeedsProvider");
+  }
+
+  return context;
+};
+
+const SetShowInHomeContext = createContext<((feedIds: number[], showInHome: boolean) => Promise<Result<Feed[], UpdateFeedError>>) | undefined>(undefined);
+
+export const useSetShowInHome = (): ((feedIds: number[], showInHome: boolean) => Promise<Result<Feed[], UpdateFeedError>>) => {
+  const context = useContext(SetShowInHomeContext);
+
+  if (context === undefined) {
+    throw new Error("useSetShowInHome must be used within a FeedsProvider");
   }
 
   return context;
@@ -88,6 +101,15 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
 
   const deleteFeed = useCallback(async (feedId: number) => {
     const response = await window.electron.ipcRenderer.invoke('feeds:delete-feed', feedId);
+    if (response.success) {
+      hasFreshList.current = true;
+      setFeeds(response.data);
+    }
+    return response;
+  }, []);
+
+  const setShowInHome = useCallback(async (feedIds: number[], showInHome: boolean) => {
+    const response = await window.electron.ipcRenderer.invoke('feeds:set-show-in-home', { feedIds, showInHome });
     if (response.success) {
       hasFreshList.current = true;
       setFeeds(response.data);
@@ -164,9 +186,11 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
     <FeedsContext.Provider value={feeds}>
       <AddFeedContext.Provider value={addFeed}>
         <DeleteFeedContext.Provider value={deleteFeed}>
-          <FeedsRefreshContext.Provider value={refresh}>
-            <ReadStateContext.Provider value={readState}>{children}</ReadStateContext.Provider>
-          </FeedsRefreshContext.Provider>
+          <SetShowInHomeContext.Provider value={setShowInHome}>
+            <FeedsRefreshContext.Provider value={refresh}>
+              <ReadStateContext.Provider value={readState}>{children}</ReadStateContext.Provider>
+            </FeedsRefreshContext.Provider>
+          </SetShowInHomeContext.Provider>
         </DeleteFeedContext.Provider>
       </AddFeedContext.Provider>
     </FeedsContext.Provider>

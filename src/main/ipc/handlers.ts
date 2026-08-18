@@ -3,6 +3,7 @@ import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
 import { addFeedToDatabase, updateFeedItemImage, type AddFeedError, type NewFeedInput } from "../db/insert";
 import { deleteFeedFromDatabase, type DeleteFeedError } from "../db/delete";
+import { setFeedsShowInHome, type UpdateFeedError } from "../db/update";
 import { queryFeeds } from "../db/query";
 import { setRefreshInterval, toRefreshInterval, type RefreshInterval } from "../settings";
 import { sendToRenderer } from "./sendToRenderer";
@@ -28,6 +29,12 @@ export function handleFeedsRefresh(): Promise<Feed[]> {
 
 export async function handleFeedsDeleteFeed(_event: IpcMainInvokeEvent, feedId: number): Promise<Result<Feed[], DeleteFeedError>> {
   const result = await deleteFeedFromDatabase(feedId);
+  if (!result.success) return result;
+  return { success: true, data: await queryFeeds() };
+}
+
+export async function handleFeedsSetShowInHome(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInHome: boolean }): Promise<Result<Feed[], UpdateFeedError>> {
+  const result = await setFeedsShowInHome(payload.feedIds, payload.showInHome);
   if (!result.success) return result;
   return { success: true, data: await queryFeeds() };
 }
