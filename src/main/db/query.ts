@@ -35,6 +35,7 @@ const feedItemHandlers = {
   pubDate: (q, v) => q.where('pubDate', '=', v),
   description: (q, v) => q.where('description', '=', v),
   image: (q, v) => q.where('image', '=', v),
+  read_at: (q, v) => q.where('read_at', '=', v),
 } satisfies CriteriaHandlers<'feedItem', FeedItem>;
 
 export function queryFeedItems(criteria: Partial<FeedItem>): Promise<FeedItem[]> {
@@ -69,6 +70,20 @@ const settingHandlers = {
 
 export function querySettings(criteria: Partial<Setting>): Promise<Setting[]> {
   return applyCriteria(db.selectFrom('setting').selectAll(), criteria, settingHandlers).execute();
+}
+
+export async function countFeedItems(): Promise<number> {
+  const { count } = await db.selectFrom('feedItem')
+    .select((eb) => eb.fn.countAll<number>().as('count'))
+    .executeTakeFirstOrThrow();
+  return count;
+}
+
+export async function countFeedMetadata(): Promise<number> {
+  const { count } = await db.selectFrom('feedMetadata')
+    .select((eb) => eb.fn.countAll<number>().as('count'))
+    .executeTakeFirstOrThrow();
+  return count;
 }
 
 export async function queryFeeds(): Promise<Feed[]> {

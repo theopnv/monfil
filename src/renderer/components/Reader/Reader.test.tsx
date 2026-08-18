@@ -34,6 +34,7 @@ function createFeedItem(overrides: Partial<FeedItem> = {}): FeedItem {
     pubDate: '2024-01-01',
     description: `<p>Item ${id} description</p>`,
     image: undefined,
+    read_at: undefined,
     ...overrides,
   };
 }
@@ -78,7 +79,7 @@ beforeEach(() => {
   } as unknown as typeof window.electron;
 
   markRead = vi.fn<(id: number) => void>();
-  mockedUseReadState.mockReturnValue({ isRead: () => false, markRead, toggleRead: vi.fn() });
+  mockedUseReadState.mockReturnValue({ isRead: () => false, markRead, toggleRead: vi.fn(), markAllRead: vi.fn() });
 });
 
 test('renders the matched item title, byline and body', async () => {
@@ -165,7 +166,7 @@ test('clicking previous and next navigates to the correct neighbor', async () =>
 test('the next article card targets the nearest unread item further down the list', async () => {
   // Arrange
   const { itemA, itemB, itemC } = setUpThreeItemRiver();
-  mockedUseReadState.mockReturnValue({ isRead: (id) => id === itemB.id, markRead, toggleRead: vi.fn() });
+  mockedUseReadState.mockReturnValue({ isRead: (id) => id === itemB.id, markRead, toggleRead: vi.fn(), markAllRead: vi.fn() });
   const onNavigateToItem = vi.fn();
 
   // Act

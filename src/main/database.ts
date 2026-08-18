@@ -11,6 +11,7 @@ export const DB_FILE_NAME = 'monfil.db';
 // Every consumer's contract is "await dbReady, then use db" (see doc/database.md), so nothing reads these before initializeDatabase has run.
 export let db!: Kysely<Database>;
 export let dbReady!: Promise<void>;
+export let dbFilePath!: string;
 
 async function openAndMigrate(filePath: string): Promise<void> {
   const sqlite = new SQLite(filePath);
@@ -39,6 +40,7 @@ async function openAndMigrate(filePath: string): Promise<void> {
 }
 
 export function initializeDatabase(filePath: string): Promise<void> {
+  dbFilePath = filePath;
   dbReady = withCorruptionRecovery(filePath, () => openAndMigrate(filePath), () => db.destroy());
   return dbReady;
 }

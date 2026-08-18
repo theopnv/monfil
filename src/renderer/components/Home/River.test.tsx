@@ -1,6 +1,7 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { FeedsProvider, useFeeds } from '@/providers/feeds-provider';
+import { FeedsProvider, useFeeds, useReadState } from '@/providers/feeds-provider';
+import { PreferencesProvider } from '@/providers/preferences-provider';
 import River from './River';
 import type { Feed } from '../../../preload/channels';
 
@@ -13,11 +14,12 @@ vi.mock(import('@/providers/feeds-provider'), async (importOriginal) => {
     useDeleteFeed: vi.fn(() => vi.fn()),
     useSetShowInHome: vi.fn(() => vi.fn()),
     useFeedsRefresh: vi.fn(() => ({ refreshNow: vi.fn(), isRefreshing: false })),
-    useReadState: vi.fn(() => ({ isRead: () => false, markRead: vi.fn(), toggleRead: vi.fn() })),
+    useReadState: vi.fn(() => ({ isRead: () => false, markRead: vi.fn(), toggleRead: vi.fn(), markAllRead: vi.fn() })),
   };
 });
 
 const mockedUseFeeds = vi.mocked(useFeeds);
+const mockedUseReadState = vi.mocked(useReadState);
 
 type FeedItem = Feed['items'][number];
 
@@ -34,6 +36,7 @@ function createFeedItem(overrides: Partial<FeedItem> = {}): FeedItem {
     pubDate: '2024-01-01',
     description: `Item ${id} description`,
     image: undefined,
+    read_at: undefined,
     ...overrides,
   };
 }
@@ -78,11 +81,12 @@ beforeEach(() => {
   });
 
   mockedUseFeeds.mockReturnValue([feedA, feedB]);
+  mockedUseReadState.mockReturnValue({ isRead: () => false, markRead: vi.fn(), toggleRead: vi.fn(), markAllRead: vi.fn() });
 });
 
 test('shows items from every feed by default', async () => {
   // Arrange
-  const { getByText } = await render(<River onOpenItem={vi.fn()} />);
+  const { getByText } = await render(<PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider>);
 
   // Assert
   await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
@@ -93,9 +97,11 @@ test('shows items from every feed by default', async () => {
 test('rotating feed visibility narrows, widens, then narrows home again', async () => {
   // Arrange
   const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <River onOpenItem={vi.fn()} />
-    </FeedsProvider>
+    <PreferencesProvider>
+      <FeedsProvider>
+        <River onOpenItem={vi.fn()} />
+      </FeedsProvider>
+    </PreferencesProvider>
   );
   await getByRole('button', { name: 'Tech', exact: true }).click();
 
@@ -133,9 +139,11 @@ test('hides feed items when showInHome is set to 0', async () => {
   mockedUseFeeds.mockReturnValue((mockedUseFeeds() as Feed[]).concat(feedC));
 
   const { getByText } = await render(
-    <FeedsProvider>
-      <River onOpenItem={vi.fn()} />
-    </FeedsProvider>
+    <PreferencesProvider>
+      <FeedsProvider>
+        <River onOpenItem={vi.fn()} />
+      </FeedsProvider>
+    </PreferencesProvider>
   );
 
   // Assert
@@ -148,11 +156,63 @@ test('clicking a card invokes onOpenItem with the item id', async () => {
   const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [item] });
   mockedUseFeeds.mockReturnValue([feed]);
   const onOpenItem = vi.fn();
-  const { getByText } = await render(<River onOpenItem={onOpenItem} />);
+  const { getByText } = await render(<PreferencesProvider><River onOpenItem={onOpenItem} /></PreferencesProvider>);
 
   // Act
   await getByText('Clickable item', { exact: true }).click();
 
   // Assert
   expect(onOpenItem).toHaveBeenCalledWith(item.id);
+});
+
+test('hides read items when the hideReadItems preference is on', async () => {
+  // Arrange
+  localStorage.setItem('preferences-hide-read-items', JSON.stringify(true));
+  const readItem = createFeedItem({ title: 'Read item' });
+  const unreadItem = createFeedItem({ title: 'Unread item' });
+  const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [readItem, unreadItem] });
+  mockedUseFeeds.mockReturnValue([feed]);
+  mockedUseReadState.mockReturnValue({ isRead: (id) => id === readItem.id, markRead: vi.fn(), toggleRead: vi.fn(), markAllRead: vi.fn() });
+
+  // Act
+  const { getByText } = await render(<PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider>);
+
+  // Assert
+  await expect.element(getByText('Unread item', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Read item', { exact: true })).not.toBeInTheDocument();
+});
+
+test('opening a link externally sends link:open, marks it read, and does not navigate', async () => {
+  // Arrange
+  localStorage.setItem('preferences-open-links-externally', JSON.stringify(true));
+  const item = createFeedItem({ title: 'External item', link: 'https://x.example/article' });
+  const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [item] });
+  mockedUseFeeds.mockReturnValue([feed]);
+  const markRead = vi.fn();
+  mockedUseReadState.mockReturnValue({ isRead: () => false, markRead, toggleRead: vi.fn(), markAllRead: vi.fn() });
+  const onOpenItem = vi.fn();
+  const { getByText } = await render(<PreferencesProvider><River onOpenItem={onOpenItem} /></PreferencesProvider>);
+
+  // Act
+  await getByText('External item', { exact: true }).click();
+
+  // Assert
+  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('link:open', item.link);
+  expect(markRead).toHaveBeenCalledWith(item.id);
+  expect(onOpenItem).not.toHaveBeenCalled();
+});
+
+test('density reads from preferences', async () => {
+  // Arrange
+  localStorage.setItem('preferences-density', JSON.stringify('Compact'));
+  const item = createFeedItem({ title: 'Compact item' });
+  const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [item] });
+  mockedUseFeeds.mockReturnValue([feed]);
+
+  // Act
+  const { getByText } = await render(<PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider>);
+
+  // Assert
+  const cardRoot = getByText('Compact item', { exact: true }).element().closest('[data-item-id]');
+  expect(cardRoot?.tagName).toBe('DIV');
 });

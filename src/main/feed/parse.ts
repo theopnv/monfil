@@ -25,6 +25,7 @@ export function parseFeedContent(content: string, maxItems: number = 0): ParsedF
             pubDate: item.pubDate ?? 'No publication date',
             description: item.description ?? '',
             image: extractImageUrl(item),
+            read_at: undefined,
           }))
           : [],
       };
@@ -39,6 +40,7 @@ export function parseFeedContent(content: string, maxItems: number = 0): ParsedF
             pubDate: entry.published ?? entry.updated ?? 'No publication date',
             description: entry.summary?.value ?? entry.content?.value ?? '',
             image: extractAtomImageUrl(entry),
+            read_at: undefined,
           }))
           : [],
       };

@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { queryFeedCategory, queryFeedItems, queryFeedMetadata } from './query';
+import { countFeedItems, countFeedMetadata, queryFeedCategory, queryFeedItems, queryFeedMetadata } from './query';
 
 beforeAll(async () => {
   await initializeDatabase(':memory:');
@@ -171,5 +171,56 @@ describe('queryFeedItems', () => {
 
     // Assert
     expect(result).toEqual([]);
+  });
+});
+
+describe('countFeedMetadata', () => {
+  test('counts every feed', async () => {
+    // Arrange
+    const category = await db.insertInto('feedCategory').values({ name: 'tech' }).returning(['id']).executeTakeFirstOrThrow();
+    await db.insertInto('feedMetadata').values([
+      { link: 'https://a.example/feed', title: 'Feed A', category_id: category.id },
+      { link: 'https://b.example/feed', title: 'Feed B', category_id: category.id },
+    ]).execute();
+
+    // Act
+    const result = await countFeedMetadata();
+
+    // Assert
+    expect(result).toBe(2);
+  });
+
+  test('returns 0 when there are no feeds', async () => {
+    // Act
+    const result = await countFeedMetadata();
+
+    // Assert
+    expect(result).toBe(0);
+  });
+});
+
+describe('countFeedItems', () => {
+  test('counts every item across every feed', async () => {
+    // Arrange
+    const category = await db.insertInto('feedCategory').values({ name: 'tech' }).returning(['id']).executeTakeFirstOrThrow();
+    const feed = await db.insertInto('feedMetadata').values({ link: 'https://a.example/feed', title: 'Feed A', category_id: category.id }).returning(['id']).executeTakeFirstOrThrow();
+    await db.insertInto('feedItem').values([
+      { feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', pubDate: '2024-01-01', description: '' },
+      { feed_id: feed.id, title: 'Item 2', link: 'https://a.example/2', pubDate: '2024-01-02', description: '' },
+    ]).execute();
+
+    // Act
+    const result = await countFeedItems();
+
+    // Assert
+    expect(result).toBe(2);
+  });
+
+  test('returns 0 when there are no items', async () => {
+    // Act
+    const result = await countFeedItems();
+
+    // Assert
+    expect(result).toBe(0);
   });
 });

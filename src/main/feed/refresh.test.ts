@@ -17,7 +17,7 @@ const mockedFetchArticleImage = vi.mocked(fetchArticleImage);
 type NewItem = Omit<FeedItem, 'id' | 'feed_id'>;
 
 function item(overrides: Partial<NewItem> = {}): NewItem {
-  return { title: 'Item', link: 'https://a.example/1', pubDate: '2024-01-01', description: '', image: undefined, ...overrides };
+  return { title: 'Item', link: 'https://a.example/1', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined, ...overrides };
 }
 
 function parsed(link: string, items: NewItem[]): ParsedFeed {

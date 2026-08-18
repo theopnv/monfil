@@ -1,5 +1,9 @@
 import type { Feed } from '../../preload/channels';
 
+export type Density = "Cards" | "Magazine" | "Compact";
+
+export const DENSITIES: readonly Density[] = ["Cards", "Magazine", "Compact"];
+
 export interface RiverItem {
   id: number;
   title: string;

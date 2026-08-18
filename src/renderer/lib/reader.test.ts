@@ -118,7 +118,7 @@ describe('findRawDescription', () => {
       category_id: 1,
       showInHome: 1,
       category: { id: 1, name: 'Tech' },
-      items: [{ id: 10, feed_id: 1, title: 'Item', link: 'https://a.example/item', pubDate: '2024-01-01', description: '<p>raw html</p>', image: undefined }],
+      items: [{ id: 10, feed_id: 1, title: 'Item', link: 'https://a.example/item', pubDate: '2024-01-01', description: '<p>raw html</p>', image: undefined, read_at: undefined }],
     },
   ];
 

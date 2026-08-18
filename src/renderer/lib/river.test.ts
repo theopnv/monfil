@@ -13,6 +13,7 @@ function createFeedItem(overrides: Partial<FeedItem> = {}): FeedItem {
     pubDate: '2024-01-01',
     description: '',
     image: undefined,
+    read_at: undefined,
     ...overrides,
   };
 }

@@ -6,6 +6,7 @@ import { formatRelativeTime, type RiverCardProps } from "@/lib/river";
 export default function RiverCardCompact({ item, read, onOpen }: RiverCardProps) {
   return (
     <div
+      data-item-id={item.id}
       onClick={() => onOpen(item.id)}
       className={cx(
         "flex cursor-pointer items-center gap-3 border-b border-secondary px-4 py-2.75 transition last:border-b-0 hover:bg-brand-secondary",

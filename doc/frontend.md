@@ -22,6 +22,12 @@ Main pushes only what the renderer cannot ask for, because main decided it on it
 
 "Renderer-only" data that needs to be stored between sessions should go to the localStorage, and not the database, to avoid the overload of setting up an extra channel between the renderer and main.
 
+## Preferences
+
+`preferences-provider.tsx` holds the renderer-only settings: density, hide-read-items, mark-read-on-scroll and open-links-externally. `src/renderer/lib/preferences.ts` reads and writes each one under its own `localStorage` key, defaulting and discarding a stored value that fails validation rather than trusting it blindly. `usePreferences()` returns `{ preferences, setPreference }`; call `setPreference(key, value)` to update one field, which writes through to `localStorage` and re-renders every consumer.
+
+These preferences are `localStorage`-only because none of them are read by main: refresh interval and refresh-on-launch, by contrast, live in the `setting` table (`src/main/settings.ts`) since the refresh scheduler in main needs them. Read state (`feedItem.read_at`) lives in the database too, since it is data about a feed item rather than a client preference.
+
 ## Styling
 
 `src/renderer/styles/globals.css` is the entry point. It imports Tailwind, then `theme.css`, then `monfil-theme.css`.

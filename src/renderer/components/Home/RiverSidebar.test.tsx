@@ -14,7 +14,7 @@ const feedA: Feed = {
   category_id: 1,
   showInHome: 1,
   category: { id: 1, name: 'Tech' },
-  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined }],
+  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
 };
 
 const feedB: Feed = {

@@ -21,7 +21,7 @@ describe('addFeedToDatabase', () => {
     const result = await addFeedToDatabase({
       link: feedA.link,
       title: feedA.title,
-      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: 'Item 1 description', image: undefined }],
+      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: 'Item 1 description', image: undefined, read_at: undefined }],
       categoryName: 'tech',
       showInHome: true,
     });
@@ -52,8 +52,8 @@ describe('addFeedToDatabase', () => {
       link: feedA.link,
       title: feedA.title,
       items: [
-        { title: 'Item 1', link: undefined, pubDate: '2024-01-01', description: '', image: undefined },
-        { title: 'Item 2', link: undefined, pubDate: '2024-01-02', description: '', image: undefined },
+        { title: 'Item 1', link: undefined, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined },
+        { title: 'Item 2', link: undefined, pubDate: '2024-01-02', description: '', image: undefined, read_at: undefined },
       ],
       categoryName: 'tech',
       showInHome: true,
@@ -107,7 +107,7 @@ describe('addFeedToDatabase', () => {
 
 describe('addFeedItemsToDatabase', () => {
   function feedItem(overrides: Partial<Omit<FeedItem, 'id' | 'feed_id'>> = {}): Omit<FeedItem, 'id' | 'feed_id'> {
-    return { title: 'Item', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, ...overrides };
+    return { title: 'Item', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined, ...overrides };
   }
 
   async function createFeed(): Promise<number> {
@@ -178,7 +178,7 @@ describe('updateFeedItemImage', () => {
     const result = await addFeedToDatabase({
       link: feedA.link,
       title: feedA.title,
-      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined }],
+      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
       categoryName: 'tech',
       showInHome: true,
     });
@@ -198,8 +198,8 @@ describe('updateFeedItemImage', () => {
       link: feedA.link,
       title: feedA.title,
       items: [
-        { title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined },
-        { title: 'Item 2', link: `${feedA.link}#2`, pubDate: '2024-01-02', description: '', image: 'https://example.com/existing.jpg' },
+        { title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined },
+        { title: 'Item 2', link: `${feedA.link}#2`, pubDate: '2024-01-02', description: '', image: 'https://example.com/existing.jpg', read_at: undefined },
       ],
       categoryName: 'tech',
       showInHome: true,

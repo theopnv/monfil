@@ -2,7 +2,6 @@ import { test as base, expect, _electron as electron, type ElectronApplication, 
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import type { ResolvedTheme } from '../../src/renderer/providers/theme-provider';
 
 type SettingsTestFixtures = {
   settingsPage: Page;
@@ -37,33 +36,35 @@ settingsTest('should display settings page', async ({ settingsPage }) => {
   await expect(heading).toBeVisible()
 })
 
-settingsTest('should toggle theme', async ({ settingsPage }) => {
-  // Arrange
-  const darkTheme = 'dark' satisfies ResolvedTheme
-  const isDark = (className: string) => className.includes(darkTheme)
+settingsTest('choosing Dark applies the dark theme, and Light removes it', async ({ settingsPage }) => {
+  // Act
+  await settingsPage.getByRole('button', { name: 'Dark', exact: true }).click();
 
-  const rootClassBefore = await settingsPage.evaluate(() => document.documentElement.className)
-  const wasDark = isDark(rootClassBefore)
+  // Assert
+  await expect.poll(() => settingsPage.evaluate(() => document.documentElement.className)).toContain('dark-mode');
 
   // Act
-  const themeToggleButton = settingsPage.getByRole('button', { name: 'Toggle theme' })
-  await themeToggleButton.click()
+  await settingsPage.getByRole('button', { name: 'Light', exact: true }).click();
 
   // Assert
-  const rootClass = await settingsPage.evaluate(() => document.documentElement.className)
-  expect(isDark(rootClass)).toBe(!wasDark)
-
-  // Act 2
-  await themeToggleButton.click()
-
-  // Assert 2
-  const rootClassAfter = await settingsPage.evaluate(() => document.documentElement.className)
-  expect(rootClassAfter).toBe(rootClassBefore)
+  await expect.poll(() => settingsPage.evaluate(() => document.documentElement.className)).not.toContain('dark-mode');
 })
 
-settingsTest('should default the refresh interval to every 30 minutes', async ({ settingsPage }) => {
+settingsTest('choosing System clears the stored theme override', async ({ settingsPage }) => {
+  // Arrange
+  await settingsPage.getByRole('button', { name: 'Dark', exact: true }).click();
+  await expect.poll(() => settingsPage.evaluate(() => localStorage.getItem('ui-theme'))).toBe('dark');
+
+  // Act
+  await settingsPage.getByRole('button', { name: 'System', exact: true }).click();
+
   // Assert
-  await expect(settingsPage.getByLabel('Refresh feeds')).toHaveValue('30')
+  await expect.poll(() => settingsPage.evaluate(() => localStorage.getItem('ui-theme'))).toBeNull();
+})
+
+settingsTest('should default the refresh interval to 30 min', async ({ settingsPage }) => {
+  // Assert
+  await expect(settingsPage.getByRole('button', { name: '30 min', pressed: true })).toBeVisible();
 })
 
 base('should keep the chosen refresh interval after a restart', async () => {
@@ -74,7 +75,7 @@ base('should keep the chosen refresh interval after a restart', async () => {
     const first = await openSettings(userDataDir)
     try {
       // Act
-      await first.page.getByLabel('Refresh feeds').selectOption('360')
+      await first.page.getByRole('button', { name: '6 h', exact: true }).click();
       // The invoke reply only comes back once the main process has written the row.
       await expect
         .poll(() => first.page.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-refresh-interval', undefined)))
@@ -86,7 +87,37 @@ base('should keep the chosen refresh interval after a restart', async () => {
     const second = await openSettings(userDataDir)
     try {
       // Assert
-      await expect(second.page.getByLabel('Refresh feeds')).toHaveValue('360')
+      await expect(second.page.getByRole('button', { name: '6 h', pressed: true })).toBeVisible();
+    } finally {
+      await second.electronApp.close()
+    }
+  } finally {
+    await rm(userDataDir, { recursive: true })
+  }
+})
+
+base('should keep "Refresh on launch" after a restart', async () => {
+  // Arrange
+  const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'))
+
+  try {
+    const first = await openSettings(userDataDir)
+    try {
+      // Act
+      await first.page.getByText('Refresh on launch', { exact: true }).click();
+      await expect
+        .poll(() => first.page.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-refresh-on-launch', undefined)))
+        .toBe(false)
+    } finally {
+      await first.electronApp.close()
+    }
+
+    const second = await openSettings(userDataDir)
+    try {
+      // Assert
+      await expect
+        .poll(() => second.page.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-refresh-on-launch', undefined)))
+        .toBe(false)
     } finally {
       await second.electronApp.close()
     }

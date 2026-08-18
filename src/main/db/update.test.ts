@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { setFeedsShowInHome } from './update';
+import { setFeedItemsRead, setFeedsShowInHome } from './update';
 import { addFeedToDatabase, type NewFeedInput } from './insert';
 
 const feedA: NewFeedInput = {
@@ -14,6 +14,17 @@ const feedB: NewFeedInput = {
   link: 'https://b.example/feed',
   title: 'Feed B',
   items: [],
+  categoryName: 'tech',
+  showInHome: true,
+};
+
+const feedWithItems: NewFeedInput = {
+  link: 'https://c.example/feed',
+  title: 'Feed C',
+  items: [
+    { title: 'Item 1', link: 'https://c.example/1', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined },
+    { title: 'Item 2', link: 'https://c.example/2', pubDate: '2024-01-02', description: '', image: undefined, read_at: undefined },
+  ],
   categoryName: 'tech',
   showInHome: true,
 };
@@ -82,5 +93,57 @@ describe('setFeedsShowInHome', () => {
 
     // Assert
     expect(result.success).toBe(true);
+  });
+});
+
+describe('setFeedItemsRead', () => {
+  test('updates a batch of several ids in one call', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedWithItems);
+    if (!inserted.success) throw new Error('expected the feed to be created');
+    const itemIds = inserted.data.items.map((item) => item.id);
+
+    // Act
+    const result = await setFeedItemsRead(itemIds, true);
+
+    // Assert
+    expect(result.success).toBe(true);
+    const rows = await db.selectFrom('feedItem').selectAll().where('id', 'in', itemIds).execute();
+    expect(rows.every((row) => typeof row.read_at === 'string')).toBe(true);
+  });
+
+  test('an unknown id returns ITEM_NOT_FOUND', async () => {
+    // Act
+    const result = await setFeedItemsRead([999999], true);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.name).toBe('ITEM_NOT_FOUND');
+  });
+
+  test('an empty id list succeeds without writing', async () => {
+    // Act
+    const result = await setFeedItemsRead([], true);
+
+    // Assert
+    expect(result.success).toBe(true);
+  });
+
+  test('marking read then unread clears read_at', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedWithItems);
+    if (!inserted.success) throw new Error('expected the feed to be created');
+    const itemId = inserted.data.items[0]?.id;
+    if (itemId === undefined) throw new Error('expected an item id');
+    await setFeedItemsRead([itemId], true);
+
+    // Act
+    const result = await setFeedItemsRead([itemId], false);
+    const row = await db.selectFrom('feedItem').selectAll().where('id', '=', itemId).executeTakeFirstOrThrow();
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(row.read_at).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-import { getRefreshInterval, type RefreshInterval } from '../settings';
+import { getRefreshInterval, getRefreshOnLaunch, type RefreshInterval } from '../settings';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { refreshAllFeeds } from './refresh';
 
@@ -28,12 +28,14 @@ function armTimer(interval: RefreshInterval): void {
 
 /**
  * Refreshes every feed once, then again on each period of the stored interval. Each cycle broadcasts
- * its result on `feeds:list`. The launch refresh runs even when the interval is `manual`.
+ * its result on `feeds:list`. The launch refresh runs even when the interval is `manual`, unless the
+ * refresh-on-launch preference is off.
  */
 export async function startRefreshScheduler(): Promise<void> {
+  const [interval, onLaunch] = await Promise.all([getRefreshInterval(), getRefreshOnLaunch()]);
   // The period counts from launch, so the timer is armed before the launch refresh rather than after it.
-  armTimer(await getRefreshInterval());
-  await runCycle();
+  armTimer(interval);
+  if (onLaunch) await runCycle();
 }
 
 /**
