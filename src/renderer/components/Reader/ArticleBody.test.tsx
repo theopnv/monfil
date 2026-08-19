@@ -15,7 +15,7 @@ beforeEach(() => {
 
 test('renders allowed markup', async () => {
   // Act
-  const { getByText } = await render(<ArticleBody description="<p>Hello <strong>world</strong></p>" />);
+  const { getByText } = await render(<ArticleBody html="<p>Hello <strong>world</strong></p>" />);
 
   // Assert
   await expect.element(getByText('world', { exact: true })).toBeInTheDocument();
@@ -26,7 +26,7 @@ test('a script/onerror payload never reaches the DOM', async () => {
   const malicious = '<p>Safe</p><script>window.__pwned = true;</script><img src="x.png" onerror="window.__pwned = true">';
 
   // Act
-  const { getByTestId } = await render(<ArticleBody description={malicious} />);
+  const { getByTestId } = await render(<ArticleBody html={malicious} />);
 
   // Assert
   const html = getByTestId('article-body').element().innerHTML;
@@ -36,7 +36,7 @@ test('a script/onerror payload never reaches the DOM', async () => {
 
 test('clicking an internal anchor calls openLink instead of navigating', async () => {
   // Arrange
-  const { getByText } = await render(<ArticleBody description='<p><a href="https://example.com/article">Read more</a></p>' />);
+  const { getByText } = await render(<ArticleBody html='<p><a href="https://example.com/article">Read more</a></p>' />);
 
   // Act
   await getByText('Read more', { exact: true }).click();

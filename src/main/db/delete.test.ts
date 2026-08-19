@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
 import { deleteFeedFromDatabase } from './delete';
-import { addFeedToDatabase, type NewFeedInput } from './insert';
+import { addFeedToDatabase, upsertArticleContent, type NewFeedInput } from './insert';
 
 const feedA: NewFeedInput = {
   link: 'https://a.example/feed',
@@ -23,6 +23,7 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
+  await db.deleteFrom('articleContent').execute();
   await db.deleteFrom('feedItem').execute();
   await db.deleteFrom('feedMetadata').execute();
   await db.deleteFrom('feedCategory').execute();
@@ -81,6 +82,22 @@ describe('deleteFeedFromDatabase', () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.name).toBe('FEED_NOT_FOUND');
+  });
+
+  test('removes the article content row of its items through the cascade', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) throw new Error('expected the feed to be created');
+    const itemId = inserted.data.items[0]?.id;
+    if (itemId === undefined) throw new Error('expected an item id');
+    await upsertArticleContent({ item_id: itemId, html: '<p>Body</p>', text: 'Body', word_count: 1, status: 'ok' });
+
+    // Act
+    await deleteFeedFromDatabase(inserted.data.id);
+
+    // Assert
+    const content = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).execute();
+    expect(content).toEqual([]);
   });
 
   test('the category row survives', async () => {

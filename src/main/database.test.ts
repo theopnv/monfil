@@ -13,13 +13,13 @@ describe('initializeDatabase', () => {
     await closeDatabase();
   });
 
-  test('creates the feedCategory, feedMetadata, feedItem and setting tables', async () => {
+  test('creates the feedCategory, feedMetadata, feedItem, setting and articleContent tables', async () => {
     // Act
     const tables = await db.introspection.getTables();
 
     // Assert
     expect(tables.map((table) => table.name).sort()).toEqual([
-      'feedCategory', 'feedItem', 'feedMetadata', 'setting',
+      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'setting',
     ]);
   });
 
@@ -34,6 +34,7 @@ describe('initializeDatabase', () => {
     expect(columnsOf('feedMetadata')).toEqual(['category_id', 'id', 'link', 'showInHome', 'title']);
     expect(columnsOf('feedItem')).toEqual(['description', 'feed_id', 'id', 'image', 'link', 'pubDate', 'read_at', 'title']);
     expect(columnsOf('setting')).toEqual(['key', 'value']);
+    expect(columnsOf('articleContent')).toEqual(['html', 'item_id', 'status', 'text', 'word_count']);
   });
 
   test('the shared db is queryable once dbReady resolves', async () => {

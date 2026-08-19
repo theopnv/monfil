@@ -11,6 +11,7 @@ export interface Database {
   feedMetadata: FeedMetadataTable
   feedItem: FeedItemTable
   setting: SettingTable
+  articleContent: ArticleContentTable
 }
 
 // =============== Feed Category ===============
@@ -56,6 +57,22 @@ export interface FeedItemTable {
 export type FeedItem = Selectable<FeedItemTable>;
 export type NewFeedItem = Insertable<FeedItemTable>;
 export type UpdateFeedItem = Updateable<FeedItemTable>;
+
+// =============== Article Content ===============
+
+export type ArticleContentStatus = 'ok' | 'failed' | 'too_short';
+
+export interface ArticleContentTable {
+  item_id: number;
+  html: string | undefined;
+  text: string | undefined;
+  word_count: number | undefined;
+  status: ArticleContentStatus;
+}
+
+export type ArticleContent = Selectable<ArticleContentTable>;
+export type NewArticleContent = Insertable<ArticleContentTable>;
+export type UpdateArticleContent = Updateable<ArticleContentTable>;
 
 // =============== Setting ===============
 

@@ -10,6 +10,7 @@ import ReadingProgressBar from "@/components/common/ReadingProgressBar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { deriveStandfirst, findRawDescription, getReaderNavigation } from "@/lib/reader";
 import { toRiverItems } from "@/lib/river";
+import { useArticleContent } from "@/lib/useArticleContent";
 import { useFeeds, useReadState } from "@/providers/feeds-provider";
 
 export interface ReaderProps {
@@ -31,6 +32,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
   const navigation = useMemo(() => getReaderNavigation(riverItems, id, isRead), [riverItems, id, isRead]);
   const standfirst = useMemo(() => (currentItem ? deriveStandfirst(currentItem.description) : undefined), [currentItem]);
   const readerHighlightedLinks = useMemo(() => new Set(currentItem ? [currentItem.feedLink] : []), [currentItem]);
+  const articleContent = useArticleContent(currentItem?.id);
 
   useEffect(() => {
     if (currentItem) {
@@ -94,7 +96,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-6.5 pb-25">
           <article className="mx-auto max-w-[700px] pt-11">
-            <ArticleMeta item={currentItem} />
+            <ArticleMeta item={currentItem} wordCount={articleContent.state === 'ready' ? articleContent.wordCount : undefined} />
 
             <h1 className="mb-4.5 text-4xl leading-tight text-pretty text-primary">{currentItem.title}</h1>
 
@@ -102,7 +104,15 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
 
             <ArticleHeroImage src={currentItem.image} />
 
-            <ArticleBody description={rawDescription ?? ''} />
+            {articleContent.state === 'loading' && (
+              <p className="mb-4 text-sm text-tertiary">Loading full article…</p>
+            )}
+
+            <ArticleBody html={articleContent.state === 'ready' ? articleContent.html : (rawDescription ?? '')} />
+
+            {articleContent.state === 'unavailable' && (
+              <p className="mb-4 text-sm text-tertiary">The full article could not be loaded. Read it at the source instead.</p>
+            )}
 
             <ArticleSourceLink item={currentItem} />
 

@@ -1,7 +1,7 @@
 import { type Kysely } from 'kysely';
 import { db, dbReady } from '../database';
 import { queryFeedItems } from './query';
-import type { Database, FeedItem } from './types';
+import type { Database, FeedItem, NewArticleContent } from './types';
 import type { Feed } from '../../preload/channels';
 import type { Result } from '../../utils';
 
@@ -57,6 +57,28 @@ export async function updateFeedItemImage(itemId: number, image: string): Promis
     await db.updateTable('feedItem').set({ image }).where('id', '=', itemId).execute();
   } catch (error) {
     console.error(`Failed to persist image for feed item ${itemId}.`, error);
+  }
+}
+
+/**
+ * Inserts or replaces the extracted article content for one feed item.
+ * Fire-and-forget: extraction runs off the enrichment path, so a write failure is logged rather than surfaced.
+ * @param content the row to write, including the item id it belongs to
+ */
+export async function upsertArticleContent(content: NewArticleContent): Promise<void> {
+  await dbReady;
+  try {
+    await db.insertInto('articleContent')
+      .values(content)
+      .onConflict((oc) => oc.column('item_id').doUpdateSet((eb) => ({
+        html: eb.ref('excluded.html'),
+        text: eb.ref('excluded.text'),
+        word_count: eb.ref('excluded.word_count'),
+        status: eb.ref('excluded.status'),
+      })))
+      .execute();
+  } catch (error) {
+    console.error(`Failed to persist article content for item ${content.item_id}.`, error);
   }
 }
 

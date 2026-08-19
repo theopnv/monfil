@@ -13,6 +13,10 @@ export type { FeedCategory } from '../main/db/types';
 
 export type Feed = FeedMetadata & { items: FeedItem[]; category: FeedCategory };
 
+export type ArticleContentResult =
+  | { status: 'ok'; html: string; wordCount: number }
+  | { status: 'unavailable' };
+
 // ============= One-way channels (renderer -> main) ==============
 export type OneWayRendererToMainChannelPayloads = {
   'link:open': string;
@@ -45,6 +49,7 @@ export type TwoWayRendererMainChannelPayloads = {
   'settings:get-refresh-interval': RefreshInterval;
   'settings:set-refresh-interval': RefreshInterval;
   'items:set-read': Result<void, UpdateItemError>;
+  'items:get-content': ArticleContentResult;
   'settings:get-refresh-on-launch': boolean;
   'settings:set-refresh-on-launch': boolean;
   'app:get-info': AppInfo;
@@ -63,6 +68,7 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'settings:get-refresh-interval': undefined;
   'settings:set-refresh-interval': RefreshInterval;
   'items:set-read': { itemIds: number[]; read: boolean };
+  'items:get-content': number;
   'settings:get-refresh-on-launch': undefined;
   'settings:set-refresh-on-launch': boolean;
   'app:get-info': undefined;

@@ -163,6 +163,45 @@ test('clicking previous and next navigates to the correct neighbor', async () =>
   expect(onNavigateToItem).toHaveBeenCalledWith(itemC.id);
 });
 
+test('shows the full extracted article body when the content is ready', async () => {
+  // Arrange
+  const { itemB } = setUpThreeItemRiver();
+  window.electron.ipcRenderer.invoke = vi.fn().mockResolvedValue({ status: 'ok', html: '<p>Full extracted body</p>', wordCount: 400 });
+
+  // Act
+  const { getByTestId, getByText } = await render(<Reader itemId={String(itemB.id)} onNavigateToItem={vi.fn()} onNavigateHome={vi.fn()} />);
+
+  // Assert
+  await expect.element(getByTestId('article-body').getByText('Full extracted body', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('2 min read')).toBeInTheDocument();
+});
+
+test('shows the feed description and a loading hint while the article is being fetched', async () => {
+  // Arrange
+  const { itemB } = setUpThreeItemRiver();
+  window.electron.ipcRenderer.invoke = vi.fn().mockReturnValue(new Promise(() => {}));
+
+  // Act
+  const { getByTestId, getByText } = await render(<Reader itemId={String(itemB.id)} onNavigateToItem={vi.fn()} onNavigateHome={vi.fn()} />);
+
+  // Assert
+  await expect.element(getByText('Loading full article…', { exact: true })).toBeInTheDocument();
+  await expect.element(getByTestId('article-body').getByText(`Item ${itemB.id} description`, { exact: true })).toBeInTheDocument();
+});
+
+test('shows the feed description and a note when the article is unavailable', async () => {
+  // Arrange
+  const { itemB } = setUpThreeItemRiver();
+  window.electron.ipcRenderer.invoke = vi.fn().mockResolvedValue({ status: 'unavailable' });
+
+  // Act
+  const { getByTestId, getByText } = await render(<Reader itemId={String(itemB.id)} onNavigateToItem={vi.fn()} onNavigateHome={vi.fn()} />);
+
+  // Assert
+  await expect.element(getByText('The full article could not be loaded. Read it at the source instead.', { exact: true })).toBeInTheDocument();
+  await expect.element(getByTestId('article-body').getByText(`Item ${itemB.id} description`, { exact: true })).toBeInTheDocument();
+});
+
 test('the next article card targets the nearest unread item further down the list', async () => {
   // Arrange
   const { itemA, itemB, itemC } = setUpThreeItemRiver();

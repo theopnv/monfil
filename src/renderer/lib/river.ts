@@ -86,8 +86,8 @@ export function formatRelativeTime(pubDate: string): string {
 
 const WORDS_PER_MINUTE = 200;
 
-export function estimateReadTime(description: string): string {
-  const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
+export function estimateReadTime(input: string | number): string {
+  const wordCount = typeof input === 'number' ? input : input.trim().split(/\s+/).filter(Boolean).length;
   const minutes = Math.max(1, Math.round(wordCount / WORDS_PER_MINUTE));
   return `${minutes} min read`;
 }

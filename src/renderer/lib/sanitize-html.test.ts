@@ -53,6 +53,25 @@ describe('sanitizeArticleHtml', () => {
     expect(result).not.toContain('javascript:');
   });
 
+  test('keeps table markup', () => {
+    // Arrange
+    const html = '<table><thead><tr><th>Name</th></tr></thead><tbody><tr><td>Value</td></tr></tbody></table>';
+
+    // Act
+    const result = sanitizeArticleHtml(html);
+
+    // Assert
+    expect(result).toBe(html);
+  });
+
+  test('keeps an hr tag', () => {
+    // Act
+    const result = sanitizeArticleHtml('<p>Before</p><hr><p>After</p>');
+
+    // Assert
+    expect(result).toBe('<p>Before</p><hr><p>After</p>');
+  });
+
   test('returns empty output for empty input', () => {
     // Act
     const result = sanitizeArticleHtml('');
