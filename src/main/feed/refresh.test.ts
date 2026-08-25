@@ -1,14 +1,14 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { db, initializeDatabase } from '../db/database';
 import { addFeedToDatabase } from '../db/crud/insert';
-import { fetchUrl } from '../fetch';
+import { fetchUrl } from '../lib/fetch';
 import { fetchFeed } from './parse';
 import type { ParsedFeed } from './parse';
 import { refreshAllFeeds } from './refresh';
 import type { FeedItem } from '../db/types';
 
 vi.mock(import('./parse'), () => ({ fetchFeed: vi.fn() }));
-vi.mock(import('../fetch'), () => ({ fetchUrl: vi.fn() }));
+vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
 vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedFetchFeed = vi.mocked(fetchFeed);

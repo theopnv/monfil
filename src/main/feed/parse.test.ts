@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { parseFeedContent, fetchFeed } from './parse';
-import { fetchUrl } from '../fetch';
+import { fetchUrl } from '../lib/fetch';
 
-vi.mock(import('../fetch'), () => ({
+vi.mock(import('../lib/fetch'), () => ({
   fetchUrl: vi.fn(),
 }));
 

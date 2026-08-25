@@ -1,6 +1,6 @@
 import { type FeedItem, type FeedMetadata } from '../db/types';
-import { fetchUrl } from '../fetch';
-import type { FetchUrlError } from '../fetch';
+import { fetchUrl } from '../lib/fetch';
+import type { FetchUrlError } from '../lib/fetch';
 import { parseFeed } from 'feedsmith';
 import type { Result } from '../../utils';
 import { extractAtomImageUrl, extractImageUrl } from './extractImage';

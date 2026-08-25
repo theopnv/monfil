@@ -1,6 +1,6 @@
 import type { FeedItem, NewArticleContent } from '../db/types';
 import { runWithConcurrency } from '../../utils';
-import { fetchUrl } from '../fetch';
+import { fetchUrl } from '../lib/fetch';
 import { deriveArticleContentStatus, extractArticle } from './extractArticle';
 import { extractOgImageUrl } from './extractOgImage';
 

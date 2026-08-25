@@ -1,11 +1,11 @@
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { db, initializeDatabase } from '../db/database';
 import { addFeedToDatabase, upsertArticleContent } from '../db/crud/insert';
-import { fetchUrl } from '../fetch';
+import { fetchUrl } from '../lib/fetch';
 import { handleItemsGetContent } from './handlers';
 import type { IpcMainInvokeEvent } from 'electron';
 
-vi.mock(import('../fetch'), () => ({ fetchUrl: vi.fn() }));
+vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
 
 const mockedFetchUrl = vi.mocked(fetchUrl);
 const fakeEvent = {} as IpcMainInvokeEvent;

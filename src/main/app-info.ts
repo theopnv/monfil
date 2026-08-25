@@ -22,7 +22,7 @@ async function sizeOf(filePath: string): Promise<number> {
 }
 
 /**
- * Gathers the figures shown on the Settings "Your data" card. Database size sums `monfil.db` and its
+ * Gathers the app figures. Database size sums `monfil.db` and its
  * `-wal` / `-shm` sidecars, since WAL mode can hold a large share of the data outside the main file.
  */
 export async function getAppInfo(): Promise<AppInfo> {

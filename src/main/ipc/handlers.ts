@@ -2,7 +2,7 @@ import { ARTICLE_FETCH_TIMEOUT_MS, enrichItems } from "../feed/enrichItems";
 import { deriveArticleContentStatus, extractArticle } from "../feed/extractArticle";
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
-import { fetchUrl } from "../fetch";
+import { fetchUrl } from "../lib/fetch";
 import { addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type AddFeedError, type NewFeedInput } from "../db/crud/insert";
 import { deleteFeedFromDatabase, type DeleteFeedError } from "../db/crud/delete";
 import { setFeedsShowInHome, setFeedItemsRead, type UpdateFeedError, type UpdateItemError } from "../db/crud/update";
