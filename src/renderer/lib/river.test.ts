@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { toRiverItems } from './river';
+import { estimateReadTime, toRiverItems } from './river';
 import type { Feed } from '../../preload/channels';
 
 type FeedItem = Feed['items'][number];
@@ -65,5 +65,31 @@ describe('toRiverItems', () => {
 
     // Assert
     expect(result?.description).toBe('Actual excerpt.');
+  });
+});
+
+describe('estimateReadTime', () => {
+  test('counts words in a description string', () => {
+    // Act
+    const result = estimateReadTime('word '.repeat(400).trim());
+
+    // Assert
+    expect(result).toBe('2 min read');
+  });
+
+  test('follows a given word count directly, without touching the description', () => {
+    // Act
+    const result = estimateReadTime(1000);
+
+    // Assert
+    expect(result).toBe('5 min read');
+  });
+
+  test('rounds up to a minimum of 1 minute', () => {
+    // Act
+    const result = estimateReadTime('short description');
+
+    // Assert
+    expect(result).toBe('1 min read');
   });
 });

@@ -1,18 +1,18 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { db, initializeDatabase } from '../database';
 import { addFeedToDatabase } from '../db/insert';
-import { fetchArticleImage } from './fetchArticleImage';
+import { fetchUrl } from '../fetch';
 import { fetchFeed } from './parse';
 import type { ParsedFeed } from './parse';
 import { refreshAllFeeds } from './refresh';
 import type { FeedItem } from '../db/types';
 
 vi.mock(import('./parse'), () => ({ fetchFeed: vi.fn() }));
-vi.mock(import('./fetchArticleImage'), () => ({ fetchArticleImage: vi.fn() }));
+vi.mock(import('../fetch'), () => ({ fetchUrl: vi.fn() }));
 vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedFetchFeed = vi.mocked(fetchFeed);
-const mockedFetchArticleImage = vi.mocked(fetchArticleImage);
+const mockedFetchUrl = vi.mocked(fetchUrl);
 
 type NewItem = Omit<FeedItem, 'id' | 'feed_id'>;
 
@@ -26,7 +26,9 @@ function parsed(link: string, items: NewItem[]): ParsedFeed {
 
 async function storeFeed(link: string, items: NewItem[] = []): Promise<number> {
   const result = await addFeedToDatabase({ link, title: `Feed at ${link}`, items, categoryName: 'tech', showInHome: true });
-  if (!result.success) throw new Error('expected the feed to be stored');
+  if (!result.success) {
+    throw new Error('expected the feed to be stored');
+  }
   return result.data.id;
 }
 
@@ -39,14 +41,14 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
-  mockedFetchArticleImage.mockResolvedValue(undefined);
+  mockedFetchUrl.mockResolvedValue({ success: true, data: '<html></html>' });
 });
 
 afterEach(async () => {
   // Image enrichment outlives refreshAllFeeds on purpose; let it finish before the next test starts.
   await new Promise((resolve) => setImmediate(resolve));
   mockedFetchFeed.mockReset();
-  mockedFetchArticleImage.mockReset();
+  mockedFetchUrl.mockReset();
   await db.deleteFrom('feedItem').execute();
   await db.deleteFrom('feedMetadata').execute();
   await db.deleteFrom('feedCategory').execute();
@@ -153,10 +155,10 @@ describe('refreshAllFeeds', () => {
 
     // Act
     await refreshAllFeeds();
-    await vi.waitFor(() => expect(mockedFetchArticleImage).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockedFetchUrl).toHaveBeenCalled());
 
     // Assert
-    expect(mockedFetchArticleImage).toHaveBeenCalledTimes(1);
-    expect(mockedFetchArticleImage).toHaveBeenCalledWith('https://a.example/new');
+    expect(mockedFetchUrl).toHaveBeenCalledTimes(1);
+    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/new', expect.any(AbortSignal));
   });
 });

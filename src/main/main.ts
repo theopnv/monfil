@@ -20,9 +20,14 @@ function bootstrap() {
     console.error('Failed to initialize the database.', error);
   });
 
+  // Playwright's electron.launch() sets this so e2e runs never raise a real window and steal
+  // OS focus from whatever the developer is doing
+  const isE2ETest = process.env['E2E_TEST'] === '1';
+
   const createWindow = () => {
     const mainWindow = new BrowserWindow({
       titleBarStyle: 'hidden',
+      show: !isE2ETest,
       webPreferences: {
         preload: path.join(__dirname, 'preload.js'),
       },

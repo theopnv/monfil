@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { addFeedItemsToDatabase, addFeedToDatabase, updateFeedItemImage, type NewFeedInput } from './insert';
+import { addFeedItemsToDatabase, addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type NewFeedInput } from './insert';
 import type { FeedItem } from './types';
 
 const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', items: [], categoryName: 'tech', showInHome: true };
@@ -11,6 +11,7 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
+  await db.deleteFrom('articleContent').execute();
   await db.deleteFrom('feedItem').execute();
   await db.deleteFrom('feedMetadata').execute();
   await db.deleteFrom('feedCategory').execute();
@@ -27,7 +28,9 @@ describe('addFeedToDatabase', () => {
     });
 
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     expect(result.data.title).toBe(feedA.title);
     expect(result.data.category.name).toBe('tech');
     expect(result.data.showInHome).toBe(1);
@@ -60,7 +63,9 @@ describe('addFeedToDatabase', () => {
     });
 
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     expect(result.data.items).toHaveLength(2);
   });
 
@@ -82,7 +87,9 @@ describe('addFeedToDatabase', () => {
     });
 
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     expect(result.data.title).toBe('New title');
     expect(result.data.showInHome).toBe(0);
 
@@ -100,7 +107,9 @@ describe('addFeedToDatabase', () => {
     });
 
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     expect(result.data.showInHome).toBe(0);
   });
 });
@@ -112,7 +121,9 @@ describe('addFeedItemsToDatabase', () => {
 
   async function createFeed(): Promise<number> {
     const result = await addFeedToDatabase(feedA);
-    if (!result.success) throw new Error('expected the feed to be created');
+    if (!result.success) {
+      throw new Error('expected the feed to be created');
+    }
     return result.data.id;
   }
 
@@ -183,9 +194,13 @@ describe('updateFeedItemImage', () => {
       showInHome: true,
     });
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     const itemId = result.data.items[0]?.id;
-    if (itemId === undefined) throw new Error('expected an item id');
+    if (itemId === undefined) {
+      throw new Error('expected an item id');
+    }
 
     await updateFeedItemImage(itemId, 'https://example.com/new.jpg');
 
@@ -205,9 +220,13 @@ describe('updateFeedItemImage', () => {
       showInHome: true,
     });
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     const [item1, item2] = result.data.items;
-    if (item1 === undefined || item2 === undefined) throw new Error('expected two items');
+    if (item1 === undefined || item2 === undefined) {
+      throw new Error('expected two items');
+    }
 
     await updateFeedItemImage(item1.id, 'https://example.com/new.jpg');
 
@@ -217,5 +236,52 @@ describe('updateFeedItemImage', () => {
 
   test('does not throw when the id matches no row', async () => {
     await expect(updateFeedItemImage(999999, 'https://example.com/new.jpg')).resolves.toBeUndefined();
+  });
+});
+
+describe('upsertArticleContent', () => {
+  async function createItem(): Promise<number> {
+    const result = await addFeedToDatabase({
+      link: feedA.link,
+      title: feedA.title,
+      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+      categoryName: 'tech',
+      showInHome: true,
+    });
+    if (!result.success) {
+      throw new Error('expected the feed to be created');
+    }
+    const itemId = result.data.items[0]?.id;
+    if (itemId === undefined) {
+      throw new Error('expected an item id');
+    }
+    return itemId;
+  }
+
+  test('inserts a row that reads back with the same fields', async () => {
+    // Arrange
+    const itemId = await createItem();
+
+    // Act
+    await upsertArticleContent({ item_id: itemId, html: '<p>Body</p>', text: 'Body', word_count: 1, status: 'ok' });
+
+    // Assert
+    const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirst();
+    expect(stored).toEqual({ item_id: itemId, html: '<p>Body</p>', text: 'Body', word_count: 1, status: 'ok' });
+  });
+
+  test('a second upsert replaces the row instead of duplicating it', async () => {
+    // Arrange
+    const itemId = await createItem();
+    await upsertArticleContent({ item_id: itemId, html: '<p>Old</p>', text: 'Old', word_count: 1, status: 'ok' });
+
+    // Act
+    await upsertArticleContent({ item_id: itemId, html: undefined, text: undefined, word_count: undefined, status: 'failed' });
+
+    // Assert
+    const rows = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).execute();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.status).toBe('failed');
+    expect(rows[0]?.html).toBeNull();
   });
 });

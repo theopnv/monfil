@@ -24,10 +24,12 @@ export function listenToRevealDatabaseFile() {
 export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayRendererToMainChannelPayloads["feeds:show-feed-context-menu"]) {
   const menu = Menu.buildFromTemplate([
     {
-      label: "Delete feed…",
+      label: "Delete feed",
       click: () => sendToRenderer(event.sender, "feeds:delete-feed-requested", feedId),
     },
   ]);
   const window = BrowserWindow.fromWebContents(event.sender);
-  if (window) menu.popup({ window });
+  if (window) {
+    menu.popup({ window });
+  }
 }

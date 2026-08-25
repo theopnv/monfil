@@ -14,15 +14,21 @@ export function useMarkReadOnScroll(
   markAllRead: (ids: number[]) => void,
 ): void {
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      return;
+    }
     const root = scrollRef.current;
-    if (!root) return;
+    if (!root) {
+      return;
+    }
 
     const pendingIds = new Set<number>();
     let flushTimer: ReturnType<typeof setTimeout> | undefined;
 
     const flush = () => {
-      if (pendingIds.size === 0) return;
+      if (pendingIds.size === 0) {
+        return;
+      }
       markAllRead([...pendingIds]);
       pendingIds.clear();
     };
@@ -31,9 +37,13 @@ export function useMarkReadOnScroll(
       let scheduled = false;
       for (const entry of entries) {
         const passedAbove = entry.boundingClientRect.bottom <= (entry.rootBounds?.top ?? 0);
-        if (!passedAbove) continue;
+        if (!passedAbove) {
+          continue;
+        }
         const idAttr = (entry.target as HTMLElement).dataset['itemId'];
-        if (!idAttr) continue;
+        if (!idAttr) {
+          continue;
+        }
         pendingIds.add(Number(idAttr));
         scheduled = true;
       }

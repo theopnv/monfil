@@ -7,7 +7,9 @@ export function sendToRenderer<C extends OneWayMainToRendererChannels>(
   channel: C,
   payload: OneWayMainToRendererChannelPayloads[C],
 ): void {
-  if (sender.isDestroyed()) return;
+  if (sender.isDestroyed()) {
+    return;
+  }
   sender.send(channel, payload);
 }
 

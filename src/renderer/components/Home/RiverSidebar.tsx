@@ -75,7 +75,11 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
       <AddFeedModal isOpen={isAddFeedOpen} onOpenChange={setIsAddFeedOpen} />
       <DeleteFeedDialog
         feed={feedPendingDelete}
-        onOpenChange={(isOpen) => { if (!isOpen) setFeedPendingDelete(null); }}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setFeedPendingDelete(null);
+          } 
+        }}
         onDeleted={onFeedDeleted}
       />
       <div className="flex flex-col gap-px px-2.5">

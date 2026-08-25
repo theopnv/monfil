@@ -14,7 +14,9 @@ async function sizeOf(filePath: string): Promise<number> {
   try {
     return (await stat(filePath)).size;
   } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return 0;
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return 0;
+    }
     throw error;
   }
 }

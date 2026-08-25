@@ -1,9 +1,9 @@
 import { ElectronHandler } from '../preload/preload';
 
 declare global {
-    interface Window {
-        electron: ElectronHandler;
-    }
+  interface Window {
+    electron: ElectronHandler;
+  }
 }
 
 export { };

@@ -53,8 +53,12 @@ const REFRESH_ON_LAUNCH_KEY = 'refreshOnLaunch';
  * @returns the matching boolean, or `DEFAULT_REFRESH_ON_LAUNCH` when there is no match
  */
 export function toRefreshOnLaunch(value: unknown): boolean {
-  if (value === 'true' || value === true) return true;
-  if (value === 'false' || value === false) return false;
+  if (value === 'true' || value === true) {
+    return true;
+  }
+  if (value === 'false' || value === false) {
+    return false;
+  }
   return DEFAULT_REFRESH_ON_LAUNCH;
 }
 

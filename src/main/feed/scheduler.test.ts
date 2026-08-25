@@ -109,7 +109,9 @@ describe('startRefreshScheduler', () => {
     expect(mockedRefreshAllFeeds).toHaveBeenCalledTimes(1);
 
     // Act
-    inFlight.forEach((finish) => { finish(); });
+    inFlight.forEach((finish) => {
+      finish(); 
+    });
     await started;
     await vi.advanceTimersByTimeAsync(15 * MINUTE);
 
@@ -117,7 +119,9 @@ describe('startRefreshScheduler', () => {
     expect(mockedRefreshAllFeeds).toHaveBeenCalledTimes(2);
 
     // Leaving a cycle hanging would keep the module's in-flight flag set for the next test.
-    inFlight.forEach((finish) => { finish(); });
+    inFlight.forEach((finish) => {
+      finish(); 
+    });
     await vi.advanceTimersByTimeAsync(0);
   });
 
@@ -183,6 +187,8 @@ describe('stopRefreshScheduler', () => {
 
   test('is safe to call when no timer is armed', () => {
     // Act, Assert
-    expect(() => { stopRefreshScheduler(); }).not.toThrow();
+    expect(() => {
+      stopRefreshScheduler(); 
+    }).not.toThrow();
   });
 });

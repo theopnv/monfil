@@ -5,7 +5,9 @@ import { Button } from "@/components/untitled-ui/base/buttons/button";
 import type { AppInfo } from "../../../main/app-info";
 
 function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
   const units = ["KB", "MB", "GB"];
   let value = bytes / 1024;
   let unitIndex = 0;

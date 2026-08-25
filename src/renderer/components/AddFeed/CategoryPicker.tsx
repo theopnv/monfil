@@ -17,7 +17,9 @@ export default function CategoryPicker({ categories, selectedName, onSelect, new
   const [isAddingNew, setIsAddingNew] = useState(false);
 
   function commitNewCategory() {
-    if (newName.trim().length === 0) return;
+    if (newName.trim().length === 0) {
+      return;
+    }
     onAddNew();
     setIsAddingNew(false);
   }
@@ -53,8 +55,12 @@ export default function CategoryPicker({ categories, selectedName, onSelect, new
               value={newName}
               onChange={onNewNameChange}
               onKeyDown={(event) => {
-                if (event.key === "Enter") commitNewCategory();
-                if (event.key === "Escape") setIsAddingNew(false);
+                if (event.key === "Enter") {
+                  commitNewCategory();
+                }
+                if (event.key === "Escape") {
+                  setIsAddingNew(false);
+                }
               }}
             />
             <Button size="sm" color="secondary" isDisabled={newName.trim().length === 0} onPress={commitNewCategory}>

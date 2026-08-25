@@ -1,5 +1,5 @@
 import { type SelectQueryBuilder } from 'kysely';
-import { type Database, type FeedCategory, type FeedItem, type FeedMetadata, type Setting } from './types';
+import { type ArticleContent, type Database, type FeedCategory, type FeedItem, type FeedMetadata, type Setting } from './types';
 import { db } from '../database';
 import type { Feed } from '../../preload/channels';
 
@@ -61,6 +61,18 @@ const feedCategoryHandlers = {
 
 export function queryFeedCategory(criteria: Partial<FeedCategory>): Promise<FeedCategory[]> {
   return applyCriteria(db.selectFrom('feedCategory').selectAll(), criteria, feedCategoryHandlers).execute();
+}
+
+const articleContentHandlers = {
+  item_id: (q, v) => q.where('item_id', '=', v),
+  html: (q, v) => q.where('html', '=', v),
+  text: (q, v) => q.where('text', '=', v),
+  word_count: (q, v) => q.where('word_count', '=', v),
+  status: (q, v) => q.where('status', '=', v),
+} satisfies CriteriaHandlers<'articleContent', ArticleContent>;
+
+export function queryArticleContent(criteria: Partial<ArticleContent>): Promise<ArticleContent[]> {
+  return applyCriteria(db.selectFrom('articleContent').selectAll(), criteria, articleContentHandlers).execute();
 }
 
 const settingHandlers = {

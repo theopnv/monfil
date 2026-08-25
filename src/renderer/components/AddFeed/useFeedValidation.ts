@@ -28,7 +28,9 @@ export function useFeedValidation(query: string): FeedValidationState {
     window.electron.ipcRenderer
       .invoke('feeds:validate-feed-url', debouncedQuery)
       .then((result) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setState(
           result.success
             ? { status: 'found', feed: result.data, error: null }
@@ -36,7 +38,9 @@ export function useFeedValidation(query: string): FeedValidationState {
         );
       })
       .catch((error) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setState({
           status: 'not-found',
           feed: null,

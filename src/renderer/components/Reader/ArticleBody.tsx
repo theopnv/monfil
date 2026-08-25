@@ -3,7 +3,7 @@ import { openLink } from "@/lib/river";
 import { sanitizeArticleHtml } from "@/lib/sanitize-html";
 
 export interface ArticleBodyProps {
-  description: string;
+  html: string;
 }
 
 const PROSE_CLASSES = [
@@ -17,10 +17,12 @@ const PROSE_CLASSES = [
   "[&_img]:max-w-full [&_img]:rounded-lg",
   "[&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-secondary [&_pre]:p-3 [&_code]:font-mono [&_code]:text-sm",
   "[&_figcaption]:text-xs [&_figcaption]:text-quaternary",
+  "[&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-secondary [&_th]:p-2 [&_th]:text-left [&_td]:border [&_td]:border-secondary [&_td]:p-2",
+  "[&_hr]:my-6 [&_hr]:border-secondary",
 ].join(" ");
 
-export default function ArticleBody({ description }: ArticleBodyProps) {
-  const html = useMemo(() => sanitizeArticleHtml(description), [description]);
+export default function ArticleBody({ html: rawHtml }: ArticleBodyProps) {
+  const html = useMemo(() => sanitizeArticleHtml(rawHtml), [rawHtml]);
 
   const handleClick = (event: MouseEvent<HTMLDivElement>) => {
     const anchor = (event.target as HTMLElement).closest("a");

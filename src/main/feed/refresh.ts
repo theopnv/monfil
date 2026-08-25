@@ -1,9 +1,9 @@
 import { db, dbReady } from '../database';
-import { addFeedItemsToDatabase, updateFeedItemImage } from '../db/insert';
+import { addFeedItemsToDatabase, updateFeedItemImage, upsertArticleContent } from '../db/insert';
 import { queryFeedMetadata, queryFeeds } from '../db/query';
 import type { FeedItem, FeedMetadata } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
-import { enrichItemImages } from './enrichItemImages';
+import { enrichItems } from './enrichItems';
 import { fetchFeed } from './parse';
 import type { Feed } from '../../preload/channels';
 import { runWithConcurrency } from '../../utils';
@@ -53,9 +53,15 @@ export async function refreshAllFeeds(): Promise<Feed[]> {
 
 async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedItem[]>): Promise<void> {
   for (const [feedId, items] of insertedByFeedId) {
-    await enrichItemImages(items, (itemId, image) => {
-      void updateFeedItemImage(itemId, image);
-      broadcastToRenderers('feeds:item-image-fetched', { feedId, itemId, image });
-    });
+    await enrichItems(
+      items,
+      (itemId, image) => {
+        void updateFeedItemImage(itemId, image);
+        broadcastToRenderers('feeds:item-image-fetched', { feedId, itemId, image });
+      },
+      (itemId, content) => {
+        void upsertArticleContent({ item_id: itemId, ...content });
+      },
+    );
   }
 }

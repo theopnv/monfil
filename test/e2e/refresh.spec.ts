@@ -38,9 +38,13 @@ const refreshTest = base.extend<RefreshTestFixtures>({
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     const { port } = server.address() as AddressInfo;
     try {
-      await use({ url: `http://127.0.0.1:${port}/feed.xml`, publish: (articles) => { body = rss(articles); } });
+      await use({ url: `http://127.0.0.1:${port}/feed.xml`, publish: (articles) => {
+        body = rss(articles); 
+      } });
     } finally {
-      await new Promise<void>((resolve) => server.close(() => { resolve(); }));
+      await new Promise<void>((resolve) => server.close(() => {
+        resolve(); 
+      }));
     }
   },
 

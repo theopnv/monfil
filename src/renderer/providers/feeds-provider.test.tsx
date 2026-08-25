@@ -50,7 +50,9 @@ function AddFeedButton({ feed }: { feed: Feed }) {
 function DeleteFeedButton({ feedId }: { feedId: number }) {
   const deleteFeed = useDeleteFeed();
   return (
-    <button type="button" onClick={() => { void deleteFeed(feedId); }}>
+    <button type="button" onClick={() => {
+      void deleteFeed(feedId); 
+    }}>
       Delete {feedId}
     </button>
   );
@@ -256,8 +258,12 @@ test('a stale feeds:list invoke does not restore a feed removed by useDeleteFeed
     answerTheInvoke = resolve;
   });
   invokeImpl = (channel) => {
-    if (channel === 'feeds:list') return pendingList;
-    if (channel === 'feeds:delete-feed') return Promise.resolve({ success: true, data: [] });
+    if (channel === 'feeds:list') {
+      return pendingList;
+    }
+    if (channel === 'feeds:delete-feed') {
+      return Promise.resolve({ success: true, data: [] });
+    }
     return Promise.resolve([]);
   };
   const { getByText, getByRole } = await render(
@@ -311,7 +317,9 @@ test('refreshNow stops reporting a refresh once it fails', async () => {
   await getByRole('button', { name: 'Refresh' }).click();
 
   // Assert
-  await vi.waitFor(() => { expect(consoleError).toHaveBeenCalled(); });
+  await vi.waitFor(() => {
+    expect(consoleError).toHaveBeenCalled(); 
+  });
   await expect.element(getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
 });
 

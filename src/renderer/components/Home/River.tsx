@@ -63,7 +63,9 @@ export default function River({ onOpenItem }: RiverProps) {
 
   const handleFeedDeleted = useCallback((feed: Feed) => {
     setShowOnlyLinks((prev) => {
-      if (!prev.has(feed.link)) return prev;
+      if (!prev.has(feed.link)) {
+        return prev;
+      }
       const next = new Set(prev);
       next.delete(feed.link);
       return next;

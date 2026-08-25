@@ -46,7 +46,9 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   }
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      return;
+    }
     resetWizard();
     window.electron.ipcRenderer
       .invoke("feeds:list-categories", undefined)
@@ -55,24 +57,32 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   }, [isOpen]);
 
   function goToStep(target: WizardStep) {
-    if (target <= maxStepReached) setStep(target);
+    if (target <= maxStepReached) {
+      setStep(target);
+    }
   }
 
   function handleContinueFromStep1() {
-    if (validation.status !== "found") return;
+    if (validation.status !== "found") {
+      return;
+    }
     setStep(2);
     setMaxStepReached((prev) => (prev < 2 ? 2 : prev));
   }
 
   function handleAddNewCategory() {
     const name = newCategoryName.trim();
-    if (!name) return;
+    if (!name) {
+      return;
+    }
     setSelectedCategoryName(name);
     setNewCategoryName("");
   }
 
   async function handleSubmit() {
-    if (!validation.feed || selectedCategoryName === null) return;
+    if (!validation.feed || selectedCategoryName === null) {
+      return;
+    }
     setSubmitStatus("loading");
     setSubmitError(null);
 
