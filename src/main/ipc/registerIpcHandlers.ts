@@ -1,18 +1,19 @@
 import { ipcMain } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
 import type { ChannelPayloads, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../preload/channels";
-import { fetchFeed } from "../feed/parse";
-import { queryFeedCategory, queryFeeds } from "../db/crud/query";
-import { dbReady } from "../db/database";
-import { getRefreshInterval, getRefreshOnLaunch } from "../settings";
 import {
   handleAppGetInfo,
   handleFeedsDeleteFeed,
+  handleFeedsList,
+  handleFeedsListCategories,
   handleFeedsRefresh,
   handleFeedsSetShowInHome,
   handleFeedsSubmitAddFeed,
+  handleFeedsValidateFeedUrl,
   handleItemsGetContent,
   handleItemsSetRead,
+  handleSettingsGetRefreshInterval,
+  handleSettingsGetRefreshOnLaunch,
   handleSettingsSetRefreshInterval,
   handleSettingsSetRefreshOnLaunch,
 } from "./handlers";
@@ -28,23 +29,18 @@ type Handler<C extends TwoWayRendererMainChannels> = (
 ) => ChannelPayloads[C] | Promise<ChannelPayloads[C]>;
 
 const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
-  // handler functions could be moved to a separate handlers.ts file if they grow too large.
-  "feeds:validate-feed-url": (_event, query) => fetchFeed(query),
-  "feeds:list-categories": async () => {
-    await dbReady; return queryFeedCategory({});
-  },
-  "feeds:list": async () => {
-    await dbReady; return queryFeeds();
-  },
+  "feeds:validate-feed-url": handleFeedsValidateFeedUrl,
+  "feeds:list-categories": handleFeedsListCategories,
+  "feeds:list": handleFeedsList,
   "feeds:refresh": handleFeedsRefresh,
   "feeds:submit-add-feed": handleFeedsSubmitAddFeed,
   "feeds:delete-feed": handleFeedsDeleteFeed,
   "feeds:set-show-in-home": handleFeedsSetShowInHome,
-  "settings:get-refresh-interval": () => getRefreshInterval(),
+  "settings:get-refresh-interval": handleSettingsGetRefreshInterval,
   "settings:set-refresh-interval": handleSettingsSetRefreshInterval,
   "items:set-read": handleItemsSetRead,
   "items:get-content": handleItemsGetContent,
-  "settings:get-refresh-on-launch": () => getRefreshOnLaunch(),
+  "settings:get-refresh-on-launch": handleSettingsGetRefreshOnLaunch,
   "settings:set-refresh-on-launch": handleSettingsSetRefreshOnLaunch,
   "app:get-info": handleAppGetInfo,
 };

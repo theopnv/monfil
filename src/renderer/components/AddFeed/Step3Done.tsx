@@ -1,5 +1,5 @@
 import { Check } from "@untitledui/icons";
-import { formatRelativeTime } from "@/lib/river";
+import { formatRelativeTime } from "@/lib/river/utils";
 import type { Feed } from "../../../preload/channels";
 
 export interface Step3DoneProps {

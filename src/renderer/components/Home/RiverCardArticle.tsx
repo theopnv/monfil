@@ -5,7 +5,7 @@ import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { getFaviconUrl } from "@/lib/favicon";
-import { estimateReadTime, formatRelativeTime, type RiverCardProps } from "@/lib/river";
+import { estimateReadTime, formatRelativeTime, type RiverCardProps } from "@/lib/river/utils";
 
 export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps) {
   return (

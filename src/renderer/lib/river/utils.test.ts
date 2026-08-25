@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { estimateReadTime, toRiverItems } from './river';
-import type { Feed } from '../../preload/channels';
+import { estimateReadTime, toRiverItems } from './utils';
+import type { Feed } from '../../../preload/channels';
 
 type FeedItem = Feed['items'][number];
 

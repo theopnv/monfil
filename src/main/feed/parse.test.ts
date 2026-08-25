@@ -39,6 +39,32 @@ describe('parseFeedContent', () => {
     </rss>
   `;
 
+  test('decodes literal entities left over from CDATA titles and descriptions', () => {
+    // Some feeds (e.g. The Verge) wrap titles in CDATA but still entity-encode punctuation inside
+    // it, so the XML parser leaves entities like "&#8217;" and "&#8230;" as literal text.
+    const feedWithEncodedEntities = `
+      <rss version="2.0">
+        <channel>
+          <title>Feed &#8217;n stuff</title>
+          <description>A &#8230; feed</description>
+          <item>
+            <title><![CDATA[Apple&#8217;s ‘new’ polishing cloth]]></title>
+            <link>http://example.com/item1</link>
+            <pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate>
+            <description>Matches an archived [&#8230;]</description>
+          </item>
+        </channel>
+      </rss>
+    `;
+
+    const result = parseFeedContent(feedWithEncodedEntities, 30);
+
+    expect(result?.title).toBe('Feed ’n stuff');
+    expect(result?.description).toBe('A … feed');
+    expect(result?.items[0]?.title).toBe('Apple’s ‘new’ polishing cloth');
+    expect(result?.items[0]?.description).toBe('Matches an archived […]');
+  });
+
   test('should return the feed title, description and items when format is rss', () => {
     // A maxItems of 0 (the default) means "return zero items" per feedsmith's semantics, so pass an explicit limit here.
     const result = parseFeedContent(validRssFeed, 30);

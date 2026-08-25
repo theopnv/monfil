@@ -1,6 +1,6 @@
 import { ArrowRight } from "@untitledui/icons";
-import { estimateReadTime, formatRelativeTime } from "@/lib/river";
-import type { RiverItem } from "@/lib/river";
+import { estimateReadTime, formatRelativeTime } from "@/lib/river/utils";
+import type { RiverItem } from "@/lib/river/utils";
 
 export interface NextArticleCardProps {
   item: RiverItem;

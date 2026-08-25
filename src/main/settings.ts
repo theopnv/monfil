@@ -26,7 +26,6 @@ export function toRefreshInterval(value: unknown): RefreshInterval {
  * @returns the stored interval, or `DEFAULT_REFRESH_INTERVAL` when none is stored
  */
 export async function getRefreshInterval(): Promise<RefreshInterval> {
-  await dbReady;
   const [row] = await querySettings({ key: REFRESH_INTERVAL_KEY });
   return toRefreshInterval(row?.value);
 }
@@ -67,7 +66,6 @@ export function toRefreshOnLaunch(value: unknown): boolean {
  * @returns the stored preference, or `DEFAULT_REFRESH_ON_LAUNCH` when none is stored
  */
 export async function getRefreshOnLaunch(): Promise<boolean> {
-  await dbReady;
   const [row] = await querySettings({ key: REFRESH_ON_LAUNCH_KEY });
   return toRefreshOnLaunch(row?.value);
 }

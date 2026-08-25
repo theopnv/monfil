@@ -1,4 +1,4 @@
-import type { Feed } from '../../preload/channels';
+import type { Feed } from '../../../preload/channels';
 
 export type Density = "Cards" | "Magazine" | "Compact";
 

@@ -1,6 +1,6 @@
 import { type SelectQueryBuilder } from 'kysely';
 import { type ArticleContent, type Database, type FeedCategory, type FeedItem, type FeedMetadata, type Setting } from '../types';
-import { db } from '../database';
+import { db, dbReady } from '../database';
 import type { Feed } from '../../../preload/channels';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
@@ -38,7 +38,8 @@ const feedItemHandlers = {
   read_at: (q, v) => q.where('read_at', '=', v),
 } satisfies CriteriaHandlers<'feedItem', FeedItem>;
 
-export function queryFeedItems(criteria: Partial<FeedItem>): Promise<FeedItem[]> {
+export async function queryFeedItems(criteria: Partial<FeedItem>): Promise<FeedItem[]> {
+  await dbReady;
   return applyCriteria(db.selectFrom('feedItem').selectAll(), criteria, feedItemHandlers).execute();
 }
 
@@ -50,7 +51,8 @@ const feedMetadataHandlers = {
   showInHome: (q, v) => q.where('showInHome', '=', v),
 } satisfies CriteriaHandlers<'feedMetadata', FeedMetadata>;
 
-export function queryFeedMetadata(criteria: Partial<FeedMetadata>): Promise<FeedMetadata[]> {
+export async function queryFeedMetadata(criteria: Partial<FeedMetadata>): Promise<FeedMetadata[]> {
+  await dbReady;
   return applyCriteria(db.selectFrom('feedMetadata').selectAll(), criteria, feedMetadataHandlers).execute();
 }
 
@@ -59,7 +61,8 @@ const feedCategoryHandlers = {
   name: (q, v) => q.where('name', '=', v),
 } satisfies CriteriaHandlers<'feedCategory', FeedCategory>;
 
-export function queryFeedCategory(criteria: Partial<FeedCategory>): Promise<FeedCategory[]> {
+export async function queryFeedCategory(criteria: Partial<FeedCategory>): Promise<FeedCategory[]> {
+  await dbReady;
   return applyCriteria(db.selectFrom('feedCategory').selectAll(), criteria, feedCategoryHandlers).execute();
 }
 
@@ -71,7 +74,8 @@ const articleContentHandlers = {
   status: (q, v) => q.where('status', '=', v),
 } satisfies CriteriaHandlers<'articleContent', ArticleContent>;
 
-export function queryArticleContent(criteria: Partial<ArticleContent>): Promise<ArticleContent[]> {
+export async function queryArticleContent(criteria: Partial<ArticleContent>): Promise<ArticleContent[]> {
+  await dbReady;
   return applyCriteria(db.selectFrom('articleContent').selectAll(), criteria, articleContentHandlers).execute();
 }
 
@@ -80,11 +84,13 @@ const settingHandlers = {
   value: (q, v) => q.where('value', '=', v),
 } satisfies CriteriaHandlers<'setting', Setting>;
 
-export function querySettings(criteria: Partial<Setting>): Promise<Setting[]> {
+export async function querySettings(criteria: Partial<Setting>): Promise<Setting[]> {
+  await dbReady;
   return applyCriteria(db.selectFrom('setting').selectAll(), criteria, settingHandlers).execute();
 }
 
 export async function countFeedItems(): Promise<number> {
+  await dbReady;
   const { count } = await db.selectFrom('feedItem')
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .executeTakeFirstOrThrow();
@@ -92,6 +98,7 @@ export async function countFeedItems(): Promise<number> {
 }
 
 export async function countFeedMetadata(): Promise<number> {
+  await dbReady;
   const { count } = await db.selectFrom('feedMetadata')
     .select((eb) => eb.fn.countAll<number>().as('count'))
     .executeTakeFirstOrThrow();

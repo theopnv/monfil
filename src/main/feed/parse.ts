@@ -2,6 +2,7 @@ import { type FeedItem, type FeedMetadata } from '../db/types';
 import { fetchUrl } from '../lib/fetch';
 import type { FetchUrlError } from '../lib/fetch';
 import { parseFeed } from 'feedsmith';
+import { decode, EntityLevel } from 'entities';
 import type { Result } from '../../utils';
 import { extractAtomImageUrl, extractImageUrl } from './extractImage';
 
@@ -11,19 +12,25 @@ interface ParsedFeedContent {
   items: Omit<FeedItem, 'id' | 'feed_id'>[];
 }
 
+// Some feeds put literal entities like "&#8217;" inside a CDATA section, where XML parsers
+// leave them untouched by spec. Decode them here so titles and descriptions render as text.
+function decodeText(text: string): string {
+  return decode(text, EntityLevel.HTML);
+}
+
 export function parseFeedContent(content: string, maxItems: number = 0): ParsedFeedContent | null {
   const { format, feed } = parseFeed(content, { maxItems });
   switch (format) {
     case 'rss':
       return {
-        title: feed.title ?? '',
-        description: feed.description ?? '',
+        title: decodeText(feed.title ?? ''),
+        description: decodeText(feed.description ?? ''),
         items: feed.items
           ? feed.items.map(item => ({
-            title: item.title ?? 'No title',
+            title: decodeText(item.title ?? 'No title'),
             link: item.link,
             pubDate: item.pubDate ?? 'No publication date',
-            description: item.description ?? '',
+            description: decodeText(item.description ?? ''),
             image: extractImageUrl(item),
             read_at: undefined,
           }))
@@ -31,14 +38,14 @@ export function parseFeedContent(content: string, maxItems: number = 0): ParsedF
       };
     case 'atom':
       return {
-        title: feed.title?.value ?? '',
-        description: feed.subtitle?.value ?? '',
+        title: decodeText(feed.title?.value ?? ''),
+        description: decodeText(feed.subtitle?.value ?? ''),
         items: feed.entries
           ? feed.entries.map(entry => ({
-            title: entry.title?.value ?? 'No title',
+            title: decodeText(entry.title?.value ?? 'No title'),
             link: entry.links?.find(link => link.rel === 'alternate' || !link.rel)?.href ?? entry.links?.[0]?.href,
             pubDate: entry.published ?? entry.updated ?? 'No publication date',
-            description: entry.summary?.value ?? entry.content?.value ?? '',
+            description: decodeText(entry.summary?.value ?? entry.content?.value ?? ''),
             image: extractAtomImageUrl(entry),
             read_at: undefined,
           }))

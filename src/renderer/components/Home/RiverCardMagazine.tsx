@@ -3,7 +3,7 @@ import RiverCardImage from "@/components/Home/RiverCardImage";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { getFaviconUrl } from "@/lib/favicon";
-import { formatRelativeTime, type RiverCardProps } from "@/lib/river";
+import { formatRelativeTime, type RiverCardProps } from "@/lib/river/utils";
 
 export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps) {
   return (

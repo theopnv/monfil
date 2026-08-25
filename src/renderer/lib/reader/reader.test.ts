@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { deriveStandfirst, findRawDescription, getReaderNavigation } from './reader';
-import type { Feed } from '../../preload/channels';
-import type { RiverItem } from './river';
+import type { Feed } from '../../../preload/channels';
+import type { RiverItem } from '../river/utils';
 
 function createItem(overrides: Partial<RiverItem> = {}): RiverItem {
   return {

@@ -1,5 +1,5 @@
-// Shared with src/renderer/lib/sanitize-html.ts: main sanitizes extracted article HTML before
-// storing it, and the renderer sanitizes again at render time. Both must allow the same markup.
+// main sanitizes extracted article HTML before storing it,
+// and the renderer sanitizes again at render time. Both must allow the same markup.
 export const ALLOWED_TAGS = [
   'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'a', 'ul', 'ol', 'li', 'blockquote',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'code', 'pre', 'img', 'figure', 'figcaption', 'span',

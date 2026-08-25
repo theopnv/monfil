@@ -4,7 +4,7 @@ import RiverHeader from "@/components/Home/RiverHeader";
 import RiverList from "@/components/Home/RiverList";
 import RiverSidebar from "@/components/Home/RiverSidebar";
 import { type FeedVisibility, visibleFeedLinks } from "@/lib/feed-visibility";
-import { openLink, toRiverItems } from "@/lib/river";
+import { openLink, toRiverItems } from "@/lib/river/utils";
 import { useMarkReadOnScroll } from "@/lib/useMarkReadOnScroll";
 import { useFeeds, useReadState, useSetShowInHome } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";

@@ -1,5 +1,5 @@
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
-import { DENSITIES, type Density } from "@/lib/river";
+import { DENSITIES, type Density } from "@/lib/river/utils";
 
 export interface Preferences {
   density: Density;

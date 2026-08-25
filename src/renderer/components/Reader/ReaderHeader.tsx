@@ -4,7 +4,7 @@ import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Tooltip } from "@/components/untitled-ui/base/tooltip/tooltip";
 import { getFaviconUrl } from "@/lib/favicon";
-import type { RiverItem } from "@/lib/river";
+import type { RiverItem } from "@/lib/river/utils";
 
 export interface ReaderHeaderProps {
   item: RiverItem;

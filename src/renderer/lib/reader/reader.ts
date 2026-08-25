@@ -1,5 +1,5 @@
-import type { Feed } from '../../preload/channels';
-import type { RiverItem } from './river';
+import type { Feed } from '../../../preload/channels';
+import type { RiverItem } from '../river/utils';
 
 export interface ReaderNavigation {
   previous: RiverItem | undefined;

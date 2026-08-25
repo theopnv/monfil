@@ -1,6 +1,6 @@
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
-import { estimateReadTime, formatRelativeTime } from "@/lib/river";
-import type { RiverItem } from "@/lib/river";
+import { estimateReadTime, formatRelativeTime } from "@/lib/river/utils";
+import type { RiverItem } from "@/lib/river/utils";
 
 export interface ArticleMetaProps {
   item: RiverItem;

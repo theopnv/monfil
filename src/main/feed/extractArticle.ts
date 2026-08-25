@@ -2,7 +2,7 @@ import { Readability } from '@mozilla/readability';
 import createDOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
 import type { ArticleContentStatus } from '../db/types';
-import { SANITIZE_CONFIG } from './sanitize-html';
+import { SANITIZE_CONFIG } from '../lib/sanitize-html';
 
 // Cookie walls and paywall stubs extract "successfully" but too thin to be worth showing over the feed description.
 export const MIN_ARTICLE_LENGTH = 500;
