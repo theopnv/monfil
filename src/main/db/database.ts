@@ -5,8 +5,6 @@ import { Migrator } from 'kysely/migration'
 import { migrationProvider } from './migrations/index.ts'
 import { withCorruptionRecovery } from './recovery.ts'
 
-export const DB_FILE_NAME = 'monfil.db';
-
 // Populated by initializeDatabase().
 // Every consumer's contract is "await dbReady, then use db", so nothing reads these before initializeDatabase has run.
 export let db!: Kysely<Database>;

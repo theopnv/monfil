@@ -1,5 +1,5 @@
 import { useLocation } from "@tanstack/react-router";
-import { Button } from "../untitled-ui/base/buttons/button";
+import { Button } from "./untitled-ui/base/buttons/button";
 import { Home02, Sliders01 } from "@untitledui/icons";
 
 const activeNavClasses = "rounded-xl bg-brand-secondary *:data-icon:text-fg-brand-secondary hover:bg-brand-secondary hover:*:data-icon:text-fg-brand-secondary";

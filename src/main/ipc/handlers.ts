@@ -1,4 +1,5 @@
-import { ARTICLE_FETCH_TIMEOUT_MS, enrichItems } from "../feed/enrichItems";
+import { enrichItems } from "../feed/enrichItems";
+import { ARTICLE_FETCH_TIMEOUT_MS } from "../constants";
 import { deriveArticleContentStatus, extractArticle } from "../feed/extractArticle";
 import { fetchFeed, type FeedFetchError, type ParsedFeed } from "../feed/parse";
 import { refreshAllFeeds } from "../feed/refresh";
@@ -8,15 +9,15 @@ import { addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type AddF
 import { deleteFeedFromDatabase, type DeleteFeedError } from "../db/crud/delete";
 import { setFeedsShowInHome, setFeedItemsRead, type UpdateFeedError, type UpdateItemError } from "../db/crud/update";
 import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeeds } from "../db/crud/query";
-import { getRefreshInterval, getRefreshOnLaunch, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type RefreshInterval } from "../settings";
+import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type MaxFeedItems, type RefreshInterval } from "../settings";
 import { getAppInfo, type AppInfo } from "../app-info";
 import { sendToRenderer } from "./sendToRenderer";
 import type { IpcMainInvokeEvent } from "electron";
 import type { ArticleContentResult, Feed, FeedCategory } from "../../preload/channels";
-import type { Result } from "../../utils";
+import type { Result } from "../lib/utils";
 
-export function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, query: string): Promise<Result<ParsedFeed, FeedFetchError>> {
-  return fetchFeed(query);
+export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, query: string): Promise<Result<ParsedFeed, FeedFetchError>> {
+  return fetchFeed(query, await getMaxFeedItems());
 }
 
 export function handleFeedsListCategories(): Promise<FeedCategory[]> {
@@ -119,4 +120,13 @@ export async function handleSettingsSetRefreshOnLaunch(_event: IpcMainInvokeEven
 
 export function handleAppGetInfo(): Promise<AppInfo> {
   return getAppInfo();
+}
+
+export function handleSettingsGetMaxFeedItems(): Promise<MaxFeedItems> {
+  return getMaxFeedItems();
+}
+
+export async function handleSettingsSetMaxFeedItems(_event: IpcMainInvokeEvent, payload: MaxFeedItems): Promise<MaxFeedItems> {
+  await setMaxFeedItems(payload);
+  return payload;
 }

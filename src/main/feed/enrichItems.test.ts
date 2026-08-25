@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { deriveArticleContentStatus, extractArticle } from './extractArticle';
 import { extractOgImageUrl } from './extractOgImage';
-import { ENRICHMENT_CONCURRENCY, enrichItems } from './enrichItems';
+import { enrichItems } from './enrichItems';
 import { fetchUrl } from '../lib/fetch';
 import type { FeedItem } from '../db/types';
+import { ENRICHMENT_CONCURRENCY } from '../constants';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
 vi.mock(import('./extractOgImage'), () => ({ extractOgImageUrl: vi.fn() }));

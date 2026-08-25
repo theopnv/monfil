@@ -1,7 +1,7 @@
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Toggle } from "@/components/untitled-ui/base/toggle/toggle";
 import { getFaviconUrl } from "@/lib/favicon";
-import { computeFeedContentType, computePublishRate } from "@/lib/feedStats";
+import { computeFeedContentType, computePublishRate } from "@/lib/addFeed/feedStats";
 import CategoryPicker from "./CategoryPicker";
 import FeedMatchCard from "./FeedMatchCard";
 import type { ParsedFeed } from "../../../main/feed/parse";

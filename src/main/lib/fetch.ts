@@ -1,4 +1,4 @@
-import type { Result } from '../../utils.ts'
+import type { Result } from './utils.ts'
 
 interface GenericFetchError extends Error {
   name: 'GENERIC_FETCH_ERROR';

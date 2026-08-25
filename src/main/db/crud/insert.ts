@@ -3,7 +3,7 @@ import { db, dbReady } from '../database';
 import { queryFeedItems } from './query';
 import type { Database, FeedItem, NewArticleContent } from '../types';
 import type { Feed } from '../../../preload/channels';
-import type { Result } from '../../../utils';
+import type { Result } from '../../lib/utils';
 
 async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: string) {
   return trx.insertInto('feedCategory')

@@ -1,11 +1,9 @@
 import type { FeedItem, NewArticleContent } from '../db/types';
-import { runWithConcurrency } from '../../utils';
+import { runWithConcurrency } from '../lib/utils';
 import { fetchUrl } from '../lib/fetch';
 import { deriveArticleContentStatus, extractArticle } from './extractArticle';
 import { extractOgImageUrl } from './extractOgImage';
-
-export const ENRICHMENT_CONCURRENCY = 5;
-export const ARTICLE_FETCH_TIMEOUT_MS = 5000;
+import { ENRICHMENT_CONCURRENCY, ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 
 const ABSOLUTE_HTTP_URL_REGEX = /^https?:\/\//i;
 

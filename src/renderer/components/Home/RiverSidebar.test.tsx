@@ -4,7 +4,7 @@ import { FeedsProvider, useFeeds } from '@/providers/feeds-provider';
 import RiverSidebar from './RiverSidebar';
 import type { DeleteFeedError } from '../../../main/db/crud/delete';
 import type { Feed } from '../../../preload/channels';
-import type { Result } from '../../../utils';
+import type { Result } from '../../../main/lib/utils';
 import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../preload/channels';
 
 const feedA: Feed = {

@@ -6,12 +6,12 @@ import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
 import { fetchFeed } from './parse';
 import type { Feed } from '../../preload/channels';
-import { runWithConcurrency } from '../../utils';
+import { runWithConcurrency } from '../lib/utils';
+import { FEED_FETCH_CONCURRENCY } from '../constants';
+import { getMaxFeedItems } from '../settings';
 
-export const FEED_FETCH_CONCURRENCY = 4;
-
-async function refreshOneFeed(feed: FeedMetadata): Promise<FeedItem[]> {
-  const result = await fetchFeed(feed.link);
+async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<FeedItem[]> {
+  const result = await fetchFeed(feed.link, maxItems);
   if (!result.success) {
     console.error(`Failed to refresh feed "${feed.title}" (${feed.link}).`, result.error);
     return [];
@@ -35,11 +35,11 @@ async function refreshOneFeed(feed: FeedMetadata): Promise<FeedItem[]> {
  */
 export async function refreshAllFeeds(): Promise<Feed[]> {
   await dbReady;
-  const feedList = await queryFeedMetadata({});
+  const [feedList, maxItems] = await Promise.all([queryFeedMetadata({}), getMaxFeedItems()]);
   const insertedByFeedId = new Map<number, FeedItem[]>();
 
   await runWithConcurrency(feedList, FEED_FETCH_CONCURRENCY, async (feed) => {
-    insertedByFeedId.set(feed.id, await refreshOneFeed(feed));
+    insertedByFeedId.set(feed.id, await refreshOneFeed(feed, maxItems));
   });
 
   const feeds = await queryFeeds();

@@ -12,8 +12,10 @@ import {
   handleFeedsValidateFeedUrl,
   handleItemsGetContent,
   handleItemsSetRead,
+  handleSettingsGetMaxFeedItems,
   handleSettingsGetRefreshInterval,
   handleSettingsGetRefreshOnLaunch,
+  handleSettingsSetMaxFeedItems,
   handleSettingsSetRefreshInterval,
   handleSettingsSetRefreshOnLaunch,
 } from "./handlers";
@@ -42,6 +44,8 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "items:get-content": handleItemsGetContent,
   "settings:get-refresh-on-launch": handleSettingsGetRefreshOnLaunch,
   "settings:set-refresh-on-launch": handleSettingsSetRefreshOnLaunch,
+  "settings:get-max-feed-items": handleSettingsGetMaxFeedItems,
+  "settings:set-max-feed-items": handleSettingsSetMaxFeedItems,
   "app:get-info": handleAppGetInfo,
 };
 

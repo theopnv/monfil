@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { useFeedValidation } from './useFeedValidation';
 import type { ParsedFeed, FeedFetchError } from '../../../main/feed/parse';
-import type { Result } from '../../../utils';
+import type { Result } from '../../../main/lib/utils';
 
 const validFeed: ParsedFeed = { link: 'https://example.com/feed', title: 'Example Feed', description: 'An example feed', items: [] };
 const notFoundError: FeedFetchError = { name: 'UNSUPPORTED_FORMAT', message: 'nope' };
@@ -98,7 +98,7 @@ describe('useFeedValidation', () => {
 
   test('ignores a stale response for an earlier query', async () => {
     // Arrange: the first call resolves slowly, the second resolves fast.
-    let resolveFirst: (value: Result<ParsedFeed, FeedFetchError>) => void = () => {};
+    let resolveFirst: (value: Result<ParsedFeed, FeedFetchError>) => void = () => { };
     const firstCall = new Promise<Result<ParsedFeed, FeedFetchError>>((resolve) => {
       resolveFirst = resolve;
     });

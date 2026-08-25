@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { feedVisibility, folderVisibility, nextVisibility, visibleFeedLinks } from './feed-visibility';
-import type { Feed } from '../../preload/channels';
+import type { Feed } from '../../../preload/channels';
 
 function createFeed(overrides: Partial<Feed> = {}): Feed {
   return {

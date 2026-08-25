@@ -3,8 +3,9 @@ import { fetchUrl } from '../lib/fetch';
 import type { FetchUrlError } from '../lib/fetch';
 import { parseFeed } from 'feedsmith';
 import { decode, EntityLevel } from 'entities';
-import type { Result } from '../../utils';
+import type { Result } from '../lib/utils';
 import { extractAtomImageUrl, extractImageUrl } from './extractImage';
+import { DEFAULT_MAX_FEED_ITEMS } from '../settings';
 
 interface ParsedFeedContent {
   title: string;
@@ -71,7 +72,7 @@ export type FeedFetchError =
   | FetchUrlError
   | { name: ParseErrorCode; message: string }
 
-export async function fetchFeed(link: string, maxItems: number = 30): Promise<Result<ParsedFeed, FeedFetchError>> {
+export async function fetchFeed(link: string, maxItems: number = DEFAULT_MAX_FEED_ITEMS): Promise<Result<ParsedFeed, FeedFetchError>> {
   const normalizedLink = /^https?:\/\//i.test(link) ? link : `https://${link}`;
   try {
     const result = await fetchUrl(normalizedLink);

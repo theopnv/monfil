@@ -3,16 +3,16 @@ import type { NewFeedInput, AddFeedError } from '../main/db/crud/insert';
 import type { DeleteFeedError } from '../main/db/crud/delete';
 import type { UpdateFeedError, UpdateItemError } from '../main/db/crud/update';
 import type { ParsedFeed, FeedFetchError } from '../main/feed/parse';
-import type { RefreshInterval } from '../main/settings';
+import type { MaxFeedItems, RefreshInterval } from '../main/settings';
 import type { AppInfo } from '../main/app-info';
-import type { Result } from '../utils';
+import type { Result } from '../main/lib/utils';
 
 // =====================================
 // ============== TYPES ================
 // =====================================
 
 // Expose types from main process to preload, so that the renderer can use them without importing from main directly.
-export type { RefreshInterval } from '../main/settings';
+export type { RefreshInterval, MaxFeedItems } from '../main/settings';
 export type { FeedCategory } from '../main/db/types';
 
 // Some types are only used in the preload layer, so we define them here instead of main.
@@ -60,6 +60,8 @@ export type TwoWayRendererMainChannelPayloads = {
   'items:get-content': ArticleContentResult;
   'settings:get-refresh-on-launch': boolean;
   'settings:set-refresh-on-launch': boolean;
+  'settings:get-max-feed-items': MaxFeedItems;
+  'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': AppInfo;
 }
 
@@ -79,6 +81,8 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'items:get-content': number;
   'settings:get-refresh-on-launch': undefined;
   'settings:set-refresh-on-launch': boolean;
+  'settings:get-max-feed-items': undefined;
+  'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': undefined;
 };
 

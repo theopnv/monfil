@@ -3,7 +3,8 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { registerIpcHandlers } from './ipc/registerIpcHandlers';
 import { registerIpcListeners } from './ipc/registerIpcListeners';
-import { closeDatabase, DB_FILE_NAME, initializeDatabase } from './db/database';
+import { closeDatabase, initializeDatabase } from './db/database';
+import { DB_FILE_NAME } from './constants';
 import { startRefreshScheduler, stopRefreshScheduler } from './feed/scheduler';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.

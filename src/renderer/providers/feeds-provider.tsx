@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Feed } from "../../preload/channels";
 import type { DeleteFeedError } from "../../main/db/crud/delete";
 import type { UpdateFeedError } from "../../main/db/crud/update";
-import type { Result } from "../../utils";
+import type { Result } from "../../main/lib/utils";
 
 const FeedsContext = createContext<Feed[] | undefined>(undefined);
 

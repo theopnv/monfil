@@ -14,3 +14,9 @@ Check [Database](./database.md) for more information on the implementation.
 For renderer only data that main never reads. Using it skips an extra IPC channel for data that main doesn't need.
 - Reader preferences (density, hide-read-items, open-links-externally)
 - Theme
+
+## Constants
+
+For values that tune app behavior but are not a user preference: no IPC channel, no UI control, no database row. They live in `src/main/constants.ts`.
+- The database file name
+- Fetch timeouts and concurrency limits

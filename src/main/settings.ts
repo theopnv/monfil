@@ -81,3 +81,44 @@ export async function setRefreshOnLaunch(value: boolean): Promise<void> {
     .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
     .execute();
 }
+
+export type MaxFeedItems = 10 | 30 | 50 | 100;
+
+export const MAX_FEED_ITEMS_OPTIONS: readonly MaxFeedItems[] = [10, 30, 50, 100];
+
+export const DEFAULT_MAX_FEED_ITEMS: MaxFeedItems = 30;
+
+const MAX_FEED_ITEMS_KEY = 'maxFeedItems';
+
+/**
+ * Narrows an untrusted value, such as a hand-edited database row or an IPC payload, to a supported item count.
+ * @param value anything that is meant to be the max feed items preference
+ * @returns the matching count, or `DEFAULT_MAX_FEED_ITEMS` when there is no match
+ */
+export function toMaxFeedItems(value: unknown): MaxFeedItems {
+  const candidate = typeof value === 'string' ? Number(value) : value;
+  return MAX_FEED_ITEMS_OPTIONS.includes(candidate as MaxFeedItems)
+    ? candidate as MaxFeedItems
+    : DEFAULT_MAX_FEED_ITEMS;
+}
+
+/**
+ * Reads how many items are kept per feed when it is fetched.
+ * @returns the stored count, or `DEFAULT_MAX_FEED_ITEMS` when none is stored
+ */
+export async function getMaxFeedItems(): Promise<MaxFeedItems> {
+  const [row] = await querySettings({ key: MAX_FEED_ITEMS_KEY });
+  return toMaxFeedItems(row?.value);
+}
+
+/**
+ * Stores how many items are kept per feed when it is fetched.
+ * @param value the item count to store
+ */
+export async function setMaxFeedItems(value: MaxFeedItems): Promise<void> {
+  await dbReady;
+  await db.insertInto('setting')
+    .values({ key: MAX_FEED_ITEMS_KEY, value: String(value) })
+    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
+    .execute();
+}

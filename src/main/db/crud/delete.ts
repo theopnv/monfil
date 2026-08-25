@@ -1,5 +1,5 @@
 import { db, dbReady } from '../database';
-import type { Result } from '../../../utils';
+import type { Result } from '../../lib/utils';
 
 export type DeleteFeedError =
   | { name: 'DB_ERROR'; message: string }

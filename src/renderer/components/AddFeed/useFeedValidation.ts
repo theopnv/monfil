@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useDebouncedValue } from '@/lib/useDebouncedValue';
+import { useDebouncedValue } from '@/lib/addFeed/useDebouncedValue';
 import type { ParsedFeed, FeedFetchError } from '../../../main/feed/parse';
 
 export type FeedValidationStatus = 'idle' | 'loading' | 'found' | 'not-found';
