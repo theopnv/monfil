@@ -25,8 +25,9 @@ export default defineConfig({
       // https://vitest.dev/config/browser/playwright
       instances: [
         { browser: 'chromium' },
-        { browser: 'firefox' },
-        { browser: 'webkit' },
+        // Electron is based on chromium
+        // { browser: 'firefox' },
+        // { browser: 'webkit' },
       ],
       // Concurrent instances hitting one dev server cause flaky "failed to import" and "failed to find the runner" errors in CI: vitest-dev/vitest#9509, #9473, #8447
       fileParallelism: false,
