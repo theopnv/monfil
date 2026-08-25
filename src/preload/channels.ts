@@ -1,21 +1,29 @@
 import type { FeedMetadata, FeedItem, FeedCategory } from '../main/db/types';
-import type { NewFeedInput, AddFeedError } from '../main/db/insert';
-import type { DeleteFeedError } from '../main/db/delete';
-import type { UpdateFeedError, UpdateItemError } from '../main/db/update';
+import type { NewFeedInput, AddFeedError } from '../main/db/crud/insert';
+import type { DeleteFeedError } from '../main/db/crud/delete';
+import type { UpdateFeedError, UpdateItemError } from '../main/db/crud/update';
 import type { ParsedFeed, FeedFetchError } from '../main/feed/parse';
 import type { RefreshInterval } from '../main/settings';
 import type { AppInfo } from '../main/app-info';
 import type { Result } from '../utils';
 
-export type { RefreshInterval } from '../main/settings';
+// =====================================
+// ============== TYPES ================
+// =====================================
 
+// Expose types from main process to preload, so that the renderer can use them without importing from main directly.
+export type { RefreshInterval } from '../main/settings';
 export type { FeedCategory } from '../main/db/types';
 
+// Some types are only used in the preload layer, so we define them here instead of main.
 export type Feed = FeedMetadata & { items: FeedItem[]; category: FeedCategory };
-
 export type ArticleContentResult =
   | { status: 'ok'; html: string; wordCount: number }
   | { status: 'unavailable' };
+
+// =====================================
+// ============= CHANNELS ==============
+// =====================================
 
 // ============= One-way channels (renderer -> main) ==============
 export type OneWayRendererToMainChannelPayloads = {

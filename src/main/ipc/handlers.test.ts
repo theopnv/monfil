@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
-import { db, initializeDatabase } from '../database';
-import { addFeedToDatabase, upsertArticleContent } from '../db/insert';
+import { db, initializeDatabase } from '../db/database';
+import { addFeedToDatabase, upsertArticleContent } from '../db/crud/insert';
 import { fetchUrl } from '../fetch';
 import { handleItemsGetContent } from './handlers';
 import type { IpcMainInvokeEvent } from 'electron';

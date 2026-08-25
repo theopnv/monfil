@@ -1,7 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { app } from 'electron';
-import { dbFilePath } from './database';
-import { countFeedItems, countFeedMetadata } from './db/query';
+import { dbFilePath } from './db/database';
+import { countFeedItems, countFeedMetadata } from './db/crud/query';
 
 export interface AppInfo {
   version: string;

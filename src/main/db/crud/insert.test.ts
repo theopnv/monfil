@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
 import { addFeedItemsToDatabase, addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type NewFeedInput } from './insert';
-import type { FeedItem } from './types';
+import type { FeedItem } from '../types';
 
 const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', items: [], categoryName: 'tech', showInHome: true };
 const feedB: NewFeedInput = { link: 'https://b.example/feed', title: 'Feed B', items: [], categoryName: 'tech', showInHome: true };
@@ -138,9 +138,13 @@ describe('addFeedItemsToDatabase', () => {
     ]);
 
     // Assert
-    expect(inserted.map((item) => item.title)).toEqual(['Item 1', 'Item 2']);
-    expect(inserted.every((item) => typeof item.id === 'number')).toBe(true);
-    expect(inserted.every((item) => item.feed_id === feedId)).toBe(true);
+    expect(inserted.success).toBe(true);
+    if (!inserted.success) {
+      return;
+    }
+    expect(inserted.data.map((item) => item.title)).toEqual(['Item 1', 'Item 2']);
+    expect(inserted.data.every((item) => typeof item.id === 'number')).toBe(true);
+    expect(inserted.data.every((item) => item.feed_id === feedId)).toBe(true);
   });
 
   test('leaves out the rows it skipped as duplicates', async () => {
@@ -155,7 +159,11 @@ describe('addFeedItemsToDatabase', () => {
     ]);
 
     // Assert
-    expect(inserted.map((item) => item.title)).toEqual(['Brand new']);
+    expect(inserted.success).toBe(true);
+    if (!inserted.success) {
+      return;
+    }
+    expect(inserted.data.map((item) => item.title)).toEqual(['Brand new']);
     const stored = await db.selectFrom('feedItem').selectAll().execute();
     expect(stored).toHaveLength(2);
   });
@@ -169,7 +177,11 @@ describe('addFeedItemsToDatabase', () => {
     const inserted = await addFeedItemsToDatabase(db, feedId, [feedItem({ link: `${feedA.link}#1` })]);
 
     // Assert
-    expect(inserted).toEqual([]);
+    expect(inserted.success).toBe(true);
+    if (!inserted.success) {
+      return;
+    }
+    expect(inserted.data).toEqual([]);
   });
 
   test('returns an empty array when there is nothing to insert', async () => {
@@ -180,7 +192,11 @@ describe('addFeedItemsToDatabase', () => {
     const inserted = await addFeedItemsToDatabase(db, feedId, []);
 
     // Assert
-    expect(inserted).toEqual([]);
+    expect(inserted.success).toBe(true);
+    if (!inserted.success) {
+      return;
+    }
+    expect(inserted.data).toEqual([]);
   });
 });
 

@@ -1,5 +1,5 @@
-import { db, dbReady } from './database';
-import { querySettings } from './db/query';
+import { db, dbReady } from './db/database';
+import { querySettings } from './db/crud/query';
 
 export type RefreshInterval = 15 | 30 | 60 | 360 | 'manual';
 

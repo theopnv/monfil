@@ -1,9 +1,9 @@
 import { type Kysely } from 'kysely';
 import { db, dbReady } from '../database';
 import { queryFeedItems } from './query';
-import type { Database, FeedItem, NewArticleContent } from './types';
-import type { Feed } from '../../preload/channels';
-import type { Result } from '../../utils';
+import type { Database, FeedItem, NewArticleContent } from '../types';
+import type { Feed } from '../../../preload/channels';
+import type { Result } from '../../../utils';
 
 async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: string) {
   return trx.insertInto('feedCategory')
@@ -25,6 +25,8 @@ async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, ti
     .executeTakeFirstOrThrow();
 }
 
+export type AddFeedItemsError = { name: 'DB_ERROR'; message: string };
+
 /**
  * Inserts the items of one feed, skipping the links that are already stored.
  * @param executor the `db` singleton, or a transaction to insert within
@@ -32,15 +34,20 @@ async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, ti
  * @param items the items to insert
  * @returns only the rows it wrote, since `ON CONFLICT DO NOTHING ... RETURNING *` leaves out the skipped ones
  */
-export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId: number, items: Omit<FeedItem, 'id' | 'feed_id'>[]): Promise<FeedItem[]> {
+export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId: number, items: Omit<FeedItem, 'id' | 'feed_id'>[]): Promise<Result<FeedItem[], AddFeedItemsError>> {
   if (items.length === 0) {
-    return [];
+    return { success: true, data: [] };
   }
-  return executor.insertInto('feedItem')
-    .values(items.map((item) => ({ feed_id: feedId, ...item })))
-    .onConflict((oc) => oc.column('link').doNothing())
-    .returningAll()
-    .execute();
+  try {
+    const inserted = await executor.insertInto('feedItem')
+      .values(items.map((item) => ({ feed_id: feedId, ...item })))
+      .onConflict((oc) => oc.column('link').doNothing())
+      .returningAll()
+      .execute();
+    return { success: true, data: inserted };
+  } catch (error) {
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
 }
 
 export interface NewFeedInput {
@@ -90,7 +97,10 @@ export async function addFeedToDatabase(input: NewFeedInput): Promise<Result<Fee
     const { category, metadata } = await db.transaction().execute(async (trx) => {
       const category = await addFeedCategoryToDatabase(trx, input.categoryName);
       const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, category.id, input.showInHome);
-      await addFeedItemsToDatabase(trx, metadata.id, input.items);
+      const items = await addFeedItemsToDatabase(trx, metadata.id, input.items);
+      if (!items.success) {
+        throw new Error(items.error.message);
+      }
       return { category, metadata };
     });
 

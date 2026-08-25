@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { FeedsProvider, useFeeds } from '@/providers/feeds-provider';
 import RiverSidebar from './RiverSidebar';
-import type { DeleteFeedError } from '../../../main/db/delete';
+import type { DeleteFeedError } from '../../../main/db/crud/delete';
 import type { Feed } from '../../../preload/channels';
 import type { Result } from '../../../utils';
 import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../preload/channels';

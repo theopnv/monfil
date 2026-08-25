@@ -3,8 +3,8 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { getAppInfo } from './app-info';
-import { closeDatabase, initializeDatabase } from './database';
-import { addFeedToDatabase } from './db/insert';
+import { closeDatabase, initializeDatabase } from './db/database';
+import { addFeedToDatabase } from './db/crud/insert';
 
 vi.mock(import('electron'), () => ({
   app: { getVersion: vi.fn(() => '1.2.3') } as unknown as Electron.App,

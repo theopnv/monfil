@@ -1,37 +1,30 @@
 # Database
 
-`better-sqlite3` is the driver. [Kysely](https://kysely.dev) supplies the types and the query builder.
+Dependencies:
+- [`better-sqlite3`](https://www.npmjs.com/package/better-sqlite3) is the driver.
+- [Kysely](https://kysely.dev) supplies the types and the query builder.
 
-## Files
+## Readying the database
 
-## Await `dbReady` first
+The database is file-backed, resolved in `src/main/db/database.ts`.
 
-`src/main/database.ts` exports `dbReady`, a promise that resolves once the migrator has brought the schema up to date.
+It exports `dbReady`, a promise that resolves once the migrator has brought the schema up to date.
 Any code path that touches the database must await it. `run()` does this once at startup, and the unit tests do it in `beforeAll`.
 
-The database is file-backed. `src/main/main.ts` is the only place that resolves the file path — `app.getPath('userData')` joined with `DB_FILE_NAME` — and passes it to `initializeDatabase(filePath)`, which assigns `db` and populates `dbReady`. `database.ts` itself stays decoupled from Electron: it takes the path as a parameter instead of resolving it, since the module is also imported directly by unit tests running in plain Node, where importing `app` from `'electron'` would not resolve to a real Electron runtime.
-
-Every connection gets two pragmas: `foreign_keys = ON` (SQLite does not enforce the `.references(...)` foreign keys declared in the migrations unless this is set per connection), and, for file-backed connections only, `journal_mode = WAL`.
-
-Migrations are supplied by a hand-written `MigrationProvider` in `src/main/db/migrations/index.ts`, backed by a statically-imported `Record<string, Migration>`, not Kysely's built-in `FileMigrationProvider`. `FileMigrationProvider` scans a folder with `fs.readdir()` and dynamically `import()`s each file, which assumes loose files on disk — untrue once Vite bundles the main process into `.vite/build/main.js`. Add a migration by creating `000X_description.ts` next to `index.ts` and adding one line to the `migrations` record; `Migrator` sorts by name, so the numeric prefix keeps ordering explicit.
-
-Migration `0002_feed_item_read` adds `feedItem.read_at`, a nullable text column holding an ISO timestamp, or nothing when the item is unread. It is the one column in the schema an update can explicitly clear back to `NULL`, so `FeedItemTable` types it with `ColumnType<string | undefined, string | undefined, string | null>` rather than the plain `string | undefined` used for `link` and `image`: select and insert stay `string | undefined` (the existing nullable-column convention), while update additionally allows `null`. `setFeedItemsRead` (`src/main/db/update.ts`) is the only writer.
-
-Migration `0003_article_content` adds the `articleContent` table, one row per `feedItem` (`item_id` is both the primary key and the foreign key, `ON DELETE CASCADE`). `html` and `text` hold the same extracted article in two forms because they serve different readers: `html` is sanitized markup for the reader view, `text` is plain text set aside for the planned trend-analysis features, which need a body of text to work on rather than markup to strip. `word_count` is stored rather than derived from `text` at read time because `text` never crosses IPC — sending the full article body to the renderer just to count its words would be wasted bandwidth, so the count is computed once in main (`src/main/feed/extractArticle.ts`) and carried over `items:get-content` instead. `html` and `text` are nullable, and `status` (`'ok' | 'failed' | 'too_short'`) records the outcome of every extraction attempt, successful or not: a `failed` or `too_short` row still exists, so a page that never yields usable content is not refetched on every reader open.
+There is a "recovery" mechanism in `src/main/db/recovery.ts`. If it detects corrupted files or leftovers, it will delete them and restart from a clean slate.
 
 Call `closeDatabase()` before the process exits so `better-sqlite3` closes its connection cleanly. `src/main/main.ts` already does this in its `before-quit` handler.
 
-`initializeDatabase` runs its open-and-migrate step through `withCorruptionRecovery` (`src/main/db/recovery.ts`). If the process was killed rather than closed cleanly, the WAL sidecar files (`-wal`, `-shm`) can outlive a database file that was deleted or replaced by hand, which SQLite reports as a disk I/O error rather than "file not found". `withCorruptionRecovery` recognizes that error shape, deletes the stale files, and retries once. This only applies to file-backed databases; `:memory:` connections used by tests skip it.
-
-## Query criteria must stay exhaustive
+## Query
 
 `src/main/db/query.ts` builds each query through a `CriteriaHandlers` mapped type. The type requires one handler per column of the table.
+This is deliberate, to avoid adding a column to a table interface without adding its handler (compilation failure).
 
-This is deliberate. Add a column to a table interface without adding its handler, and the build fails. It stops a new column from being silently unfilterable. Keep the mapped type when you add a table.
+## Migrations
 
-## Native module packaging
+Migrations are supplied by a hand-written `MigrationProvider` in `src/main/db/migrations/index.ts`, backed by a statically-imported `Record<string, Migration>`, not Kysely's built-in `FileMigrationProvider`. `FileMigrationProvider` scans a folder with `fs.readdir()` and dynamically `import()`s each file, which assumes loose files on disk — untrue once Vite bundles the main process into `.vite/build/main.js`.
 
-`better-sqlite3` is listed as `external` in `vite.main.config.mts`. It resolves its `.node` binary against its own package directory, so bundling it breaks the load. Any other native dependency in the main process needs the same treatment.
+Add a migration by creating `000X_description.ts` next to `index.ts` and adding one line to the `migrations` record. `Migrator` sorts by name, so the numeric prefix keeps ordering explicit.
 
 ## Tests
 

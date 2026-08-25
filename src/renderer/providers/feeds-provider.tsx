@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from "react";
 import type { Feed } from "../../preload/channels";
-import type { DeleteFeedError } from "../../main/db/delete";
-import type { UpdateFeedError } from "../../main/db/update";
+import type { DeleteFeedError } from "../../main/db/crud/delete";
+import type { UpdateFeedError } from "../../main/db/crud/update";
 import type { Result } from "../../utils";
 
 const FeedsContext = createContext<Feed[] | undefined>(undefined);

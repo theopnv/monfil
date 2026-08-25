@@ -3,13 +3,13 @@ import { deriveArticleContentStatus, extractArticle } from "../feed/extractArtic
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
 import { fetchUrl } from "../fetch";
-import { addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type AddFeedError, type NewFeedInput } from "../db/insert";
-import { deleteFeedFromDatabase, type DeleteFeedError } from "../db/delete";
-import { setFeedsShowInHome, setFeedItemsRead, type UpdateFeedError, type UpdateItemError } from "../db/update";
-import { queryArticleContent, queryFeedItems, queryFeeds } from "../db/query";
+import { addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type AddFeedError, type NewFeedInput } from "../db/crud/insert";
+import { deleteFeedFromDatabase, type DeleteFeedError } from "../db/crud/delete";
+import { setFeedsShowInHome, setFeedItemsRead, type UpdateFeedError, type UpdateItemError } from "../db/crud/update";
+import { queryArticleContent, queryFeedItems, queryFeeds } from "../db/crud/query";
 import { setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type RefreshInterval } from "../settings";
 import { getAppInfo, type AppInfo } from "../app-info";
-import { dbReady } from "../database";
+import { dbReady } from "../db/database";
 import { sendToRenderer } from "./sendToRenderer";
 import type { IpcMainInvokeEvent } from "electron";
 import type { ArticleContentResult, Feed } from "../../preload/channels";

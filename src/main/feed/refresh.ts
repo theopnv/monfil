@@ -1,6 +1,6 @@
-import { db, dbReady } from '../database';
-import { addFeedItemsToDatabase, updateFeedItemImage, upsertArticleContent } from '../db/insert';
-import { queryFeedMetadata, queryFeeds } from '../db/query';
+import { db, dbReady } from '../db/database';
+import { addFeedItemsToDatabase, updateFeedItemImage, upsertArticleContent } from '../db/crud/insert';
+import { queryFeedMetadata, queryFeeds } from '../db/crud/query';
 import type { FeedItem, FeedMetadata } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
@@ -20,7 +20,12 @@ async function refreshOneFeed(feed: FeedMetadata): Promise<FeedItem[]> {
   // feedItem.link is UNIQUE but nullable, and SQLite accepts any number of NULLs in a unique column,
   // so a linkless item would be inserted again on every cycle.
   const items = result.data.items.filter((item) => item.link);
-  return addFeedItemsToDatabase(db, feed.id, items);
+  const inserted = await addFeedItemsToDatabase(db, feed.id, items);
+  if (!inserted.success) {
+    console.error(`Failed to store the refreshed items of feed "${feed.title}" (${feed.link}).`, inserted.error);
+    return [];
+  }
+  return inserted.data;
 }
 
 /**
@@ -34,11 +39,7 @@ export async function refreshAllFeeds(): Promise<Feed[]> {
   const insertedByFeedId = new Map<number, FeedItem[]>();
 
   await runWithConcurrency(feedList, FEED_FETCH_CONCURRENCY, async (feed) => {
-    try {
-      insertedByFeedId.set(feed.id, await refreshOneFeed(feed));
-    } catch (error) {
-      console.error(`Failed to store the refreshed items of feed "${feed.title}".`, error);
-    }
+    insertedByFeedId.set(feed.id, await refreshOneFeed(feed));
   });
 
   const feeds = await queryFeeds();

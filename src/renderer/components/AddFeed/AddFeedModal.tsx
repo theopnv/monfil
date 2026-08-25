@@ -7,7 +7,7 @@ import Step3Done from "./Step3Done";
 import { useFeedValidation } from "./useFeedValidation";
 import WizardFooter from "./WizardFooter";
 import WizardHeader, { type WizardStep } from "./WizardHeader";
-import type { AddFeedError } from "../../../main/db/insert";
+import type { AddFeedError } from "../../../main/db/crud/insert";
 import type { Feed, FeedCategory } from "../../../preload/channels";
 
 export interface AddFeedModalProps {

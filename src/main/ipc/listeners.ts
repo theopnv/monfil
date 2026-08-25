@@ -1,6 +1,6 @@
 import { BrowserWindow, Menu, shell, type IpcMainEvent } from "electron";
 import type { OneWayRendererToMainChannelPayloads } from "../../preload/channels";
-import { dbFilePath } from "../database";
+import { dbFilePath } from "../db/database";
 import { sendToRenderer } from "./sendToRenderer";
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {

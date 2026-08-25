@@ -5,7 +5,7 @@ import { FeedsProvider } from '@/providers/feeds-provider';
 import type { ParsedFeed, FeedFetchError } from '../../../main/feed/parse';
 import type { Feed, FeedCategory } from '../../../preload/channels';
 import type { Result } from '../../../utils';
-import type { AddFeedError } from '../../../main/db/insert';
+import type { AddFeedError } from '../../../main/db/crud/insert';
 import type { TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannelPayloads } from '../../../preload/channels';
 
 const categories: FeedCategory[] = [{ id: 1, name: 'Tech' }];

@@ -1,14 +1,14 @@
-import type { Database } from './db/types.ts'
+import type { Database } from './types.ts'
 import SQLite from 'better-sqlite3'
 import { Kysely, SqliteDialect } from 'kysely'
 import { Migrator } from 'kysely/migration'
-import { migrationProvider } from './db/migrations'
-import { withCorruptionRecovery } from './db/recovery'
+import { migrationProvider } from './migrations/index.ts'
+import { withCorruptionRecovery } from './recovery.ts'
 
 export const DB_FILE_NAME = 'monfil.db';
 
 // Populated by initializeDatabase().
-// Every consumer's contract is "await dbReady, then use db" (see doc/database.md), so nothing reads these before initializeDatabase has run.
+// Every consumer's contract is "await dbReady, then use db", so nothing reads these before initializeDatabase has run.
 export let db!: Kysely<Database>;
 export let dbReady!: Promise<void>;
 export let dbFilePath!: string;

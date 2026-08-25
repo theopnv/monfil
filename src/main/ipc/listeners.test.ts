@@ -1,6 +1,6 @@
 import { beforeAll, describe, afterEach, test, expect, vi } from 'vitest';
 import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowFeedContextMenu } from './listeners';
-import { initializeDatabase } from '../database';
+import { initializeDatabase } from '../db/database';
 import { BrowserWindow, Menu, shell } from 'electron';
 
 vi.mock(import('electron'), () => ({

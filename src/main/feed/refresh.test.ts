@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import { db, initializeDatabase } from '../database';
-import { addFeedToDatabase } from '../db/insert';
+import { db, initializeDatabase } from '../db/database';
+import { addFeedToDatabase } from '../db/crud/insert';
 import { fetchUrl } from '../fetch';
 import { fetchFeed } from './parse';
 import type { ParsedFeed } from './parse';
