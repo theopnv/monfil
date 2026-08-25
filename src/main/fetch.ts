@@ -28,8 +28,7 @@ export async function fetchUrl(url: string, signal?: AbortSignal): Promise<Fetch
       return { success: false, error: { name: 'NETWORK_ERROR', message: error.message } }
     } else if (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError' || error.name === 'TimeoutError')) {
       return { success: false, error: { name: 'NOT_ALLOWED_OR_ABORTED_ERROR', message: 'Request was aborted or not allowed' } }
-    }
-    else {
+    } else {
       return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'An unknown error occurred' } }
     }
   }

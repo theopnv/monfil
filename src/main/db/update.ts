@@ -15,7 +15,9 @@ export type UpdateItemError =
  * @param showInHome the value to set
  */
 export async function setFeedsShowInHome(feedIds: number[], showInHome: boolean): Promise<Result<void, UpdateFeedError>> {
-  if (feedIds.length === 0) return { success: true, data: undefined };
+  if (feedIds.length === 0) {
+    return { success: true, data: undefined };
+  }
 
   await dbReady;
   try {
@@ -38,7 +40,9 @@ export async function setFeedsShowInHome(feedIds: number[], showInHome: boolean)
  * @param read whether the items are read
  */
 export async function setFeedItemsRead(itemIds: number[], read: boolean): Promise<Result<void, UpdateItemError>> {
-  if (itemIds.length === 0) return { success: true, data: undefined };
+  if (itemIds.length === 0) {
+    return { success: true, data: undefined };
+  }
 
   await dbReady;
   try {

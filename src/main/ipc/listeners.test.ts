@@ -103,7 +103,7 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     // Assert
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     expect(template).toHaveLength(1);
-    expect(template?.[0]?.label).toBe('Delete feed…');
+    expect(template?.[0]?.label).toBe('Delete feed');
   });
 
   test("the template item's click sends feeds:delete-feed-requested with the feed id", () => {

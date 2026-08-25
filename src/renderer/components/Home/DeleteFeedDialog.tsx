@@ -18,7 +18,9 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
   const [error, setError] = useState<DeleteFeedError | null>(null);
 
   async function handleConfirm() {
-    if (!feed) return;
+    if (!feed) {
+      return;
+    }
     setIsLoading(true);
     setError(null);
 
@@ -34,7 +36,9 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
   }
 
   function handleOpenChange(open: boolean) {
-    if (!open) setError(null);
+    if (!open) {
+      setError(null);
+    }
     onOpenChange(open);
   }
 

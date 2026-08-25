@@ -8,7 +8,9 @@ function sidecarFilesOf(filePath: string): string[] {
 }
 
 function isCorruptionError(error: unknown): boolean {
-  if (!(error instanceof Error) || !('code' in error)) return false;
+  if (!(error instanceof Error) || !('code' in error)) {
+    return false;
+  }
   const code = String(error.code);
   return code.startsWith('SQLITE_IOERR') || code === 'SQLITE_CORRUPT' || code === 'SQLITE_NOTADB';
 }
@@ -37,7 +39,9 @@ export async function withCorruptionRecovery(filePath: string, attempt: () => Pr
   try {
     await attempt();
   } catch (error) {
-    if (!isCorruptionError(error)) throw error;
+    if (!isCorruptionError(error)) {
+      throw error;
+    }
 
     console.error(`Database at "${filePath}" could not be opened and looks corrupted. Resetting it and starting fresh.`, error);
     try {

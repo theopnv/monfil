@@ -4,7 +4,9 @@
  */
 export function readLocalStorageJSON(key: string): unknown {
   const raw = localStorage.getItem(key);
-  if (raw === null) return undefined;
+  if (raw === null) {
+    return undefined;
+  }
   try {
     return JSON.parse(raw);
   } catch {

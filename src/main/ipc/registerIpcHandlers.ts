@@ -30,8 +30,12 @@ type Handler<C extends TwoWayRendererMainChannels> = (
 const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   // handler functions could be moved to a separate handlers.ts file if they grow too large.
   "feeds:validate-feed-url": (_event, query) => fetchFeed(query),
-  "feeds:list-categories": async () => { await dbReady; return queryFeedCategory({}); },
-  "feeds:list": async () => { await dbReady; return queryFeeds(); },
+  "feeds:list-categories": async () => {
+    await dbReady; return queryFeedCategory({}); 
+  },
+  "feeds:list": async () => {
+    await dbReady; return queryFeeds(); 
+  },
   "feeds:refresh": handleFeedsRefresh,
   "feeds:submit-add-feed": handleFeedsSubmitAddFeed,
   "feeds:delete-feed": handleFeedsDeleteFeed,

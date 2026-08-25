@@ -22,7 +22,9 @@ export async function runWithConcurrency<T>(
     while (nextIndex < items.length) {
       const item = items[nextIndex];
       nextIndex += 1;
-      if (item === undefined) continue;
+      if (item === undefined) {
+        continue;
+      }
       await worker(item);
     }
   }

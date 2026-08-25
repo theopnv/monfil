@@ -251,14 +251,14 @@ export type FlagTypes =
 export type ExtractColorKeys<T> = T extends { styles: infer C } ? keyof C : never;
 export type ExtractBadgeKeys<T> = keyof T;
 export type BadgeTypeToColorMap<T> = {
-    [K in ExtractBadgeKeys<T>]: ExtractColorKeys<T[K]>;
+  [K in ExtractBadgeKeys<T>]: ExtractColorKeys<T[K]>;
 };
 export type BadgeTypeColors<T> = ExtractColorKeys<T[keyof T]>;
 
 export const badgeTypes = {
-    pillColor: "pill-color",
-    badgeColor: "color",
-    badgeModern: "modern",
+  pillColor: "pill-color",
+  badgeColor: "color",
+  badgeModern: "modern",
 } as const;
 
 export type BadgeTypes = (typeof badgeTypes)[keyof typeof badgeTypes];

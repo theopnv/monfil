@@ -86,7 +86,9 @@ export async function fetchFeed(link: string, maxItems: number = 30): Promise<Re
     }
     return { success: true, data: { link: normalizedLink, title: parsed.title, description: parsed.description, items: parsed.items } };
   } catch (error) {
-    if (error instanceof Error) return { success: false, error: { name: 'PARSE_ERROR', message: error.message } };
+    if (error instanceof Error) {
+      return { success: false, error: { name: 'PARSE_ERROR', message: error.message } };
+    }
     return { success: false, error: { name: 'UNKNOWN_ERROR', message: 'An unknown error occurred' } };
   }
 }

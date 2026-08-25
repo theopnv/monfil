@@ -39,9 +39,13 @@ const deleteFeedTest = base.extend<DeleteFeedTestFixtures>({
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     const { port } = server.address() as AddressInfo;
     try {
-      await use({ url: `http://127.0.0.1:${port}/feed.xml`, publish: (articles) => { body = rss(articles); } });
+      await use({ url: `http://127.0.0.1:${port}/feed.xml`, publish: (articles) => {
+        body = rss(articles); 
+      } });
     } finally {
-      await new Promise<void>((resolve) => server.close(() => { resolve(); }));
+      await new Promise<void>((resolve) => server.close(() => {
+        resolve(); 
+      }));
     }
   },
 
@@ -80,7 +84,9 @@ async function subscribe(page: Page, url: string): Promise<void> {
 async function feedIdFor(page: Page, link: string): Promise<number> {
   const feeds = await page.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list', undefined)) as Feed[];
   const feed = feeds.find((candidate) => candidate.link === link);
-  if (!feed) throw new Error(`expected a feed for ${link}`);
+  if (!feed) {
+    throw new Error(`expected a feed for ${link}`);
+  }
   return feed.id;
 }
 

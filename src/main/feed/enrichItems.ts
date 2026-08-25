@@ -18,7 +18,9 @@ interface Candidate {
 function toCandidates(items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[]): Candidate[] {
   const candidates: Candidate[] = [];
   for (const item of items) {
-    if (!item.link || !ABSOLUTE_HTTP_URL_REGEX.test(item.link)) continue;
+    if (!item.link || !ABSOLUTE_HTTP_URL_REGEX.test(item.link)) {
+      continue;
+    }
     // better-sqlite3 reads a NULL column back as `null`, not `undefined`, despite the FeedItem type.
     candidates.push({ id: item.id, link: item.link, hasImage: !!item.image });
   }
@@ -41,12 +43,16 @@ export async function enrichItems(
 ): Promise<void> {
   await runWithConcurrency(toCandidates(items), ENRICHMENT_CONCURRENCY, async (candidate) => {
     const result = await fetchUrl(candidate.link, AbortSignal.timeout(ARTICLE_FETCH_TIMEOUT_MS));
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     const html = result.data;
 
     if (!candidate.hasImage) {
       const image = extractOgImageUrl(html);
-      if (image) onImageFound(candidate.id, image);
+      if (image) {
+        onImageFound(candidate.id, image);
+      }
     }
 
     const article = extractArticle(html, candidate.link);

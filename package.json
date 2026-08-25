@@ -37,6 +37,7 @@
     "@electron/fuses": "^1.8.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@tanstack/router-plugin": "^1.168.28",
     "@types/better-sqlite3": "^9.6.0",
     "@types/electron-squirrel-startup": "^1.0.2",

@@ -26,7 +26,9 @@ function parsed(link: string, items: NewItem[]): ParsedFeed {
 
 async function storeFeed(link: string, items: NewItem[] = []): Promise<number> {
   const result = await addFeedToDatabase({ link, title: `Feed at ${link}`, items, categoryName: 'tech', showInHome: true });
-  if (!result.success) throw new Error('expected the feed to be stored');
+  if (!result.success) {
+    throw new Error('expected the feed to be stored');
+  }
   return result.data.id;
 }
 

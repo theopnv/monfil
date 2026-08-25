@@ -33,7 +33,9 @@ describe('deleteFeedFromDatabase', () => {
   test('removes the feed and every one of its items through the cascade', async () => {
     // Arrange
     const inserted = await addFeedToDatabase(feedA);
-    if (!inserted.success) throw new Error('expected the feed to be created');
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
 
     // Act
     const result = await deleteFeedFromDatabase(inserted.data.id);
@@ -50,7 +52,9 @@ describe('deleteFeedFromDatabase', () => {
     // Arrange
     const insertedA = await addFeedToDatabase(feedA);
     const insertedB = await addFeedToDatabase(feedB);
-    if (!insertedA.success || !insertedB.success) throw new Error('expected both feeds to be created');
+    if (!insertedA.success || !insertedB.success) {
+      throw new Error('expected both feeds to be created');
+    }
 
     // Act
     await deleteFeedFromDatabase(insertedA.data.id);
@@ -65,7 +69,9 @@ describe('deleteFeedFromDatabase', () => {
   test('a feed with zero items still deletes', async () => {
     // Arrange
     const inserted = await addFeedToDatabase({ ...feedA, items: [] });
-    if (!inserted.success) throw new Error('expected the feed to be created');
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
 
     // Act
     const result = await deleteFeedFromDatabase(inserted.data.id);
@@ -80,16 +86,22 @@ describe('deleteFeedFromDatabase', () => {
 
     // Assert
     expect(result.success).toBe(false);
-    if (result.success) return;
+    if (result.success) {
+      return;
+    }
     expect(result.error.name).toBe('FEED_NOT_FOUND');
   });
 
   test('removes the article content row of its items through the cascade', async () => {
     // Arrange
     const inserted = await addFeedToDatabase(feedA);
-    if (!inserted.success) throw new Error('expected the feed to be created');
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
     const itemId = inserted.data.items[0]?.id;
-    if (itemId === undefined) throw new Error('expected an item id');
+    if (itemId === undefined) {
+      throw new Error('expected an item id');
+    }
     await upsertArticleContent({ item_id: itemId, html: '<p>Body</p>', text: 'Body', word_count: 1, status: 'ok' });
 
     // Act
@@ -103,7 +115,9 @@ describe('deleteFeedFromDatabase', () => {
   test('the category row survives', async () => {
     // Arrange
     const inserted = await addFeedToDatabase(feedA);
-    if (!inserted.success) throw new Error('expected the feed to be created');
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
 
     // Act
     await deleteFeedFromDatabase(inserted.data.id);

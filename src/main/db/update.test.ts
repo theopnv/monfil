@@ -43,7 +43,9 @@ describe('setFeedsShowInHome', () => {
   test('sets showInHome to 0 then back to 1', async () => {
     // Arrange
     const inserted = await addFeedToDatabase(feedA);
-    if (!inserted.success) throw new Error('expected the feed to be created');
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
 
     // Act
     const hidden = await setFeedsShowInHome([inserted.data.id], false);
@@ -66,7 +68,9 @@ describe('setFeedsShowInHome', () => {
     // Arrange
     const insertedA = await addFeedToDatabase(feedA);
     const insertedB = await addFeedToDatabase(feedB);
-    if (!insertedA.success || !insertedB.success) throw new Error('expected both feeds to be created');
+    if (!insertedA.success || !insertedB.success) {
+      throw new Error('expected both feeds to be created');
+    }
 
     // Act
     const result = await setFeedsShowInHome([insertedA.data.id, insertedB.data.id], false);
@@ -83,7 +87,9 @@ describe('setFeedsShowInHome', () => {
 
     // Assert
     expect(result.success).toBe(false);
-    if (result.success) return;
+    if (result.success) {
+      return;
+    }
     expect(result.error.name).toBe('FEED_NOT_FOUND');
   });
 
@@ -100,7 +106,9 @@ describe('setFeedItemsRead', () => {
   test('updates a batch of several ids in one call', async () => {
     // Arrange
     const inserted = await addFeedToDatabase(feedWithItems);
-    if (!inserted.success) throw new Error('expected the feed to be created');
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
     const itemIds = inserted.data.items.map((item) => item.id);
 
     // Act
@@ -118,7 +126,9 @@ describe('setFeedItemsRead', () => {
 
     // Assert
     expect(result.success).toBe(false);
-    if (result.success) return;
+    if (result.success) {
+      return;
+    }
     expect(result.error.name).toBe('ITEM_NOT_FOUND');
   });
 
@@ -133,9 +143,13 @@ describe('setFeedItemsRead', () => {
   test('marking read then unread clears read_at', async () => {
     // Arrange
     const inserted = await addFeedToDatabase(feedWithItems);
-    if (!inserted.success) throw new Error('expected the feed to be created');
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
     const itemId = inserted.data.items[0]?.id;
-    if (itemId === undefined) throw new Error('expected an item id');
+    if (itemId === undefined) {
+      throw new Error('expected an item id');
+    }
     await setFeedItemsRead([itemId], true);
 
     // Act

@@ -33,7 +33,9 @@ async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, ti
  * @returns only the rows it wrote, since `ON CONFLICT DO NOTHING ... RETURNING *` leaves out the skipped ones
  */
 export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId: number, items: Omit<FeedItem, 'id' | 'feed_id'>[]): Promise<FeedItem[]> {
-  if (items.length === 0) return [];
+  if (items.length === 0) {
+    return [];
+  }
   return executor.insertInto('feedItem')
     .values(items.map((item) => ({ feed_id: feedId, ...item })))
     .onConflict((oc) => oc.column('link').doNothing())

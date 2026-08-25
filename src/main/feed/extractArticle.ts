@@ -29,7 +29,9 @@ export function extractArticle(pageHtml: string, url: string): ExtractedArticle 
   // jsdom's `runScripts`/`resources` options are left at their safe (disabled) defaults.
   const dom = new JSDOM(pageHtml, { url });
   const article = new Readability(dom.window.document).parse();
-  if (!article?.content || !article.textContent?.trim()) return undefined;
+  if (!article?.content || !article.textContent?.trim()) {
+    return undefined;
+  }
 
   const purify = createDOMPurify(dom.window);
   const html = purify.sanitize(article.content, SANITIZE_CONFIG);
@@ -39,6 +41,8 @@ export function extractArticle(pageHtml: string, url: string): ExtractedArticle 
 }
 
 export function deriveArticleContentStatus(article: ExtractedArticle | undefined): ArticleContentStatus {
-  if (!article) return 'failed';
+  if (!article) {
+    return 'failed';
+  }
   return article.text.length < MIN_ARTICLE_LENGTH ? 'too_short' : 'ok';
 }

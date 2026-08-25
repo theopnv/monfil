@@ -26,9 +26,13 @@ async function createItem(link: string | undefined): Promise<number> {
     categoryName: 'tech',
     showInHome: true,
   });
-  if (!result.success) throw new Error('expected the feed to be created');
+  if (!result.success) {
+    throw new Error('expected the feed to be created');
+  }
   const itemId = result.data.items[0]?.id;
-  if (itemId === undefined) throw new Error('expected an item id');
+  if (itemId === undefined) {
+    throw new Error('expected an item id');
+  }
   return itemId;
 }
 

@@ -15,7 +15,7 @@ interface FeedServer {
   publish: (articles: Article[]) => void;
 }
 
-type ReadStateTestFixtures = {
+type ScrollRestorationTestFixtures = {
   feedServer: FeedServer;
   userDataDir: string;
   launchApp: () => Promise<Page>;
@@ -28,7 +28,7 @@ function rss(articles: Article[]): string {
   return `<?xml version="1.0"?><rss version="2.0"><channel><title>Local feed</title><description>A local feed</description>${items}</channel></rss>`;
 }
 
-const readStateTest = base.extend<ReadStateTestFixtures>({
+const scrollRestorationTest = base.extend<ScrollRestorationTestFixtures>({
   feedServer: async ({}, use) => {
     let body = rss([]);
     const server = createServer((_request, response) => {
@@ -57,7 +57,6 @@ const readStateTest = base.extend<ReadStateTestFixtures>({
     }
   },
 
-  // Every launch reuses the same user data dir, so a test can restart the app against its own database.
   launchApp: async ({ userDataDir }, use) => {
     const launched: ElectronApplication[] = [];
     try {
@@ -80,28 +79,36 @@ async function subscribe(page: Page, url: string): Promise<void> {
   await page.getByRole('button', { name: 'Refresh feeds' }).click();
 }
 
-readStateTest('an opened article is still read after a restart', async ({ feedServer, launchApp }) => {
-  // Arrange
-  feedServer.publish([{ title: 'First article', link: 'http://127.0.0.1/first' }]);
-  const firstRun = await launchApp();
-  await subscribe(firstRun, feedServer.url);
-  await expect(firstRun.getByText('First article', { exact: true })).toBeVisible();
+// The river's scroll container is the only `.flex-1.overflow-y-auto` element on the home route;
+// the feed sidebar next to it also scrolls, but is `w-64 flex-none` instead.
+const riverScrollContainer = (page: Page) => page.locator('.flex-1.overflow-y-auto');
 
-  // Act
-  await firstRun.getByText('First article', { exact: true }).click();
-  await expect(firstRun.getByRole('heading', { name: 'First article' })).toBeVisible();
+scrollRestorationTest('keeps the river scroll position after returning from the reader', async ({ feedServer, launchApp }) => {
+  // Arrange: fetchFeed caps a single refresh at 30 items, so that is the largest river this test can fill.
+  const articles = Array.from({ length: 30 }, (_, index) => ({
+    title: `Article number ${index}`,
+    link: `http://127.0.0.1/article-${index}`,
+  }));
+  feedServer.publish(articles);
+  const page = await launchApp();
+  await subscribe(page, feedServer.url);
+  await expect(page.getByText('Article number 0', { exact: true })).toBeVisible();
+  await expect(page.getByText('Article number 29', { exact: true })).toBeAttached();
 
-  // The read mark is written asynchronously behind the optimistic UI update, so wait for the
-  // database to confirm it before restarting.
-  await expect
-    .poll(() => firstRun.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list', undefined)
-      .then((feeds) => feeds.some((feed) => feed.items.some((item) => Boolean(item.read_at))))))
-    .toBe(true);
+  // Act: Playwright's `.click()` scrolls its target into view first, which would itself move
+  // the river before navigation. Dispatch DOM clicks instead, so the scroll position set below
+  // is exactly what's still in place when the reader opens.
+  await riverScrollContainer(page).evaluate((element) => {
+    element.scrollTop = 800; 
+  });
+  await expect.poll(() => riverScrollContainer(page).evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  const scrollTopBeforeLeaving = await riverScrollContainer(page).evaluate((element) => element.scrollTop);
 
-  const secondRun = await launchApp();
+  await page.getByText('Article number 15', { exact: true }).evaluate((element) => (element as HTMLElement).click());
+  await expect(page.getByRole('heading', { name: 'Article number 15' })).toBeVisible();
+  await page.getByRole('button', { name: 'Home' }).evaluate((element) => (element as HTMLElement).click());
+  await expect(page.getByText('Article number 0', { exact: true })).toBeVisible();
 
   // Assert
-  const feeds = await secondRun.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list', undefined));
-  const item = feeds.flatMap((feed) => feed.items).find((candidate) => candidate.title === 'First article');
-  expect(item?.read_at).toBeTruthy();
+  await expect.poll(() => riverScrollContainer(page).evaluate((element) => element.scrollTop)).toBe(scrollTopBeforeLeaving);
 });

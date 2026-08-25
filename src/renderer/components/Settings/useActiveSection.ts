@@ -19,10 +19,14 @@ export function useActiveSection(sectionIds: readonly string[]): string | undefi
       .map((id) => document.getElementById(id))
       .filter((element): element is HTMLElement => element !== null);
     const firstElement = elements[0];
-    if (!firstElement) return;
+    if (!firstElement) {
+      return;
+    }
 
     const scrollContainer = firstElement.closest<HTMLElement>('.overflow-y-auto');
-    if (!scrollContainer) return;
+    if (!scrollContainer) {
+      return;
+    }
 
     const updateActiveId = () => {
       const scrolledToBottom = scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 1;

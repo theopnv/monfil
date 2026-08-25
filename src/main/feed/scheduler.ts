@@ -9,7 +9,9 @@ let running = false;
 
 async function runCycle(): Promise<void> {
   // A feed that answers slowly must not let cycles stack up behind it.
-  if (running) return;
+  if (running) {
+    return;
+  }
   running = true;
   try {
     broadcastToRenderers('feeds:list', await refreshAllFeeds());
@@ -22,7 +24,9 @@ async function runCycle(): Promise<void> {
 
 function armTimer(interval: RefreshInterval): void {
   stopRefreshScheduler();
-  if (interval === 'manual') return;
+  if (interval === 'manual') {
+    return;
+  }
   timer = setInterval(() => void runCycle(), interval * MINUTE_IN_MS);
 }
 
@@ -35,7 +39,9 @@ export async function startRefreshScheduler(): Promise<void> {
   const [interval, onLaunch] = await Promise.all([getRefreshInterval(), getRefreshOnLaunch()]);
   // The period counts from launch, so the timer is armed before the launch refresh rather than after it.
   armTimer(interval);
-  if (onLaunch) await runCycle();
+  if (onLaunch) {
+    await runCycle();
+  }
 }
 
 /**
@@ -48,7 +54,9 @@ export function rescheduleRefresh(interval: RefreshInterval): void {
 
 /** Disarms the timer. A cycle that is already in flight still finishes. */
 export function stopRefreshScheduler(): void {
-  if (timer === undefined) return;
+  if (timer === undefined) {
+    return;
+  }
   clearInterval(timer);
   timer = undefined;
 }

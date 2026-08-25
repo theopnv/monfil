@@ -120,14 +120,22 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
   // `feedItem.read_at` is the one source of truth for read state, so it survives a restart.
   const readIds = useMemo(() => {
     const ids = new Set<number>();
-    for (const feed of feeds) for (const item of feed.items) if (item.read_at) ids.add(item.id);
+    for (const feed of feeds) {
+      for (const item of feed.items) {
+        if (item.read_at) {
+          ids.add(item.id);
+        }
+      }
+    }
     return ids;
   }, [feeds]);
 
   const isRead = useCallback((id: number) => readIds.has(id), [readIds]);
 
   const setRead = useCallback((itemIds: number[], read: boolean) => {
-    if (itemIds.length === 0) return;
+    if (itemIds.length === 0) {
+      return;
+    }
     const targetIds = new Set(itemIds);
     const readAt = read ? new Date().toISOString() : undefined;
     setFeeds((prev) => prev.map((feed) => (
@@ -166,7 +174,9 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     window.electron.ipcRenderer.invoke('feeds:list', undefined)
       .then((listed) => {
-        if (hasFreshList.current) return;
+        if (hasFreshList.current) {
+          return;
+        }
         setFeeds(listed);
       })
       .catch((error: unknown) => {

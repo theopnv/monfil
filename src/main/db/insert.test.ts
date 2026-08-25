@@ -28,7 +28,9 @@ describe('addFeedToDatabase', () => {
     });
 
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     expect(result.data.title).toBe(feedA.title);
     expect(result.data.category.name).toBe('tech');
     expect(result.data.showInHome).toBe(1);
@@ -61,7 +63,9 @@ describe('addFeedToDatabase', () => {
     });
 
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     expect(result.data.items).toHaveLength(2);
   });
 
@@ -83,7 +87,9 @@ describe('addFeedToDatabase', () => {
     });
 
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     expect(result.data.title).toBe('New title');
     expect(result.data.showInHome).toBe(0);
 
@@ -101,7 +107,9 @@ describe('addFeedToDatabase', () => {
     });
 
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     expect(result.data.showInHome).toBe(0);
   });
 });
@@ -113,7 +121,9 @@ describe('addFeedItemsToDatabase', () => {
 
   async function createFeed(): Promise<number> {
     const result = await addFeedToDatabase(feedA);
-    if (!result.success) throw new Error('expected the feed to be created');
+    if (!result.success) {
+      throw new Error('expected the feed to be created');
+    }
     return result.data.id;
   }
 
@@ -184,9 +194,13 @@ describe('updateFeedItemImage', () => {
       showInHome: true,
     });
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     const itemId = result.data.items[0]?.id;
-    if (itemId === undefined) throw new Error('expected an item id');
+    if (itemId === undefined) {
+      throw new Error('expected an item id');
+    }
 
     await updateFeedItemImage(itemId, 'https://example.com/new.jpg');
 
@@ -206,9 +220,13 @@ describe('updateFeedItemImage', () => {
       showInHome: true,
     });
     expect(result.success).toBe(true);
-    if (!result.success) return;
+    if (!result.success) {
+      return;
+    }
     const [item1, item2] = result.data.items;
-    if (item1 === undefined || item2 === undefined) throw new Error('expected two items');
+    if (item1 === undefined || item2 === undefined) {
+      throw new Error('expected two items');
+    }
 
     await updateFeedItemImage(item1.id, 'https://example.com/new.jpg');
 
@@ -230,9 +248,13 @@ describe('upsertArticleContent', () => {
       categoryName: 'tech',
       showInHome: true,
     });
-    if (!result.success) throw new Error('expected the feed to be created');
+    if (!result.success) {
+      throw new Error('expected the feed to be created');
+    }
     const itemId = result.data.items[0]?.id;
-    if (itemId === undefined) throw new Error('expected an item id');
+    if (itemId === undefined) {
+      throw new Error('expected an item id');
+    }
     return itemId;
   }
 

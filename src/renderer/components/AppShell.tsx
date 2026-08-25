@@ -11,9 +11,9 @@ export default function AppShell() {
       />
       <div className="flex flex-1 overflow-hidden">
         <Toolbar />
-          <main className="flex-1 overflow-hidden">
-            <Outlet />
-          </main>
+        <main className="flex-1 overflow-hidden">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

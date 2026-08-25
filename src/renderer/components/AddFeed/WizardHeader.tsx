@@ -16,8 +16,12 @@ const STEP_COPY: Record<WizardStep, { title: string; blurb: string }> = {
 type StepState = "done" | "current" | "todo";
 
 function stepStateOf(dot: WizardStep, current: WizardStep): StepState {
-  if (dot < current) return "done";
-  if (dot === current) return "current";
+  if (dot < current) {
+    return "done";
+  }
+  if (dot === current) {
+    return "current";
+  }
   return "todo";
 }
 

@@ -39,13 +39,17 @@ export function handleFeedsRefresh(): Promise<Feed[]> {
 
 export async function handleFeedsDeleteFeed(_event: IpcMainInvokeEvent, feedId: number): Promise<Result<Feed[], DeleteFeedError>> {
   const result = await deleteFeedFromDatabase(feedId);
-  if (!result.success) return result;
+  if (!result.success) {
+    return result;
+  }
   return { success: true, data: await queryFeeds() };
 }
 
 export async function handleFeedsSetShowInHome(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInHome: boolean }): Promise<Result<Feed[], UpdateFeedError>> {
   const result = await setFeedsShowInHome(payload.feedIds, payload.showInHome);
-  if (!result.success) return result;
+  if (!result.success) {
+    return result;
+  }
   return { success: true, data: await queryFeeds() };
 }
 
@@ -76,7 +80,9 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
   }
 
   const [item] = await queryFeedItems({ id: itemId });
-  if (!item?.link) return { status: 'unavailable' };
+  if (!item?.link) {
+    return { status: 'unavailable' };
+  }
 
   const fetched = await fetchUrl(item.link, AbortSignal.timeout(ARTICLE_FETCH_TIMEOUT_MS));
   const article = fetched.success ? extractArticle(fetched.data, item.link) : undefined;

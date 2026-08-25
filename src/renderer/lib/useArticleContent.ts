@@ -28,11 +28,15 @@ export function useArticleContent(itemId: number | undefined): ArticleContentSta
     window.electron.ipcRenderer
       .invoke('items:get-content', itemId)
       .then((result) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setState(result.status === 'ok' ? { state: 'ready', html: result.html, wordCount: result.wordCount } : unavailableState);
       })
       .catch(() => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setState(unavailableState);
       });
 
