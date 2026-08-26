@@ -11,6 +11,15 @@ export let db!: Kysely<Database>;
 export let dbReady!: Promise<void>;
 export let dbFilePath!: string;
 
+export type DatabaseStatus =
+  | { name: 'OK' }
+  | { name: 'RESET'; quarantinePath: string }
+  | { name: 'FAILED'; message: string };
+
+// Latched outcome of the last initializeDatabase() call. No consumer yet: this is the seam a later
+// step reads over an `invoke` channel, once there is a renderer surface for it.
+export let dbStatus: DatabaseStatus = { name: 'OK' };
+
 async function openAndMigrate(filePath: string): Promise<void> {
   const sqlite = new SQLite(filePath);
 
@@ -39,7 +48,14 @@ async function openAndMigrate(filePath: string): Promise<void> {
 
 export function initializeDatabase(filePath: string): Promise<void> {
   dbFilePath = filePath;
-  dbReady = withCorruptionRecovery(filePath, () => openAndMigrate(filePath), () => db.destroy());
+  dbReady = withCorruptionRecovery(filePath, () => openAndMigrate(filePath), () => db.destroy())
+    .then((quarantinePath) => {
+      dbStatus = quarantinePath ? { name: 'RESET', quarantinePath } : { name: 'OK' };
+    })
+    .catch((error: unknown) => {
+      dbStatus = { name: 'FAILED', message: error instanceof Error ? error.message : String(error) };
+      throw error;
+    });
   return dbReady;
 }
 

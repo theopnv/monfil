@@ -11,7 +11,13 @@ The database is file-backed, resolved in `src/main/db/database.ts`.
 It exports `dbReady`, a promise that resolves once the migrator has brought the schema up to date.
 Any code path that touches the database must await it. `run()` does this once at startup, and the unit tests do it in `beforeAll`.
 
-There is a "recovery" mechanism in `src/main/db/recovery.ts`. If it detects corrupted files or leftovers, it will delete them and restart from a clean slate.
+There is a "recovery" mechanism in `src/main/db/recovery.ts`. It resets the database, starting from a clean slate:
+- when the main file is corrupt (`SQLITE_CORRUPT*`)
+- or when not a database at all (`SQLITE_NOTADB`)
+- or when leftover WAL/SHM/journal sidecars point at a main file that no longer exists
+A reset does not delete the corrupt file: it renames the main file and its sidecars aside to a parallel `.corrupt-<timestamp>` path, so the data is still there for a manual recovery.
+
+Any other I/O error (a full disk, a locked file, a dropped network volume, a permission change) is reported, not acted on, since none of those mean the data is actually gone.
 
 Call `closeDatabase()` before the process exits so `better-sqlite3` closes its connection cleanly. `src/main/main.ts` already does this in its `before-quit` handler.
 

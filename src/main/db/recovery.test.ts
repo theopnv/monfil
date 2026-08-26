@@ -1,11 +1,22 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { existsSync } from 'node:fs';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { existsSync, renameSync } from 'node:fs';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { withCorruptionRecovery } from './recovery';
 
+vi.mock(import('node:fs'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, renameSync: vi.fn(actual.renameSync) };
+});
+
+const mockedRenameSync = vi.mocked(renameSync);
+
 function corruptionError(): Error {
+  return Object.assign(new Error('file is not a database'), { code: 'SQLITE_CORRUPT' });
+}
+
+function ioError(): Error {
   return Object.assign(new Error('disk I/O error'), { code: 'SQLITE_IOERR_SHORT_READ' });
 }
 
@@ -19,6 +30,7 @@ describe('withCorruptionRecovery', () => {
   });
 
   afterEach(async () => {
+    mockedRenameSync.mockClear();
     await rm(dir, { recursive: true });
   });
 
@@ -57,21 +69,55 @@ describe('withCorruptionRecovery', () => {
     expect(attempt).toHaveBeenCalledTimes(1);
   });
 
-  test('closes, deletes the database files, and retries once on a corruption-shaped error', async () => {
+  test('closes, quarantines the database files, and retries once on a corruption-shaped error', async () => {
     // Arrange
     await writeFile(filePath, 'garbage');
-    await writeFile(`${filePath}-wal`, 'garbage');
+    await writeFile(`${filePath}-wal`, 'garbage wal');
     const attempt = vi.fn().mockRejectedValueOnce(corruptionError()).mockResolvedValueOnce(undefined);
     const close = vi.fn().mockResolvedValue(undefined);
 
     // Act
-    await withCorruptionRecovery(filePath, attempt, close);
+    const result = await withCorruptionRecovery(filePath, attempt, close);
 
     // Assert
     expect(close).toHaveBeenCalledTimes(1);
     expect(attempt).toHaveBeenCalledTimes(2);
     expect(existsSync(filePath)).toBe(false);
     expect(existsSync(`${filePath}-wal`)).toBe(false);
+    if (result === null) {
+      throw new Error('expected the database to be quarantined');
+    }
+    expect(result).toMatch(/\.corrupt-/);
+    await expect(readFile(result, 'utf-8')).resolves.toBe('garbage');
+    await expect(readFile(`${result}-wal`, 'utf-8')).resolves.toBe('garbage wal');
+  });
+
+  test('rethrows an I/O error without quarantining, since it does not mean the data is gone', async () => {
+    // Arrange
+    await writeFile(filePath, 'a real-enough db file');
+    const error = ioError();
+    const attempt = vi.fn().mockRejectedValue(error);
+
+    // Act
+    // Assert
+    await expect(withCorruptionRecovery(filePath, attempt, vi.fn())).rejects.toBe(error);
+    expect(attempt).toHaveBeenCalledTimes(1);
+    expect(existsSync(filePath)).toBe(true);
+  });
+
+  test('rethrows the original corruption error, not a rename failure, when quarantining itself fails', async () => {
+    // Arrange
+    await writeFile(filePath, 'garbage');
+    const error = corruptionError();
+    const attempt = vi.fn().mockRejectedValue(error);
+    mockedRenameSync.mockImplementationOnce(() => {
+      throw new Error('EACCES: permission denied');
+    });
+
+    // Act
+    // Assert
+    await expect(withCorruptionRecovery(filePath, attempt, vi.fn())).rejects.toBe(error);
+    expect(attempt).toHaveBeenCalledTimes(1);
   });
 
   test('still retries when close itself throws, since a connection that never opened has nothing to release', async () => {
@@ -81,7 +127,7 @@ describe('withCorruptionRecovery', () => {
 
     // Act
     // Assert
-    await expect(withCorruptionRecovery(filePath, attempt, close)).resolves.toBeUndefined();
+    await expect(withCorruptionRecovery(filePath, attempt, close)).resolves.toEqual(expect.any(String));
     expect(attempt).toHaveBeenCalledTimes(2);
   });
 

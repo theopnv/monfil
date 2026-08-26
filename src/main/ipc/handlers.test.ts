@@ -3,6 +3,7 @@ import { db, initializeDatabase } from '../db/database';
 import { addFeedToDatabase, upsertArticleContent } from '../db/crud/insert';
 import { fetchUrl } from '../lib/fetch';
 import { handleItemsGetContent } from './handlers';
+import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 import type { IpcMainInvokeEvent } from 'electron';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
@@ -98,7 +99,7 @@ describe('handleItemsGetContent', () => {
     const result = await handleItemsGetContent(fakeEvent, itemId);
 
     // Assert
-    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/long-article', expect.any(AbortSignal));
+    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/long-article', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
     expect(result.status).toBe('ok');
     const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
     expect(stored.status).toBe('ok');

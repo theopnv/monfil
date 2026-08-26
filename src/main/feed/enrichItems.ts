@@ -40,7 +40,7 @@ export async function enrichItems(
   onContentFound: (itemId: number, content: NewArticleContentPayload) => void,
 ): Promise<void> {
   await runWithConcurrency(toCandidates(items), ENRICHMENT_CONCURRENCY, async (candidate) => {
-    const result = await fetchUrl(candidate.link, AbortSignal.timeout(ARTICLE_FETCH_TIMEOUT_MS));
+    const result = await fetchUrl(candidate.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
     if (!result.success) {
       return;
     }

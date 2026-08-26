@@ -100,7 +100,7 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
     return { status: 'unavailable' };
   }
 
-  const fetched = await fetchUrl(item.link, AbortSignal.timeout(ARTICLE_FETCH_TIMEOUT_MS));
+  const fetched = await fetchUrl(item.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
   const article = fetched.success ? extractArticle(fetched.data, item.link) : undefined;
   const status = deriveArticleContentStatus(article);
   await upsertArticleContent({ item_id: itemId, html: article?.html, text: article?.text, word_count: article?.wordCount, status });

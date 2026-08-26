@@ -6,6 +6,7 @@ import { rssSource } from './sources/rss';
 import type { ParsedSource } from './sources/types';
 import { refreshAllFeeds } from './refresh';
 import type { FeedItem } from '../db/types';
+import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 
 vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetch: vi.fn(), parse: vi.fn() } }));
 vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
@@ -214,6 +215,6 @@ describe('refreshAllFeeds', () => {
 
     // Assert
     expect(mockedFetchUrl).toHaveBeenCalledTimes(1);
-    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/new', expect.any(AbortSignal));
+    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/new', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
   });
 });
