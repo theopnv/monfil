@@ -29,3 +29,5 @@ Add a migration by creating `000X_description.ts` next to `index.ts` and adding 
 ## Tests
 
 Unit tests import the same `db` singleton that the app uses. There is no fixture database. Call `initializeDatabase(':memory:')` in `beforeAll` to migrate a fresh in-memory database before using `db`. Delete the rows in `afterEach` so each test starts clean, and delete children before parents to respect the foreign keys.
+
+`src/main/db/migrations/migrations.test.ts` runs every migration against a populated file, once per starting version. Adding a migration adds a case to that loop for free. Adding a *column* usually means updating the seed row in the same file, so the fixture keeps covering it.

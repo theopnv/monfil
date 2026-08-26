@@ -3,8 +3,8 @@ import { db, initializeDatabase } from '../database';
 import { addFeedItemsToDatabase, addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type NewFeedInput } from './insert';
 import type { FeedItem } from '../types';
 
-const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', items: [], categoryName: 'tech', showInHome: true };
-const feedB: NewFeedInput = { link: 'https://b.example/feed', title: 'Feed B', items: [], categoryName: 'tech', showInHome: true };
+const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', type: 'rss', items: [], categoryName: 'tech', showInHome: true };
+const feedB: NewFeedInput = { link: 'https://b.example/feed', title: 'Feed B', type: 'rss', items: [], categoryName: 'tech', showInHome: true };
 
 beforeAll(async () => {
   await initializeDatabase(':memory:');
@@ -22,7 +22,8 @@ describe('addFeedToDatabase', () => {
     const result = await addFeedToDatabase({
       link: feedA.link,
       title: feedA.title,
-      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: 'Item 1 description', image: undefined, read_at: undefined }],
+      items: [{ title: 'Item 1', link: `${feedA.link}#1`, guid: `${feedA.link}#1`, pubDate: '2024-01-01', description: 'Item 1 description', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
+      type: 'rss',
       categoryName: 'tech',
       showInHome: true,
     });
@@ -55,9 +56,10 @@ describe('addFeedToDatabase', () => {
       link: feedA.link,
       title: feedA.title,
       items: [
-        { title: 'Item 1', link: undefined, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined },
-        { title: 'Item 2', link: undefined, pubDate: '2024-01-02', description: '', image: undefined, read_at: undefined },
+        { title: 'Item 1', link: undefined, guid: 'monfil:hash:one', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined },
+        { title: 'Item 2', link: undefined, guid: 'monfil:hash:two', pubDate: '2024-01-02', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined },
       ],
+      type: 'rss',
       categoryName: 'tech',
       showInHome: true,
     });
@@ -74,6 +76,7 @@ describe('addFeedToDatabase', () => {
       link: feedA.link,
       title: 'Old title',
       items: [],
+      type: 'rss',
       categoryName: 'tech',
       showInHome: true,
     });
@@ -82,6 +85,7 @@ describe('addFeedToDatabase', () => {
       link: feedA.link,
       title: 'New title',
       items: [],
+      type: 'rss',
       categoryName: 'tech',
       showInHome: false,
     });
@@ -102,6 +106,7 @@ describe('addFeedToDatabase', () => {
       link: feedA.link,
       title: feedA.title,
       items: [],
+      type: 'rss',
       categoryName: 'tech',
       showInHome: false,
     });
@@ -116,7 +121,9 @@ describe('addFeedToDatabase', () => {
 
 describe('addFeedItemsToDatabase', () => {
   function feedItem(overrides: Partial<Omit<FeedItem, 'id' | 'feed_id'>> = {}): Omit<FeedItem, 'id' | 'feed_id'> {
-    return { title: 'Item', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined, ...overrides };
+    const link = 'link' in overrides ? overrides.link : `${feedA.link}#1`;
+    // The parser falls back to the link when a feed supplies no guid. Mirror that here.
+    return { title: 'Item', link, guid: link ?? 'monfil:test:linkless', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined, ...overrides };
   }
 
   async function createFeed(): Promise<number> {
@@ -198,6 +205,43 @@ describe('addFeedItemsToDatabase', () => {
     }
     expect(inserted.data).toEqual([]);
   });
+
+  test('lets two feeds each hold the same link', async () => {
+    // Arrange
+    const shared = 'https://shared.example/article';
+    const feedIdA = await createFeed();
+    const resultB = await addFeedToDatabase(feedB);
+    if (!resultB.success) {
+      throw new Error('expected the second feed to be created');
+    }
+
+    // Act
+    const intoA = await addFeedItemsToDatabase(db, feedIdA, [feedItem({ title: 'In A', link: shared })]);
+    const intoB = await addFeedItemsToDatabase(db, resultB.data.id, [feedItem({ title: 'In B', link: shared })]);
+
+    // Assert
+    expect(intoA.success && intoA.data).toHaveLength(1);
+    expect(intoB.success && intoB.data).toHaveLength(1);
+  });
+
+  test('skips a guid the same feed already holds, whatever the link says', async () => {
+    // Arrange
+    const feedId = await createFeed();
+    await addFeedItemsToDatabase(db, feedId, [feedItem({ title: 'First', guid: 'tag:example,2024:1', link: 'https://a.example/old' })]);
+
+    // Act
+    const inserted = await addFeedItemsToDatabase(db, feedId, [feedItem({ title: 'Same item, new url', guid: 'tag:example,2024:1', link: 'https://a.example/new' })]);
+
+    // Assert
+    expect(inserted.success).toBe(true);
+    if (!inserted.success) {
+      return;
+    }
+    expect(inserted.data).toEqual([]);
+    const stored = await db.selectFrom('feedItem').selectAll().where('feed_id', '=', feedId).execute();
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.title).toBe('First');
+  });
 });
 
 describe('updateFeedItemImage', () => {
@@ -205,7 +249,8 @@ describe('updateFeedItemImage', () => {
     const result = await addFeedToDatabase({
       link: feedA.link,
       title: feedA.title,
-      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+      items: [{ title: 'Item 1', link: `${feedA.link}#1`, guid: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
+      type: 'rss',
       categoryName: 'tech',
       showInHome: true,
     });
@@ -229,9 +274,10 @@ describe('updateFeedItemImage', () => {
       link: feedA.link,
       title: feedA.title,
       items: [
-        { title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined },
-        { title: 'Item 2', link: `${feedA.link}#2`, pubDate: '2024-01-02', description: '', image: 'https://example.com/existing.jpg', read_at: undefined },
+        { title: 'Item 1', link: `${feedA.link}#1`, guid: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined },
+        { title: 'Item 2', link: `${feedA.link}#2`, guid: `${feedA.link}#2`, pubDate: '2024-01-02', description: '', image: 'https://example.com/existing.jpg', author: undefined, extra: undefined, read_at: undefined },
       ],
+      type: 'rss',
       categoryName: 'tech',
       showInHome: true,
     });
@@ -260,7 +306,8 @@ describe('upsertArticleContent', () => {
     const result = await addFeedToDatabase({
       link: feedA.link,
       title: feedA.title,
-      items: [{ title: 'Item 1', link: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+      items: [{ title: 'Item 1', link: `${feedA.link}#1`, guid: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
+      type: 'rss',
       categoryName: 'tech',
       showInHome: true,
     });

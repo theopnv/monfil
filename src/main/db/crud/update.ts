@@ -35,6 +35,28 @@ export async function setFeedsShowInHome(feedIds: number[], showInHome: boolean)
 }
 
 /**
+ * Records the outcome of one refresh of one feed. `last_fetched_at` moves on both paths, so a feed that
+ * keeps failing is distinguishable from a feed that has published nothing.
+ * @param feedId the id of the feed that was fetched
+ * @param result the failure to record, or `{ last_error: null }` to clear a previous one
+ */
+export async function setFeedFetchResult(feedId: number, result: { last_error: string | null }): Promise<Result<void, UpdateFeedError>> {
+  await dbReady;
+  try {
+    const updated = await db.updateTable('feedMetadata')
+      .set({ last_fetched_at: new Date().toISOString(), last_error: result.last_error })
+      .where('id', '=', feedId)
+      .executeTakeFirst();
+    if (updated.numUpdatedRows === 0n) {
+      return { success: false, error: { name: 'FEED_NOT_FOUND', message: `No feed found for id ${feedId}` } };
+    }
+    return { success: true, data: undefined };
+  } catch (error) {
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
+}
+
+/**
  * Sets `read_at` on a batch of feed items in one statement.
  * @param itemIds the ids of the items to update
  * @param read whether the items are read

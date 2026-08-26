@@ -1,7 +1,7 @@
 import { type Kysely } from 'kysely';
 import { db, dbReady } from '../database';
 import { queryFeedItems } from './query';
-import type { Database, FeedItem, NewArticleContent } from '../types';
+import type { Database, FeedItem, NewArticleContent, SourceType } from '../types';
 import type { Feed } from '../../../preload/channels';
 import type { Result } from '../../lib/utils';
 
@@ -13,11 +13,12 @@ async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: st
     .executeTakeFirstOrThrow();
 }
 
-async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, title: string, categoryId: number, showInHome: boolean) {
+async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, title: string, type: SourceType, categoryId: number, showInHome: boolean) {
   return trx.insertInto('feedMetadata')
-    .values({ link, title, category_id: categoryId, showInHome: showInHome ? 1 : 0 })
+    .values({ link, title, type, category_id: categoryId, showInHome: showInHome ? 1 : 0 })
     .onConflict((oc) => oc.column('link').doUpdateSet((eb) => ({
       title: eb.ref('excluded.title'),
+      type: eb.ref('excluded.type'),
       category_id: eb.ref('excluded.category_id'),
       showInHome: eb.ref('excluded.showInHome'),
     })))
@@ -28,7 +29,7 @@ async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, ti
 export type AddFeedItemsError = { name: 'DB_ERROR'; message: string };
 
 /**
- * Inserts the items of one feed, skipping the links that are already stored.
+ * Inserts the items of one feed, skipping the guids that feed already holds.
  * @param executor the `db` singleton, or a transaction to insert within
  * @param feedId the id of the feed the items belong to
  * @param items the items to insert
@@ -41,7 +42,7 @@ export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId:
   try {
     const inserted = await executor.insertInto('feedItem')
       .values(items.map((item) => ({ feed_id: feedId, ...item })))
-      .onConflict((oc) => oc.column('link').doNothing())
+      .onConflict((oc) => oc.columns(['feed_id', 'guid']).doNothing())
       .returningAll()
       .execute();
     return { success: true, data: inserted };
@@ -53,6 +54,7 @@ export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId:
 export interface NewFeedInput {
   link: string;
   title: string;
+  type: SourceType;
   items: Omit<FeedItem, 'id' | 'feed_id'>[];
   categoryName: string;
   showInHome: boolean;
@@ -96,7 +98,7 @@ export async function addFeedToDatabase(input: NewFeedInput): Promise<Result<Fee
   try {
     const { category, metadata } = await db.transaction().execute(async (trx) => {
       const category = await addFeedCategoryToDatabase(trx, input.categoryName);
-      const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, category.id, input.showInHome);
+      const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, input.type, category.id, input.showInHome);
       const items = await addFeedItemsToDatabase(trx, metadata.id, input.items);
       if (!items.success) {
         throw new Error(items.error.message);

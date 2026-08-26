@@ -20,8 +20,11 @@ const feed: Feed = {
   id: 1,
   link: 'https://a.example/feed',
   title: 'Feed A',
+  type: 'rss',
   category_id: 1,
   showInHome: 1,
+  last_fetched_at: undefined,
+  last_error: undefined,
   category: { id: 1, name: 'tech' },
   items: [],
 };
@@ -110,7 +113,7 @@ describe('startRefreshScheduler', () => {
 
     // Act
     inFlight.forEach((finish) => {
-      finish(); 
+      finish();
     });
     await started;
     await vi.advanceTimersByTimeAsync(15 * MINUTE);
@@ -120,7 +123,7 @@ describe('startRefreshScheduler', () => {
 
     // Leaving a cycle hanging would keep the module's in-flight flag set for the next test.
     inFlight.forEach((finish) => {
-      finish(); 
+      finish();
     });
     await vi.advanceTimersByTimeAsync(0);
   });
@@ -188,7 +191,7 @@ describe('stopRefreshScheduler', () => {
   test('is safe to call when no timer is armed', () => {
     // Act, Assert
     expect(() => {
-      stopRefreshScheduler(); 
+      stopRefreshScheduler();
     }).not.toThrow();
   });
 });

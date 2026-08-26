@@ -4,11 +4,11 @@ import { getFaviconUrl } from "@/lib/favicon";
 import { computeFeedContentType, computePublishRate } from "@/lib/addFeed/feedStats";
 import CategoryPicker from "./CategoryPicker";
 import FeedMatchCard from "./FeedMatchCard";
-import type { ParsedFeed } from "../../../main/feed/parse";
+import type { ParsedSource } from "../../../preload/channels";
 import type { FeedCategory } from "../../../preload/channels";
 
 export interface Step2ConfigureProps {
-  feed: ParsedFeed | null;
+  feed: ParsedSource | null;
   categories: FeedCategory[];
   selectedCategoryName: string | null;
   onSelectCategory: (name: string) => void;

@@ -28,12 +28,18 @@ export type UpdateFeedCategory = Updateable<FeedCategoryTable>;
 // =============== Feed ===============
 // A feed is anything the user wants to subscribe to (e.g. RSS, podcasts, bluesky feed, etc)
 
+export type SourceType = 'rss';
+
 export interface FeedMetadataTable {
   id: Generated<number>;
   link: string;
   title: string;
   category_id: number;
   showInHome: Generated<number>;
+  type: Generated<SourceType>;
+  last_fetched_at: string | undefined;
+  // Update additionally allows `null`, so a successful fetch can clear the last failure.
+  last_error: string | undefined | null;
 }
 
 export type FeedMetadata = Selectable<FeedMetadataTable>;
@@ -47,10 +53,14 @@ export interface FeedItemTable {
   id: Generated<number>;
   feed_id: number;
   title: string;
+  guid: string;
   link: string | undefined;
   pubDate: string;
   description: string;
   image: string | undefined;
+  author: string | undefined;
+  // A JSON blob for the fields only some source types carry. See doc/sources.md.
+  extra: string | undefined;
   // Select/insert stay `string | undefined`, per the nullable-column convention (see `link`, `image`).
   // Update additionally allows `null`, the one write path that must be able to clear the column back to unread.
   read_at: string | undefined | null;

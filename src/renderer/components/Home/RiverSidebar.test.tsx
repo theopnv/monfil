@@ -12,9 +12,12 @@ const feedA: Feed = {
   link: 'https://a.example/feed',
   title: 'Feed A',
   category_id: 1,
+  type: 'rss',
   showInHome: 1,
+  last_fetched_at: undefined,
+  last_error: undefined,
   category: { id: 1, name: 'Tech' },
-  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://a.example/feed#1', guid: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
 };
 
 const feedB: Feed = {
@@ -22,7 +25,10 @@ const feedB: Feed = {
   link: 'https://b.example/feed',
   title: 'Feed B',
   category_id: 1,
+  type: 'rss',
   showInHome: 1,
+  last_fetched_at: undefined,
+  last_error: undefined,
   category: { id: 1, name: 'Tech' },
   items: [],
 };

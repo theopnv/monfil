@@ -125,8 +125,8 @@ describe('queryFeedItems', () => {
     await db
       .insertInto('feedItem')
       .values([
-        { feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', pubDate: '2024-01-01', description: 'Description 1' },
-        { feed_id: feed.id, title: 'Item 2', link: 'https://a.example/2', pubDate: '2024-01-02', description: 'Description 2' },
+        { feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', guid: 'https://a.example/1', pubDate: '2024-01-01', description: 'Description 1' },
+        { feed_id: feed.id, title: 'Item 2', link: 'https://a.example/2', guid: 'https://a.example/2', pubDate: '2024-01-02', description: 'Description 2' },
       ])
       .execute();
   });
@@ -189,7 +189,7 @@ describe('queryArticleContent', () => {
       .executeTakeFirstOrThrow();
     const item = await db
       .insertInto('feedItem')
-      .values({ feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', pubDate: '2024-01-01', description: '' })
+      .values({ feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', guid: 'https://a.example/1', pubDate: '2024-01-01', description: '' })
       .returning(['id'])
       .executeTakeFirstOrThrow();
     return item.id;
@@ -261,8 +261,8 @@ describe('countFeedItems', () => {
     const category = await db.insertInto('feedCategory').values({ name: 'tech' }).returning(['id']).executeTakeFirstOrThrow();
     const feed = await db.insertInto('feedMetadata').values({ link: 'https://a.example/feed', title: 'Feed A', category_id: category.id }).returning(['id']).executeTakeFirstOrThrow();
     await db.insertInto('feedItem').values([
-      { feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', pubDate: '2024-01-01', description: '' },
-      { feed_id: feed.id, title: 'Item 2', link: 'https://a.example/2', pubDate: '2024-01-02', description: '' },
+      { feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', guid: 'https://a.example/1', pubDate: '2024-01-01', description: '' },
+      { feed_id: feed.id, title: 'Item 2', link: 'https://a.example/2', guid: 'https://a.example/2', pubDate: '2024-01-02', description: '' },
     ]).execute();
 
     // Act

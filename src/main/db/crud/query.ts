@@ -31,16 +31,21 @@ const feedItemHandlers = {
   id: (q, v) => q.where('id', '=', v),
   feed_id: (q, v) => q.where('feed_id', '=', v),
   title: (q, v) => q.where('title', '=', v),
+  guid: (q, v) => q.where('guid', '=', v),
   link: (q, v) => q.where('link', '=', v),
   pubDate: (q, v) => q.where('pubDate', '=', v),
   description: (q, v) => q.where('description', '=', v),
   image: (q, v) => q.where('image', '=', v),
+  author: (q, v) => q.where('author', '=', v),
+  extra: (q, v) => q.where('extra', '=', v),
   read_at: (q, v) => q.where('read_at', '=', v),
 } satisfies CriteriaHandlers<'feedItem', FeedItem>;
 
+// Ordered explicitly: without it SQLite returns rows in whatever order the chosen index gives,
+// which the UNIQUE(feed_id, guid) index made "by guid" rather than the insertion order callers expect.
 export async function queryFeedItems(criteria: Partial<FeedItem>): Promise<FeedItem[]> {
   await dbReady;
-  return applyCriteria(db.selectFrom('feedItem').selectAll(), criteria, feedItemHandlers).execute();
+  return applyCriteria(db.selectFrom('feedItem').selectAll(), criteria, feedItemHandlers).orderBy('id').execute();
 }
 
 const feedMetadataHandlers = {
@@ -49,6 +54,9 @@ const feedMetadataHandlers = {
   title: (q, v) => q.where('title', '=', v),
   category_id: (q, v) => q.where('category_id', '=', v),
   showInHome: (q, v) => q.where('showInHome', '=', v),
+  type: (q, v) => q.where('type', '=', v),
+  last_fetched_at: (q, v) => q.where('last_fetched_at', '=', v),
+  last_error: (q, v) => q.where('last_error', '=', v),
 } satisfies CriteriaHandlers<'feedMetadata', FeedMetadata>;
 
 export async function queryFeedMetadata(criteria: Partial<FeedMetadata>): Promise<FeedMetadata[]> {

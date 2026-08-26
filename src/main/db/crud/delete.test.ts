@@ -6,14 +6,16 @@ import { addFeedToDatabase, upsertArticleContent, type NewFeedInput } from './in
 const feedA: NewFeedInput = {
   link: 'https://a.example/feed',
   title: 'Feed A',
-  items: [{ title: 'Item 1', link: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+  items: [{ title: 'Item 1', link: 'https://a.example/feed#1', guid: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
+  type: 'rss',
   categoryName: 'tech',
   showInHome: true,
 };
 const feedB: NewFeedInput = {
   link: 'https://b.example/feed',
   title: 'Feed B',
-  items: [{ title: 'Item 1', link: 'https://b.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+  items: [{ title: 'Item 1', link: 'https://b.example/feed#1', guid: 'https://b.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
+  type: 'rss',
   categoryName: 'tech',
   showInHome: true,
 };

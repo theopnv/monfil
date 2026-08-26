@@ -10,6 +10,7 @@ This is an Electron project based on [Vite](https://vite.dev):
 - [Storage](./storage.md)
 - [Database](./database.md)
 - [Backend](./backend.md)
+  - [Sources](./sources.md)
 - [Frontend](./frontend.md)
   - [Untitled UI](./untitled-ui.md)
 

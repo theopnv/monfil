@@ -7,6 +7,7 @@ const feedA: NewFeedInput = {
   link: 'https://a.example/feed',
   title: 'Feed A',
   items: [],
+  type: 'rss',
   categoryName: 'tech',
   showInHome: true,
 };
@@ -14,6 +15,7 @@ const feedB: NewFeedInput = {
   link: 'https://b.example/feed',
   title: 'Feed B',
   items: [],
+  type: 'rss',
   categoryName: 'tech',
   showInHome: true,
 };
@@ -22,9 +24,10 @@ const feedWithItems: NewFeedInput = {
   link: 'https://c.example/feed',
   title: 'Feed C',
   items: [
-    { title: 'Item 1', link: 'https://c.example/1', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined },
-    { title: 'Item 2', link: 'https://c.example/2', pubDate: '2024-01-02', description: '', image: undefined, read_at: undefined },
+    { title: 'Item 1', link: 'https://c.example/1', guid: 'https://c.example/1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined },
+    { title: 'Item 2', link: 'https://c.example/2', guid: 'https://c.example/2', pubDate: '2024-01-02', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined },
   ],
+  type: 'rss',
   categoryName: 'tech',
   showInHome: true,
 };

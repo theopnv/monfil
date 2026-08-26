@@ -43,7 +43,7 @@ Electron with three source trees, each built by its own Vite config. See `forge.
 
 - Type-only imports need the `type` keyword. The root `tsconfig.json` is strict: `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noPropertyAccessFromIndexSignature`, `noUnusedLocals`, `verbatimModuleSyntax`.
 - The `@/` alias points at `src/renderer/` only. It is declared twice, in `tsconfig.json` and in `vite.renderer.config.mts`. Keep them in step.
-- Fallible operations return the `Result` union from `src/utils.ts` instead of throwing. Errors are tagged unions with a `name` field. Discriminate them with a `switch` that ends in a `never` exhaustiveness check, as in `src/main/feed/parse.ts`.
+- Fallible operations return the `Result` union from `src/utils.ts` instead of throwing. Errors are tagged unions with a `name` field. Discriminate them with a `switch` that ends in a `never` exhaustiveness check, as in `src/main/feed/sources/rss.ts`.
 - Documentation files use kebab-case names and live in `doc/`.
 - Use JSDoc @params and @return to document functions (only the important, external facing APIs or helpers).
 

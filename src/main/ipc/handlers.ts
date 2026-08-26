@@ -1,7 +1,8 @@
 import { enrichItems } from "../feed/enrichItems";
 import { ARTICLE_FETCH_TIMEOUT_MS } from "../constants";
 import { deriveArticleContentStatus, extractArticle } from "../feed/extractArticle";
-import { fetchFeed, type FeedFetchError, type ParsedFeed } from "../feed/parse";
+import { resolveSource } from "../feed/sources/registry";
+import type { FeedFetchError, ParsedSource } from "../feed/sources/types";
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
 import { fetchUrl } from "../lib/fetch";
@@ -16,8 +17,8 @@ import type { IpcMainInvokeEvent } from "electron";
 import type { ArticleContentResult, Feed, FeedCategory } from "../../preload/channels";
 import type { Result } from "../lib/utils";
 
-export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, query: string): Promise<Result<ParsedFeed, FeedFetchError>> {
-  return fetchFeed(query, await getMaxFeedItems());
+export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, query: string): Promise<Result<ParsedSource, FeedFetchError>> {
+  return resolveSource(query).fetch(query, await getMaxFeedItems());
 }
 
 export function handleFeedsListCategories(): Promise<FeedCategory[]> {

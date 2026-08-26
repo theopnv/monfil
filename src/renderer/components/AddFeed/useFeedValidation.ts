@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useDebouncedValue } from '@/lib/addFeed/useDebouncedValue';
-import type { ParsedFeed, FeedFetchError } from '../../../main/feed/parse';
+import type { ParsedSource, FeedFetchError } from '../../../preload/channels';
 
 export type FeedValidationStatus = 'idle' | 'loading' | 'found' | 'not-found';
 
 interface FeedValidationState {
   status: FeedValidationStatus;
-  feed: ParsedFeed | null;
+  feed: ParsedSource | null;
   error: FeedFetchError | null;
 }
 

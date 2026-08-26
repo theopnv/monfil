@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
 import { useAddFeed } from "@/providers/feeds-provider";
-import Step1Find, { type FeedKind } from "./Step1Find";
+import Step1Find, { type FeedType } from "./Step1Find";
 import Step2Configure from "./Step2Configure";
 import Step3Done from "./Step3Done";
 import { useFeedValidation } from "./useFeedValidation";
@@ -21,7 +21,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   const [step, setStep] = useState<WizardStep>(1);
   const [maxStepReached, setMaxStepReached] = useState<WizardStep>(1);
   const [query, setQuery] = useState("");
-  const [kind, setKind] = useState<FeedKind>("anything");
+  const [type, setType] = useState<FeedType>("anything");
   const [categories, setCategories] = useState<FeedCategory[]>([]);
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -36,7 +36,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
     setStep(1);
     setMaxStepReached(1);
     setQuery("");
-    setKind("anything");
+    setType("anything");
     setSelectedCategoryName(null);
     setNewCategoryName("");
     setShowInHome(true);
@@ -89,6 +89,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
     const response = await window.electron.ipcRenderer.invoke("feeds:submit-add-feed", {
       link: validation.feed.link,
       title: validation.feed.title,
+      type: validation.feed.type,
       items: validation.feed.items,
       categoryName: selectedCategoryName,
       showInHome,
@@ -116,8 +117,8 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
             <Step1Find
               query={query}
               onQueryChange={setQuery}
-              kind={kind}
-              onKindChange={setKind}
+              type={type}
+              onTypeChange={setType}
               status={validation.status}
               feed={validation.feed}
               error={validation.error}

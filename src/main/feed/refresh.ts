@@ -4,23 +4,23 @@ import { queryFeedMetadata, queryFeeds } from '../db/crud/query';
 import type { FeedItem, FeedMetadata } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
-import { fetchFeed } from './parse';
+import { sourceFor } from './sources/registry';
+import { setFeedFetchResult } from '../db/crud/update';
 import type { Feed } from '../../preload/channels';
 import { runWithConcurrency } from '../lib/utils';
 import { FEED_FETCH_CONCURRENCY } from '../constants';
 import { getMaxFeedItems } from '../settings';
 
 async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<FeedItem[]> {
-  const result = await fetchFeed(feed.link, maxItems);
+  const result = await sourceFor(feed.type).fetch(feed.link, maxItems);
   if (!result.success) {
     console.error(`Failed to refresh feed "${feed.title}" (${feed.link}).`, result.error);
+    await setFeedFetchResult(feed.id, { last_error: result.error.message });
     return [];
   }
+  await setFeedFetchResult(feed.id, { last_error: null });
 
-  // feedItem.link is UNIQUE but nullable, and SQLite accepts any number of NULLs in a unique column,
-  // so a linkless item would be inserted again on every cycle.
-  const items = result.data.items.filter((item) => item.link);
-  const inserted = await addFeedItemsToDatabase(db, feed.id, items);
+  const inserted = await addFeedItemsToDatabase(db, feed.id, result.data.items);
   if (!inserted.success) {
     console.error(`Failed to store the refreshed items of feed "${feed.title}" (${feed.link}).`, inserted.error);
     return [];

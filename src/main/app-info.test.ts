@@ -30,7 +30,8 @@ describe('getAppInfo', () => {
     await addFeedToDatabase({
       link: 'https://a.example/feed',
       title: 'Feed A',
-      items: [{ title: 'Item 1', link: 'https://a.example/1', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+      items: [{ title: 'Item 1', link: 'https://a.example/1', guid: 'https://a.example/1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
+      type: 'rss',
       categoryName: 'tech',
       showInHome: true,
     });

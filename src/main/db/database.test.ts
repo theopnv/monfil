@@ -31,8 +31,8 @@ describe('initializeDatabase', () => {
 
     // Assert
     expect(columnsOf('feedCategory')).toEqual(['id', 'name']);
-    expect(columnsOf('feedMetadata')).toEqual(['category_id', 'id', 'link', 'showInHome', 'title']);
-    expect(columnsOf('feedItem')).toEqual(['description', 'feed_id', 'id', 'image', 'link', 'pubDate', 'read_at', 'title']);
+    expect(columnsOf('feedMetadata')).toEqual(['category_id', 'id', 'last_error', 'last_fetched_at', 'link', 'showInHome', 'title', 'type']);
+    expect(columnsOf('feedItem')).toEqual(['author', 'description', 'extra', 'feed_id', 'guid', 'id', 'image', 'link', 'pubDate', 'read_at', 'title']);
     expect(columnsOf('setting')).toEqual(['key', 'value']);
     expect(columnsOf('articleContent')).toEqual(['html', 'item_id', 'status', 'text', 'word_count']);
   });

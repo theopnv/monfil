@@ -4,11 +4,11 @@ import { Input } from "@/components/untitled-ui/base/input/input";
 import { getFaviconUrl } from "@/lib/favicon";
 import FeedMatchCard from "./FeedMatchCard";
 import type { FeedValidationStatus } from "./useFeedValidation";
-import type { ParsedFeed, FeedFetchError } from "../../../main/feed/parse";
+import type { ParsedSource, FeedFetchError } from "../../../preload/channels";
 
-export type FeedKind = "anything" | "rss-atom";
+export type FeedType = "anything" | "rss-atom";
 
-const KINDS: { id: FeedKind; label: string }[] = [
+const KINDS: { id: FeedType; label: string }[] = [
   { id: "anything", label: "Anything" },
   { id: "rss-atom", label: "RSS · Atom" },
 ];
@@ -23,14 +23,14 @@ function LinkIcon({ className }: { className?: string | undefined }) {
 export interface Step1FindProps {
   query: string;
   onQueryChange: (query: string) => void;
-  kind: FeedKind;
-  onKindChange: (kind: FeedKind) => void;
+  type: FeedType;
+  onTypeChange: (type: FeedType) => void;
   status: FeedValidationStatus;
-  feed: ParsedFeed | null;
+  feed: ParsedSource | null;
   error: FeedFetchError | null;
 }
 
-export default function Step1Find({ query, onQueryChange, kind, onKindChange, status, feed, error }: Step1FindProps) {
+export default function Step1Find({ query, onQueryChange, type, onTypeChange, status, feed, error }: Step1FindProps) {
   return (
     <div className="flex flex-col gap-1 px-7.5 py-5.5">
       <Input
@@ -49,9 +49,9 @@ export default function Step1Find({ query, onQueryChange, kind, onKindChange, st
           <Button
             key={option.id}
             size="sm"
-            color={option.id === kind ? "secondary" : "tertiary"}
+            color={option.id === type ? "secondary" : "tertiary"}
             className="rounded-full"
-            onPress={() => onKindChange(option.id)}
+            onPress={() => onTypeChange(option.id)}
           >
             {option.label}
           </Button>

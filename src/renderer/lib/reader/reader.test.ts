@@ -116,9 +116,12 @@ describe('findRawDescription', () => {
       link: 'https://a.example/feed',
       title: 'Feed A',
       category_id: 1,
+      type: 'rss',
       showInHome: 1,
+      last_fetched_at: undefined,
+      last_error: undefined,
       category: { id: 1, name: 'Tech' },
-      items: [{ id: 10, feed_id: 1, title: 'Item', link: 'https://a.example/item', pubDate: '2024-01-01', description: '<p>raw html</p>', image: undefined, read_at: undefined }],
+      items: [{ id: 10, feed_id: 1, title: 'Item', link: 'https://a.example/item', guid: 'https://a.example/item', pubDate: '2024-01-01', description: '<p>raw html</p>', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
     },
   ];
 
