@@ -3,6 +3,7 @@ name: Test
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
   workflow_dispatch:
@@ -40,9 +41,16 @@ jobs:
       # windows-latest ships Visual Studio 2026, which the @electron/node-gyp version bundled by
       # our pinned Electron Forge release can't detect, so better-sqlite3 fails to build.
       # Pin to windows-2022 until theopnv/monfil#41 is resolved.
+      #
+      # A plain pull_request run only ever gets ubuntu-latest, to keep the expensive macOS/Windows
+      # legs off every commit. The "full-ci" label opts a PR in: labeling triggers a pull_request
+      # event, so the resulting checks are tied to the PR's own check suite and can actually satisfy
+      # the branch ruleset's required checks (a workflow_dispatch run's checks are not).
       - id: compute
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "push" ]; then
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ contains(github.event.pull_request.labels.*.name, 'full-ci') }}" = "true" ]; then
+            echo 'os=["ubuntu-latest", "macos-latest", "windows-2022"]' >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "push" ]; then
             echo 'os=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
           else
             echo 'os=["ubuntu-latest", "macos-latest", "windows-2022"]' >> "$GITHUB_OUTPUT"
