@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
-import { db, initializeDatabase } from './database';
-import { DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, getRefreshInterval, getRefreshOnLaunch, setRefreshInterval, setRefreshOnLaunch } from './settings';
+import { db, initializeDatabase } from './db/database';
+import { DEFAULT_MAX_FEED_ITEMS, DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch } from './settings';
 
 beforeAll(async () => {
   await initializeDatabase(':memory:');
@@ -138,6 +138,48 @@ describe('setRefreshOnLaunch', () => {
 
     // Assert
     expect(await getRefreshOnLaunch()).toBe(true);
+    const rows = await db.selectFrom('setting').selectAll().execute();
+    expect(rows).toHaveLength(1);
+  });
+});
+
+describe('getMaxFeedItems', () => {
+  test('falls back to the default when nothing is stored', async () => {
+    // Act
+    const value = await getMaxFeedItems();
+
+    // Assert
+    expect(value).toBe(DEFAULT_MAX_FEED_ITEMS);
+  });
+
+  test('falls back to the default when the stored value is not one of the choices', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'maxFeedItems', value: '7' }).execute();
+
+    // Act
+    const value = await getMaxFeedItems();
+
+    // Assert
+    expect(value).toBe(DEFAULT_MAX_FEED_ITEMS);
+  });
+});
+
+describe('setMaxFeedItems', () => {
+  test('stores a count and reads it back', async () => {
+    // Act
+    await setMaxFeedItems(100);
+
+    // Assert
+    expect(await getMaxFeedItems()).toBe(100);
+  });
+
+  test('overwrites the previous choice instead of adding a row', async () => {
+    // Act
+    await setMaxFeedItems(10);
+    await setMaxFeedItems(50);
+
+    // Assert
+    expect(await getMaxFeedItems()).toBe(50);
     const rows = await db.selectFrom('setting').selectAll().execute();
     expect(rows).toHaveLength(1);
   });

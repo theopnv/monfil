@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { deriveArticleContentStatus, extractArticle, MIN_ARTICLE_LENGTH } from './extractArticle';
+import { deriveArticleContentStatus, extractArticle } from './extractArticle';
+import { MIN_ARTICLE_LENGTH } from '../constants';
 
 const PARAGRAPH = 'This is a long paragraph about something interesting that readers care about deeply. '.repeat(6);
 

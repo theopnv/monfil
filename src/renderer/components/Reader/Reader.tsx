@@ -8,8 +8,8 @@ import NextArticleCard from "@/components/Reader/NextArticleCard";
 import ReaderHeader from "@/components/Reader/ReaderHeader";
 import ReadingProgressBar from "@/components/common/ReadingProgressBar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
-import { deriveStandfirst, findRawDescription, getReaderNavigation } from "@/lib/reader";
-import { toRiverItems } from "@/lib/river";
+import { deriveStandfirst, findRawDescription, getReaderNavigation } from "@/lib/reader/reader";
+import { toRiverItems } from "@/lib/river/utils";
 import { useArticleContent } from "@/lib/useArticleContent";
 import { useFeeds, useReadState } from "@/providers/feeds-provider";
 

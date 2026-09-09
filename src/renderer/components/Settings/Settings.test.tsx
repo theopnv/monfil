@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/providers/theme-provider';
 import Settings from './Settings';
 import type { AppInfo } from '../../../main/app-info';
 
-const appInfo: AppInfo = { version: '1.2.3', feedCount: 2, itemCount: 10, databaseSizeBytes: 2048 };
+const appInfo: AppInfo = { version: '1.2.3', feedCount: 2, itemCount: 42, databaseSizeBytes: 2048 };
 
 let invokeImpl: (channel: string) => Promise<unknown>;
 
@@ -28,6 +28,8 @@ beforeEach(() => {
       case 'settings:get-refresh-on-launch': return Promise.resolve(true);
       case 'settings:set-refresh-interval': return Promise.resolve(60);
       case 'settings:set-refresh-on-launch': return Promise.resolve(false);
+      case 'settings:get-max-feed-items': return Promise.resolve(30);
+      case 'settings:set-max-feed-items': return Promise.resolve(100);
       default: return Promise.resolve(undefined);
     }
   };
@@ -101,6 +103,18 @@ test('choosing a refresh interval invokes settings:set-refresh-interval', async 
   expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set-refresh-interval', 60);
 });
 
+test('choosing items per feed invokes settings:set-max-feed-items', async () => {
+  // Arrange
+  const { getByRole } = await renderSettings();
+  await expect.element(getByRole('button', { name: '100' })).toBeInTheDocument();
+
+  // Act
+  await getByRole('button', { name: '100' }).click();
+
+  // Assert
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set-max-feed-items', 100);
+});
+
 test('toggling "Refresh on launch" invokes settings:set-refresh-on-launch', async () => {
   // Arrange
   const { getByRole, getByText } = await renderSettings();
@@ -133,7 +147,7 @@ test('shows the your-data stats from app:get-info', async () => {
 
   // Assert
   await expect.element(getByText('2', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('10', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('42', { exact: true })).toBeInTheDocument();
 });
 
 test('check for updates is disabled', async () => {

@@ -1,11 +1,9 @@
 import type { FeedItem, NewArticleContent } from '../db/types';
-import { runWithConcurrency } from '../../utils';
-import { fetchUrl } from '../fetch';
+import { runWithConcurrency } from '../lib/utils';
+import { fetchUrl } from '../lib/fetch';
 import { deriveArticleContentStatus, extractArticle } from './extractArticle';
 import { extractOgImageUrl } from './extractOgImage';
-
-export const ENRICHMENT_CONCURRENCY = 5;
-export const ARTICLE_FETCH_TIMEOUT_MS = 5000;
+import { ENRICHMENT_CONCURRENCY, ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 
 const ABSOLUTE_HTTP_URL_REGEX = /^https?:\/\//i;
 
@@ -42,7 +40,7 @@ export async function enrichItems(
   onContentFound: (itemId: number, content: NewArticleContentPayload) => void,
 ): Promise<void> {
   await runWithConcurrency(toCandidates(items), ENRICHMENT_CONCURRENCY, async (candidate) => {
-    const result = await fetchUrl(candidate.link, AbortSignal.timeout(ARTICLE_FETCH_TIMEOUT_MS));
+    const result = await fetchUrl(candidate.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
     if (!result.success) {
       return;
     }

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import Toolbar from '@/components/Home/Toolbar';
+import Toolbar from '@/components/Toolbar';
 import { Outlet } from '@tanstack/react-router';
 
 export default function AppShell() {

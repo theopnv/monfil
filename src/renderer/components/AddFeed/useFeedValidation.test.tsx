@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { useFeedValidation } from './useFeedValidation';
-import type { ParsedFeed, FeedFetchError } from '../../../main/feed/parse';
-import type { Result } from '../../../utils';
+import type { ParsedSource, FeedFetchError } from '../../../preload/channels';
+import type { Result } from '../../../main/lib/utils';
 
-const validFeed: ParsedFeed = { link: 'https://example.com/feed', title: 'Example Feed', description: 'An example feed', items: [] };
+const validFeed: ParsedSource = { type: 'rss', link: 'https://example.com/feed', title: 'Example Feed', description: 'An example feed', items: [] };
 const notFoundError: FeedFetchError = { name: 'UNSUPPORTED_FORMAT', message: 'nope' };
 
 function Probe({ query }: { query: string }) {
@@ -55,7 +55,7 @@ describe('useFeedValidation', () => {
     // value with no delay, so mounting directly at "e" would fire once immediately and
     // once again after the debounce window.
     vi.useRealTimers();
-    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedFeed, FeedFetchError>);
+    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
     const { rerender } = await render(<Probe query="" />);
 
     // Act
@@ -72,7 +72,7 @@ describe('useFeedValidation', () => {
 
   test('maps a successful validation to status "found"', async () => {
     // Arrange
-    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedFeed, FeedFetchError>);
+    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
     const { getByTestId } = await render(<Probe query="example.com/feed" />);
 
     // Act
@@ -85,7 +85,7 @@ describe('useFeedValidation', () => {
 
   test('maps a failed validation to status "not-found"', async () => {
     // Arrange
-    invokeMock.mockResolvedValue({ success: false, error: notFoundError } satisfies Result<ParsedFeed, FeedFetchError>);
+    invokeMock.mockResolvedValue({ success: false, error: notFoundError } satisfies Result<ParsedSource, FeedFetchError>);
     const { getByTestId } = await render(<Probe query="not-a-feed.com" />);
 
     // Act
@@ -98,8 +98,8 @@ describe('useFeedValidation', () => {
 
   test('ignores a stale response for an earlier query', async () => {
     // Arrange: the first call resolves slowly, the second resolves fast.
-    let resolveFirst: (value: Result<ParsedFeed, FeedFetchError>) => void = () => {};
-    const firstCall = new Promise<Result<ParsedFeed, FeedFetchError>>((resolve) => {
+    let resolveFirst: (value: Result<ParsedSource, FeedFetchError>) => void = () => { };
+    const firstCall = new Promise<Result<ParsedSource, FeedFetchError>>((resolve) => {
       resolveFirst = resolve;
     });
     invokeMock.mockReturnValueOnce(firstCall);

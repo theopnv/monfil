@@ -18,6 +18,8 @@ export default defineConfig([
     rules: {
       'curly': ['error', 'all'],
       'no-empty-pattern': ['error', { allowObjectPatternsAsParameters: true }],
+      // Match tsconfig's noUnusedParameters, which already treats a leading underscore as deliberate.
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@stylistic/brace-style': ['error', '1tbs'],
       '@stylistic/nonblock-statement-body-position': ['error', 'below'],
       '@stylistic/indent': ['error', 2],

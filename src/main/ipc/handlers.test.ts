@@ -1,11 +1,12 @@
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
-import { db, initializeDatabase } from '../database';
-import { addFeedToDatabase, upsertArticleContent } from '../db/insert';
-import { fetchUrl } from '../fetch';
+import { db, initializeDatabase } from '../db/database';
+import { addFeedToDatabase, upsertArticleContent } from '../db/crud/insert';
+import { fetchUrl } from '../lib/fetch';
 import { handleItemsGetContent } from './handlers';
+import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 import type { IpcMainInvokeEvent } from 'electron';
 
-vi.mock(import('../fetch'), () => ({ fetchUrl: vi.fn() }));
+vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
 
 const mockedFetchUrl = vi.mocked(fetchUrl);
 const fakeEvent = {} as IpcMainInvokeEvent;
@@ -22,7 +23,8 @@ async function createItem(link: string | undefined): Promise<number> {
   const result = await addFeedToDatabase({
     link: 'https://a.example/feed',
     title: 'Feed A',
-    items: [{ title: 'Item', link, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+    items: [{ title: 'Item', link, guid: link ?? 'monfil:test:linkless', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
+    type: 'rss',
     categoryName: 'tech',
     showInHome: true,
   });
@@ -97,7 +99,7 @@ describe('handleItemsGetContent', () => {
     const result = await handleItemsGetContent(fakeEvent, itemId);
 
     // Assert
-    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/long-article', expect.any(AbortSignal));
+    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/long-article', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
     expect(result.status).toBe('ok');
     const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
     expect(stored.status).toBe('ok');

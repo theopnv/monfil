@@ -12,7 +12,10 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
     link: `https://example.com/feed-${id}`,
     title: `Feed ${id}`,
     category_id: 1,
+    type: 'rss',
     showInHome: 1,
+    last_fetched_at: undefined,
+    last_error: undefined,
     category: { id: 1, name: 'Tech' },
     items: [],
     ...overrides,
@@ -23,7 +26,7 @@ function createFeedWithItem(itemId: number): Feed {
   const feed = createFeed();
   return {
     ...feed,
-    items: [{ id: itemId, feed_id: feed.id, title: 'Item', link: `https://example.com/item-${itemId}`, pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+    items: [{ id: itemId, feed_id: feed.id, title: 'Item', link: `https://example.com/item-${itemId}`, guid: `https://example.com/item-${itemId}`, pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
   };
 }
 
@@ -51,7 +54,7 @@ function DeleteFeedButton({ feedId }: { feedId: number }) {
   const deleteFeed = useDeleteFeed();
   return (
     <button type="button" onClick={() => {
-      void deleteFeed(feedId); 
+      void deleteFeed(feedId);
     }}>
       Delete {feedId}
     </button>
@@ -162,9 +165,9 @@ test('re-adding the same link replaces the existing feed instead of duplicating 
 
 test('an item-image-fetched push merges the image into the matching feed item, leaving others untouched', async () => {
   // Arrange
-  const targetItem = { id: 1, feed_id: 1, title: 'Target item', link: 'https://example.com/target', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined };
-  const otherItemInSameFeed = { id: 2, feed_id: 1, title: 'Other item', link: 'https://example.com/other', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined };
-  const itemInOtherFeed = { id: 3, feed_id: 2, title: 'Item in other feed', link: 'https://example.com/other-feed-item', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined };
+  const targetItem = { id: 1, feed_id: 1, title: 'Target item', link: 'https://example.com/target', guid: 'https://example.com/target', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined };
+  const otherItemInSameFeed = { id: 2, feed_id: 1, title: 'Other item', link: 'https://example.com/other', guid: 'https://example.com/other', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined };
+  const itemInOtherFeed = { id: 3, feed_id: 2, title: 'Item in other feed', link: 'https://example.com/other-feed-item', guid: 'https://example.com/other-feed-item', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined };
   const targetFeed = createFeed({ title: 'Target feed', items: [targetItem, otherItemInSameFeed] });
   const otherFeed = createFeed({ title: 'Other feed', items: [itemInOtherFeed] });
   const { getByText, getByRole } = await render(
@@ -318,7 +321,7 @@ test('refreshNow stops reporting a refresh once it fails', async () => {
 
   // Assert
   await vi.waitFor(() => {
-    expect(consoleError).toHaveBeenCalled(); 
+    expect(consoleError).toHaveBeenCalled();
   });
   await expect.element(getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
 });

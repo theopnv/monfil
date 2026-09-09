@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { deriveArticleContentStatus, extractArticle } from './extractArticle';
 import { extractOgImageUrl } from './extractOgImage';
-import { ENRICHMENT_CONCURRENCY, enrichItems } from './enrichItems';
-import { fetchUrl } from '../fetch';
+import { enrichItems } from './enrichItems';
+import { fetchUrl } from '../lib/fetch';
 import type { FeedItem } from '../db/types';
+import { ARTICLE_FETCH_TIMEOUT_MS, ENRICHMENT_CONCURRENCY } from '../constants';
 
-vi.mock(import('../fetch'), () => ({ fetchUrl: vi.fn() }));
+vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
 vi.mock(import('./extractOgImage'), () => ({ extractOgImageUrl: vi.fn() }));
 vi.mock(import('./extractArticle'), () => ({ extractArticle: vi.fn(), deriveArticleContentStatus: vi.fn() }));
 
@@ -39,8 +40,8 @@ describe('enrichItems', () => {
 
     // Assert
     expect(mockedFetchUrl).toHaveBeenCalledTimes(2);
-    expect(mockedFetchUrl).toHaveBeenCalledWith('https://example.com/1', expect.any(AbortSignal));
-    expect(mockedFetchUrl).toHaveBeenCalledWith('http://example.com/2', expect.any(AbortSignal));
+    expect(mockedFetchUrl).toHaveBeenCalledWith('https://example.com/1', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
+    expect(mockedFetchUrl).toHaveBeenCalledWith('http://example.com/2', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
   });
 
   test('one fetch feeds both the image and the content extractor', async () => {

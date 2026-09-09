@@ -1,7 +1,7 @@
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { getFaviconUrl } from "@/lib/favicon";
-import { formatRelativeTime, type RiverCardProps } from "@/lib/river";
+import { formatRelativeTime, type RiverCardProps } from "@/lib/river/utils";
 
 export default function RiverCardCompact({ item, read, onOpen }: RiverCardProps) {
   return (

@@ -5,7 +5,7 @@ import DeleteFeedDialog from "@/components/Home/DeleteFeedDialog";
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
-import { feedVisibility, folderVisibility, nextVisibility, VISIBILITY_ICON, VISIBILITY_LABEL, type FeedVisibility } from "@/lib/feed-visibility";
+import { feedVisibility, folderVisibility, nextVisibility, VISIBILITY_ICON, VISIBILITY_LABEL, type FeedVisibility } from "@/lib/river/feed-visibility";
 import { getFaviconUrl } from "@/lib/favicon";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import type { Feed } from "../../../preload/channels";
@@ -78,7 +78,7 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
         onOpenChange={(isOpen) => {
           if (!isOpen) {
             setFeedPendingDelete(null);
-          } 
+          }
         }}
         onDeleted={onFeedDeleted}
       />

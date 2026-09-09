@@ -8,7 +8,7 @@ export type WizardStep = 1 | 2 | 3;
 const STEP_LABELS: Record<WizardStep, string> = { 1: "Find", 2: "Configure", 3: "Done" };
 
 const STEP_COPY: Record<WizardStep, { title: string; blurb: string }> = {
-  1: { title: "Add a source", blurb: "One box for everything you want to follow." },
+  1: { title: "Add a feed", blurb: "One box for everything you want to follow." },
   2: { title: "Make it yours", blurb: "Where it lives and whether it shows up in Home." },
   3: { title: "Added to Monfil", blurb: "It's already fetching. Nothing else to do." },
 };

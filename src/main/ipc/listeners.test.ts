@@ -1,6 +1,6 @@
 import { beforeAll, describe, afterEach, test, expect, vi } from 'vitest';
 import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowFeedContextMenu } from './listeners';
-import { initializeDatabase } from '../database';
+import { initializeDatabase } from '../db/database';
 import { BrowserWindow, Menu, shell } from 'electron';
 
 vi.mock(import('electron'), () => ({
@@ -92,7 +92,7 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     expect(popup).toHaveBeenCalledWith({ window: fakeWindow });
   });
 
-  test('builds a template holding one item labelled "Delete feed…"', () => {
+  test('builds a template holding one item labelled "Delete feed"', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);

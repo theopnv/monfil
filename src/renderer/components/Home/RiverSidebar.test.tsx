@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { FeedsProvider, useFeeds } from '@/providers/feeds-provider';
 import RiverSidebar from './RiverSidebar';
-import type { DeleteFeedError } from '../../../main/db/delete';
+import type { DeleteFeedError } from '../../../main/db/crud/delete';
 import type { Feed } from '../../../preload/channels';
-import type { Result } from '../../../utils';
+import type { Result } from '../../../main/lib/utils';
 import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../preload/channels';
 
 const feedA: Feed = {
@@ -12,9 +12,12 @@ const feedA: Feed = {
   link: 'https://a.example/feed',
   title: 'Feed A',
   category_id: 1,
+  type: 'rss',
   showInHome: 1,
+  last_fetched_at: undefined,
+  last_error: undefined,
   category: { id: 1, name: 'Tech' },
-  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, read_at: undefined }],
+  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://a.example/feed#1', guid: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
 };
 
 const feedB: Feed = {
@@ -22,7 +25,10 @@ const feedB: Feed = {
   link: 'https://b.example/feed',
   title: 'Feed B',
   category_id: 1,
+  type: 'rss',
   showInHome: 1,
+  last_fetched_at: undefined,
+  last_error: undefined,
   category: { id: 1, name: 'Tech' },
   items: [],
 };
@@ -79,13 +85,13 @@ test('clicking "Add feed" opens the add-feed modal', async () => {
       <RiverSidebar feeds={[]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
     </FeedsProvider>,
   );
-  await expect.element(getByRole('heading', { name: 'Add a source' })).not.toBeInTheDocument();
+  await expect.element(getByRole('heading', { name: 'Add a feed' })).not.toBeInTheDocument();
 
   // Act
   await getByRole('button', { name: 'Add feed' }).click();
 
   // Assert
-  await expect.element(getByRole('heading', { name: 'Add a source' })).toBeInTheDocument();
+  await expect.element(getByRole('heading', { name: 'Add a feed' })).toBeInTheDocument();
 });
 
 describe('feed row visibility rotation', () => {

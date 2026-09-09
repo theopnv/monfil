@@ -1,5 +1,5 @@
 import { useMemo, type MouseEvent } from "react";
-import { openLink } from "@/lib/river";
+import { openLink } from "@/lib/river/utils";
 import { sanitizeArticleHtml } from "@/lib/sanitize-html";
 
 export interface ArticleBodyProps {

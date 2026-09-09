@@ -39,11 +39,11 @@ const readStateTest = base.extend<ReadStateTestFixtures>({
     const { port } = server.address() as AddressInfo;
     try {
       await use({ url: `http://127.0.0.1:${port}/feed.xml`, publish: (articles) => {
-        body = rss(articles); 
+        body = rss(articles);
       } });
     } finally {
       await new Promise<void>((resolve) => server.close(() => {
-        resolve(); 
+        resolve();
       }));
     }
   },
@@ -75,7 +75,7 @@ const readStateTest = base.extend<ReadStateTestFixtures>({
 // Subscribes without going through the wizard. The row is enough for a refresh to find the feed.
 async function subscribe(page: Page, url: string): Promise<void> {
   await page.evaluate((link) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title: 'Local feed', items: [], categoryName: 'tech', showInHome: true,
+    link, title: 'Local feed', type: 'rss', items: [], categoryName: 'tech', showInHome: true,
   }), url);
   await page.getByRole('button', { name: 'Refresh feeds' }).click();
 }

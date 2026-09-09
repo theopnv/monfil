@@ -1,7 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { app } from 'electron';
-import { dbFilePath } from './database';
-import { countFeedItems, countFeedMetadata } from './db/query';
+import { dbFilePath } from './db/database';
+import { countFeedItems, countFeedMetadata } from './db/crud/query';
 
 export interface AppInfo {
   version: string;
@@ -22,7 +22,7 @@ async function sizeOf(filePath: string): Promise<number> {
 }
 
 /**
- * Gathers the figures shown on the Settings "Your data" card. Database size sums `monfil.db` and its
+ * Gathers the app figures. Database size sums `monfil.db` and its
  * `-wal` / `-shm` sidecars, since WAL mode can hold a large share of the data outside the main file.
  */
 export async function getAppInfo(): Promise<AppInfo> {

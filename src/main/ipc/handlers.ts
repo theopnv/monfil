@@ -1,19 +1,33 @@
-import { ARTICLE_FETCH_TIMEOUT_MS, enrichItems } from "../feed/enrichItems";
+import { enrichItems } from "../feed/enrichItems";
+import { ARTICLE_FETCH_TIMEOUT_MS } from "../constants";
 import { deriveArticleContentStatus, extractArticle } from "../feed/extractArticle";
+import { resolveSource } from "../feed/sources/registry";
+import type { FeedFetchError, ParsedSource } from "../feed/sources/types";
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
-import { fetchUrl } from "../fetch";
-import { addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type AddFeedError, type NewFeedInput } from "../db/insert";
-import { deleteFeedFromDatabase, type DeleteFeedError } from "../db/delete";
-import { setFeedsShowInHome, setFeedItemsRead, type UpdateFeedError, type UpdateItemError } from "../db/update";
-import { queryArticleContent, queryFeedItems, queryFeeds } from "../db/query";
-import { setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type RefreshInterval } from "../settings";
+import { fetchUrl } from "../lib/fetch";
+import { addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type AddFeedError, type NewFeedInput } from "../db/crud/insert";
+import { deleteFeedFromDatabase, type DeleteFeedError } from "../db/crud/delete";
+import { setFeedsShowInHome, setFeedItemsRead, type UpdateFeedError, type UpdateItemError } from "../db/crud/update";
+import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeeds } from "../db/crud/query";
+import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type MaxFeedItems, type RefreshInterval } from "../settings";
 import { getAppInfo, type AppInfo } from "../app-info";
-import { dbReady } from "../database";
 import { sendToRenderer } from "./sendToRenderer";
 import type { IpcMainInvokeEvent } from "electron";
-import type { ArticleContentResult, Feed } from "../../preload/channels";
-import type { Result } from "../../utils";
+import type { ArticleContentResult, Feed, FeedCategory } from "../../preload/channels";
+import type { Result } from "../lib/utils";
+
+export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, query: string): Promise<Result<ParsedSource, FeedFetchError>> {
+  return resolveSource(query).fetch(query, await getMaxFeedItems());
+}
+
+export function handleFeedsListCategories(): Promise<FeedCategory[]> {
+  return queryFeedCategory({});
+}
+
+export function handleFeedsList(): Promise<Feed[]> {
+  return queryFeeds();
+}
 
 export async function handleFeedsSubmitAddFeed(event: IpcMainInvokeEvent, payload: NewFeedInput): Promise<Result<Feed, AddFeedError>> {
   const result = await addFeedToDatabase(payload);
@@ -53,6 +67,10 @@ export async function handleFeedsSetShowInHome(_event: IpcMainInvokeEvent, paylo
   return { success: true, data: await queryFeeds() };
 }
 
+export function handleSettingsGetRefreshInterval(): Promise<RefreshInterval> {
+  return getRefreshInterval();
+}
+
 export async function handleSettingsSetRefreshInterval(_event: IpcMainInvokeEvent, payload: RefreshInterval): Promise<RefreshInterval> {
   const interval = toRefreshInterval(payload);
   await setRefreshInterval(interval);
@@ -70,8 +88,6 @@ export async function handleItemsSetRead(_event: IpcMainInvokeEvent, payload: { 
  * that never works is not refetched on every open.
  */
 export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: number): Promise<ArticleContentResult> {
-  await dbReady;
-
   const [existing] = await queryArticleContent({ item_id: itemId });
   if (existing) {
     return existing.status === 'ok' && existing.html && existing.word_count
@@ -84,7 +100,7 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
     return { status: 'unavailable' };
   }
 
-  const fetched = await fetchUrl(item.link, AbortSignal.timeout(ARTICLE_FETCH_TIMEOUT_MS));
+  const fetched = await fetchUrl(item.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
   const article = fetched.success ? extractArticle(fetched.data, item.link) : undefined;
   const status = deriveArticleContentStatus(article);
   await upsertArticleContent({ item_id: itemId, html: article?.html, text: article?.text, word_count: article?.wordCount, status });
@@ -94,12 +110,24 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
     : { status: 'unavailable' };
 }
 
+export function handleSettingsGetRefreshOnLaunch(): Promise<boolean> {
+  return getRefreshOnLaunch();
+}
+
 export async function handleSettingsSetRefreshOnLaunch(_event: IpcMainInvokeEvent, payload: boolean): Promise<boolean> {
   await setRefreshOnLaunch(payload);
   return payload;
 }
 
-export async function handleAppGetInfo(): Promise<AppInfo> {
-  await dbReady;
+export function handleAppGetInfo(): Promise<AppInfo> {
   return getAppInfo();
+}
+
+export function handleSettingsGetMaxFeedItems(): Promise<MaxFeedItems> {
+  return getMaxFeedItems();
+}
+
+export async function handleSettingsSetMaxFeedItems(_event: IpcMainInvokeEvent, payload: MaxFeedItems): Promise<MaxFeedItems> {
+  await setMaxFeedItems(payload);
+  return payload;
 }

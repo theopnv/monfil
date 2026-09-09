@@ -33,9 +33,12 @@ function createFeedItem(overrides: Partial<FeedItem> = {}): FeedItem {
     feed_id: 1,
     title: `Item ${id}`,
     link: `https://example.com/item-${id}`,
+    guid: `https://example.com/item-${id}`,
     pubDate: '2024-01-01',
     description: `Item ${id} description`,
     image: undefined,
+    author: undefined,
+    extra: undefined,
     read_at: undefined,
     ...overrides,
   };
@@ -48,7 +51,10 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
     link: `https://example.com/feed-${id}`,
     title: `Feed ${id}`,
     category_id: 1,
+    type: 'rss',
     showInHome: 1,
+    last_fetched_at: undefined,
+    last_error: undefined,
     category: { id: 1, name: 'Tech' },
     items: [],
     ...overrides,
@@ -133,7 +139,10 @@ test('hides feed items when showInHome is set to 0', async () => {
   const feedC = createFeed({
     title: 'Feed C',
     link: 'https://c.example/feed',
+    type: 'rss',
     showInHome: 0,
+    last_fetched_at: undefined,
+    last_error: undefined,
     items: [createFeedItem({ title: 'Item C1', description: 'Item C1 description' })],
   });
   mockedUseFeeds.mockReturnValue((mockedUseFeeds() as Feed[]).concat(feedC));

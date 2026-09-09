@@ -1,7 +1,7 @@
 import RiverCardArticle from "@/components/Home/RiverCardArticle";
 import RiverCardCompact from "@/components/Home/RiverCardCompact";
 import RiverCardMagazine from "@/components/Home/RiverCardMagazine";
-import type { Density, RiverItem } from "@/lib/river";
+import type { Density, RiverItem } from "@/lib/river/utils";
 
 export interface RiverListProps {
   items: RiverItem[];

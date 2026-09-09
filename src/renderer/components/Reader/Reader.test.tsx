@@ -31,9 +31,12 @@ function createFeedItem(overrides: Partial<FeedItem> = {}): FeedItem {
     feed_id: 1,
     title: `Item ${id}`,
     link: `https://example.com/item-${id}`,
+    guid: `https://example.com/item-${id}`,
     pubDate: '2024-01-01',
     description: `<p>Item ${id} description</p>`,
     image: undefined,
+    author: undefined,
+    extra: undefined,
     read_at: undefined,
     ...overrides,
   };
@@ -46,7 +49,10 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
     link: `https://example.com/feed-${id}`,
     title: `Feed ${id}`,
     category_id: 1,
+    type: 'rss',
     showInHome: 1,
+    last_fetched_at: undefined,
+    last_error: undefined,
     category: { id: 1, name: 'Tech' },
     items: [],
     ...overrides,
@@ -179,7 +185,7 @@ test('shows the full extracted article body when the content is ready', async ()
 test('shows the feed description and a loading hint while the article is being fetched', async () => {
   // Arrange
   const { itemB } = setUpThreeItemRiver();
-  window.electron.ipcRenderer.invoke = vi.fn().mockReturnValue(new Promise(() => {}));
+  window.electron.ipcRenderer.invoke = vi.fn().mockReturnValue(new Promise(() => { }));
 
   // Act
   const { getByTestId, getByText } = await render(<Reader itemId={String(itemB.id)} onNavigateToItem={vi.fn()} onNavigateHome={vi.fn()} />);

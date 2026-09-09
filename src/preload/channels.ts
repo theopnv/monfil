@@ -1,21 +1,30 @@
 import type { FeedMetadata, FeedItem, FeedCategory } from '../main/db/types';
-import type { NewFeedInput, AddFeedError } from '../main/db/insert';
-import type { DeleteFeedError } from '../main/db/delete';
-import type { UpdateFeedError, UpdateItemError } from '../main/db/update';
-import type { ParsedFeed, FeedFetchError } from '../main/feed/parse';
-import type { RefreshInterval } from '../main/settings';
+import type { NewFeedInput, AddFeedError } from '../main/db/crud/insert';
+import type { DeleteFeedError } from '../main/db/crud/delete';
+import type { UpdateFeedError, UpdateItemError } from '../main/db/crud/update';
+import type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
+import type { MaxFeedItems, RefreshInterval } from '../main/settings';
 import type { AppInfo } from '../main/app-info';
-import type { Result } from '../utils';
+import type { Result } from '../main/lib/utils';
 
-export type { RefreshInterval } from '../main/settings';
+// =====================================
+// ============== TYPES ================
+// =====================================
 
-export type { FeedCategory } from '../main/db/types';
+// Expose types from main process to preload, so that the renderer can use them without importing from main directly.
+export type { RefreshInterval, MaxFeedItems } from '../main/settings';
+export type { FeedCategory, SourceType } from '../main/db/types';
+export type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
 
+// Some types are only used in the preload layer, so we define them here instead of main.
 export type Feed = FeedMetadata & { items: FeedItem[]; category: FeedCategory };
-
 export type ArticleContentResult =
   | { status: 'ok'; html: string; wordCount: number }
   | { status: 'unavailable' };
+
+// =====================================
+// ============= CHANNELS ==============
+// =====================================
 
 // ============= One-way channels (renderer -> main) ==============
 export type OneWayRendererToMainChannelPayloads = {
@@ -39,7 +48,7 @@ export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayl
 
 // ============ Two-way channels (renderer <-> main) ==============
 export type TwoWayRendererMainChannelPayloads = {
-  'feeds:validate-feed-url': Result<ParsedFeed, FeedFetchError>;
+  'feeds:validate-feed-url': Result<ParsedSource, FeedFetchError>;
   'feeds:list-categories': FeedCategory[];
   'feeds:list': Feed[];
   'feeds:refresh': Feed[];
@@ -52,6 +61,8 @@ export type TwoWayRendererMainChannelPayloads = {
   'items:get-content': ArticleContentResult;
   'settings:get-refresh-on-launch': boolean;
   'settings:set-refresh-on-launch': boolean;
+  'settings:get-max-feed-items': MaxFeedItems;
+  'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': AppInfo;
 }
 
@@ -71,6 +82,8 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'items:get-content': number;
   'settings:get-refresh-on-launch': undefined;
   'settings:set-refresh-on-launch': boolean;
+  'settings:get-max-feed-items': undefined;
+  'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': undefined;
 };
 

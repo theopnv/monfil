@@ -2,35 +2,37 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import AddFeedModal from './AddFeedModal';
 import { FeedsProvider } from '@/providers/feeds-provider';
-import type { ParsedFeed, FeedFetchError } from '../../../main/feed/parse';
-import type { Feed, FeedCategory } from '../../../preload/channels';
-import type { Result } from '../../../utils';
-import type { AddFeedError } from '../../../main/db/insert';
-import type { TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannelPayloads } from '../../../preload/channels';
+import type { Result } from '../../../main/lib/utils';
+import type { AddFeedError } from '../../../main/db/crud/insert';
+import type { Feed, FeedCategory, FeedFetchError, ParsedSource, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannelPayloads } from '../../../preload/channels';
 
 const categories: FeedCategory[] = [{ id: 1, name: 'Tech' }];
 
-const parsedFeed: ParsedFeed = {
+const parsedFeed: ParsedSource = {
+  type: 'rss',
   link: 'https://example.com/feed',
   title: 'Example Feed',
   description: 'A feed about examples.',
-  items: [{ title: 'Item 1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd', image: undefined, read_at: undefined }],
+  items: [{ title: 'Item 1', guid: 'https://example.com/item1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
 };
 
 const insertedFeed: Feed = {
   id: 1,
   link: parsedFeed.link,
   title: parsedFeed.title,
+  type: 'rss',
   category_id: 1,
   showInHome: 1,
+  last_fetched_at: undefined,
+  last_error: undefined,
   category: { id: 1, name: 'Tech' },
-  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd', image: undefined, read_at: undefined }],
+  items: [{ id: 1, feed_id: 1, title: 'Item 1', guid: 'https://example.com/item1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
 };
 
 let invokeMock: ReturnType<typeof vi.fn>;
 
 function stubElectron(overrides: {
-  validateFeedUrl?: Result<ParsedFeed, FeedFetchError>;
+  validateFeedUrl?: Result<ParsedSource, FeedFetchError>;
   submitAddFeed?: Result<Feed, AddFeedError>;
 } = {}) {
   invokeMock = vi.fn(<C extends keyof TwoWayRendererMainChannelsInvokeArgs>(channel: C): Promise<TwoWayRendererMainChannelPayloads[C]> => {

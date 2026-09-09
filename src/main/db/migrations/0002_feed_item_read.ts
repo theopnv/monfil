@@ -1,5 +1,4 @@
-// Migrations are typed against Kysely<any>, not Database, because a migration
-// reflects the schema at that point in history rather than today's types.
+// As per https://kysely.dev/docs/migrations, migrations are typed against Kysely<any>.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Kysely } from 'kysely';
 
