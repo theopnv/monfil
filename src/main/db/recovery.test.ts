@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { existsSync, renameSync } from 'node:fs';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { withCorruptionRecovery } from './recovery';
+import { rmTestDir } from '../lib/rmTestDir';
 
 vi.mock(import('node:fs'), async (importOriginal) => {
   const actual = await importOriginal();
@@ -31,7 +32,7 @@ describe('withCorruptionRecovery', () => {
 
   afterEach(async () => {
     mockedRenameSync.mockClear();
-    await rm(dir, { recursive: true });
+    await rmTestDir(dir);
   });
 
   test('runs attempt once and resolves when it succeeds', async () => {

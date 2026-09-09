@@ -57,17 +57,20 @@ const refreshTest = base.extend<RefreshTestFixtures>({
     }
   },
 
-  // Every launch reuses the same user data dir, so a test can restart the app against its own database.
+  // Every launch reuses the same user data dir, so a test can restart the app against its own
+  // database. A restart closes the previous instance first: two Electron processes sharing one
+  // profile directory at once is unsupported and races over the profile's own lock files (not just
+  // this app's SQLite WAL), which surfaces as flaky contention rather than a clean failure.
   launchApp: async ({ userDataDir }, use) => {
-    const launched: ElectronApplication[] = [];
+    let current: ElectronApplication | undefined;
     try {
       await use(async () => {
-        const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-        launched.push(app);
-        return app.firstWindow();
+        await current?.close();
+        current = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
+        return current.firstWindow();
       });
     } finally {
-      await Promise.all(launched.map((app) => app.close()));
+      await current?.close();
     }
   },
 });

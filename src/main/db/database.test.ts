@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, test, beforeEach } from 'vitest';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { closeDatabase, db, dbReady, initializeDatabase } from './database';
+import { rmTestDir } from '../lib/rmTestDir';
 
 describe('initializeDatabase', () => {
   beforeEach(async () => {
@@ -58,7 +59,7 @@ describe('reopening an already-migrated file', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    await rm(dir, { recursive: true });
+    await rmTestDir(dir);
   });
 
   test('a second initialization against the same file resolves without error', async () => {
@@ -95,7 +96,7 @@ describe('recovering from a corrupted database file', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    await rm(dir, { recursive: true });
+    await rmTestDir(dir);
   });
 
   // The recovery branching itself is covered in detail by db/recovery.test.ts. This is an end-to-end
