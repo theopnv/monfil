@@ -13,7 +13,7 @@ import type { Result } from '../main/lib/utils';
 
 // Expose types from main process to preload, so that the renderer can use them without importing from main directly.
 export type { RefreshInterval, MaxFeedItems } from '../main/settings';
-export type { FeedCategory, SourceType as SourceType } from '../main/db/types';
+export type { FeedCategory, SourceType } from '../main/db/types';
 export type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
 
 // Some types are only used in the preload layer, so we define them here instead of main.

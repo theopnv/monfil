@@ -15,10 +15,16 @@ async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<Fee
   const result = await sourceFor(feed.type).fetch(feed.link, maxItems);
   if (!result.success) {
     console.error(`Failed to refresh feed "${feed.title}" (${feed.link}).`, result.error);
-    await setFeedFetchResult(feed.id, { last_error: result.error.message });
+    const updated = await setFeedFetchResult(feed.id, { last_error: result.error.message });
+    if (!updated.success) {
+      console.error(`Failed to store the refresh failure of feed "${feed.title}" (${feed.link}).`, updated.error);
+    }
     return [];
   }
-  await setFeedFetchResult(feed.id, { last_error: null });
+  const updated = await setFeedFetchResult(feed.id, { last_error: null });
+  if (!updated.success) {
+    console.error(`Failed to clear the refresh failure of feed "${feed.title}" (${feed.link}).`, updated.error);
+  }
 
   const inserted = await addFeedItemsToDatabase(db, feed.id, result.data.items);
   if (!inserted.success) {

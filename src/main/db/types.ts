@@ -1,4 +1,5 @@
 import type {
+  ColumnType,
   Generated,
   Insertable,
   Selectable,
@@ -63,7 +64,7 @@ export interface FeedItemTable {
   extra: string | undefined;
   // Select/insert stay `string | undefined`, per the nullable-column convention (see `link`, `image`).
   // Update additionally allows `null`, the one write path that must be able to clear the column back to unread.
-  read_at: string | undefined | null;
+  read_at: ColumnType<string | undefined, string | undefined, string | null>;
 };
 
 export type FeedItem = Selectable<FeedItemTable>;
