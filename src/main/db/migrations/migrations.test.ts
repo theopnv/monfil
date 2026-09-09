@@ -25,10 +25,13 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  const destroyStart = Date.now();
   await db.destroy();
-  // Windows can hold the file's OS-level lock for several seconds after better-sqlite3's close()
-  // returns. The default hook timeout doesn't leave fs.rm's own retry/backoff room to work with.
+  console.error(`[diag] db.destroy() took ${Date.now() - destroyStart}ms`);
+
+  const rmStart = Date.now();
   await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 300 });
+  console.error(`[diag] rm() took ${Date.now() - rmStart}ms`);
 }, 20000);
 
 function assertMigrated({ error }: MigrationResultSet): void {
