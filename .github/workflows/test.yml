@@ -3,15 +3,21 @@ name: Test
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  push:
+    branches: [main]
   workflow_dispatch:
   workflow_call:
+
+permissions:
+  contents: read
 
 concurrency:
   group: test-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -22,19 +28,97 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run package
+      # tsc needs routeTree.gen.ts, which the router plugin only writes as a build side effect.
+      - run: npx vite build --config vite.renderer.config.mts
 
       - run: npm run lint
 
+  os_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      os: ${{ steps.compute.outputs.os }}
+    steps:
+      # windows-latest ships Visual Studio 2026, which the @electron/node-gyp version bundled by
+      # our pinned Electron Forge release can't detect, so better-sqlite3 fails to build.
+      # Pin to windows-2022 until theopnv/monfil#41 is resolved.
+      #
+      # A plain pull_request run only ever gets ubuntu-latest, to keep the expensive macOS/Windows
+      # legs off every commit. The "full-ci" label opts a PR in: labeling triggers a pull_request
+      # event, so the resulting checks are tied to the PR's own check suite and can actually satisfy
+      # the branch ruleset's required checks (a workflow_dispatch run's checks are not).
+      - id: compute
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ contains(github.event.pull_request.labels.*.name, 'full-ci') }}" = "true" ]; then
+            echo 'os=["ubuntu-latest", "macos-latest", "windows-2022"]' >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "push" ]; then
+            echo 'os=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'os=["ubuntu-latest", "macos-latest", "windows-2022"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  unit:
+    needs: os_matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJson(needs.os_matrix.outputs.os) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - run: npm ci
+
+      - run: npm run test:unit
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - run: npm ci
+
       - run: npx playwright install
 
-      - run: npx playwright install-deps
+      - run: npm run test:integration
 
-      - run: xvfb-run -a npm test
+  e2e:
+    needs: [lint, unit, integration, os_matrix]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJson(needs.os_matrix.outputs.os) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - run: npm ci
+
+      - run: npx playwright install
+
+      - if: runner.os == 'Linux'
+        run: npx playwright install-deps
+
+      - if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:e2e
+
+      - if: runner.os != 'Linux'
+        run: npm run test:e2e
 
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: test-result
+          name: test-result-${{ matrix.os }}
           path: test-results/
           retention-days: 2

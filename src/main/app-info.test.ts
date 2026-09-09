@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { sql } from 'kysely';
 import { getAppInfo } from './app-info';
-import { closeDatabase, initializeDatabase } from './db/database';
+import { closeDatabase, db, initializeDatabase } from './db/database';
 import { addFeedToDatabase } from './db/crud/insert';
+import { rmTestDir } from './lib/rmTestDir';
 
 vi.mock(import('electron'), () => ({
   app: { getVersion: vi.fn(() => '1.2.3') } as unknown as Electron.App,
@@ -22,7 +24,7 @@ describe('getAppInfo', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    await rm(dir, { recursive: true });
+    await rmTestDir(dir);
   });
 
   test('reports the app version, feed count and item count', async () => {
@@ -56,12 +58,21 @@ describe('getAppInfo', () => {
     expect(info.databaseSizeBytes).toBeGreaterThanOrEqual(4096);
   });
 
-  test('treats a missing -wal/-shm sidecar as zero bytes rather than throwing', async () => {
+  test('accounts for a checkpointed -wal/-shm sidecar without throwing', async () => {
     // Arrange
-    await rm(`${filePath}-wal`, { force: true });
-    await rm(`${filePath}-shm`, { force: true });
+    // A live WAL-mode connection keeps its -wal/-shm files open for as long as it lives, so they
+    // cannot be deleted out from under it on Windows. Checkpointing truncates the -wal file instead;
+    // the -shm file stays allocated at its fixed size for as long as the connection holds it open.
+    await sql`PRAGMA wal_checkpoint(TRUNCATE)`.execute(db);
+    const [mainStat, walStat, shmStat] = await Promise.all([
+      stat(filePath),
+      stat(`${filePath}-wal`),
+      stat(`${filePath}-shm`),
+    ]);
 
     // Act, Assert
-    await expect(getAppInfo()).resolves.toMatchObject({ feedCount: 0, itemCount: 0 });
+    await expect(getAppInfo()).resolves.toMatchObject({
+      databaseSizeBytes: mainStat.size + walStat.size + shmStat.size,
+    });
   });
 });
