@@ -27,7 +27,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await db.destroy();
   // Windows can hold the file's OS-level lock briefly after better-sqlite3's close() returns.
-  await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 200 });
+  await rm(dir, { recursive: true, maxRetries: 8, retryDelay: 150 });
 });
 
 function assertMigrated({ error }: MigrationResultSet): void {

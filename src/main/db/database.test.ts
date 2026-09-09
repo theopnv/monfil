@@ -59,7 +59,7 @@ describe('reopening an already-migrated file', () => {
   afterEach(async () => {
     await closeDatabase();
     // Windows can hold the file's OS-level lock briefly after better-sqlite3's close() returns.
-    await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 200 });
+    await rm(dir, { recursive: true, maxRetries: 8, retryDelay: 150 });
   });
 
   test('a second initialization against the same file resolves without error', async () => {
@@ -97,7 +97,7 @@ describe('recovering from a corrupted database file', () => {
   afterEach(async () => {
     await closeDatabase();
     // Windows can hold the file's OS-level lock briefly after better-sqlite3's close() returns.
-    await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 200 });
+    await rm(dir, { recursive: true, maxRetries: 8, retryDelay: 150 });
   });
 
   // The recovery branching itself is covered in detail by db/recovery.test.ts. This is an end-to-end
