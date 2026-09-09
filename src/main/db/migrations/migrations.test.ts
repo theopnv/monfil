@@ -138,6 +138,9 @@ describe('migrateToLatest', () => {
     expect(second.results).toEqual([]);
   });
 
+  // Rolls every migration down then back up, on top of the initial migrateToLatest: several times
+  // the DB work of any other single test here, which on Windows CI's slower per-migration I/O
+  // (individually observed up to ~5s each elsewhere in this file) can exceed the default timeout.
   test('brings back the same tables after every migration is rolled back', async () => {
     // Arrange
     assertMigrated(await migrator.migrateToLatest());
@@ -151,7 +154,7 @@ describe('migrateToLatest', () => {
     // Assert
     expect(rolledBack).toEqual([]);
     expect(await tableNames()).toEqual(migrated);
-  });
+  }, 20000);
 });
 
 describe('0004_feed_item_identity', () => {
