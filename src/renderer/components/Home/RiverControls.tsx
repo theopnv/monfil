@@ -10,7 +10,7 @@ export default function RiverControls({ unreadCount, sourceCount, onMarkAllRead 
   return (
     <div className="flex flex-none items-center gap-3.5 border-b border-secondary px-8.5 py-3">
       <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-tertiary">
-        {unreadCount} unread · {sourceCount} sources
+        {unreadCount} unread · {sourceCount} feeds
       </span>
 
       <div className="ml-auto flex items-center gap-2">

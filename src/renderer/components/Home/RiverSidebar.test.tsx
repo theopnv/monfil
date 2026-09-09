@@ -85,13 +85,13 @@ test('clicking "Add feed" opens the add-feed modal', async () => {
       <RiverSidebar feeds={[]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
     </FeedsProvider>,
   );
-  await expect.element(getByRole('heading', { name: 'Add a source' })).not.toBeInTheDocument();
+  await expect.element(getByRole('heading', { name: 'Add a feed' })).not.toBeInTheDocument();
 
   // Act
   await getByRole('button', { name: 'Add feed' }).click();
 
   // Assert
-  await expect.element(getByRole('heading', { name: 'Add a source' })).toBeInTheDocument();
+  await expect.element(getByRole('heading', { name: 'Add a feed' })).toBeInTheDocument();
 });
 
 describe('feed row visibility rotation', () => {
