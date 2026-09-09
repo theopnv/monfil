@@ -57,17 +57,20 @@ const refreshTest = base.extend<RefreshTestFixtures>({
     }
   },
 
-  // Every launch reuses the same user data dir, so a test can restart the app against its own database.
+  // Every launch reuses the same user data dir, so a test can restart the app against its own
+  // database. A restart closes the previous instance first: two Electron processes sharing one
+  // profile directory at once is unsupported and races over the profile's own lock files (not just
+  // this app's SQLite WAL), which surfaces as flaky contention rather than a clean failure.
   launchApp: async ({ userDataDir }, use) => {
-    const launched: ElectronApplication[] = [];
+    let current: ElectronApplication | undefined;
     try {
       await use(async () => {
-        const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-        launched.push(app);
-        return app.firstWindow();
+        await current?.close();
+        current = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
+        return current.firstWindow();
       });
     } finally {
-      await Promise.all(launched.map((app) => app.close()));
+      await current?.close();
     }
   },
 });
@@ -94,12 +97,8 @@ refreshTest('picks up the items published between two launches', async ({ feedSe
   ]);
   const secondRun = await launchApp();
 
-  // Assert: "Second article" only appears once the second launch's own refresh-on-launch cycle has
-  // fetched over the network and written to the database, on top of a full second Electron process
-  // boot. Windows CI leaves much less headroom for that than the single-process "click refresh"
-  // path below, or than Linux/macOS (matches the process/file-handle slowness already seen for
-  // better-sqlite3's native module elsewhere in this repo's Windows CI).
-  await expect(secondRun.getByText('Second article', { exact: true })).toBeVisible({ timeout: 15000 });
+  // Assert
+  await expect(secondRun.getByText('Second article', { exact: true })).toBeVisible();
   await expect(secondRun.getByText('First article', { exact: true })).toBeVisible();
 });
 
