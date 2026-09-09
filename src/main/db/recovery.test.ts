@@ -31,9 +31,10 @@ describe('withCorruptionRecovery', () => {
 
   afterEach(async () => {
     mockedRenameSync.mockClear();
-    // Windows can hold the file's OS-level lock briefly after better-sqlite3's close() returns.
-    await rm(dir, { recursive: true, maxRetries: 8, retryDelay: 150 });
-  });
+    // Windows can hold the file's OS-level lock for several seconds after better-sqlite3's close()
+    // returns. The default hook timeout doesn't leave fs.rm's own retry/backoff room to work with.
+    await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 300 });
+  }, 20000);
 
   test('runs attempt once and resolves when it succeeds', async () => {
     // Arrange

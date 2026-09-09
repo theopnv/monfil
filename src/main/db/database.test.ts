@@ -58,9 +58,10 @@ describe('reopening an already-migrated file', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    // Windows can hold the file's OS-level lock briefly after better-sqlite3's close() returns.
-    await rm(dir, { recursive: true, maxRetries: 8, retryDelay: 150 });
-  });
+    // Windows can hold the file's OS-level lock for several seconds after better-sqlite3's close()
+    // returns. The default hook timeout doesn't leave fs.rm's own retry/backoff room to work with.
+    await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 300 });
+  }, 20000);
 
   test('a second initialization against the same file resolves without error', async () => {
     // Arrange
@@ -96,9 +97,10 @@ describe('recovering from a corrupted database file', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    // Windows can hold the file's OS-level lock briefly after better-sqlite3's close() returns.
-    await rm(dir, { recursive: true, maxRetries: 8, retryDelay: 150 });
-  });
+    // Windows can hold the file's OS-level lock for several seconds after better-sqlite3's close()
+    // returns. The default hook timeout doesn't leave fs.rm's own retry/backoff room to work with.
+    await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 300 });
+  }, 20000);
 
   // The recovery branching itself is covered in detail by db/recovery.test.ts. This is an end-to-end
   // check that initializeDatabase really is wired to it, against a real (not simulated) SQLite error.
