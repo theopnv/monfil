@@ -23,14 +23,22 @@ export let dbStatus: DatabaseStatus = { name: 'OK' };
 async function openAndMigrate(filePath: string): Promise<void> {
   const sqlite = new SQLite(filePath);
 
-  db = new Kysely<Database>({ dialect: new SqliteDialect({ database: sqlite }) });
+  try {
+    // Declared via .references(...) in the migration but not enforced bySQLite unless this pragma is set, per connection, every time.
+    sqlite.pragma('foreign_keys = ON');
 
-  // Declared via .references(...) in the migration but not enforced bySQLite unless this pragma is set, per connection, every time.
-  sqlite.pragma('foreign_keys = ON');
-
-  if (filePath !== ':memory:') {
-    sqlite.pragma('journal_mode = WAL');
+    if (filePath !== ':memory:') {
+      sqlite.pragma('journal_mode = WAL');
+    }
+  } catch (error) {
+    // Kysely only initializes its driver (and so only closes this handle via db.destroy()) once a
+    // query has run through it, which hasn't happened yet here. Close the raw handle directly, or
+    // withCorruptionRecovery's quarantine rename fails on Windows, which cannot rename an open file.
+    sqlite.close();
+    throw error;
   }
+
+  db = new Kysely<Database>({ dialect: new SqliteDialect({ database: sqlite }) });
 
   const migrator = new Migrator({ db, provider: migrationProvider });
   const { error, results } = await migrator.migrateToLatest();
