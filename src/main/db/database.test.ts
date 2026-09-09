@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, test, beforeEach } from 'vitest';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { closeDatabase, db, dbReady, initializeDatabase } from './database';
+import { rmTestDir } from '../lib/rmTestDir';
 
 describe('initializeDatabase', () => {
   beforeEach(async () => {
@@ -58,10 +59,8 @@ describe('reopening an already-migrated file', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    // Windows can hold the file's OS-level lock for several seconds after better-sqlite3's close()
-    // returns. The default hook timeout doesn't leave fs.rm's own retry/backoff room to work with.
-    await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 300 });
-  }, 20000);
+    await rmTestDir(dir);
+  });
 
   test('a second initialization against the same file resolves without error', async () => {
     // Arrange
@@ -97,10 +96,8 @@ describe('recovering from a corrupted database file', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    // Windows can hold the file's OS-level lock for several seconds after better-sqlite3's close()
-    // returns. The default hook timeout doesn't leave fs.rm's own retry/backoff room to work with.
-    await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 300 });
-  }, 20000);
+    await rmTestDir(dir);
+  });
 
   // The recovery branching itself is covered in detail by db/recovery.test.ts. This is an end-to-end
   // check that initializeDatabase really is wired to it, against a real (not simulated) SQLite error.

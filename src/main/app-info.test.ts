@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdtemp, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { sql } from 'kysely';
 import { getAppInfo } from './app-info';
 import { closeDatabase, db, initializeDatabase } from './db/database';
 import { addFeedToDatabase } from './db/crud/insert';
+import { rmTestDir } from './lib/rmTestDir';
 
 vi.mock(import('electron'), () => ({
   app: { getVersion: vi.fn(() => '1.2.3') } as unknown as Electron.App,
@@ -23,10 +24,8 @@ describe('getAppInfo', () => {
 
   afterEach(async () => {
     await closeDatabase();
-    // Windows can hold the file's OS-level lock for several seconds after better-sqlite3's close()
-    // returns. The default hook timeout doesn't leave fs.rm's own retry/backoff room to work with.
-    await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 300 });
-  }, 20000);
+    await rmTestDir(dir);
+  });
 
   test('reports the app version, feed count and item count', async () => {
     // Arrange

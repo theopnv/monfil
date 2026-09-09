@@ -1,13 +1,14 @@
 // As per https://kysely.dev/docs/migrations, migrations are typed against Kysely<any>.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import SQLite from 'better-sqlite3';
 import { Kysely, SqliteDialect, sql } from 'kysely';
 import { Migrator, NO_MIGRATIONS, type MigrationResultSet } from 'kysely/migration';
 import { migrationProvider } from './index.ts';
+import { rmTestDir } from '../../lib/rmTestDir';
 
 // A real file rather than ':memory:', so the table rebuilds run the way they will run on a user's install.
 let dir: string;
@@ -25,14 +26,9 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  const destroyStart = Date.now();
   await db.destroy();
-  console.error(`[diag] db.destroy() took ${Date.now() - destroyStart}ms`);
-
-  const rmStart = Date.now();
-  await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 300 });
-  console.error(`[diag] rm() took ${Date.now() - rmStart}ms`);
-}, 20000);
+  await rmTestDir(dir);
+});
 
 function assertMigrated({ error }: MigrationResultSet): void {
   if (error) {
