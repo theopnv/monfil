@@ -31,7 +31,8 @@ describe('withCorruptionRecovery', () => {
 
   afterEach(async () => {
     mockedRenameSync.mockClear();
-    await rm(dir, { recursive: true });
+    // Windows can hold the file's OS-level lock briefly after better-sqlite3's close() returns.
+    await rm(dir, { recursive: true, maxRetries: 3, retryDelay: 100 });
   });
 
   test('runs attempt once and resolves when it succeeds', async () => {

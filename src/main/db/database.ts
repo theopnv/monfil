@@ -31,9 +31,6 @@ async function openAndMigrate(filePath: string): Promise<void> {
       sqlite.pragma('journal_mode = WAL');
     }
   } catch (error) {
-    // Kysely only initializes its driver (and so only closes this handle via db.destroy()) once a
-    // query has run through it, which hasn't happened yet here. Close the raw handle directly, or
-    // withCorruptionRecovery's quarantine rename fails on Windows, which cannot rename an open file.
     sqlite.close();
     throw error;
   }
