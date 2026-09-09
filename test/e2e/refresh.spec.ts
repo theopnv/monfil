@@ -94,8 +94,12 @@ refreshTest('picks up the items published between two launches', async ({ feedSe
   ]);
   const secondRun = await launchApp();
 
-  // Assert
-  await expect(secondRun.getByText('Second article', { exact: true })).toBeVisible();
+  // Assert: "Second article" only appears once the second launch's own refresh-on-launch cycle has
+  // fetched over the network and written to the database, on top of a full second Electron process
+  // boot. Windows CI leaves much less headroom for that than the single-process "click refresh"
+  // path below, or than Linux/macOS (matches the process/file-handle slowness already seen for
+  // better-sqlite3's native module elsewhere in this repo's Windows CI).
+  await expect(secondRun.getByText('Second article', { exact: true })).toBeVisible({ timeout: 15000 });
   await expect(secondRun.getByText('First article', { exact: true })).toBeVisible();
 });
 

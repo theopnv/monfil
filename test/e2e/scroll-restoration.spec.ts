@@ -98,8 +98,14 @@ scrollRestorationTest('keeps the river scroll position after returning from the 
   // Act: Playwright's `.click()` scrolls its target into view first, which would itself move
   // the river before navigation. Dispatch DOM clicks instead, so the scroll position set below
   // is exactly what's still in place when the reader opens.
+  //
+  // Setting `scrollTop` fires a native `scroll` event asynchronously (on the next frame), but
+  // TanStack Router's scroll restoration only remembers elements that already received one by the
+  // time navigation starts. Dispatching it inline makes the router's capture-phase listener see it
+  // synchronously, instead of racing frame timing before the click below.
   await riverScrollContainer(page).evaluate((element) => {
     element.scrollTop = 800;
+    element.dispatchEvent(new Event('scroll', { bubbles: true }));
   });
   await expect.poll(() => riverScrollContainer(page).evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   const scrollTopBeforeLeaving = await riverScrollContainer(page).evaluate((element) => element.scrollTop);
