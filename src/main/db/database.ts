@@ -23,14 +23,14 @@ export let dbStatus: DatabaseStatus = { name: 'OK' };
 async function openAndMigrate(filePath: string): Promise<void> {
   const sqlite = new SQLite(filePath);
 
+  db = new Kysely<Database>({ dialect: new SqliteDialect({ database: sqlite }) });
+
   // Declared via .references(...) in the migration but not enforced bySQLite unless this pragma is set, per connection, every time.
   sqlite.pragma('foreign_keys = ON');
 
   if (filePath !== ':memory:') {
     sqlite.pragma('journal_mode = WAL');
   }
-
-  db = new Kysely<Database>({ dialect: new SqliteDialect({ database: sqlite }) });
 
   const migrator = new Migrator({ db, provider: migrationProvider });
   const { error, results } = await migrator.migrateToLatest();
