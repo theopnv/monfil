@@ -24,7 +24,7 @@ describe('getAppInfo', () => {
   afterEach(async () => {
     await closeDatabase();
     // Windows can hold the file's OS-level lock briefly after better-sqlite3's close() returns.
-    await rm(dir, { recursive: true, maxRetries: 3, retryDelay: 100 });
+    await rm(dir, { recursive: true, maxRetries: 10, retryDelay: 200 });
   });
 
   test('reports the app version, feed count and item count', async () => {
