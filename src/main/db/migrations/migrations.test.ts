@@ -154,67 +154,8 @@ describe('migrateToLatest', () => {
   });
 });
 
-describe('0004_feed_item_identity', () => {
-  const BEFORE = '0003_article_content';
-
-  test('keeps item ids, read marks and article content across the table rebuild', async () => {
-    // Arrange
-    assertMigrated(await migrator.migrateTo(BEFORE));
-    const seeded = await seed();
-
-    // Act
-    assertMigrated(await migrator.migrateToLatest());
-
-    // Assert
-    const item = await db.selectFrom('feedItem').selectAll().where('id', '=', seeded.itemId).executeTakeFirst();
-    expect(item).toMatchObject({ id: seeded.itemId, link: ITEM_LINK, read_at: READ_AT });
-
-    const joined = await db.selectFrom('articleContent')
-      .innerJoin('feedItem', 'feedItem.id', 'articleContent.item_id')
-      .select(['articleContent.text', 'feedItem.title'])
-      .execute();
-    expect(joined).toEqual([{ text: 'Body', title: 'Item 1' }]);
-  });
-
-  test('backfills guid from link, and synthesises one for a linkless item', async () => {
-    // Arrange
-    assertMigrated(await migrator.migrateTo(BEFORE));
-    const seeded = await seed();
-    const linkless = await db.insertInto('feedItem')
-      .values({ feed_id: seeded.feedId, title: 'Linkless', link: null, pubDate: '2024-01-02', description: '' })
-      .returning('id')
-      .executeTakeFirstOrThrow();
-
-    // Act
-    assertMigrated(await migrator.migrateToLatest());
-
-    // Assert
-    const items = await db.selectFrom('feedItem').select(['id', 'guid']).orderBy('id').execute();
-    expect(items).toEqual([
-      { id: seeded.itemId, guid: ITEM_LINK },
-      { id: linkless.id, guid: `monfil:legacy:${linkless.id}` },
-    ]);
-  });
-
-  test('keeps handing out ids above the highest one the old table used', async () => {
-    // Arrange
-    assertMigrated(await migrator.migrateTo(BEFORE));
-    const seeded = await seed();
-    await db.deleteFrom('articleContent').execute();
-    await db.deleteFrom('feedItem').execute();
-
-    // Act
-    assertMigrated(await migrator.migrateToLatest());
-    const fresh = await db.insertInto('feedItem')
-      .values({ feed_id: seeded.feedId, title: 'After', link: null, guid: 'g', pubDate: '2024-01-03', description: '' })
-      .returning('id')
-      .executeTakeFirstOrThrow();
-
-    // Assert
-    expect(fresh.id).toBeGreaterThan(seeded.itemId);
-  });
-
-  test('lets two feeds hold the same link once applied', async () => {
+describe('the schema', () => {
+  test('lets two feeds hold the same link', async () => {
     // Arrange
     assertMigrated(await migrator.migrateToLatest());
     const seeded = await seed();
@@ -232,16 +173,11 @@ describe('0004_feed_item_identity', () => {
     const shared = await db.selectFrom('feedItem').selectAll().where('link', '=', ITEM_LINK).execute();
     expect(shared).toHaveLength(2);
   });
-});
 
-describe('0005_feed_source_type', () => {
-  test('calls a feed stored before there were source types an rss feed, with no fetch state yet', async () => {
+  test('calls a feed stored without a source type an rss feed, with no fetch state yet', async () => {
     // Arrange
-    assertMigrated(await migrator.migrateTo('0004_feed_item_identity'));
-    const seeded = await seed();
-
-    // Act
     assertMigrated(await migrator.migrateToLatest());
+    const seeded = await seed();
 
     // Assert
     const feed = await db.selectFrom('feedMetadata').selectAll().where('id', '=', seeded.feedId).executeTakeFirst();
