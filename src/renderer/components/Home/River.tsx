@@ -78,8 +78,6 @@ export default function River({ onOpenItem }: RiverProps) {
     });
   }, []);
 
-  const handleMarkAllRead = () => markAllRead(visibleItems.map((item) => item.id));
-
   const unreadCount = visibleItems.filter((item) => !isRead(item.id)).length;
 
   return (
@@ -93,17 +91,15 @@ export default function River({ onOpenItem }: RiverProps) {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-        <RiverControls
-          unreadCount={unreadCount}
-          sourceCount={feeds.length}
-          onMarkAllRead={handleMarkAllRead}
-        />
+        <RiverControls unreadCount={unreadCount} sourceCount={feeds.length} />
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">
             {visibleItems.length === 0 && debouncedSearch.length > 0
               ? <p className="py-20 text-center text-md font-regular text-tertiary">No results for &quot;{debouncedSearch}&quot;</p>
-              : <RiverList items={visibleItems} density={preferences.density} isRead={isRead} onOpen={handleOpen} />}
+              : visibleItems.length === 0 && preferences.hideReadItems
+                ? <p className="py-20 text-center text-md font-regular text-tertiary">You&apos;re all caught up</p>
+                : <RiverList items={visibleItems} density={preferences.density} isRead={isRead} onOpen={handleOpen} />}
           </div>
         </div>
       </div>

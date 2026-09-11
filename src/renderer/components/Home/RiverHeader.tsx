@@ -1,7 +1,8 @@
-import { FilterLines, RefreshCw01, SearchLg, XClose } from "@untitledui/icons";
+import { Eye, RefreshCw01, SearchLg, XClose } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
 import { useFeedsRefresh } from "@/providers/feeds-provider";
+import { usePreferences } from "@/providers/preferences-provider";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -28,6 +29,7 @@ export interface RiverHeaderProps {
 
 export default function RiverHeader({ searchQuery, onSearchChange }: RiverHeaderProps) {
   const { refreshNow, isRefreshing } = useFeedsRefresh();
+  const { preferences, setPreference } = usePreferences();
 
   // The webkit cancel button is hidden in globals.css, so the field renders its
   // own clear cross while the query is set; Escape clears as well.
@@ -72,8 +74,13 @@ export default function RiverHeader({ searchQuery, onSearchChange }: RiverHeader
             </button>
           )}
         </div>
-        <Button color="secondary" iconLeading={FilterLines} className="flex-none rounded-full">
-          Filter
+        <Button
+          color="secondary"
+          iconLeading={Eye}
+          className="flex-none rounded-full"
+          onPress={() => setPreference("hideReadItems", !preferences.hideReadItems)}
+        >
+          {preferences.hideReadItems ? "Show All" : "Show Unread"}
         </Button>
         <Button
           aria-label="Refresh feeds"

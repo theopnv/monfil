@@ -197,6 +197,47 @@ test('hides read items when the hideReadItems preference is on', async () => {
   await expect.element(getByText('Read item', { exact: true })).not.toBeInTheDocument();
 });
 
+test('the unread toggle hides read items and brings them back', async () => {
+  // Arrange
+  const readItem = createFeedItem({ title: 'Read item' });
+  const unreadItem = createFeedItem({ title: 'Unread item' });
+  const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [readItem, unreadItem] });
+  mockedUseFeeds.mockReturnValue([feed]);
+  mockedUseReadState.mockReturnValue({ isRead: (id) => id === readItem.id, markRead: vi.fn(), toggleRead: vi.fn(), markAllRead: vi.fn() });
+  const { getByRole, getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+
+  // Act
+  await getByRole('button', { name: 'Show Unread' }).click();
+
+  // Assert
+  await expect.element(getByText('Unread item', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Read item', { exact: true })).not.toBeInTheDocument();
+  expect(localStorage.getItem('preferences-hide-read-items')).toBe('true');
+
+  // Act
+  await getByRole('button', { name: 'Show All' }).click();
+
+  // Assert
+  await expect.element(getByText('Read item', { exact: true })).toBeInTheDocument();
+  expect(localStorage.getItem('preferences-hide-read-items')).toBe('false');
+});
+
+test('shows a caught-up message when the unread filter leaves no items', async () => {
+  // Arrange: every item is read, so filtering to unread empties the river.
+  const readItem = createFeedItem({ title: 'Read item' });
+  const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [readItem] });
+  mockedUseFeeds.mockReturnValue([feed]);
+  mockedUseReadState.mockReturnValue({ isRead: () => true, markRead: vi.fn(), toggleRead: vi.fn(), markAllRead: vi.fn() });
+  const { getByRole, getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+
+  // Act
+  await getByRole('button', { name: 'Show Unread' }).click();
+
+  // Assert
+  await expect.element(getByText("You're all caught up", { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Read item', { exact: true })).not.toBeInTheDocument();
+});
+
 test('opening a link externally sends link:open, marks it read, and does not navigate', async () => {
   // Arrange
   localStorage.setItem('preferences-open-links-externally', JSON.stringify(true));
