@@ -1,7 +1,9 @@
 import { beforeEach, expect, test, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 import { FeedsProvider, useFeeds, useReadState } from '@/providers/feeds-provider';
 import { PreferencesProvider } from '@/providers/preferences-provider';
+import { SearchProvider } from '@/providers/search-provider';
 import River from './River';
 import type { Feed } from '../../../preload/channels';
 
@@ -92,7 +94,7 @@ beforeEach(() => {
 
 test('shows items from every feed by default', async () => {
   // Arrange
-  const { getByText } = await render(<PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider>);
+  const { getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
 
   // Assert
   await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
@@ -103,11 +105,13 @@ test('shows items from every feed by default', async () => {
 test('rotating feed visibility narrows, widens, then narrows home again', async () => {
   // Arrange
   const { getByText, getByRole } = await render(
-    <PreferencesProvider>
-      <FeedsProvider>
-        <River onOpenItem={vi.fn()} />
-      </FeedsProvider>
-    </PreferencesProvider>
+    <SearchProvider>
+      <PreferencesProvider>
+        <FeedsProvider>
+          <River onOpenItem={vi.fn()} />
+        </FeedsProvider>
+      </PreferencesProvider>
+    </SearchProvider>
   );
   await getByRole('button', { name: 'Tech', exact: true }).click();
 
@@ -148,11 +152,13 @@ test('hides feed items when showInHome is set to 0', async () => {
   mockedUseFeeds.mockReturnValue((mockedUseFeeds() as Feed[]).concat(feedC));
 
   const { getByText } = await render(
-    <PreferencesProvider>
-      <FeedsProvider>
-        <River onOpenItem={vi.fn()} />
-      </FeedsProvider>
-    </PreferencesProvider>
+    <SearchProvider>
+      <PreferencesProvider>
+        <FeedsProvider>
+          <River onOpenItem={vi.fn()} />
+        </FeedsProvider>
+      </PreferencesProvider>
+    </SearchProvider>
   );
 
   // Assert
@@ -165,7 +171,7 @@ test('clicking a card invokes onOpenItem with the item id', async () => {
   const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [item] });
   mockedUseFeeds.mockReturnValue([feed]);
   const onOpenItem = vi.fn();
-  const { getByText } = await render(<PreferencesProvider><River onOpenItem={onOpenItem} /></PreferencesProvider>);
+  const { getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={onOpenItem} /></PreferencesProvider></SearchProvider>);
 
   // Act
   await getByText('Clickable item', { exact: true }).click();
@@ -184,7 +190,7 @@ test('hides read items when the hideReadItems preference is on', async () => {
   mockedUseReadState.mockReturnValue({ isRead: (id) => id === readItem.id, markRead: vi.fn(), toggleRead: vi.fn(), markAllRead: vi.fn() });
 
   // Act
-  const { getByText } = await render(<PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider>);
+  const { getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
 
   // Assert
   await expect.element(getByText('Unread item', { exact: true })).toBeInTheDocument();
@@ -200,7 +206,7 @@ test('opening a link externally sends link:open, marks it read, and does not nav
   const markRead = vi.fn();
   mockedUseReadState.mockReturnValue({ isRead: () => false, markRead, toggleRead: vi.fn(), markAllRead: vi.fn() });
   const onOpenItem = vi.fn();
-  const { getByText } = await render(<PreferencesProvider><River onOpenItem={onOpenItem} /></PreferencesProvider>);
+  const { getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={onOpenItem} /></PreferencesProvider></SearchProvider>);
 
   // Act
   await getByText('External item', { exact: true }).click();
@@ -219,9 +225,121 @@ test('density reads from preferences', async () => {
   mockedUseFeeds.mockReturnValue([feed]);
 
   // Act
-  const { getByText } = await render(<PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider>);
+  const { getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
 
   // Assert
   const cardRoot = getByText('Compact item', { exact: true }).element().closest('[data-item-id]');
   expect(cardRoot?.tagName).toBe('DIV');
+});
+
+test('search filters river items by title', async () => {
+  // Arrange
+  const { getByRole, getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+  const search = getByRole('textbox', { name: 'Search everything' });
+
+  // Act
+  await search.fill('Item B1');
+
+  // Assert
+  await expect.element(getByText('Item B1', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
+  await expect.element(getByText('Item A2', { exact: true })).not.toBeInTheDocument();
+});
+
+test('search matches the feed name and surfaces that feed\'s items', async () => {
+  // Arrange: "feed a" appears in no item title or description, only in the feed title.
+  const { getByRole, getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+  const search = getByRole('textbox', { name: 'Search everything' });
+
+  // Act
+  await search.fill('feed a');
+
+  // Assert
+  await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item A2', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item B1', { exact: true })).not.toBeInTheDocument();
+});
+
+test('search requires every word to match', async () => {
+  // Arrange
+  const { getByRole, getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+  const search = getByRole('textbox', { name: 'Search everything' });
+
+  // Act
+  await search.fill('item b1 description');
+
+  // Assert
+  await expect.element(getByText('Item B1', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
+});
+
+test('shows a no-results message and Escape restores every item', async () => {
+  // Arrange
+  const { getByRole, getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+  const search = getByRole('textbox', { name: 'Search everything' });
+
+  // Act
+  await search.fill('quantum');
+  await expect.element(getByText('No results for "quantum"', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
+
+  // Act: Escape clears the query. fill() leaves the input focused.
+  await userEvent.keyboard('{Escape}');
+
+  // Assert
+  await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item A2', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item B1', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('No results for "quantum"', { exact: true })).not.toBeInTheDocument();
+});
+
+test('cross button appears while typing and clears the query on click', async () => {
+  // Arrange
+  const { getByRole, getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+  const search = getByRole('textbox', { name: 'Search everything' });
+  const cross = getByRole('button', { name: 'Clear search' });
+
+  // Assert: nothing typed yet, so the cross is hidden.
+  await expect.element(cross).not.toBeInTheDocument();
+
+  // Act
+  await search.fill('Item B1');
+
+  // Assert
+  await expect.element(cross).toBeInTheDocument();
+  await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
+
+  // Act: click the cross.
+  await cross.click();
+
+  // Assert
+  await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item A2', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item B1', { exact: true })).toBeInTheDocument();
+  await expect.element(cross).not.toBeInTheDocument();
+});
+
+test('search query survives unmounting and remounting River', async () => {
+  // Arrange: one SearchProvider instance outlives the River component.
+  function Session({ showRiver }: { showRiver: boolean }) {
+    return (
+      <SearchProvider>
+        <PreferencesProvider>
+          {showRiver && <River onOpenItem={vi.fn()} />}
+        </PreferencesProvider>
+      </SearchProvider>
+    );
+  }
+  const screen = await render(<Session showRiver />);
+  const search = screen.getByRole('textbox', { name: 'Search everything' });
+  await search.fill('Item B1');
+  await expect.element(screen.getByText('Item B1', { exact: true })).toBeInTheDocument();
+
+  // Act: leave the river, come back within the same session.
+  await screen.rerender(<Session showRiver={false} />);
+  await screen.rerender(<Session showRiver />);
+
+  // Assert
+  await expect.element(screen.getByText('Item B1', { exact: true })).toBeInTheDocument();
+  await expect.element(screen.getByText('Item A1', { exact: true })).not.toBeInTheDocument();
 });

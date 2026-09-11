@@ -4,10 +4,13 @@ import RiverHeader from "@/components/Home/RiverHeader";
 import RiverList from "@/components/Home/RiverList";
 import RiverSidebar from "@/components/Home/RiverSidebar";
 import { type FeedVisibility, visibleFeedLinks } from "@/lib/river/feed-visibility";
+import { filterBySearch } from "@/lib/river/search";
 import { openLink, toRiverItems } from "@/lib/river/utils";
 import { useMarkReadOnScroll } from "@/lib/river/useMarkReadOnScroll";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useFeeds, useReadState, useSetShowInHome } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
+import { useSearch } from "@/providers/search-provider";
 import type { Feed } from "../../../preload/channels";
 
 export interface RiverProps {
@@ -19,6 +22,8 @@ export default function River({ onOpenItem }: RiverProps) {
   const { isRead, markRead, markAllRead } = useReadState();
   const setShowInHome = useSetShowInHome();
   const { preferences } = usePreferences();
+  const { query: searchQuery, setQuery: setSearchQuery } = useSearch();
+  const debouncedSearch = useDebouncedValue(searchQuery.trim(), 250);
   const riverItems = useMemo(() => toRiverItems(feeds), [feeds]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -27,8 +32,9 @@ export default function River({ onOpenItem }: RiverProps) {
   const visibleItems = useMemo(() => {
     const links = visibleFeedLinks(feeds, showOnlyLinks);
     const inHome = riverItems.filter((item) => links.has(item.feedLink));
-    return preferences.hideReadItems ? inHome.filter((item) => !isRead(item.id)) : inHome;
-  }, [riverItems, feeds, showOnlyLinks, preferences.hideReadItems, isRead]);
+    const shown = preferences.hideReadItems ? inHome.filter((item) => !isRead(item.id)) : inHome;
+    return filterBySearch(shown, debouncedSearch);
+  }, [riverItems, feeds, showOnlyLinks, preferences.hideReadItems, isRead, debouncedSearch]);
 
   useMarkReadOnScroll(scrollRef, preferences.markReadOnScroll, markAllRead);
 
@@ -86,7 +92,7 @@ export default function River({ onOpenItem }: RiverProps) {
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <RiverHeader />
+        <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
         <RiverControls
           unreadCount={unreadCount}
           sourceCount={feeds.length}
@@ -95,7 +101,9 @@ export default function River({ onOpenItem }: RiverProps) {
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">
-            <RiverList items={visibleItems} density={preferences.density} isRead={isRead} onOpen={handleOpen} />
+            {visibleItems.length === 0 && debouncedSearch.length > 0
+              ? <p className="py-20 text-center text-md font-regular text-tertiary">No results for &quot;{debouncedSearch}&quot;</p>
+              : <RiverList items={visibleItems} density={preferences.density} isRead={isRead} onOpen={handleOpen} />}
           </div>
         </div>
       </div>
