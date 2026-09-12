@@ -148,6 +148,48 @@ describe('feed row visibility rotation', () => {
   });
 });
 
+describe('feed row current-state label', () => {
+  test('a home feed is titled by what it is now, not the "only" state a click moves it to', async () => {
+    // Arrange
+    const { getByRole } = await render(
+      <FeedsProvider>
+        <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
+      </FeedsProvider>,
+    );
+    await getByRole('button', { name: 'Tech', exact: true }).click();
+
+    // Assert
+    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Shown with others');
+  });
+
+  test('a soloed feed is titled "Shown only", not the "hidden" state it moves to next', async () => {
+    // Arrange
+    const { getByRole } = await render(
+      <FeedsProvider>
+        <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set([feedA.link])} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
+      </FeedsProvider>,
+    );
+    await getByRole('button', { name: 'Tech', exact: true }).click();
+
+    // Assert
+    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Shown only');
+  });
+
+  test('a hidden feed is titled "Hidden", not the "home" state it moves to next', async () => {
+    // Arrange
+    const hiddenFeedA: Feed = { ...feedA, showInHome: 0 };
+    const { getByRole } = await render(
+      <FeedsProvider>
+        <RiverSidebar feeds={[hiddenFeedA]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
+      </FeedsProvider>,
+    );
+    await getByRole('button', { name: 'Tech', exact: true }).click();
+
+    // Assert
+    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Hidden');
+  });
+});
+
 describe('folder visibility rotation', () => {
   test('the rotate button applies the next state to every feed in the folder', async () => {
     // Arrange

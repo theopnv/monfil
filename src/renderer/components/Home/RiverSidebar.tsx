@@ -5,7 +5,7 @@ import DeleteFeedDialog from "@/components/Home/DeleteFeedDialog";
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
-import { feedVisibility, folderVisibility, nextVisibility, VISIBILITY_ICON, VISIBILITY_LABEL, type FeedVisibility } from "@/lib/river/feed-visibility";
+import { feedVisibility, folderVisibility, nextVisibility, VISIBILITY_ICON, VISIBILITY_LABEL, VISIBILITY_STATE_LABEL, type FeedVisibility } from "@/lib/river/feed-visibility";
 import { getFaviconUrl } from "@/lib/favicon";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import type { Feed } from "../../../preload/channels";
@@ -134,7 +134,8 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
                       <button
                         key={feed.link}
                         type="button"
-                        title={`${feed.title} — ${VISIBILITY_LABEL[next]}`}
+                        title={`${feed.title} — ${VISIBILITY_STATE_LABEL[state]}`}
+                        aria-label={`${feed.title}, ${VISIBILITY_STATE_LABEL[state]}${unreadCount(feed) > 0 ? `, ${unreadCount(feed)} unread` : ''}`}
                         data-visibility={state}
                         onClick={() => onSetVisibility([feed], next)}
                         onContextMenu={(event) => {

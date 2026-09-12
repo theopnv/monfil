@@ -1,8 +1,12 @@
+import { useEffect, useRef } from "react";
 import { Eye, RefreshCw01, SearchLg, XClose } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
+import { announce } from "@/lib/announcer";
 import { useFeedsRefresh } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
+
+const REFRESH_FAILED_MESSAGE = "Couldn't refresh feeds. Check your connection and try again.";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -31,6 +35,14 @@ export interface RiverHeaderProps {
 export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: RiverHeaderProps) {
   const { refreshNow, isRefreshing, refreshFailed } = useFeedsRefresh();
   const { preferences, setPreference } = usePreferences();
+
+  const wasRefreshing = useRef(false);
+  useEffect(() => {
+    if (wasRefreshing.current && !isRefreshing) {
+      announce(refreshFailed ? REFRESH_FAILED_MESSAGE : "Feeds refreshed.");
+    }
+    wasRefreshing.current = isRefreshing;
+  }, [isRefreshing, refreshFailed]);
 
   // The webkit cancel button is hidden in globals.css, so the field renders its
   // own clear cross while the query is set; Escape clears as well.
@@ -99,7 +111,7 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: R
           )}
         </div>
 
-        {hasFeeds && refreshFailed && <p className="text-right text-sm text-error-primary">Couldn&apos;t refresh feeds. Check your connection and try again.</p>}
+        {hasFeeds && refreshFailed && <p className="text-right text-sm text-error-primary">{REFRESH_FAILED_MESSAGE}</p>}
       </div>
     </header>
   );

@@ -57,6 +57,13 @@ export const VISIBILITY_LABEL: Record<FeedVisibility, string> = {
   hidden: "Hide",
 };
 
+/** Describes the current state, unlike `VISIBILITY_LABEL`, which names the action a control performs next. */
+export const VISIBILITY_STATE_LABEL: Record<FeedVisibility, string> = {
+  home: "Shown with others",
+  only: "Shown only",
+  hidden: "Hidden",
+};
+
 export const VISIBILITY_ICON: Record<FeedVisibility, FC<{ className?: string; "aria-hidden"?: boolean }>> = {
   home: LayersThree01,
   only: LayerSingle,

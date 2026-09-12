@@ -6,6 +6,7 @@ export interface Preferences {
   hideReadItems: boolean;
   markReadOnScroll: boolean;
   openLinksExternally: boolean;
+  keyboardNavigation: boolean;
 }
 
 const STORAGE_KEYS = {
@@ -13,6 +14,7 @@ const STORAGE_KEYS = {
   hideReadItems: 'preferences-hide-read-items',
   markReadOnScroll: 'preferences-mark-read-on-scroll',
   openLinksExternally: 'preferences-open-links-externally',
+  keyboardNavigation: 'preferences-keyboard-navigation',
 } satisfies Record<keyof Preferences, string>;
 
 function loadEnum<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
@@ -32,6 +34,7 @@ export function loadPreferences(): Preferences {
     hideReadItems: loadBoolean(STORAGE_KEYS.hideReadItems, false),
     markReadOnScroll: loadBoolean(STORAGE_KEYS.markReadOnScroll, true),
     openLinksExternally: loadBoolean(STORAGE_KEYS.openLinksExternally, false),
+    keyboardNavigation: loadBoolean(STORAGE_KEYS.keyboardNavigation, true),
   };
 }
 

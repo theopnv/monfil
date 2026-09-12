@@ -16,6 +16,7 @@ describe('loadPreferences', () => {
       hideReadItems: false,
       markReadOnScroll: true,
       openLinksExternally: false,
+      keyboardNavigation: true,
     });
   });
 
@@ -62,6 +63,7 @@ describe('savePreference', () => {
     savePreference('hideReadItems', true);
     savePreference('markReadOnScroll', false);
     savePreference('openLinksExternally', true);
+    savePreference('keyboardNavigation', false);
 
     // Assert
     expect(loadPreferences()).toEqual({
@@ -69,6 +71,7 @@ describe('savePreference', () => {
       hideReadItems: true,
       markReadOnScroll: false,
       openLinksExternally: true,
+      keyboardNavigation: false,
     });
   });
 });

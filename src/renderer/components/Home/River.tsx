@@ -1,12 +1,14 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EmptyRiver from "@/components/Home/EmptyRiver";
 import RiverHeader from "@/components/Home/RiverHeader";
 import RiverList from "@/components/Home/RiverList";
 import RiverSidebar from "@/components/Home/RiverSidebar";
+import { announce } from "@/lib/announcer";
 import { type FeedVisibility, visibleFeedLinks } from "@/lib/river/feed-visibility";
 import { filterBySearch } from "@/lib/river/search";
 import { openLink, toRiverItems } from "@/lib/river/utils";
 import { useMarkReadOnScroll } from "@/lib/river/useMarkReadOnScroll";
+import { useRiverKeyboardNav } from "@/lib/river/useRiverKeyboardNav";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useFeeds, useReadState, useSetShowInHome } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
@@ -41,6 +43,15 @@ export default function River({ onOpenItem }: RiverProps) {
   }, [inHomeItems, preferences.hideReadItems, isRead, debouncedSearch]);
 
   useMarkReadOnScroll(scrollRef, preferences.markReadOnScroll, markAllRead);
+  useRiverKeyboardNav(scrollRef, preferences.keyboardNavigation);
+
+  useEffect(() => {
+    if (debouncedSearch.length === 0) {
+      return;
+    }
+    const count = visibleItems.length;
+    announce(count === 0 ? `No results for "${debouncedSearch}"` : `${count} result${count === 1 ? '' : 's'} for "${debouncedSearch}"`);
+  }, [debouncedSearch, visibleItems.length]);
 
   const handleOpen = useCallback((id: number) => {
     const item = visibleItems.find((candidate) => candidate.id === id);
