@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import RiverControls from "@/components/Home/RiverControls";
 import RiverHeader from "@/components/Home/RiverHeader";
 import RiverList from "@/components/Home/RiverList";
 import RiverSidebar from "@/components/Home/RiverSidebar";
@@ -29,8 +28,8 @@ export default function River({ onOpenItem }: RiverProps) {
 
   const [showOnlyLinks, setShowOnlyLinks] = useState<ReadonlySet<string>>(() => new Set());
 
-  // The scope both counts in RiverControls describe: the feeds currently shown in home
-  // (respecting solo/hide), independent of the transient search query and hideReadItems toggle.
+  // The feeds currently shown in home (respecting solo/hide), independent of
+  // the transient search query and hideReadItems toggle.
   const visibleFeedLinksSet = useMemo(() => visibleFeedLinks(feeds, showOnlyLinks), [feeds, showOnlyLinks]);
   const inHomeItems = useMemo(() => riverItems.filter((item) => visibleFeedLinksSet.has(item.feedLink)), [riverItems, visibleFeedLinksSet]);
 
@@ -81,9 +80,6 @@ export default function River({ onOpenItem }: RiverProps) {
     });
   }, []);
 
-  const unreadCount = inHomeItems.filter((item) => !isRead(item.id)).length;
-  const sourceCount = visibleFeedLinksSet.size;
-
   return (
     <div className="flex h-full w-full overflow-hidden">
       <RiverSidebar
@@ -95,7 +91,6 @@ export default function River({ onOpenItem }: RiverProps) {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-        <RiverControls unreadCount={unreadCount} sourceCount={sourceCount} />
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">

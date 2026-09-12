@@ -1,8 +1,5 @@
-import { Bookmark } from "@untitledui/icons";
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import RiverCardImage from "@/components/Home/RiverCardImage";
-import { Badge } from "@/components/untitled-ui/base/badges/badges";
-import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { getFaviconUrl } from "@/lib/favicon";
 import { estimateReadTime, formatRelativeTime, type RiverCardProps } from "@/lib/river/utils";
@@ -22,9 +19,6 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
           <FeedAvatar title={item.feedTitle} faviconUrl={getFaviconUrl(item.feedLink)} size="md" />
           <span className="text-sm font-bold text-primary">{item.feedTitle}</span>
           <span className="text-sm text-quaternary">{formatRelativeTime(item.pubDate)}</span>
-          <Badge color="brand" size="sm">
-            RSS
-          </Badge>
         </div>
 
         <h4 className="mb-1.75 text-lg leading-tight font-bold text-pretty text-primary">{item.title}</h4>
@@ -34,16 +28,6 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
           {item.description && <span className="text-xs text-quaternary">{estimateReadTime(item.description)}</span>}
           <span className="size-0.75 flex-none rounded-full bg-quaternary" />
           <span className="rounded-full bg-sage-200 px-2.5 py-0.75 text-xs font-semibold text-sage-800">{item.categoryName}</span>
-          <Button
-            aria-label="Save"
-            color="tertiary"
-            size="sm"
-            className="ml-auto rounded-full"
-            iconLeading={Bookmark}
-            // react-aria's Button stops the press event from bubbling to the
-            // card's onClick by default, so this never opens the article.
-            onPress={() => { }}
-          />
         </div>
       </div>
 

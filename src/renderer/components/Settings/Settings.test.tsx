@@ -150,10 +150,3 @@ test('shows the your-data stats from app:get-info', async () => {
   await expect.element(getByText('42', { exact: true })).toBeInTheDocument();
 });
 
-test('check for updates is disabled', async () => {
-  // Arrange
-  const { getByRole } = await renderSettings();
-
-  // Assert
-  await expect.element(getByRole('button', { name: 'Check for updates' })).toBeDisabled();
-});

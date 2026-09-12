@@ -5,5 +5,5 @@ export interface ArticleHeroImageProps {
 }
 
 export default function ArticleHeroImage({ src }: ArticleHeroImageProps) {
-  return <ImageWithFallback src={src} className="mb-8.5 h-75 w-full rounded-xl" fallbackLabel="lead image from the feed" testId="article-hero-image" />;
+  return <ImageWithFallback src={src} className="mb-8.5 h-75 w-full rounded-xl" testId="article-hero-image" />;
 }

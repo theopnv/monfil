@@ -126,6 +126,20 @@ test('marks the current item read on mount', async () => {
   expect(markRead).toHaveBeenCalledWith(itemB.id);
 });
 
+test('mark unread calls toggleRead with the current item id', async () => {
+  // Arrange
+  const { itemB } = setUpThreeItemRiver();
+  const toggleRead = vi.fn();
+  mockedUseReadState.mockReturnValue({ isRead: () => false, markRead, toggleRead, markAllRead: vi.fn() });
+
+  // Act
+  const { getByRole } = await render(<Reader itemId={String(itemB.id)} onNavigateToItem={vi.fn()} onNavigateHome={vi.fn()} />);
+  await getByRole('button', { name: 'Mark unread' }).click();
+
+  // Assert
+  expect(toggleRead).toHaveBeenCalledWith(itemB.id);
+});
+
 test('previous is disabled on the newest item', async () => {
   // Arrange
   const { itemA } = setUpThreeItemRiver();

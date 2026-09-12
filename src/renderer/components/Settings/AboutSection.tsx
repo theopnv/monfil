@@ -1,5 +1,4 @@
 import SettingsSection from "@/components/Settings/SettingsSection";
-import { Button } from "@/components/untitled-ui/base/buttons/button";
 
 export interface AboutSectionProps {
   version: string | undefined;
@@ -17,10 +16,6 @@ export default function AboutSection({ version }: AboutSectionProps) {
           <span className="text-sm text-tertiary">RSS feed reader and more.</span>
         </div>
       </div>
-
-      <Button color="secondary" isDisabled className="self-start">
-        Check for updates
-      </Button>
     </SettingsSection>
   );
 }

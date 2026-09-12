@@ -22,7 +22,7 @@ export interface ReaderProps {
 export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: ReaderProps) {
   const id = Number(itemId);
   const feeds = useFeeds();
-  const { isRead, markRead } = useReadState();
+  const { isRead, markRead, toggleRead } = useReadState();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
 
@@ -88,6 +88,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
         <ReaderHeader
           item={currentItem}
           onNavigateHome={onNavigateHome}
+          onToggleRead={() => toggleRead(currentItem.id)}
           onPrevious={() => navigation.previous && onNavigateToItem(navigation.previous.id)}
           onNext={() => navigation.next && onNavigateToItem(navigation.next.id)}
           hasPrevious={!!navigation.previous}
