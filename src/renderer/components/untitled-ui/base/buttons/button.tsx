@@ -13,8 +13,9 @@ export const styles = sortCx({
       "group relative inline-flex h-max cursor-pointer items-center justify-center whitespace-nowrap outline-brand transition duration-100 ease-linear before:absolute focus-visible:outline-2 focus-visible:outline-offset-2",
       // When button is used within `InputGroup`
       "in-data-input-wrapper:shadow-xs in-data-input-wrapper:focus:!z-50 in-data-input-wrapper:in-data-leading:-mr-px in-data-input-wrapper:in-data-leading:rounded-r-none in-data-input-wrapper:in-data-leading:before:rounded-r-none in-data-input-wrapper:in-data-trailing:-ml-px in-data-input-wrapper:in-data-trailing:rounded-l-none in-data-input-wrapper:in-data-trailing:before:rounded-l-none",
-      // Disabled styles
-      "disabled:cursor-not-allowed disabled:opacity-50 in-data-input-wrapper:disabled:opacity-100",
+      // Disabled styles: a solid muted fill instead of opacity, so the label stays
+      // legible instead of washing out toward the page colour behind it.
+      "disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-secondary! disabled:text-tertiary! disabled:shadow-none! disabled:ring-1! disabled:ring-secondary! disabled:before:hidden! disabled:*:data-icon:text-quaternary!",
       // Same as `icon` but for SSR icons that cannot be passed to the client as functions.
       "*:data-icon:pointer-events-none *:data-icon:size-5 *:data-icon:shrink-0 *:data-icon:transition-inherit-all",
     ].join(" "),

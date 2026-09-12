@@ -21,7 +21,7 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
         <div className="mb-2 flex items-center gap-1.75">
           <FeedAvatar title={item.feedTitle} faviconUrl={getFaviconUrl(item.feedLink)} size="sm" />
           <span className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
-          <span className="ml-auto flex-none text-xs text-quaternary">{formatRelativeTime(item.pubDate)}</span>
+          <span className="ml-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.pubDate)}</span>
         </div>
 
         <h4 className="mb-1.75 text-base leading-snug font-bold text-pretty text-primary">{item.title}</h4>

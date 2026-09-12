@@ -25,7 +25,7 @@ export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPre
       <div className="flex min-w-0 items-center gap-2">
         <FeedAvatar title={item.feedTitle} faviconUrl={getFaviconUrl(item.feedLink)} size="sm" />
         <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-primary">{item.feedTitle}</span>
-        <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-quaternary">{item.categoryName}</span>
+        <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-tertiary">{item.categoryName}</span>
       </div>
 
       <div className="ml-auto flex flex-none items-center gap-1">

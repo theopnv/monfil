@@ -73,7 +73,7 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
   return (
     <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-r border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
       <div className="flex items-center justify-between px-4.5 pb-2">
-        <span className="text-xs font-bold tracking-wide text-quaternary uppercase">Feeds</span>
+        <span className="text-xs font-bold tracking-wide text-tertiary uppercase">Feeds</span>
         <Button aria-label="Add feed" size="xs" color="tertiary" iconLeading={Plus} onPress={() => setIsAddFeedOpen(true)} />
       </div>
       <AddFeedModal isOpen={isAddFeedOpen} onOpenChange={setIsAddFeedOpen} />
@@ -120,7 +120,7 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
                 >
                   <FolderNextIcon aria-hidden className="size-3.5 text-quaternary" />
                 </button>
-                <span data-testid="folder-count" className="text-xs font-bold text-quaternary tabular-nums">{folder.count > 0 ? folder.count : ''}</span>
+                <span data-testid="folder-count" className="text-xs font-bold text-tertiary tabular-nums">{folder.count > 0 ? folder.count : ''}</span>
               </div>
 
               {folder.open && (
@@ -151,7 +151,7 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
                         <FeedAvatar title={feed.title} faviconUrl={getFaviconUrl(feed.link)} size="sm" />
                         <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{feed.title}</span>
                         <NextIcon aria-hidden className="size-3.5 flex-none text-quaternary opacity-0 group-hover:opacity-100" />
-                        <span data-testid="feed-count" className="text-xs text-quaternary tabular-nums">{unreadCount(feed) > 0 ? unreadCount(feed) : ''}</span>
+                        <span data-testid="feed-count" className="text-xs text-tertiary tabular-nums">{unreadCount(feed) > 0 ? unreadCount(feed) : ''}</span>
                       </button>
                     );
                   })}

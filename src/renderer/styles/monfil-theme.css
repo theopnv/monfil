@@ -101,7 +101,10 @@
     --color-bg-secondary: #ebddc5;
     --color-bg-secondary_alt: #ebddc5;
     --color-bg-secondary_hover: #e3d3b6;
-    --color-bg-tertiary: #e3d3b6;
+    /* Worn sand reads at ~1.2:1 against the cream ground — invisible as a toggle
+       track. The toggle is bg-tertiary's only live consumer, so darken the token
+       itself rather than patch the (vendored) toggle component. */
+    --color-bg-tertiary: #645c50;
     --color-bg-active: #efe2cc;
 
     /* Organic's text is very slightly warmer and darker than the ramp
@@ -156,6 +159,23 @@
         --color-fg-brand-secondary: var(--color-brand-400);
 
         --color-border-secondary_alt: rgb(242 231 214 / 0.18);
+
+        /* Sage has no authored dark-mode step of its own, so the topic pill's
+           light sage-200/800 pair carried over unchanged and read as a
+           light-mode leftover pasted onto the espresso ground. Invert the ramp
+           the same way theme.css inverts its own utility-* colors, so a step
+           keeps the same contrast against its paired step either direction. */
+        --color-sage-50: #171b10;
+        --color-sage-100: #272e1b;
+        --color-sage-200: #3d472b;
+        --color-sage-300: #56633f;
+        --color-sage-400: #728157;
+        --color-sage-500: #8fa073;
+        --color-sage-600: #aebf92;
+        --color-sage-700: #ccdbb2;
+        --color-sage-800: #e1eecc;
+        --color-sage-900: #f0fae1;
+        --color-sage-950: #f7fcee;
     }
 }
 

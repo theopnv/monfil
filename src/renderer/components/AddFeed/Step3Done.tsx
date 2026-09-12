@@ -28,7 +28,7 @@ export default function Step3Done({ feed }: Step3DoneProps) {
             >
               <span className="size-1.75 flex-none rounded-full bg-brand-solid" />
               <span className="min-w-0 flex-1 truncate text-secondary">{item.title}</span>
-              <span className="flex-none text-xs text-quaternary">{formatRelativeTime(item.pubDate)}</span>
+              <span className="flex-none text-xs text-tertiary">{formatRelativeTime(item.pubDate)}</span>
             </div>
           ))}
         </div>

@@ -46,11 +46,11 @@ export default function Step2Configure({
           <div className="mt-3.5 flex flex-wrap gap-4 border-t border-secondary pt-3.5">
             <div className="leading-tight">
               <div className="text-sm font-bold tabular-nums text-primary">{computePublishRate(feed.items)}</div>
-              <div className="text-[11.5px] text-quaternary">Publishes</div>
+              <div className="text-[11.5px] text-tertiary">Publishes</div>
             </div>
             <div className="leading-tight">
               <div className="text-sm font-bold text-primary">{computeFeedContentType(feed.items)}</div>
-              <div className="text-[11.5px] text-quaternary">Feed contains</div>
+              <div className="text-[11.5px] text-tertiary">Feed contains</div>
             </div>
           </div>
         </div>
