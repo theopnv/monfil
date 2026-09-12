@@ -193,3 +193,11 @@
         background: color-mix(in srgb, var(--color-brand-500) 30%, transparent);
     }
 }
+
+/* ─── SCROLLBARS ─── */
+@layer base {
+    html {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-utility-neutral-300) transparent;
+    }
+}
