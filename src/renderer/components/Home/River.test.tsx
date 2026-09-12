@@ -238,6 +238,38 @@ test('shows a caught-up message when the unread filter leaves no items', async (
   await expect.element(getByText('Read item', { exact: true })).not.toBeInTheDocument();
 });
 
+test('shows a caught-up message on the default path once nothing is unread', async () => {
+  // Arrange: every item is read, hideReadItems stays off (the default).
+  const readItem = createFeedItem({ title: 'Read item' });
+  const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [readItem] });
+  mockedUseFeeds.mockReturnValue([feed]);
+  mockedUseReadState.mockReturnValue({ isRead: () => true, markRead: vi.fn(), toggleRead: vi.fn(), markAllRead: vi.fn() });
+
+  // Act
+  const { getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+
+  // Assert
+  await expect.element(getByText("You're all caught up", { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Read item', { exact: true })).not.toBeInTheDocument();
+});
+
+test('shows an onboarding empty state with zero feeds and opens the Add Feed modal', async () => {
+  // Arrange
+  mockedUseFeeds.mockReturnValue([]);
+  const { getByRole, getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+
+  // Assert: no controls for a river that has nothing to search, filter or refresh.
+  await expect.element(getByText('Pick your sources', { exact: true })).toBeInTheDocument();
+  await expect.element(getByRole('textbox', { name: 'Search everything' })).not.toBeInTheDocument();
+  await expect.element(getByRole('heading', { name: 'Add a feed' })).not.toBeInTheDocument();
+
+  // Act
+  await getByRole('button', { name: 'Add your first feed' }).click();
+
+  // Assert
+  await expect.element(getByRole('heading', { name: 'Add a feed' })).toBeInTheDocument();
+});
+
 test('opening a link externally sends link:open, marks it read, and does not navigate', async () => {
   // Arrange
   localStorage.setItem('preferences-open-links-externally', JSON.stringify(true));
