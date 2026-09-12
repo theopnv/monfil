@@ -55,6 +55,7 @@ export const useSetShowInHome = (): ((feedIds: number[], showInHome: boolean) =>
 interface FeedsRefresh {
   refreshNow: () => void;
   isRefreshing: boolean;
+  refreshFailed: boolean;
 }
 
 const FeedsRefreshContext = createContext<FeedsRefresh | undefined>(undefined);
@@ -138,14 +139,43 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
     }
     const targetIds = new Set(itemIds);
     const readAt = read ? new Date().toISOString() : undefined;
+    // Captured so a rejected or unsuccessful persist can restore exactly what each item had before, not just flip `read`.
+    const previousReadAt = new Map<number, string | undefined>();
+
     setFeeds((prev) => prev.map((feed) => (
       feed.items.some((item) => targetIds.has(item.id))
-        ? { ...feed, items: feed.items.map((item) => (targetIds.has(item.id) ? { ...item, read_at: readAt } : item)) }
+        ? {
+          ...feed,
+          items: feed.items.map((item) => {
+            if (!targetIds.has(item.id)) {
+              return item;
+            }
+            previousReadAt.set(item.id, item.read_at);
+            return { ...item, read_at: readAt };
+          }),
+        }
         : feed
     )));
-    window.electron.ipcRenderer.invoke('items:set-read', { itemIds, read }).catch((error: unknown) => {
-      console.error('Error persisting read state:', error);
-    });
+
+    const rollback = () => {
+      setFeeds((prev) => prev.map((feed) => (
+        feed.items.some((item) => previousReadAt.has(item.id))
+          ? { ...feed, items: feed.items.map((item) => (previousReadAt.has(item.id) ? { ...item, read_at: previousReadAt.get(item.id) } : item)) }
+          : feed
+      )));
+    };
+
+    window.electron.ipcRenderer.invoke('items:set-read', { itemIds, read })
+      .then((response) => {
+        if (!response.success) {
+          console.error('Error persisting read state:', response.error);
+          rollback();
+        }
+      })
+      .catch((error: unknown) => {
+        console.error('Error persisting read state:', error);
+        rollback();
+      });
   }, []);
 
   const markRead = useCallback((id: number) => setRead([id], true), [setRead]);
@@ -154,8 +184,11 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
 
   const readState = useMemo<ReadState>(() => ({ isRead, markRead, toggleRead, markAllRead }), [isRead, markRead, toggleRead, markAllRead]);
 
+  const [refreshFailed, setRefreshFailed] = useState(false);
+
   const refreshNow = useCallback(() => {
     setIsRefreshing(true);
+    setRefreshFailed(false);
     window.electron.ipcRenderer.invoke('feeds:refresh', undefined)
       .then((refreshed) => {
         hasFreshList.current = true;
@@ -163,13 +196,14 @@ export const FeedsProvider = ({ children }: PropsWithChildren) => {
       })
       .catch((error: unknown) => {
         console.error('Error refreshing feeds:', error);
+        setRefreshFailed(true);
       })
       .finally(() => {
         setIsRefreshing(false);
       });
   }, []);
 
-  const refresh = useMemo<FeedsRefresh>(() => ({ refreshNow, isRefreshing }), [refreshNow, isRefreshing]);
+  const refresh = useMemo<FeedsRefresh>(() => ({ refreshNow, isRefreshing, refreshFailed }), [refreshNow, isRefreshing, refreshFailed]);
 
   useEffect(() => {
     window.electron.ipcRenderer.invoke('feeds:list', undefined)

@@ -15,7 +15,7 @@ vi.mock(import('@/providers/feeds-provider'), async (importOriginal) => {
     useAddFeed: vi.fn(() => vi.fn()),
     useDeleteFeed: vi.fn(() => vi.fn()),
     useSetShowInHome: vi.fn(() => vi.fn()),
-    useFeedsRefresh: vi.fn(() => ({ refreshNow: vi.fn(), isRefreshing: false })),
+    useFeedsRefresh: vi.fn(() => ({ refreshNow: vi.fn(), isRefreshing: false, refreshFailed: false })),
     useReadState: vi.fn(() => ({ isRead: () => false, markRead: vi.fn(), toggleRead: vi.fn(), markAllRead: vi.fn() })),
   };
 });
@@ -136,6 +136,27 @@ test('rotating feed visibility narrows, widens, then narrows home again', async 
   // Assert
   await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
   await expect.element(getByText('Item B1', { exact: true })).toBeInTheDocument();
+});
+
+test('unread and feed counts share the same visibility scope', async () => {
+  // Arrange: both feeds visible by default, 3 unread items total.
+  const { getByRole, getByText } = await render(
+    <SearchProvider>
+      <PreferencesProvider>
+        <FeedsProvider>
+          <River onOpenItem={vi.fn()} />
+        </FeedsProvider>
+      </PreferencesProvider>
+    </SearchProvider>
+  );
+  await expect.element(getByText('3 unread · 2 feeds', { exact: true })).toBeInTheDocument();
+  await getByRole('button', { name: 'Tech', exact: true }).click();
+
+  // Act: solo Feed A, narrowing what's visible to just its 2 items.
+  await getByRole('button', { name: /Feed A/ }).click();
+
+  // Assert: both numbers now describe only the solo'd feed, not the full library.
+  await expect.element(getByText('2 unread · 1 feeds', { exact: true })).toBeInTheDocument();
 });
 
 test('hides feed items when showInHome is set to 0', async () => {

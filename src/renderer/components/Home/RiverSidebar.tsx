@@ -35,6 +35,10 @@ function saveOpenFolderNames(names: Iterable<string>): void {
   writeLocalStorageJSON(OPEN_FOLDERS_STORAGE_KEY, [...names]);
 }
 
+function unreadCount(feed: Feed): number {
+  return feed.items.filter((item) => !item.read_at).length;
+}
+
 function groupByCategory(feeds: Feed[]): Folder[] {
   const openFolderNames = loadOpenFolderNames();
   const folders = new Map<string, Folder>();
@@ -42,7 +46,7 @@ function groupByCategory(feeds: Feed[]): Folder[] {
     const name = feed.category.name;
     const folder = folders.get(name) ?? { name, feeds: [], count: 0, open: openFolderNames.has(name) };
     folder.feeds.push(feed);
-    folder.count += feed.items.length;
+    folder.count += unreadCount(feed);
     folders.set(name, folder);
   }
   return [...folders.values()];
@@ -116,7 +120,7 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
                 >
                   <FolderNextIcon aria-hidden className="size-3.5 text-quaternary" />
                 </button>
-                <span className="text-xs font-bold text-quaternary tabular-nums">{folder.count}</span>
+                <span data-testid="folder-count" className="text-xs font-bold text-quaternary tabular-nums">{folder.count > 0 ? folder.count : ''}</span>
               </div>
 
               {folder.open && (
@@ -147,7 +151,7 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
                         <FeedAvatar title={feed.title} faviconUrl={getFaviconUrl(feed.link)} size="sm" />
                         <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{feed.title}</span>
                         <NextIcon aria-hidden className="size-3.5 flex-none text-quaternary opacity-0 group-hover:opacity-100" />
-                        <span className="text-xs text-quaternary tabular-nums">{feed.items.length}</span>
+                        <span data-testid="feed-count" className="text-xs text-quaternary tabular-nums">{unreadCount(feed) > 0 ? unreadCount(feed) : ''}</span>
                       </button>
                     );
                   })}

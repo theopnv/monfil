@@ -29,12 +29,15 @@ export default function River({ onOpenItem }: RiverProps) {
 
   const [showOnlyLinks, setShowOnlyLinks] = useState<ReadonlySet<string>>(() => new Set());
 
+  // The scope both counts in RiverControls describe: the feeds currently shown in home
+  // (respecting solo/hide), independent of the transient search query and hideReadItems toggle.
+  const visibleFeedLinksSet = useMemo(() => visibleFeedLinks(feeds, showOnlyLinks), [feeds, showOnlyLinks]);
+  const inHomeItems = useMemo(() => riverItems.filter((item) => visibleFeedLinksSet.has(item.feedLink)), [riverItems, visibleFeedLinksSet]);
+
   const visibleItems = useMemo(() => {
-    const links = visibleFeedLinks(feeds, showOnlyLinks);
-    const inHome = riverItems.filter((item) => links.has(item.feedLink));
-    const shown = preferences.hideReadItems ? inHome.filter((item) => !isRead(item.id)) : inHome;
+    const shown = preferences.hideReadItems ? inHomeItems.filter((item) => !isRead(item.id)) : inHomeItems;
     return filterBySearch(shown, debouncedSearch);
-  }, [riverItems, feeds, showOnlyLinks, preferences.hideReadItems, isRead, debouncedSearch]);
+  }, [inHomeItems, preferences.hideReadItems, isRead, debouncedSearch]);
 
   useMarkReadOnScroll(scrollRef, preferences.markReadOnScroll, markAllRead);
 
@@ -78,7 +81,8 @@ export default function River({ onOpenItem }: RiverProps) {
     });
   }, []);
 
-  const unreadCount = visibleItems.filter((item) => !isRead(item.id)).length;
+  const unreadCount = inHomeItems.filter((item) => !isRead(item.id)).length;
+  const sourceCount = visibleFeedLinksSet.size;
 
   return (
     <div className="flex h-full w-full overflow-hidden">
@@ -91,7 +95,7 @@ export default function River({ onOpenItem }: RiverProps) {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-        <RiverControls unreadCount={unreadCount} sourceCount={feeds.length} />
+        <RiverControls unreadCount={unreadCount} sourceCount={sourceCount} />
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">
