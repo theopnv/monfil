@@ -84,6 +84,11 @@ export function formatRelativeTime(pubDate: string): string {
   return 'now';
 }
 
+/** Screen-reader label for a river card: state isn't conveyed by opacity alone. */
+export function describeRiverCard(item: RiverItem, read: boolean): string {
+  return `${item.title}, ${read ? "read" : "unread"}, from ${item.feedTitle}, ${formatRelativeTime(item.pubDate)}.`;
+}
+
 const WORDS_PER_MINUTE = 200;
 
 export function estimateReadTime(input: string | number): string {

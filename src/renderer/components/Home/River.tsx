@@ -1,12 +1,14 @@
-import { useCallback, useMemo, useRef, useState } from "react";
-import RiverControls from "@/components/Home/RiverControls";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import EmptyRiver from "@/components/Home/EmptyRiver";
 import RiverHeader from "@/components/Home/RiverHeader";
 import RiverList from "@/components/Home/RiverList";
 import RiverSidebar from "@/components/Home/RiverSidebar";
+import { announce } from "@/lib/announcer";
 import { type FeedVisibility, visibleFeedLinks } from "@/lib/river/feed-visibility";
 import { filterBySearch } from "@/lib/river/search";
 import { openLink, toRiverItems } from "@/lib/river/utils";
 import { useMarkReadOnScroll } from "@/lib/river/useMarkReadOnScroll";
+import { useRiverKeyboardNav } from "@/lib/river/useRiverKeyboardNav";
 import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import { useFeeds, useReadState, useSetShowInHome } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
@@ -29,14 +31,27 @@ export default function River({ onOpenItem }: RiverProps) {
 
   const [showOnlyLinks, setShowOnlyLinks] = useState<ReadonlySet<string>>(() => new Set());
 
+  // The feeds currently shown in home (respecting solo/hide), independent of
+  // the transient search query and hideReadItems toggle.
+  const visibleFeedLinksSet = useMemo(() => visibleFeedLinks(feeds, showOnlyLinks), [feeds, showOnlyLinks]);
+  const inHomeItems = useMemo(() => riverItems.filter((item) => visibleFeedLinksSet.has(item.feedLink)), [riverItems, visibleFeedLinksSet]);
+  const unreadCount = useMemo(() => inHomeItems.filter((item) => !isRead(item.id)).length, [inHomeItems, isRead]);
+
   const visibleItems = useMemo(() => {
-    const links = visibleFeedLinks(feeds, showOnlyLinks);
-    const inHome = riverItems.filter((item) => links.has(item.feedLink));
-    const shown = preferences.hideReadItems ? inHome.filter((item) => !isRead(item.id)) : inHome;
+    const shown = preferences.hideReadItems ? inHomeItems.filter((item) => !isRead(item.id)) : inHomeItems;
     return filterBySearch(shown, debouncedSearch);
-  }, [riverItems, feeds, showOnlyLinks, preferences.hideReadItems, isRead, debouncedSearch]);
+  }, [inHomeItems, preferences.hideReadItems, isRead, debouncedSearch]);
 
   useMarkReadOnScroll(scrollRef, preferences.markReadOnScroll, markAllRead);
+  useRiverKeyboardNav(scrollRef, preferences.keyboardNavigation);
+
+  useEffect(() => {
+    if (debouncedSearch.length === 0) {
+      return;
+    }
+    const count = visibleItems.length;
+    announce(count === 0 ? `No results for "${debouncedSearch}"` : `${count} result${count === 1 ? '' : 's'} for "${debouncedSearch}"`);
+  }, [debouncedSearch, visibleItems.length]);
 
   const handleOpen = useCallback((id: number) => {
     const item = visibleItems.find((candidate) => candidate.id === id);
@@ -78,7 +93,7 @@ export default function River({ onOpenItem }: RiverProps) {
     });
   }, []);
 
-  const unreadCount = visibleItems.filter((item) => !isRead(item.id)).length;
+  const hasFeeds = feeds.length > 0;
 
   return (
     <div className="flex h-full w-full overflow-hidden">
@@ -90,16 +105,21 @@ export default function River({ onOpenItem }: RiverProps) {
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-        <RiverControls unreadCount={unreadCount} sourceCount={feeds.length} />
+        <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} hasFeeds={hasFeeds} />
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">
-            {visibleItems.length === 0 && debouncedSearch.length > 0
-              ? <p className="py-20 text-center text-md font-regular text-tertiary">No results for &quot;{debouncedSearch}&quot;</p>
-              : visibleItems.length === 0 && preferences.hideReadItems
-                ? <p className="py-20 text-center text-md font-regular text-tertiary">You&apos;re all caught up</p>
-                : <RiverList items={visibleItems} density={preferences.density} isRead={isRead} onOpen={handleOpen} />}
+            {!hasFeeds ? (
+              <EmptyRiver />
+            ) : debouncedSearch.length > 0 ? (
+              visibleItems.length === 0
+                ? <p className="py-20 text-center text-md font-regular text-tertiary">No results for &quot;{debouncedSearch}&quot;</p>
+                : <RiverList items={visibleItems} density={preferences.density} isRead={isRead} onOpen={handleOpen} />
+            ) : unreadCount === 0 ? (
+              <p className="py-20 text-center text-md font-regular text-tertiary">You&apos;re all caught up</p>
+            ) : (
+              <RiverList items={visibleItems} density={preferences.density} isRead={isRead} onOpen={handleOpen} />
+            )}
           </div>
         </div>
       </div>

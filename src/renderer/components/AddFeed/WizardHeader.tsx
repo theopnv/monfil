@@ -71,7 +71,7 @@ export default function WizardHeader({ step, maxStepReached, onStepClick, onClos
               >
                 {dot}
               </span>
-              <span className={cx("flex-none text-xs font-semibold whitespace-nowrap", state === "current" ? "text-primary" : "text-quaternary")}>
+              <span className={cx("flex-none text-xs font-semibold whitespace-nowrap", state === "current" ? "text-primary" : "text-tertiary")}>
                 {STEP_LABELS[dot]}
               </span>
               {dot !== 3 && <span className={cx("h-0.5 min-w-3 flex-1 rounded-full", state === "done" ? "bg-success-solid/60" : "bg-quaternary")} />}

@@ -31,7 +31,7 @@ export default function FeedMatchCard({ title, detail, status, faviconUrl }: Fee
         <p className="truncate text-sm font-semibold text-primary">{title}</p>
         <p className="truncate text-xs text-tertiary">{detail}</p>
       </div>
-      {status === "loading" && <span className="text-xs text-quaternary">Checking…</span>}
+      {status === "loading" && <span className="text-xs text-tertiary">Checking…</span>}
       {status !== "loading" && (
         <Badge color={status === "found" ? "success" : "error"} size="sm" className="tracking-wide uppercase">
           {badgeLabel[status]}

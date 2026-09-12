@@ -1,4 +1,4 @@
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
 import { FeedsProvider, useFeeds, useReadState } from '@/providers/feeds-provider';
@@ -15,7 +15,7 @@ vi.mock(import('@/providers/feeds-provider'), async (importOriginal) => {
     useAddFeed: vi.fn(() => vi.fn()),
     useDeleteFeed: vi.fn(() => vi.fn()),
     useSetShowInHome: vi.fn(() => vi.fn()),
-    useFeedsRefresh: vi.fn(() => ({ refreshNow: vi.fn(), isRefreshing: false })),
+    useFeedsRefresh: vi.fn(() => ({ refreshNow: vi.fn(), isRefreshing: false, refreshFailed: false })),
     useReadState: vi.fn(() => ({ isRead: () => false, markRead: vi.fn(), toggleRead: vi.fn(), markAllRead: vi.fn() })),
   };
 });
@@ -116,7 +116,7 @@ test('rotating feed visibility narrows, widens, then narrows home again', async 
   await getByRole('button', { name: 'Tech', exact: true }).click();
 
   // Act: one click on Feed A shows only Feed A.
-  await getByRole('button', { name: /Feed A/ }).click();
+  await getByRole('button', { name: /^Feed A/ }).click();
 
   // Assert
   await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
@@ -124,14 +124,14 @@ test('rotating feed visibility narrows, widens, then narrows home again', async 
   await expect.element(getByText('Item B1', { exact: true })).not.toBeInTheDocument();
 
   // Act: focusing Feed B too shows both.
-  await getByRole('button', { name: /Feed B/ }).click();
+  await getByRole('button', { name: /^Feed B/ }).click();
 
   // Assert
   await expect.element(getByText('Item A1', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Item B1', { exact: true })).toBeInTheDocument();
 
   // Act: clicking Feed A again drops it from the only set, leaving Feed B alone.
-  await getByRole('button', { name: /Feed A/ }).click();
+  await getByRole('button', { name: /^Feed A/ }).click();
 
   // Assert
   await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
@@ -178,6 +178,69 @@ test('clicking a card invokes onOpenItem with the item id', async () => {
 
   // Assert
   expect(onOpenItem).toHaveBeenCalledWith(item.id);
+});
+
+describe('card keyboard interaction', () => {
+  test('pressing Enter on a focused card opens it', async () => {
+    // Arrange
+    const item = createFeedItem({ title: 'Keyboard item' });
+    const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [item] });
+    mockedUseFeeds.mockReturnValue([feed]);
+    const onOpenItem = vi.fn();
+    const { getByRole } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={onOpenItem} /></PreferencesProvider></SearchProvider>);
+    getByRole('button', { name: /Keyboard item/ }).element().focus();
+
+    // Act
+    await userEvent.keyboard('{Enter}');
+
+    // Assert
+    expect(onOpenItem).toHaveBeenCalledWith(item.id);
+  });
+
+  test('pressing Space on a focused card opens it', async () => {
+    // Arrange
+    const item = createFeedItem({ title: 'Spacebar item' });
+    const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [item] });
+    mockedUseFeeds.mockReturnValue([feed]);
+    const onOpenItem = vi.fn();
+    const { getByRole } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={onOpenItem} /></PreferencesProvider></SearchProvider>);
+    getByRole('button', { name: /Spacebar item/ }).element().focus();
+
+    // Act
+    await userEvent.keyboard(' ');
+
+    // Assert
+    expect(onOpenItem).toHaveBeenCalledWith(item.id);
+  });
+
+  test('j and k move focus between cards', async () => {
+    // Arrange: sorted newest first, so "First item" renders above "Second item".
+    const itemOne = createFeedItem({ title: 'First item', pubDate: '2024-01-02' });
+    const itemTwo = createFeedItem({ title: 'Second item', pubDate: '2024-01-01' });
+    const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [itemOne, itemTwo] });
+    mockedUseFeeds.mockReturnValue([feed]);
+    const { getByRole } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+    const firstCard = getByRole('button', { name: /First item/ });
+    const secondCard = getByRole('button', { name: /Second item/ });
+
+    // Act: j with nothing focused lands on the first card.
+    await userEvent.keyboard('j');
+
+    // Assert
+    await expect.element(firstCard).toHaveFocus();
+
+    // Act
+    await userEvent.keyboard('j');
+
+    // Assert
+    await expect.element(secondCard).toHaveFocus();
+
+    // Act
+    await userEvent.keyboard('k');
+
+    // Assert
+    await expect.element(firstCard).toHaveFocus();
+  });
 });
 
 test('hides read items when the hideReadItems preference is on', async () => {
@@ -236,6 +299,38 @@ test('shows a caught-up message when the unread filter leaves no items', async (
   // Assert
   await expect.element(getByText("You're all caught up", { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Read item', { exact: true })).not.toBeInTheDocument();
+});
+
+test('shows a caught-up message on the default path once nothing is unread', async () => {
+  // Arrange: every item is read, hideReadItems stays off (the default).
+  const readItem = createFeedItem({ title: 'Read item' });
+  const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', items: [readItem] });
+  mockedUseFeeds.mockReturnValue([feed]);
+  mockedUseReadState.mockReturnValue({ isRead: () => true, markRead: vi.fn(), toggleRead: vi.fn(), markAllRead: vi.fn() });
+
+  // Act
+  const { getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+
+  // Assert
+  await expect.element(getByText("You're all caught up", { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Read item', { exact: true })).not.toBeInTheDocument();
+});
+
+test('shows an onboarding empty state with zero feeds and opens the Add Feed modal', async () => {
+  // Arrange
+  mockedUseFeeds.mockReturnValue([]);
+  const { getByRole, getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+
+  // Assert: no controls for a river that has nothing to search, filter or refresh.
+  await expect.element(getByText('Pick your sources', { exact: true })).toBeInTheDocument();
+  await expect.element(getByRole('textbox', { name: 'Search everything' })).not.toBeInTheDocument();
+  await expect.element(getByRole('heading', { name: 'Add a feed' })).not.toBeInTheDocument();
+
+  // Act
+  await getByRole('button', { name: 'Add your first feed' }).click();
+
+  // Assert
+  await expect.element(getByRole('heading', { name: 'Add a feed' })).toBeInTheDocument();
 });
 
 test('opening a link externally sends link:open, marks it read, and does not navigate', async () => {

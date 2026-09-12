@@ -148,6 +148,48 @@ describe('feed row visibility rotation', () => {
   });
 });
 
+describe('feed row current-state label', () => {
+  test('a home feed is titled by what it is now, not the "only" state a click moves it to', async () => {
+    // Arrange
+    const { getByRole } = await render(
+      <FeedsProvider>
+        <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
+      </FeedsProvider>,
+    );
+    await getByRole('button', { name: 'Tech', exact: true }).click();
+
+    // Assert
+    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Shown with others');
+  });
+
+  test('a soloed feed is titled "Shown only", not the "hidden" state it moves to next', async () => {
+    // Arrange
+    const { getByRole } = await render(
+      <FeedsProvider>
+        <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set([feedA.link])} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
+      </FeedsProvider>,
+    );
+    await getByRole('button', { name: 'Tech', exact: true }).click();
+
+    // Assert
+    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Shown only');
+  });
+
+  test('a hidden feed is titled "Hidden", not the "home" state it moves to next', async () => {
+    // Arrange
+    const hiddenFeedA: Feed = { ...feedA, showInHome: 0 };
+    const { getByRole } = await render(
+      <FeedsProvider>
+        <RiverSidebar feeds={[hiddenFeedA]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
+      </FeedsProvider>,
+    );
+    await getByRole('button', { name: 'Tech', exact: true }).click();
+
+    // Assert
+    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Hidden');
+  });
+});
+
 describe('folder visibility rotation', () => {
   test('the rotate button applies the next state to every feed in the folder', async () => {
     // Arrange
@@ -196,6 +238,52 @@ describe('folder visibility rotation', () => {
 
     // Assert
     await expect.element(getByText('Feed A', { exact: true })).toBeInTheDocument();
+  });
+});
+
+describe('unread counts', () => {
+  test('feed and folder counts reflect unread items, not total items', async () => {
+    // Arrange: two items in one feed, only one of them unread.
+    const baseItem = { feed_id: 1, title: 'Item', link: 'https://a.example/feed#item', guid: 'https://a.example/feed#item', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined };
+    const feedWithMixedItems: Feed = {
+      ...feedA,
+      items: [
+        { ...baseItem, id: 1, read_at: undefined },
+        { ...baseItem, id: 2, read_at: '2024-01-02T00:00:00.000Z' },
+      ],
+    };
+    const { getByRole, getByTestId } = await render(
+      <FeedsProvider>
+        <RiverSidebar feeds={[feedWithMixedItems]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
+      </FeedsProvider>,
+    );
+
+    // Act
+    await getByRole('button', { name: 'Tech', exact: true }).click();
+
+    // Assert: one unread item out of two total, so both counts read 1, not 2.
+    await expect.element(getByTestId('folder-count')).toHaveTextContent('1');
+    await expect.element(getByTestId('feed-count')).toHaveTextContent('1');
+  });
+
+  test('a fully-read feed and folder show a blank count instead of 0', async () => {
+    // Arrange
+    const fullyReadFeed: Feed = {
+      ...feedA,
+      items: [{ feed_id: 1, id: 1, title: 'Item', link: 'https://a.example/feed#item', guid: 'https://a.example/feed#item', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: '2024-01-02T00:00:00.000Z' }],
+    };
+    const { getByRole, getByTestId } = await render(
+      <FeedsProvider>
+        <RiverSidebar feeds={[fullyReadFeed]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
+      </FeedsProvider>,
+    );
+
+    // Act
+    await getByRole('button', { name: 'Tech', exact: true }).click();
+
+    // Assert
+    await expect.element(getByTestId('folder-count')).toHaveTextContent('');
+    await expect.element(getByTestId('feed-count')).toHaveTextContent('');
   });
 });
 

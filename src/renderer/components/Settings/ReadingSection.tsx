@@ -23,6 +23,13 @@ export default function ReadingSection() {
       />
       <Toggle
         className="w-full"
+        label="Keyboard navigation"
+        hint="j / k to move between items, Esc to leave the reader."
+        isSelected={preferences.keyboardNavigation}
+        onChange={(isSelected) => setPreference("keyboardNavigation", isSelected)}
+      />
+      <Toggle
+        className="w-full"
         label="Open links in my browser"
         hint="Clicking an item opens its source link instead of the built-in reader."
         isSelected={preferences.openLinksExternally}

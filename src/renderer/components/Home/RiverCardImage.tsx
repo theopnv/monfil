@@ -6,5 +6,5 @@ export interface RiverCardImageProps {
 }
 
 export default function RiverCardImage({ src, className }: RiverCardImageProps) {
-  return <ImageWithFallback src={src} className={className} fallbackLabel="article image" testId="river-card-image" />;
+  return <ImageWithFallback src={src} className={className} testId="river-card-image" />;
 }

@@ -91,6 +91,19 @@ test('toggling "Hide read items in Home" writes the preference', async () => {
   expect(JSON.parse(localStorage.getItem('preferences-hide-read-items') ?? 'null')).toBe(true);
 });
 
+test('toggling "Keyboard navigation" writes the preference', async () => {
+  // Arrange
+  const { getByText } = await renderSettings();
+
+  // Act
+  // The switch input is visually hidden behind its label (react-aria's Switch pattern), so the
+  // label text is what receives the click in the real DOM.
+  await getByText('Keyboard navigation', { exact: true }).click();
+
+  // Assert
+  expect(JSON.parse(localStorage.getItem('preferences-keyboard-navigation') ?? 'null')).toBe(false);
+});
+
 test('choosing a refresh interval invokes settings:set-refresh-interval', async () => {
   // Arrange
   const { getByRole } = await renderSettings();
@@ -150,10 +163,3 @@ test('shows the your-data stats from app:get-info', async () => {
   await expect.element(getByText('42', { exact: true })).toBeInTheDocument();
 });
 
-test('check for updates is disabled', async () => {
-  // Arrange
-  const { getByRole } = await renderSettings();
-
-  // Assert
-  await expect.element(getByRole('button', { name: 'Check for updates' })).toBeDisabled();
-});

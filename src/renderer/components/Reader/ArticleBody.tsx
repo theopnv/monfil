@@ -16,7 +16,7 @@ const PROSE_CLASSES = [
   "[&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_h4]:text-base [&_h4]:font-bold",
   "[&_img]:max-w-full [&_img]:rounded-lg",
   "[&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-secondary [&_pre]:p-3 [&_code]:font-mono [&_code]:text-sm",
-  "[&_figcaption]:text-xs [&_figcaption]:text-quaternary",
+  "[&_figcaption]:text-xs [&_figcaption]:text-tertiary",
   "[&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-secondary [&_th]:p-2 [&_th]:text-left [&_td]:border [&_td]:border-secondary [&_td]:p-2",
   "[&_hr]:my-6 [&_hr]:border-secondary",
 ].join(" ");

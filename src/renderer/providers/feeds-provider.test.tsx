@@ -73,11 +73,14 @@ function ItemImages() {
 }
 
 function RefreshButton() {
-  const { refreshNow, isRefreshing } = useFeedsRefresh();
+  const { refreshNow, isRefreshing, refreshFailed } = useFeedsRefresh();
   return (
-    <button type="button" onClick={refreshNow}>
-      {isRefreshing ? 'Refreshing' : 'Refresh'}
-    </button>
+    <div>
+      <button type="button" onClick={refreshNow}>
+        {isRefreshing ? 'Refreshing' : 'Refresh'}
+      </button>
+      {refreshFailed && <span>Refresh failed</span>}
+    </div>
   );
 }
 
@@ -106,7 +109,7 @@ let invokeImpl: (channel: string) => Promise<unknown>;
 beforeEach(() => {
   itemImageFetchedHandler = undefined;
   feedsListPushHandler = undefined;
-  invokeImpl = () => Promise.resolve([]);
+  invokeImpl = (channel) => Promise.resolve(channel === 'items:set-read' ? { success: true, data: undefined } : []);
   window.electron = {
     ipcRenderer: {
       invoke: vi.fn((channel: string) => invokeImpl(channel)),
@@ -326,6 +329,32 @@ test('refreshNow stops reporting a refresh once it fails', async () => {
   await expect.element(getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
 });
 
+test('refreshNow surfaces a failure and clears it once a later attempt succeeds', async () => {
+  // Arrange
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  let shouldFail = true;
+  invokeImpl = (channel) => (channel === 'feeds:refresh' ? (shouldFail ? Promise.reject(new Error('offline')) : Promise.resolve([])) : Promise.resolve([]));
+  const { getByRole, getByText } = await render(
+    <FeedsProvider>
+      <RefreshButton />
+    </FeedsProvider>
+  );
+
+  // Act
+  await getByRole('button', { name: 'Refresh' }).click();
+
+  // Assert
+  await expect.element(getByText('Refresh failed', { exact: true })).toBeInTheDocument();
+  expect(consoleError).toHaveBeenCalled();
+
+  // Act: a later attempt that succeeds clears the failure.
+  shouldFail = false;
+  await getByRole('button', { name: 'Refresh' }).click();
+
+  // Assert
+  await expect.element(getByText('Refresh failed', { exact: true })).not.toBeInTheDocument();
+});
+
 test('a fresh provider starts with nothing read', async () => {
   // Arrange
   const feed = createFeedWithItem(1);
@@ -375,6 +404,95 @@ test('markRead invokes items:set-read with the item id', async () => {
 
   // Assert
   expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('items:set-read', { itemIds: [1], read: true });
+});
+
+test('a rejected items:set-read rolls back the optimistic read state', async () => {
+  // Arrange
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  invokeImpl = (channel) => (channel === 'items:set-read' ? Promise.reject(new Error('offline')) : Promise.resolve([]));
+  const feed = createFeedWithItem(1);
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <AddFeedButton feed={feed} />
+      <ReadStateProbe id={1} />
+    </FeedsProvider>,
+  );
+  await getByRole('button', { name: `Add ${feed.title}` }).click();
+
+  // Act
+  await getByRole('button', { name: 'Mark 1 read' }).click();
+
+  // Assert
+  await vi.waitFor(() => {
+    expect(consoleError).toHaveBeenCalled();
+  });
+  await expect.element(getByText('Item 1 is unread', { exact: true })).toBeInTheDocument();
+});
+
+test('an unsuccessful items:set-read result rolls back the optimistic read state', async () => {
+  // Arrange: the invoke promise resolves, but with a Result-level failure.
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  invokeImpl = (channel) => Promise.resolve(channel === 'items:set-read'
+    ? { success: false, error: { name: 'ITEM_NOT_FOUND', message: 'No feed item found' } }
+    : []);
+  const feed = createFeedWithItem(1);
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <AddFeedButton feed={feed} />
+      <ReadStateProbe id={1} />
+    </FeedsProvider>,
+  );
+  await getByRole('button', { name: `Add ${feed.title}` }).click();
+
+  // Act
+  await getByRole('button', { name: 'Mark 1 read' }).click();
+
+  // Assert
+  await vi.waitFor(() => {
+    expect(consoleError).toHaveBeenCalled();
+  });
+  await expect.element(getByText('Item 1 is unread', { exact: true })).toBeInTheDocument();
+});
+
+test('a rejected items:set-read restores each item to its own previous state, not a blanket flip', async () => {
+  // Arrange: item 1 is already read before the failing batch call includes it alongside unread item 2.
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  let failNextSetRead = false;
+  invokeImpl = (channel) => {
+    if (channel === 'items:set-read') {
+      if (failNextSetRead) {
+        return Promise.reject(new Error('offline'));
+      }
+      return Promise.resolve({ success: true, data: undefined });
+    }
+    return Promise.resolve([]);
+  };
+  const feedA = createFeedWithItem(1);
+  const feedB = createFeedWithItem(2);
+  const { getByText, getByRole } = await render(
+    <FeedsProvider>
+      <AddFeedButton feed={feedA} />
+      <AddFeedButton feed={feedB} />
+      <ReadStateProbe id={1} />
+      <ReadStateProbe id={2} />
+      <MarkAllReadButton ids={[1, 2]} />
+    </FeedsProvider>,
+  );
+  await getByRole('button', { name: `Add ${feedA.title}` }).click();
+  await getByRole('button', { name: `Add ${feedB.title}` }).click();
+  await getByRole('button', { name: 'Mark 1 read' }).click();
+  await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
+
+  // Act: mark both read in one batch; item 1 was already read, item 2 was not.
+  failNextSetRead = true;
+  await getByRole('button', { name: 'Mark all read' }).click();
+
+  // Assert: item 1 stays read (its own prior state), item 2 reverts to unread, not both flipped.
+  await vi.waitFor(() => {
+    expect(consoleError).toHaveBeenCalled();
+  });
+  await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Item 2 is unread', { exact: true })).toBeInTheDocument();
 });
 
 test('marking an already-read item again is a no-op', async () => {

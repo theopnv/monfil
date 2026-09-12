@@ -1,8 +1,12 @@
+import { useEffect, useRef } from "react";
 import { Eye, RefreshCw01, SearchLg, XClose } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
+import { announce } from "@/lib/announcer";
 import { useFeedsRefresh } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
+
+const REFRESH_FAILED_MESSAGE = "Couldn't refresh feeds. Check your connection and try again.";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -25,11 +29,20 @@ function SearchIcon({ className }: { className?: string | undefined }) {
 export interface RiverHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  hasFeeds: boolean;
 }
 
-export default function RiverHeader({ searchQuery, onSearchChange }: RiverHeaderProps) {
-  const { refreshNow, isRefreshing } = useFeedsRefresh();
+export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: RiverHeaderProps) {
+  const { refreshNow, isRefreshing, refreshFailed } = useFeedsRefresh();
   const { preferences, setPreference } = usePreferences();
+
+  const wasRefreshing = useRef(false);
+  useEffect(() => {
+    if (wasRefreshing.current && !isRefreshing) {
+      announce(refreshFailed ? REFRESH_FAILED_MESSAGE : "Feeds refreshed.");
+    }
+    wasRefreshing.current = isRefreshing;
+  }, [isRefreshing, refreshFailed]);
 
   // The webkit cancel button is hidden in globals.css, so the field renders its
   // own clear cross while the query is set; Escape clears as well.
@@ -45,52 +58,60 @@ export default function RiverHeader({ searchQuery, onSearchChange }: RiverHeader
   };
 
   return (
-    <header className="flex flex-none items-end gap-5 border-b border-secondary px-8.5 py-4.5">
-      <div className="min-w-0 flex-1">
-        <div className="mb-1 text-xs font-semibold tracking-wide text-brand-secondary uppercase">{getGreeting()}</div>
-        <h1 className="font-display text-display-md leading-none text-primary">Home</h1>
-      </div>
+    <header className="flex flex-none flex-col border-b border-secondary px-8.5 py-4.5">
+      <div className="mx-auto flex w-full max-w-[860px] flex-col gap-2">
+        <div className="flex items-end gap-5">
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 text-xs font-semibold tracking-wide text-brand-secondary uppercase">{getGreeting()}</div>
+            <h1 className="font-display text-display-md leading-none text-primary">Home</h1>
+          </div>
 
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
-        <div className="relative min-w-30 max-w-75 flex-1">
-          <Input
-            placeholder="Search everything"
-            icon={SearchIcon}
-            wrapperClassName="rounded-full"
-            inputClassName="pr-9"
-            value={searchQuery}
-            onChange={onSearchChange}
-            onKeyDown={handleSearchKeyDown}
-          />
-          {searchQuery.length > 0 && (
-            <button
-              type="button"
-              aria-label="Clear search"
-              onMouseDown={handleCrossMouseDown}
-              onClick={() => onSearchChange("")}
-              className="absolute right-2.5 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-fg-quaternary transition duration-100 ease-linear hover:text-fg-quaternary_hover focus:outline-hidden"
-            >
-              <XClose className="size-4 stroke-[2.25px]" />
-            </button>
+          {hasFeeds && (
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
+              <div className="relative min-w-30 max-w-75 flex-1">
+                <Input
+                  placeholder="Search everything"
+                  icon={SearchIcon}
+                  wrapperClassName="rounded-full"
+                  inputClassName="pr-9"
+                  value={searchQuery}
+                  onChange={onSearchChange}
+                  onKeyDown={handleSearchKeyDown}
+                />
+                {searchQuery.length > 0 && (
+                  <button
+                    type="button"
+                    aria-label="Clear search"
+                    onMouseDown={handleCrossMouseDown}
+                    onClick={() => onSearchChange("")}
+                    className="absolute right-2.5 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-fg-quaternary transition duration-100 ease-linear hover:text-fg-quaternary_hover focus:outline-hidden"
+                  >
+                    <XClose className="size-4 stroke-[2.25px]" />
+                  </button>
+                )}
+              </div>
+              <Button
+                color="secondary"
+                iconLeading={Eye}
+                className="flex-none rounded-full"
+                onPress={() => setPreference("hideReadItems", !preferences.hideReadItems)}
+              >
+                {preferences.hideReadItems ? "Show All" : "Show Unread"}
+              </Button>
+              <Button
+                aria-label="Refresh feeds"
+                color="secondary"
+                iconLeading={RefreshCw01}
+                className="flex-none rounded-full"
+                isLoading={isRefreshing}
+                isDisabled={isRefreshing}
+                onPress={refreshNow}
+              />
+            </div>
           )}
         </div>
-        <Button
-          color="secondary"
-          iconLeading={Eye}
-          className="flex-none rounded-full"
-          onPress={() => setPreference("hideReadItems", !preferences.hideReadItems)}
-        >
-          {preferences.hideReadItems ? "Show All" : "Show Unread"}
-        </Button>
-        <Button
-          aria-label="Refresh feeds"
-          color="secondary"
-          iconLeading={RefreshCw01}
-          className="flex-none rounded-full"
-          isLoading={isRefreshing}
-          isDisabled={isRefreshing}
-          onPress={refreshNow}
-        />
+
+        {hasFeeds && refreshFailed && <p className="text-right text-sm text-error-primary">{REFRESH_FAILED_MESSAGE}</p>}
       </div>
     </header>
   );

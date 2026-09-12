@@ -4,14 +4,17 @@ import ArticleBody from "@/components/Reader/ArticleBody";
 import ArticleHeroImage from "@/components/Reader/ArticleHeroImage";
 import ArticleMeta from "@/components/Reader/ArticleMeta";
 import ArticleSourceLink from "@/components/Reader/ArticleSourceLink";
+import KeyboardShortcutsHint from "@/components/Reader/KeyboardShortcutsHint";
 import NextArticleCard from "@/components/Reader/NextArticleCard";
 import ReaderHeader from "@/components/Reader/ReaderHeader";
 import ReadingProgressBar from "@/components/common/ReadingProgressBar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
+import { announce } from "@/lib/announcer";
 import { deriveStandfirst, findRawDescription, getReaderNavigation } from "@/lib/reader/reader";
 import { toRiverItems } from "@/lib/river/utils";
 import { useArticleContent } from "@/lib/useArticleContent";
 import { useFeeds, useReadState } from "@/providers/feeds-provider";
+import { usePreferences } from "@/providers/preferences-provider";
 
 export interface ReaderProps {
   itemId: string;
@@ -22,7 +25,8 @@ export interface ReaderProps {
 export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: ReaderProps) {
   const id = Number(itemId);
   const feeds = useFeeds();
-  const { isRead, markRead } = useReadState();
+  const { isRead, markRead, toggleRead } = useReadState();
+  const { preferences } = usePreferences();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
 
@@ -40,6 +44,23 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
     }
     // Route reuse means this effect must re-run per article id, not once on mount.
   }, [currentItem?.id, markRead]);
+
+  useEffect(() => {
+    if (!preferences.keyboardNavigation) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onNavigateHome();
+      } else if (event.key === "j" && navigation.next) {
+        onNavigateToItem(navigation.next.id);
+      } else if (event.key === "k" && navigation.previous) {
+        onNavigateToItem(navigation.previous.id);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onNavigateHome, onNavigateToItem, navigation.next, navigation.previous, preferences.keyboardNavigation]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -74,6 +95,12 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
   const nextTarget = navigation.nextUnread;
   const nextLabel = nextTarget && !isRead(nextTarget.id) ? "Next unread" : "Next article";
 
+  const handleToggleRead = () => {
+    const willBeRead = !isRead(currentItem.id);
+    toggleRead(currentItem.id);
+    announce(willBeRead ? "Marked as read" : "Marked as unread");
+  };
+
   return (
     <div className="flex h-full w-full overflow-hidden">
       <RiverSidebar
@@ -88,6 +115,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
         <ReaderHeader
           item={currentItem}
           onNavigateHome={onNavigateHome}
+          onToggleRead={handleToggleRead}
           onPrevious={() => navigation.previous && onNavigateToItem(navigation.previous.id)}
           onNext={() => navigation.next && onNavigateToItem(navigation.next.id)}
           hasPrevious={!!navigation.previous}
@@ -117,6 +145,8 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
             <ArticleSourceLink item={currentItem} />
 
             {nextTarget && <NextArticleCard item={nextTarget} label={nextLabel} onClick={() => onNavigateToItem(nextTarget.id)} />}
+
+            {preferences.keyboardNavigation && <KeyboardShortcutsHint />}
           </article>
         </div>
       </div>

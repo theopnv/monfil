@@ -138,7 +138,8 @@ searchTest('search over the description shows a no-results message when nothing 
   // Act
   await search.fill('executors kubernetes');
 
-  // Assert
-  await expect(page.getByText('No results for "executors kubernetes"', { exact: true })).toBeVisible();
+  // Assert: scoped to the <p>, since the same copy is also mirrored into the
+  // visually-hidden aria-live region for screen readers.
+  await expect(page.getByText('No results for "executors kubernetes"', { exact: true }).and(page.locator('p'))).toBeVisible();
   await expect(page.getByText('Rust async runtime', { exact: true })).not.toBeVisible();
 });
