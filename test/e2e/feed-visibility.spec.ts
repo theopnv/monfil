@@ -83,7 +83,7 @@ async function subscribe(page: Page, url: string): Promise<void> {
 // The folder's open state is saved to localStorage, so a relaunch against the same user data
 // dir can start with it already expanded.
 async function ensureFolderOpen(page: Page): Promise<void> {
-  const row = page.getByRole('button', { name: /Local feed/ });
+  const row = page.getByRole('button', { name: /^Local feed/ });
   if (!(await row.isVisible())) {
     await page.getByRole('button', { name: 'tech', exact: true }).click();
   }
@@ -96,7 +96,7 @@ feedVisibilityTest('rotating a feed row to hidden removes it from home and survi
   await subscribe(page, feedServer.url);
   await expect(page.getByText('First article', { exact: true })).toBeVisible();
   await ensureFolderOpen(page);
-  const row = page.getByRole('button', { name: /Local feed/ });
+  const row = page.getByRole('button', { name: /^Local feed/ });
 
   // Act: rotate the row home -> only -> hidden.
   await row.click();
@@ -113,5 +113,5 @@ feedVisibilityTest('rotating a feed row to hidden removes it from home and survi
   // Assert: the hide persisted, but the row is not stuck in a session-only "only" state.
   await expect(relaunched.getByText('First article', { exact: true })).not.toBeVisible();
   await ensureFolderOpen(relaunched);
-  await expect(relaunched.getByRole('button', { name: /Local feed/ })).toHaveAttribute('data-visibility', 'hidden');
+  await expect(relaunched.getByRole('button', { name: /^Local feed/ })).toHaveAttribute('data-visibility', 'hidden');
 });
