@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { announce } from '@/lib/announcer';
 import LiveRegion from './LiveRegion';
@@ -23,10 +23,21 @@ test('re-announces a repeated message by clearing it first', async () => {
   announce('Marked as read');
   await expect.element(region).toHaveTextContent('Marked as read');
 
-  // Act
-  announce('Marked as read');
+  // The target text is already "Marked as read" before the second announce, so a
+  // polling DOM assertion for that same value can resolve immediately without ever
+  // observing the clear-then-reset cycle. Record every mutation instead and wait on
+  // that record directly.
+  const element = region.element();
+  const seenTextValues: string[] = [];
+  const observer = new MutationObserver(() => {
+    seenTextValues.push(element.textContent ?? '');
+  });
+  observer.observe(element, { childList: true, characterData: true, subtree: true });
 
-  // Assert: cleared immediately so a screen reader sees the text change again.
-  await expect.element(region).toHaveTextContent('');
-  await expect.element(region).toHaveTextContent('Marked as read');
+  // Act: announcing the same message again must still touch the DOM, not no-op.
+  announce('Marked as read');
+  await vi.waitFor(() => {
+    expect(seenTextValues).toEqual(['', 'Marked as read']);
+  });
+  observer.disconnect();
 });
