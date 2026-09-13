@@ -3,7 +3,6 @@ import RiverSidebar from "@/components/Home/RiverSidebar";
 import ArticleBody from "@/components/Reader/ArticleBody";
 import ArticleHeroImage from "@/components/Reader/ArticleHeroImage";
 import ArticleMeta from "@/components/Reader/ArticleMeta";
-import ArticleSourceLink from "@/components/Reader/ArticleSourceLink";
 import KeyboardShortcutsHint from "@/components/Reader/KeyboardShortcutsHint";
 import NextArticleCard from "@/components/Reader/NextArticleCard";
 import ReaderHeader from "@/components/Reader/ReaderHeader";
@@ -139,8 +138,6 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
             {content.isUnavailable && (
               <p className="mb-4 text-sm text-tertiary">The full article could not be loaded. Read it at the source instead.</p>
             )}
-
-            <ArticleSourceLink item={currentItem} />
 
             {nextTarget && <NextArticleCard item={nextTarget} label={nextLabel} onClick={() => onNavigateToItem(nextTarget.id)} />}
 

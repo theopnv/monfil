@@ -1,5 +1,6 @@
 import { ArrowLeft, ChevronDown, ChevronUp, Circle } from "@untitledui/icons";
 import FeedAvatar from "@/components/Home/FeedAvatar";
+import ArticleSourceLink from "@/components/Reader/ArticleSourceLink";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Tooltip } from "@/components/untitled-ui/base/tooltip/tooltip";
 import { resolveFeedIcon } from "@/lib/favicon";
@@ -29,6 +30,13 @@ export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPre
       </div>
 
       <div className="ml-auto flex flex-none items-center gap-1">
+        {item.link && (
+          <>
+            <ArticleSourceLink item={item} />
+            <span className="mx-1.5 h-5.5 flex-none border-l border-secondary" />
+          </>
+        )}
+
         <Tooltip title="Mark unread">
           <Button aria-label="Mark unread" color="tertiary" size="sm" className="rounded-full" iconLeading={Circle} onPress={onToggleRead} />
         </Tooltip>
