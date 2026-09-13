@@ -33,7 +33,8 @@ const youtubeFeedTest = base.extend<YoutubeFeedTestFixtures>({
   },
 });
 
-const ICON_URL = 'https://yt3.googleusercontent.com/avatar=s176-c-k-c0x00ffffff-no-rj';
+const ICON_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+const THUMBNAIL_URL = ICON_URL;
 const CHANNEL_LINK = 'https://www.youtube.com/feeds/videos.xml?channel_id=UC1234567890123456789012';
 const VIDEO_DESCRIPTION = 'Full video notes.\n\nMore at: https://example.com/more';
 
@@ -54,7 +55,7 @@ async function subscribeYoutube(page: Page): Promise<void> {
         link: 'https://www.youtube.com/watch?v=abc123',
         pubDate: 'Mon, 01 Jan 2024 00:00:00 GMT',
         description: VIDEO_DESCRIPTION,
-        image: 'https://i.ytimg.com/vi/abc123/hqdefault.jpg',
+        image: THUMBNAIL_URL,
         author: 'Local Channel',
         extra: JSON.stringify({ videoId: 'abc123', channelId: 'UC1234567890123456789012', views: 100, rating: 4.5 }),
         read_at: undefined,
@@ -72,9 +73,11 @@ youtubeFeedTest('shows the channel avatar in the sidebar and the video descripti
   await expect(page.getByText('A Video', { exact: true })).toBeVisible();
 
   // Assert: the sidebar shows the channel's own avatar, not a generic favicon. The category
-  // folder starts collapsed, so it must be opened before the feed row renders.
+  // folder starts collapsed, so it must be opened before the feed row renders. The name is
+  // anchored because the river card below also names "Local Channel", in its own aria-label.
   await page.getByRole('button', { name: 'tech', exact: true }).click();
-  await expect(page.locator(`img[src="${ICON_URL}"]`)).toBeVisible();
+  const feedRow = page.getByRole('button', { name: /^Local Channel,/ });
+  await expect(feedRow.locator('img')).toHaveAttribute('src', ICON_URL);
 
   // Act: open the video in the reader.
   await page.getByText('A Video', { exact: true }).click();
@@ -82,7 +85,7 @@ youtubeFeedTest('shows the channel avatar in the sidebar and the video descripti
 
   // Assert: the badge names the source type, the description shows with its line break and a
   // clickable link, and nothing tries to report a missing article.
-  await expect(page.getByText('YOUTUBE ARTICLE', { exact: true })).toBeVisible();
+  await expect(page.getByText('YOUTUBE', { exact: true })).toBeVisible();
   await expect(page.getByTestId('article-body')).toContainText('Full video notes.');
   await expect(page.getByTestId('article-body').getByRole('link', { name: 'https://example.com/more' })).toBeVisible();
   await expect(page.getByText('The full article could not be loaded', { exact: false })).toHaveCount(0);
