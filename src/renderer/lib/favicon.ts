@@ -1,3 +1,13 @@
+/**
+ * The icon to show for a feed: its own stored icon (a YouTube channel avatar, for instance),
+ * falling back to the site favicon RSS feeds don't carry one for.
+ * @param icon the feed's stored `icon` column
+ * @param link the feed's link, used for the favicon fallback
+ */
+export function resolveFeedIcon(icon: string | undefined, link: string): string | undefined {
+  return icon ?? getFaviconUrl(link);
+}
+
 export function getFaviconUrl(link: string | undefined): string | undefined {
   if (!link) {
     return undefined;

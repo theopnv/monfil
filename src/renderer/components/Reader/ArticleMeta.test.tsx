@@ -12,8 +12,10 @@ function createItem(overrides: Partial<RiverItem> = {}): RiverItem {
     description: 'word '.repeat(400),
     feedTitle: 'Feed',
     feedLink: 'https://example.com/feed',
+    feedIcon: undefined,
     categoryName: 'Tech',
     image: undefined,
+    type: 'rss',
     ...overrides,
   };
 }

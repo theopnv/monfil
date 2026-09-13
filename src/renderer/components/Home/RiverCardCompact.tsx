@@ -1,7 +1,7 @@
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { cx } from "@/components/untitled-ui/utils/cx";
-import { getFaviconUrl } from "@/lib/favicon";
-import { describeRiverCard, formatRelativeTime, type RiverCardProps } from "@/lib/river/utils";
+import { resolveFeedIcon } from "@/lib/favicon";
+import { describeRiverCard, formatRelativeTime, SOURCE_TYPE_LABEL, type RiverCardProps } from "@/lib/river/utils";
 
 export default function RiverCardCompact({ item, read, onOpen }: RiverCardProps) {
   return (
@@ -23,11 +23,11 @@ export default function RiverCardCompact({ item, read, onOpen }: RiverCardProps)
       )}
     >
       <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
-      <FeedAvatar title={item.feedTitle} faviconUrl={getFaviconUrl(item.feedLink)} size="sm" />
+      <FeedAvatar title={item.feedTitle} faviconUrl={resolveFeedIcon(item.feedIcon, item.feedLink)} size="sm" />
       <span className="w-33 flex-none overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-primary">{item.feedTitle}</span>
       <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-secondary">{item.title}</span>
       <span className="flex-none rounded-full bg-sage-200 px-2 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>
-      <span className="flex-none text-xs font-bold tracking-wide text-tertiary">RSS</span>
+      <span className="flex-none text-xs font-bold tracking-wide text-tertiary">{SOURCE_TYPE_LABEL[item.type]}</span>
       <span className="w-13 flex-none text-right text-xs text-tertiary tabular-nums">{formatRelativeTime(item.pubDate)}</span>
     </div>
   );

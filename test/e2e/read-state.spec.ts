@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
+import type { SourceType } from '../../src/preload/channels';
 
 interface Article {
   title: string;
@@ -73,10 +74,10 @@ const readStateTest = base.extend<ReadStateTestFixtures>({
 });
 
 // Subscribes without going through the wizard. The row is enough for a refresh to find the feed.
-async function subscribe(page: Page, url: string): Promise<void> {
-  await page.evaluate((link) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title: 'Local feed', type: 'rss', items: [], categoryName: 'tech', showInHome: true,
-  }), url);
+async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Promise<void> {
+  await page.evaluate(({ link, type }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
+    link, title: 'Local feed', type, items: [], categoryName: 'tech', showInHome: true,
+  }), { link: url, type });
   await page.getByRole('button', { name: 'Refresh feeds' }).click();
 }
 

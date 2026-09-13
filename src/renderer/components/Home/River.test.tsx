@@ -57,6 +57,7 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
     showInHome: 1,
     last_fetched_at: undefined,
     last_error: undefined,
+    icon: undefined,
     category: { id: 1, name: 'Tech' },
     items: [],
     ...overrides,
@@ -366,6 +367,21 @@ test('density reads from preferences', async () => {
   // Assert
   const cardRoot = getByText('Compact item', { exact: true }).element().closest('[data-item-id]');
   expect(cardRoot?.tagName).toBe('DIV');
+});
+
+test('shows the YOUTUBE badge for an item from a youtube feed', async () => {
+  // Arrange
+  localStorage.setItem('preferences-density', JSON.stringify('Compact'));
+  const item = createFeedItem({ title: 'Video item' });
+  const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed', type: 'youtube', items: [item] });
+  mockedUseFeeds.mockReturnValue([feed]);
+
+  // Act
+  const { getByText } = await render(<SearchProvider><PreferencesProvider><River onOpenItem={vi.fn()} /></PreferencesProvider></SearchProvider>);
+
+  // Assert
+  const cardRoot = getByText('Video item', { exact: true }).element().closest('[data-item-id]');
+  expect(cardRoot?.textContent).toContain('YOUTUBE');
 });
 
 test('search filters river items by title', async () => {

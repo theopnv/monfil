@@ -20,6 +20,8 @@ export type FeedFetchError =
  */
 export interface SourceAdapter {
   readonly type: SourceType;
+  /** Whether a subscribed item's own link should be fetched and run through Readability. */
+  readonly fetchesFullArticle: boolean;
   /** Retrieves and parses a subscription at `link`. */
   fetch(link: string, maxItems?: number): Promise<Result<ParsedSource, FeedFetchError>>;
   /** Parses already-retrieved content, so callers can test the parse without the network. */

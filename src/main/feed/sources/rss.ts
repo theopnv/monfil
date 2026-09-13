@@ -1,38 +1,15 @@
-import { createHash } from 'node:crypto';
 import { parseFeed } from 'feedsmith';
-import { decode, EntityLevel } from 'entities';
 import { fetchUrl } from '../../lib/fetch';
 import type { Result } from '../../lib/utils';
 import { extractAtomImageUrl, extractImageUrl } from '../extractImage';
 import { DEFAULT_MAX_FEED_ITEMS } from '../../settings';
+import { decodeOptional, decodeText, resolveGuid } from './text';
 import type { FeedFetchError, NewSourceItem, ParsedSource, SourceAdapter } from './types';
 
 interface ParsedFeedContent {
   title: string;
   description: string;
   items: NewSourceItem[];
-}
-
-// Some feeds put literal entities like "&#8217;" inside a CDATA section, where XML parsers
-// leave them untouched by spec. Decode them here so titles and descriptions render as text.
-function decodeText(text: string): string {
-  return decode(text, EntityLevel.HTML);
-}
-
-function decodeOptional(text: string | undefined): string | undefined {
-  return text === undefined ? undefined : decodeText(text);
-}
-
-// Every item needs an identity, and a feed may supply neither a guid nor a link, so fall back to a
-// digest of the fields that are always there. The prefix keeps it clear of real guids.
-function resolveGuid(guid: string | undefined, link: string | undefined, title: string, pubDate: string): string {
-  if (guid) {
-    return guid;
-  }
-  if (link) {
-    return link;
-  }
-  return `monfil:hash:${createHash('sha1').update(`${title} ${pubDate}`).digest('hex')}`;
 }
 
 export function parseFeedContent(content: string, maxItems: number = 0): ParsedFeedContent | null {
@@ -114,7 +91,7 @@ async function fetchFeed(link: string, maxItems: number = DEFAULT_MAX_FEED_ITEMS
     if (!parsed) {
       return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported RSS or Atom feed." } };
     }
-    return { success: true, data: { type: 'rss', link: normalizedLink, title: parsed.title, description: parsed.description, items: parsed.items } };
+    return { success: true, data: { type: 'rss', link: normalizedLink, title: parsed.title, description: parsed.description, items: parsed.items, icon: undefined } };
   } catch (error) {
     if (error instanceof Error) {
       return { success: false, error: { name: 'PARSE_ERROR', message: error.message } };
@@ -125,6 +102,7 @@ async function fetchFeed(link: string, maxItems: number = DEFAULT_MAX_FEED_ITEMS
 
 export const rssSource: SourceAdapter = {
   type: 'rss',
+  fetchesFullArticle: true,
   fetch: fetchFeed,
   parse: parseFeedContent,
 };

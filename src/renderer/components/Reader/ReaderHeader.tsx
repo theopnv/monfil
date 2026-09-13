@@ -2,7 +2,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Circle } from "@untitledui/icons";
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Tooltip } from "@/components/untitled-ui/base/tooltip/tooltip";
-import { getFaviconUrl } from "@/lib/favicon";
+import { resolveFeedIcon } from "@/lib/favicon";
 import type { RiverItem } from "@/lib/river/utils";
 
 export interface ReaderHeaderProps {
@@ -23,7 +23,7 @@ export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPre
       </Button>
 
       <div className="flex min-w-0 items-center gap-2">
-        <FeedAvatar title={item.feedTitle} faviconUrl={getFaviconUrl(item.feedLink)} size="sm" />
+        <FeedAvatar title={item.feedTitle} faviconUrl={resolveFeedIcon(item.feedIcon, item.feedLink)} size="sm" />
         <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-primary">{item.feedTitle}</span>
         <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-tertiary">{item.categoryName}</span>
       </div>

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getFaviconUrl } from './favicon';
+import { getFaviconUrl, resolveFeedIcon } from './favicon';
 
 describe('getFaviconUrl', () => {
   test('returns the origin favicon path for a normal link', () => {
@@ -48,5 +48,31 @@ describe('getFaviconUrl', () => {
 
     // Assert
     expect(result).toBe('https://example.com/favicon.ico');
+  });
+});
+
+describe('resolveFeedIcon', () => {
+  test('prefers the stored icon over the favicon fallback', () => {
+    // Act
+    const result = resolveFeedIcon('https://yt3.googleusercontent.com/avatar=s176', 'https://example.com/feed');
+
+    // Assert
+    expect(result).toBe('https://yt3.googleusercontent.com/avatar=s176');
+  });
+
+  test('falls back to the favicon when there is no stored icon', () => {
+    // Act
+    const result = resolveFeedIcon(undefined, 'https://example.com/feed');
+
+    // Assert
+    expect(result).toBe('https://example.com/favicon.ico');
+  });
+
+  test('returns undefined when there is no icon and the link is malformed', () => {
+    // Act
+    const result = resolveFeedIcon(undefined, 'not a url');
+
+    // Assert
+    expect(result).toBeUndefined();
   });
 });

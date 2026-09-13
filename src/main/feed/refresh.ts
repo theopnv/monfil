@@ -1,7 +1,7 @@
 import { db, dbReady } from '../db/database';
 import { addFeedItemsToDatabase, updateFeedItemImage, upsertArticleContent } from '../db/crud/insert';
 import { queryFeedMetadata, queryFeeds } from '../db/crud/query';
-import type { FeedItem, FeedMetadata } from '../db/types';
+import type { FeedItem, FeedMetadata, SourceType } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
 import { sourceFor } from './sources/registry';
@@ -49,17 +49,21 @@ export async function refreshAllFeeds(): Promise<Feed[]> {
   });
 
   const feeds = await queryFeeds();
+  const typeByFeedId = new Map(feedList.map((feed) => [feed.id, feed.type]));
 
   // Images take a page fetch each, so they arrive later through their own push rather than holding up the list.
-  enrichRefreshedItems(insertedByFeedId).catch((error: unknown) => {
+  enrichRefreshedItems(insertedByFeedId, typeByFeedId).catch((error: unknown) => {
     console.error('Failed to enrich the images of the refreshed items.', error);
   });
 
   return feeds;
 }
 
-async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedItem[]>): Promise<void> {
+async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedItem[]>, typeByFeedId: ReadonlyMap<number, SourceType>): Promise<void> {
   for (const [feedId, items] of insertedByFeedId) {
+    if (!sourceFor(typeByFeedId.get(feedId) ?? 'rss').fetchesFullArticle) {
+      continue;
+    }
     await enrichItems(
       items,
       (itemId, image) => {
