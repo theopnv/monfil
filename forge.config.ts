@@ -4,6 +4,7 @@ import { MakerZIP } from '@electron-forge/maker-zip';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
+import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
@@ -12,6 +13,17 @@ const config: ForgeConfig = {
     asar: true,
     icon: 'assets/icons/icon',
     extraResource: ['assets/icons/icon.png'],
+    // The Vite plugin's own `ignore` keeps only `.vite/**`, dropping node_modules entirely.
+    // vite.main.config.mts marks a few packages (better-sqlite3, jsdom) as Rollup `external`
+    // since they can't be bundled, so their real files need to survive packaging. Keeping
+    // node_modules here lets the default `prune` step (packagerConfig.prune, on unless set
+    // false) trim it back down to production dependencies only.
+    ignore: (file) => {
+      if (!file) {
+        return false;
+      }
+      return !(file.startsWith('/.vite') || file.startsWith('/node_modules'));
+    },
   },
   rebuildConfig: {},
   makers: [
@@ -44,6 +56,9 @@ const config: ForgeConfig = {
         },
       ],
     }),
+    // .node binaries can't be dlopen'd from inside an asar archive, so better-sqlite3's
+    // prebuilds need to live unpacked alongside it.
+    new AutoUnpackNativesPlugin({}),
     // Fuses are used to enable/disable various Electron functionality
     // at package time, before code signing the application
     new FusesPlugin({
