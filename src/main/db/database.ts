@@ -29,6 +29,18 @@ async function openAndMigrate(filePath: string): Promise<void> {
 
     if (filePath !== ':memory:') {
       sqlite.pragma('journal_mode = WAL');
+
+      // A migration only touches the migration table once the schema is up to date, so it can succeed
+      // even when other tables are corrupted on disk. Checking here, inside withCorruptionRecovery's
+      // guarded attempt, is what lets that corruption trigger a quarantine-and-reset instead of
+      // surfacing as SQLITE_CORRUPT errors from the first real query later on.
+      const integrityRows = sqlite.pragma('quick_check') as { quick_check: string }[];
+      if (integrityRows.length !== 1 || integrityRows[0]?.quick_check !== 'ok') {
+        throw Object.assign(
+          new Error(`database disk image is malformed: ${integrityRows.map((row) => row.quick_check).join('; ')}`),
+          { code: 'SQLITE_CORRUPT' },
+        );
+      }
     }
   } catch (error) {
     sqlite.close();

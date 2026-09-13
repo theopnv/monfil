@@ -1,6 +1,7 @@
 import { useLocation } from "@tanstack/react-router";
 import { Button } from "./untitled-ui/base/buttons/button";
 import { Home02, Sliders01 } from "@untitledui/icons";
+import MonfilLogo from "@/components/common/MonfilLogo";
 
 const activeNavClasses = "rounded-xl bg-brand-secondary *:data-icon:text-fg-brand-secondary hover:bg-brand-secondary hover:*:data-icon:text-fg-brand-secondary";
 
@@ -9,9 +10,7 @@ export default function Toolbar() {
 
   return (
     <nav className="flex h-full w-16 flex-none flex-col items-center gap-1.5 border-r border-secondary bg-secondary py-4.5">
-      <div className="mb-3.5 flex size-8.5 items-center justify-center rounded-full bg-brand-solid font-display text-primary_on-brand">
-        M
-      </div>
+      <MonfilLogo className="mb-3.5 size-8.5" />
 
       <Button
         href="/"
