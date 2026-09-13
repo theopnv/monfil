@@ -16,6 +16,7 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
     showInHome: 1,
     last_fetched_at: undefined,
     last_error: undefined,
+    icon: undefined,
     category: { id: 1, name: 'Tech' },
     items: [],
     ...overrides,

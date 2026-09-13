@@ -8,7 +8,7 @@ import { refreshAllFeeds } from './refresh';
 import type { FeedItem } from '../db/types';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 
-vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetch: vi.fn(), parse: vi.fn() } }));
+vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: true, fetch: vi.fn(), parse: vi.fn() } }));
 vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
 vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
@@ -36,7 +36,7 @@ function item(overrides: Partial<NewItem> = {}): NewItem {
 }
 
 function parsed(link: string, items: NewItem[]): ParsedSource {
-  return { type: 'rss', link, title: 'Feed A', description: '', items };
+  return { type: 'rss', link, title: 'Feed A', description: '', items, icon: undefined };
 }
 
 async function storeFeed(link: string, items: NewItem[] = []): Promise<number> {

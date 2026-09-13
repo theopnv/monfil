@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { deriveStandfirst, findRawDescription, getReaderNavigation } from './reader';
+import { deriveStandfirst, findRawDescription, getReaderNavigation, renderPlainTextDescription } from './reader';
 import type { Feed } from '../../../preload/channels';
 import type { RiverItem } from '../river/utils';
 
@@ -12,8 +12,10 @@ function createItem(overrides: Partial<RiverItem> = {}): RiverItem {
     description: 'Item description',
     feedTitle: 'Feed',
     feedLink: 'https://example.com/feed',
+    feedIcon: undefined,
     categoryName: 'Tech',
     image: undefined,
+    type: 'rss',
     ...overrides,
   };
 }
@@ -109,6 +111,40 @@ describe('deriveStandfirst', () => {
   });
 });
 
+describe('renderPlainTextDescription', () => {
+  test('escapes html-significant characters', () => {
+    // Act
+    const result = renderPlainTextDescription('<script>alert("hi")</script> & friends');
+
+    // Assert
+    expect(result).toBe('&lt;script&gt;alert(&quot;hi&quot;)&lt;/script&gt; &amp; friends');
+  });
+
+  test('wraps a bare url in an anchor', () => {
+    // Act
+    const result = renderPlainTextDescription('Watch: https://example.com/video for more.');
+
+    // Assert
+    expect(result).toBe('Watch: <a href="https://example.com/video">https://example.com/video</a> for more.');
+  });
+
+  test('excludes trailing sentence punctuation from the link', () => {
+    // Act
+    const result = renderPlainTextDescription('See https://example.com/video.');
+
+    // Assert
+    expect(result).toBe('See <a href="https://example.com/video">https://example.com/video</a>.');
+  });
+
+  test('replaces newlines with line breaks', () => {
+    // Act
+    const result = renderPlainTextDescription('Line one\nLine two');
+
+    // Assert
+    expect(result).toBe('Line one<br>Line two');
+  });
+});
+
 describe('findRawDescription', () => {
   const feeds: Feed[] = [
     {
@@ -120,6 +156,7 @@ describe('findRawDescription', () => {
       showInHome: 1,
       last_fetched_at: undefined,
       last_error: undefined,
+      icon: undefined,
       category: { id: 1, name: 'Tech' },
       items: [{ id: 10, feed_id: 1, title: 'Item', link: 'https://a.example/item', guid: 'https://a.example/item', pubDate: '2024-01-01', description: '<p>raw html</p>', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
     },

@@ -1,4 +1,4 @@
-import type { FeedMetadata, FeedItem, FeedCategory } from '../main/db/types';
+import type { FeedMetadata, FeedItem, FeedCategory, SourceType } from '../main/db/types';
 import type { NewFeedInput, AddFeedError } from '../main/db/crud/insert';
 import type { DeleteFeedError } from '../main/db/crud/delete';
 import type { UpdateFeedError, UpdateItemError } from '../main/db/crud/update';
@@ -69,7 +69,7 @@ export type TwoWayRendererMainChannelPayloads = {
 export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
 
 export type TwoWayRendererMainChannelsInvokeArgs = {
-  'feeds:validate-feed-url': string;
+  'feeds:validate-feed-url': { query: string; type?: SourceType };
   'feeds:list-categories': undefined;
   'feeds:list': undefined;
   'feeds:refresh': undefined;

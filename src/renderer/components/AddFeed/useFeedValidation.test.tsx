@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { useFeedValidation } from './useFeedValidation';
-import type { ParsedSource, FeedFetchError } from '../../../preload/channels';
+import type { ParsedSource, FeedFetchError, SourceType } from '../../../preload/channels';
 import type { Result } from '../../../main/lib/utils';
 
-const validFeed: ParsedSource = { type: 'rss', link: 'https://example.com/feed', title: 'Example Feed', description: 'An example feed', items: [] };
+const validFeed: ParsedSource = { type: 'rss', link: 'https://example.com/feed', title: 'Example Feed', description: 'An example feed', icon: undefined, items: [] };
 const notFoundError: FeedFetchError = { name: 'UNSUPPORTED_FORMAT', message: 'nope' };
 
-function Probe({ query }: { query: string }) {
-  const { status, feed, error } = useFeedValidation(query);
+function Probe({ query, type }: { query: string; type?: SourceType }) {
+  const { status, feed, error } = useFeedValidation(query, type);
   return (
     <div>
       <span data-testid="status">{status}</span>
@@ -67,7 +67,22 @@ describe('useFeedValidation', () => {
 
     // Assert
     expect(invokeMock).toHaveBeenCalledTimes(1);
-    expect(invokeMock).toHaveBeenCalledWith('feeds:validate-feed-url', 'example.com/feed');
+    expect(invokeMock).toHaveBeenCalledWith('feeds:validate-feed-url', { query: 'example.com/feed', type: undefined });
+  });
+
+  test('sends the type hint, and re-validates unchanged text when the hint changes', async () => {
+    // Arrange
+    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
+    const { rerender } = await render(<Probe query="Underscore_" type="youtube" />);
+    await vi.advanceTimersByTimeAsync(450);
+
+    // Act: the query stays the same, only the hint changes.
+    await rerender(<Probe query="Underscore_" type="rss" />);
+    await vi.advanceTimersByTimeAsync(450);
+
+    // Assert
+    expect(invokeMock).toHaveBeenNthCalledWith(1, 'feeds:validate-feed-url', { query: 'Underscore_', type: 'youtube' });
+    expect(invokeMock).toHaveBeenNthCalledWith(2, 'feeds:validate-feed-url', { query: 'Underscore_', type: 'rss' });
   });
 
   test('maps a successful validation to status "found"', async () => {

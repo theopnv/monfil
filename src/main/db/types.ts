@@ -29,7 +29,7 @@ export type UpdateFeedCategory = Updateable<FeedCategoryTable>;
 // =============== Feed ===============
 // A feed is anything the user wants to subscribe to (e.g. RSS, podcasts, bluesky feed, etc)
 
-export type SourceType = 'rss';
+export type SourceType = 'rss' | 'youtube';
 
 export interface FeedMetadataTable {
   id: Generated<number>;
@@ -41,6 +41,7 @@ export interface FeedMetadataTable {
   last_fetched_at: string | undefined;
   // Update additionally allows `null`, so a successful fetch can clear the last failure.
   last_error: string | undefined | null;
+  icon: string | undefined;
 }
 
 export type FeedMetadata = Selectable<FeedMetadataTable>;

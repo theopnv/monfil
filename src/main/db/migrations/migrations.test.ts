@@ -74,6 +74,7 @@ async function seed(): Promise<Seeded> {
       title: 'Feed A',
       category_id: category.id,
       showInHome: 1,
+      icon: 'https://a.example/icon.png',
     }, columns.get('feedMetadata')))
     .returning('id')
     .executeTakeFirstOrThrow();

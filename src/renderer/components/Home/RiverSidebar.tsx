@@ -6,7 +6,7 @@ import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { feedVisibility, folderVisibility, nextVisibility, VISIBILITY_ICON, VISIBILITY_LABEL, VISIBILITY_STATE_LABEL, type FeedVisibility } from "@/lib/river/feed-visibility";
-import { getFaviconUrl } from "@/lib/favicon";
+import { resolveFeedIcon } from "@/lib/favicon";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import type { Feed } from "../../../preload/channels";
 
@@ -149,7 +149,7 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
                           state === "home" && "text-secondary",
                         )}
                       >
-                        <FeedAvatar title={feed.title} faviconUrl={getFaviconUrl(feed.link)} size="sm" />
+                        <FeedAvatar title={feed.title} faviconUrl={resolveFeedIcon(feed.icon, feed.link)} size="sm" />
                         <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{feed.title}</span>
                         <NextIcon aria-hidden className="size-3.5 flex-none text-quaternary opacity-0 group-hover:opacity-100" />
                         <span data-testid="feed-count" className="text-xs text-tertiary tabular-nums">{unreadCount(feed) > 0 ? unreadCount(feed) : ''}</span>

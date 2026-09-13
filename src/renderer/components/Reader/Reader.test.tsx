@@ -56,6 +56,7 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
     showInHome: 1,
     last_fetched_at: undefined,
     last_error: undefined,
+    icon: undefined,
     category: { id: 1, name: 'Tech' },
     items: [],
     ...overrides,
@@ -298,6 +299,24 @@ test('shows the feed description and a note when the article is unavailable', as
   // Assert
   await expect.element(getByText('The full article could not be loaded. Read it at the source instead.', { exact: true })).toBeInTheDocument();
   await expect.element(getByTestId('article-body').getByText(`Item ${itemB.id} description`, { exact: true })).toBeInTheDocument();
+});
+
+test('shows a linkified description for a youtube item, with no unavailable message or duplicated standfirst', async () => {
+  // Arrange
+  const item = createFeedItem({ description: 'Check this out: https://example.com/video\n\nMore info.' });
+  const feed = createFeed({ title: 'Feed V', link: 'https://v.example/feed', type: 'youtube', items: [item] });
+  mockedUseFeeds.mockReturnValue([feed]);
+  const invoke = vi.fn().mockResolvedValue([]);
+  window.electron.ipcRenderer.invoke = invoke;
+
+  // Act
+  const { getByTestId, getByText } = await renderReader({ itemId: String(item.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
+
+  // Assert
+  await expect.element(getByTestId('article-body').getByRole('link', { name: 'https://example.com/video' })).toBeInTheDocument();
+  await expect.element(getByText('Check this out:', { exact: false })).toBeInTheDocument();
+  await expect.element(getByText('The full article could not be loaded. Read it at the source instead.', { exact: true })).not.toBeInTheDocument();
+  expect(invoke).not.toHaveBeenCalledWith('items:get-content', item.id);
 });
 
 test('the next article card targets the nearest unread item further down the list', async () => {

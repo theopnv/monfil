@@ -13,10 +13,8 @@ export default function ArticleSourceLink({ item }: ArticleSourceLinkProps) {
   }
 
   return (
-    <div className="mb-8.5 flex items-center border-t border-secondary pt-6">
-      <Button color="link-color" size="sm" iconTrailing={LinkExternal01} className="ml-auto" onPress={() => openLink(item.link)}>
-        Read on {item.feedTitle}
-      </Button>
-    </div>
+    <Button color="link-color" size="sm" iconTrailing={LinkExternal01} onPress={() => openLink(item.link)}>
+      Read on {item.feedTitle}
+    </Button>
   );
 }

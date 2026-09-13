@@ -1,4 +1,4 @@
-import type { Feed } from '../../../preload/channels';
+import type { Feed, SourceType } from '../../../preload/channels';
 
 export type Density = "Cards" | "Magazine" | "Compact";
 
@@ -12,9 +12,17 @@ export interface RiverItem {
   description: string;
   feedTitle: string;
   feedLink: string;
+  feedIcon: string | undefined;
   categoryName: string;
   image: string | undefined;
+  type: SourceType;
 }
+
+/** The uppercase badge word for a source type, e.g. "RSS" / "YOUTUBE". */
+export const SOURCE_TYPE_LABEL: Record<SourceType, string> = {
+  rss: 'RSS',
+  youtube: 'YOUTUBE',
+};
 
 export interface RiverCardProps {
   item: RiverItem;
@@ -50,8 +58,10 @@ export function toRiverItems(feeds: Feed[]): RiverItem[] {
         description: stripHtml(item.description),
         feedTitle: feed.title,
         feedLink: feed.link,
+        feedIcon: feed.icon,
         categoryName: feed.category.name,
         image: item.image,
+        type: feed.type,
       }))
     );
 

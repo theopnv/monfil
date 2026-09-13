@@ -1,17 +1,33 @@
 import { Link02 } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
-import { getFaviconUrl } from "@/lib/favicon";
+import { resolveFeedIcon } from "@/lib/favicon";
 import FeedMatchCard from "./FeedMatchCard";
 import type { FeedValidationStatus } from "./useFeedValidation";
-import type { ParsedSource, FeedFetchError } from "../../../preload/channels";
+import type { ParsedSource, FeedFetchError, SourceType } from "../../../preload/channels";
 
-export type FeedType = "anything" | "rss-atom";
+export type FeedType = SourceType | undefined;
 
 const KINDS: { id: FeedType; label: string }[] = [
-  { id: "anything", label: "Anything" },
-  { id: "rss-atom", label: "RSS · Atom" },
+  { id: undefined, label: "Anything" },
+  { id: "rss", label: "RSS · Atom" },
+  { id: "youtube", label: "YouTube" },
 ];
+
+const COPY: Record<"anything" | SourceType, { placeholder: string; hint: string }> = {
+  anything: {
+    placeholder: "Paste a link to an RSS feed or a YouTube channel…",
+    hint: "Monfil checks the link for an RSS feed or a YouTube channel.",
+  },
+  rss: {
+    placeholder: "Paste a link to an RSS feed…",
+    hint: "Monfil checks the link for an RSS feed.",
+  },
+  youtube: {
+    placeholder: "Paste a channel, handle, or video link…",
+    hint: "Monfil checks the link for a YouTube channel or video.",
+  },
+};
 
 // Input's `icon` prop is typed as ComponentType<HTMLAttributes<HTMLOrSVGElement>>,
 // but @untitledui/icons components are typed against SVGProps. InputBase only
@@ -31,23 +47,25 @@ export interface Step1FindProps {
 }
 
 export default function Step1Find({ query, onQueryChange, type, onTypeChange, status, feed, error }: Step1FindProps) {
+  const copy = COPY[type ?? "anything"];
+
   return (
     <div className="flex flex-col gap-1 px-7.5 py-5.5">
       <Input
         aria-label="Feed URL"
         size="lg"
         icon={LinkIcon}
-        placeholder="Paste a link to an RSS feed…"
+        placeholder={copy.placeholder}
         value={query}
         onChange={onQueryChange}
         wrapperClassName="rounded-full"
       />
-      <p className="mb-4.5 px-1.5 text-xs text-tertiary text-pretty">Monfil checks the link for an RSS feed.</p>
+      <p className="mb-4.5 px-1.5 text-xs text-tertiary text-pretty">{copy.hint}</p>
 
       <div className="mb-5.5 flex w-max gap-0.5 rounded-full bg-primary_hover p-0.75">
         {KINDS.map((option) => (
           <Button
-            key={option.id}
+            key={option.label}
             size="sm"
             color={option.id === type ? "secondary" : "tertiary"}
             className="rounded-full"
@@ -64,7 +82,7 @@ export default function Step1Find({ query, onQueryChange, type, onTypeChange, st
           title={feed.title || feed.link}
           detail={`${feed.link} — ${feed.items.length} items`}
           status="found"
-          faviconUrl={getFaviconUrl(feed.link)}
+          faviconUrl={resolveFeedIcon(feed.icon, feed.link)}
         />
       )}
       {status === "not-found" && (

@@ -33,6 +33,8 @@ jobs:
 
       - run: npm ci
 
+      - run: npx vite build --config vite.renderer.config.mts
+
       - run: npm run lint
 
       - run: npm run publish

@@ -21,7 +21,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   const [step, setStep] = useState<WizardStep>(1);
   const [maxStepReached, setMaxStepReached] = useState<WizardStep>(1);
   const [query, setQuery] = useState("");
-  const [type, setType] = useState<FeedType>("anything");
+  const [type, setType] = useState<FeedType>(undefined);
   const [categories, setCategories] = useState<FeedCategory[]>([]);
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -30,13 +30,13 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   const [submitError, setSubmitError] = useState<AddFeedError | null>(null);
   const [result, setResult] = useState<Feed | null>(null);
 
-  const validation = useFeedValidation(query);
+  const validation = useFeedValidation(query, type);
 
   function resetWizard() {
     setStep(1);
     setMaxStepReached(1);
     setQuery("");
-    setType("anything");
+    setType(undefined);
     setSelectedCategoryName(null);
     setNewCategoryName("");
     setShowInHome(true);
@@ -93,6 +93,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
       items: validation.feed.items,
       categoryName: selectedCategoryName,
       showInHome,
+      ...(validation.feed.icon !== undefined ? { icon: validation.feed.icon } : {}),
     });
 
     if (response.success) {

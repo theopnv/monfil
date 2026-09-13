@@ -32,6 +32,8 @@ Migrations are supplied by a hand-written `MigrationProvider` in `src/main/db/mi
 
 Add a migration by creating `000X_description.ts` next to `index.ts` and adding one line to the `migrations` record. `Migrator` sorts by name, so the numeric prefix keeps ordering explicit.
 
+`0002_feed_icon` adds a nullable `icon` text column to `feedMetadata`: a remote URL for a feed's own picture (a YouTube channel avatar, for instance), left `undefined` for a feed whose adapter has none to offer. Existing rows are not retyped or backfilled.
+
 ## Tests
 
 Unit tests import the same `db` singleton that the app uses. There is no fixture database. Call `initializeDatabase(':memory:')` in `beforeAll` to migrate a fresh in-memory database before using `db`. Delete the rows in `afterEach` so each test starts clean, and delete children before parents to respect the foreign keys.

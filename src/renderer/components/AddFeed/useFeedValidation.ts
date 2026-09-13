@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import type { ParsedSource, FeedFetchError } from '../../../preload/channels';
+import type { ParsedSource, FeedFetchError, SourceType } from '../../../preload/channels';
 
 export type FeedValidationStatus = 'idle' | 'loading' | 'found' | 'not-found';
 
@@ -12,7 +12,7 @@ interface FeedValidationState {
 
 const idleState: FeedValidationState = { status: 'idle', feed: null, error: null };
 
-export function useFeedValidation(query: string): FeedValidationState {
+export function useFeedValidation(query: string, type?: SourceType): FeedValidationState {
   const debouncedQuery = useDebouncedValue(query.trim(), 450);
   const [state, setState] = useState<FeedValidationState>(idleState);
 
@@ -26,7 +26,7 @@ export function useFeedValidation(query: string): FeedValidationState {
     setState((prev) => ({ ...prev, status: 'loading' }));
 
     window.electron.ipcRenderer
-      .invoke('feeds:validate-feed-url', debouncedQuery)
+      .invoke('feeds:validate-feed-url', { query: debouncedQuery, ...(type !== undefined ? { type } : {}) })
       .then((result) => {
         if (cancelled) {
           return;
@@ -54,7 +54,7 @@ export function useFeedValidation(query: string): FeedValidationState {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery]);
+  }, [debouncedQuery, type]);
 
   return state;
 }

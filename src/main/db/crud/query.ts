@@ -57,6 +57,7 @@ const feedMetadataHandlers = {
   type: (q, v) => q.where('type', '=', v),
   last_fetched_at: (q, v) => q.where('last_fetched_at', '=', v),
   last_error: (q, v) => q.where('last_error', '=', v),
+  icon: (q, v) => q.where('icon', '=', v),
 } satisfies CriteriaHandlers<'feedMetadata', FeedMetadata>;
 
 export async function queryFeedMetadata(criteria: Partial<FeedMetadata>): Promise<FeedMetadata[]> {

@@ -13,14 +13,15 @@ async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: st
     .executeTakeFirstOrThrow();
 }
 
-async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, title: string, type: SourceType, categoryId: number, showInHome: boolean) {
+async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, title: string, type: SourceType, categoryId: number, showInHome: boolean, icon: string | undefined) {
   return trx.insertInto('feedMetadata')
-    .values({ link, title, type, category_id: categoryId, showInHome: showInHome ? 1 : 0 })
+    .values({ link, title, type, category_id: categoryId, showInHome: showInHome ? 1 : 0, icon })
     .onConflict((oc) => oc.column('link').doUpdateSet((eb) => ({
       title: eb.ref('excluded.title'),
       type: eb.ref('excluded.type'),
       category_id: eb.ref('excluded.category_id'),
       showInHome: eb.ref('excluded.showInHome'),
+      icon: eb.ref('excluded.icon'),
     })))
     .returningAll()
     .executeTakeFirstOrThrow();
@@ -58,6 +59,7 @@ export interface NewFeedInput {
   items: Omit<FeedItem, 'id' | 'feed_id'>[];
   categoryName: string;
   showInHome: boolean;
+  icon?: string;
 }
 
 export type AddFeedError = { name: 'DB_ERROR'; message: string };
@@ -98,7 +100,7 @@ export async function addFeedToDatabase(input: NewFeedInput): Promise<Result<Fee
   try {
     const { category, metadata } = await db.transaction().execute(async (trx) => {
       const category = await addFeedCategoryToDatabase(trx, input.categoryName);
-      const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, input.type, category.id, input.showInHome);
+      const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, input.type, category.id, input.showInHome, input.icon);
       const items = await addFeedItemsToDatabase(trx, metadata.id, input.items);
       if (!items.success) {
         throw new Error(items.error.message);

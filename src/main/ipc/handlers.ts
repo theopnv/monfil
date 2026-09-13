@@ -1,8 +1,9 @@
 import { enrichItems } from "../feed/enrichItems";
 import { ARTICLE_FETCH_TIMEOUT_MS } from "../constants";
 import { deriveArticleContentStatus, extractArticle } from "../feed/extractArticle";
-import { resolveSource } from "../feed/sources/registry";
+import { resolveSource, sourceFor } from "../feed/sources/registry";
 import type { FeedFetchError, ParsedSource } from "../feed/sources/types";
+import type { SourceType } from "../db/types";
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
 import { fetchUrl } from "../lib/fetch";
@@ -17,8 +18,8 @@ import type { IpcMainInvokeEvent } from "electron";
 import type { ArticleContentResult, Feed, FeedCategory } from "../../preload/channels";
 import type { Result } from "../lib/utils";
 
-export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, query: string): Promise<Result<ParsedSource, FeedFetchError>> {
-  return resolveSource(query).fetch(query, await getMaxFeedItems());
+export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource, FeedFetchError>> {
+  return resolveSource(payload.query, payload.type).fetch(payload.query, await getMaxFeedItems());
 }
 
 export function handleFeedsListCategories(): Promise<FeedCategory[]> {
@@ -31,7 +32,7 @@ export function handleFeedsList(): Promise<Feed[]> {
 
 export async function handleFeedsSubmitAddFeed(event: IpcMainInvokeEvent, payload: NewFeedInput): Promise<Result<Feed, AddFeedError>> {
   const result = await addFeedToDatabase(payload);
-  if (result.success) {
+  if (result.success && sourceFor(payload.type).fetchesFullArticle) {
     const feed = result.data;
     void enrichItems(
       feed.items,

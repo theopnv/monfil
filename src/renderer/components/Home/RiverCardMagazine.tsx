@@ -2,8 +2,8 @@ import FeedAvatar from "@/components/Home/FeedAvatar";
 import RiverCardImage from "@/components/Home/RiverCardImage";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx } from "@/components/untitled-ui/utils/cx";
-import { getFaviconUrl } from "@/lib/favicon";
-import { describeRiverCard, formatRelativeTime, type RiverCardProps } from "@/lib/river/utils";
+import { resolveFeedIcon } from "@/lib/favicon";
+import { describeRiverCard, formatRelativeTime, SOURCE_TYPE_LABEL, type RiverCardProps } from "@/lib/river/utils";
 
 export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps) {
   return (
@@ -29,7 +29,7 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
       <div className="flex flex-1 flex-col p-4.25">
         <div className="mb-2 flex items-center gap-1.75">
           <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
-          <FeedAvatar title={item.feedTitle} faviconUrl={getFaviconUrl(item.feedLink)} size="sm" />
+          <FeedAvatar title={item.feedTitle} faviconUrl={resolveFeedIcon(item.feedIcon, item.feedLink)} size="sm" />
           <span className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
           <span className="ml-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.pubDate)}</span>
         </div>
@@ -40,7 +40,7 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
         <div className="mt-auto flex items-center gap-2 pt-3">
           <span className="rounded-full bg-sage-200 px-2.25 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>
           <Badge color="brand" size="sm">
-            RSS
+            {SOURCE_TYPE_LABEL[item.type]}
           </Badge>
         </div>
       </div>

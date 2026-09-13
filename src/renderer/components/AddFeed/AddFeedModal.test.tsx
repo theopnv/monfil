@@ -13,6 +13,7 @@ const parsedFeed: ParsedSource = {
   link: 'https://example.com/feed',
   title: 'Example Feed',
   description: 'A feed about examples.',
+  icon: undefined,
   items: [{ title: 'Item 1', guid: 'https://example.com/item1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
 };
 
@@ -25,6 +26,7 @@ const insertedFeed: Feed = {
   showInHome: 1,
   last_fetched_at: undefined,
   last_error: undefined,
+  icon: undefined,
   category: { id: 1, name: 'Tech' },
   items: [{ id: 1, feed_id: 1, title: 'Item 1', guid: 'https://example.com/item1', link: 'https://example.com/item1', pubDate: '2024-01-01', description: 'd', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
 };
@@ -86,6 +88,43 @@ describe('AddFeedModal', () => {
     // Assert: Step 3 shows the real, post-insert feed with its backfilled items.
     await expect.element(getByText(/is in Tech/)).toBeInTheDocument();
     await expect.element(getByText('Item 1')).toBeInTheDocument();
+  });
+
+  test('selecting YouTube sends the type hint to the validation call', async () => {
+    // Arrange
+    const { getByLabelText, getByRole, getByText } = await render(
+      <FeedsProvider>
+        <AddFeedModal isOpen onOpenChange={vi.fn()} />
+      </FeedsProvider>,
+    );
+
+    // Act
+    await getByRole('button', { name: 'YouTube' }).click();
+    await getByLabelText('Feed URL').fill('Underscore_');
+    await expect.element(getByText('Feed found', { exact: true })).toBeInTheDocument();
+
+    // Assert
+    expect(invokeMock).toHaveBeenCalledWith('feeds:validate-feed-url', { query: 'Underscore_', type: 'youtube' });
+  });
+
+  test('switching the type toggle re-validates the same, unchanged text', async () => {
+    // Arrange
+    const { getByLabelText, getByRole, getByText } = await render(
+      <FeedsProvider>
+        <AddFeedModal isOpen onOpenChange={vi.fn()} />
+      </FeedsProvider>,
+    );
+    await getByLabelText('Feed URL').fill('example.com/feed');
+    await expect.element(getByText('Feed found', { exact: true })).toBeInTheDocument();
+    invokeMock.mockClear();
+
+    // Act: the text is unchanged, only the toggle moves.
+    await getByRole('button', { name: 'RSS · Atom' }).click();
+
+    // Assert
+    await vi.waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith('feeds:validate-feed-url', { query: 'example.com/feed', type: 'rss' });
+    }, { timeout: 2000 });
   });
 
   test('keeps Continue disabled when the url does not resolve to a feed', async () => {
