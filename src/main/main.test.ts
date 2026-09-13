@@ -3,14 +3,24 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 const mockQuit = vi.fn();
 const mockOn = vi.fn();
 const mockGetPath = vi.fn(() => 'mock-user-data');
+const mockGetAppPath = vi.fn(() => 'mock-app-path');
+const mockDockSetIcon = vi.fn();
+let mockIsPackaged = false;
 
 vi.mock(import('electron'), () => ({
-  app: { quit: mockQuit, on: mockOn, getPath: mockGetPath } as unknown as Electron.App,
-  BrowserWindow: vi.fn(() => ({
-    maximize: vi.fn(),
-    loadURL: vi.fn(),
-    loadFile: vi.fn(),
-  })) as unknown as typeof Electron.BrowserWindow,
+  app: {
+    quit: mockQuit,
+    on: mockOn,
+    getPath: mockGetPath,
+    getAppPath: mockGetAppPath,
+    get isPackaged() {
+      return mockIsPackaged;
+    },
+    dock: { setIcon: mockDockSetIcon },
+  } as unknown as Electron.App,
+  BrowserWindow: vi.fn(function () {
+    return { maximize: vi.fn(), loadURL: vi.fn(), loadFile: vi.fn() };
+  }) as unknown as typeof Electron.BrowserWindow,
 }));
 
 vi.mock(import('./ipc/registerIpcHandlers'), () => ({
@@ -36,6 +46,8 @@ describe('main', () => {
     vi.resetModules();
     mockQuit.mockClear();
     mockOn.mockClear();
+    mockDockSetIcon.mockClear();
+    mockIsPackaged = false;
   });
 
   test('quits without bootstrapping on a Squirrel install/uninstall event', async () => {
