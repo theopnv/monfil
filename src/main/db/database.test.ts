@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, test, beforeEach } from 'vitest';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import SQLite from 'better-sqlite3';
+import { sql } from 'kysely';
 import { closeDatabase, db, dbReady, initializeDatabase } from './database';
 import { rmTestDir } from '../lib/rmTestDir';
 
@@ -110,5 +112,33 @@ describe('recovering from a corrupted database file', () => {
 
     // Assert
     await expect(db.selectFrom('feedCategory').selectAll().execute()).resolves.toEqual([]);
+  });
+
+  // An already-migrated file's migration step touches only the migration bookkeeping table, so it can
+  // succeed even when a data table is corrupted elsewhere in the file. Without an integrity check inside
+  // the guarded attempt, that corruption would surface later as SQLITE_CORRUPT from the first real query
+  // instead of being quarantined here.
+  test('resets an already-migrated file whose data pages are corrupted, not just its header', async () => {
+    // Arrange
+    await initializeDatabase(filePath);
+    await db.insertInto('setting').values({ key: 'theme', value: 'dark' }).execute();
+    await sql`PRAGMA wal_checkpoint(TRUNCATE)`.execute(db);
+    await closeDatabase();
+
+    const probe = new SQLite(filePath);
+    const pageSize = probe.pragma('page_size', { simple: true }) as number;
+    const { rootpage } = probe.prepare("SELECT rootpage FROM sqlite_master WHERE name = 'setting'").get() as { rootpage: number };
+    probe.close();
+
+    const bytes = await readFile(filePath);
+    const pageStart = (rootpage - 1) * pageSize;
+    bytes.subarray(pageStart, pageStart + pageSize).fill(0xff);
+    await writeFile(filePath, bytes);
+
+    // Act
+    await expect(initializeDatabase(filePath)).resolves.toBeUndefined();
+
+    // Assert
+    await expect(db.selectFrom('setting').selectAll().execute()).resolves.toEqual([]);
   });
 });

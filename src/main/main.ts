@@ -25,10 +25,16 @@ function bootstrap() {
   // OS focus from whatever the developer is doing
   const isE2ETest = process.env['E2E_TEST'] === '1';
 
+  // extraResource copies this next to the packaged app; unpackaged, it's still in the source tree.
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.png')
+    : path.join(app.getAppPath(), 'assets/icons/icon.png');
+
   const createWindow = () => {
     const mainWindow = new BrowserWindow({
       titleBarStyle: 'hidden',
       show: !isE2ETest,
+      icon: iconPath,
       webPreferences: {
         preload: path.join(__dirname, 'preload.js'),
       },
@@ -62,6 +68,14 @@ function bootstrap() {
   // This method will be called when Electron has finished initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
   app.on('ready', main);
+
+  // On macOS, BrowserWindow's `icon` option is a no-op; the packaged app gets its icon from the
+  // bundle's Info.plist, but in dev there's no bundle, so the dock icon needs setting explicitly.
+  app.on('ready', () => {
+    if (process.platform === 'darwin' && !app.isPackaged) {
+      app.dock?.setIcon(iconPath);
+    }
+  });
 
   // Quit when all windows are closed, except on macOS. There, it's common for applications and their menu bar to stay active until the user quits explicitly with Cmd + Q.
   app.on('window-all-closed', () => {
