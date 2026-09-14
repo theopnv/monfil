@@ -83,6 +83,17 @@ describe('stripHtml', () => {
     // Assert
     expect(result).not.toContain('<script');
   });
+
+  test('strips a tag nested inside another tag', () => {
+    // Arrange
+    const html = '<scr<a>ipt>alert(1)</script>Body';
+
+    // Act
+    const result = stripHtml(html);
+
+    // Assert
+    expect(result).not.toContain('<');
+  });
 });
 
 describe('truncateOnWordBoundary', () => {

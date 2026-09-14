@@ -5,13 +5,26 @@ import { decode, EntityLevel } from 'entities';
 const STYLE_SCRIPT_REGEX = /<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi;
 const TAG_REGEX = /<[^>]*>/g;
 
+// A single pass can't prove it caught every tag once one match's removal could expose another,
+// so this reapplies the regex to a fixed point instead of trusting one replace() call.
+function stripTagsToFixedPoint(input: string): string {
+  let previous: string;
+  let current = input;
+  do {
+    previous = current;
+    current = current.replace(TAG_REGEX, '');
+  } while (current !== previous);
+  return current;
+}
+
 /** Strips an HTML fragment down to its plain-text content, decoding entities and collapsing whitespace. */
 export function stripHtml(html: string): string {
   // Entities must be decoded before tag stripping: decoding afterwards would turn
   // entity-encoded markup (e.g. `&lt;script&gt;`) into live tags that already skipped removal.
   const decoded = decode(html, EntityLevel.HTML);
   const withoutStyleScript = decoded.replace(STYLE_SCRIPT_REGEX, '');
-  const withoutTags = withoutStyleScript.replace(TAG_REGEX, '');
+  const withoutTags = stripTagsToFixedPoint(withoutStyleScript);
+  // An unterminated tag (no closing `>`) never matches TAG_REGEX, so any leftover `<` is dropped directly.
   const withoutStrayBrackets = withoutTags.replace(/</g, '');
   return withoutStrayBrackets.replace(/\s+/g, ' ').trim();
 }
