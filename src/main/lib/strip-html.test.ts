@@ -73,6 +73,17 @@ describe('stripHtml', () => {
     expect(result).toBe('Body');
   });
 
+  test('strips a script tag exposed by removing a nested script tag', () => {
+    // Arrange
+    const html = '<scrip<script>ignored</script>t>alert(1)</script>Body';
+
+    // Act
+    const result = stripHtml(html);
+
+    // Assert
+    expect(result).toBe('Body');
+  });
+
   test('strips an unterminated tag with no closing bracket', () => {
     // Arrange
     const html = 'Body<script src=evil.js';
