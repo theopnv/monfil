@@ -1,45 +1,29 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { useReaderContent } from './useReaderContent';
-import type { ArticleContentResult, Feed } from '../../../preload/channels';
-import type { RiverItem } from '../river/utils';
+import type { ItemBody, RiverRow } from '../../../preload/channels';
 
-function createFeed(overrides: Partial<Feed> = {}): Feed {
-  return {
-    id: 1,
-    link: 'https://a.example/feed',
-    title: 'Feed A',
-    category_id: 1,
-    type: 'rss',
-    showInHome: 1,
-    last_fetched_at: undefined,
-    last_error: undefined,
-    icon: undefined,
-    category: { id: 1, name: 'Tech' },
-    items: [{ id: 10, feed_id: 1, title: 'Item', link: 'https://a.example/item', guid: 'https://a.example/item', pubDate: '2024-01-01', description: '<p>Raw html description.</p>', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
-    ...overrides,
-  };
-}
-
-function createItem(overrides: Partial<RiverItem> = {}): RiverItem {
+function createItem(overrides: Partial<RiverRow> = {}): RiverRow {
   return {
     id: 10,
     title: 'Item',
     link: 'https://a.example/item',
-    pubDate: '2024-01-01',
-    description: 'Raw html description.',
+    publishedAt: 1704067200000,
+    excerpt: 'Raw html description.',
     feedTitle: 'Feed A',
     feedLink: 'https://a.example/feed',
     feedIcon: undefined,
     categoryName: 'Tech',
     image: undefined,
+    readAt: undefined,
+    feedId: 1,
     type: 'rss',
     ...overrides,
   };
 }
 
-function Probe({ feeds, item }: { feeds: Feed[]; item: RiverItem | undefined }) {
-  const content = useReaderContent(feeds, item);
+function Probe({ item }: { item: RiverRow | undefined }) {
+  const content = useReaderContent(item);
   return (
     <div>
       <span data-testid="html">{content.html}</span>
@@ -69,26 +53,23 @@ describe('useReaderContent', () => {
   test('an rss item shows the raw description while the fetched article is loading', async () => {
     // Arrange
     invokeMock.mockReturnValue(new Promise(() => { }));
-    const feeds = [createFeed()];
     const item = createItem();
 
     // Act
-    const { getByTestId } = await render(<Probe feeds={feeds} item={item} />);
+    const { getByTestId } = await render(<Probe item={item} />);
 
     // Assert
     expect(invokeMock).toHaveBeenCalledWith('items:get-content', item.id);
     await expect.element(getByTestId('loading')).toHaveTextContent('true');
-    await expect.element(getByTestId('html')).toHaveTextContent('Raw html description.');
   });
 
   test('an rss item switches to the fetched article once it is ready', async () => {
     // Arrange
-    invokeMock.mockResolvedValue({ status: 'ok', html: '<p>Full article</p>', wordCount: 42 } satisfies ArticleContentResult);
-    const feeds = [createFeed()];
+    invokeMock.mockResolvedValue({ description: 'Raw html description.', article: { html: '<p>Full article</p>', wordCount: 42 } } satisfies ItemBody);
     const item = createItem();
 
     // Act
-    const { getByTestId } = await render(<Probe feeds={feeds} item={item} />);
+    const { getByTestId } = await render(<Probe item={item} />);
 
     // Assert
     await expect.element(getByTestId('html')).toHaveTextContent('Full article');
@@ -99,41 +80,38 @@ describe('useReaderContent', () => {
 
   test('an rss item falls back to the raw description when the article is unavailable', async () => {
     // Arrange
-    invokeMock.mockResolvedValue({ status: 'unavailable' } satisfies ArticleContentResult);
-    const feeds = [createFeed()];
+    invokeMock.mockResolvedValue({ description: 'Raw html description.', article: undefined } satisfies ItemBody);
     const item = createItem();
 
     // Act
-    const { getByTestId } = await render(<Probe feeds={feeds} item={item} />);
+    const { getByTestId } = await render(<Probe item={item} />);
 
     // Assert
     await expect.element(getByTestId('unavailable')).toHaveTextContent('true');
     await expect.element(getByTestId('html')).toHaveTextContent('Raw html description.');
   });
 
-  test('an rss item derives a standfirst from its description', async () => {
+  test('an rss item derives a standfirst from its excerpt', async () => {
     // Arrange
     invokeMock.mockReturnValue(new Promise(() => { }));
-    const feeds = [createFeed()];
-    const item = createItem({ description: 'A short teaser.' });
+    const item = createItem({ excerpt: 'A short teaser.' });
 
     // Act
-    const { getByTestId } = await render(<Probe feeds={feeds} item={item} />);
+    const { getByTestId } = await render(<Probe item={item} />);
 
     // Assert
     await expect.element(getByTestId('standfirst')).toHaveTextContent('A short teaser.');
   });
 
-  test('a youtube item never asks main for a fetched article', async () => {
+  test('a youtube item never reports a loading or unavailable article', async () => {
     // Arrange
-    const feeds = [createFeed({ type: 'youtube', items: [{ id: 10, feed_id: 1, title: 'Video', link: 'https://youtube.com/watch?v=1', guid: 'yt:video:1', pubDate: '2024-01-01', description: 'Check https://example.com/more', image: undefined, author: undefined, extra: undefined, read_at: undefined }] })];
-    const item = createItem({ type: 'youtube', description: 'Check https://example.com/more' });
+    invokeMock.mockResolvedValue({ description: 'Check https://example.com/more', article: undefined } satisfies ItemBody);
+    const item = createItem({ type: 'youtube', excerpt: 'Check https://example.com/more' });
 
     // Act
-    const { getByTestId } = await render(<Probe feeds={feeds} item={item} />);
+    const { getByTestId } = await render(<Probe item={item} />);
 
     // Assert
-    expect(invokeMock).not.toHaveBeenCalled();
     await expect.element(getByTestId('loading')).toHaveTextContent('false');
     await expect.element(getByTestId('unavailable')).toHaveTextContent('false');
     await expect.element(getByTestId('standfirst')).toHaveTextContent('');
@@ -144,7 +122,7 @@ describe('useReaderContent', () => {
 
   test('renders no standfirst and an empty body while there is no current item', async () => {
     // Act
-    const { getByTestId } = await render(<Probe feeds={[]} item={undefined} />);
+    const { getByTestId } = await render(<Probe item={undefined} />);
 
     // Assert
     expect(invokeMock).not.toHaveBeenCalled();

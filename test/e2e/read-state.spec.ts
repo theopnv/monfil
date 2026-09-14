@@ -95,14 +95,14 @@ readStateTest('an opened article is still read after a restart', async ({ feedSe
   // The read mark is written asynchronously behind the optimistic UI update, so wait for the
   // database to confirm it before restarting.
   await expect
-    .poll(() => firstRun.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list', undefined)
-      .then((feeds) => feeds.some((feed) => feed.items.some((item) => Boolean(item.read_at))))))
+    .poll(() => firstRun.evaluate(() => window.electron.ipcRenderer.invoke('items:query', { limit: 100 })
+      .then((page) => page.rows.some((row) => row.title === 'First article' && Boolean(row.readAt)))))
     .toBe(true);
 
   const secondRun = await launchApp();
 
   // Assert
-  const feeds = await secondRun.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list', undefined));
-  const item = feeds.flatMap((feed) => feed.items).find((candidate) => candidate.title === 'First article');
-  expect(item?.read_at).toBeTruthy();
+  const page = await secondRun.evaluate(() => window.electron.ipcRenderer.invoke('items:query', { limit: 100 }));
+  const item = page.rows.find((candidate) => candidate.title === 'First article');
+  expect(item?.readAt).toBeTruthy();
 });

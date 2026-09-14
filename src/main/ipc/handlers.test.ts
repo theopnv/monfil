@@ -5,6 +5,7 @@ import { fetchUrl } from '../lib/fetch';
 import { handleItemsGetContent } from './handlers';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 import type { IpcMainInvokeEvent } from 'electron';
+import type { SourceType } from '../db/types';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
 
@@ -19,12 +20,12 @@ const ARTICLE_PAGE_HTML = `<!doctype html>
 <p>Another paragraph continues the story with more detail and context for the reader to enjoy.</p>
 </article></body></html>`;
 
-async function createItem(link: string | undefined): Promise<number> {
+async function createItem(link: string | undefined, options: { type?: SourceType; description?: string } = {}): Promise<number> {
   const result = await addFeedToDatabase({
     link: 'https://a.example/feed',
     title: 'Feed A',
-    items: [{ title: 'Item', link, guid: link ?? 'monfil:test:linkless', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
-    type: 'rss',
+    items: [{ title: 'Item', link, guid: link ?? 'monfil:test:linkless', pubDate: '2024-01-01', description: options.description ?? '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
+    type: options.type ?? 'rss',
     categoryName: 'tech',
     showInHome: true,
   });
@@ -60,11 +61,11 @@ describe('handleItemsGetContent', () => {
     const result = await handleItemsGetContent(fakeEvent, itemId);
 
     // Assert
-    expect(result).toEqual({ status: 'ok', html: '<p>Stored</p>', wordCount: 1 });
+    expect(result).toEqual({ description: '', article: { html: '<p>Stored</p>', wordCount: 1 } });
     expect(mockedFetchUrl).not.toHaveBeenCalled();
   });
 
-  test('returns "unavailable" for a stored "failed" row without fetching again', async () => {
+  test('leaves out the article for a stored "failed" row without fetching again', async () => {
     // Arrange
     const itemId = await createItem('https://a.example/article');
     await upsertArticleContent({ item_id: itemId, html: undefined, text: undefined, word_count: undefined, status: 'failed' });
@@ -73,11 +74,11 @@ describe('handleItemsGetContent', () => {
     const result = await handleItemsGetContent(fakeEvent, itemId);
 
     // Assert
-    expect(result).toEqual({ status: 'unavailable' });
+    expect(result).toEqual({ description: '', article: undefined });
     expect(mockedFetchUrl).not.toHaveBeenCalled();
   });
 
-  test('returns "unavailable" for a stored "too_short" row without fetching again', async () => {
+  test('leaves out the article for a stored "too_short" row without fetching again', async () => {
     // Arrange
     const itemId = await createItem('https://a.example/article');
     await upsertArticleContent({ item_id: itemId, html: '<p>x</p>', text: 'x', word_count: 1, status: 'too_short' });
@@ -86,7 +87,7 @@ describe('handleItemsGetContent', () => {
     const result = await handleItemsGetContent(fakeEvent, itemId);
 
     // Assert
-    expect(result).toEqual({ status: 'unavailable' });
+    expect(result).toEqual({ description: '', article: undefined });
     expect(mockedFetchUrl).not.toHaveBeenCalled();
   });
 
@@ -100,13 +101,13 @@ describe('handleItemsGetContent', () => {
 
     // Assert
     expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/long-article', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
-    expect(result.status).toBe('ok');
+    expect(result.article?.html).toContain('<p>');
     const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
     expect(stored.status).toBe('ok');
     expect(stored.html).toContain('<p>');
   });
 
-  test('a fetch failure stores a "failed" row and returns "unavailable"', async () => {
+  test('a fetch failure stores a "failed" row and leaves out the article', async () => {
     // Arrange
     const itemId = await createItem('https://a.example/article');
     mockedFetchUrl.mockResolvedValue({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
@@ -115,29 +116,41 @@ describe('handleItemsGetContent', () => {
     const result = await handleItemsGetContent(fakeEvent, itemId);
 
     // Assert
-    expect(result).toEqual({ status: 'unavailable' });
+    expect(result).toEqual({ description: '', article: undefined });
     const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
     expect(stored.status).toBe('failed');
   });
 
-  test('an item with no link returns "unavailable" without fetching', async () => {
+  test('an item with no link returns its description without fetching', async () => {
     // Arrange
-    const itemId = await createItem(undefined);
+    const itemId = await createItem(undefined, { description: 'Fallback text' });
 
     // Act
     const result = await handleItemsGetContent(fakeEvent, itemId);
 
     // Assert
-    expect(result).toEqual({ status: 'unavailable' });
+    expect(result).toEqual({ description: 'Fallback text', article: undefined });
     expect(mockedFetchUrl).not.toHaveBeenCalled();
   });
 
-  test('an unknown item id returns "unavailable" without fetching', async () => {
+  test('an unknown item id returns an empty body without fetching', async () => {
     // Act
     const result = await handleItemsGetContent(fakeEvent, 999999);
 
     // Assert
-    expect(result).toEqual({ status: 'unavailable' });
+    expect(result).toEqual({ description: '', article: undefined });
+    expect(mockedFetchUrl).not.toHaveBeenCalled();
+  });
+
+  test('a source that does not fetch full articles skips extraction entirely', async () => {
+    // Arrange
+    const itemId = await createItem('https://a.example/video', { type: 'youtube', description: 'Video description' });
+
+    // Act
+    const result = await handleItemsGetContent(fakeEvent, itemId);
+
+    // Assert
+    expect(result).toEqual({ description: 'Video description', article: undefined });
     expect(mockedFetchUrl).not.toHaveBeenCalled();
   });
 });

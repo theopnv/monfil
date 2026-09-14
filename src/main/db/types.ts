@@ -59,6 +59,11 @@ export interface FeedItemTable {
   link: string | undefined;
   pubDate: string;
   description: string;
+  // Derived from `pubDate` on insert, since SQLite cannot parse RFC-822 in SQL. Epoch ms, `0` when unparseable.
+  // `Generated`, like `showInHome`: the DB default only matters for a row that bypasses `addFeedItemsToDatabase`.
+  published_at: Generated<number>;
+  // Derived from `description` on insert: plain text, truncated. Powers the river list without shipping the full body.
+  excerpt: Generated<string>;
   image: string | undefined;
   author: string | undefined;
   // A JSON blob for the fields only some source types carry. See doc/sources.md.

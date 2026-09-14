@@ -1,55 +1,62 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type PropsWithChildren } from "react";
-import type { Feed } from "../../preload/channels";
+import { useCallback } from "react";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData, type UseInfiniteQueryResult } from "@tanstack/react-query";
+import type { FeedSummary, RiverPage } from "../../preload/channels";
 import type { DeleteFeedError } from "../../main/db/crud/delete";
+import type { AddFeedError, NewFeedInput } from "../../main/db/crud/insert";
 import type { UpdateFeedError } from "../../main/db/crud/update";
 import type { Result } from "../../main/lib/utils";
+import { feedsQuery, patchRiverRows, queryKeys, riverQuery, type RiverScope } from "../lib/queries";
 
-const FeedsContext = createContext<Feed[] | undefined>(undefined);
-
-export const useFeeds = (): Feed[] => {
-  const context = useContext(FeedsContext);
-
-  if (context === undefined) {
-    throw new Error("useFeeds must be used within a FeedsProvider");
-  }
-
-  return context;
+export const useFeeds = (): FeedSummary[] => {
+  const { data } = useQuery(feedsQuery());
+  return data ?? [];
 };
 
-const AddFeedContext = createContext<((feed: Feed) => void) | undefined>(undefined);
+export const useRiver = (scope: RiverScope): UseInfiniteQueryResult<InfiniteData<RiverPage>> => useInfiniteQuery(riverQuery(scope));
 
-export const useAddFeed = (): ((feed: Feed) => void) => {
-  const context = useContext(AddFeedContext);
-
-  if (context === undefined) {
-    throw new Error("useAddFeed must be used within a FeedsProvider");
-  }
-
-  return context;
+export const useAddFeed = (): ((input: NewFeedInput) => Promise<Result<FeedSummary, AddFeedError>>) => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (input: NewFeedInput) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', input),
+    onSuccess: (result) => {
+      if (result.success) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: ['river'] });
+      }
+    },
+  });
+  const { mutateAsync } = mutation;
+  return useCallback((input: NewFeedInput) => mutateAsync(input), [mutateAsync]);
 };
 
-const DeleteFeedContext = createContext<((feedId: number) => Promise<Result<Feed[], DeleteFeedError>>) | undefined>(undefined);
-
-export const useDeleteFeed = (): ((feedId: number) => Promise<Result<Feed[], DeleteFeedError>>) => {
-  const context = useContext(DeleteFeedContext);
-
-  if (context === undefined) {
-    throw new Error("useDeleteFeed must be used within a FeedsProvider");
-  }
-
-  return context;
+export const useDeleteFeed = (): ((feedId: number) => Promise<Result<void, DeleteFeedError>>) => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (feedId: number) => window.electron.ipcRenderer.invoke('feeds:delete-feed', feedId),
+    onSuccess: (result) => {
+      if (result.success) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: ['river'] });
+      }
+    },
+  });
+  const { mutateAsync } = mutation;
+  return useCallback((feedId: number) => mutateAsync(feedId), [mutateAsync]);
 };
 
-const SetShowInHomeContext = createContext<((feedIds: number[], showInHome: boolean) => Promise<Result<Feed[], UpdateFeedError>>) | undefined>(undefined);
-
-export const useSetShowInHome = (): ((feedIds: number[], showInHome: boolean) => Promise<Result<Feed[], UpdateFeedError>>) => {
-  const context = useContext(SetShowInHomeContext);
-
-  if (context === undefined) {
-    throw new Error("useSetShowInHome must be used within a FeedsProvider");
-  }
-
-  return context;
+export const useSetShowInHome = (): ((feedIds: number[], showInHome: boolean) => Promise<Result<void, UpdateFeedError>>) => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (variables: { feedIds: number[]; showInHome: boolean }) => window.electron.ipcRenderer.invoke('feeds:set-show-in-home', variables),
+    onSuccess: (result) => {
+      if (result.success) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: ['river'] });
+      }
+    },
+  });
+  const { mutateAsync } = mutation;
+  return useCallback((feedIds: number[], showInHome: boolean) => mutateAsync({ feedIds, showInHome }), [mutateAsync]);
 };
 
 interface FeedsRefresh {
@@ -58,194 +65,97 @@ interface FeedsRefresh {
   refreshFailed: boolean;
 }
 
-const FeedsRefreshContext = createContext<FeedsRefresh | undefined>(undefined);
-
 export const useFeedsRefresh = (): FeedsRefresh => {
-  const context = useContext(FeedsRefreshContext);
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: () => window.electron.ipcRenderer.invoke('feeds:refresh', undefined),
+    onSuccess: () => {
+      // A user-initiated refresh gets its content immediately; an automatic cycle's `feeds:refreshed`
+      // push only raises the pill (see `useIpcBridge`), so it never moves the river under the user.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+      void queryClient.invalidateQueries({ queryKey: ['river'] });
+    },
+    onError: (error: unknown) => {
+      console.error('Error refreshing feeds:', error);
+    },
+  });
 
-  if (context === undefined) {
-    throw new Error("useFeedsRefresh must be used within a FeedsProvider");
-  }
-
-  return context;
+  return {
+    refreshNow: () => mutation.mutate(),
+    isRefreshing: mutation.isPending,
+    refreshFailed: mutation.isError,
+  };
 };
 
 interface ReadState {
-  isRead: (id: number) => boolean;
   markRead: (id: number) => void;
-  toggleRead: (id: number) => void;
   markAllRead: (ids: number[]) => void;
+  toggleRead: (id: number, currentlyRead: boolean) => void;
 }
 
-const ReadStateContext = createContext<ReadState | undefined>(undefined);
+interface ReadStateContext {
+  // Keyed by item id rather than a whole-page snapshot: two of these mutations can be in flight at
+  // once over the same page (one item each), and restoring a full snapshot taken before the second
+  // one started would silently undo it. Restoring only the rows this mutation itself touched can't.
+  previousReadAt: Map<number, string | undefined>;
+}
 
+/**
+ * `onMutate` records each affected row's prior `readAt` before patching it in place; `onError`
+ * restores exactly those rows, so a failed batch (or a batch racing another one) cannot lose an
+ * item's prior state the way a hand-rolled "flip everything back" rollback would. `onSettled`
+ * invalidates the feed list so sidebar counts catch up once the dust settles, whether the mutation
+ * succeeded or not.
+ */
 export const useReadState = (): ReadState => {
-  const context = useContext(ReadStateContext);
+  const queryClient = useQueryClient();
 
-  if (context === undefined) {
-    throw new Error("useReadState must be used within a FeedsProvider");
-  }
-
-  return context;
-};
-
-export const FeedsProvider = ({ children }: PropsWithChildren) => {
-  const [feeds, setFeeds] = useState<Feed[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  // The mount-time invoke and a launch-refresh push resolve in either order. Once a refreshed list
-  // has arrived, an older snapshot must not land on top of it.
-  const hasFreshList = useRef(false);
-
-  const addFeed = useCallback((feed: Feed) => {
-    setFeeds((prev) => [...prev.filter((f) => f.link !== feed.link), feed]);
-  }, []);
-
-  const deleteFeed = useCallback(async (feedId: number) => {
-    const response = await window.electron.ipcRenderer.invoke('feeds:delete-feed', feedId);
-    if (response.success) {
-      hasFreshList.current = true;
-      setFeeds(response.data);
-    }
-    return response;
-  }, []);
-
-  const setShowInHome = useCallback(async (feedIds: number[], showInHome: boolean) => {
-    const response = await window.electron.ipcRenderer.invoke('feeds:set-show-in-home', { feedIds, showInHome });
-    if (response.success) {
-      hasFreshList.current = true;
-      setFeeds(response.data);
-    }
-    return response;
-  }, []);
-
-  // `feedItem.read_at` is the one source of truth for read state, so it survives a restart.
-  const readIds = useMemo(() => {
-    const ids = new Set<number>();
-    for (const feed of feeds) {
-      for (const item of feed.items) {
-        if (item.read_at) {
-          ids.add(item.id);
-        }
+  const mutation = useMutation<undefined, Error, { itemIds: number[]; read: boolean }, ReadStateContext>({
+    mutationFn: async (variables) => {
+      const result = await window.electron.ipcRenderer.invoke('items:set-read', variables);
+      if (!result.success) {
+        throw new Error(result.error.message);
       }
+    },
+    onMutate: async ({ itemIds, read }) => {
+      await queryClient.cancelQueries({ queryKey: ['river'] });
+
+      const targetIds = new Set(itemIds);
+      const readAt = read ? new Date().toISOString() : undefined;
+      const previousReadAt = new Map<number, string | undefined>();
+      queryClient.setQueriesData<InfiniteData<RiverPage>>(
+        { queryKey: ['river'] },
+        (data) => (data ? patchRiverRows(data, targetIds, (row) => {
+          previousReadAt.set(row.id, row.readAt);
+          return { ...row, readAt };
+        }) : data),
+      );
+
+      return { previousReadAt };
+    },
+    onError: (error, _variables, context) => {
+      console.error('Error persisting read state:', error);
+      if (!context) {
+        return;
+      }
+      queryClient.setQueriesData<InfiniteData<RiverPage>>(
+        { queryKey: ['river'] },
+        (data) => (data ? patchRiverRows(data, new Set(context.previousReadAt.keys()), (row) => ({ ...row, readAt: context.previousReadAt.get(row.id) })) : data),
+      );
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+    },
+  });
+
+  const { mutate } = mutation;
+  const markRead = useCallback((id: number) => mutate({ itemIds: [id], read: true }), [mutate]);
+  const markAllRead = useCallback((ids: number[]) => {
+    if (ids.length > 0) {
+      mutate({ itemIds: ids, read: true });
     }
-    return ids;
-  }, [feeds]);
+  }, [mutate]);
+  const toggleRead = useCallback((id: number, currentlyRead: boolean) => mutate({ itemIds: [id], read: !currentlyRead }), [mutate]);
 
-  const isRead = useCallback((id: number) => readIds.has(id), [readIds]);
-
-  const setRead = useCallback((itemIds: number[], read: boolean) => {
-    if (itemIds.length === 0) {
-      return;
-    }
-    const targetIds = new Set(itemIds);
-    const readAt = read ? new Date().toISOString() : undefined;
-    // Captured so a rejected or unsuccessful persist can restore exactly what each item had before, not just flip `read`.
-    const previousReadAt = new Map<number, string | undefined>();
-
-    setFeeds((prev) => prev.map((feed) => (
-      feed.items.some((item) => targetIds.has(item.id))
-        ? {
-          ...feed,
-          items: feed.items.map((item) => {
-            if (!targetIds.has(item.id)) {
-              return item;
-            }
-            previousReadAt.set(item.id, item.read_at);
-            return { ...item, read_at: readAt };
-          }),
-        }
-        : feed
-    )));
-
-    const rollback = () => {
-      setFeeds((prev) => prev.map((feed) => (
-        feed.items.some((item) => previousReadAt.has(item.id))
-          ? { ...feed, items: feed.items.map((item) => (previousReadAt.has(item.id) ? { ...item, read_at: previousReadAt.get(item.id) } : item)) }
-          : feed
-      )));
-    };
-
-    window.electron.ipcRenderer.invoke('items:set-read', { itemIds, read })
-      .then((response) => {
-        if (!response.success) {
-          console.error('Error persisting read state:', response.error);
-          rollback();
-        }
-      })
-      .catch((error: unknown) => {
-        console.error('Error persisting read state:', error);
-        rollback();
-      });
-  }, []);
-
-  const markRead = useCallback((id: number) => setRead([id], true), [setRead]);
-  const toggleRead = useCallback((id: number) => setRead([id], !isRead(id)), [setRead, isRead]);
-  const markAllRead = useCallback((ids: number[]) => setRead(ids, true), [setRead]);
-
-  const readState = useMemo<ReadState>(() => ({ isRead, markRead, toggleRead, markAllRead }), [isRead, markRead, toggleRead, markAllRead]);
-
-  const [refreshFailed, setRefreshFailed] = useState(false);
-
-  const refreshNow = useCallback(() => {
-    setIsRefreshing(true);
-    setRefreshFailed(false);
-    window.electron.ipcRenderer.invoke('feeds:refresh', undefined)
-      .then((refreshed) => {
-        hasFreshList.current = true;
-        setFeeds(refreshed);
-      })
-      .catch((error: unknown) => {
-        console.error('Error refreshing feeds:', error);
-        setRefreshFailed(true);
-      })
-      .finally(() => {
-        setIsRefreshing(false);
-      });
-  }, []);
-
-  const refresh = useMemo<FeedsRefresh>(() => ({ refreshNow, isRefreshing, refreshFailed }), [refreshNow, isRefreshing, refreshFailed]);
-
-  useEffect(() => {
-    window.electron.ipcRenderer.invoke('feeds:list', undefined)
-      .then((listed) => {
-        if (hasFreshList.current) {
-          return;
-        }
-        setFeeds(listed);
-      })
-      .catch((error: unknown) => {
-        console.error('Error loading feeds:', error);
-      });
-  }, []);
-
-  useEffect(() => {
-    return window.electron.ipcRenderer.on('feeds:list', (pushed) => {
-      hasFreshList.current = true;
-      setFeeds(pushed);
-    });
-  }, []);
-
-  useEffect(() => {
-    return window.electron.ipcRenderer.on('feeds:item-image-fetched', ({ feedId, itemId, image }) => {
-      setFeeds((prev) => prev.map((feed) =>
-        feed.id !== feedId
-          ? feed
-          : { ...feed, items: feed.items.map((item) => (item.id === itemId ? { ...item, image } : item)) }
-      ));
-    });
-  }, []);
-
-  return (
-    <FeedsContext.Provider value={feeds}>
-      <AddFeedContext.Provider value={addFeed}>
-        <DeleteFeedContext.Provider value={deleteFeed}>
-          <SetShowInHomeContext.Provider value={setShowInHome}>
-            <FeedsRefreshContext.Provider value={refresh}>
-              <ReadStateContext.Provider value={readState}>{children}</ReadStateContext.Provider>
-            </FeedsRefreshContext.Provider>
-          </SetShowInHomeContext.Provider>
-        </DeleteFeedContext.Provider>
-      </AddFeedContext.Provider>
-    </FeedsContext.Provider>
-  );
+  return { markRead, markAllRead, toggleRead };
 };

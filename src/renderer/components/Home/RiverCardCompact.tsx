@@ -28,7 +28,7 @@ export default function RiverCardCompact({ item, read, onOpen }: RiverCardProps)
       <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-secondary">{item.title}</span>
       <span className="flex-none rounded-full bg-sage-200 px-2 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>
       <span className="flex-none text-xs font-bold tracking-wide text-tertiary">{SOURCE_TYPE_LABEL[item.type]}</span>
-      <span className="w-13 flex-none text-right text-xs text-tertiary tabular-nums">{formatRelativeTime(item.pubDate)}</span>
+      <span className="w-13 flex-none text-right text-xs text-tertiary tabular-nums">{formatRelativeTime(item.publishedAt)}</span>
     </div>
   );
 }

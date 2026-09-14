@@ -1,9 +1,9 @@
 import { ArrowRight } from "@untitledui/icons";
 import { estimateReadTime, formatRelativeTime } from "@/lib/river/utils";
-import type { RiverItem } from "@/lib/river/utils";
+import type { RiverRow } from "../../../preload/channels";
 
 export interface NextArticleCardProps {
-  item: RiverItem;
+  item: RiverRow;
   label: "Next unread" | "Next article";
   onClick: () => void;
 }
@@ -19,7 +19,7 @@ export default function NextArticleCard({ item, label, onClick }: NextArticleCar
         <div className="mb-1.75 text-xs font-bold tracking-wide text-tertiary uppercase">{label}</div>
         <div className="mb-1.25 text-lg leading-tight font-bold text-pretty text-primary">{item.title}</div>
         <div className="text-sm text-tertiary">
-          {item.feedTitle} · {estimateReadTime(item.description)} · {formatRelativeTime(item.pubDate)}
+          {item.feedTitle} · {estimateReadTime(item.excerpt)} · {formatRelativeTime(item.publishedAt)}
         </div>
       </div>
       <span className="flex size-10 flex-none items-center justify-center rounded-full bg-brand-secondary text-brand-tertiary">

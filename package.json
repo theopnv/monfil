@@ -58,6 +58,7 @@
     "@mozilla/readability": "^0.6.0",
     "@react-stately/utils": "^3.12.1",
     "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-query": "^5.102.8",
     "@tanstack/react-router": "^1.170.24",
     "@tanstack/react-router-devtools": "^1.167.1",
     "@untitledui/icons": "^0.0.22",

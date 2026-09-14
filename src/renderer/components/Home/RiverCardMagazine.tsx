@@ -31,11 +31,11 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
           <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
           <FeedAvatar title={item.feedTitle} faviconUrl={resolveFeedIcon(item.feedIcon, item.feedLink)} size="sm" />
           <span className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
-          <span className="ml-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.pubDate)}</span>
+          <span className="ml-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
         </div>
 
         <h4 className="mb-1.75 text-base leading-snug font-bold text-pretty text-primary">{item.title}</h4>
-        {item.description && <p className="text-sm leading-snug text-pretty text-tertiary">{item.description}</p>}
+        {item.excerpt && <p className="text-sm leading-snug text-pretty text-tertiary">{item.excerpt}</p>}
 
         <div className="mt-auto flex items-center gap-2 pt-3">
           <span className="rounded-full bg-sage-200 px-2.25 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>

@@ -3,7 +3,7 @@ import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { getRefreshInterval, getRefreshOnLaunch } from '../settings';
 import { refreshAllFeeds } from './refresh';
 import { rescheduleRefresh, startRefreshScheduler, stopRefreshScheduler } from './scheduler';
-import type { Feed } from '../../preload/channels';
+import type { RefreshSummary } from '../../preload/channels';
 
 vi.mock(import('./refresh'), () => ({ refreshAllFeeds: vi.fn() }));
 vi.mock(import('../settings'), () => ({ getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn() }));
@@ -16,23 +16,11 @@ const mockedBroadcast = vi.mocked(broadcastToRenderers);
 
 const MINUTE = 60 * 1000;
 
-const feed: Feed = {
-  id: 1,
-  link: 'https://a.example/feed',
-  title: 'Feed A',
-  type: 'rss',
-  category_id: 1,
-  showInHome: 1,
-  last_fetched_at: undefined,
-  last_error: undefined,
-  icon: undefined,
-  category: { id: 1, name: 'tech' },
-  items: [],
-};
+const summary: RefreshSummary = { perFeed: [{ feedId: 1, inserted: 0 }] };
 
 beforeEach(() => {
   vi.useFakeTimers();
-  mockedRefreshAllFeeds.mockResolvedValue([feed]);
+  mockedRefreshAllFeeds.mockResolvedValue(summary);
   mockedGetRefreshInterval.mockResolvedValue(15);
   mockedGetRefreshOnLaunch.mockResolvedValue(true);
 });
@@ -66,7 +54,7 @@ describe('startRefreshScheduler', () => {
     await startRefreshScheduler();
 
     // Assert
-    expect(mockedBroadcast).toHaveBeenCalledWith('feeds:list', [feed]);
+    expect(mockedBroadcast).toHaveBeenCalledWith('feeds:refreshed', summary);
   });
 
   test("runs the launch refresh but arms no timer when the interval is 'manual'", async () => {
@@ -102,7 +90,7 @@ describe('startRefreshScheduler', () => {
     // Arrange
     const inFlight: (() => void)[] = [];
     mockedRefreshAllFeeds.mockImplementation(() => new Promise((resolve) => {
-      inFlight.push(() => resolve([feed]));
+      inFlight.push(() => resolve(summary));
     }));
 
     // Act
@@ -132,7 +120,7 @@ describe('startRefreshScheduler', () => {
   test('keeps the timer running after a cycle fails', async () => {
     // Arrange
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    mockedRefreshAllFeeds.mockRejectedValueOnce(new Error('boom')).mockResolvedValue([feed]);
+    mockedRefreshAllFeeds.mockRejectedValueOnce(new Error('boom')).mockResolvedValue(summary);
 
     // Act
     await startRefreshScheduler();

@@ -1,12 +1,12 @@
 import { db, dbReady } from '../db/database';
 import { addFeedItemsToDatabase, updateFeedItemImage, upsertArticleContent } from '../db/crud/insert';
-import { queryFeedMetadata, queryFeeds } from '../db/crud/query';
+import { queryFeedMetadata } from '../db/crud/query';
 import type { FeedItem, FeedMetadata, SourceType } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
 import { sourceFor } from './sources/registry';
 import { setFeedFetchResult } from '../db/crud/update';
-import type { Feed } from '../../preload/channels';
+import type { RefreshSummary } from '../../preload/channels';
 import { runWithConcurrency } from '../lib/utils';
 import { FEED_FETCH_CONCURRENCY } from '../constants';
 import { getMaxFeedItems } from '../settings';
@@ -37,9 +37,9 @@ async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<Fee
 /**
  * Fetches every stored feed and inserts the items that are not stored yet. Nothing is updated or deleted.
  * A feed that fails to fetch is logged and skipped, so the others still get their items.
- * @returns the full, current feed list, without the images that are still being fetched
+ * @returns how many items each feed gained, so the renderer can show a pill without receiving the rows themselves
  */
-export async function refreshAllFeeds(): Promise<Feed[]> {
+export async function refreshAllFeeds(): Promise<RefreshSummary> {
   await dbReady;
   const [feedList, maxItems] = await Promise.all([queryFeedMetadata({}), getMaxFeedItems()]);
   const insertedByFeedId = new Map<number, FeedItem[]>();
@@ -48,7 +48,6 @@ export async function refreshAllFeeds(): Promise<Feed[]> {
     insertedByFeedId.set(feed.id, await refreshOneFeed(feed, maxItems));
   });
 
-  const feeds = await queryFeeds();
   const typeByFeedId = new Map(feedList.map((feed) => [feed.id, feed.type]));
 
   // Images take a page fetch each, so they arrive later through their own push rather than holding up the list.
@@ -56,7 +55,9 @@ export async function refreshAllFeeds(): Promise<Feed[]> {
     console.error('Failed to enrich the images of the refreshed items.', error);
   });
 
-  return feeds;
+  return {
+    perFeed: [...insertedByFeedId.entries()].map(([feedId, items]) => ({ feedId, inserted: items.length })),
+  };
 }
 
 async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedItem[]>, typeByFeedId: ReadonlyMap<number, SourceType>): Promise<void> {

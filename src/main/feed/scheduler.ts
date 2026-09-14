@@ -14,7 +14,7 @@ async function runCycle(): Promise<void> {
   }
   running = true;
   try {
-    broadcastToRenderers('feeds:list', await refreshAllFeeds());
+    broadcastToRenderers('feeds:refreshed', await refreshAllFeeds());
   } catch (error) {
     console.error('Feed refresh cycle failed.', error);
   } finally {

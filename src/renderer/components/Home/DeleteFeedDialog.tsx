@@ -4,12 +4,12 @@ import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/applicatio
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useDeleteFeed } from "@/providers/feeds-provider";
 import type { DeleteFeedError } from "../../../main/db/crud/delete";
-import type { Feed } from "../../../preload/channels";
+import type { FeedSummary } from "../../../preload/channels";
 
 export interface DeleteFeedDialogProps {
-  feed: Feed | null;
+  feed: FeedSummary | null;
   onOpenChange: (open: boolean) => void;
-  onDeleted: (feed: Feed) => void;
+  onDeleted: (feed: FeedSummary) => void;
 }
 
 export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: DeleteFeedDialogProps) {
@@ -54,7 +54,7 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
               <p className="text-sm text-tertiary">
                 This removes <span className="font-semibold text-secondary">{feed.title}</span> and its{" "}
                 <span className="font-semibold text-secondary">
-                  {feed.items.length} {feed.items.length === 1 ? "item" : "items"}
+                  {feed.itemCount} {feed.itemCount === 1 ? "item" : "items"}
                 </span>
                 . There is no undo.
               </p>

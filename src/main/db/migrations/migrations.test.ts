@@ -189,6 +189,72 @@ describe('the schema', () => {
   });
 });
 
+describe('0003_river_index backfill', () => {
+  test('derives published_at from an RFC-822 pubDate', async () => {
+    // Arrange
+    assertMigrated(await migrator.migrateTo('0002_feed_icon'));
+    const seeded = await seed();
+    await db.updateTable('feedItem').set({ pubDate: 'Mon, 01 Jan 2024 00:00:00 GMT' }).where('id', '=', seeded.itemId).execute();
+
+    // Act
+    assertMigrated(await migrator.migrateToLatest());
+
+    // Assert
+    const item = await db.selectFrom('feedItem').selectAll().where('id', '=', seeded.itemId).executeTakeFirstOrThrow();
+    expect(item['published_at']).toBe(new Date('Mon, 01 Jan 2024 00:00:00 GMT').getTime());
+  });
+
+  test('derives published_at from an ISO-8601 pubDate', async () => {
+    // Arrange
+    assertMigrated(await migrator.migrateTo('0002_feed_icon'));
+    const seeded = await seed();
+    await db.updateTable('feedItem').set({ pubDate: '2024-01-01T00:00:00.000Z' }).where('id', '=', seeded.itemId).execute();
+
+    // Act
+    assertMigrated(await migrator.migrateToLatest());
+
+    // Assert
+    const item = await db.selectFrom('feedItem').selectAll().where('id', '=', seeded.itemId).executeTakeFirstOrThrow();
+    expect(item['published_at']).toBe(Date.parse('2024-01-01T00:00:00.000Z'));
+  });
+
+  test('falls back to 0 for an unparseable pubDate', async () => {
+    // Arrange
+    assertMigrated(await migrator.migrateTo('0002_feed_icon'));
+    const seeded = await seed();
+    await db.updateTable('feedItem').set({ pubDate: 'not-a-date' }).where('id', '=', seeded.itemId).execute();
+
+    // Act
+    assertMigrated(await migrator.migrateToLatest());
+
+    // Assert
+    const item = await db.selectFrom('feedItem').selectAll().where('id', '=', seeded.itemId).executeTakeFirstOrThrow();
+    expect(item['published_at']).toBe(0);
+  });
+
+  test('derives excerpt by stripping the description down to plain text', async () => {
+    // Arrange
+    assertMigrated(await migrator.migrateTo('0002_feed_icon'));
+    const seeded = await seed();
+    await db.updateTable('feedItem').set({ description: '<p>Hello <b>world</b></p>' }).where('id', '=', seeded.itemId).execute();
+
+    // Act
+    assertMigrated(await migrator.migrateToLatest());
+
+    // Assert
+    const item = await db.selectFrom('feedItem').selectAll().where('id', '=', seeded.itemId).executeTakeFirstOrThrow();
+    expect(item['excerpt']).toBe('Hello world');
+  });
+
+  test('backfills an empty table without error', async () => {
+    // Arrange
+    assertMigrated(await migrator.migrateTo('0002_feed_icon'));
+
+    // Act, Assert
+    assertMigrated(await migrator.migrateToLatest());
+  });
+});
+
 describe('the migration list', () => {
   test('has unique names, already in the order Migrator will run them', () => {
     // Assert

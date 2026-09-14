@@ -10,12 +10,12 @@ import { fetchUrl } from "../lib/fetch";
 import { addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type AddFeedError, type NewFeedInput } from "../db/crud/insert";
 import { deleteFeedFromDatabase, type DeleteFeedError } from "../db/crud/delete";
 import { setFeedsShowInHome, setFeedItemsRead, type UpdateFeedError, type UpdateItemError } from "../db/crud/update";
-import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeeds } from "../db/crud/query";
+import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage } from "../db/crud/query";
 import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type MaxFeedItems, type RefreshInterval } from "../settings";
 import { getAppInfo, type AppInfo } from "../app-info";
 import { sendToRenderer } from "./sendToRenderer";
 import type { IpcMainInvokeEvent } from "electron";
-import type { ArticleContentResult, Feed, FeedCategory } from "../../preload/channels";
+import type { FeedCategory, FeedSummary, ItemBody, RefreshSummary, RiverPage, RiverQuery } from "../../preload/channels";
 import type { Result } from "../lib/utils";
 
 export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource, FeedFetchError>> {
@@ -26,46 +26,50 @@ export function handleFeedsListCategories(): Promise<FeedCategory[]> {
   return queryFeedCategory({});
 }
 
-export function handleFeedsList(): Promise<Feed[]> {
-  return queryFeeds();
+export function handleFeedsList(): Promise<FeedSummary[]> {
+  return queryFeedSummaries();
 }
 
-export async function handleFeedsSubmitAddFeed(event: IpcMainInvokeEvent, payload: NewFeedInput): Promise<Result<Feed, AddFeedError>> {
+export function handleItemsQuery(_event: IpcMainInvokeEvent, payload: RiverQuery): Promise<RiverPage> {
+  return queryRiverPage(payload);
+}
+
+export async function handleFeedsSubmitAddFeed(event: IpcMainInvokeEvent, payload: NewFeedInput): Promise<Result<FeedSummary, AddFeedError>> {
   const result = await addFeedToDatabase(payload);
-  if (result.success && sourceFor(payload.type).fetchesFullArticle) {
-    const feed = result.data;
+  if (!result.success) {
+    return result;
+  }
+
+  const { items, category, ...metadata } = result.data;
+  if (sourceFor(payload.type).fetchesFullArticle) {
     void enrichItems(
-      feed.items,
+      items,
       (itemId, image) => {
         void updateFeedItemImage(itemId, image);
-        sendToRenderer(event.sender, 'feeds:item-image-fetched', { feedId: feed.id, itemId, image });
+        sendToRenderer(event.sender, 'feeds:item-image-fetched', { feedId: metadata.id, itemId, image });
       },
       (itemId, content) => {
         void upsertArticleContent({ item_id: itemId, ...content });
       },
     );
   }
-  return result;
+
+  return {
+    success: true,
+    data: { ...metadata, category, itemCount: items.length, unreadCount: items.filter((item) => !item.read_at).length },
+  };
 }
 
-export function handleFeedsRefresh(): Promise<Feed[]> {
+export function handleFeedsRefresh(): Promise<RefreshSummary> {
   return refreshAllFeeds();
 }
 
-export async function handleFeedsDeleteFeed(_event: IpcMainInvokeEvent, feedId: number): Promise<Result<Feed[], DeleteFeedError>> {
-  const result = await deleteFeedFromDatabase(feedId);
-  if (!result.success) {
-    return result;
-  }
-  return { success: true, data: await queryFeeds() };
+export async function handleFeedsDeleteFeed(_event: IpcMainInvokeEvent, feedId: number): Promise<Result<void, DeleteFeedError>> {
+  return deleteFeedFromDatabase(feedId);
 }
 
-export async function handleFeedsSetShowInHome(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInHome: boolean }): Promise<Result<Feed[], UpdateFeedError>> {
-  const result = await setFeedsShowInHome(payload.feedIds, payload.showInHome);
-  if (!result.success) {
-    return result;
-  }
-  return { success: true, data: await queryFeeds() };
+export async function handleFeedsSetShowInHome(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInHome: boolean }): Promise<Result<void, UpdateFeedError>> {
+  return setFeedsShowInHome(payload.feedIds, payload.showInHome);
 }
 
 export function handleSettingsGetRefreshInterval(): Promise<RefreshInterval> {
@@ -84,21 +88,34 @@ export async function handleItemsSetRead(_event: IpcMainInvokeEvent, payload: { 
 }
 
 /**
- * Resolves an item's full article content, extracting and storing it on the first request.
- * A `failed` or `too_short` row on file is returned as `unavailable` without a retry, so a page
- * that never works is not refetched on every open.
+ * Resolves an item's raw description plus, for sources the registry marks as `fetchesFullArticle`,
+ * its extracted full article, fetching and storing it on the first request. A `failed` or `too_short`
+ * row on file is left out of the response without a retry, so a page that never works is not refetched
+ * on every open.
  */
-export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: number): Promise<ArticleContentResult> {
-  const [existing] = await queryArticleContent({ item_id: itemId });
-  if (existing) {
-    return existing.status === 'ok' && existing.html && existing.word_count
-      ? { status: 'ok', html: existing.html, wordCount: existing.word_count }
-      : { status: 'unavailable' };
+export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: number): Promise<ItemBody> {
+  const [item] = await queryFeedItems({ id: itemId });
+  if (!item) {
+    return { description: '', article: undefined };
   }
 
-  const [item] = await queryFeedItems({ id: itemId });
-  if (!item?.link) {
-    return { status: 'unavailable' };
+  const [feed] = await queryFeedMetadata({ id: item.feed_id });
+  if (!feed || !sourceFor(feed.type).fetchesFullArticle) {
+    return { description: item.description, article: undefined };
+  }
+
+  const [existing] = await queryArticleContent({ item_id: itemId });
+  if (existing) {
+    return {
+      description: item.description,
+      article: existing.status === 'ok' && existing.html && existing.word_count
+        ? { html: existing.html, wordCount: existing.word_count }
+        : undefined,
+    };
+  }
+
+  if (!item.link) {
+    return { description: item.description, article: undefined };
   }
 
   const fetched = await fetchUrl(item.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
@@ -106,9 +123,10 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
   const status = deriveArticleContentStatus(article);
   await upsertArticleContent({ item_id: itemId, html: article?.html, text: article?.text, word_count: article?.wordCount, status });
 
-  return status === 'ok' && article
-    ? { status: 'ok', html: article.html, wordCount: article.wordCount }
-    : { status: 'unavailable' };
+  return {
+    description: item.description,
+    article: status === 'ok' && article ? { html: article.html, wordCount: article.wordCount } : undefined,
+  };
 }
 
 export function handleSettingsGetRefreshOnLaunch(): Promise<boolean> {

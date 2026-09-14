@@ -120,7 +120,7 @@ describe('addFeedToDatabase', () => {
 });
 
 describe('addFeedItemsToDatabase', () => {
-  function feedItem(overrides: Partial<Omit<FeedItem, 'id' | 'feed_id'>> = {}): Omit<FeedItem, 'id' | 'feed_id'> {
+  function feedItem(overrides: Partial<Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>> = {}): Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'> {
     const link = 'link' in overrides ? overrides.link : `${feedA.link}#1`;
     // The parser falls back to the link when a feed supplies no guid. Mirror that here.
     return { title: 'Item', link, guid: link ?? 'monfil:test:linkless', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined, ...overrides };

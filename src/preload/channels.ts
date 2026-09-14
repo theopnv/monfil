@@ -1,4 +1,4 @@
-import type { FeedMetadata, FeedItem, FeedCategory, SourceType } from '../main/db/types';
+import type { FeedMetadata, FeedCategory, SourceType } from '../main/db/types';
 import type { NewFeedInput, AddFeedError } from '../main/db/crud/insert';
 import type { DeleteFeedError } from '../main/db/crud/delete';
 import type { UpdateFeedError, UpdateItemError } from '../main/db/crud/update';
@@ -17,10 +17,45 @@ export type { FeedCategory, SourceType } from '../main/db/types';
 export type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
 
 // Some types are only used in the preload layer, so we define them here instead of main.
-export type Feed = FeedMetadata & { items: FeedItem[]; category: FeedCategory };
-export type ArticleContentResult =
-  | { status: 'ok'; html: string; wordCount: number }
-  | { status: 'unavailable' };
+export type FeedSummary = FeedMetadata & {
+  category: FeedCategory;
+  itemCount: number;
+  unreadCount: number;
+};
+
+export type RiverRow = {
+  id: number;
+  title: string;
+  link: string | undefined;
+  publishedAt: number;
+  excerpt: string;
+  image: string | undefined;
+  readAt: string | undefined;
+  feedId: number;
+  feedTitle: string;
+  feedLink: string;
+  feedIcon: string | undefined;
+  categoryName: string;
+  type: SourceType;
+};
+
+export type RiverCursor = { publishedAt: number; id: number };
+
+export type RiverQuery = {
+  feedIds?: number[]; // omitted = every feed with showInHome = 1
+  ids?: number[]; // exact rows, for a Reader deep link outside the window
+  unreadOnly?: boolean;
+  search?: string;
+  cursor?: RiverCursor;
+  limit: number;
+};
+
+export type RiverPage = { rows: RiverRow[]; nextCursor?: RiverCursor };
+export type RefreshSummary = { perFeed: { feedId: number; inserted: number }[] };
+export type ItemBody = {
+  description: string; // raw, unstripped
+  article: { html: string; wordCount: number } | undefined;
+};
 
 // =====================================
 // ============= CHANNELS ==============
@@ -40,7 +75,7 @@ export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayl
 // Make sure this is set up correctly before sending through new channels.
 export type OneWayMainToRendererChannelPayloads = {
   'feeds:item-image-fetched': { feedId: number; itemId: number; image: string };
-  'feeds:list': Feed[];
+  'feeds:refreshed': RefreshSummary;
   'feeds:delete-feed-requested': number;
 };
 
@@ -50,15 +85,16 @@ export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayl
 export type TwoWayRendererMainChannelPayloads = {
   'feeds:validate-feed-url': Result<ParsedSource, FeedFetchError>;
   'feeds:list-categories': FeedCategory[];
-  'feeds:list': Feed[];
-  'feeds:refresh': Feed[];
-  'feeds:submit-add-feed': Result<Feed, AddFeedError>;
-  'feeds:delete-feed': Result<Feed[], DeleteFeedError>;
-  'feeds:set-show-in-home': Result<Feed[], UpdateFeedError>;
+  'feeds:list': FeedSummary[];
+  'items:query': RiverPage;
+  'feeds:refresh': RefreshSummary;
+  'feeds:submit-add-feed': Result<FeedSummary, AddFeedError>;
+  'feeds:delete-feed': Result<void, DeleteFeedError>;
+  'feeds:set-show-in-home': Result<void, UpdateFeedError>;
   'settings:get-refresh-interval': RefreshInterval;
   'settings:set-refresh-interval': RefreshInterval;
   'items:set-read': Result<void, UpdateItemError>;
-  'items:get-content': ArticleContentResult;
+  'items:get-content': ItemBody;
   'settings:get-refresh-on-launch': boolean;
   'settings:set-refresh-on-launch': boolean;
   'settings:get-max-feed-items': MaxFeedItems;
@@ -72,6 +108,7 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:validate-feed-url': { query: string; type?: SourceType };
   'feeds:list-categories': undefined;
   'feeds:list': undefined;
+  'items:query': RiverQuery;
   'feeds:refresh': undefined;
   'feeds:submit-add-feed': NewFeedInput;
   'feeds:delete-feed': number;

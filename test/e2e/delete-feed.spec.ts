@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
-import type { Feed, SourceType } from '../../src/preload/channels';
+import type { FeedSummary, SourceType } from '../../src/preload/channels';
 
 interface Article {
   title: string;
@@ -82,7 +82,7 @@ async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Pro
 }
 
 async function feedIdFor(page: Page, link: string): Promise<number> {
-  const feeds = await page.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list', undefined)) as Feed[];
+  const feeds = await page.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list', undefined)) as FeedSummary[];
   const feed = feeds.find((candidate) => candidate.link === link);
   if (!feed) {
     throw new Error(`expected a feed for ${link}`);

@@ -1,13 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { render } from 'vitest-browser-react';
-import { FeedsProvider, useFeeds } from '@/providers/feeds-provider';
+import { useFeeds } from '@/providers/feeds-provider';
+import { useIpcBridge } from '@/lib/ipc-bridge';
+import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import RiverSidebar from './RiverSidebar';
 import type { DeleteFeedError } from '../../../main/db/crud/delete';
-import type { Feed } from '../../../preload/channels';
+import type { FeedSummary } from '../../../preload/channels';
 import type { Result } from '../../../main/lib/utils';
 import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../preload/channels';
 
-const feedA: Feed = {
+const feedA: FeedSummary = {
   id: 1,
   link: 'https://a.example/feed',
   title: 'Feed A',
@@ -18,10 +19,11 @@ const feedA: Feed = {
   last_error: undefined,
   icon: undefined,
   category: { id: 1, name: 'Tech' },
-  items: [{ id: 1, feed_id: 1, title: 'Item 1', link: 'https://a.example/feed#1', guid: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
+  itemCount: 1,
+  unreadCount: 1,
 };
 
-const feedB: Feed = {
+const feedB: FeedSummary = {
   id: 2,
   link: 'https://b.example/feed',
   title: 'Feed B',
@@ -32,15 +34,16 @@ const feedB: Feed = {
   last_error: undefined,
   icon: undefined,
   category: { id: 1, name: 'Tech' },
-  items: [],
+  itemCount: 0,
+  unreadCount: 0,
 };
 
 let deleteFeedRequestedHandler: ((feedId: number) => void) | undefined;
 let invokeMock: ReturnType<typeof vi.fn>;
 
 function stubElectron(overrides: {
-  feeds?: Feed[];
-  deleteFeed?: Result<Feed[], DeleteFeedError>;
+  feeds?: FeedSummary[];
+  deleteFeed?: Result<void, DeleteFeedError>;
 } = {}) {
   deleteFeedRequestedHandler = undefined;
 
@@ -49,7 +52,7 @@ function stubElectron(overrides: {
       case 'feeds:list':
         return Promise.resolve(overrides.feeds ?? []) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:delete-feed':
-        return Promise.resolve(overrides.deleteFeed ?? { success: true, data: [] }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(overrides.deleteFeed ?? { success: true, data: undefined }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       default:
         return Promise.resolve(undefined) as unknown as Promise<TwoWayRendererMainChannelPayloads[C]>;
     }
@@ -70,9 +73,19 @@ function stubElectron(overrides: {
   } as unknown as typeof window.electron;
 }
 
-function ConnectedSidebar({ onFeedDeleted }: { onFeedDeleted: (feed: Feed) => void }) {
+function IpcBridgeMount() {
+  useIpcBridge();
+  return null;
+}
+
+function ConnectedSidebar({ onFeedDeleted }: { onFeedDeleted: (feed: FeedSummary) => void }) {
   const feeds = useFeeds();
-  return <RiverSidebar feeds={feeds} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={onFeedDeleted} />;
+  return (
+    <>
+      <IpcBridgeMount />
+      <RiverSidebar feeds={feeds} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={onFeedDeleted} />
+    </>
+  );
 }
 
 beforeEach(() => {
@@ -82,10 +95,8 @@ beforeEach(() => {
 
 test('clicking "Add feed" opens the add-feed modal', async () => {
   // Arrange
-  const { getByRole } = await render(
-    <FeedsProvider>
-      <RiverSidebar feeds={[]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
-    </FeedsProvider>,
+  const { getByRole } = await renderWithQueryClient(
+    <RiverSidebar feeds={[]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
   );
   await expect.element(getByRole('heading', { name: 'Add a feed' })).not.toBeInTheDocument();
 
@@ -100,10 +111,8 @@ describe('feed row visibility rotation', () => {
   test('clicking a home feed row asks to show it only', async () => {
     // Arrange
     const onSetVisibility = vi.fn();
-    const { getByRole } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+    const { getByRole } = await renderWithQueryClient(
+      <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
     );
     await getByRole('button', { name: 'Tech', exact: true }).click();
 
@@ -117,10 +126,8 @@ describe('feed row visibility rotation', () => {
   test('clicking an only feed row asks to hide it', async () => {
     // Arrange
     const onSetVisibility = vi.fn();
-    const { getByRole } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set([feedA.link])} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+    const { getByRole } = await renderWithQueryClient(
+      <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set([feedA.link])} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
     );
     await getByRole('button', { name: 'Tech', exact: true }).click();
 
@@ -133,12 +140,10 @@ describe('feed row visibility rotation', () => {
 
   test('clicking a hidden feed row asks to show it with the others', async () => {
     // Arrange
-    const hiddenFeedA: Feed = { ...feedA, showInHome: 0 };
+    const hiddenFeedA: FeedSummary = { ...feedA, showInHome: 0 };
     const onSetVisibility = vi.fn();
-    const { getByRole } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[hiddenFeedA]} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+    const { getByRole } = await renderWithQueryClient(
+      <RiverSidebar feeds={[hiddenFeedA]} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
     );
     await getByRole('button', { name: 'Tech', exact: true }).click();
 
@@ -153,10 +158,8 @@ describe('feed row visibility rotation', () => {
 describe('feed row current-state label', () => {
   test('a home feed is titled by what it is now, not the "only" state a click moves it to', async () => {
     // Arrange
-    const { getByRole } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+    const { getByRole } = await renderWithQueryClient(
+      <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
     );
     await getByRole('button', { name: 'Tech', exact: true }).click();
 
@@ -166,10 +169,8 @@ describe('feed row current-state label', () => {
 
   test('a soloed feed is titled "Shown only", not the "hidden" state it moves to next', async () => {
     // Arrange
-    const { getByRole } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set([feedA.link])} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+    const { getByRole } = await renderWithQueryClient(
+      <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set([feedA.link])} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
     );
     await getByRole('button', { name: 'Tech', exact: true }).click();
 
@@ -179,11 +180,9 @@ describe('feed row current-state label', () => {
 
   test('a hidden feed is titled "Hidden", not the "home" state it moves to next', async () => {
     // Arrange
-    const hiddenFeedA: Feed = { ...feedA, showInHome: 0 };
-    const { getByRole } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[hiddenFeedA]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+    const hiddenFeedA: FeedSummary = { ...feedA, showInHome: 0 };
+    const { getByRole } = await renderWithQueryClient(
+      <RiverSidebar feeds={[hiddenFeedA]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
     );
     await getByRole('button', { name: 'Tech', exact: true }).click();
 
@@ -196,10 +195,8 @@ describe('folder visibility rotation', () => {
   test('the rotate button applies the next state to every feed in the folder', async () => {
     // Arrange
     const onSetVisibility = vi.fn();
-    const { getByRole } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[feedA, feedB]} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+    const { getByRole } = await renderWithQueryClient(
+      <RiverSidebar feeds={[feedA, feedB]} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
     );
 
     // Act
@@ -211,12 +208,10 @@ describe('folder visibility rotation', () => {
 
   test('a mixed folder resets to home on the first click', async () => {
     // Arrange
-    const hiddenFeedB: Feed = { ...feedB, showInHome: 0 };
+    const hiddenFeedB: FeedSummary = { ...feedB, showInHome: 0 };
     const onSetVisibility = vi.fn();
-    const { getByRole } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[feedA, hiddenFeedB]} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+    const { getByRole } = await renderWithQueryClient(
+      <RiverSidebar feeds={[feedA, hiddenFeedB]} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
     );
 
     // Act
@@ -228,10 +223,8 @@ describe('folder visibility rotation', () => {
 
   test('the expand button still toggles the folder open and closed', async () => {
     // Arrange
-    const { getByRole, getByText } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+    const { getByRole, getByText } = await renderWithQueryClient(
+      <RiverSidebar feeds={[feedA]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
     );
     await expect.element(getByText('Feed A', { exact: true })).not.toBeInTheDocument();
 
@@ -244,40 +237,26 @@ describe('folder visibility rotation', () => {
 });
 
 describe('unread counts', () => {
-  test('feed and folder counts reflect unread items, not total items', async () => {
-    // Arrange: two items in one feed, only one of them unread.
-    const baseItem = { feed_id: 1, title: 'Item', link: 'https://a.example/feed#item', guid: 'https://a.example/feed#item', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined };
-    const feedWithMixedItems: Feed = {
-      ...feedA,
-      items: [
-        { ...baseItem, id: 1, read_at: undefined },
-        { ...baseItem, id: 2, read_at: '2024-01-02T00:00:00.000Z' },
-      ],
-    };
-    const { getByRole, getByTestId } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[feedWithMixedItems]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+  test('feed and folder counts reflect FeedSummary.unreadCount', async () => {
+    // Arrange
+    const feedWithUnread: FeedSummary = { ...feedA, itemCount: 2, unreadCount: 1 };
+    const { getByRole, getByTestId } = await renderWithQueryClient(
+      <RiverSidebar feeds={[feedWithUnread]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
     );
 
     // Act
     await getByRole('button', { name: 'Tech', exact: true }).click();
 
-    // Assert: one unread item out of two total, so both counts read 1, not 2.
+    // Assert
     await expect.element(getByTestId('folder-count')).toHaveTextContent('1');
     await expect.element(getByTestId('feed-count')).toHaveTextContent('1');
   });
 
   test('a fully-read feed and folder show a blank count instead of 0', async () => {
     // Arrange
-    const fullyReadFeed: Feed = {
-      ...feedA,
-      items: [{ feed_id: 1, id: 1, title: 'Item', link: 'https://a.example/feed#item', guid: 'https://a.example/feed#item', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: '2024-01-02T00:00:00.000Z' }],
-    };
-    const { getByRole, getByTestId } = await render(
-      <FeedsProvider>
-        <RiverSidebar feeds={[fullyReadFeed]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
+    const fullyReadFeed: FeedSummary = { ...feedA, itemCount: 1, unreadCount: 0 };
+    const { getByRole, getByTestId } = await renderWithQueryClient(
+      <RiverSidebar feeds={[fullyReadFeed]} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
     );
 
     // Act
@@ -293,11 +272,7 @@ describe('feed row context menu and delete', () => {
   test('right-clicking a feed row sends feeds:show-feed-context-menu with the feed id', async () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
-    const { getByRole, getByText } = await render(
-      <FeedsProvider>
-        <ConnectedSidebar onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
-    );
+    const { getByRole, getByText } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
     await getByRole('button', { name: 'Tech', exact: true }).click();
     await expect.element(getByText('Feed A', { exact: true })).toBeInTheDocument();
 
@@ -311,11 +286,7 @@ describe('feed row context menu and delete', () => {
   test('firing feeds:delete-feed-requested opens the dialog naming the feed and its item count', async () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
-    const { getByText, getByRole } = await render(
-      <FeedsProvider>
-        <ConnectedSidebar onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
-    );
+    const { getByText, getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
     await expect.element(getByRole('heading', { name: 'Delete feed' })).not.toBeInTheDocument();
 
     // Act
@@ -330,11 +301,7 @@ describe('feed row context menu and delete', () => {
   test('cancel closes the dialog and invokes nothing', async () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
-    const { getByRole } = await render(
-      <FeedsProvider>
-        <ConnectedSidebar onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
-    );
+    const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
     deleteFeedRequestedHandler?.(feedA.id);
     await expect.element(getByRole('heading', { name: 'Delete feed' })).toBeInTheDocument();
     invokeMock.mockClear();
@@ -347,17 +314,11 @@ describe('feed row context menu and delete', () => {
     expect(invokeMock).not.toHaveBeenCalledWith('feeds:delete-feed', expect.anything());
   });
 
-  test('confirm invokes feeds:delete-feed with the feed id, drops the row, and calls onFeedDeleted', async () => {
+  test('confirm invokes feeds:delete-feed with the feed id and calls onFeedDeleted', async () => {
     // Arrange
-    stubElectron({ feeds: [feedA, feedB], deleteFeed: { success: true, data: [feedB] } });
+    stubElectron({ feeds: [feedA, feedB], deleteFeed: { success: true, data: undefined } });
     const onFeedDeleted = vi.fn();
-    const { getByText, getByRole } = await render(
-      <FeedsProvider>
-        <ConnectedSidebar onFeedDeleted={onFeedDeleted} />
-      </FeedsProvider>,
-    );
-    await getByRole('button', { name: 'Tech', exact: true }).click();
-    await expect.element(getByText('Feed A', { exact: true })).toBeInTheDocument();
+    const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={onFeedDeleted} />);
     deleteFeedRequestedHandler?.(feedA.id);
     await expect.element(getByRole('heading', { name: 'Delete feed' })).toBeInTheDocument();
 
@@ -367,21 +328,13 @@ describe('feed row context menu and delete', () => {
     // Assert
     expect(invokeMock).toHaveBeenCalledWith('feeds:delete-feed', feedA.id);
     await expect.element(getByRole('heading', { name: 'Delete feed' })).not.toBeInTheDocument();
-    await expect.element(getByText('Feed A', { exact: true })).not.toBeInTheDocument();
-    await expect.element(getByText('Feed B', { exact: true })).toBeInTheDocument();
     expect(onFeedDeleted).toHaveBeenCalledWith(feedA);
   });
 
-  test('a failed reply keeps the feed and shows the message', async () => {
+  test('a failed reply keeps the dialog open and shows the message', async () => {
     // Arrange
     stubElectron({ feeds: [feedA], deleteFeed: { success: false, error: { name: 'DB_ERROR', message: 'Could not delete the feed.' } } });
-    const { getByText, getByRole } = await render(
-      <FeedsProvider>
-        <ConnectedSidebar onFeedDeleted={vi.fn()} />
-      </FeedsProvider>,
-    );
-    await getByRole('button', { name: 'Tech', exact: true }).click();
-    await expect.element(getByText('Feed A', { exact: true })).toBeInTheDocument();
+    const { getByText, getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
     deleteFeedRequestedHandler?.(feedA.id);
 
     // Act
@@ -393,4 +346,3 @@ describe('feed row context menu and delete', () => {
     await expect.element(getByText('1 item', { exact: true })).toBeInTheDocument();
   });
 });
-

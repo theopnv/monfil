@@ -1,125 +1,84 @@
 import { beforeEach, expect, test, vi } from 'vitest';
-import { render } from 'vitest-browser-react';
-import { FeedsProvider, useAddFeed, useDeleteFeed, useFeeds, useFeedsRefresh, useReadState } from './feeds-provider';
-import type { Feed } from '../../preload/channels';
+import { useReadState, useRiver } from './feeds-provider';
+import { useIpcBridge, usePendingRefreshCount } from '../lib/ipc-bridge';
+import { renderWithQueryClient } from '../lib/test/render-with-query-client';
+import type { RiverPage, RiverRow } from '../../preload/channels';
 
-let nextFeedId = 1;
+let nextItemId = 1;
 
-function createFeed(overrides: Partial<Feed> = {}): Feed {
-  const id = nextFeedId++;
+function createRow(overrides: Partial<RiverRow> = {}): RiverRow {
+  const id = nextItemId++;
   return {
     id,
-    link: `https://example.com/feed-${id}`,
-    title: `Feed ${id}`,
-    category_id: 1,
+    title: `Item ${id}`,
+    link: `https://example.com/item-${id}`,
+    publishedAt: id,
+    excerpt: '',
+    image: undefined,
+    readAt: undefined,
+    feedId: 1,
+    feedTitle: 'Feed A',
+    feedLink: 'https://example.com/feed',
+    feedIcon: undefined,
+    categoryName: 'Tech',
     type: 'rss',
-    showInHome: 1,
-    last_fetched_at: undefined,
-    last_error: undefined,
-    icon: undefined,
-    category: { id: 1, name: 'Tech' },
-    items: [],
     ...overrides,
   };
 }
 
-function createFeedWithItem(itemId: number): Feed {
-  const feed = createFeed();
-  return {
-    ...feed,
-    items: [{ id: itemId, feed_id: feed.id, title: 'Item', link: `https://example.com/item-${itemId}`, guid: `https://example.com/item-${itemId}`, pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
-  };
-}
-
-function FeedsList() {
-  const feeds = useFeeds();
-  return (
-    <ul>
-      {feeds.map((feed) => (
-        <li key={feed.link}>{feed.title}</li>
-      ))}
-    </ul>
-  );
-}
-
-function AddFeedButton({ feed }: { feed: Feed }) {
-  const addFeed = useAddFeed();
-  return (
-    <button type="button" onClick={() => addFeed(feed)}>
-      Add {feed.title}
-    </button>
-  );
-}
-
-function DeleteFeedButton({ feedId }: { feedId: number }) {
-  const deleteFeed = useDeleteFeed();
-  return (
-    <button type="button" onClick={() => {
-      void deleteFeed(feedId);
-    }}>
-      Delete {feedId}
-    </button>
-  );
-}
-
-function ItemImages() {
-  const feeds = useFeeds();
-  return (
-    <ul>
-      {feeds.flatMap((feed) => feed.items.map((item) => (
-        <li key={item.id}>{item.title}: {item.image ?? 'no-image'}</li>
-      )))}
-    </ul>
-  );
-}
-
-function RefreshButton() {
-  const { refreshNow, isRefreshing, refreshFailed } = useFeedsRefresh();
+function RiverRows() {
+  const { data, fetchNextPage } = useRiver({});
+  const rows = data?.pages.flatMap((page) => page.rows) ?? [];
   return (
     <div>
-      <button type="button" onClick={refreshNow}>
-        {isRefreshing ? 'Refreshing' : 'Refresh'}
-      </button>
-      {refreshFailed && <span>Refresh failed</span>}
+      <ul>
+        {rows.map((row) => (
+          <li key={row.id}>{row.title}: {row.readAt ? 'read' : 'unread'}{row.image ? `: ${row.image}` : ''}</li>
+        ))}
+      </ul>
+      <button type="button" onClick={() => void fetchNextPage()}>Load more</button>
     </div>
   );
 }
 
-function ReadStateProbe({ id }: { id: number }) {
-  const { isRead, markRead, toggleRead } = useReadState();
+function ReadStateButtons({ id, currentlyRead }: { id: number; currentlyRead: boolean }) {
+  const { markRead, toggleRead } = useReadState();
   return (
     <div>
-      <span>Item {id} is {isRead(id) ? 'read' : 'unread'}</span>
       <button type="button" onClick={() => markRead(id)}>Mark {id} read</button>
-      <button type="button" onClick={() => toggleRead(id)}>Toggle {id}</button>
+      <button type="button" onClick={() => toggleRead(id, currentlyRead)}>Toggle {id}</button>
     </div>
   );
 }
 
-function MarkAllReadButton({ ids }: { ids: number[] }) {
-  const { markAllRead } = useReadState();
-  return (
-    <button type="button" onClick={() => markAllRead(ids)}>Mark all read</button>
-  );
+function PendingPill() {
+  const count = usePendingRefreshCount();
+  return <span>{count} new</span>;
+}
+
+function IpcBridgeMount() {
+  useIpcBridge();
+  return null;
 }
 
 let itemImageFetchedHandler: ((payload: { feedId: number; itemId: number; image: string }) => void) | undefined;
-let feedsListPushHandler: ((payload: Feed[]) => void) | undefined;
-let invokeImpl: (channel: string) => Promise<unknown>;
+let feedsRefreshedHandler: ((payload: { perFeed: { feedId: number; inserted: number }[] }) => void) | undefined;
+let invokeImpl: (channel: string, arg: unknown) => Promise<unknown>;
 
 beforeEach(() => {
+  nextItemId = 1;
   itemImageFetchedHandler = undefined;
-  feedsListPushHandler = undefined;
-  invokeImpl = (channel) => Promise.resolve(channel === 'items:set-read' ? { success: true, data: undefined } : []);
+  feedsRefreshedHandler = undefined;
+  invokeImpl = () => Promise.resolve({ rows: [] } satisfies RiverPage);
   window.electron = {
     ipcRenderer: {
-      invoke: vi.fn((channel: string) => invokeImpl(channel)),
+      invoke: vi.fn((channel: string, arg: unknown) => invokeImpl(channel, arg)),
       on: vi.fn((channel: string, handler: (payload: never) => void) => {
         if (channel === 'feeds:item-image-fetched') {
           itemImageFetchedHandler = handler as typeof itemImageFetchedHandler;
         }
-        if (channel === 'feeds:list') {
-          feedsListPushHandler = handler as typeof feedsListPushHandler;
+        if (channel === 'feeds:refreshed') {
+          feedsRefreshedHandler = handler as typeof feedsRefreshedHandler;
         }
         return vi.fn();
       }),
@@ -129,433 +88,197 @@ beforeEach(() => {
   } as unknown as typeof window.electron;
 });
 
-test('a feed added via useAddFeed appears to useFeeds consumers', async () => {
+test('loads the first page on mount', async () => {
   // Arrange
-  const feedA = createFeed({ title: 'Feed A' });
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={feedA} />
-      <FeedsList />
-    </FeedsProvider>,
-  );
+  const rowA = createRow({ title: 'Row A' });
+  invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [rowA] } satisfies RiverPage : []);
 
   // Act
-  await getByRole('button', { name: 'Add Feed A' }).click();
+  const { getByText } = await renderWithQueryClient(<RiverRows />);
 
   // Assert
-  await expect.element(getByText('Feed A', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 });
 
-test('re-adding the same link replaces the existing feed instead of duplicating it', async () => {
+test('fetchNextPage appends the second page without dropping the first', async () => {
   // Arrange
-  const originalFeed = createFeed({ link: 'https://example.com/shared', title: 'Original title' });
-  const updatedFeed = createFeed({ link: 'https://example.com/shared', title: 'Updated title' });
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={originalFeed} />
-      <AddFeedButton feed={updatedFeed} />
-      <FeedsList />
-    </FeedsProvider>,
-  );
-
-  // Act
-  await getByRole('button', { name: 'Add Original title' }).click();
-  await getByRole('button', { name: 'Add Updated title' }).click();
-
-  // Assert
-  await expect.element(getByText('Updated title', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('Original title', { exact: true })).not.toBeInTheDocument();
-});
-
-test('an item-image-fetched push merges the image into the matching feed item, leaving others untouched', async () => {
-  // Arrange
-  const targetItem = { id: 1, feed_id: 1, title: 'Target item', link: 'https://example.com/target', guid: 'https://example.com/target', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined };
-  const otherItemInSameFeed = { id: 2, feed_id: 1, title: 'Other item', link: 'https://example.com/other', guid: 'https://example.com/other', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined };
-  const itemInOtherFeed = { id: 3, feed_id: 2, title: 'Item in other feed', link: 'https://example.com/other-feed-item', guid: 'https://example.com/other-feed-item', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined };
-  const targetFeed = createFeed({ title: 'Target feed', items: [targetItem, otherItemInSameFeed] });
-  const otherFeed = createFeed({ title: 'Other feed', items: [itemInOtherFeed] });
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={targetFeed} />
-      <AddFeedButton feed={otherFeed} />
-      <ItemImages />
-    </FeedsProvider>,
-  );
-  await getByRole('button', { name: 'Add Target feed' }).click();
-  await getByRole('button', { name: 'Add Other feed' }).click();
-  await expect.element(getByText('Target item: no-image', { exact: true })).toBeInTheDocument();
-
-  // Act
-  itemImageFetchedHandler?.({ feedId: targetFeed.id, itemId: targetItem.id, image: 'https://example.com/fetched.jpg' });
-
-  // Assert
-  await expect.element(getByText('Target item: https://example.com/fetched.jpg', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('Other item: no-image', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('Item in other feed: no-image', { exact: true })).toBeInTheDocument();
-});
-
-test('a feeds:list push replaces the list', async () => {
-  // Arrange
-  const pushedFeed = createFeed({ title: 'Pushed feed' });
-  const { getByText } = await render(
-    <FeedsProvider>
-      <FeedsList />
-    </FeedsProvider>,
-  );
-
-  // Act
-  feedsListPushHandler?.([pushedFeed]);
-
-  // Assert
-  await expect.element(getByText('Pushed feed', { exact: true })).toBeInTheDocument();
-});
-
-test('a feeds:list invoke response that lands after a push does not overwrite it', async () => {
-  // Arrange
-  const pushedFeed = createFeed({ title: 'Pushed feed' });
-  const staleFeed = createFeed({ title: 'Stale feed' });
-  let answerTheInvoke!: (feeds: Feed[]) => void;
-  const pendingList = new Promise<Feed[]>((resolve) => {
-    answerTheInvoke = resolve;
-  });
-  invokeImpl = (channel) => (channel === 'feeds:list' ? pendingList : Promise.resolve([]));
-  const { getByText } = await render(
-    <FeedsProvider>
-      <FeedsList />
-    </FeedsProvider>,
-  );
-  feedsListPushHandler?.([pushedFeed]);
-  await expect.element(getByText('Pushed feed', { exact: true })).toBeInTheDocument();
-
-  // Act
-  answerTheInvoke([staleFeed]);
-  await pendingList;
-  await new Promise((resolve) => setTimeout(resolve, 0));
-
-  // Assert
-  await expect.element(getByText('Pushed feed', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('Stale feed', { exact: true })).not.toBeInTheDocument();
-});
-
-test('useDeleteFeed replaces the list from the reply', async () => {
-  // Arrange
-  const feedA = createFeed({ title: 'Feed A' });
-  const feedC = createFeed({ title: 'Feed C' });
-  invokeImpl = (channel) => Promise.resolve(channel === 'feeds:delete-feed' ? { success: true, data: [feedC] } : []);
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <DeleteFeedButton feedId={feedA.id} />
-      <FeedsList />
-    </FeedsProvider>,
-  );
-
-  // Act
-  await getByRole('button', { name: `Delete ${feedA.id}` }).click();
-
-  // Assert
-  await expect.element(getByText('Feed C', { exact: true })).toBeInTheDocument();
-  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('feeds:delete-feed', feedA.id);
-});
-
-test('a stale feeds:list invoke does not restore a feed removed by useDeleteFeed', async () => {
-  // Arrange
-  const feedA = createFeed({ title: 'Feed A' });
-  let answerTheInvoke!: (feeds: Feed[]) => void;
-  const pendingList = new Promise<Feed[]>((resolve) => {
-    answerTheInvoke = resolve;
-  });
-  invokeImpl = (channel) => {
-    if (channel === 'feeds:list') {
-      return pendingList;
+  const rowA = createRow({ title: 'Row A' });
+  const rowB = createRow({ title: 'Row B' });
+  invokeImpl = (channel, arg) => {
+    if (channel !== 'items:query') {
+      return Promise.resolve([]);
     }
-    if (channel === 'feeds:delete-feed') {
-      return Promise.resolve({ success: true, data: [] });
-    }
-    return Promise.resolve([]);
+    const query = arg as { cursor?: unknown };
+    return Promise.resolve(
+      query.cursor
+        ? ({ rows: [rowB] } satisfies RiverPage)
+        : ({ rows: [rowA], nextCursor: { publishedAt: rowA.publishedAt, id: rowA.id } } satisfies RiverPage),
+    );
   };
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <DeleteFeedButton feedId={feedA.id} />
-      <FeedsList />
-    </FeedsProvider>,
-  );
-  await getByRole('button', { name: `Delete ${feedA.id}` }).click();
-  await expect.element(getByText('Feed A', { exact: true })).not.toBeInTheDocument();
+  const { getByText, getByRole } = await renderWithQueryClient(<RiverRows />);
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 
   // Act
-  answerTheInvoke([feedA]);
-  await pendingList;
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await getByRole('button', { name: 'Load more' }).click();
 
   // Assert
-  await expect.element(getByText('Feed A', { exact: true })).not.toBeInTheDocument();
+  await expect.element(getByText('Row B: unread', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 });
 
-test('refreshNow asks main for a refresh and shows the list it answers with', async () => {
+test('a feeds:refreshed push raises the pending count without moving the river window', async () => {
   // Arrange
-  const refreshedFeed = createFeed({ title: 'Refreshed feed' });
-  invokeImpl = (channel) => Promise.resolve(channel === 'feeds:refresh' ? [refreshedFeed] : []);
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <RefreshButton />
-      <FeedsList />
-    </FeedsProvider>,
+  const rowA = createRow({ title: 'Row A' });
+  invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [rowA] } satisfies RiverPage : []);
+  const { getByText } = await renderWithQueryClient(
+    <>
+      <IpcBridgeMount />
+      <PendingPill />
+      <RiverRows />
+    </>,
   );
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 
   // Act
-  await getByRole('button', { name: 'Refresh' }).click();
+  feedsRefreshedHandler?.({ perFeed: [{ feedId: 1, inserted: 3 }] });
 
   // Assert
-  await expect.element(getByText('Refreshed feed', { exact: true })).toBeInTheDocument();
-  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('feeds:refresh', undefined);
+  await expect.element(getByText('3 new', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 });
 
-test('refreshNow stops reporting a refresh once it fails', async () => {
-  // Arrange
-  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-  invokeImpl = (channel) => (channel === 'feeds:refresh' ? Promise.reject(new Error('offline')) : Promise.resolve([]));
-  const { getByRole } = await render(
-    <FeedsProvider>
-      <RefreshButton />
-    </FeedsProvider>,
+test('a feeds:refreshed push before the river has ever rendered raises no pill', async () => {
+  // Arrange: the river's first fetch never resolves, so the window has nothing loaded yet —
+  // exactly the launch race, where a pill here would have nothing left to load once that fetch
+  // eventually lands on its own.
+  invokeImpl = (channel) => (channel === 'items:query' ? new Promise(() => { }) : Promise.resolve([]));
+  const { getByText } = await renderWithQueryClient(
+    <>
+      <IpcBridgeMount />
+      <PendingPill />
+      <RiverRows />
+    </>,
   );
 
   // Act
-  await getByRole('button', { name: 'Refresh' }).click();
+  feedsRefreshedHandler?.({ perFeed: [{ feedId: 1, inserted: 3 }] });
 
   // Assert
-  await vi.waitFor(() => {
-    expect(consoleError).toHaveBeenCalled();
-  });
-  await expect.element(getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
+  await expect.element(getByText('0 new', { exact: true })).toBeInTheDocument();
 });
 
-test('refreshNow surfaces a failure and clears it once a later attempt succeeds', async () => {
+test('a feeds:item-image-fetched push patches exactly one row', async () => {
   // Arrange
-  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-  let shouldFail = true;
-  invokeImpl = (channel) => (channel === 'feeds:refresh' ? (shouldFail ? Promise.reject(new Error('offline')) : Promise.resolve([])) : Promise.resolve([]));
-  const { getByRole, getByText } = await render(
-    <FeedsProvider>
-      <RefreshButton />
-    </FeedsProvider>
+  const target = createRow({ title: 'Target' });
+  const other = createRow({ title: 'Other' });
+  invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [target, other] } satisfies RiverPage : []);
+  const { getByText } = await renderWithQueryClient(
+    <>
+      <IpcBridgeMount />
+      <RiverRows />
+    </>,
   );
+  await expect.element(getByText('Target: unread', { exact: true })).toBeInTheDocument();
 
   // Act
-  await getByRole('button', { name: 'Refresh' }).click();
+  itemImageFetchedHandler?.({ feedId: target.feedId, itemId: target.id, image: 'https://example.com/fetched.jpg' });
 
   // Assert
-  await expect.element(getByText('Refresh failed', { exact: true })).toBeInTheDocument();
-  expect(consoleError).toHaveBeenCalled();
-
-  // Act: a later attempt that succeeds clears the failure.
-  shouldFail = false;
-  await getByRole('button', { name: 'Refresh' }).click();
-
-  // Assert
-  await expect.element(getByText('Refresh failed', { exact: true })).not.toBeInTheDocument();
+  await expect.element(getByText('Target: unread: https://example.com/fetched.jpg', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Other: unread', { exact: true })).toBeInTheDocument();
 });
 
-test('a fresh provider starts with nothing read', async () => {
+test('marking an item read updates it optimistically and keeps it once the write succeeds', async () => {
   // Arrange
-  const feed = createFeedWithItem(1);
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={feed} />
-      <ReadStateProbe id={1} />
-    </FeedsProvider>,
+  const row = createRow({ title: 'Row A' });
+  invokeImpl = (channel) => Promise.resolve(
+    channel === 'items:query' ? ({ rows: [row] } satisfies RiverPage)
+      : channel === 'items:set-read' ? { success: true, data: undefined }
+        : [],
   );
-  await getByRole('button', { name: `Add ${feed.title}` }).click();
-
-  // Assert
-  await expect.element(getByText('Item 1 is unread', { exact: true })).toBeInTheDocument();
-});
-
-test('markRead marks an item read', async () => {
-  // Arrange
-  const feed = createFeedWithItem(1);
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={feed} />
-      <ReadStateProbe id={1} />
-    </FeedsProvider>,
+  const { getByText, getByRole } = await renderWithQueryClient(
+    <>
+      <RiverRows />
+      <ReadStateButtons id={row.id} currentlyRead={false} />
+    </>,
   );
-  await getByRole('button', { name: `Add ${feed.title}` }).click();
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 
   // Act
-  await getByRole('button', { name: 'Mark 1 read' }).click();
+  await getByRole('button', { name: `Mark ${row.id} read` }).click();
 
   // Assert
-  await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
-});
-
-test('markRead invokes items:set-read with the item id', async () => {
-  // Arrange
-  const feed = createFeedWithItem(1);
-  const { getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={feed} />
-      <ReadStateProbe id={1} />
-    </FeedsProvider>,
-  );
-  await getByRole('button', { name: `Add ${feed.title}` }).click();
-
-  // Act
-  await getByRole('button', { name: 'Mark 1 read' }).click();
-
-  // Assert
-  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('items:set-read', { itemIds: [1], read: true });
+  await expect.element(getByText('Row A: read', { exact: true })).toBeInTheDocument();
 });
 
 test('a rejected items:set-read rolls back the optimistic read state', async () => {
   // Arrange
   const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-  invokeImpl = (channel) => (channel === 'items:set-read' ? Promise.reject(new Error('offline')) : Promise.resolve([]));
-  const feed = createFeedWithItem(1);
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={feed} />
-      <ReadStateProbe id={1} />
-    </FeedsProvider>,
+  const row = createRow({ title: 'Row A' });
+  invokeImpl = (channel) => (channel === 'items:query'
+    ? Promise.resolve({ rows: [row] } satisfies RiverPage)
+    : channel === 'items:set-read'
+      ? Promise.reject(new Error('offline'))
+      : Promise.resolve([]));
+  const { getByText, getByRole } = await renderWithQueryClient(
+    <>
+      <RiverRows />
+      <ReadStateButtons id={row.id} currentlyRead={false} />
+    </>,
   );
-  await getByRole('button', { name: `Add ${feed.title}` }).click();
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 
   // Act
-  await getByRole('button', { name: 'Mark 1 read' }).click();
+  await getByRole('button', { name: `Mark ${row.id} read` }).click();
 
-  // Assert
+  // Assert: read immediately (optimistic), then rolled back once the write fails.
   await vi.waitFor(() => {
     expect(consoleError).toHaveBeenCalled();
   });
-  await expect.element(getByText('Item 1 is unread', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 });
 
-test('an unsuccessful items:set-read result rolls back the optimistic read state', async () => {
-  // Arrange: the invoke promise resolves, but with a Result-level failure.
+test('two read-state mutations racing each keep their own outcome', async () => {
+  // Arrange: item A's write is slow and fails; item B's write is fast and succeeds.
   const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-  invokeImpl = (channel) => Promise.resolve(channel === 'items:set-read'
-    ? { success: false, error: { name: 'ITEM_NOT_FOUND', message: 'No feed item found' } }
-    : []);
-  const feed = createFeedWithItem(1);
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={feed} />
-      <ReadStateProbe id={1} />
-    </FeedsProvider>,
-  );
-  await getByRole('button', { name: `Add ${feed.title}` }).click();
-
-  // Act
-  await getByRole('button', { name: 'Mark 1 read' }).click();
-
-  // Assert
-  await vi.waitFor(() => {
-    expect(consoleError).toHaveBeenCalled();
+  const rowA = createRow({ title: 'Row A' });
+  const rowB = createRow({ title: 'Row B' });
+  let resolveA!: () => void;
+  const pendingA = new Promise<void>((resolve) => {
+    resolveA = resolve;
   });
-  await expect.element(getByText('Item 1 is unread', { exact: true })).toBeInTheDocument();
-});
-
-test('a rejected items:set-read restores each item to its own previous state, not a blanket flip', async () => {
-  // Arrange: item 1 is already read before the failing batch call includes it alongside unread item 2.
-  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-  let failNextSetRead = false;
-  invokeImpl = (channel) => {
+  invokeImpl = (channel, arg) => {
+    if (channel === 'items:query') {
+      return Promise.resolve({ rows: [rowA, rowB] } satisfies RiverPage);
+    }
     if (channel === 'items:set-read') {
-      if (failNextSetRead) {
-        return Promise.reject(new Error('offline'));
+      const { itemIds } = arg as { itemIds: number[] };
+      if (itemIds.includes(rowA.id)) {
+        return pendingA.then(() => ({ success: false, error: { name: 'ITEM_NOT_FOUND', message: 'gone' } }) as const);
       }
       return Promise.resolve({ success: true, data: undefined });
     }
     return Promise.resolve([]);
   };
-  const feedA = createFeedWithItem(1);
-  const feedB = createFeedWithItem(2);
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={feedA} />
-      <AddFeedButton feed={feedB} />
-      <ReadStateProbe id={1} />
-      <ReadStateProbe id={2} />
-      <MarkAllReadButton ids={[1, 2]} />
-    </FeedsProvider>,
+  const { getByText, getByRole } = await renderWithQueryClient(
+    <>
+      <RiverRows />
+      <ReadStateButtons id={rowA.id} currentlyRead={false} />
+      <ReadStateButtons id={rowB.id} currentlyRead={false} />
+    </>,
   );
-  await getByRole('button', { name: `Add ${feedA.title}` }).click();
-  await getByRole('button', { name: `Add ${feedB.title}` }).click();
-  await getByRole('button', { name: 'Mark 1 read' }).click();
-  await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 
-  // Act: mark both read in one batch; item 1 was already read, item 2 was not.
-  failNextSetRead = true;
-  await getByRole('button', { name: 'Mark all read' }).click();
+  // Act: start A's slow mutation, then B's fast one, which settles first.
+  await getByRole('button', { name: `Mark ${rowA.id} read` }).click();
+  await getByRole('button', { name: `Mark ${rowB.id} read` }).click();
+  await expect.element(getByText('Row B: read', { exact: true })).toBeInTheDocument();
+  resolveA();
 
-  // Assert: item 1 stays read (its own prior state), item 2 reverts to unread, not both flipped.
+  // Assert: A rolls back to unread, B stays read, neither mutation clobbered the other's row.
   await vi.waitFor(() => {
     expect(consoleError).toHaveBeenCalled();
   });
-  await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('Item 2 is unread', { exact: true })).toBeInTheDocument();
-});
-
-test('marking an already-read item again is a no-op', async () => {
-  // Arrange
-  const feed = createFeedWithItem(1);
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={feed} />
-      <ReadStateProbe id={1} />
-    </FeedsProvider>,
-  );
-  await getByRole('button', { name: `Add ${feed.title}` }).click();
-
-  // Act
-  await getByRole('button', { name: 'Mark 1 read' }).click();
-  await getByRole('button', { name: 'Mark 1 read' }).click();
-
-  // Assert
-  await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
-});
-
-test('toggleRead flips the read state both ways', async () => {
-  // Arrange
-  const feed = createFeedWithItem(1);
-  const { getByText, getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={feed} />
-      <ReadStateProbe id={1} />
-    </FeedsProvider>,
-  );
-  await getByRole('button', { name: `Add ${feed.title}` }).click();
-
-  // Act
-  await getByRole('button', { name: 'Toggle 1' }).click();
-
-  // Assert
-  await expect.element(getByText('Item 1 is read', { exact: true })).toBeInTheDocument();
-
-  // Act
-  await getByRole('button', { name: 'Toggle 1' }).click();
-
-  // Assert
-  await expect.element(getByText('Item 1 is unread', { exact: true })).toBeInTheDocument();
-});
-
-test('markAllRead sends one items:set-read call for every id', async () => {
-  // Arrange
-  const feedA = createFeedWithItem(1);
-  const feedB = createFeedWithItem(2);
-  const { getByRole } = await render(
-    <FeedsProvider>
-      <AddFeedButton feed={feedA} />
-      <AddFeedButton feed={feedB} />
-      <MarkAllReadButton ids={[1, 2]} />
-    </FeedsProvider>,
-  );
-  await getByRole('button', { name: `Add ${feedA.title}` }).click();
-  await getByRole('button', { name: `Add ${feedB.title}` }).click();
-
-  // Act
-  await getByRole('button', { name: 'Mark all read' }).click();
-
-  // Assert
-  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('items:set-read', { itemIds: [1, 2], read: true });
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Row B: read', { exact: true })).toBeInTheDocument();
 });

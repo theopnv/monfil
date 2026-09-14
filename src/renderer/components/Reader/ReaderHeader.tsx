@@ -4,10 +4,10 @@ import ArticleSourceLink from "@/components/Reader/ArticleSourceLink";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Tooltip } from "@/components/untitled-ui/base/tooltip/tooltip";
 import { resolveFeedIcon } from "@/lib/favicon";
-import type { RiverItem } from "@/lib/river/utils";
+import type { RiverRow } from "../../../preload/channels";
 
 export interface ReaderHeaderProps {
-  item: RiverItem;
+  item: RiverRow;
   onNavigateHome: () => void;
   onToggleRead: () => void;
   onPrevious: () => void;

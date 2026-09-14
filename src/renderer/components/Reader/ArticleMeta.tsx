@@ -1,9 +1,9 @@
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { estimateReadTime, formatRelativeTime, SOURCE_TYPE_LABEL } from "@/lib/river/utils";
-import type { RiverItem } from "@/lib/river/utils";
+import type { RiverRow } from "../../../preload/channels";
 
 export interface ArticleMetaProps {
-  item: RiverItem;
+  item: RiverRow;
   wordCount: number | undefined;
 }
 
@@ -16,7 +16,7 @@ export default function ArticleMeta({ item, wordCount }: ArticleMetaProps) {
         {SOURCE_TYPE_LABEL[item.type]}
       </Badge>
       <span className="text-sm text-tertiary">
-        {item.feedTitle} · {formatRelativeTime(item.pubDate)}
+        {item.feedTitle} · {formatRelativeTime(item.publishedAt)}
         {readTime && <> · {readTime}</>}
       </span>
     </div>

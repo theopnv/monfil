@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import RiverSidebar from "@/components/Home/RiverSidebar";
 import ArticleBody from "@/components/Reader/ArticleBody";
 import ArticleHeroImage from "@/components/Reader/ArticleHeroImage";
@@ -9,11 +10,13 @@ import ReaderHeader from "@/components/Reader/ReaderHeader";
 import ReadingProgressBar from "@/components/common/ReadingProgressBar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { announce } from "@/lib/announcer";
+import { queryKeys, mergeRiverRows } from "@/lib/queries";
 import { getReaderNavigation } from "@/lib/reader/reader";
 import { useReaderContent } from "@/lib/reader/useReaderContent";
-import { toRiverItems } from "@/lib/river/utils";
-import { useFeeds, useReadState } from "@/providers/feeds-provider";
+import { useRiverScope } from "@/lib/river/useRiverScope";
+import { useFeeds, useReadState, useRiver } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
+import type { RiverPage } from "../../../preload/channels";
 
 export interface ReaderProps {
   itemId: string;
@@ -24,16 +27,66 @@ export interface ReaderProps {
 export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: ReaderProps) {
   const id = Number(itemId);
   const feeds = useFeeds();
-  const { isRead, markRead, toggleRead } = useReadState();
+  const { markRead, toggleRead } = useReadState();
   const { preferences } = usePreferences();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
+  const queryClient = useQueryClient();
 
-  const riverItems = useMemo(() => toRiverItems(feeds), [feeds]);
+  // Shares Home's window and cache: same scope, same query key, so navigation follows whatever
+  // Home is currently scoped to instead of maintaining its own separate view of the river.
+  const { scope } = useRiverScope(feeds);
+  const { data } = useRiver(scope);
+  const riverItems = useMemo(() => data?.pages.flatMap((page) => page.rows) ?? [], [data]);
   const currentItem = useMemo(() => riverItems.find((item) => item.id === id), [riverItems, id]);
+  const isRead = useCallback((candidateId: number) => !!riverItems.find((item) => item.id === candidateId)?.readAt, [riverItems]);
   const navigation = useMemo(() => getReaderNavigation(riverItems, id, isRead), [riverItems, id, isRead]);
   const readerHighlightedLinks = useMemo(() => new Set(currentItem ? [currentItem.feedLink] : []), [currentItem]);
-  const content = useReaderContent(feeds, currentItem);
+  const content = useReaderContent(currentItem);
+
+  const mergeRows = useCallback((rows: RiverPage['rows']) => {
+    if (rows.length === 0) {
+      return;
+    }
+    queryClient.setQueryData<InfiniteData<RiverPage>>(queryKeys.river(scope), (current) => (current ? mergeRiverRows(current, rows) : current));
+  }, [queryClient, scope]);
+
+  // A deep link to an item outside the loaded window: fetch the exact row directly.
+  useEffect(() => {
+    if (currentItem || Number.isNaN(id)) {
+      return;
+    }
+    let cancelled = false;
+    window.electron.ipcRenderer.invoke('items:query', { ids: [id], limit: 1 })
+      .then((page) => {
+        if (!cancelled) {
+          mergeRows(page.rows);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [currentItem, id, mergeRows]);
+
+  // `nextUnread` found nothing locally: ask main for the next unread row past this one's cursor.
+  useEffect(() => {
+    if (!currentItem || navigation.nextUnread) {
+      return;
+    }
+    let cancelled = false;
+    window.electron.ipcRenderer
+      .invoke('items:query', { ...scope, unreadOnly: true, cursor: { publishedAt: currentItem.publishedAt, id: currentItem.id }, limit: 1 })
+      .then((page) => {
+        if (!cancelled) {
+          mergeRows(page.rows);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [currentItem, navigation.nextUnread, scope, mergeRows]);
 
   useEffect(() => {
     if (currentItem) {
@@ -90,11 +143,11 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
   }
 
   const nextTarget = navigation.nextUnread;
-  const nextLabel = nextTarget && !isRead(nextTarget.id) ? "Next unread" : "Next article";
+  const nextLabel = nextTarget && !nextTarget.readAt ? "Next unread" : "Next article";
 
   const handleToggleRead = () => {
-    const willBeRead = !isRead(currentItem.id);
-    toggleRead(currentItem.id);
+    const willBeRead = !currentItem.readAt;
+    toggleRead(currentItem.id, !!currentItem.readAt);
     announce(willBeRead ? "Marked as read" : "Marked as unread");
   };
 
