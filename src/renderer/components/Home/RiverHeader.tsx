@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Eye, RefreshCw01, SearchLg, XClose } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
 import { announce } from "@/lib/announcer";
+import { useClearPendingRefreshCount, usePendingRefreshCount } from "@/lib/ipc-bridge";
 import { useFeedsRefresh } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 
@@ -35,6 +37,14 @@ export interface RiverHeaderProps {
 export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: RiverHeaderProps) {
   const { refreshNow, isRefreshing, refreshFailed } = useFeedsRefresh();
   const { preferences, setPreference } = usePreferences();
+  const pendingRefreshCount = usePendingRefreshCount();
+  const clearPendingRefreshCount = useClearPendingRefreshCount();
+  const queryClient = useQueryClient();
+
+  const handlePendingClick = () => {
+    clearPendingRefreshCount();
+    void queryClient.invalidateQueries({ queryKey: ['river'] });
+  };
 
   const wasRefreshing = useRef(false);
   useEffect(() => {
@@ -90,6 +100,11 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: R
                   </button>
                 )}
               </div>
+              {pendingRefreshCount > 0 && (
+                <Button color="primary" className="flex-none rounded-full" onPress={handlePendingClick}>
+                  {pendingRefreshCount} new
+                </Button>
+              )}
               <Button
                 color="secondary"
                 iconLeading={Eye}

@@ -1,20 +1,21 @@
 import { describe, expect, test } from 'vitest';
-import { deriveStandfirst, findRawDescription, getReaderNavigation, renderPlainTextDescription } from './reader';
-import type { Feed } from '../../../preload/channels';
-import type { RiverItem } from '../river/utils';
+import { deriveStandfirst, getReaderNavigation, renderPlainTextDescription } from './reader';
+import type { RiverRow } from '../../../preload/channels';
 
-function createItem(overrides: Partial<RiverItem> = {}): RiverItem {
+function createItem(overrides: Partial<RiverRow> = {}): RiverRow {
   return {
     id: 1,
     title: 'Item title',
     link: 'https://example.com/item',
-    pubDate: '2024-01-01',
-    description: 'Item description',
+    publishedAt: 1704067200000,
+    excerpt: 'Item description',
     feedTitle: 'Feed',
     feedLink: 'https://example.com/feed',
     feedIcon: undefined,
     categoryName: 'Tech',
     image: undefined,
+    readAt: undefined,
+    feedId: 1,
     type: 'rss',
     ...overrides,
   };
@@ -142,39 +143,5 @@ describe('renderPlainTextDescription', () => {
 
     // Assert
     expect(result).toBe('Line one<br>Line two');
-  });
-});
-
-describe('findRawDescription', () => {
-  const feeds: Feed[] = [
-    {
-      id: 1,
-      link: 'https://a.example/feed',
-      title: 'Feed A',
-      category_id: 1,
-      type: 'rss',
-      showInHome: 1,
-      last_fetched_at: undefined,
-      last_error: undefined,
-      icon: undefined,
-      category: { id: 1, name: 'Tech' },
-      items: [{ id: 10, feed_id: 1, title: 'Item', link: 'https://a.example/item', guid: 'https://a.example/item', pubDate: '2024-01-01', description: '<p>raw html</p>', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
-    },
-  ];
-
-  test('returns the raw description for a matching item id', () => {
-    // Act
-    const result = findRawDescription(feeds, 10);
-
-    // Assert
-    expect(result).toBe('<p>raw html</p>');
-  });
-
-  test('returns undefined when no item matches', () => {
-    // Act
-    const result = findRawDescription(feeds, 999);
-
-    // Assert
-    expect(result).toBeUndefined();
   });
 });

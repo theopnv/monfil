@@ -1,77 +1,81 @@
 import { describe, expect, test } from 'vitest';
-import { estimateReadTime, toRiverItems } from './utils';
-import type { Feed } from '../../../preload/channels';
+import { describeRiverCard, estimateReadTime, formatRelativeTime } from './utils';
+import type { RiverRow } from '../../../preload/channels';
 
-type FeedItem = Feed['items'][number];
-
-function createFeedItem(overrides: Partial<FeedItem> = {}): FeedItem {
+function createRow(overrides: Partial<RiverRow> = {}): RiverRow {
   return {
     id: 1,
-    feed_id: 1,
     title: 'Item',
     link: 'https://example.com/item',
-    guid: 'https://example.com/item',
-    pubDate: '2024-01-01',
-    description: '',
+    publishedAt: Date.now(),
+    excerpt: '',
+    feedTitle: 'Feed',
+    feedLink: 'https://example.com/feed',
+    feedIcon: undefined,
+    categoryName: 'Tech',
     image: undefined,
-    author: undefined,
-    extra: undefined,
-    read_at: undefined,
-    ...overrides,
-  };
-}
-
-function createFeed(overrides: Partial<Feed> = {}): Feed {
-  return {
-    id: 1,
-    link: 'https://example.com/feed',
-    title: 'Feed',
-    category_id: 1,
+    readAt: undefined,
+    feedId: 1,
     type: 'rss',
-    showInHome: 1,
-    last_fetched_at: undefined,
-    last_error: undefined,
-    icon: undefined,
-    category: { id: 1, name: 'Tech' },
-    items: [],
     ...overrides,
   };
 }
 
-describe('toRiverItems', () => {
-  test('strips markup from the description', () => {
-    // Arrange
-    const feed = createFeed({ items: [createFeedItem({ description: '<p>Hello <strong>world</strong></p>' })] });
-
+describe('formatRelativeTime', () => {
+  test('shows "now" for the current moment', () => {
     // Act
-    const [result] = toRiverItems([feed]);
+    const result = formatRelativeTime(Date.now());
 
     // Assert
-    expect(result?.description).toBe('Hello world');
+    expect(result).toBe('now');
   });
 
-  test('strips style tag content out of the description', () => {
-    // Arrange: Blogger/Blogspot Atom feeds embed a <style> block ahead of the article body.
-    const description = '<style>@media (max-width: 600px) { .body { overflow-x: auto; } }</style><p>Actual excerpt.</p>';
-    const feed = createFeed({ items: [createFeedItem({ description })] });
-
+  test('shows minutes for under an hour', () => {
     // Act
-    const [result] = toRiverItems([feed]);
+    const result = formatRelativeTime(Date.now() - 5 * 60 * 1000);
 
     // Assert
-    expect(result?.description).toBe('Actual excerpt.');
+    expect(result).toBe('5m');
   });
 
-  test('strips script tag content out of the description', () => {
-    // Arrange
-    const description = '<script>alert(1)</script><p>Actual excerpt.</p>';
-    const feed = createFeed({ items: [createFeedItem({ description })] });
-
+  test('shows hours for under a day', () => {
     // Act
-    const [result] = toRiverItems([feed]);
+    const result = formatRelativeTime(Date.now() - 3 * 60 * 60 * 1000);
 
     // Assert
-    expect(result?.description).toBe('Actual excerpt.');
+    expect(result).toBe('3h');
+  });
+
+  test('shows days for under a week', () => {
+    // Act
+    const result = formatRelativeTime(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+    // Assert
+    expect(result).toBe('2d');
+  });
+
+  test('falls back to a locale date at a week or older', () => {
+    // Arrange
+    const timestamp = Date.now() - 10 * 24 * 60 * 60 * 1000;
+
+    // Act
+    const result = formatRelativeTime(timestamp);
+
+    // Assert
+    expect(result).toBe(new Date(timestamp).toLocaleDateString());
+  });
+});
+
+describe('describeRiverCard', () => {
+  test('mentions the title, read state and feed', () => {
+    // Arrange
+    const row = createRow({ title: 'A headline', feedTitle: 'Feed A', publishedAt: Date.now() });
+
+    // Act
+    const result = describeRiverCard(row, false);
+
+    // Assert
+    expect(result).toBe(`A headline, unread, from Feed A, ${formatRelativeTime(row.publishedAt)}.`);
   });
 });
 

@@ -8,7 +8,7 @@ import { useFeedValidation } from "./useFeedValidation";
 import WizardFooter from "./WizardFooter";
 import WizardHeader, { type WizardStep } from "./WizardHeader";
 import type { AddFeedError } from "../../../main/db/crud/insert";
-import type { Feed, FeedCategory } from "../../../preload/channels";
+import type { FeedCategory, FeedSummary } from "../../../preload/channels";
 
 export interface AddFeedModalProps {
   isOpen: boolean;
@@ -28,7 +28,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   const [showInHome, setShowInHome] = useState(true);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "loading" | "error">("idle");
   const [submitError, setSubmitError] = useState<AddFeedError | null>(null);
-  const [result, setResult] = useState<Feed | null>(null);
+  const [result, setResult] = useState<FeedSummary | null>(null);
 
   const validation = useFeedValidation(query, type);
 
@@ -86,7 +86,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
     setSubmitStatus("loading");
     setSubmitError(null);
 
-    const response = await window.electron.ipcRenderer.invoke("feeds:submit-add-feed", {
+    const response = await addFeed({
       link: validation.feed.link,
       title: validation.feed.title,
       type: validation.feed.type,
@@ -97,7 +97,6 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
     });
 
     if (response.success) {
-      addFeed(response.data);
       setResult(response.data);
       setSubmitStatus("idle");
       setStep(3);

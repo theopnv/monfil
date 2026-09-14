@@ -1,7 +1,7 @@
-import { type SelectQueryBuilder } from 'kysely';
+import { sql, type SelectQueryBuilder } from 'kysely';
 import { type ArticleContent, type Database, type FeedCategory, type FeedItem, type FeedMetadata, type Setting } from '../types';
 import { db, dbReady } from '../database';
-import type { Feed } from '../../../preload/channels';
+import type { FeedSummary, RiverPage, RiverQuery, RiverRow } from '../../../preload/channels';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
 // Adding a new field to a table object and forgetting to add it here will result in a compilation error.
@@ -39,6 +39,8 @@ const feedItemHandlers = {
   author: (q, v) => q.where('author', '=', v),
   extra: (q, v) => q.where('extra', '=', v),
   read_at: (q, v) => q.where('read_at', '=', v),
+  published_at: (q, v) => q.where('published_at', '=', v),
+  excerpt: (q, v) => q.where('excerpt', '=', v),
 } satisfies CriteriaHandlers<'feedItem', FeedItem>;
 
 // Ordered explicitly: without it SQLite returns rows in whatever order the chosen index gives,
@@ -114,24 +116,131 @@ export async function countFeedMetadata(): Promise<number> {
   return count;
 }
 
-export async function queryFeeds(): Promise<Feed[]> {
-  const [feedMetadataList, categories] = await Promise.all([
-    queryFeedMetadata({}),
-    queryFeedCategory({}),
-  ]);
-  const categoriesById = new Map(categories.map((category) => [category.id, category]));
-  const feeds: Feed[] = [];
+/** Every feed with its category and item counts, in one statement. No items: use `queryRiverPage` for those. */
+export async function queryFeedSummaries(): Promise<FeedSummary[]> {
+  await dbReady;
 
-  for (const feedMetadata of feedMetadataList) {
-    const category = categoriesById.get(feedMetadata.category_id);
-    if (!category) {
-      console.error(`No category found for feed "${feedMetadata.title}" (category_id: ${feedMetadata.category_id})`);
-      continue;
-    }
+  const rows = await db.selectFrom('feedMetadata as f')
+    .innerJoin('feedCategory as c', 'c.id', 'f.category_id')
+    .leftJoin(
+      (eb) => eb.selectFrom('feedItem')
+        .select('feed_id')
+        .select((eb2) => eb2.fn.countAll<number>().as('itemCount'))
+        .select(() => sql<number>`count(*) filter (where read_at is null)`.as('unreadCount'))
+        .groupBy('feed_id')
+        .as('stats'),
+      (join) => join.onRef('stats.feed_id', '=', 'f.id'),
+    )
+    .select([
+      'f.id as id',
+      'f.link as link',
+      'f.title as title',
+      'f.category_id as category_id',
+      'f.showInHome as showInHome',
+      'f.type as type',
+      'f.last_fetched_at as last_fetched_at',
+      'f.last_error as last_error',
+      'f.icon as icon',
+      'c.id as categoryId',
+      'c.name as categoryName',
+      'stats.itemCount as itemCount',
+      'stats.unreadCount as unreadCount',
+    ])
+    .execute();
 
-    const items = await queryFeedItems({ feed_id: feedMetadata.id });
-    feeds.push({ ...feedMetadata, items, category });
+  return rows.map((row) => ({
+    id: row.id,
+    link: row.link,
+    title: row.title,
+    category_id: row.category_id,
+    showInHome: row.showInHome,
+    type: row.type,
+    last_fetched_at: row.last_fetched_at,
+    last_error: row.last_error,
+    icon: row.icon,
+    category: { id: row.categoryId, name: row.categoryName },
+    itemCount: row.itemCount ?? 0,
+    unreadCount: row.unreadCount ?? 0,
+  }));
+}
+
+// Escapes SQLite LIKE wildcards so a search word is matched literally rather than as a pattern.
+function escapeLikeWord(word: string): string {
+  return word.replace(/[\\%_]/g, (char) => `\\${char}`);
+}
+
+/**
+ * One page of the river: every matching item, newest first, joined with its feed and category.
+ * `LIMIT limit + 1` is requested so the extra row (when present) tells us whether a `nextCursor` exists,
+ * without a separate count query.
+ */
+export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
+  await dbReady;
+
+  let builder = db.selectFrom('feedItem as i')
+    .innerJoin('feedMetadata as f', 'f.id', 'i.feed_id')
+    .innerJoin('feedCategory as c', 'c.id', 'f.category_id')
+    .select([
+      'i.id as id',
+      'i.title as title',
+      'i.link as link',
+      'i.published_at as publishedAt',
+      'i.excerpt as excerpt',
+      'i.image as image',
+      'i.read_at as readAt',
+      'f.id as feedId',
+      'f.title as feedTitle',
+      'f.link as feedLink',
+      'f.icon as feedIcon',
+      'c.name as categoryName',
+      'f.type as type',
+    ]);
+
+  builder = query.feedIds
+    ? builder.where('f.id', 'in', query.feedIds)
+    : builder.where('f.showInHome', '=', 1);
+
+  if (query.ids) {
+    builder = builder.where('i.id', 'in', query.ids);
   }
 
-  return feeds;
+  if (query.unreadOnly) {
+    builder = builder.where('i.read_at', 'is', null);
+  }
+
+  const words = query.search?.trim().toLowerCase().split(/\s+/).filter(Boolean) ?? [];
+  for (const word of words) {
+    const pattern = `%${escapeLikeWord(word)}%`;
+    builder = builder.where((eb) => eb.or([
+      sql<boolean>`${eb.ref('i.title')} like ${pattern} escape '\\'`,
+      sql<boolean>`${eb.ref('i.excerpt')} like ${pattern} escape '\\'`,
+      sql<boolean>`${eb.ref('f.title')} like ${pattern} escape '\\'`,
+    ]));
+  }
+
+  if (query.cursor) {
+    const { publishedAt, id } = query.cursor;
+    builder = builder.where((eb) => eb.or([
+      eb('i.published_at', '<', publishedAt),
+      eb.and([
+        eb('i.published_at', '=', publishedAt),
+        eb('i.id', '<', id),
+      ]),
+    ]));
+  }
+
+  const rows: RiverRow[] = await builder
+    .orderBy('i.published_at', 'desc')
+    .orderBy('i.id', 'desc')
+    .limit(query.limit + 1)
+    .execute();
+
+  const hasMore = rows.length > query.limit;
+  const page = hasMore ? rows.slice(0, query.limit) : rows;
+  const last = page[page.length - 1];
+
+  return {
+    rows: page,
+    ...(hasMore && last ? { nextCursor: { publishedAt: last.publishedAt, id: last.id } } : {}),
+  };
 }

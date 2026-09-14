@@ -93,8 +93,10 @@ scrollRestorationTest('keeps the river scroll position after returning from the 
   feedServer.publish(articles);
   const page = await launchApp();
   await subscribe(page, feedServer.url);
-  await expect(page.getByText('Article number 0', { exact: true })).toBeVisible();
-  await expect(page.getByText('Article number 29', { exact: true })).toBeAttached();
+  // Every article shares the same pubDate, so the river's id-DESC tiebreak sorts the highest-id
+  // (last-inserted) article first: "Article number 29" leads, "Article number 0" trails.
+  await expect(page.getByText('Article number 29', { exact: true })).toBeVisible();
+  await expect(page.getByText('Article number 0', { exact: true })).toBeAttached();
 
   // Act: Playwright's `.click()` scrolls its target into view first, which would itself move
   // the river before navigation. Dispatch DOM clicks instead, so the scroll position set below
@@ -114,7 +116,7 @@ scrollRestorationTest('keeps the river scroll position after returning from the 
   await page.getByText('Article number 15', { exact: true }).evaluate((element) => (element as HTMLElement).click());
   await expect(page.getByRole('heading', { name: 'Article number 15' })).toBeVisible();
   await page.getByRole('button', { name: 'Home' }).evaluate((element) => (element as HTMLElement).click());
-  await expect(page.getByText('Article number 0', { exact: true })).toBeVisible();
+  await expect(page.getByText('Article number 29', { exact: true })).toBeAttached();
 
   // Assert
   await expect.poll(() => riverScrollContainer(page).evaluate((element) => element.scrollTop)).toBe(scrollTopBeforeLeaving);

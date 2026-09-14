@@ -1,9 +1,17 @@
 import { type Kysely } from 'kysely';
 import { db, dbReady } from '../database';
 import { queryFeedItems } from './query';
-import type { Database, FeedItem, NewArticleContent, SourceType } from '../types';
-import type { Feed } from '../../../preload/channels';
+import type { Database, FeedCategory, FeedItem, FeedMetadata, NewArticleContent, SourceType } from '../types';
 import type { Result } from '../../lib/utils';
+import { stripHtml, truncateOnWordBoundary } from '../../lib/strip-html';
+
+const EXCERPT_MAX_LENGTH = 200;
+
+// SQLite cannot parse RFC-822 pubDates, so this must run in JS rather than in SQL.
+function parsePublishedAt(pubDate: string): number {
+  const timestamp = new Date(pubDate).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
 
 async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: string) {
   return trx.insertInto('feedCategory')
@@ -36,13 +44,18 @@ export type AddFeedItemsError = { name: 'DB_ERROR'; message: string };
  * @param items the items to insert
  * @returns only the rows it wrote, since `ON CONFLICT DO NOTHING ... RETURNING *` leaves out the skipped ones
  */
-export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId: number, items: Omit<FeedItem, 'id' | 'feed_id'>[]): Promise<Result<FeedItem[], AddFeedItemsError>> {
+export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId: number, items: Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>[]): Promise<Result<FeedItem[], AddFeedItemsError>> {
   if (items.length === 0) {
     return { success: true, data: [] };
   }
   try {
     const inserted = await executor.insertInto('feedItem')
-      .values(items.map((item) => ({ feed_id: feedId, ...item })))
+      .values(items.map((item) => ({
+        feed_id: feedId,
+        ...item,
+        published_at: parsePublishedAt(item.pubDate),
+        excerpt: truncateOnWordBoundary(stripHtml(item.description), EXCERPT_MAX_LENGTH),
+      })))
       .onConflict((oc) => oc.columns(['feed_id', 'guid']).doNothing())
       .returningAll()
       .execute();
@@ -56,13 +69,16 @@ export interface NewFeedInput {
   link: string;
   title: string;
   type: SourceType;
-  items: Omit<FeedItem, 'id' | 'feed_id'>[];
+  items: Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>[];
   categoryName: string;
   showInHome: boolean;
   icon?: string;
 }
 
 export type AddFeedError = { name: 'DB_ERROR'; message: string };
+
+/** The full row set a freshly added feed needs internally (e.g. to enrich its items). Never sent over IPC as-is. */
+export type AddedFeed = FeedMetadata & { items: FeedItem[]; category: FeedCategory };
 
 export async function updateFeedItemImage(itemId: number, image: string): Promise<void> {
   await dbReady;
@@ -95,7 +111,7 @@ export async function upsertArticleContent(content: NewArticleContent): Promise<
   }
 }
 
-export async function addFeedToDatabase(input: NewFeedInput): Promise<Result<Feed, AddFeedError>> {
+export async function addFeedToDatabase(input: NewFeedInput): Promise<Result<AddedFeed, AddFeedError>> {
   await dbReady;
   try {
     const { category, metadata } = await db.transaction().execute(async (trx) => {

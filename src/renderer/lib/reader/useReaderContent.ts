@@ -1,27 +1,22 @@
-import { useMemo } from 'react';
-import type { Feed, SourceType } from '../../../preload/channels';
-import { useArticleContent } from '../useArticleContent';
-import type { RiverItem } from '../river/utils';
-import { deriveStandfirst, findRawDescription, renderPlainTextDescription } from './reader';
+import { useEffect, useMemo, useState } from 'react';
+import type { ItemBody, RiverRow, SourceType } from '../../../preload/channels';
+import { deriveStandfirst, renderPlainTextDescription } from './reader';
 
 interface ReaderContentStrategy {
-  /** Whether the reader should ask main to fetch and extract the item's own link as a full article. */
-  fetchesFullArticle: boolean;
-  /** Turns the item's raw, unprocessed description into displayable HTML, shown while there is no fetched article. */
+  /** Turns the item's raw description into displayable HTML, shown while there is no fetched article. */
   renderDescription: (rawDescription: string) => string;
-  /** Whether a short teaser paragraph shows above the body, ahead of the (usually longer) fetched article. */
+  // Also stands in for "this source fetches a full article": both happen to coincide for every
+  // source type today, and only the main-only registry otherwise knows the latter.
   showStandfirst: boolean;
 }
 
 // One entry per SourceType. A new source type is a new entry here, never a new branch in Reader.tsx.
 const STRATEGY_BY_TYPE: Record<SourceType, ReaderContentStrategy> = {
   rss: {
-    fetchesFullArticle: true,
     renderDescription: (raw) => raw,
     showStandfirst: true,
   },
   youtube: {
-    fetchesFullArticle: false,
     renderDescription: renderPlainTextDescription,
     showStandfirst: false,
   },
@@ -35,37 +30,72 @@ export interface ReaderContent {
   isUnavailable: boolean;
 }
 
+type BodyState =
+  | { state: 'loading' }
+  | { state: 'ready'; body: ItemBody }
+  | { state: 'unavailable' };
+
 /**
- * Resolves what the reader should show for the current item's body, entirely from the item's own
- * source type: whether to fetch and wait for a full extracted article, and how to render its raw
- * description otherwise. `Reader.tsx` renders the result without knowing what type it came from.
- * @param feeds every stored feed, searched for the item's raw (unstripped) description
+ * Resolves what the reader should show for the current item's body: the raw description and,
+ * for sources the registry marks as fetching full articles, the extracted article, in one call.
  * @param item the item to show, or `undefined` while it has not resolved yet
  */
-export function useReaderContent(feeds: Feed[], item: RiverItem | undefined): ReaderContent {
+export function useReaderContent(item: RiverRow | undefined): ReaderContent {
+  const [body, setBody] = useState<BodyState>({ state: 'loading' });
+
+  useEffect(() => {
+    if (!item) {
+      setBody({ state: 'unavailable' });
+      return;
+    }
+
+    let cancelled = false;
+    setBody({ state: 'loading' });
+
+    window.electron.ipcRenderer
+      .invoke('items:get-content', item.id)
+      .then((result) => {
+        if (!cancelled) {
+          setBody({ state: 'ready', body: result });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBody({ state: 'unavailable' });
+        }
+      });
+
+    // Paging fast through items resolves responses out of order; drop any response whose
+    // item is no longer the one this effect was started for.
+    return () => {
+      cancelled = true;
+    };
+  }, [item?.id]);
+
   const strategy = item ? STRATEGY_BY_TYPE[item.type] : undefined;
-  const articleContent = useArticleContent(strategy?.fetchesFullArticle ? item?.id : undefined);
-  const rawDescription = useMemo(() => (item ? findRawDescription(feeds, item.id) : undefined), [feeds, item]);
 
   const standfirst = useMemo(() => {
     if (!item || !strategy?.showStandfirst) {
       return undefined;
     }
-    return deriveStandfirst(item.description);
+    return deriveStandfirst(item.excerpt);
   }, [item, strategy?.showStandfirst]);
 
+  const description = body.state === 'ready' ? body.body.description : '';
+  const article = body.state === 'ready' ? body.body.article : undefined;
+
   const html = useMemo(() => {
-    if (articleContent.state === 'ready') {
-      return articleContent.html;
+    if (article) {
+      return article.html;
     }
-    return strategy?.renderDescription(rawDescription ?? '') ?? (rawDescription ?? '');
-  }, [articleContent, strategy, rawDescription]);
+    return strategy?.renderDescription(description) ?? description;
+  }, [article, strategy, description]);
 
   return {
     html,
-    wordCount: articleContent.state === 'ready' ? articleContent.wordCount : undefined,
+    wordCount: article?.wordCount,
     standfirst,
-    isLoading: !!strategy?.fetchesFullArticle && articleContent.state === 'loading',
-    isUnavailable: !!strategy?.fetchesFullArticle && articleContent.state === 'unavailable',
+    isLoading: !!strategy?.showStandfirst && body.state === 'loading',
+    isUnavailable: !!strategy?.showStandfirst && body.state === 'ready' && !article,
   };
 }

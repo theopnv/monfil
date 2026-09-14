@@ -36,7 +36,12 @@ export function useMarkReadOnScroll(
     const intersectionObserver = new IntersectionObserver((entries) => {
       let scheduled = false;
       for (const entry of entries) {
-        const passedAbove = entry.boundingClientRect.bottom <= (entry.rootBounds?.top ?? 0);
+        // A target that hasn't been laid out yet (freshly mounted: a refresh, a filter clearing)
+        // reports an all-zero rect before its first real measurement, which would otherwise satisfy
+        // "passed above" immediately and mark it read on sight. A card that has actually scrolled
+        // past always keeps its real, non-zero height.
+        const passedAbove = entry.boundingClientRect.height > 0
+          && entry.boundingClientRect.bottom <= (entry.rootBounds?.top ?? 0);
         if (!passedAbove) {
           continue;
         }

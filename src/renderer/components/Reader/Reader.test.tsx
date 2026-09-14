@@ -1,52 +1,19 @@
+import type { PropsWithChildren } from 'react';
 import { beforeEach, expect, test, vi } from 'vitest';
-import type { Mock } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import { render } from 'vitest-browser-react';
-import { useFeeds, useReadState } from '@/providers/feeds-provider';
 import { PreferencesProvider } from '@/providers/preferences-provider';
+import { SearchProvider } from '@/providers/search-provider';
+import { RiverScopeProvider } from '@/providers/river-scope-provider';
+import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import Reader from './Reader';
 import type { ReaderProps } from './Reader';
-import type { Feed } from '../../../preload/channels';
-
-vi.mock(import('@/providers/feeds-provider'), async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useFeeds: vi.fn(),
-    useAddFeed: vi.fn(() => vi.fn()),
-    useDeleteFeed: vi.fn(() => vi.fn()),
-    useReadState: vi.fn(),
-  };
-});
-
-const mockedUseFeeds = vi.mocked(useFeeds);
-const mockedUseReadState = vi.mocked(useReadState);
-
-type FeedItem = Feed['items'][number];
+import type { FeedSummary, ItemBody, RiverPage, RiverQuery, RiverRow } from '../../../preload/channels';
 
 let nextFeedId = 1;
 let nextItemId = 1;
 
-function createFeedItem(overrides: Partial<FeedItem> = {}): FeedItem {
-  const id = nextItemId++;
-  return {
-    id,
-    feed_id: 1,
-    title: `Item ${id}`,
-    link: `https://example.com/item-${id}`,
-    guid: `https://example.com/item-${id}`,
-    pubDate: '2024-01-01',
-    description: `<p>Item ${id} description</p>`,
-    image: undefined,
-    author: undefined,
-    extra: undefined,
-    read_at: undefined,
-    ...overrides,
-  };
-}
-
-function createFeed(overrides: Partial<Feed> = {}): Feed {
-  const id = nextFeedId++;
+function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
+  const id = overrides.id ?? nextFeedId++;
   return {
     id,
     link: `https://example.com/feed-${id}`,
@@ -58,42 +25,131 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
     last_error: undefined,
     icon: undefined,
     category: { id: 1, name: 'Tech' },
-    items: [],
+    itemCount: 0,
+    unreadCount: 0,
     ...overrides,
   };
 }
 
-// Ordered newest to oldest, matching toRiverItems' sort. itemA is spread
-// across two feeds so navigation tests exercise the full flat river order.
+let descriptionsById: Map<number, string>;
+
+function createRow(feed: FeedSummary, overrides: Partial<RiverRow> & { description?: string } = {}): RiverRow {
+  const id = nextItemId++;
+  const { description, ...rowOverrides } = overrides;
+  descriptionsById.set(id, description ?? `<p>Item ${id} description</p>`);
+  return {
+    id,
+    title: `Item ${id}`,
+    link: `https://example.com/item-${id}`,
+    publishedAt: id,
+    excerpt: `Item ${id} description`,
+    feedTitle: feed.title,
+    feedLink: feed.link,
+    feedIcon: feed.icon,
+    categoryName: feed.category.name,
+    image: undefined,
+    readAt: undefined,
+    feedId: feed.id,
+    type: feed.type,
+    ...rowOverrides,
+  };
+}
+
+let allFeeds: FeedSummary[];
+let allRows: RiverRow[];
+let itemBodyOverride: ItemBody | undefined | 'pending';
+
+function computeRiverPage(query: RiverQuery): RiverPage {
+  let candidates = allRows;
+  candidates = query.feedIds
+    ? candidates.filter((row) => new Set(query.feedIds).has(row.feedId))
+    : candidates.filter((row) => allFeeds.find((feed) => feed.id === row.feedId)?.showInHome !== 0);
+  if (query.ids) {
+    const idSet = new Set(query.ids);
+    candidates = candidates.filter((row) => idSet.has(row.id));
+  }
+  if (query.unreadOnly) {
+    candidates = candidates.filter((row) => !row.readAt);
+  }
+  const sorted = [...candidates].sort((a, b) => b.publishedAt - a.publishedAt || b.id - a.id);
+  const cursor = query.cursor;
+  const afterCursor = cursor
+    ? sorted.filter((row) => row.publishedAt < cursor.publishedAt || (row.publishedAt === cursor.publishedAt && row.id < cursor.id))
+    : sorted;
+  const page = afterCursor.slice(0, query.limit);
+  const hasMore = afterCursor.length > query.limit;
+  const last = page[page.length - 1];
+  return { rows: page, ...(hasMore && last ? { nextCursor: { publishedAt: last.publishedAt, id: last.id } } : {}) };
+}
+
+// Ordered newest to oldest. itemA is in its own feed so navigation tests exercise the full flat river order.
 function setUpThreeItemRiver() {
-  const itemA = createFeedItem({ title: 'Newest item', pubDate: '2024-01-03' });
-  const itemB = createFeedItem({ title: 'Middle item', pubDate: '2024-01-02' });
-  const itemC = createFeedItem({ title: 'Oldest item', pubDate: '2024-01-01' });
-  const feedA = createFeed({ title: 'Feed A', link: 'https://a.example/feed', items: [itemA] });
-  const feedB = createFeed({ title: 'Feed B', link: 'https://b.example/feed', items: [itemB, itemC] });
-  mockedUseFeeds.mockReturnValue([feedA, feedB]);
+  const feedA = createFeed({ title: 'Feed A', link: 'https://a.example/feed' });
+  const feedB = createFeed({ title: 'Feed B', link: 'https://b.example/feed' });
+  const itemA = createRow(feedA, { title: 'Newest item', publishedAt: 3 });
+  const itemB = createRow(feedB, { title: 'Middle item', publishedAt: 2 });
+  const itemC = createRow(feedB, { title: 'Oldest item', publishedAt: 1 });
+  allFeeds = [feedA, feedB];
+  allRows = [itemA, itemB, itemC];
   return { itemA, itemB, itemC };
 }
 
-function renderReader(props: ReaderProps) {
-  return render(<PreferencesProvider><Reader {...props} /></PreferencesProvider>);
+function Session({ children }: PropsWithChildren) {
+  return (
+    <SearchProvider>
+      <RiverScopeProvider>
+        <PreferencesProvider>{children}</PreferencesProvider>
+      </RiverScopeProvider>
+    </SearchProvider>
+  );
 }
 
-let markRead: Mock<(id: number) => void>;
+function renderReader(props: ReaderProps) {
+  return renderWithQueryClient(<Session><Reader {...props} /></Session>);
+}
+
+let invokeMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   localStorage.clear();
+  nextFeedId = 1;
+  nextItemId = 1;
+  allFeeds = [];
+  allRows = [];
+  descriptionsById = new Map();
+  itemBodyOverride = undefined;
+
+  invokeMock = vi.fn((channel: string, arg: unknown) => {
+    switch (channel) {
+      case 'feeds:list':
+        return Promise.resolve(allFeeds);
+      case 'items:query':
+        return Promise.resolve(computeRiverPage(arg as RiverQuery));
+      case 'items:get-content': {
+        if (itemBodyOverride === 'pending') {
+          return new Promise(() => { });
+        }
+        if (itemBodyOverride) {
+          return Promise.resolve(itemBodyOverride);
+        }
+        const itemId = arg as number;
+        return Promise.resolve({ description: descriptionsById.get(itemId) ?? '', article: undefined } satisfies ItemBody);
+      }
+      case 'items:set-read':
+        return Promise.resolve({ success: true, data: undefined });
+      default:
+        return Promise.resolve([]);
+    }
+  });
+
   window.electron = {
     ipcRenderer: {
-      invoke: vi.fn().mockResolvedValue([]),
+      invoke: invokeMock,
       on: vi.fn(() => vi.fn()),
       sendMessage: vi.fn(),
       once: vi.fn(),
     },
   } as unknown as typeof window.electron;
-
-  markRead = vi.fn<(id: number) => void>();
-  mockedUseReadState.mockReturnValue({ isRead: () => false, markRead, toggleRead: vi.fn(), markAllRead: vi.fn() });
 });
 
 test('renders the matched item title, byline and body', async () => {
@@ -131,28 +187,33 @@ test('marks the current item read on mount', async () => {
   await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
 
   // Assert
-  expect(markRead).toHaveBeenCalledWith(itemB.id);
+  await vi.waitFor(() => {
+    expect(invokeMock).toHaveBeenCalledWith('items:set-read', { itemIds: [itemB.id], read: true });
+  });
 });
 
-test('mark unread calls toggleRead with the current item id', async () => {
+test('mark unread calls toggleRead, flipping the current item back to unread', async () => {
   // Arrange
   const { itemB } = setUpThreeItemRiver();
-  const toggleRead = vi.fn();
-  mockedUseReadState.mockReturnValue({ isRead: () => false, markRead, toggleRead, markAllRead: vi.fn() });
 
   // Act
-  const { getByRole } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
+  const { getByRole, getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
+  await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
+  invokeMock.mockClear();
   await getByRole('button', { name: 'Mark unread' }).click();
 
-  // Assert
-  expect(toggleRead).toHaveBeenCalledWith(itemB.id);
+  // Assert: mounting already marked it read, so toggling now must set it back to unread.
+  await vi.waitFor(() => {
+    expect(invokeMock).toHaveBeenCalledWith('items:set-read', { itemIds: [itemB.id], read: false });
+  });
 });
 
 test('pressing Escape leaves the Reader', async () => {
   // Arrange
   const { itemB } = setUpThreeItemRiver();
   const onNavigateHome = vi.fn();
-  await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome });
+  const { getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome });
+  await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
 
   // Act
   await userEvent.keyboard('{Escape}');
@@ -165,7 +226,8 @@ test('pressing j and k navigates to the next and previous neighbor', async () =>
   // Arrange
   const { itemA, itemB, itemC } = setUpThreeItemRiver();
   const onNavigateToItem = vi.fn();
-  await renderReader({ itemId: String(itemB.id), onNavigateToItem, onNavigateHome: vi.fn() });
+  const { getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem, onNavigateHome: vi.fn() });
+  await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
 
   // Act
   await userEvent.keyboard('j');
@@ -186,7 +248,8 @@ test('disabling the keyboard navigation preference turns off Escape, j and k', a
   const { itemB } = setUpThreeItemRiver();
   const onNavigateHome = vi.fn();
   const onNavigateToItem = vi.fn();
-  await renderReader({ itemId: String(itemB.id), onNavigateToItem, onNavigateHome });
+  const { getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem, onNavigateHome });
+  await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
 
   // Act
   await userEvent.keyboard('{Escape}jk');
@@ -249,7 +312,8 @@ test('clicking previous and next navigates to the correct neighbor', async () =>
   const onNavigateToItem = vi.fn();
 
   // Act
-  const { getByRole } = await renderReader({ itemId: String(itemB.id), onNavigateToItem, onNavigateHome: vi.fn() });
+  const { getByRole, getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem, onNavigateHome: vi.fn() });
+  await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
   await getByRole('button', { name: 'Previous article' }).click();
 
   // Assert
@@ -265,7 +329,7 @@ test('clicking previous and next navigates to the correct neighbor', async () =>
 test('shows the full extracted article body when the content is ready', async () => {
   // Arrange
   const { itemB } = setUpThreeItemRiver();
-  window.electron.ipcRenderer.invoke = vi.fn().mockResolvedValue({ status: 'ok', html: '<p>Full extracted body</p>', wordCount: 400 });
+  itemBodyOverride = { description: descriptionsById.get(itemB.id) ?? '', article: { html: '<p>Full extracted body</p>', wordCount: 400 } };
 
   // Act
   const { getByTestId, getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
@@ -275,23 +339,23 @@ test('shows the full extracted article body when the content is ready', async ()
   await expect.element(getByText('2 min read')).toBeInTheDocument();
 });
 
-test('shows the feed description and a loading hint while the article is being fetched', async () => {
-  // Arrange
+test('shows a loading hint while the article is being fetched', async () => {
+  // Arrange: the raw description now arrives over the same call as the article, so there is
+  // nothing to show synchronously ahead of it, unlike the fetched-article-only loading state before.
   const { itemB } = setUpThreeItemRiver();
-  window.electron.ipcRenderer.invoke = vi.fn().mockReturnValue(new Promise(() => { }));
+  itemBodyOverride = 'pending';
 
   // Act
-  const { getByTestId, getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
+  const { getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
 
   // Assert
   await expect.element(getByText('Loading full article…', { exact: true })).toBeInTheDocument();
-  await expect.element(getByTestId('article-body').getByText(`Item ${itemB.id} description`, { exact: true })).toBeInTheDocument();
 });
 
 test('shows the feed description and a note when the article is unavailable', async () => {
   // Arrange
   const { itemB } = setUpThreeItemRiver();
-  window.electron.ipcRenderer.invoke = vi.fn().mockResolvedValue({ status: 'unavailable' });
+  itemBodyOverride = { description: descriptionsById.get(itemB.id) ?? '', article: undefined };
 
   // Act
   const { getByTestId, getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
@@ -303,11 +367,10 @@ test('shows the feed description and a note when the article is unavailable', as
 
 test('shows a linkified description for a youtube item, with no unavailable message or duplicated standfirst', async () => {
   // Arrange
-  const item = createFeedItem({ description: 'Check this out: https://example.com/video\n\nMore info.' });
-  const feed = createFeed({ title: 'Feed V', link: 'https://v.example/feed', type: 'youtube', items: [item] });
-  mockedUseFeeds.mockReturnValue([feed]);
-  const invoke = vi.fn().mockResolvedValue([]);
-  window.electron.ipcRenderer.invoke = invoke;
+  const feed = createFeed({ title: 'Feed V', link: 'https://v.example/feed', type: 'youtube' });
+  const item = createRow(feed, { description: 'Check this out: https://example.com/video\n\nMore info.' });
+  allFeeds = [feed];
+  allRows = [item];
 
   // Act
   const { getByTestId, getByText } = await renderReader({ itemId: String(item.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
@@ -316,13 +379,12 @@ test('shows a linkified description for a youtube item, with no unavailable mess
   await expect.element(getByTestId('article-body').getByRole('link', { name: 'https://example.com/video' })).toBeInTheDocument();
   await expect.element(getByText('Check this out:', { exact: false })).toBeInTheDocument();
   await expect.element(getByText('The full article could not be loaded. Read it at the source instead.', { exact: true })).not.toBeInTheDocument();
-  expect(invoke).not.toHaveBeenCalledWith('items:get-content', item.id);
 });
 
 test('the next article card targets the nearest unread item further down the list', async () => {
   // Arrange
   const { itemA, itemB, itemC } = setUpThreeItemRiver();
-  mockedUseReadState.mockReturnValue({ isRead: (id) => id === itemB.id, markRead, toggleRead: vi.fn(), markAllRead: vi.fn() });
+  itemB.readAt = '2024-01-02T00:00:00.000Z';
   const onNavigateToItem = vi.fn();
 
   // Act
@@ -332,4 +394,38 @@ test('the next article card targets the nearest unread item further down the lis
   await expect.element(getByText('Next unread', { exact: true })).toBeInTheDocument();
   await getByText('Oldest item', { exact: true }).click();
   expect(onNavigateToItem).toHaveBeenCalledWith(itemC.id);
+});
+
+test('fetches and merges the nearest unread item past the loaded window', async () => {
+  // Arrange: 60 items in one feed, page 1 only holds the newest 50 (publishedAt 60..11), all
+  // read except the far older publishedAt 5, which sits well outside that window.
+  const feed = createFeed({ title: 'Feed Big', link: 'https://big.example/feed' });
+  allFeeds = [feed];
+  let lastItemInWindow: RiverRow | undefined;
+  let farUnreadItem: RiverRow | undefined;
+  allRows = Array.from({ length: 60 }, (_, index) => {
+    const publishedAt = index + 1;
+    const row = createRow(feed, { title: `Item ${publishedAt}`, publishedAt, readAt: publishedAt === 5 ? undefined : '2024-01-01T00:00:00.000Z' });
+    if (publishedAt === 11) {
+      lastItemInWindow = row;
+    }
+    if (publishedAt === 5) {
+      farUnreadItem = row;
+    }
+    return row;
+  });
+  if (!lastItemInWindow || !farUnreadItem) {
+    throw new Error('expected both a window-edge row and a far unread row');
+  }
+  const onNavigateToItem = vi.fn();
+
+  // Act: open the last item the initial page loads. Locally there is nothing after it, so
+  // `navigation.nextUnread` starts undefined and Reader has to ask main for the next one.
+  const { getByText } = await renderReader({ itemId: String(lastItemInWindow.id), onNavigateToItem, onNavigateHome: vi.fn() });
+  await expect.element(getByText('Item 11', { exact: true })).toBeInTheDocument();
+
+  // Assert: the fetched row merges into the cache and navigation finds it on the next render.
+  await expect.element(getByText('Next unread', { exact: true })).toBeInTheDocument();
+  await getByText('Item 5', { exact: true }).click();
+  expect(onNavigateToItem).toHaveBeenCalledWith(farUnreadItem.id);
 });

@@ -8,6 +8,9 @@ export function resolveFeedIcon(icon: string | undefined, link: string): string 
   return icon ?? getFaviconUrl(link);
 }
 
+// Most sites don't serve a favicon at the guessable /favicon.ico path (custom paths, .png
+// icons, nested asset dirs), so resolution goes through DuckDuckGo's icon service, which
+// crawls the real page for its favicon and re-serves it.
 export function getFaviconUrl(link: string | undefined): string | undefined {
   if (!link) {
     return undefined;
@@ -17,12 +20,7 @@ export function getFaviconUrl(link: string | undefined): string | undefined {
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
       return undefined;
     }
-    if (url.hostname.split('.').length > 2) {
-      const domainParts = url.hostname.split('.');
-      const rootDomain = domainParts.slice(-2).join('.');
-      return `${url.protocol}//${rootDomain}/favicon.ico`;
-    }
-    return `${url.origin}/favicon.ico`;
+    return `https://icons.duckduckgo.com/ip3/${url.hostname}.ico`;
   } catch {
     return undefined;
   }

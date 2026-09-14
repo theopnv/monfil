@@ -2,12 +2,12 @@ import { describe, expect, test } from 'vitest';
 import { getFaviconUrl, resolveFeedIcon } from './favicon';
 
 describe('getFaviconUrl', () => {
-  test('returns the origin favicon path for a normal link', () => {
+  test('returns the icon service URL for the link host', () => {
     // Act
     const result = getFaviconUrl('https://example.com/blog');
 
     // Assert
-    expect(result).toBe('https://example.com/favicon.ico');
+    expect(result).toBe('https://icons.duckduckgo.com/ip3/example.com.ico');
   });
 
   test('strips path and query from the feed URL', () => {
@@ -15,7 +15,7 @@ describe('getFaviconUrl', () => {
     const result = getFaviconUrl('https://example.com/blog/feed.xml?x=1');
 
     // Assert
-    expect(result).toBe('https://example.com/favicon.ico');
+    expect(result).toBe('https://icons.duckduckgo.com/ip3/example.com.ico');
   });
 
   test('returns undefined for undefined input', () => {
@@ -42,12 +42,12 @@ describe('getFaviconUrl', () => {
     expect(result).toBeUndefined();
   });
 
-  test('returns the root domain favicon path for a subdomain link', () => {
+  test('keeps the subdomain for a subdomain link', () => {
     // Act
     const result = getFaviconUrl('https://sub.example.com/blog');
 
     // Assert
-    expect(result).toBe('https://example.com/favicon.ico');
+    expect(result).toBe('https://icons.duckduckgo.com/ip3/sub.example.com.ico');
   });
 });
 
@@ -65,7 +65,7 @@ describe('resolveFeedIcon', () => {
     const result = resolveFeedIcon(undefined, 'https://example.com/feed');
 
     // Assert
-    expect(result).toBe('https://example.com/favicon.ico');
+    expect(result).toBe('https://icons.duckduckgo.com/ip3/example.com.ico');
   });
 
   test('returns undefined when there is no icon and the link is malformed', () => {

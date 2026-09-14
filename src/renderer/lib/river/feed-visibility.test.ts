@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { feedVisibility, folderVisibility, nextVisibility, visibleFeedLinks } from './feed-visibility';
-import type { Feed } from '../../../preload/channels';
+import { feedVisibility, folderVisibility, nextVisibility, visibleFeedIds } from './feed-visibility';
+import type { FeedSummary } from '../../../preload/channels';
 
-function createFeed(overrides: Partial<Feed> = {}): Feed {
+function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
   return {
     id: 1,
     link: 'https://example.com/feed',
@@ -14,7 +14,8 @@ function createFeed(overrides: Partial<Feed> = {}): Feed {
     last_error: undefined,
     icon: undefined,
     category: { id: 1, name: 'Tech' },
-    items: [],
+    itemCount: 0,
+    unreadCount: 0,
     ...overrides,
   };
 }
@@ -93,38 +94,38 @@ describe('folderVisibility', () => {
   });
 });
 
-describe('visibleFeedLinks', () => {
+describe('visibleFeedIds', () => {
   test('an empty feed list yields an empty set', () => {
-    expect(visibleFeedLinks([], new Set())).toEqual(new Set());
+    expect(visibleFeedIds([], new Set())).toEqual(new Set());
   });
 
   test('with no only feeds, every non-hidden feed is visible', () => {
     // Arrange
     const feeds = [
-      createFeed({ link: 'https://a.example/feed' }),
+      createFeed({ id: 1, link: 'https://a.example/feed' }),
       createFeed({ id: 2, link: 'https://b.example/feed', showInHome: 0 }),
     ];
 
     // Act & Assert
-    expect(visibleFeedLinks(feeds, new Set())).toEqual(new Set(['https://a.example/feed']));
+    expect(visibleFeedIds(feeds, new Set())).toEqual(new Set([1]));
   });
 
   test('with an only feed, just the only feeds are visible', () => {
     // Arrange
     const feeds = [
-      createFeed({ link: 'https://a.example/feed' }),
+      createFeed({ id: 1, link: 'https://a.example/feed' }),
       createFeed({ id: 2, link: 'https://b.example/feed' }),
     ];
 
     // Act & Assert
-    expect(visibleFeedLinks(feeds, new Set(['https://a.example/feed']))).toEqual(new Set(['https://a.example/feed']));
+    expect(visibleFeedIds(feeds, new Set(['https://a.example/feed']))).toEqual(new Set([1]));
   });
 
   test('an only feed that is also hidden contributes nothing', () => {
     // Arrange
-    const feeds = [createFeed({ link: 'https://a.example/feed', showInHome: 0 })];
+    const feeds = [createFeed({ id: 1, link: 'https://a.example/feed', showInHome: 0 })];
 
     // Act & Assert
-    expect(visibleFeedLinks(feeds, new Set(['https://a.example/feed']))).toEqual(new Set());
+    expect(visibleFeedIds(feeds, new Set(['https://a.example/feed']))).toEqual(new Set());
   });
 });

@@ -1,19 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import EmptyRiver from "@/components/Home/EmptyRiver";
 import RiverHeader from "@/components/Home/RiverHeader";
 import RiverList from "@/components/Home/RiverList";
 import RiverSidebar from "@/components/Home/RiverSidebar";
 import { announce } from "@/lib/announcer";
-import { type FeedVisibility, visibleFeedLinks } from "@/lib/river/feed-visibility";
-import { filterBySearch } from "@/lib/river/search";
-import { openLink, toRiverItems } from "@/lib/river/utils";
+import { type FeedVisibility } from "@/lib/river/feed-visibility";
+import { openLink } from "@/lib/river/utils";
+import { useLoadMoreOnScroll } from "@/lib/river/useLoadMoreOnScroll";
 import { useMarkReadOnScroll } from "@/lib/river/useMarkReadOnScroll";
 import { useRiverKeyboardNav } from "@/lib/river/useRiverKeyboardNav";
-import { useDebouncedValue } from "@/lib/useDebouncedValue";
-import { useFeeds, useReadState, useSetShowInHome } from "@/providers/feeds-provider";
+import { useRiverScope } from "@/lib/river/useRiverScope";
+import { useFeeds, useReadState, useRiver, useSetShowInHome } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import { useSearch } from "@/providers/search-provider";
-import type { Feed } from "../../../preload/channels";
+import type { FeedSummary } from "../../../preload/channels";
 
 export interface RiverProps {
   onOpenItem: (id: number) => void;
@@ -21,27 +21,27 @@ export interface RiverProps {
 
 export default function River({ onOpenItem }: RiverProps) {
   const feeds = useFeeds();
-  const { isRead, markRead, markAllRead } = useReadState();
+  const { markRead, markAllRead } = useReadState();
   const setShowInHome = useSetShowInHome();
   const { preferences } = usePreferences();
   const { query: searchQuery, setQuery: setSearchQuery } = useSearch();
-  const debouncedSearch = useDebouncedValue(searchQuery.trim(), 250);
-  const riverItems = useMemo(() => toRiverItems(feeds), [feeds]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [showOnlyLinks, setShowOnlyLinks] = useState<ReadonlySet<string>>(() => new Set());
+  const { scope, visibleFeedIdsSet, showOnlyLinks, setShowOnlyLinks, debouncedSearch } = useRiverScope(feeds);
 
-  // The feeds currently shown in home (respecting solo/hide), independent of
-  // the transient search query and hideReadItems toggle.
-  const visibleFeedLinksSet = useMemo(() => visibleFeedLinks(feeds, showOnlyLinks), [feeds, showOnlyLinks]);
-  const inHomeItems = useMemo(() => riverItems.filter((item) => visibleFeedLinksSet.has(item.feedLink)), [riverItems, visibleFeedLinksSet]);
-  const unreadCount = useMemo(() => inHomeItems.filter((item) => !isRead(item.id)).length, [inHomeItems, isRead]);
+  // The corpus-wide unread count of the visible feeds. Comes from FeedSummary.
+  const unreadCount = useMemo(
+    () => feeds.filter((feed) => visibleFeedIdsSet.has(feed.id)).reduce((sum, feed) => sum + feed.unreadCount, 0),
+    [feeds, visibleFeedIdsSet],
+  );
 
-  const visibleItems = useMemo(() => {
-    const shown = preferences.hideReadItems ? inHomeItems.filter((item) => !isRead(item.id)) : inHomeItems;
-    return filterBySearch(shown, debouncedSearch);
-  }, [inHomeItems, preferences.hideReadItems, isRead, debouncedSearch]);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useRiver(scope);
+  const visibleItems = useMemo(() => data?.pages.flatMap((page) => page.rows) ?? [], [data]);
 
+  const loadMore = useCallback(() => {
+    void fetchNextPage();
+  }, [fetchNextPage]);
+  useLoadMoreOnScroll(scrollRef, loadMore, !!hasNextPage && !isFetchingNextPage);
   useMarkReadOnScroll(scrollRef, preferences.markReadOnScroll, markAllRead);
   useRiverKeyboardNav(scrollRef, preferences.keyboardNavigation);
 
@@ -63,7 +63,7 @@ export default function River({ onOpenItem }: RiverProps) {
     onOpenItem(id);
   }, [visibleItems, preferences.openLinksExternally, markRead, onOpenItem]);
 
-  const applyVisibility = useCallback(async (targets: Feed[], target: FeedVisibility) => {
+  const applyVisibility = useCallback(async (targets: FeedSummary[], target: FeedVisibility) => {
     setShowOnlyLinks((prev) => {
       const next = new Set(prev);
       for (const feed of targets) {
@@ -80,9 +80,9 @@ export default function River({ onOpenItem }: RiverProps) {
     if (needsWrite.length > 0) {
       await setShowInHome(needsWrite.map((feed) => feed.id), target !== "hidden");
     }
-  }, [setShowInHome]);
+  }, [setShowInHome, setShowOnlyLinks]);
 
-  const handleFeedDeleted = useCallback((feed: Feed) => {
+  const handleFeedDeleted = useCallback((feed: FeedSummary) => {
     setShowOnlyLinks((prev) => {
       if (!prev.has(feed.link)) {
         return prev;
@@ -91,7 +91,7 @@ export default function River({ onOpenItem }: RiverProps) {
       next.delete(feed.link);
       return next;
     });
-  }, []);
+  }, [setShowOnlyLinks]);
 
   const hasFeeds = feeds.length > 0;
 
@@ -114,11 +114,11 @@ export default function River({ onOpenItem }: RiverProps) {
             ) : debouncedSearch.length > 0 ? (
               visibleItems.length === 0
                 ? <p className="py-20 text-center text-md font-regular text-tertiary">No results for &quot;{debouncedSearch}&quot;</p>
-                : <RiverList items={visibleItems} density={preferences.density} isRead={isRead} onOpen={handleOpen} />
+                : <RiverList items={visibleItems} density={preferences.density} onOpen={handleOpen} />
             ) : unreadCount === 0 ? (
               <p className="py-20 text-center text-md font-regular text-tertiary">You&apos;re all caught up</p>
             ) : (
-              <RiverList items={visibleItems} density={preferences.density} isRead={isRead} onOpen={handleOpen} />
+              <RiverList items={visibleItems} density={preferences.density} onOpen={handleOpen} />
             )}
           </div>
         </div>

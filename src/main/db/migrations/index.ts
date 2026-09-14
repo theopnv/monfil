@@ -1,10 +1,12 @@
 import type { Migration, MigrationProvider } from 'kysely/migration';
 import * as initialSchema from './0001_initial_schema';
 import * as feedIcon from './0002_feed_icon';
+import * as riverIndex from './0003_river_index';
 
 const migrations: Record<string, Migration> = {
   '0001_initial_schema': initialSchema,
   '0002_feed_icon': feedIcon,
+  '0003_river_index': riverIndex,
 };
 
 export const migrationProvider: MigrationProvider = {

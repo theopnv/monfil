@@ -15,7 +15,7 @@ vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broad
 const mockedFetchFeed = vi.mocked(rssSource.fetch);
 const mockedFetchUrl = vi.mocked(fetchUrl);
 
-type NewItem = Omit<FeedItem, 'id' | 'feed_id'>;
+type NewItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>;
 
 function item(overrides: Partial<NewItem> = {}): NewItem {
   const link = 'link' in overrides ? overrides.link : 'https://a.example/1';
@@ -73,7 +73,7 @@ describe('refreshAllFeeds', () => {
   test('stores the items published since the feed was added', async () => {
     // Arrange
     const link = 'https://a.example/feed';
-    await storeFeed(link, [item({ title: 'Old item', link: 'https://a.example/old' })]);
+    const feedId = await storeFeed(link, [item({ title: 'Old item', link: 'https://a.example/old' })]);
     mockedFetchFeed.mockResolvedValue({
       success: true,
       data: parsed(link, [
@@ -83,11 +83,11 @@ describe('refreshAllFeeds', () => {
     });
 
     // Act
-    const feeds = await refreshAllFeeds();
+    const summary = await refreshAllFeeds();
 
     // Assert
     expect(await storedTitles()).toEqual(['Old item', 'New item']);
-    expect(feeds[0]?.items.map((stored) => stored.title)).toEqual(['Old item', 'New item']);
+    expect(summary.perFeed).toContainEqual({ feedId, inserted: 1 });
   });
 
   test('does not duplicate an item that is already stored', async () => {
@@ -188,12 +188,12 @@ describe('refreshAllFeeds', () => {
     expect(await storedTitles()).toEqual(['From the working feed']);
   });
 
-  test('fetches nothing and returns an empty list when no feed is stored', async () => {
+  test('fetches nothing and returns an empty summary when no feed is stored', async () => {
     // Act
-    const feeds = await refreshAllFeeds();
+    const summary = await refreshAllFeeds();
 
     // Assert
-    expect(feeds).toEqual([]);
+    expect(summary).toEqual({ perFeed: [] });
     expect(mockedFetchFeed).not.toHaveBeenCalled();
   });
 

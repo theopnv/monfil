@@ -98,9 +98,18 @@ refreshTest('picks up the items published between two launches', async ({ feedSe
   ]);
   const secondRun = await launchApp();
 
-  // Assert
-  await expect(secondRun.getByText('Second article', { exact: true })).toBeVisible();
+  // Assert: the launch refresh may still be in flight when the river first paints. Either the
+  // initial fetch already lands after the insert (both articles show immediately), or it lands
+  // first and the refresh's push raises a pill once there is something for it to protect (see
+  // `useIpcBridge`) — never a pill left on screen with nothing left for it to load.
   await expect(secondRun.getByText('First article', { exact: true })).toBeVisible();
+  await expect(async () => {
+    const pill = secondRun.getByRole('button', { name: /new$/ });
+    if (await pill.isVisible()) {
+      await pill.click();
+    }
+    await expect(secondRun.getByText('Second article', { exact: true })).toBeVisible();
+  }).toPass();
 });
 
 refreshTest('the refresh button picks up the items published while the app is open', async ({ feedServer, launchApp }) => {

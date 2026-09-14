@@ -2,7 +2,7 @@ import type { FeedItem, FeedMetadata, SourceType } from '../../db/types';
 import type { FetchUrlError } from '../../lib/fetch';
 import type { Result } from '../../lib/utils';
 
-export type NewSourceItem = Omit<FeedItem, 'id' | 'feed_id'>;
+export type NewSourceItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>;
 
 export type ParsedSource = Omit<FeedMetadata, 'id' | 'category_id' | 'showInHome' | 'last_fetched_at' | 'last_error'> & {
   description: string;

@@ -1,20 +1,22 @@
 import { expect, test } from 'vitest';
 import { render } from 'vitest-browser-react';
 import ArticleMeta from './ArticleMeta';
-import type { RiverItem } from '@/lib/river/utils';
+import type { RiverRow } from '../../../preload/channels';
 
-function createItem(overrides: Partial<RiverItem> = {}): RiverItem {
+function createItem(overrides: Partial<RiverRow> = {}): RiverRow {
   return {
     id: 1,
     title: 'Item',
     link: 'https://example.com/item',
-    pubDate: '2024-01-01',
-    description: 'word '.repeat(400),
+    publishedAt: Date.now(),
+    excerpt: 'word '.repeat(400),
     feedTitle: 'Feed',
     feedLink: 'https://example.com/feed',
     feedIcon: undefined,
     categoryName: 'Tech',
     image: undefined,
+    readAt: undefined,
+    feedId: 1,
     type: 'rss',
     ...overrides,
   };

@@ -30,7 +30,7 @@ export default function DataSection() {
         });
     };
     load();
-    return window.electron.ipcRenderer.on("feeds:list", load);
+    return window.electron.ipcRenderer.on("feeds:refreshed", load);
   }, []);
 
   return (

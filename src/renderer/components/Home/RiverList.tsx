@@ -1,21 +1,21 @@
 import RiverCardArticle from "@/components/Home/RiverCardArticle";
 import RiverCardCompact from "@/components/Home/RiverCardCompact";
 import RiverCardMagazine from "@/components/Home/RiverCardMagazine";
-import type { Density, RiverItem } from "@/lib/river/utils";
+import type { Density } from "@/lib/river/utils";
+import type { RiverRow } from "../../../preload/channels";
 
 export interface RiverListProps {
-  items: RiverItem[];
+  items: RiverRow[];
   density: Density;
-  isRead: (id: number) => boolean;
   onOpen: (id: number) => void;
 }
 
-export default function RiverList({ items, density, isRead, onOpen }: RiverListProps) {
+export default function RiverList({ items, density, onOpen }: RiverListProps) {
   if (density === "Magazine") {
     return (
       <div className="grid grid-cols-2 gap-3.5">
         {items.map((item) => (
-          <RiverCardMagazine key={item.id} item={item} read={isRead(item.id)} onOpen={onOpen} />
+          <RiverCardMagazine key={item.id} item={item} read={!!item.readAt} onOpen={onOpen} />
         ))}
       </div>
     );
@@ -25,7 +25,7 @@ export default function RiverList({ items, density, isRead, onOpen }: RiverListP
     return (
       <div className="overflow-hidden rounded-xl border border-secondary bg-primary">
         {items.map((item) => (
-          <RiverCardCompact key={item.id} item={item} read={isRead(item.id)} onOpen={onOpen} />
+          <RiverCardCompact key={item.id} item={item} read={!!item.readAt} onOpen={onOpen} />
         ))}
       </div>
     );
@@ -34,7 +34,7 @@ export default function RiverList({ items, density, isRead, onOpen }: RiverListP
   return (
     <div className="flex flex-col gap-3.5">
       {items.map((item) => (
-        <RiverCardArticle key={item.id} item={item} read={isRead(item.id)} onOpen={onOpen} />
+        <RiverCardArticle key={item.id} item={item} read={!!item.readAt} onOpen={onOpen} />
       ))}
     </div>
   );

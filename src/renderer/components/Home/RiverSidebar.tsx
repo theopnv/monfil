@@ -6,20 +6,21 @@ import FeedAvatar from "@/components/Home/FeedAvatar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { feedVisibility, folderVisibility, nextVisibility, VISIBILITY_ICON, VISIBILITY_LABEL, VISIBILITY_STATE_LABEL, type FeedVisibility } from "@/lib/river/feed-visibility";
+import { useClearDeleteFeedRequest, useDeleteFeedRequestedId } from "@/lib/ipc-bridge";
 import { resolveFeedIcon } from "@/lib/favicon";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
-import type { Feed } from "../../../preload/channels";
+import type { FeedSummary } from "../../../preload/channels";
 
 export interface RiverSidebarProps {
-  feeds: Feed[];
+  feeds: FeedSummary[];
   showOnlyLinks: ReadonlySet<string>;
-  onSetVisibility: (feeds: Feed[], target: FeedVisibility) => void;
-  onFeedDeleted: (feed: Feed) => void;
+  onSetVisibility: (feeds: FeedSummary[], target: FeedVisibility) => void;
+  onFeedDeleted: (feed: FeedSummary) => void;
 }
 
 interface Folder {
   name: string;
-  feeds: Feed[];
+  feeds: FeedSummary[];
   count: number;
   open: boolean;
 }
@@ -35,18 +36,14 @@ function saveOpenFolderNames(names: Iterable<string>): void {
   writeLocalStorageJSON(OPEN_FOLDERS_STORAGE_KEY, [...names]);
 }
 
-function unreadCount(feed: Feed): number {
-  return feed.items.filter((item) => !item.read_at).length;
-}
-
-function groupByCategory(feeds: Feed[]): Folder[] {
+function groupByCategory(feeds: FeedSummary[]): Folder[] {
   const openFolderNames = loadOpenFolderNames();
   const folders = new Map<string, Folder>();
   for (const feed of feeds) {
     const name = feed.category.name;
     const folder = folders.get(name) ?? { name, feeds: [], count: 0, open: openFolderNames.has(name) };
     folder.feeds.push(feed);
-    folder.count += unreadCount(feed);
+    folder.count += feed.unreadCount;
     folders.set(name, folder);
   }
   return [...folders.values()];
@@ -55,7 +52,9 @@ function groupByCategory(feeds: Feed[]): Folder[] {
 export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, onFeedDeleted }: RiverSidebarProps) {
   const [folders, setFolders] = useState(() => groupByCategory(feeds));
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
-  const [feedPendingDelete, setFeedPendingDelete] = useState<Feed | null>(null);
+  const [feedPendingDelete, setFeedPendingDelete] = useState<FeedSummary | null>(null);
+  const deleteFeedRequestedId = useDeleteFeedRequestedId();
+  const clearDeleteFeedRequest = useClearDeleteFeedRequest();
 
   useEffect(() => {
     setFolders((prev) => {
@@ -65,10 +64,12 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
   }, [feeds]);
 
   useEffect(() => {
-    return window.electron.ipcRenderer.on('feeds:delete-feed-requested', (feedId) => {
-      setFeedPendingDelete((prev) => feeds.find((feed) => feed.id === feedId) ?? prev);
-    });
-  }, [feeds]);
+    if (deleteFeedRequestedId === null) {
+      return;
+    }
+    setFeedPendingDelete((prev) => feeds.find((feed) => feed.id === deleteFeedRequestedId) ?? prev);
+    clearDeleteFeedRequest();
+  }, [deleteFeedRequestedId, feeds, clearDeleteFeedRequest]);
 
   return (
     <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-r border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
@@ -135,7 +136,7 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
                         key={feed.link}
                         type="button"
                         title={`${feed.title} — ${VISIBILITY_STATE_LABEL[state]}`}
-                        aria-label={`${feed.title}, ${VISIBILITY_STATE_LABEL[state]}${unreadCount(feed) > 0 ? `, ${unreadCount(feed)} unread` : ''}`}
+                        aria-label={`${feed.title}, ${VISIBILITY_STATE_LABEL[state]}${feed.unreadCount > 0 ? `, ${feed.unreadCount} unread` : ''}`}
                         data-visibility={state}
                         onClick={() => onSetVisibility([feed], next)}
                         onContextMenu={(event) => {
@@ -152,7 +153,7 @@ export default function RiverSidebar({ feeds, showOnlyLinks, onSetVisibility, on
                         <FeedAvatar title={feed.title} faviconUrl={resolveFeedIcon(feed.icon, feed.link)} size="sm" />
                         <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{feed.title}</span>
                         <NextIcon aria-hidden className="size-3.5 flex-none text-quaternary opacity-0 group-hover:opacity-100" />
-                        <span data-testid="feed-count" className="text-xs text-tertiary tabular-nums">{unreadCount(feed) > 0 ? unreadCount(feed) : ''}</span>
+                        <span data-testid="feed-count" className="text-xs text-tertiary tabular-nums">{feed.unreadCount > 0 ? feed.unreadCount : ''}</span>
                       </button>
                     );
                   })}
