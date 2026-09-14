@@ -104,5 +104,12 @@ test-results/
 # TanStack Router
 src/renderer/routeTree.gen.ts
 
-# graft's local graph cache — regenerable, not committed (run `graft build`).
+# graft is an optional per-developer tool, not a project dependency. These are
+# regenerated locally by its own Claude Code setup for anyone who opts in.
 /graft/
+.claude/settings.json
+.claude/helpers/graft-hooks.cjs
+.claude/helpers/graft-statusline.cjs
+.ai/skills/graft/
+.mcp.json
+.claude/helpers/statusline-merged.sh
