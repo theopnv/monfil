@@ -72,6 +72,17 @@ describe('stripHtml', () => {
     // Assert
     expect(result).toBe('Body');
   });
+
+  test('strips an unterminated tag with no closing bracket', () => {
+    // Arrange
+    const html = 'Body<script src=evil.js';
+
+    // Act
+    const result = stripHtml(html);
+
+    // Assert
+    expect(result).not.toContain('<script');
+  });
 });
 
 describe('truncateOnWordBoundary', () => {

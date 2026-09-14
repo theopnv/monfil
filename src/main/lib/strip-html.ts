@@ -12,7 +12,8 @@ export function stripHtml(html: string): string {
   const decoded = decode(html, EntityLevel.HTML);
   const withoutStyleScript = decoded.replace(STYLE_SCRIPT_REGEX, '');
   const withoutTags = withoutStyleScript.replace(TAG_REGEX, '');
-  return withoutTags.replace(/\s+/g, ' ').trim();
+  const withoutStrayBrackets = withoutTags.replace(/</g, '');
+  return withoutStrayBrackets.replace(/\s+/g, ' ').trim();
 }
 
 /** Truncates plain text to at most `maxLength` characters, breaking on a word boundary and appending an ellipsis. */
