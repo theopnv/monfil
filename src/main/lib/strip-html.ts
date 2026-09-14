@@ -7,10 +7,12 @@ const TAG_REGEX = /<[^>]*>/g;
 
 /** Strips an HTML fragment down to its plain-text content, decoding entities and collapsing whitespace. */
 export function stripHtml(html: string): string {
-  const withoutStyleScript = html.replace(STYLE_SCRIPT_REGEX, '');
+  // Entities must be decoded before tag stripping: decoding afterwards would turn
+  // entity-encoded markup (e.g. `&lt;script&gt;`) into live tags that already skipped removal.
+  const decoded = decode(html, EntityLevel.HTML);
+  const withoutStyleScript = decoded.replace(STYLE_SCRIPT_REGEX, '');
   const withoutTags = withoutStyleScript.replace(TAG_REGEX, '');
-  const decoded = decode(withoutTags, EntityLevel.HTML);
-  return decoded.replace(/\s+/g, ' ').trim();
+  return withoutTags.replace(/\s+/g, ' ').trim();
 }
 
 /** Truncates plain text to at most `maxLength` characters, breaking on a word boundary and appending an ellipsis. */

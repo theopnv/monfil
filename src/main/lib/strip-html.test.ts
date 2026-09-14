@@ -61,6 +61,17 @@ describe('stripHtml', () => {
     // Assert
     expect(result).toBe('Just plain text');
   });
+
+  test('strips a script tag that is only revealed after entity decoding', () => {
+    // Arrange
+    const html = '&lt;script&gt;alert(1)&lt;/script&gt;Body';
+
+    // Act
+    const result = stripHtml(html);
+
+    // Assert
+    expect(result).toBe('Body');
+  });
 });
 
 describe('truncateOnWordBoundary', () => {
