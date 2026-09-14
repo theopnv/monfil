@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
@@ -24,6 +26,23 @@ const config: ForgeConfig = {
       }
       return !(file.startsWith('/.vite') || file.startsWith('/node_modules'));
     },
+    afterCopy: [
+      // better-sqlite3 ships one prebuild per platform/arch; keep only the one this
+      // package targets so foreign-arch binaries don't reach the rpm maker's strip step.
+      async (buildPath, _electronVersion, platform, arch, callback) => {
+        try {
+          const prebuildsDir = path.join(buildPath, 'node_modules', 'better-sqlite3', 'prebuilds');
+          const keep = `${platform}-${arch}.node`;
+          const files = await fs.readdir(prebuildsDir);
+          await Promise.all(
+            files.filter((file) => file !== keep).map((file) => fs.rm(path.join(prebuildsDir, file))),
+          );
+          callback();
+        } catch (err) {
+          callback(err as Error);
+        }
+      },
+    ],
   },
   rebuildConfig: {},
   makers: [
