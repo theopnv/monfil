@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import path from 'node:path';
 
 const mockQuit = vi.fn();
 const mockOn = vi.fn();
 const mockGetPath = vi.fn(() => 'mock-user-data');
 const mockGetAppPath = vi.fn(() => 'mock-app-path');
+const mockGetName = vi.fn(() => 'monfil');
+const mockSetPath = vi.fn();
+const mockHasSwitch = vi.fn(() => true);
 const mockDockSetIcon = vi.fn();
+const mockMkdirSync = vi.fn();
 let mockIsPackaged = false;
 
 vi.mock(import('electron'), () => ({
@@ -13,6 +18,9 @@ vi.mock(import('electron'), () => ({
     on: mockOn,
     getPath: mockGetPath,
     getAppPath: mockGetAppPath,
+    getName: mockGetName,
+    setPath: mockSetPath,
+    commandLine: { hasSwitch: mockHasSwitch },
     get isPackaged() {
       return mockIsPackaged;
     },
@@ -21,6 +29,10 @@ vi.mock(import('electron'), () => ({
   BrowserWindow: vi.fn(function () {
     return { maximize: vi.fn(), loadURL: vi.fn(), loadFile: vi.fn() };
   }) as unknown as typeof Electron.BrowserWindow,
+}));
+
+vi.mock(import('node:fs'), () => ({
+  mkdirSync: mockMkdirSync,
 }));
 
 vi.mock(import('./ipc/registerIpcHandlers'), () => ({
@@ -47,6 +59,10 @@ describe('main', () => {
     mockQuit.mockClear();
     mockOn.mockClear();
     mockDockSetIcon.mockClear();
+    mockSetPath.mockClear();
+    mockMkdirSync.mockClear();
+    mockHasSwitch.mockClear();
+    mockHasSwitch.mockReturnValue(true);
     mockIsPackaged = false;
   });
 
@@ -97,5 +113,46 @@ describe('main', () => {
     } finally {
       Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
     }
+  });
+
+  test('redirects userData to a dev directory when unpackaged and no --user-data-dir was passed', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    mockHasSwitch.mockReturnValue(false);
+
+    // Act
+    await import('./main');
+
+    // Assert
+    expect(mockMkdirSync).toHaveBeenCalledWith(path.join('mock-user-data', 'monfil-dev'), { recursive: true });
+    expect(mockSetPath).toHaveBeenCalledWith('userData', path.join('mock-user-data', 'monfil-dev'));
+  });
+
+  test('leaves userData alone when an explicit --user-data-dir was passed', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    mockHasSwitch.mockReturnValue(true);
+
+    // Act
+    await import('./main');
+
+    // Assert
+    expect(mockMkdirSync).not.toHaveBeenCalled();
+    expect(mockSetPath).not.toHaveBeenCalled();
+  });
+
+  test('leaves userData alone when packaged', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    mockHasSwitch.mockReturnValue(false);
+    mockIsPackaged = true;
+    Object.defineProperty(process, 'resourcesPath', { value: 'mock-resources-path', configurable: true });
+
+    // Act
+    await import('./main');
+
+    // Assert
+    expect(mockMkdirSync).not.toHaveBeenCalled();
+    expect(mockSetPath).not.toHaveBeenCalled();
   });
 });

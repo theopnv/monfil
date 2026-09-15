@@ -22,11 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-
-      - run: npm ci
+      - uses: ./.github/actions/setup
 
       # tsc needs routeTree.gen.ts, which the router plugin only writes as a build side effect.
       - run: npx vite build --config vite.renderer.config.mts
@@ -66,26 +62,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-
-      - run: npm ci
+      - uses: ./.github/actions/setup
 
       - run: npm run test:unit
 
   integration:
     runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
+      - uses: ./.github/actions/setup
         with:
-          node-version: 24
-
-      - run: npm ci
-
-      - run: npx playwright install
+          playwright: 'true'
 
       - run: npm run test:integration
 
@@ -96,16 +86,14 @@ jobs:
       fail-fast: false
       matrix:
         os: ${{ fromJson(needs.os_matrix.outputs.os) }}
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
+      - uses: ./.github/actions/setup
         with:
-          node-version: 24
-
-      - run: npm ci
-
-      - run: npx playwright install
+          playwright: 'true'
 
       - if: runner.os == 'Linux'
         run: npx playwright install-deps
