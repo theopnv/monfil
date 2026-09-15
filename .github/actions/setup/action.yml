@@ -1,0 +1,56 @@
+name: Setup
+description: >
+  Installs Node, restores the Electron download and (optionally) the Playwright browsers from
+  cache, then runs npm ci. Shared across test.yml and publish.yml so every job pays for these
+  downloads once instead of once per job.
+
+inputs:
+  node-version:
+    description: Node.js version to install
+    default: '24'
+  playwright:
+    description: Also cache and install the Playwright browsers
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+
+    # Resolved from package-lock.json rather than package.json so the cache key tracks the exact
+    # version npm ci will install, not just the semver range.
+    - name: Resolve pinned versions
+      id: versions
+      shell: bash
+      run: |
+        echo "electron=$(node -p "require('./package-lock.json').packages['node_modules/electron'].version")" >> "$GITHUB_OUTPUT"
+        echo "playwright=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
+
+    # @electron/get has no env var to redirect this; it always resolves to env-paths('electron').cache,
+    # which differs by OS. Listing all three candidate paths lets one cache step cover every runner.
+    - name: Cache Electron download
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/.cache/electron
+          ~/Library/Caches/electron
+          ~/AppData/Local/electron/Cache
+        key: electron-${{ runner.os }}-${{ steps.versions.outputs.electron }}
+
+    - name: Cache Playwright browsers
+      if: inputs.playwright == 'true'
+      uses: actions/cache@v6
+      with:
+        path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+        key: playwright-${{ runner.os }}-${{ steps.versions.outputs.playwright }}
+
+    - run: npm ci
+      shell: bash
+
+    - name: Install Playwright browsers
+      if: inputs.playwright == 'true'
+      run: npx playwright install
+      shell: bash

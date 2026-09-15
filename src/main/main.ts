@@ -1,11 +1,13 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
+import { mkdirSync } from 'node:fs';
 import started from 'electron-squirrel-startup';
 import { registerIpcHandlers } from './ipc/registerIpcHandlers';
 import { registerIpcListeners } from './ipc/registerIpcListeners';
 import { closeDatabase, initializeDatabase } from './db/database';
 import { DB_FILE_NAME } from './constants';
 import { startRefreshScheduler, stopRefreshScheduler } from './feed/scheduler';
+import { resolveDevUserDataDir } from './dev-user-data-dir';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // app.quit() only schedules an exit, so without this return the rest of the module (and its app.on(...) wiring)
@@ -17,6 +19,17 @@ if (started) {
 }
 
 function bootstrap() {
+  const devUserDataDir = resolveDevUserDataDir({
+    isPackaged: app.isPackaged,
+    hasExplicitUserDataDir: app.commandLine.hasSwitch('user-data-dir'),
+    appDataDir: app.getPath('appData'),
+    appName: app.getName(),
+  });
+  if (devUserDataDir !== null) {
+    mkdirSync(devUserDataDir, { recursive: true });
+    app.setPath('userData', devUserDataDir);
+  }
+
   initializeDatabase(path.join(app.getPath('userData'), DB_FILE_NAME)).catch((error: unknown) => {
     console.error('Failed to initialize the database.', error);
   });
