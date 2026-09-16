@@ -85,20 +85,40 @@ function stubElectron(overrides: {
   renameCategoryRequestedHandler = undefined;
   deleteCategoryRequestedHandler = undefined;
 
-  invokeMock = vi.fn(<C extends keyof TwoWayRendererMainChannelsInvokeArgs>(channel: C): Promise<TwoWayRendererMainChannelPayloads[C]> => {
+  // Mutated by create/rename/delete below, so a test asserting the sidebar reflects a mutation
+  // (e.g. a deleted folder actually disappearing) sees `feeds:list-categories` catch up, the same
+  // way the real main process would.
+  let currentCategories = overrides.categories ?? categoriesFrom(overrides.feeds ?? []);
+
+  invokeMock = vi.fn(<C extends keyof TwoWayRendererMainChannelsInvokeArgs>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<TwoWayRendererMainChannelPayloads[C]> => {
     switch (channel) {
       case 'feeds:list':
         return Promise.resolve(overrides.feeds ?? []) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:list-categories':
-        return Promise.resolve(overrides.categories ?? categoriesFrom(overrides.feeds ?? [])) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(currentCategories) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:delete-feed':
         return Promise.resolve(overrides.deleteFeed ?? { success: true, data: undefined }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
-      case 'feeds:create-category':
-        return Promise.resolve(overrides.createCategory ?? { success: true, data: { id: 99, name: 'Recipes' } }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
-      case 'feeds:rename-category':
-        return Promise.resolve(overrides.renameCategory ?? { success: true, data: { id: 1, name: 'Renamed' } }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
-      case 'feeds:delete-category':
-        return Promise.resolve(overrides.deleteCategory ?? { success: true, data: undefined }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+      case 'feeds:create-category': {
+        const result = overrides.createCategory ?? { success: true, data: { id: 99, name: (arg as { name: string }).name } };
+        if (result.success) {
+          currentCategories = [...currentCategories, result.data];
+        }
+        return Promise.resolve(result) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+      }
+      case 'feeds:rename-category': {
+        const result = overrides.renameCategory ?? { success: true, data: { id: 1, name: 'Renamed' } };
+        if (result.success) {
+          currentCategories = currentCategories.map((category) => (category.id === result.data.id ? result.data : category));
+        }
+        return Promise.resolve(result) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+      }
+      case 'feeds:delete-category': {
+        const result = overrides.deleteCategory ?? { success: true, data: undefined };
+        if (result.success) {
+          currentCategories = currentCategories.filter((category) => category.id !== (arg as { categoryId: number }).categoryId);
+        }
+        return Promise.resolve(result) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+      }
       case 'feeds:move-feeds-to-category':
         return Promise.resolve(overrides.moveFeedsToCategory ?? { success: true, data: undefined }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       default:
@@ -459,6 +479,48 @@ describe('folder context menu and rename', () => {
 
     // Assert
     await expect.element(getByRole('textbox')).toHaveValue('Techt');
+  });
+
+  // The rename field used to close itself before any keystroke on every folder but the first one:
+  // the GridList claimed its first row as focus entered the collection and pulled DOM focus onto
+  // it, blurring the field.
+  test('a folder other than the first one can be renamed', async () => {
+    // Arrange
+    stubElectron({ feeds: [feedA, feedC] });
+    const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
+    await expect.element(getByRole('button', { name: 'News', exact: true })).toBeInTheDocument();
+
+    // Act
+    renameCategoryRequestedHandler?.(feedC.category.id);
+    await expect.element(getByRole('textbox')).toHaveValue('News');
+    await getByRole('textbox').fill('Politics');
+    await userEvent.keyboard('{Enter}');
+
+    // Assert
+    await vi.waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith('feeds:rename-category', { categoryId: feedC.category.id, name: 'Politics' });
+    });
+  });
+
+  test('an empty folder can be renamed', async () => {
+    // Arrange
+    const empty: FeedCategory = { id: 5, name: 'Recipes' };
+    stubElectron({ feeds: [feedA], categories: [feedA.category, empty] });
+    const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
+    // Waits for the categories query to resolve — a right-click on this row (what the request
+    // handler stands in for) couldn't fire any sooner than this in the real app either.
+    await expect.element(getByRole('button', { name: 'Recipes', exact: true })).toBeInTheDocument();
+
+    // Act
+    renameCategoryRequestedHandler?.(empty.id);
+    await expect.element(getByRole('textbox')).toHaveValue('Recipes');
+    await getByRole('textbox').fill('Meals');
+    await userEvent.keyboard('{Enter}');
+
+    // Assert
+    await vi.waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith('feeds:rename-category', { categoryId: empty.id, name: 'Meals' });
+    });
   });
 
   test('pressing Enter submits the new name via feeds:rename-category', async () => {

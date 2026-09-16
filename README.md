@@ -60,6 +60,9 @@ xattr -cr /Applications/monfil.app
 - Add a feed with the '+' button at the top of the sidebar, or the "Add your first feed" button on an empty Home.
 - Paste a link to an RSS feed, a YouTube channel, a handle, or a video. Monfil resolves what it points to.
 - Put it in a folder, existing or new, then confirm.
+- Create a folder with the folder icon next to '+' in the sidebar.
+- Right-click a folder to rename or delete it. Deleting one asks where to move its feeds first, unless it's already empty.
+- Drag a feed onto a folder to move it there.
 - Remove a feed with a right-click on it in the sidebar.
 - Click an item to open it in the reader; use `j`/`k`/`Esc` to move around without the mouse.
 - Open Settings (gear icon) to change theme, density, refresh interval, and reading behavior.

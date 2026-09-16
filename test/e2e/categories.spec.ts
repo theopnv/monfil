@@ -135,7 +135,10 @@ categoriesTest('creating a folder via "New folder" persists and stays visible wi
 
   // Assert: the folder persisted, still with no feeds in it.
   await expect(relaunched.page.getByRole('button', { name: 'Recipes', exact: true })).toBeVisible();
+  // `subscribe` writes via IPC directly, bypassing the add-feed wizard's own query invalidation, so
+  // the sidebar only picks up the new feed after an explicit reload.
   await subscribe(relaunched.page, 'http://127.0.0.1/feed-a', 'Feed A', 'Recipes');
+  await relaunched.page.reload();
   await relaunched.page.getByRole('button', { name: 'Recipes', exact: true }).click();
   await expect(relaunched.page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
 });
@@ -155,7 +158,11 @@ categoriesTest('a newly created folder is a valid drag-and-drop target', async (
   // Act
   await dragOnto(page, page.getByRole('button', { name: 'Drag to a folder' }), page.getByRole('button', { name: 'Recipes', exact: true }));
 
-  // Assert
+  // Assert: Feed A leaves the still-open Tech folder first. `ensureFolderOpen` reads whether the
+  // feed is already on screen, so calling it any sooner reads the pre-move Tech row and skips the
+  // click that expands Recipes.
+  await expect(page.getByRole('button', { name: /^Feed A/ })).not.toBeVisible();
+
   await ensureFolderOpen(page, 'Recipes', /^Feed A/);
   await expect(page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
 });
@@ -193,13 +200,8 @@ categoriesTest('dragging a feed onto a feed row moves it into that row\'s folder
   const feedARow = page.getByRole('row').filter({ has: page.getByRole('button', { name: /^Feed A/ }) });
   await dragOnto(page, feedARow.getByRole('button', { name: 'Drag to a folder' }), page.getByRole('button', { name: /^Feed B/ }));
 
-  // Assert: Tech is left without a feed, but still shows (an empty folder stays visible)...
-  await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^Feed A/ })).not.toBeVisible();
-
-  // ...and both feeds now sit under News.
-  await expect(page.getByRole('button', { name: 'News', exact: true })).toBeVisible();
-  await ensureFolderOpen(page, 'News', /^Feed A/);
-  await expect(page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^Feed B/ })).toBeVisible();
+  // Assert: both feeds now sit under News, and Tech still shows with nothing under it. Both folders
+  // stay expanded, so the feeds never leave the screen — row order is the only thing that says which
+  // folder holds them.
+  await expect(page.getByRole('grid', { name: 'Feeds' }).getByRole('row')).toHaveText([/^Tech$/, /^News$/, /^Feed A/, /^Feed B/]);
 });

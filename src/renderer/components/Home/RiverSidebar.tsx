@@ -363,6 +363,10 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                       autoFocus
                       aria-label={`Rename ${folder.name}`}
                       value={editingName}
+                      // A GridList with no focused key yet claims its first row when focus enters
+                      // it, then pulls DOM focus onto that row — which blurs this input and submits
+                      // the rename for any folder but the first one.
+                      onFocus={(event) => event.stopPropagation()}
                       onChange={(event) => setEditingName(event.target.value)}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter') {
