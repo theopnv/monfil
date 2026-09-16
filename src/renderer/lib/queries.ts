@@ -1,5 +1,5 @@
 import { infiniteQueryOptions, queryOptions, type InfiniteData } from '@tanstack/react-query';
-import type { FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow } from '../../preload/channels';
+import type { FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow } from '../../preload/channels';
 
 export const RIVER_PAGE_SIZE = 50;
 export const RIVER_MAX_PAGES = 8;
@@ -17,6 +17,7 @@ function normalizeScope(scope: RiverScope): RiverScope {
 
 export const queryKeys = {
   feeds: ['feeds'] as const,
+  categories: ['categories'] as const,
   river: (scope: RiverScope) => ['river', normalizeScope(scope)] as const,
 };
 
@@ -24,6 +25,14 @@ export function feedsQuery() {
   return queryOptions({
     queryKey: queryKeys.feeds,
     queryFn: (): Promise<FeedSummary[]> => window.electron.ipcRenderer.invoke('feeds:list', undefined),
+  });
+}
+
+/** Every category, including one with no feeds in it yet — unlike `FeedSummary.category`, which only surfaces a category through a feed that belongs to it. */
+export function categoriesQuery() {
+  return queryOptions({
+    queryKey: queryKeys.categories,
+    queryFn: (): Promise<FeedCategory[]> => window.electron.ipcRenderer.invoke('feeds:list-categories', undefined),
   });
 }
 

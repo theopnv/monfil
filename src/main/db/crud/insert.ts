@@ -21,6 +21,28 @@ async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: st
     .executeTakeFirstOrThrow();
 }
 
+export type CreateCategoryError =
+  | { name: 'DB_ERROR'; message: string }
+  | { name: 'DUPLICATE_NAME'; message: string };
+
+/**
+ * Creates a new, empty category. Unlike `addFeedCategoryToDatabase`, a name already in use is an error
+ * rather than a silent reuse, since this path is a deliberate "new folder" action.
+ * @param name the category's display name, unique across every category
+ */
+export async function createCategory(name: string): Promise<Result<FeedCategory, CreateCategoryError>> {
+  await dbReady;
+  try {
+    const category = await db.insertInto('feedCategory').values({ name }).returningAll().executeTakeFirstOrThrow();
+    return { success: true, data: category };
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      return { success: false, error: { name: 'DUPLICATE_NAME', message: `A category named "${name}" already exists.` } };
+    }
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
+}
+
 async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, title: string, type: SourceType, categoryId: number, showInHome: boolean, icon: string | undefined) {
   return trx.insertInto('feedMetadata')
     .values({ link, title, type, category_id: categoryId, showInHome: showInHome ? 1 : 0, icon })

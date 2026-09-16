@@ -33,3 +33,20 @@ export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayR
     menu.popup({ window });
   }
 }
+
+export function listenToShowCategoryContextMenu(event: IpcMainEvent, categoryId: OneWayRendererToMainChannelPayloads["feeds:show-category-context-menu"]) {
+  const menu = Menu.buildFromTemplate([
+    {
+      label: "Rename",
+      click: () => sendToRenderer(event.sender, "feeds:rename-category-requested", categoryId),
+    },
+    {
+      label: "Delete",
+      click: () => sendToRenderer(event.sender, "feeds:delete-category-requested", categoryId),
+    },
+  ]);
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) {
+    menu.popup({ window });
+  }
+}

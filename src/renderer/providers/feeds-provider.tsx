@@ -1,14 +1,20 @@
 import { useCallback } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData, type UseInfiniteQueryResult } from "@tanstack/react-query";
-import type { FeedSummary, RiverPage } from "../../preload/channels";
-import type { DeleteFeedError } from "../../main/db/crud/delete";
-import type { AddFeedError, NewFeedInput } from "../../main/db/crud/insert";
-import type { UpdateFeedError } from "../../main/db/crud/update";
+import type { FeedCategory, FeedSummary, RiverPage } from "../../preload/channels";
+import type { DeleteCategoryError, DeleteFeedError } from "../../main/db/crud/delete";
+import type { AddFeedError, CreateCategoryError, NewFeedInput } from "../../main/db/crud/insert";
+import type { UpdateCategoryError, UpdateFeedError } from "../../main/db/crud/update";
 import type { Result } from "../../main/lib/utils";
-import { feedsQuery, patchRiverRows, queryKeys, riverQuery, type RiverScope } from "../lib/queries";
+import { categoriesQuery, feedsQuery, patchRiverRows, queryKeys, riverQuery, type RiverScope } from "../lib/queries";
 
 export const useFeeds = (): FeedSummary[] => {
   const { data } = useQuery(feedsQuery());
+  return data ?? [];
+};
+
+/** Every category, including ones with no feeds in them yet. */
+export const useCategories = (): FeedCategory[] => {
+  const { data } = useQuery(categoriesQuery());
   return data ?? [];
 };
 
@@ -21,6 +27,9 @@ export const useAddFeed = (): ((input: NewFeedInput) => Promise<Result<FeedSumma
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        // A feed can be filed under a brand new category name (see CategoryPicker's "+ New
+        // category"), which creates that category as a side effect.
+        void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
         void queryClient.invalidateQueries({ queryKey: ['river'] });
       }
     },
@@ -57,6 +66,67 @@ export const useSetShowInHome = (): ((feedIds: number[], showInHome: boolean) =>
   });
   const { mutateAsync } = mutation;
   return useCallback((feedIds: number[], showInHome: boolean) => mutateAsync({ feedIds, showInHome }), [mutateAsync]);
+};
+
+export const useCreateCategory = (): ((name: string) => Promise<Result<FeedCategory, CreateCategoryError>>) => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (name: string) => window.electron.ipcRenderer.invoke('feeds:create-category', { name }),
+    onSuccess: (result) => {
+      if (result.success) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+      }
+    },
+  });
+  const { mutateAsync } = mutation;
+  return useCallback((name: string) => mutateAsync(name), [mutateAsync]);
+};
+
+export const useRenameCategory = (): ((categoryId: number, name: string) => Promise<Result<FeedCategory, UpdateCategoryError>>) => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (variables: { categoryId: number; name: string }) => window.electron.ipcRenderer.invoke('feeds:rename-category', variables),
+    onSuccess: (result) => {
+      if (result.success) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+        void queryClient.invalidateQueries({ queryKey: ['river'] });
+      }
+    },
+  });
+  const { mutateAsync } = mutation;
+  return useCallback((categoryId: number, name: string) => mutateAsync({ categoryId, name }), [mutateAsync]);
+};
+
+export const useDeleteCategory = (): ((categoryId: number, reassignTo: number) => Promise<Result<void, DeleteCategoryError>>) => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (variables: { categoryId: number; reassignTo: number }) => window.electron.ipcRenderer.invoke('feeds:delete-category', variables),
+    onSuccess: (result) => {
+      if (result.success) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+        void queryClient.invalidateQueries({ queryKey: ['river'] });
+      }
+    },
+  });
+  const { mutateAsync } = mutation;
+  return useCallback((categoryId: number, reassignTo: number) => mutateAsync({ categoryId, reassignTo }), [mutateAsync]);
+};
+
+export const useMoveFeeds = (): ((feedIds: number[], categoryId: number) => Promise<Result<void, UpdateCategoryError>>) => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (variables: { feedIds: number[]; categoryId: number }) => window.electron.ipcRenderer.invoke('feeds:move-feeds-to-category', variables),
+    onSuccess: (result) => {
+      if (result.success) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: ['river'] });
+      }
+    },
+  });
+  const { mutateAsync } = mutation;
+  return useCallback((feedIds: number[], categoryId: number) => mutateAsync({ feedIds, categoryId }), [mutateAsync]);
 };
 
 interface FeedsRefresh {

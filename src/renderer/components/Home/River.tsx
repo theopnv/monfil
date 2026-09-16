@@ -10,7 +10,7 @@ import { useLoadMoreOnScroll } from "@/lib/river/useLoadMoreOnScroll";
 import { useMarkReadOnScroll } from "@/lib/river/useMarkReadOnScroll";
 import { useRiverKeyboardNav } from "@/lib/river/useRiverKeyboardNav";
 import { useRiverScope } from "@/lib/river/useRiverScope";
-import { useFeeds, useReadState, useRiver, useSetShowInHome } from "@/providers/feeds-provider";
+import { useCategories, useFeeds, useReadState, useRiver, useSetShowInHome } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import { useSearch } from "@/providers/search-provider";
 import type { FeedSummary } from "../../../preload/channels";
@@ -21,6 +21,7 @@ export interface RiverProps {
 
 export default function River({ onOpenItem }: RiverProps) {
   const feeds = useFeeds();
+  const categories = useCategories();
   const { markRead, markAllRead } = useReadState();
   const setShowInHome = useSetShowInHome();
   const { preferences } = usePreferences();
@@ -99,6 +100,7 @@ export default function River({ onOpenItem }: RiverProps) {
     <div className="flex h-full w-full overflow-hidden">
       <RiverSidebar
         feeds={feeds}
+        categories={categories}
         showOnlyLinks={showOnlyLinks}
         onSetVisibility={applyVisibility}
         onFeedDeleted={handleFeedDeleted}

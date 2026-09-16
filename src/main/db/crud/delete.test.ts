@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { deleteFeedFromDatabase } from './delete';
-import { addFeedToDatabase, upsertArticleContent, type NewFeedInput } from './insert';
+import { deleteCategory, deleteFeedFromDatabase } from './delete';
+import { addFeedToDatabase, createCategory, upsertArticleContent, type NewFeedInput } from './insert';
 
 const feedA: NewFeedInput = {
   link: 'https://a.example/feed',
@@ -127,5 +127,62 @@ describe('deleteFeedFromDatabase', () => {
     // Assert
     const categories = await db.selectFrom('feedCategory').selectAll().where('id', '=', inserted.data.category.id).execute();
     expect(categories).toHaveLength(1);
+  });
+});
+
+describe('deleteCategory', () => {
+  test('reassigns its feeds to the destination category then removes it', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+    const destination = await createCategory('Destination');
+    if (!destination.success) {
+      throw new Error('expected the category to be created');
+    }
+
+    // Act
+    const result = await deleteCategory(inserted.data.category.id, destination.data.id);
+
+    // Assert
+    expect(result.success).toBe(true);
+    const category = await db.selectFrom('feedCategory').selectAll().where('id', '=', inserted.data.category.id).execute();
+    expect(category).toEqual([]);
+    const feed = await db.selectFrom('feedMetadata').selectAll().where('id', '=', inserted.data.id).executeTakeFirstOrThrow();
+    expect(feed.category_id).toBe(destination.data.id);
+  });
+
+  test('an empty category still deletes', async () => {
+    // Arrange
+    const empty = await createCategory('Empty');
+    const destination = await createCategory('Destination');
+    if (!empty.success || !destination.success) {
+      throw new Error('expected both categories to be created');
+    }
+
+    // Act
+    const result = await deleteCategory(empty.data.id, destination.data.id);
+
+    // Assert
+    expect(result.success).toBe(true);
+  });
+
+  test('an unknown id returns CATEGORY_NOT_FOUND and writes nothing', async () => {
+    // Arrange
+    const destination = await createCategory('Destination');
+    if (!destination.success) {
+      throw new Error('expected the category to be created');
+    }
+
+    // Act
+    const result = await deleteCategory(999999, destination.data.id);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('CATEGORY_NOT_FOUND');
   });
 });

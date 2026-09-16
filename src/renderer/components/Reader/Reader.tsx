@@ -14,7 +14,7 @@ import { queryKeys, mergeRiverRows } from "@/lib/queries";
 import { getReaderNavigation } from "@/lib/reader/reader";
 import { useReaderContent } from "@/lib/reader/useReaderContent";
 import { useRiverScope } from "@/lib/river/useRiverScope";
-import { useFeeds, useReadState, useRiver } from "@/providers/feeds-provider";
+import { useCategories, useFeeds, useReadState, useRiver } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import type { RiverPage } from "../../../preload/channels";
 
@@ -27,6 +27,7 @@ export interface ReaderProps {
 export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: ReaderProps) {
   const id = Number(itemId);
   const feeds = useFeeds();
+  const categories = useCategories();
   const { markRead, toggleRead } = useReadState();
   const { preferences } = usePreferences();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -155,6 +156,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
     <div className="flex h-full w-full overflow-hidden">
       <RiverSidebar
         feeds={feeds}
+        categories={categories}
         showOnlyLinks={readerHighlightedLinks}
         onSetVisibility={() => onNavigateHome()}
         onFeedDeleted={() => onNavigateHome()}

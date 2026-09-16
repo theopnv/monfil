@@ -1,5 +1,6 @@
 import { db, dbReady } from '../database';
 import type { Result } from '../../lib/utils';
+import type { FeedCategory } from '../types';
 
 export type UpdateFeedError =
   | { name: 'DB_ERROR'; message: string }
@@ -8,6 +9,54 @@ export type UpdateFeedError =
 export type UpdateItemError =
   | { name: 'DB_ERROR'; message: string }
   | { name: 'ITEM_NOT_FOUND'; message: string };
+
+export type UpdateCategoryError =
+  | { name: 'DB_ERROR'; message: string }
+  | { name: 'CATEGORY_NOT_FOUND'; message: string }
+  | { name: 'DUPLICATE_NAME'; message: string };
+
+/**
+ * Renames a category in place.
+ * @param categoryId the id of the category to rename
+ * @param name the new name, unique across every category
+ */
+export async function renameCategory(categoryId: number, name: string): Promise<Result<FeedCategory, UpdateCategoryError>> {
+  await dbReady;
+  try {
+    const updated = await db.updateTable('feedCategory').set({ name }).where('id', '=', categoryId).returningAll().executeTakeFirst();
+    if (!updated) {
+      return { success: false, error: { name: 'CATEGORY_NOT_FOUND', message: `No category found with id ${categoryId}` } };
+    }
+    return { success: true, data: updated };
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      return { success: false, error: { name: 'DUPLICATE_NAME', message: `A category named "${name}" already exists.` } };
+    }
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
+}
+
+/**
+ * Moves a batch of feeds into a category in one statement.
+ * @param feedIds the ids of the feeds to move
+ * @param categoryId the id of the destination category
+ */
+export async function moveFeedsToCategory(feedIds: number[], categoryId: number): Promise<Result<void, UpdateCategoryError>> {
+  if (feedIds.length === 0) {
+    return { success: true, data: undefined };
+  }
+
+  await dbReady;
+  try {
+    await db.updateTable('feedMetadata').set({ category_id: categoryId }).where('id', 'in', feedIds).execute();
+    return { success: true, data: undefined };
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+      return { success: false, error: { name: 'CATEGORY_NOT_FOUND', message: `No category found with id ${categoryId}` } };
+    }
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
+}
 
 /**
  * Sets `showInHome` on a batch of feeds in one statement.
