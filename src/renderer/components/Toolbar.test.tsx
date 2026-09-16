@@ -1,0 +1,141 @@
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createRootRoute, createRoute, createRouter, createMemoryHistory, Outlet, RouterProvider } from '@tanstack/react-router';
+import { beforeEach, expect, test, vi } from 'vitest';
+import { render } from 'vitest-browser-react';
+import { RouteProvider } from '@/providers/route-provider';
+import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
+import { useFeeds } from '@/providers/feeds-provider';
+import { createTestQueryClient } from '@/lib/test/render-with-query-client';
+import Toolbar from './Toolbar';
+import type { FeedSummary, WorkspaceSummary } from '../../preload/channels';
+
+function createWorkspace(overrides: Partial<WorkspaceSummary> = {}): WorkspaceSummary {
+  return {
+    id: 1,
+    name: 'Home',
+    icon: 'Home02',
+    color: '#d67f48',
+    position: 0,
+    source_slug: undefined,
+    source_version: undefined,
+    installed_at: undefined,
+    hasUnread: false,
+    ...overrides,
+  };
+}
+
+function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
+  const id = overrides.id ?? 1;
+  return {
+    id,
+    link: `https://example.com/feed-${id}`,
+    title: `Feed ${id}`,
+    type: 'rss',
+    showInWorkspace: 1,
+    workspaceId: 1,
+    last_fetched_at: undefined,
+    last_error: undefined,
+    icon: undefined,
+    category: { id: 1, name: 'Tech', workspace_id: 1 },
+    itemCount: 0,
+    unreadCount: 0,
+    ...overrides,
+  };
+}
+
+let workspaces: WorkspaceSummary[];
+let feedsByWorkspace: Record<number, FeedSummary[]>;
+
+beforeEach(() => {
+  workspaces = [];
+  feedsByWorkspace = {};
+
+  const invokeMock = vi.fn((channel: string, arg: unknown) => {
+    switch (channel) {
+      case 'workspaces:list':
+        return Promise.resolve(workspaces);
+      case 'feeds:list':
+        return Promise.resolve(feedsByWorkspace[(arg as { workspaceId: number }).workspaceId] ?? []);
+      case 'feeds:list-categories':
+        return Promise.resolve([]);
+      default:
+        return Promise.resolve([]);
+    }
+  });
+
+  window.electron = {
+    ipcRenderer: {
+      invoke: invokeMock,
+      on: vi.fn(() => vi.fn()),
+      sendMessage: vi.fn(),
+      once: vi.fn(),
+    },
+  } as unknown as typeof window.electron;
+});
+
+function FeedsList() {
+  const feeds = useFeeds();
+  return <ul aria-label="Feeds in workspace">{feeds.map((feed) => <li key={feed.id}>{feed.title}</li>)}</ul>;
+}
+
+function renderApp(initialPath: string) {
+  const rootRoute = createRootRoute({
+    component: () => (
+      <RouteProvider>
+        <ActiveWorkspaceIdProvider>
+          <div className="flex">
+            <Toolbar />
+            <Outlet />
+          </div>
+        </ActiveWorkspaceIdProvider>
+      </RouteProvider>
+    ),
+  });
+  const workspaceRoute = createRoute({ getParentRoute: () => rootRoute, path: '/workspace/$workspaceId', component: FeedsList });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([workspaceRoute]),
+    history: createMemoryHistory({ initialEntries: [initialPath] }),
+  });
+
+  return render(
+    <QueryClientProvider client={createTestQueryClient()}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
+}
+
+test('shows a dot only for a workspace with unread items', async () => {
+  // Arrange
+  workspaces = [
+    createWorkspace({ id: 1, name: 'Home', hasUnread: false }),
+    createWorkspace({ id: 2, name: 'CI/CD watch', hasUnread: true }),
+  ];
+
+  // Act
+  const { getByRole } = await renderApp('/workspace/1');
+
+  // Assert
+  await expect.element(getByRole('link', { name: 'CI/CD watch' }).getByTestId('unread-dot')).toBeInTheDocument();
+  await expect.element(getByRole('link', { name: 'Home' }).getByTestId('unread-dot')).not.toBeInTheDocument();
+});
+
+test('switching tabs swaps the river to the other workspace\'s feeds', async () => {
+  // Arrange
+  workspaces = [
+    createWorkspace({ id: 1, name: 'Home' }),
+    createWorkspace({ id: 2, name: 'CI/CD watch' }),
+  ];
+  feedsByWorkspace = {
+    1: [createFeed({ id: 1, title: 'Home feed', workspaceId: 1 })],
+    2: [createFeed({ id: 2, title: 'Pack feed', workspaceId: 2 })],
+  };
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+  await expect.element(getByText('Home feed', { exact: true })).toBeInTheDocument();
+
+  // Act
+  await getByRole('link', { name: 'CI/CD watch' }).click();
+
+  // Assert
+  await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Home feed', { exact: true })).not.toBeInTheDocument();
+});

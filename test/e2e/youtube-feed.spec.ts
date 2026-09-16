@@ -3,6 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { NewFeedInput } from '../../src/main/db/crud/insert';
+import { HOME_WORKSPACE_ID } from '../../src/preload/channels';
 
 type YoutubeFeedTestFixtures = {
   userDataDir: string;
@@ -47,6 +48,7 @@ async function subscribeYoutube(page: Page): Promise<void> {
     type: 'youtube',
     icon: ICON_URL,
     categoryName: 'tech',
+    workspaceId: HOME_WORKSPACE_ID,
     showInWorkspace: true,
     items: [
       {

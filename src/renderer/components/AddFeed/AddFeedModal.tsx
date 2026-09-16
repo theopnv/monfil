@@ -9,6 +9,7 @@ import WizardFooter from "./WizardFooter";
 import WizardHeader, { type WizardStep } from "./WizardHeader";
 import type { AddFeedError } from "../../../main/db/crud/insert";
 import type { FeedCategory, FeedSummary } from "../../../preload/channels";
+import { useActiveWorkspaceId } from "../../providers/workspace-provider";
 
 export interface AddFeedModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export interface AddFeedModalProps {
 
 export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps) {
   const addFeed = useAddFeed();
+  const workspaceId = useActiveWorkspaceId();
 
   const [step, setStep] = useState<WizardStep>(1);
   const [maxStepReached, setMaxStepReached] = useState<WizardStep>(1);
@@ -51,10 +53,10 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
     }
     resetWizard();
     window.electron.ipcRenderer
-      .invoke("feeds:list-categories", undefined)
+      .invoke("feeds:list-categories", { workspaceId })
       .then(setCategories)
       .catch(() => setCategories([]));
-  }, [isOpen]);
+  }, [isOpen, workspaceId]);
 
   function goToStep(target: WizardStep) {
     if (target <= maxStepReached) {

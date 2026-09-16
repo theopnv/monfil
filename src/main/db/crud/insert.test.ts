@@ -1,10 +1,10 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { addFeedItemsToDatabase, addFeedToDatabase, createCategory, updateFeedItemImage, upsertArticleContent, type NewFeedInput } from './insert';
-import type { FeedItem } from '../types';
+import { addFeedItemsToDatabase, addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent, type NewFeedInput } from './insert';
+import { HOME_WORKSPACE_ID, type FeedItem } from '../types';
 
-const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', type: 'rss', items: [], categoryName: 'tech', showInWorkspace: true };
-const feedB: NewFeedInput = { link: 'https://b.example/feed', title: 'Feed B', type: 'rss', items: [], categoryName: 'tech', showInWorkspace: true };
+const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', type: 'rss', items: [], categoryName: 'tech', workspaceId: HOME_WORKSPACE_ID, showInWorkspace: true };
+const feedB: NewFeedInput = { link: 'https://b.example/feed', title: 'Feed B', type: 'rss', items: [], categoryName: 'tech', workspaceId: HOME_WORKSPACE_ID, showInWorkspace: true };
 
 beforeAll(async () => {
   await initializeDatabase(':memory:');
@@ -16,6 +16,7 @@ afterEach(async () => {
   await db.deleteFrom('feedPlacement').execute();
   await db.deleteFrom('feedMetadata').execute();
   await db.deleteFrom('feedCategory').execute();
+  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
 });
 
 describe('addFeedToDatabase', () => {
@@ -26,6 +27,7 @@ describe('addFeedToDatabase', () => {
       items: [{ title: 'Item 1', link: `${feedA.link}#1`, guid: `${feedA.link}#1`, pubDate: '2024-01-01', description: 'Item 1 description', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
       type: 'rss',
       categoryName: 'tech',
+      workspaceId: HOME_WORKSPACE_ID,
       showInWorkspace: true,
     });
 
@@ -63,6 +65,7 @@ describe('addFeedToDatabase', () => {
       ],
       type: 'rss',
       categoryName: 'tech',
+      workspaceId: HOME_WORKSPACE_ID,
       showInWorkspace: true,
     });
 
@@ -80,6 +83,7 @@ describe('addFeedToDatabase', () => {
       items: [],
       type: 'rss',
       categoryName: 'tech',
+      workspaceId: HOME_WORKSPACE_ID,
       showInWorkspace: true,
     });
 
@@ -89,6 +93,7 @@ describe('addFeedToDatabase', () => {
       items: [],
       type: 'rss',
       categoryName: 'tech',
+      workspaceId: HOME_WORKSPACE_ID,
       showInWorkspace: false,
     });
 
@@ -110,6 +115,7 @@ describe('addFeedToDatabase', () => {
       items: [],
       type: 'rss',
       categoryName: 'tech',
+      workspaceId: HOME_WORKSPACE_ID,
       showInWorkspace: false,
     });
 
@@ -254,6 +260,7 @@ describe('updateFeedItemImage', () => {
       items: [{ title: 'Item 1', link: `${feedA.link}#1`, guid: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
       type: 'rss',
       categoryName: 'tech',
+      workspaceId: HOME_WORKSPACE_ID,
       showInWorkspace: true,
     });
     expect(result.success).toBe(true);
@@ -281,6 +288,7 @@ describe('updateFeedItemImage', () => {
       ],
       type: 'rss',
       categoryName: 'tech',
+      workspaceId: HOME_WORKSPACE_ID,
       showInWorkspace: true,
     });
     expect(result.success).toBe(true);
@@ -311,6 +319,7 @@ describe('upsertArticleContent', () => {
       items: [{ title: 'Item 1', link: `${feedA.link}#1`, guid: `${feedA.link}#1`, pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
       type: 'rss',
       categoryName: 'tech',
+      workspaceId: HOME_WORKSPACE_ID,
       showInWorkspace: true,
     });
     if (!result.success) {
@@ -381,5 +390,39 @@ describe('createCategory', () => {
     expect(result.error.name).toBe('DUPLICATE_NAME');
     const stored = await db.selectFrom('feedCategory').selectAll().where('name', '=', 'Newsletters').execute();
     expect(stored).toHaveLength(1);
+  });
+});
+
+describe('createWorkspace', () => {
+  test('creates a new workspace with the given name, icon and colour', async () => {
+    // Act
+    const result = await createWorkspace('CI/CD watch', 'Code01', '#3b82f6');
+
+    // Assert
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
+    expect(result.data.name).toBe('CI/CD watch');
+    expect(result.data.icon).toBe('Code01');
+    expect(result.data.color).toBe('#3b82f6');
+  });
+
+  test('positions the new workspace after every existing one', async () => {
+    // Arrange
+    const first = await createWorkspace('First', 'Code01', '#3b82f6');
+    if (!first.success) {
+      throw new Error('expected the first workspace to be created');
+    }
+
+    // Act
+    const second = await createWorkspace('Second', 'Terminal', '#ef4444');
+
+    // Assert
+    expect(second.success).toBe(true);
+    if (!second.success) {
+      return;
+    }
+    expect(second.data.position).toBeGreaterThan(first.data.position);
   });
 });

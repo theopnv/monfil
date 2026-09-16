@@ -6,6 +6,7 @@ import { sql } from 'kysely';
 import { getAppInfo } from './app-info';
 import { closeDatabase, db, initializeDatabase } from './db/database';
 import { addFeedToDatabase } from './db/crud/insert';
+import { HOME_WORKSPACE_ID } from './db/types';
 import { rmTestDir } from './lib/rmTestDir';
 
 vi.mock(import('electron'), () => ({
@@ -35,6 +36,7 @@ describe('getAppInfo', () => {
       items: [{ title: 'Item 1', link: 'https://a.example/1', guid: 'https://a.example/1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
       type: 'rss',
       categoryName: 'tech',
+      workspaceId: HOME_WORKSPACE_ID,
       showInWorkspace: true,
     });
 

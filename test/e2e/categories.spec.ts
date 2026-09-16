@@ -2,7 +2,7 @@ import { test as base, expect, _electron as electron, type ElectronApplication, 
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import type { FeedCategory } from '../../src/preload/channels';
+import { HOME_WORKSPACE_ID, type FeedCategory } from '../../src/preload/channels';
 
 type CategoriesTestFixtures = {
   userDataDir: string;
@@ -42,14 +42,14 @@ const categoriesTest = base.extend<CategoriesTestFixtures>({
 // The reload is what puts the new feed in the sidebar: only the add-feed wizard refreshes the feed
 // query, and this writes behind its back.
 async function subscribe(page: Page, link: string, title: string, categoryName: string): Promise<void> {
-  await page.evaluate(({ link, title, categoryName }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title, type: 'rss', items: [], categoryName, showInWorkspace: true,
-  }), { link, title, categoryName });
+  await page.evaluate(({ link, title, categoryName, workspaceId }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
+    link, title, type: 'rss', items: [], categoryName, workspaceId, showInWorkspace: true,
+  }), { link, title, categoryName, workspaceId: HOME_WORKSPACE_ID });
   await page.reload();
 }
 
 async function categoryIdFor(page: Page, name: string): Promise<number> {
-  const categories = await page.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list-categories', undefined)) as FeedCategory[];
+  const categories = await page.evaluate((workspaceId) => window.electron.ipcRenderer.invoke('feeds:list-categories', { workspaceId }), HOME_WORKSPACE_ID) as FeedCategory[];
   const category = categories.find((candidate) => candidate.name === name);
   if (!category) {
     throw new Error(`expected a category named ${name}`);

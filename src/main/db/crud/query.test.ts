@@ -1,7 +1,7 @@
 import { beforeEach, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
 import { HOME_WORKSPACE_ID } from '../types';
-import { countFeedItems, countFeedMetadata, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage } from './query';
+import { countFeedItems, countFeedMetadata, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from './query';
 
 beforeAll(async () => {
   await initializeDatabase(':memory:');
@@ -46,6 +46,18 @@ describe('queryFeedCategory', () => {
 
     // Assert
     expect(result).toEqual([]);
+  });
+
+  test('scoped to a workspace, still returns categories in creation order rather than alphabetically', async () => {
+    // Arrange: "Tech" is created first and sorts after "News" alphabetically, so this only passes
+    // with an explicit ORDER BY, not whatever order the (workspace_id, name) index happens to give.
+    await db.insertInto('feedCategory').values([{ name: 'Tech', workspace_id: HOME_WORKSPACE_ID }, { name: 'News', workspace_id: HOME_WORKSPACE_ID }]).execute();
+
+    // Act
+    const result = await queryFeedCategory({ workspace_id: HOME_WORKSPACE_ID });
+
+    // Assert
+    expect(result.map((category) => category.name)).toEqual(['Tech', 'News']);
   });
 });
 
@@ -293,7 +305,7 @@ describe('queryFeedSummaries', () => {
     await seedFeed();
 
     // Act
-    const [summary] = await queryFeedSummaries();
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
 
     // Assert
     expect(summary).toMatchObject({ itemCount: 0, unreadCount: 0 });
@@ -306,7 +318,7 @@ describe('queryFeedSummaries', () => {
     await seedItem(feedId);
 
     // Act
-    const [summary] = await queryFeedSummaries();
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
 
     // Assert
     expect(summary).toMatchObject({ itemCount: 2, unreadCount: 1 });
@@ -319,7 +331,7 @@ describe('queryFeedSummaries', () => {
     await seedItem(feedId);
 
     // Act
-    const [summary] = await queryFeedSummaries();
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
 
     // Assert
     expect(summary).toMatchObject({ itemCount: 2, unreadCount: 2 });
@@ -330,7 +342,7 @@ describe('queryFeedSummaries', () => {
     await seedFeed();
 
     // Act
-    const [summary] = await queryFeedSummaries();
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
 
     // Assert
     expect(summary?.category.name).toBe('tech');
@@ -338,10 +350,73 @@ describe('queryFeedSummaries', () => {
 
   test('returns an empty array when there are no feeds', async () => {
     // Act
-    const result = await queryFeedSummaries();
+    const result = await queryFeedSummaries(HOME_WORKSPACE_ID);
 
     // Assert
     expect(result).toEqual([]);
+  });
+
+  test('only returns feeds placed in the given workspace', async () => {
+    // Arrange
+    await seedFeed({ title: 'Home feed' });
+    const otherWorkspace = await db.insertInto('workspace')
+      .values({ name: 'Pack', icon: 'Stars01', color: '#000000', position: 1 })
+      .returning(['id'])
+      .executeTakeFirstOrThrow();
+    await seedFeed({ title: 'Pack feed', link: 'https://pack.example/feed', workspaceId: otherWorkspace.id });
+
+    // Act
+    const homeSummaries = await queryFeedSummaries(HOME_WORKSPACE_ID);
+    const otherSummaries = await queryFeedSummaries(otherWorkspace.id);
+
+    // Assert
+    expect(homeSummaries.map((summary) => summary.title)).toEqual(['Home feed']);
+    expect(otherSummaries.map((summary) => summary.title)).toEqual(['Pack feed']);
+  });
+});
+
+describe('queryWorkspaceSummaries', () => {
+  test('returns every workspace in rail order', async () => {
+    // Arrange
+    await db.insertInto('workspace').values({ name: 'Pack', icon: 'Stars01', color: '#000000', position: 1 }).execute();
+
+    // Act
+    const result = await queryWorkspaceSummaries();
+
+    // Assert
+    expect(result.map((workspace) => workspace.name)).toEqual(['Home', 'Pack']);
+  });
+
+  test('hasUnread is false for a workspace with no items', async () => {
+    // Act
+    const [home] = await queryWorkspaceSummaries();
+
+    // Assert
+    expect(home?.hasUnread).toBe(false);
+  });
+
+  test('hasUnread is true when a placement holds an unread item, even with showInWorkspace off', async () => {
+    // Arrange
+    const feedId = await seedFeed({ showInWorkspace: 0 });
+    await seedItem(feedId);
+
+    // Act
+    const [home] = await queryWorkspaceSummaries();
+
+    // Assert
+    expect(home?.hasUnread).toBe(true);
+  });
+
+  test('hasUnread is false once every item in the workspace is read', async () => {
+    // Arrange
+    const feedId = await seedFeed();
+    await seedItem(feedId, { readAt: '2024-01-02T00:00:00.000Z' });
+
+    // Act
+    const [home] = await queryWorkspaceSummaries();
+
+    // Assert
+    expect(home?.hasUnread).toBe(false);
   });
 });
 

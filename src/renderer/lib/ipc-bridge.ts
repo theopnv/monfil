@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import type { RiverPage } from '../../preload/channels';
-import { patchRiverRows, queryKeys } from './queries';
+import { patchRiverRows } from './queries';
 
 export const uiKeys = {
   deleteFeedRequestedId: ['ui', 'delete-feed-requested'] as const,
@@ -34,7 +34,7 @@ export function useIpcBridge(): void {
         if (inserted > 0 && hasRenderedRiver) {
           queryClient.setQueryData<number>(uiKeys.pendingRefreshCount, (prev) => (prev ?? 0) + inserted);
         }
-        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
       }),
 
       window.electron.ipcRenderer.on('feeds:item-image-fetched', ({ itemId, image }) => {

@@ -1,7 +1,7 @@
-import type { FeedMetadata, FeedCategory, SourceType } from '../main/db/types';
-import type { NewFeedInput, AddFeedError, CreateCategoryError } from '../main/db/crud/insert';
-import type { DeleteCategoryError, DeleteFeedError } from '../main/db/crud/delete';
-import type { UpdateCategoryError, UpdateFeedError, UpdateItemError } from '../main/db/crud/update';
+import type { FeedMetadata, FeedCategory, SourceType, Workspace } from '../main/db/types';
+import type { NewFeedInput, AddFeedError, CreateCategoryError, CreateWorkspaceError } from '../main/db/crud/insert';
+import type { DeleteCategoryError, DeleteFeedError, DeleteWorkspaceError } from '../main/db/crud/delete';
+import type { MoveFeedError, UpdateCategoryError, UpdateFeedError, UpdateItemError, UpdateWorkspaceError } from '../main/db/crud/update';
 import type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
 import type { MaxFeedItems, RefreshInterval } from '../main/settings';
 import type { AppInfo } from '../main/app-info';
@@ -13,7 +13,7 @@ import type { Result } from '../main/lib/utils';
 
 // Expose types from main process to preload, so that the renderer can use them without importing from main directly.
 export type { RefreshInterval, MaxFeedItems } from '../main/settings';
-export type { FeedCategory, SourceType } from '../main/db/types';
+export type { FeedCategory, SourceType, Workspace } from '../main/db/types';
 export { HOME_WORKSPACE_ID } from '../main/db/types';
 export type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
 
@@ -25,6 +25,8 @@ export type FeedSummary = FeedMetadata & {
   itemCount: number;
   unreadCount: number;
 };
+
+export type WorkspaceSummary = Workspace & { hasUnread: boolean };
 
 export type RiverRow = {
   id: number;
@@ -102,6 +104,12 @@ export type TwoWayRendererMainChannelPayloads = {
   'feeds:rename-category': Result<FeedCategory, UpdateCategoryError>;
   'feeds:delete-category': Result<void, DeleteCategoryError>;
   'feeds:move-feeds-to-category': Result<void, UpdateCategoryError>;
+  'feeds:move-to-workspace': Result<void, MoveFeedError>;
+  'workspaces:list': WorkspaceSummary[];
+  'workspaces:create': Result<Workspace, CreateWorkspaceError>;
+  'workspaces:update': Result<Workspace, UpdateWorkspaceError>;
+  'workspaces:delete': Result<void, DeleteWorkspaceError>;
+  'workspaces:reorder': Result<void, UpdateWorkspaceError>;
   'settings:get-refresh-interval': RefreshInterval;
   'settings:set-refresh-interval': RefreshInterval;
   'items:set-read': Result<void, UpdateItemError>;
@@ -117,8 +125,8 @@ export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads
 
 export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:validate-feed-url': { query: string; type?: SourceType };
-  'feeds:list-categories': undefined;
-  'feeds:list': undefined;
+  'feeds:list-categories': { workspaceId: number };
+  'feeds:list': { workspaceId: number };
   'items:query': RiverQuery;
   'feeds:refresh': undefined;
   'feeds:submit-add-feed': NewFeedInput;
@@ -128,6 +136,12 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:rename-category': { categoryId: number; name: string };
   'feeds:delete-category': { categoryId: number; reassignTo: number };
   'feeds:move-feeds-to-category': { feedIds: number[]; categoryId: number };
+  'feeds:move-to-workspace': { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string };
+  'workspaces:list': undefined;
+  'workspaces:create': { name: string; icon: string; color: string };
+  'workspaces:update': { workspaceId: number; name?: string; icon?: string; color?: string };
+  'workspaces:delete': { workspaceId: number };
+  'workspaces:reorder': { orderedIds: number[] };
   'settings:get-refresh-interval': undefined;
   'settings:set-refresh-interval': RefreshInterval;
   'items:set-read': { itemIds: number[]; read: boolean };

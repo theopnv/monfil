@@ -20,7 +20,7 @@ import {
 import { resolveFeedIcon } from "@/lib/favicon";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import { useCreateCategory, useMoveFeeds, useRenameCategory } from "@/providers/feeds-provider";
-import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary } from "../../../preload/channels";
+import type { FeedCategory, FeedSummary } from "../../../preload/channels";
 
 export interface RiverSidebarProps {
   feeds: FeedSummary[];
@@ -46,26 +46,37 @@ const FEED_KEY_PREFIX = 'feed:';
 // Folder and feed counts share a right edge, so a column of them reads as one vertical line.
 const COUNT_CLASSES = 'w-6 flex-none text-right text-xs text-tertiary tabular-nums';
 
-function loadOpenFolderNames(): Set<string> {
+function loadOpenFolderIds(): Set<number> {
   const parsed = readLocalStorageJSON(OPEN_FOLDERS_STORAGE_KEY);
-  return new Set(Array.isArray(parsed) ? parsed.filter((name): name is string => typeof name === 'string') : []);
+  return new Set(Array.isArray(parsed) ? parsed.filter((id): id is number => typeof id === 'number') : []);
 }
 
-function saveOpenFolderNames(names: Iterable<string>): void {
-  writeLocalStorageJSON(OPEN_FOLDERS_STORAGE_KEY, [...names]);
+// Flips a single id in the stored set, rather than replacing it with the currently mounted
+// folders: those only cover one workspace at a time, and replacing wholesale would drop every
+// other workspace's open folders from storage.
+function setFolderOpenStored(id: number, open: boolean): void {
+  const ids = loadOpenFolderIds();
+  if (open) {
+    ids.add(id);
+  } else {
+    ids.delete(id);
+  }
+  writeLocalStorageJSON(OPEN_FOLDERS_STORAGE_KEY, [...ids]);
 }
 
 // Seeded from `categories` first so a category with no feeds yet still gets a row; a feed whose
 // category isn't in that list (a race between the two queries) still gets a fallback one.
+// Keyed by category id, not name: a category's id is unique across every workspace, but its name
+// is only unique within its own workspace, so two workspaces can each have a "Tech" folder.
 function groupByCategory(categories: FeedCategory[], feeds: FeedSummary[]): Folder[] {
-  const openFolderNames = loadOpenFolderNames();
+  const openFolderIds = loadOpenFolderIds();
   const folders = new Map<number, Folder>();
   for (const category of categories) {
-    folders.set(category.id, { id: category.id, name: category.name, feeds: [], count: 0, open: openFolderNames.has(category.name) });
+    folders.set(category.id, { id: category.id, name: category.name, feeds: [], count: 0, open: openFolderIds.has(category.id) });
   }
   for (const feed of feeds) {
     const { id, name } = feed.category;
-    const folder = folders.get(id) ?? { id, name, feeds: [], count: 0, open: openFolderNames.has(name) };
+    const folder = folders.get(id) ?? { id, name, feeds: [], count: 0, open: openFolderIds.has(id) };
     folder.feeds.push(feed);
     folder.count += feed.unreadCount;
     folders.set(id, folder);
@@ -128,8 +139,8 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
 
   useEffect(() => {
     setFolders((prev) => {
-      const openByName = new Map(prev.map((folder) => [folder.name, folder.open]));
-      return groupByCategory(categories, feeds).map((folder) => ({ ...folder, open: openByName.get(folder.name) ?? folder.open }));
+      const openById = new Map(prev.map((folder) => [folder.id, folder.open]));
+      return groupByCategory(categories, feeds).map((folder) => ({ ...folder, open: openById.get(folder.id) ?? folder.open }));
     });
   }, [categories, feeds]);
 
@@ -266,7 +277,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
 
   const categoryPendingDeleteFolder = categoryPendingDelete ? folders.find((entry) => entry.id === categoryPendingDelete.id) : undefined;
   const otherCategories: FeedCategory[] = categoryPendingDelete
-    ? folders.filter((folder) => folder.id !== categoryPendingDelete.id).map((folder) => ({ id: folder.id, name: folder.name, workspace_id: HOME_WORKSPACE_ID }))
+    ? folders.filter((folder) => folder.id !== categoryPendingDelete.id).map((folder) => ({ id: folder.id, name: folder.name, workspace_id: categoryPendingDelete.workspace_id }))
     : [];
 
   return (
@@ -381,11 +392,10 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setFolders((prev) => {
-                        const next = prev.map((f) => (f.id === folder.id ? { ...f, open: !f.open } : f));
-                        saveOpenFolderNames(next.filter((f) => f.open).map((f) => f.name));
-                        return next;
-                      })}
+                      onClick={() => {
+                        setFolderOpenStored(folder.id, !folder.open);
+                        setFolders((prev) => prev.map((f) => (f.id === folder.id ? { ...f, open: !f.open } : f)));
+                      }}
                       className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
                     >
                       <ChevronRight className={cx("size-3.25 flex-none text-quaternary transition-transform", folder.open && "rotate-90")} />

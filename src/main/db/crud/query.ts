@@ -1,7 +1,7 @@
 import { sql, type SelectQueryBuilder } from 'kysely';
 import { type ArticleContent, type Database, type FeedCategory, type FeedItem, type FeedMetadata, type Setting } from '../types';
 import { db, dbReady } from '../database';
-import type { FeedSummary, RiverPage, RiverQuery, RiverRow } from '../../../preload/channels';
+import type { FeedSummary, RiverPage, RiverQuery, RiverRow, WorkspaceSummary } from '../../../preload/channels';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
 // Adding a new field to a table object and forgetting to add it here will result in a compilation error.
@@ -71,9 +71,12 @@ const feedCategoryHandlers = {
   workspace_id: (q, v) => q.where('workspace_id', '=', v),
 } satisfies CriteriaHandlers<'feedCategory', FeedCategory>;
 
+// Ordered explicitly, same reasoning as queryFeedItems: filtering by workspace_id lets SQLite
+// satisfy the query from the (workspace_id, name) unique index, which returns rows alphabetically
+// by name rather than in creation order once that index is used instead of a full table scan.
 export async function queryFeedCategory(criteria: Partial<FeedCategory>): Promise<FeedCategory[]> {
   await dbReady;
-  return applyCriteria(db.selectFrom('feedCategory').selectAll(), criteria, feedCategoryHandlers).execute();
+  return applyCriteria(db.selectFrom('feedCategory').selectAll(), criteria, feedCategoryHandlers).orderBy('id').execute();
 }
 
 const articleContentHandlers = {
@@ -116,15 +119,16 @@ export async function countFeedMetadata(): Promise<number> {
 }
 
 /**
- * Every feed with its category and item counts, in one statement. No items: use `queryRiverPage` for
- * those. A feed with several placements would fan out into one row per placement; every feed has
- * exactly one today, so this stays one row per feed until workspace-scoped listing arrives.
+ * Every feed placed in `workspaceId`, with its category and item counts, in one statement. No
+ * items: use `queryRiverPage` for those. Scoping the join to one workspace is what keeps this one
+ * row per feed even though a feed can hold a placement in several workspaces at once.
+ * @param workspaceId the workspace to list feeds for
  */
-export async function queryFeedSummaries(): Promise<FeedSummary[]> {
+export async function queryFeedSummaries(workspaceId: number): Promise<FeedSummary[]> {
   await dbReady;
 
   const rows = await db.selectFrom('feedMetadata as f')
-    .innerJoin('feedPlacement as p', 'p.feed_id', 'f.id')
+    .innerJoin('feedPlacement as p', (join) => join.onRef('p.feed_id', '=', 'f.id').on('p.workspace_id', '=', workspaceId))
     .innerJoin('feedCategory as c', 'c.id', 'p.category_id')
     .leftJoin(
       (eb) => eb.selectFrom('feedItem')
@@ -166,6 +170,50 @@ export async function queryFeedSummaries(): Promise<FeedSummary[]> {
     category: { id: row.categoryId, name: row.categoryName, workspace_id: row.categoryWorkspaceId },
     itemCount: row.itemCount ?? 0,
     unreadCount: row.unreadCount ?? 0,
+  }));
+}
+
+/**
+ * Every workspace in rail order, each with `hasUnread`: whether any of its placements (regardless
+ * of `showInWorkspace`) hold an unread item. The rail shows a dot, never a number.
+ */
+export async function queryWorkspaceSummaries(): Promise<WorkspaceSummary[]> {
+  await dbReady;
+
+  const rows = await db.selectFrom('workspace as w')
+    .leftJoin(
+      (eb) => eb.selectFrom('feedPlacement as p')
+        .innerJoin('feedItem as i', 'i.feed_id', 'p.feed_id')
+        .select('p.workspace_id')
+        .select(() => sql<number>`count(*) filter (where i.read_at is null)`.as('unreadCount'))
+        .groupBy('p.workspace_id')
+        .as('stats'),
+      (join) => join.onRef('stats.workspace_id', '=', 'w.id'),
+    )
+    .select([
+      'w.id as id',
+      'w.name as name',
+      'w.icon as icon',
+      'w.color as color',
+      'w.position as position',
+      'w.source_slug as source_slug',
+      'w.source_version as source_version',
+      'w.installed_at as installed_at',
+      'stats.unreadCount as unreadCount',
+    ])
+    .orderBy('w.position')
+    .execute();
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    icon: row.icon,
+    color: row.color,
+    position: row.position,
+    source_slug: row.source_slug,
+    source_version: row.source_version,
+    installed_at: row.installed_at,
+    hasUnread: (row.unreadCount ?? 0) > 0,
   }));
 }
 

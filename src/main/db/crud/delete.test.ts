@@ -1,7 +1,9 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { deleteCategory, deleteFeedFromDatabase } from './delete';
-import { addFeedToDatabase, createCategory, upsertArticleContent, type NewFeedInput } from './insert';
+import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from './delete';
+import { addFeedToDatabase, createCategory, createWorkspace, upsertArticleContent, type NewFeedInput } from './insert';
+import { moveFeedToWorkspace } from './update';
+import { HOME_WORKSPACE_ID } from '../types';
 
 const feedA: NewFeedInput = {
   link: 'https://a.example/feed',
@@ -9,6 +11,7 @@ const feedA: NewFeedInput = {
   items: [{ title: 'Item 1', link: 'https://a.example/feed#1', guid: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
   type: 'rss',
   categoryName: 'tech',
+  workspaceId: HOME_WORKSPACE_ID,
   showInWorkspace: true,
 };
 const feedB: NewFeedInput = {
@@ -17,6 +20,7 @@ const feedB: NewFeedInput = {
   items: [{ title: 'Item 1', link: 'https://b.example/feed#1', guid: 'https://b.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
   type: 'rss',
   categoryName: 'tech',
+  workspaceId: HOME_WORKSPACE_ID,
   showInWorkspace: true,
 };
 
@@ -30,6 +34,7 @@ afterEach(async () => {
   await db.deleteFrom('feedPlacement').execute();
   await db.deleteFrom('feedMetadata').execute();
   await db.deleteFrom('feedCategory').execute();
+  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
 });
 
 describe('deleteFeedFromDatabase', () => {
@@ -185,5 +190,102 @@ describe('deleteCategory', () => {
       return;
     }
     expect(result.error.name).toBe('CATEGORY_NOT_FOUND');
+  });
+});
+
+describe('deleteWorkspace', () => {
+  test('refuses to delete Home', async () => {
+    // Act
+    const result = await deleteWorkspace(HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('HOME_NOT_DELETABLE');
+    const home = await db.selectFrom('workspace').selectAll().where('id', '=', HOME_WORKSPACE_ID).executeTakeFirst();
+    expect(home).toBeDefined();
+  });
+
+  test('an unknown id returns WORKSPACE_NOT_FOUND', async () => {
+    // Act
+    const result = await deleteWorkspace(999999);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('WORKSPACE_NOT_FOUND');
+  });
+
+  test('removes the workspace along with its categories and placements', async () => {
+    // Arrange
+    const workspace = await createWorkspace('Other', 'Code01', '#3b82f6');
+    if (!workspace.success) {
+      throw new Error('expected the workspace to be created');
+    }
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+    await moveFeedToWorkspace(inserted.data.id, HOME_WORKSPACE_ID, workspace.data.id, 'Imported');
+
+    // Act
+    const result = await deleteWorkspace(workspace.data.id);
+
+    // Assert
+    expect(result.success).toBe(true);
+    const remaining = await db.selectFrom('workspace').selectAll().where('id', '=', workspace.data.id).execute();
+    expect(remaining).toEqual([]);
+    const categories = await db.selectFrom('feedCategory').selectAll().where('workspace_id', '=', workspace.data.id).execute();
+    expect(categories).toEqual([]);
+    const placements = await db.selectFrom('feedPlacement').selectAll().where('workspace_id', '=', workspace.data.id).execute();
+    expect(placements).toEqual([]);
+  });
+
+  test('collects a feed left with zero placements anywhere', async () => {
+    // Arrange
+    const workspace = await createWorkspace('Other', 'Code01', '#3b82f6');
+    if (!workspace.success) {
+      throw new Error('expected the workspace to be created');
+    }
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+    await moveFeedToWorkspace(inserted.data.id, HOME_WORKSPACE_ID, workspace.data.id, 'Imported');
+
+    // Act
+    await deleteWorkspace(workspace.data.id);
+
+    // Assert
+    const feed = await db.selectFrom('feedMetadata').selectAll().where('id', '=', inserted.data.id).execute();
+    expect(feed).toEqual([]);
+  });
+
+  test('leaves a feed placed in another workspace too untouched', async () => {
+    // Arrange
+    const workspace = await createWorkspace('Other', 'Code01', '#3b82f6');
+    if (!workspace.success) {
+      throw new Error('expected the workspace to be created');
+    }
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+    const category = await db.insertInto('feedCategory').values({ name: 'Shared', workspace_id: workspace.data.id }).returningAll().executeTakeFirstOrThrow();
+    await db.insertInto('feedPlacement').values({ feed_id: inserted.data.id, category_id: category.id, workspace_id: workspace.data.id, showInWorkspace: 1 }).execute();
+
+    // Act
+    const result = await deleteWorkspace(workspace.data.id);
+
+    // Assert
+    expect(result.success).toBe(true);
+    const feed = await db.selectFrom('feedMetadata').selectAll().where('id', '=', inserted.data.id).execute();
+    expect(feed).toHaveLength(1);
+    const homePlacement = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', inserted.data.id).where('workspace_id', '=', HOME_WORKSPACE_ID).execute();
+    expect(homePlacement).toHaveLength(1);
   });
 });

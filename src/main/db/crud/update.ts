@@ -1,10 +1,18 @@
 import { db, dbReady } from '../database';
 import type { Result } from '../../lib/utils';
-import { HOME_WORKSPACE_ID, type FeedCategory } from '../types';
+import { HOME_WORKSPACE_ID, type FeedCategory, type Workspace } from '../types';
 
 export type UpdateFeedError =
   | { name: 'DB_ERROR'; message: string }
   | { name: 'FEED_NOT_FOUND'; message: string };
+
+export type MoveFeedError = { name: 'DB_ERROR'; message: string };
+
+export type UpdateWorkspaceError =
+  | { name: 'DB_ERROR'; message: string }
+  | { name: 'WORKSPACE_NOT_FOUND'; message: string };
+
+class WorkspaceNotFoundError extends Error {}
 
 export type UpdateItemError =
   | { name: 'DB_ERROR'; message: string }
@@ -131,6 +139,86 @@ export async function setFeedItemsRead(itemIds: number[], read: boolean): Promis
     }
     return { success: true, data: undefined };
   } catch (error) {
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
+}
+
+/**
+ * Moves a feed's placement from `fromWorkspaceId` into `toWorkspaceId`, filing it under
+ * `categoryName` there. That category is created first if the destination does not have it yet.
+ * @param feedId the id of the feed to move
+ * @param fromWorkspaceId the workspace the feed currently sits in
+ * @param toWorkspaceId the workspace to place it in instead
+ * @param categoryName the destination category, created if missing
+ */
+export async function moveFeedToWorkspace(feedId: number, fromWorkspaceId: number, toWorkspaceId: number, categoryName: string): Promise<Result<void, MoveFeedError>> {
+  await dbReady;
+  try {
+    await db.transaction().execute(async (trx) => {
+      const category = await trx.insertInto('feedCategory')
+        .values({ name: categoryName, workspace_id: toWorkspaceId })
+        .onConflict((oc) => oc.columns(['workspace_id', 'name']).doUpdateSet((eb) => ({ name: eb.ref('excluded.name') })))
+        .returningAll()
+        .executeTakeFirstOrThrow();
+
+      await trx.deleteFrom('feedPlacement').where('feed_id', '=', feedId).where('workspace_id', '=', fromWorkspaceId).execute();
+
+      await trx.insertInto('feedPlacement')
+        .values({ feed_id: feedId, category_id: category.id, workspace_id: toWorkspaceId, showInWorkspace: 1 })
+        .onConflict((oc) => oc.columns(['feed_id', 'workspace_id']).doUpdateSet((eb) => ({
+          category_id: eb.ref('excluded.category_id'),
+          showInWorkspace: eb.ref('excluded.showInWorkspace'),
+        })))
+        .execute();
+    });
+    return { success: true, data: undefined };
+  } catch (error) {
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
+}
+
+/**
+ * Updates a workspace's name, icon and/or colour in place.
+ * @param workspaceId the id of the workspace to update
+ * @param patch the fields to change; a field left out keeps its current value
+ */
+export async function updateWorkspace(workspaceId: number, patch: { name?: string; icon?: string; color?: string }): Promise<Result<Workspace, UpdateWorkspaceError>> {
+  await dbReady;
+  try {
+    const updated = await db.updateTable('workspace').set(patch).where('id', '=', workspaceId).returningAll().executeTakeFirst();
+    if (!updated) {
+      return { success: false, error: { name: 'WORKSPACE_NOT_FOUND', message: `No workspace found with id ${workspaceId}` } };
+    }
+    return { success: true, data: updated };
+  } catch (error) {
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
+}
+
+/**
+ * Sets every workspace's `position` to its index in `orderedIds`, in one transaction.
+ * @param orderedIds every workspace id, in the rail order to persist
+ */
+export async function reorderWorkspaces(orderedIds: number[]): Promise<Result<void, UpdateWorkspaceError>> {
+  if (orderedIds.length === 0) {
+    return { success: true, data: undefined };
+  }
+
+  await dbReady;
+  try {
+    await db.transaction().execute(async (trx) => {
+      for (const [position, id] of orderedIds.entries()) {
+        const result = await trx.updateTable('workspace').set({ position }).where('id', '=', id).executeTakeFirst();
+        if (result.numUpdatedRows === 0n) {
+          throw new WorkspaceNotFoundError(`No workspace found with id ${id}`);
+        }
+      }
+    });
+    return { success: true, data: undefined };
+  } catch (error) {
+    if (error instanceof WorkspaceNotFoundError) {
+      return { success: false, error: { name: 'WORKSPACE_NOT_FOUND', message: error.message } };
+    }
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
   }
 }

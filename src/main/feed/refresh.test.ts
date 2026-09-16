@@ -5,7 +5,7 @@ import { fetchUrl } from '../lib/fetch';
 import { rssSource } from './sources/rss';
 import type { ParsedSource } from './sources/types';
 import { refreshAllFeeds } from './refresh';
-import type { FeedItem } from '../db/types';
+import { HOME_WORKSPACE_ID, type FeedItem } from '../db/types';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 
 vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: true, fetch: vi.fn(), parse: vi.fn() } }));
@@ -40,7 +40,7 @@ function parsed(link: string, items: NewItem[]): ParsedSource {
 }
 
 async function storeFeed(link: string, items: NewItem[] = []): Promise<number> {
-  const result = await addFeedToDatabase({ link, title: `Feed at ${link}`, type: 'rss', items, categoryName: 'tech', showInWorkspace: true });
+  const result = await addFeedToDatabase({ link, title: `Feed at ${link}`, type: 'rss', items, categoryName: 'tech', workspaceId: HOME_WORKSPACE_ID, showInWorkspace: true });
   if (!result.success) {
     throw new Error('expected the feed to be stored');
   }

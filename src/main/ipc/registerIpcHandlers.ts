@@ -9,6 +9,7 @@ import {
   handleFeedsList,
   handleFeedsListCategories,
   handleFeedsMoveFeedsToCategory,
+  handleFeedsMoveToWorkspace,
   handleFeedsRefresh,
   handleFeedsRenameCategory,
   handleFeedsSetShowInWorkspace,
@@ -23,6 +24,11 @@ import {
   handleSettingsSetMaxFeedItems,
   handleSettingsSetRefreshInterval,
   handleSettingsSetRefreshOnLaunch,
+  handleWorkspacesCreate,
+  handleWorkspacesDelete,
+  handleWorkspacesList,
+  handleWorkspacesReorder,
+  handleWorkspacesUpdate,
 } from "./handlers";
 
 // IPC Handlers - Main from and to Renderer (two ways)
@@ -47,6 +53,12 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "feeds:rename-category": handleFeedsRenameCategory,
   "feeds:delete-category": handleFeedsDeleteCategory,
   "feeds:move-feeds-to-category": handleFeedsMoveFeedsToCategory,
+  "feeds:move-to-workspace": handleFeedsMoveToWorkspace,
+  "workspaces:list": handleWorkspacesList,
+  "workspaces:create": handleWorkspacesCreate,
+  "workspaces:update": handleWorkspacesUpdate,
+  "workspaces:delete": handleWorkspacesDelete,
+  "workspaces:reorder": handleWorkspacesReorder,
   "settings:get-refresh-interval": handleSettingsGetRefreshInterval,
   "settings:set-refresh-interval": handleSettingsSetRefreshInterval,
   "items:set-read": handleItemsSetRead,
