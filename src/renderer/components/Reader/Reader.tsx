@@ -16,7 +16,7 @@ import { useReaderContent } from "@/lib/reader/useReaderContent";
 import { useRiverScope } from "@/lib/river/useRiverScope";
 import { useCategories, useFeeds, useReadState, useRiver } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
-import type { RiverPage } from "../../../preload/channels";
+import { HOME_WORKSPACE_ID, type RiverPage } from "../../../preload/channels";
 
 export interface ReaderProps {
   itemId: string;
@@ -58,7 +58,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
       return;
     }
     let cancelled = false;
-    window.electron.ipcRenderer.invoke('items:query', { ids: [id], limit: 1 })
+    window.electron.ipcRenderer.invoke('items:query', { workspaceId: HOME_WORKSPACE_ID, ids: [id], limit: 1 })
       .then((page) => {
         if (!cancelled) {
           mergeRows(page.rows);

@@ -9,7 +9,7 @@ import { rescheduleRefresh } from "../feed/scheduler";
 import { fetchUrl } from "../lib/fetch";
 import { addFeedToDatabase, createCategory, updateFeedItemImage, upsertArticleContent, type AddFeedError, type CreateCategoryError, type NewFeedInput } from "../db/crud/insert";
 import { deleteCategory, deleteFeedFromDatabase, type DeleteCategoryError, type DeleteFeedError } from "../db/crud/delete";
-import { moveFeedsToCategory, renameCategory, setFeedsShowInHome, setFeedItemsRead, type UpdateCategoryError, type UpdateFeedError, type UpdateItemError } from "../db/crud/update";
+import { moveFeedsToCategory, renameCategory, setFeedsShowInWorkspace, setFeedItemsRead, type UpdateCategoryError, type UpdateFeedError, type UpdateItemError } from "../db/crud/update";
 import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage } from "../db/crud/query";
 import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type MaxFeedItems, type RefreshInterval } from "../settings";
 import { getAppInfo, type AppInfo } from "../app-info";
@@ -68,8 +68,8 @@ export async function handleFeedsDeleteFeed(_event: IpcMainInvokeEvent, feedId: 
   return deleteFeedFromDatabase(feedId);
 }
 
-export async function handleFeedsSetShowInHome(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInHome: boolean }): Promise<Result<void, UpdateFeedError>> {
-  return setFeedsShowInHome(payload.feedIds, payload.showInHome);
+export async function handleFeedsSetShowInWorkspace(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInWorkspace: boolean }): Promise<Result<void, UpdateFeedError>> {
+  return setFeedsShowInWorkspace(payload.feedIds, payload.showInWorkspace);
 }
 
 export async function handleFeedsCreateCategory(_event: IpcMainInvokeEvent, payload: { name: string }): Promise<Result<FeedCategory, CreateCategoryError>> {

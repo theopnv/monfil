@@ -9,7 +9,7 @@ const feedA: NewFeedInput = {
   items: [{ title: 'Item 1', link: 'https://a.example/feed#1', guid: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
   type: 'rss',
   categoryName: 'tech',
-  showInHome: true,
+  showInWorkspace: true,
 };
 const feedB: NewFeedInput = {
   link: 'https://b.example/feed',
@@ -17,7 +17,7 @@ const feedB: NewFeedInput = {
   items: [{ title: 'Item 1', link: 'https://b.example/feed#1', guid: 'https://b.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
   type: 'rss',
   categoryName: 'tech',
-  showInHome: true,
+  showInWorkspace: true,
 };
 
 beforeAll(async () => {
@@ -27,6 +27,7 @@ beforeAll(async () => {
 afterEach(async () => {
   await db.deleteFrom('articleContent').execute();
   await db.deleteFrom('feedItem').execute();
+  await db.deleteFrom('feedPlacement').execute();
   await db.deleteFrom('feedMetadata').execute();
   await db.deleteFrom('feedCategory').execute();
 });
@@ -149,8 +150,8 @@ describe('deleteCategory', () => {
     expect(result.success).toBe(true);
     const category = await db.selectFrom('feedCategory').selectAll().where('id', '=', inserted.data.category.id).execute();
     expect(category).toEqual([]);
-    const feed = await db.selectFrom('feedMetadata').selectAll().where('id', '=', inserted.data.id).executeTakeFirstOrThrow();
-    expect(feed.category_id).toBe(destination.data.id);
+    const placement = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', inserted.data.id).executeTakeFirstOrThrow();
+    expect(placement.category_id).toBe(destination.data.id);
   });
 
   test('an empty category still deletes', async () => {

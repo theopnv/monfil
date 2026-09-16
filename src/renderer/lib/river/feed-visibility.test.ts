@@ -1,19 +1,19 @@
 import { describe, expect, test } from 'vitest';
 import { feedVisibility, folderVisibility, nextVisibility, visibleFeedIds } from './feed-visibility';
-import type { FeedSummary } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID, type FeedSummary } from '../../../preload/channels';
 
 function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
   return {
     id: 1,
     link: 'https://example.com/feed',
     title: 'Feed',
-    category_id: 1,
     type: 'rss',
-    showInHome: 1,
+    showInWorkspace: 1,
+    workspaceId: HOME_WORKSPACE_ID,
     last_fetched_at: undefined,
     last_error: undefined,
     icon: undefined,
-    category: { id: 1, name: 'Tech' },
+    category: { id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID },
     itemCount: 0,
     unreadCount: 0,
     ...overrides,
@@ -21,7 +21,7 @@ function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
 }
 
 describe('feedVisibility', () => {
-  test('a feed with showInHome unset and not in showOnlyLinks is home', () => {
+  test('a feed with showInWorkspace unset and not in showOnlyLinks is home', () => {
     // Arrange
     const feed = createFeed();
 
@@ -37,9 +37,9 @@ describe('feedVisibility', () => {
     expect(feedVisibility(feed, new Set(['https://a.example/feed']))).toBe('only');
   });
 
-  test('a feed with showInHome = 0 is hidden', () => {
+  test('a feed with showInWorkspace = 0 is hidden', () => {
     // Arrange
-    const feed = createFeed({ showInHome: 0 });
+    const feed = createFeed({ showInWorkspace: 0 });
 
     // Act & Assert
     expect(feedVisibility(feed, new Set())).toBe('hidden');
@@ -47,7 +47,7 @@ describe('feedVisibility', () => {
 
   test('hidden wins over only when both stores disagree', () => {
     // Arrange
-    const feed = createFeed({ link: 'https://a.example/feed', showInHome: 0 });
+    const feed = createFeed({ link: 'https://a.example/feed', showInWorkspace: 0 });
 
     // Act & Assert
     expect(feedVisibility(feed, new Set(['https://a.example/feed']))).toBe('hidden');
@@ -79,7 +79,7 @@ describe('folderVisibility', () => {
 
   test('a folder whose feeds share a state returns that state', () => {
     // Arrange
-    const feeds = [createFeed({ showInHome: 0 }), createFeed({ id: 2, link: 'https://b.example/feed', showInHome: 0 })];
+    const feeds = [createFeed({ showInWorkspace: 0 }), createFeed({ id: 2, link: 'https://b.example/feed', showInWorkspace: 0 })];
 
     // Act & Assert
     expect(folderVisibility(feeds, new Set())).toBe('hidden');
@@ -87,7 +87,7 @@ describe('folderVisibility', () => {
 
   test('a folder whose feeds disagree is mixed', () => {
     // Arrange
-    const feeds = [createFeed({ showInHome: 1 }), createFeed({ id: 2, link: 'https://b.example/feed', showInHome: 0 })];
+    const feeds = [createFeed({ showInWorkspace: 1 }), createFeed({ id: 2, link: 'https://b.example/feed', showInWorkspace: 0 })];
 
     // Act & Assert
     expect(folderVisibility(feeds, new Set())).toBe('mixed');
@@ -103,7 +103,7 @@ describe('visibleFeedIds', () => {
     // Arrange
     const feeds = [
       createFeed({ id: 1, link: 'https://a.example/feed' }),
-      createFeed({ id: 2, link: 'https://b.example/feed', showInHome: 0 }),
+      createFeed({ id: 2, link: 'https://b.example/feed', showInWorkspace: 0 }),
     ];
 
     // Act & Assert
@@ -123,7 +123,7 @@ describe('visibleFeedIds', () => {
 
   test('an only feed that is also hidden contributes nothing', () => {
     // Arrange
-    const feeds = [createFeed({ id: 1, link: 'https://a.example/feed', showInHome: 0 })];
+    const feeds = [createFeed({ id: 1, link: 'https://a.example/feed', showInWorkspace: 0 })];
 
     // Act & Assert
     expect(visibleFeedIds(feeds, new Set(['https://a.example/feed']))).toEqual(new Set());

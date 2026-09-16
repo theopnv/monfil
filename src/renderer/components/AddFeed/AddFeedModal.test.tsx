@@ -3,9 +3,9 @@ import AddFeedModal from './AddFeedModal';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import type { Result } from '../../../main/lib/utils';
 import type { AddFeedError } from '../../../main/db/crud/insert';
-import type { FeedCategory, FeedFetchError, FeedSummary, ParsedSource, RiverPage, RiverQuery, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannelPayloads } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID, type FeedCategory, type FeedFetchError, type FeedSummary, type ParsedSource, type RiverPage, type RiverQuery, type TwoWayRendererMainChannelsInvokeArgs, type TwoWayRendererMainChannelPayloads } from '../../../preload/channels';
 
-const categories: FeedCategory[] = [{ id: 1, name: 'Tech' }];
+const categories: FeedCategory[] = [{ id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID }];
 
 const parsedFeed: ParsedSource = {
   type: 'rss',
@@ -21,12 +21,12 @@ const insertedFeed: FeedSummary = {
   link: parsedFeed.link,
   title: parsedFeed.title,
   type: 'rss',
-  category_id: 1,
-  showInHome: 1,
+  showInWorkspace: 1,
+  workspaceId: HOME_WORKSPACE_ID,
   last_fetched_at: undefined,
   last_error: undefined,
   icon: undefined,
-  category: { id: 1, name: 'Tech' },
+  category: { id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID },
   itemCount: 1,
   unreadCount: 1,
 };

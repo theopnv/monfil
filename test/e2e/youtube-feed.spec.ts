@@ -47,7 +47,7 @@ async function subscribeYoutube(page: Page): Promise<void> {
     type: 'youtube',
     icon: ICON_URL,
     categoryName: 'tech',
-    showInHome: true,
+    showInWorkspace: true,
     items: [
       {
         title: 'A Video',

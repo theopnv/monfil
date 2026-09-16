@@ -6,7 +6,7 @@ export type FeedVisibility = "home" | "only" | "hidden";
 
 /** `hidden` wins over `only`, so the two stores can never disagree. */
 export function feedVisibility(feed: FeedSummary, showOnlyLinks: ReadonlySet<string>): FeedVisibility {
-  if (feed.showInHome === 0) {
+  if (feed.showInWorkspace === 0) {
     return "hidden";
   }
   if (showOnlyLinks.has(feed.link)) {
@@ -48,7 +48,7 @@ export function visibleFeedIds(feeds: FeedSummary[], showOnlyLinks: ReadonlySet<
   if (onlyFeeds.length > 0) {
     return new Set(onlyFeeds.map((feed) => feed.id));
   }
-  return new Set(feeds.filter((feed) => feed.showInHome !== 0).map((feed) => feed.id));
+  return new Set(feeds.filter((feed) => feed.showInWorkspace !== 0).map((feed) => feed.id));
 }
 
 export const VISIBILITY_LABEL: Record<FeedVisibility, string> = {

@@ -25,7 +25,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   const [categories, setCategories] = useState<FeedCategory[]>([]);
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [showInHome, setShowInHome] = useState(true);
+  const [showInWorkspace, setShowInWorkspace] = useState(true);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "loading" | "error">("idle");
   const [submitError, setSubmitError] = useState<AddFeedError | null>(null);
   const [result, setResult] = useState<FeedSummary | null>(null);
@@ -39,7 +39,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
     setType(undefined);
     setSelectedCategoryName(null);
     setNewCategoryName("");
-    setShowInHome(true);
+    setShowInWorkspace(true);
     setSubmitStatus("idle");
     setSubmitError(null);
     setResult(null);
@@ -92,7 +92,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
       type: validation.feed.type,
       items: validation.feed.items,
       categoryName: selectedCategoryName,
-      showInHome,
+      showInWorkspace,
       ...(validation.feed.icon !== undefined ? { icon: validation.feed.icon } : {}),
     });
 
@@ -134,8 +134,8 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
               newCategoryName={newCategoryName}
               onNewCategoryNameChange={setNewCategoryName}
               onAddNewCategory={handleAddNewCategory}
-              showInHome={showInHome}
-              onShowInHomeChange={setShowInHome}
+              showInWorkspace={showInWorkspace}
+              onShowInWorkspaceChange={setShowInWorkspace}
             />
           )}
 

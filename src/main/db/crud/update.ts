@@ -1,6 +1,6 @@
 import { db, dbReady } from '../database';
 import type { Result } from '../../lib/utils';
-import type { FeedCategory } from '../types';
+import { HOME_WORKSPACE_ID, type FeedCategory } from '../types';
 
 export type UpdateFeedError =
   | { name: 'DB_ERROR'; message: string }
@@ -37,7 +37,7 @@ export async function renameCategory(categoryId: number, name: string): Promise<
 }
 
 /**
- * Moves a batch of feeds into a category in one statement.
+ * Moves a batch of feeds into a category in one statement, within the Home workspace.
  * @param feedIds the ids of the feeds to move
  * @param categoryId the id of the destination category
  */
@@ -48,7 +48,11 @@ export async function moveFeedsToCategory(feedIds: number[], categoryId: number)
 
   await dbReady;
   try {
-    await db.updateTable('feedMetadata').set({ category_id: categoryId }).where('id', 'in', feedIds).execute();
+    await db.updateTable('feedPlacement')
+      .set({ category_id: categoryId })
+      .where('feed_id', 'in', feedIds)
+      .where('workspace_id', '=', HOME_WORKSPACE_ID)
+      .execute();
     return { success: true, data: undefined };
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
@@ -59,20 +63,21 @@ export async function moveFeedsToCategory(feedIds: number[], categoryId: number)
 }
 
 /**
- * Sets `showInHome` on a batch of feeds in one statement.
+ * Sets `showInWorkspace` on a batch of feeds' Home placement in one statement.
  * @param feedIds the ids of the feeds to update
- * @param showInHome the value to set
+ * @param showInWorkspace the value to set
  */
-export async function setFeedsShowInHome(feedIds: number[], showInHome: boolean): Promise<Result<void, UpdateFeedError>> {
+export async function setFeedsShowInWorkspace(feedIds: number[], showInWorkspace: boolean): Promise<Result<void, UpdateFeedError>> {
   if (feedIds.length === 0) {
     return { success: true, data: undefined };
   }
 
   await dbReady;
   try {
-    const result = await db.updateTable('feedMetadata')
-      .set({ showInHome: showInHome ? 1 : 0 })
-      .where('id', 'in', feedIds)
+    const result = await db.updateTable('feedPlacement')
+      .set({ showInWorkspace: showInWorkspace ? 1 : 0 })
+      .where('feed_id', 'in', feedIds)
+      .where('workspace_id', '=', HOME_WORKSPACE_ID)
       .executeTakeFirst();
     if (result.numUpdatedRows === 0n) {
       return { success: false, error: { name: 'FEED_NOT_FOUND', message: `No feed found for ids ${feedIds.join(', ')}` } };

@@ -40,7 +40,7 @@ function parsed(link: string, items: NewItem[]): ParsedSource {
 }
 
 async function storeFeed(link: string, items: NewItem[] = []): Promise<number> {
-  const result = await addFeedToDatabase({ link, title: `Feed at ${link}`, type: 'rss', items, categoryName: 'tech', showInHome: true });
+  const result = await addFeedToDatabase({ link, title: `Feed at ${link}`, type: 'rss', items, categoryName: 'tech', showInWorkspace: true });
   if (!result.success) {
     throw new Error('expected the feed to be stored');
   }

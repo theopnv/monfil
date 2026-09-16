@@ -36,7 +36,7 @@ const sidebarTest = base.extend<SidebarLayoutFixtures>({
 // query, and this writes behind its back.
 async function subscribe(page: Page, link: string, title: string, categoryName: string): Promise<void> {
   await page.evaluate(({ link, title, categoryName }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title, type: 'rss', items: [], categoryName, showInHome: true,
+    link, title, type: 'rss', items: [], categoryName, showInWorkspace: true,
   }), { link, title, categoryName });
   await page.reload();
 }

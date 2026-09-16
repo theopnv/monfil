@@ -24,9 +24,6 @@ async function openAndMigrate(filePath: string): Promise<void> {
   const sqlite = new SQLite(filePath);
 
   try {
-    // Declared via .references(...) in the migration but not enforced bySQLite unless this pragma is set, per connection, every time.
-    sqlite.pragma('foreign_keys = ON');
-
     if (filePath !== ':memory:') {
       sqlite.pragma('journal_mode = WAL');
 
@@ -49,6 +46,13 @@ async function openAndMigrate(filePath: string): Promise<void> {
 
   db = new Kysely<Database>({ dialect: new SqliteDialect({ database: sqlite }) });
 
+  // A migration that rebuilds a table (an in-place ALTER cannot drop a column carrying a REFERENCES
+  // constraint, or change a unique constraint) does so with DROP TABLE, which fires the parent's
+  // cascade actions when foreign keys are enforced. Kysely runs the migrator inside a transaction,
+  // where `PRAGMA foreign_keys` is a no-op, so it has to be turned off out here instead, per
+  // https://www.sqlite.org/lang_altertable.html#otheralter's procedure for table rebuilds.
+  sqlite.pragma('foreign_keys = OFF');
+
   const migrator = new Migrator({ db, provider: migrationProvider });
   const { error, results } = await migrator.migrateToLatest();
 
@@ -59,7 +63,14 @@ async function openAndMigrate(filePath: string): Promise<void> {
   });
 
   if (error) {
+    sqlite.pragma('foreign_keys = ON');
     throw error instanceof Error ? error : new Error(String(error));
+  }
+
+  const brokenForeignKeys = sqlite.pragma('foreign_key_check') as unknown[];
+  sqlite.pragma('foreign_keys = ON');
+  if (brokenForeignKeys.length > 0) {
+    throw new Error(`Migration left ${brokenForeignKeys.length} broken foreign key reference(s) at "${filePath}".`);
   }
 }
 

@@ -20,7 +20,7 @@ import {
 import { resolveFeedIcon } from "@/lib/favicon";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import { useCreateCategory, useMoveFeeds, useRenameCategory } from "@/providers/feeds-provider";
-import type { FeedCategory, FeedSummary } from "../../../preload/channels";
+import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary } from "../../../preload/channels";
 
 export interface RiverSidebarProps {
   feeds: FeedSummary[];
@@ -266,7 +266,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
 
   const categoryPendingDeleteFolder = categoryPendingDelete ? folders.find((entry) => entry.id === categoryPendingDelete.id) : undefined;
   const otherCategories: FeedCategory[] = categoryPendingDelete
-    ? folders.filter((folder) => folder.id !== categoryPendingDelete.id).map((folder) => ({ id: folder.id, name: folder.name }))
+    ? folders.filter((folder) => folder.id !== categoryPendingDelete.id).map((folder) => ({ id: folder.id, name: folder.name, workspace_id: HOME_WORKSPACE_ID }))
     : [];
 
   return (

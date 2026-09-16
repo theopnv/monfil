@@ -27,7 +27,7 @@ async function createItem(link: string | undefined, options: { type?: SourceType
     items: [{ title: 'Item', link, guid: link ?? 'monfil:test:linkless', pubDate: '2024-01-01', description: options.description ?? '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
     type: options.type ?? 'rss',
     categoryName: 'tech',
-    showInHome: true,
+    showInWorkspace: true,
   });
   if (!result.success) {
     throw new Error('expected the feed to be created');

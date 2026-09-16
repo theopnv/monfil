@@ -36,7 +36,7 @@ export async function deleteCategory(categoryId: number, reassignTo: number): Pr
   await dbReady;
   try {
     const result = await db.transaction().execute(async (trx) => {
-      await trx.updateTable('feedMetadata').set({ category_id: reassignTo }).where('category_id', '=', categoryId).execute();
+      await trx.updateTable('feedPlacement').set({ category_id: reassignTo }).where('category_id', '=', categoryId).execute();
       return trx.deleteFrom('feedCategory').where('id', '=', categoryId).executeTakeFirst();
     });
     if (result.numDeletedRows === 0n) {

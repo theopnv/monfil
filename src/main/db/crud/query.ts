@@ -54,8 +54,6 @@ const feedMetadataHandlers = {
   id: (q, v) => q.where('id', '=', v),
   link: (q, v) => q.where('link', '=', v),
   title: (q, v) => q.where('title', '=', v),
-  category_id: (q, v) => q.where('category_id', '=', v),
-  showInHome: (q, v) => q.where('showInHome', '=', v),
   type: (q, v) => q.where('type', '=', v),
   last_fetched_at: (q, v) => q.where('last_fetched_at', '=', v),
   last_error: (q, v) => q.where('last_error', '=', v),
@@ -70,6 +68,7 @@ export async function queryFeedMetadata(criteria: Partial<FeedMetadata>): Promis
 const feedCategoryHandlers = {
   id: (q, v) => q.where('id', '=', v),
   name: (q, v) => q.where('name', '=', v),
+  workspace_id: (q, v) => q.where('workspace_id', '=', v),
 } satisfies CriteriaHandlers<'feedCategory', FeedCategory>;
 
 export async function queryFeedCategory(criteria: Partial<FeedCategory>): Promise<FeedCategory[]> {
@@ -116,12 +115,17 @@ export async function countFeedMetadata(): Promise<number> {
   return count;
 }
 
-/** Every feed with its category and item counts, in one statement. No items: use `queryRiverPage` for those. */
+/**
+ * Every feed with its category and item counts, in one statement. No items: use `queryRiverPage` for
+ * those. A feed with several placements would fan out into one row per placement; every feed has
+ * exactly one today, so this stays one row per feed until workspace-scoped listing arrives.
+ */
 export async function queryFeedSummaries(): Promise<FeedSummary[]> {
   await dbReady;
 
   const rows = await db.selectFrom('feedMetadata as f')
-    .innerJoin('feedCategory as c', 'c.id', 'f.category_id')
+    .innerJoin('feedPlacement as p', 'p.feed_id', 'f.id')
+    .innerJoin('feedCategory as c', 'c.id', 'p.category_id')
     .leftJoin(
       (eb) => eb.selectFrom('feedItem')
         .select('feed_id')
@@ -135,14 +139,15 @@ export async function queryFeedSummaries(): Promise<FeedSummary[]> {
       'f.id as id',
       'f.link as link',
       'f.title as title',
-      'f.category_id as category_id',
-      'f.showInHome as showInHome',
+      'p.showInWorkspace as showInWorkspace',
+      'p.workspace_id as workspaceId',
       'f.type as type',
       'f.last_fetched_at as last_fetched_at',
       'f.last_error as last_error',
       'f.icon as icon',
       'c.id as categoryId',
       'c.name as categoryName',
+      'c.workspace_id as categoryWorkspaceId',
       'stats.itemCount as itemCount',
       'stats.unreadCount as unreadCount',
     ])
@@ -152,13 +157,13 @@ export async function queryFeedSummaries(): Promise<FeedSummary[]> {
     id: row.id,
     link: row.link,
     title: row.title,
-    category_id: row.category_id,
-    showInHome: row.showInHome,
+    showInWorkspace: row.showInWorkspace,
+    workspaceId: row.workspaceId,
     type: row.type,
     last_fetched_at: row.last_fetched_at,
     last_error: row.last_error,
     icon: row.icon,
-    category: { id: row.categoryId, name: row.categoryName },
+    category: { id: row.categoryId, name: row.categoryName, workspace_id: row.categoryWorkspaceId },
     itemCount: row.itemCount ?? 0,
     unreadCount: row.unreadCount ?? 0,
   }));
@@ -179,7 +184,8 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
 
   let builder = db.selectFrom('feedItem as i')
     .innerJoin('feedMetadata as f', 'f.id', 'i.feed_id')
-    .innerJoin('feedCategory as c', 'c.id', 'f.category_id')
+    .innerJoin('feedPlacement as p', (join) => join.onRef('p.feed_id', '=', 'f.id').on('p.workspace_id', '=', query.workspaceId))
+    .innerJoin('feedCategory as c', 'c.id', 'p.category_id')
     .select([
       'i.id as id',
       'i.title as title',
@@ -198,7 +204,7 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
 
   builder = query.feedIds
     ? builder.where('f.id', 'in', query.feedIds)
-    : builder.where('f.showInHome', '=', 1);
+    : builder.where('p.showInWorkspace', '=', 1);
 
   if (query.ids) {
     builder = builder.where('i.id', 'in', query.ids);

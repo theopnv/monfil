@@ -2,7 +2,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { useReadState, useRiver } from './feeds-provider';
 import { useIpcBridge, usePendingRefreshCount } from '../lib/ipc-bridge';
 import { renderWithQueryClient } from '../lib/test/render-with-query-client';
-import type { RiverPage, RiverRow } from '../../preload/channels';
+import { HOME_WORKSPACE_ID, type RiverPage, type RiverRow } from '../../preload/channels';
 
 let nextItemId = 1;
 
@@ -27,7 +27,7 @@ function createRow(overrides: Partial<RiverRow> = {}): RiverRow {
 }
 
 function RiverRows() {
-  const { data, fetchNextPage } = useRiver({});
+  const { data, fetchNextPage } = useRiver({ workspaceId: HOME_WORKSPACE_ID });
   const rows = data?.pages.flatMap((page) => page.rows) ?? [];
   return (
     <div>

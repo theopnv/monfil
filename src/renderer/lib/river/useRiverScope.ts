@@ -5,7 +5,7 @@ import { useRiverScopeState } from '../../providers/river-scope-provider';
 import { usePreferences } from '../../providers/preferences-provider';
 import { useSearch } from '../../providers/search-provider';
 import type { RiverScope } from '../queries';
-import type { FeedSummary } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID, type FeedSummary } from '../../../preload/channels';
 
 export interface RiverScopeResult {
   scope: RiverScope;
@@ -29,6 +29,7 @@ export function useRiverScope(feeds: FeedSummary[]): RiverScopeResult {
   const visibleFeedIdsSet = useMemo(() => visibleFeedIds(feeds, showOnlyLinks), [feeds, showOnlyLinks]);
 
   const scope = useMemo<RiverScope>(() => ({
+    workspaceId: HOME_WORKSPACE_ID,
     feedIds: [...visibleFeedIdsSet],
     ...(preferences.hideReadItems ? { unreadOnly: true } : {}),
     ...(debouncedSearch ? { search: debouncedSearch } : {}),

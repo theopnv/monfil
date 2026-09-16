@@ -15,8 +15,8 @@ export interface Step2ConfigureProps {
   newCategoryName: string;
   onNewCategoryNameChange: (name: string) => void;
   onAddNewCategory: () => void;
-  showInHome: boolean;
-  onShowInHomeChange: (value: boolean) => void;
+  showInWorkspace: boolean;
+  onShowInWorkspaceChange: (value: boolean) => void;
 }
 
 export default function Step2Configure({
@@ -27,8 +27,8 @@ export default function Step2Configure({
   newCategoryName,
   onNewCategoryNameChange,
   onAddNewCategory,
-  showInHome,
-  onShowInHomeChange,
+  showInWorkspace,
+  onShowInWorkspaceChange,
 }: Step2ConfigureProps) {
   return (
     <div className="flex flex-col gap-4.5 px-7.5 py-5.5">
@@ -67,7 +67,7 @@ export default function Step2Configure({
         onAddNew={onAddNewCategory}
       />
 
-      <Toggle isSelected={showInHome} onChange={onShowInHomeChange} label="Show in Home" hint="Uncheck for high-volume sources you'd rather visit on purpose." />
+      <Toggle isSelected={showInWorkspace} onChange={onShowInWorkspaceChange} label="Show in Workspace" hint="Uncheck for high-volume sources you'd rather visit on purpose." />
     </div>
   );
 }

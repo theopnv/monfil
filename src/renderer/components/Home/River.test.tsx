@@ -7,7 +7,7 @@ import { SearchProvider } from '@/providers/search-provider';
 import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import River from './River';
-import type { FeedSummary, RiverPage, RiverQuery, RiverRow } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID, type FeedSummary, type RiverPage, type RiverQuery, type RiverRow } from '../../../preload/channels';
 
 let nextFeedId = 1;
 let nextItemId = 1;
@@ -19,13 +19,13 @@ function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
     id,
     link: `https://example.com/feed-${id}`,
     title: `Feed ${id}`,
-    category_id: 1,
     type: 'rss',
-    showInHome: 1,
+    showInWorkspace: 1,
+    workspaceId: HOME_WORKSPACE_ID,
     last_fetched_at: undefined,
     last_error: undefined,
     icon: undefined,
-    category: { id: 1, name: 'Tech' },
+    category: { id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID },
     itemCount: 0,
     unreadCount: 0,
     ...overrides,
@@ -61,7 +61,7 @@ function computeRiverPage(query: RiverQuery): RiverPage {
 
   candidates = query.feedIds
     ? candidates.filter((row) => new Set(query.feedIds).has(row.feedId))
-    : candidates.filter((row) => allFeeds.find((feed) => feed.id === row.feedId)?.showInHome !== 0);
+    : candidates.filter((row) => allFeeds.find((feed) => feed.id === row.feedId)?.showInWorkspace !== 0);
 
   if (query.ids) {
     const idSet = new Set(query.ids);
@@ -111,10 +111,10 @@ beforeEach(() => {
         allRows = allRows.map((row) => (targetIds.has(row.id) ? { ...row, readAt: read ? new Date().toISOString() : undefined } : row));
         return Promise.resolve({ success: true, data: undefined });
       }
-      case 'feeds:set-show-in-home': {
-        const { feedIds, showInHome } = arg as { feedIds: number[]; showInHome: boolean };
+      case 'feeds:set-show-in-workspace': {
+        const { feedIds, showInWorkspace } = arg as { feedIds: number[]; showInWorkspace: boolean };
         const targetIds = new Set(feedIds);
-        allFeeds = allFeeds.map((feed) => (targetIds.has(feed.id) ? { ...feed, showInHome: showInHome ? 1 : 0 } : feed));
+        allFeeds = allFeeds.map((feed) => (targetIds.has(feed.id) ? { ...feed, showInWorkspace: showInWorkspace ? 1 : 0 } : feed));
         return Promise.resolve({ success: true, data: undefined });
       }
       default:
@@ -183,9 +183,9 @@ test('rotating feed visibility narrows, widens, then narrows home again', async 
   await expect.element(getByText('Item B1', { exact: true })).toBeInTheDocument();
 });
 
-test('hides feed items when showInHome is set to 0', async () => {
+test('hides feed items when showInWorkspace is set to 0', async () => {
   // Arrange
-  const feedC = createFeed({ title: 'Feed C', link: 'https://c.example/feed', showInHome: 0 });
+  const feedC = createFeed({ title: 'Feed C', link: 'https://c.example/feed', showInWorkspace: 0 });
   allFeeds = [...allFeeds, feedC];
   allRows = [...allRows, createRow(feedC, { title: 'Item C1', excerpt: 'Item C1 description' })];
 

@@ -7,19 +7,44 @@ import type {
 } from 'kysely'
 
 export interface Database {
+  workspace: WorkspaceTable
   feedCategory: FeedCategoryTable
   feedMetadata: FeedMetadataTable
+  feedPlacement: FeedPlacementTable
   feedItem: FeedItemTable
   setting: SettingTable
   articleContent: ArticleContentTable
 }
 
+// =============== Workspace ===============
+// A workspace is a tab in the left rail: Home, or an installed pack / OPML import. See doc/feedpacks.md.
+
+export interface WorkspaceTable {
+  id: Generated<number>;
+  name: string;
+  icon: string;
+  color: string;
+  position: number;
+  source_slug: string | undefined;
+  source_version: string | undefined;
+  installed_at: string | undefined;
+}
+
+export type Workspace = Selectable<WorkspaceTable>;
+export type NewWorkspace = Insertable<WorkspaceTable>;
+export type UpdateWorkspace = Updateable<WorkspaceTable>;
+
+// Home is inserted as the first row by the migration that creates this table, and it can never be
+// deleted, so its id is permanently 1.
+export const HOME_WORKSPACE_ID = 1;
+
 // =============== Feed Category ===============
-// Simple lookup: a category is a name (e.g. "Tech", "News"...)
+// A category is a name (e.g. "Tech", "News"...) scoped to one workspace.
 
 export interface FeedCategoryTable {
   id: Generated<number>;
   name: string;
+  workspace_id: number;
 };
 
 export type FeedCategory = Selectable<FeedCategoryTable>;
@@ -27,7 +52,8 @@ export type NewFeedCategory = Insertable<FeedCategoryTable>;
 export type UpdateFeedCategory = Updateable<FeedCategoryTable>;
 
 // =============== Feed ===============
-// A feed is anything the user wants to subscribe to (e.g. RSS, podcasts, bluesky feed, etc)
+// A feed is anything the user wants to subscribe to (e.g. RSS, podcasts, bluesky feed, etc). Identity
+// only: where it appears (category, workspace, visibility) is feedPlacement, below.
 
 export type SourceType = 'rss' | 'youtube';
 
@@ -35,8 +61,6 @@ export interface FeedMetadataTable {
   id: Generated<number>;
   link: string;
   title: string;
-  category_id: number;
-  showInHome: Generated<number>;
   type: Generated<SourceType>;
   last_fetched_at: string | undefined;
   // Update additionally allows `null`, so a successful fetch can clear the last failure.
@@ -47,6 +71,21 @@ export interface FeedMetadataTable {
 export type FeedMetadata = Selectable<FeedMetadataTable>;
 export type NewFeedMetadata = Insertable<FeedMetadataTable>;
 export type UpdateFeedMetadata = Updateable<FeedMetadataTable>;
+
+// =============== Feed Placement ===============
+// Where a feed appears. Separate from feedMetadata so one feed can belong to several workspaces at
+// once, sharing one fetch and one read state. At most one placement per (feed_id, workspace_id).
+
+export interface FeedPlacementTable {
+  feed_id: number;
+  category_id: number;
+  workspace_id: number;
+  showInWorkspace: Generated<number>;
+}
+
+export type FeedPlacement = Selectable<FeedPlacementTable>;
+export type NewFeedPlacement = Insertable<FeedPlacementTable>;
+export type UpdateFeedPlacement = Updateable<FeedPlacementTable>;
 
 // =============== Feed Item ===============
 // A feed item is a single entry in a feed (e.g. a blog post, a podcast episode, etc)
@@ -60,7 +99,7 @@ export interface FeedItemTable {
   pubDate: string;
   description: string;
   // Derived from `pubDate` on insert, since SQLite cannot parse RFC-822 in SQL. Epoch ms, `0` when unparseable.
-  // `Generated`, like `showInHome`: the DB default only matters for a row that bypasses `addFeedItemsToDatabase`.
+  // `Generated`, like `showInWorkspace`: the DB default only matters for a row that bypasses `addFeedItemsToDatabase`.
   published_at: Generated<number>;
   // Derived from `description` on insert: plain text, truncated. Powers the river list without shipping the full body.
   excerpt: Generated<string>;

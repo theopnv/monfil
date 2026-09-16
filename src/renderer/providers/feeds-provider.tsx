@@ -53,10 +53,10 @@ export const useDeleteFeed = (): ((feedId: number) => Promise<Result<void, Delet
   return useCallback((feedId: number) => mutateAsync(feedId), [mutateAsync]);
 };
 
-export const useSetShowInHome = (): ((feedIds: number[], showInHome: boolean) => Promise<Result<void, UpdateFeedError>>) => {
+export const useSetShowInWorkspace = (): ((feedIds: number[], showInWorkspace: boolean) => Promise<Result<void, UpdateFeedError>>) => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (variables: { feedIds: number[]; showInHome: boolean }) => window.electron.ipcRenderer.invoke('feeds:set-show-in-home', variables),
+    mutationFn: (variables: { feedIds: number[]; showInWorkspace: boolean }) => window.electron.ipcRenderer.invoke('feeds:set-show-in-workspace', variables),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
@@ -65,7 +65,7 @@ export const useSetShowInHome = (): ((feedIds: number[], showInHome: boolean) =>
     },
   });
   const { mutateAsync } = mutation;
-  return useCallback((feedIds: number[], showInHome: boolean) => mutateAsync({ feedIds, showInHome }), [mutateAsync]);
+  return useCallback((feedIds: number[], showInWorkspace: boolean) => mutateAsync({ feedIds, showInWorkspace }), [mutateAsync]);
 };
 
 export const useCreateCategory = (): ((name: string) => Promise<Result<FeedCategory, CreateCategoryError>>) => {

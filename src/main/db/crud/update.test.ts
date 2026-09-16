@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { moveFeedsToCategory, renameCategory, setFeedItemsRead, setFeedsShowInHome } from './update';
+import { moveFeedsToCategory, renameCategory, setFeedItemsRead, setFeedsShowInWorkspace } from './update';
 import { addFeedToDatabase, createCategory, type NewFeedInput } from './insert';
 
 const feedA: NewFeedInput = {
@@ -9,7 +9,7 @@ const feedA: NewFeedInput = {
   items: [],
   type: 'rss',
   categoryName: 'tech',
-  showInHome: true,
+  showInWorkspace: true,
 };
 const feedB: NewFeedInput = {
   link: 'https://b.example/feed',
@@ -17,7 +17,7 @@ const feedB: NewFeedInput = {
   items: [],
   type: 'rss',
   categoryName: 'tech',
-  showInHome: true,
+  showInWorkspace: true,
 };
 
 const feedWithItems: NewFeedInput = {
@@ -29,7 +29,7 @@ const feedWithItems: NewFeedInput = {
   ],
   type: 'rss',
   categoryName: 'tech',
-  showInHome: true,
+  showInWorkspace: true,
 };
 
 beforeAll(async () => {
@@ -38,12 +38,13 @@ beforeAll(async () => {
 
 afterEach(async () => {
   await db.deleteFrom('feedItem').execute();
+  await db.deleteFrom('feedPlacement').execute();
   await db.deleteFrom('feedMetadata').execute();
   await db.deleteFrom('feedCategory').execute();
 });
 
-describe('setFeedsShowInHome', () => {
-  test('sets showInHome to 0 then back to 1', async () => {
+describe('setFeedsShowInWorkspace', () => {
+  test('sets showInWorkspace to 0 then back to 1', async () => {
     // Arrange
     const inserted = await addFeedToDatabase(feedA);
     if (!inserted.success) {
@@ -51,20 +52,20 @@ describe('setFeedsShowInHome', () => {
     }
 
     // Act
-    const hidden = await setFeedsShowInHome([inserted.data.id], false);
-    const hiddenRow = await db.selectFrom('feedMetadata').selectAll().where('id', '=', inserted.data.id).executeTakeFirstOrThrow();
+    const hidden = await setFeedsShowInWorkspace([inserted.data.id], false);
+    const hiddenRow = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', inserted.data.id).executeTakeFirstOrThrow();
 
     // Assert
     expect(hidden.success).toBe(true);
-    expect(hiddenRow.showInHome).toBe(0);
+    expect(hiddenRow.showInWorkspace).toBe(0);
 
     // Act
-    const shown = await setFeedsShowInHome([inserted.data.id], true);
-    const shownRow = await db.selectFrom('feedMetadata').selectAll().where('id', '=', inserted.data.id).executeTakeFirstOrThrow();
+    const shown = await setFeedsShowInWorkspace([inserted.data.id], true);
+    const shownRow = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', inserted.data.id).executeTakeFirstOrThrow();
 
     // Assert
     expect(shown.success).toBe(true);
-    expect(shownRow.showInHome).toBe(1);
+    expect(shownRow.showInWorkspace).toBe(1);
   });
 
   test('updates a batch of several ids in one call', async () => {
@@ -76,17 +77,17 @@ describe('setFeedsShowInHome', () => {
     }
 
     // Act
-    const result = await setFeedsShowInHome([insertedA.data.id, insertedB.data.id], false);
+    const result = await setFeedsShowInWorkspace([insertedA.data.id, insertedB.data.id], false);
 
     // Assert
     expect(result.success).toBe(true);
-    const rows = await db.selectFrom('feedMetadata').selectAll().where('id', 'in', [insertedA.data.id, insertedB.data.id]).execute();
-    expect(rows.every((row) => row.showInHome === 0)).toBe(true);
+    const rows = await db.selectFrom('feedPlacement').selectAll().where('feed_id', 'in', [insertedA.data.id, insertedB.data.id]).execute();
+    expect(rows.every((row) => row.showInWorkspace === 0)).toBe(true);
   });
 
   test('an unknown id returns FEED_NOT_FOUND', async () => {
     // Act
-    const result = await setFeedsShowInHome([999999], false);
+    const result = await setFeedsShowInWorkspace([999999], false);
 
     // Assert
     expect(result.success).toBe(false);
@@ -98,7 +99,7 @@ describe('setFeedsShowInHome', () => {
 
   test('an empty id list succeeds without writing', async () => {
     // Act
-    const result = await setFeedsShowInHome([], false);
+    const result = await setFeedsShowInWorkspace([], false);
 
     // Assert
     expect(result.success).toBe(true);
@@ -241,7 +242,7 @@ describe('moveFeedsToCategory', () => {
 
     // Assert
     expect(result.success).toBe(true);
-    const rows = await db.selectFrom('feedMetadata').selectAll().where('id', 'in', [insertedA.data.id, insertedB.data.id]).execute();
+    const rows = await db.selectFrom('feedPlacement').selectAll().where('feed_id', 'in', [insertedA.data.id, insertedB.data.id]).execute();
     expect(rows.every((row) => row.category_id === destination.data.id)).toBe(true);
   });
 

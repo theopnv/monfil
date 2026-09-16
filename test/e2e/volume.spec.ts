@@ -41,7 +41,7 @@ async function seedDatabase(userDataDir: string): Promise<void> {
         type: 'rss',
         items,
         categoryName: 'volume',
-        showInHome: true,
+        showInWorkspace: true,
       });
       if (!result.success) {
         throw new Error(`failed to seed feed ${feedIndex}: ${result.error.message}`);

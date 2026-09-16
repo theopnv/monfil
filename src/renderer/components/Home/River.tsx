@@ -10,7 +10,7 @@ import { useLoadMoreOnScroll } from "@/lib/river/useLoadMoreOnScroll";
 import { useMarkReadOnScroll } from "@/lib/river/useMarkReadOnScroll";
 import { useRiverKeyboardNav } from "@/lib/river/useRiverKeyboardNav";
 import { useRiverScope } from "@/lib/river/useRiverScope";
-import { useCategories, useFeeds, useReadState, useRiver, useSetShowInHome } from "@/providers/feeds-provider";
+import { useCategories, useFeeds, useReadState, useRiver, useSetShowInWorkspace } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import { useSearch } from "@/providers/search-provider";
 import type { FeedSummary } from "../../../preload/channels";
@@ -23,7 +23,7 @@ export default function River({ onOpenItem }: RiverProps) {
   const feeds = useFeeds();
   const categories = useCategories();
   const { markRead, markAllRead } = useReadState();
-  const setShowInHome = useSetShowInHome();
+  const setShowInWorkspace = useSetShowInWorkspace();
   const { preferences } = usePreferences();
   const { query: searchQuery, setQuery: setSearchQuery } = useSearch();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -77,11 +77,11 @@ export default function River({ onOpenItem }: RiverProps) {
       return next;
     });
 
-    const needsWrite = targets.filter((feed) => (feed.showInHome !== 0) === (target === "hidden"));
+    const needsWrite = targets.filter((feed) => (feed.showInWorkspace !== 0) === (target === "hidden"));
     if (needsWrite.length > 0) {
-      await setShowInHome(needsWrite.map((feed) => feed.id), target !== "hidden");
+      await setShowInWorkspace(needsWrite.map((feed) => feed.id), target !== "hidden");
     }
-  }, [setShowInHome, setShowOnlyLinks]);
+  }, [setShowInWorkspace, setShowOnlyLinks]);
 
   const handleFeedDeleted = useCallback((feed: FeedSummary) => {
     setShowOnlyLinks((prev) => {

@@ -14,10 +14,13 @@ import type { Result } from '../main/lib/utils';
 // Expose types from main process to preload, so that the renderer can use them without importing from main directly.
 export type { RefreshInterval, MaxFeedItems } from '../main/settings';
 export type { FeedCategory, SourceType } from '../main/db/types';
+export { HOME_WORKSPACE_ID } from '../main/db/types';
 export type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
 
 // Some types are only used in the preload layer, so we define them here instead of main.
 export type FeedSummary = FeedMetadata & {
+  showInWorkspace: number;
+  workspaceId: number;
   category: FeedCategory;
   itemCount: number;
   unreadCount: number;
@@ -42,7 +45,8 @@ export type RiverRow = {
 export type RiverCursor = { publishedAt: number; id: number };
 
 export type RiverQuery = {
-  feedIds?: number[]; // omitted = every feed with showInHome = 1
+  workspaceId: number;
+  feedIds?: number[]; // omitted = every feed with showInWorkspace = 1
   ids?: number[]; // exact rows, for a Reader deep link outside the window
   unreadOnly?: boolean;
   search?: string;
@@ -93,7 +97,7 @@ export type TwoWayRendererMainChannelPayloads = {
   'feeds:refresh': RefreshSummary;
   'feeds:submit-add-feed': Result<FeedSummary, AddFeedError>;
   'feeds:delete-feed': Result<void, DeleteFeedError>;
-  'feeds:set-show-in-home': Result<void, UpdateFeedError>;
+  'feeds:set-show-in-workspace': Result<void, UpdateFeedError>;
   'feeds:create-category': Result<FeedCategory, CreateCategoryError>;
   'feeds:rename-category': Result<FeedCategory, UpdateCategoryError>;
   'feeds:delete-category': Result<void, DeleteCategoryError>;
@@ -119,7 +123,7 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:refresh': undefined;
   'feeds:submit-add-feed': NewFeedInput;
   'feeds:delete-feed': number;
-  'feeds:set-show-in-home': { feedIds: number[]; showInHome: boolean };
+  'feeds:set-show-in-workspace': { feedIds: number[]; showInWorkspace: boolean };
   'feeds:create-category': { name: string };
   'feeds:rename-category': { categoryId: number; name: string };
   'feeds:delete-category': { categoryId: number; reassignTo: number };

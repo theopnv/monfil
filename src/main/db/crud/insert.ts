@@ -1,7 +1,7 @@
 import { type Kysely } from 'kysely';
 import { db, dbReady } from '../database';
 import { queryFeedItems } from './query';
-import type { Database, FeedCategory, FeedItem, FeedMetadata, NewArticleContent, SourceType } from '../types';
+import { HOME_WORKSPACE_ID, type Database, type FeedCategory, type FeedItem, type FeedMetadata, type NewArticleContent, type SourceType } from '../types';
 import type { Result } from '../../lib/utils';
 import { stripHtml, truncateOnWordBoundary } from '../../lib/strip-html';
 
@@ -15,8 +15,8 @@ function parsePublishedAt(pubDate: string): number {
 
 async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: string) {
   return trx.insertInto('feedCategory')
-    .values({ name: categoryName })
-    .onConflict((oc) => oc.column('name').doUpdateSet((eb) => ({ name: eb.ref('excluded.name') })))
+    .values({ name: categoryName, workspace_id: HOME_WORKSPACE_ID })
+    .onConflict((oc) => oc.columns(['workspace_id', 'name']).doUpdateSet((eb) => ({ name: eb.ref('excluded.name') })))
     .returningAll()
     .executeTakeFirstOrThrow();
 }
@@ -26,14 +26,15 @@ export type CreateCategoryError =
   | { name: 'DUPLICATE_NAME'; message: string };
 
 /**
- * Creates a new, empty category. Unlike `addFeedCategoryToDatabase`, a name already in use is an error
- * rather than a silent reuse, since this path is a deliberate "new folder" action.
- * @param name the category's display name, unique across every category
+ * Creates a new, empty category in the Home workspace. Unlike `addFeedCategoryToDatabase`, a name
+ * already in use is an error rather than a silent reuse, since this path is a deliberate "new folder"
+ * action.
+ * @param name the category's display name, unique within Home
  */
 export async function createCategory(name: string): Promise<Result<FeedCategory, CreateCategoryError>> {
   await dbReady;
   try {
-    const category = await db.insertInto('feedCategory').values({ name }).returningAll().executeTakeFirstOrThrow();
+    const category = await db.insertInto('feedCategory').values({ name, workspace_id: HOME_WORKSPACE_ID }).returningAll().executeTakeFirstOrThrow();
     return { success: true, data: category };
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
@@ -43,15 +44,24 @@ export async function createCategory(name: string): Promise<Result<FeedCategory,
   }
 }
 
-async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, title: string, type: SourceType, categoryId: number, showInHome: boolean, icon: string | undefined) {
+async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, title: string, type: SourceType, icon: string | undefined) {
   return trx.insertInto('feedMetadata')
-    .values({ link, title, type, category_id: categoryId, showInHome: showInHome ? 1 : 0, icon })
+    .values({ link, title, type, icon })
     .onConflict((oc) => oc.column('link').doUpdateSet((eb) => ({
       title: eb.ref('excluded.title'),
       type: eb.ref('excluded.type'),
-      category_id: eb.ref('excluded.category_id'),
-      showInHome: eb.ref('excluded.showInHome'),
       icon: eb.ref('excluded.icon'),
+    })))
+    .returningAll()
+    .executeTakeFirstOrThrow();
+}
+
+async function addFeedPlacementToDatabase(trx: Kysely<Database>, feedId: number, categoryId: number, showInWorkspace: boolean) {
+  return trx.insertInto('feedPlacement')
+    .values({ feed_id: feedId, category_id: categoryId, workspace_id: HOME_WORKSPACE_ID, showInWorkspace: showInWorkspace ? 1 : 0 })
+    .onConflict((oc) => oc.columns(['feed_id', 'workspace_id']).doUpdateSet((eb) => ({
+      category_id: eb.ref('excluded.category_id'),
+      showInWorkspace: eb.ref('excluded.showInWorkspace'),
     })))
     .returningAll()
     .executeTakeFirstOrThrow();
@@ -93,14 +103,14 @@ export interface NewFeedInput {
   type: SourceType;
   items: Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>[];
   categoryName: string;
-  showInHome: boolean;
+  showInWorkspace: boolean;
   icon?: string;
 }
 
 export type AddFeedError = { name: 'DB_ERROR'; message: string };
 
 /** The full row set a freshly added feed needs internally (e.g. to enrich its items). Never sent over IPC as-is. */
-export type AddedFeed = FeedMetadata & { items: FeedItem[]; category: FeedCategory };
+export type AddedFeed = FeedMetadata & { items: FeedItem[]; category: FeedCategory; showInWorkspace: number; workspaceId: number };
 
 export async function updateFeedItemImage(itemId: number, image: string): Promise<void> {
   await dbReady;
@@ -136,18 +146,19 @@ export async function upsertArticleContent(content: NewArticleContent): Promise<
 export async function addFeedToDatabase(input: NewFeedInput): Promise<Result<AddedFeed, AddFeedError>> {
   await dbReady;
   try {
-    const { category, metadata } = await db.transaction().execute(async (trx) => {
+    const { category, metadata, placement } = await db.transaction().execute(async (trx) => {
       const category = await addFeedCategoryToDatabase(trx, input.categoryName);
-      const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, input.type, category.id, input.showInHome, input.icon);
+      const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, input.type, input.icon);
+      const placement = await addFeedPlacementToDatabase(trx, metadata.id, category.id, input.showInWorkspace);
       const items = await addFeedItemsToDatabase(trx, metadata.id, input.items);
       if (!items.success) {
         throw new Error(items.error.message);
       }
-      return { category, metadata };
+      return { category, metadata, placement };
     });
 
     const items = await queryFeedItems({ feed_id: metadata.id });
-    return { success: true, data: { ...metadata, items, category } };
+    return { success: true, data: { ...metadata, items, category, showInWorkspace: placement.showInWorkspace, workspaceId: placement.workspace_id } };
   } catch (error) {
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
   }

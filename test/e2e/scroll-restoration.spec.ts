@@ -75,7 +75,7 @@ const scrollRestorationTest = base.extend<ScrollRestorationTestFixtures>({
 // Subscribes without going through the wizard. The row is enough for a refresh to find the feed.
 async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Promise<void> {
   await page.evaluate(({ link, type }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title: 'Local feed', type, items: [], categoryName: 'tech', showInHome: true,
+    link, title: 'Local feed', type, items: [], categoryName: 'tech', showInWorkspace: true,
   }), { link: url, type });
   await page.getByRole('button', { name: 'Refresh feeds' }).click();
 }
