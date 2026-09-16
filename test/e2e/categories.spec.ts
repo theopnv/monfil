@@ -19,26 +19,33 @@ const categoriesTest = base.extend<CategoriesTestFixtures>({
     }
   },
 
-  // Every launch reuses the same user data dir, so a test can restart the app against its own database.
+  // Every launch reuses the same user data dir, so a test can restart the app against its own
+  // database. A restart closes the previous instance first: two Electron processes sharing one
+  // profile directory at once is unsupported and races over the profile's own lock files (not just
+  // this app's SQLite WAL), which surfaces as flaky contention rather than a clean failure.
   launchApp: async ({ userDataDir }, use) => {
-    const launched: ElectronApplication[] = [];
+    let current: ElectronApplication | undefined;
     try {
       await use(async () => {
+        await current?.close();
         const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-        launched.push(app);
+        current = app;
         return { app, page: await app.firstWindow() };
       });
     } finally {
-      await Promise.all(launched.map((app) => app.close()));
+      await current?.close();
     }
   },
 });
 
 // Subscribes without a network fetch or the wizard: enough for a feed and its category to exist.
+// The reload is what puts the new feed in the sidebar: only the add-feed wizard refreshes the feed
+// query, and this writes behind its back.
 async function subscribe(page: Page, link: string, title: string, categoryName: string): Promise<void> {
   await page.evaluate(({ link, title, categoryName }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
     link, title, type: 'rss', items: [], categoryName, showInHome: true,
   }), { link, title, categoryName });
+  await page.reload();
 }
 
 async function categoryIdFor(page: Page, name: string): Promise<number> {
@@ -135,10 +142,7 @@ categoriesTest('creating a folder via "New folder" persists and stays visible wi
 
   // Assert: the folder persisted, still with no feeds in it.
   await expect(relaunched.page.getByRole('button', { name: 'Recipes', exact: true })).toBeVisible();
-  // `subscribe` writes via IPC directly, bypassing the add-feed wizard's own query invalidation, so
-  // the sidebar only picks up the new feed after an explicit reload.
   await subscribe(relaunched.page, 'http://127.0.0.1/feed-a', 'Feed A', 'Recipes');
-  await relaunched.page.reload();
   await relaunched.page.getByRole('button', { name: 'Recipes', exact: true }).click();
   await expect(relaunched.page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
 });
