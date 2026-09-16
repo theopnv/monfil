@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { addFeedItemsToDatabase, addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type NewFeedInput } from './insert';
+import { addFeedItemsToDatabase, addFeedToDatabase, createCategory, updateFeedItemImage, upsertArticleContent, type NewFeedInput } from './insert';
 import type { FeedItem } from '../types';
 
 const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', type: 'rss', items: [], categoryName: 'tech', showInHome: true };
@@ -346,5 +346,38 @@ describe('upsertArticleContent', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]?.status).toBe('failed');
     expect(rows[0]?.html).toBeNull();
+  });
+});
+
+describe('createCategory', () => {
+  test('creates a new, empty category', async () => {
+    // Act
+    const result = await createCategory('Newsletters');
+
+    // Assert
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
+    expect(result.data.name).toBe('Newsletters');
+    const stored = await db.selectFrom('feedCategory').selectAll().where('id', '=', result.data.id).execute();
+    expect(stored).toHaveLength(1);
+  });
+
+  test('a duplicate name returns DUPLICATE_NAME and creates nothing', async () => {
+    // Arrange
+    await createCategory('Newsletters');
+
+    // Act
+    const result = await createCategory('Newsletters');
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('DUPLICATE_NAME');
+    const stored = await db.selectFrom('feedCategory').selectAll().where('name', '=', 'Newsletters').execute();
+    expect(stored).toHaveLength(1);
   });
 });

@@ -1,5 +1,5 @@
 import { beforeAll, describe, afterEach, test, expect, vi } from 'vitest';
-import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowFeedContextMenu } from './listeners';
+import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu } from './listeners';
 import { initializeDatabase } from '../db/database';
 import { BrowserWindow, Menu, shell } from 'electron';
 
@@ -147,5 +147,78 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
 
     // Assert
     expect(popup).not.toHaveBeenCalled();
+  });
+});
+
+describe('feeds:show-category-context-menu IPC listener', () => {
+  const fakeWindow = {} as Electron.BrowserWindow;
+
+  function mockEvent() {
+    return { sender: { isDestroyed: () => false, send: vi.fn() } } as unknown as Electron.IpcMainEvent;
+  }
+
+  afterEach(() => {
+    mockedBuildFromTemplate.mockReset();
+    mockedFromWebContents.mockReset();
+  });
+
+  test('builds a template holding "Rename" then "Delete"', () => {
+    // Arrange
+    mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+
+    // Act
+    listenToShowCategoryContextMenu(mockEvent(), 1);
+
+    // Assert
+    const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
+    expect(template).toHaveLength(2);
+    expect(template?.[0]?.label).toBe('Rename');
+    expect(template?.[1]?.label).toBe('Delete');
+  });
+
+  test('"Rename" sends feeds:rename-category-requested with the category id', () => {
+    // Arrange
+    mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+    const event = mockEvent();
+
+    // Act
+    listenToShowCategoryContextMenu(event, 7);
+    const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
+    template?.[0]?.click?.(undefined as never, undefined, undefined as never);
+
+    // Assert
+    expect(event.sender.send).toHaveBeenCalledWith('feeds:rename-category-requested', 7);
+  });
+
+  test('"Delete" sends feeds:delete-category-requested with the category id', () => {
+    // Arrange
+    mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+    const event = mockEvent();
+
+    // Act
+    listenToShowCategoryContextMenu(event, 7);
+    const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
+    template?.[1]?.click?.(undefined as never, undefined, undefined as never);
+
+    // Assert
+    expect(event.sender.send).toHaveBeenCalledWith('feeds:delete-category-requested', 7);
+  });
+
+  test('pops the menu at the window resolved from event.sender', () => {
+    // Arrange
+    const popup = vi.fn();
+    mockedBuildFromTemplate.mockReturnValue({ popup } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+    const event = mockEvent();
+
+    // Act
+    listenToShowCategoryContextMenu(event, 1);
+
+    // Assert
+    expect(mockedFromWebContents).toHaveBeenCalledWith(event.sender);
+    expect(popup).toHaveBeenCalledWith({ window: fakeWindow });
   });
 });

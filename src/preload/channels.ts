@@ -1,7 +1,7 @@
 import type { FeedMetadata, FeedCategory, SourceType } from '../main/db/types';
-import type { NewFeedInput, AddFeedError } from '../main/db/crud/insert';
-import type { DeleteFeedError } from '../main/db/crud/delete';
-import type { UpdateFeedError, UpdateItemError } from '../main/db/crud/update';
+import type { NewFeedInput, AddFeedError, CreateCategoryError } from '../main/db/crud/insert';
+import type { DeleteCategoryError, DeleteFeedError } from '../main/db/crud/delete';
+import type { UpdateCategoryError, UpdateFeedError, UpdateItemError } from '../main/db/crud/update';
 import type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
 import type { MaxFeedItems, RefreshInterval } from '../main/settings';
 import type { AppInfo } from '../main/app-info';
@@ -65,6 +65,7 @@ export type ItemBody = {
 export type OneWayRendererToMainChannelPayloads = {
   'link:open': string;
   'feeds:show-feed-context-menu': number;
+  'feeds:show-category-context-menu': number;
   'app:reveal-database-file': undefined;
 }
 export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayloads;
@@ -77,6 +78,8 @@ export type OneWayMainToRendererChannelPayloads = {
   'feeds:item-image-fetched': { feedId: number; itemId: number; image: string };
   'feeds:refreshed': RefreshSummary;
   'feeds:delete-feed-requested': number;
+  'feeds:rename-category-requested': number;
+  'feeds:delete-category-requested': number;
 };
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
@@ -91,6 +94,10 @@ export type TwoWayRendererMainChannelPayloads = {
   'feeds:submit-add-feed': Result<FeedSummary, AddFeedError>;
   'feeds:delete-feed': Result<void, DeleteFeedError>;
   'feeds:set-show-in-home': Result<void, UpdateFeedError>;
+  'feeds:create-category': Result<FeedCategory, CreateCategoryError>;
+  'feeds:rename-category': Result<FeedCategory, UpdateCategoryError>;
+  'feeds:delete-category': Result<void, DeleteCategoryError>;
+  'feeds:move-feeds-to-category': Result<void, UpdateCategoryError>;
   'settings:get-refresh-interval': RefreshInterval;
   'settings:set-refresh-interval': RefreshInterval;
   'items:set-read': Result<void, UpdateItemError>;
@@ -113,6 +120,10 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:submit-add-feed': NewFeedInput;
   'feeds:delete-feed': number;
   'feeds:set-show-in-home': { feedIds: number[]; showInHome: boolean };
+  'feeds:create-category': { name: string };
+  'feeds:rename-category': { categoryId: number; name: string };
+  'feeds:delete-category': { categoryId: number; reassignTo: number };
+  'feeds:move-feeds-to-category': { feedIds: number[]; categoryId: number };
   'settings:get-refresh-interval': undefined;
   'settings:set-refresh-interval': RefreshInterval;
   'items:set-read': { itemIds: number[]; read: boolean };

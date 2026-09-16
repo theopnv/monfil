@@ -5,6 +5,8 @@ import { patchRiverRows, queryKeys } from './queries';
 
 export const uiKeys = {
   deleteFeedRequestedId: ['ui', 'delete-feed-requested'] as const,
+  renameCategoryRequestedId: ['ui', 'rename-category-requested'] as const,
+  deleteCategoryRequestedId: ['ui', 'delete-category-requested'] as const,
   pendingRefreshCount: ['ui', 'pending-refresh-count'] as const,
 };
 
@@ -44,6 +46,14 @@ export function useIpcBridge(): void {
 
       window.electron.ipcRenderer.on('feeds:delete-feed-requested', (feedId) => {
         queryClient.setQueryData(uiKeys.deleteFeedRequestedId, feedId);
+      }),
+
+      window.electron.ipcRenderer.on('feeds:rename-category-requested', (categoryId) => {
+        queryClient.setQueryData(uiKeys.renameCategoryRequestedId, categoryId);
+      }),
+
+      window.electron.ipcRenderer.on('feeds:delete-category-requested', (categoryId) => {
+        queryClient.setQueryData(uiKeys.deleteCategoryRequestedId, categoryId);
       }),
     ];
 
@@ -89,5 +99,43 @@ export function useClearDeleteFeedRequest(): () => void {
   const queryClient = useQueryClient();
   return useCallback(() => {
     queryClient.setQueryData(uiKeys.deleteFeedRequestedId, null);
+  }, [queryClient]);
+}
+
+/** The category id a "Rename" context-menu click asked to edit, or `null` when none is pending. */
+export function useRenameCategoryRequestedId(): number | null {
+  const { data } = useQuery({
+    queryKey: uiKeys.renameCategoryRequestedId,
+    queryFn: (): number | null => null,
+    initialData: null,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+  return data;
+}
+
+export function useClearRenameCategoryRequest(): () => void {
+  const queryClient = useQueryClient();
+  return useCallback(() => {
+    queryClient.setQueryData(uiKeys.renameCategoryRequestedId, null);
+  }, [queryClient]);
+}
+
+/** The category id a "Delete" context-menu click asked to confirm, or `null` when none is pending. */
+export function useDeleteCategoryRequestedId(): number | null {
+  const { data } = useQuery({
+    queryKey: uiKeys.deleteCategoryRequestedId,
+    queryFn: (): number | null => null,
+    initialData: null,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+  return data;
+}
+
+export function useClearDeleteCategoryRequest(): () => void {
+  const queryClient = useQueryClient();
+  return useCallback(() => {
+    queryClient.setQueryData(uiKeys.deleteCategoryRequestedId, null);
   }, [queryClient]);
 }

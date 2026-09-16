@@ -7,9 +7,9 @@ import type { SourceType } from "../db/types";
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
 import { fetchUrl } from "../lib/fetch";
-import { addFeedToDatabase, updateFeedItemImage, upsertArticleContent, type AddFeedError, type NewFeedInput } from "../db/crud/insert";
-import { deleteFeedFromDatabase, type DeleteFeedError } from "../db/crud/delete";
-import { setFeedsShowInHome, setFeedItemsRead, type UpdateFeedError, type UpdateItemError } from "../db/crud/update";
+import { addFeedToDatabase, createCategory, updateFeedItemImage, upsertArticleContent, type AddFeedError, type CreateCategoryError, type NewFeedInput } from "../db/crud/insert";
+import { deleteCategory, deleteFeedFromDatabase, type DeleteCategoryError, type DeleteFeedError } from "../db/crud/delete";
+import { moveFeedsToCategory, renameCategory, setFeedsShowInHome, setFeedItemsRead, type UpdateCategoryError, type UpdateFeedError, type UpdateItemError } from "../db/crud/update";
 import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage } from "../db/crud/query";
 import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type MaxFeedItems, type RefreshInterval } from "../settings";
 import { getAppInfo, type AppInfo } from "../app-info";
@@ -70,6 +70,22 @@ export async function handleFeedsDeleteFeed(_event: IpcMainInvokeEvent, feedId: 
 
 export async function handleFeedsSetShowInHome(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInHome: boolean }): Promise<Result<void, UpdateFeedError>> {
   return setFeedsShowInHome(payload.feedIds, payload.showInHome);
+}
+
+export async function handleFeedsCreateCategory(_event: IpcMainInvokeEvent, payload: { name: string }): Promise<Result<FeedCategory, CreateCategoryError>> {
+  return createCategory(payload.name);
+}
+
+export async function handleFeedsRenameCategory(_event: IpcMainInvokeEvent, payload: { categoryId: number; name: string }): Promise<Result<FeedCategory, UpdateCategoryError>> {
+  return renameCategory(payload.categoryId, payload.name);
+}
+
+export async function handleFeedsDeleteCategory(_event: IpcMainInvokeEvent, payload: { categoryId: number; reassignTo: number }): Promise<Result<void, DeleteCategoryError>> {
+  return deleteCategory(payload.categoryId, payload.reassignTo);
+}
+
+export async function handleFeedsMoveFeedsToCategory(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; categoryId: number }): Promise<Result<void, UpdateCategoryError>> {
+  return moveFeedsToCategory(payload.feedIds, payload.categoryId);
 }
 
 export function handleSettingsGetRefreshInterval(): Promise<RefreshInterval> {

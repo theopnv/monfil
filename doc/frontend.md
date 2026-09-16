@@ -15,6 +15,18 @@ The router uses hash history. Production serves the renderer over `file://`, whe
 
 React Aria links need a bridge to the router. `RouteProvider` supplies it. Any subtree with Untitled UI links or buttons that navigate must sit below that provider.
 
+## React Aria collections cache their items
+
+A `GridList` (or any React Aria collection) given an `items` prop plus a render function caches the
+rendered element per item object. It re-renders an item only when that object changes identity. A
+render function that closes over state held outside `items` keeps the value it had when the item was first rendered, so the row goes stale. An editable field inside a row is the visible symptom: it is controlled by state the row never sees change, so typing does nothing.
+
+List that outside state in the collection's `dependencies` prop. `RiverSidebar.tsx` is the model.
+
+A collection with a keyboard delegate also intercepts printable keydowns for typeahead (jump to the
+item whose text starts with what was typed), even from a focused descendant like an editable field
+nested inside a row. A keystroke that happens to match another item's leading letters gets swallowed and can refocus that item, blurring the field. Pass `disallowTypeAhead` on the collection if any row can contain an editable field.
+
 ## Providers and data
 
 App-wide providers belong in the root route, `src/renderer/routes/__root.tsx`. Providers that only feed one part of the app belong in `AppShell`, wrapped around the part that reads them.

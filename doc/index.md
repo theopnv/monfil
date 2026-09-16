@@ -13,6 +13,7 @@ This is an Electron project based on [Vite](https://vite.dev):
   - [Sources](./sources.md)
 - [Frontend](./frontend.md)
   - [Untitled UI](./untitled-ui.md)
+- [Feedpacks](./feedpacks.md)
 
 ## Debugging
 

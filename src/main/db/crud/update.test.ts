@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { setFeedItemsRead, setFeedsShowInHome } from './update';
-import { addFeedToDatabase, type NewFeedInput } from './insert';
+import { moveFeedsToCategory, renameCategory, setFeedItemsRead, setFeedsShowInHome } from './update';
+import { addFeedToDatabase, createCategory, type NewFeedInput } from './insert';
 
 const feedA: NewFeedInput = {
   link: 'https://a.example/feed',
@@ -162,5 +162,112 @@ describe('setFeedItemsRead', () => {
     // Assert
     expect(result.success).toBe(true);
     expect(row.read_at).toBeNull();
+  });
+});
+
+describe('renameCategory', () => {
+  test('renames the category and returns the updated row', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+
+    // Act
+    const result = await renameCategory(inserted.data.category.id, 'Renamed');
+
+    // Assert
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
+    expect(result.data.name).toBe('Renamed');
+    const row = await db.selectFrom('feedCategory').selectAll().where('id', '=', inserted.data.category.id).executeTakeFirstOrThrow();
+    expect(row.name).toBe('Renamed');
+  });
+
+  test('an unknown id returns CATEGORY_NOT_FOUND', async () => {
+    // Act
+    const result = await renameCategory(999999, 'Renamed');
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('CATEGORY_NOT_FOUND');
+  });
+
+  test('renaming to a name already in use returns DUPLICATE_NAME and leaves the row untouched', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+    const other = await createCategory('Existing');
+    if (!other.success) {
+      throw new Error('expected the category to be created');
+    }
+
+    // Act
+    const result = await renameCategory(inserted.data.category.id, 'Existing');
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('DUPLICATE_NAME');
+    const row = await db.selectFrom('feedCategory').selectAll().where('id', '=', inserted.data.category.id).executeTakeFirstOrThrow();
+    expect(row.name).toBe('tech');
+  });
+});
+
+describe('moveFeedsToCategory', () => {
+  test('moves a batch of feeds into the destination category', async () => {
+    // Arrange
+    const insertedA = await addFeedToDatabase(feedA);
+    const insertedB = await addFeedToDatabase(feedB);
+    if (!insertedA.success || !insertedB.success) {
+      throw new Error('expected both feeds to be created');
+    }
+    const destination = await createCategory('Destination');
+    if (!destination.success) {
+      throw new Error('expected the category to be created');
+    }
+
+    // Act
+    const result = await moveFeedsToCategory([insertedA.data.id, insertedB.data.id], destination.data.id);
+
+    // Assert
+    expect(result.success).toBe(true);
+    const rows = await db.selectFrom('feedMetadata').selectAll().where('id', 'in', [insertedA.data.id, insertedB.data.id]).execute();
+    expect(rows.every((row) => row.category_id === destination.data.id)).toBe(true);
+  });
+
+  test('a destination category that does not exist returns CATEGORY_NOT_FOUND', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+
+    // Act
+    const result = await moveFeedsToCategory([inserted.data.id], 999999);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('CATEGORY_NOT_FOUND');
+  });
+
+  test('an empty id list succeeds without writing', async () => {
+    // Act
+    const result = await moveFeedsToCategory([], 1);
+
+    // Assert
+    expect(result.success).toBe(true);
   });
 });
