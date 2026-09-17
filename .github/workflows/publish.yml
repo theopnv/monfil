@@ -13,13 +13,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check_version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version, expected $expected"
+            exit 1
+          fi
+
   test:
+    needs: check_version
     uses: ./.github/workflows/test.yml
+    with:
+      full_matrix: true
 
   publish:
     needs: test
     strategy:
       fail-fast: false
+      # The publisher looks the release up by tag and creates it only when missing; running the
+      # legs one at a time keeps them from racing to create it and splitting the assets.
       max-parallel: 1
       matrix:
         # windows-latest's node-gyp can't detect the Visual Studio version on this image yet,

@@ -8,6 +8,11 @@ on:
     branches: [main]
   workflow_dispatch:
   workflow_call:
+    inputs:
+      full_matrix:
+        description: Run the unit and e2e jobs on every platform, whatever event triggered the caller.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -42,14 +47,21 @@ jobs:
       # legs off every commit. The "full-ci" label opts a PR in: labeling triggers a pull_request
       # event, so the resulting checks are tied to the PR's own check suite and can actually satisfy
       # the branch ruleset's required checks (a workflow_dispatch run's checks are not).
+      #
+      # A tag push reaches this workflow through publish.yml as a plain "push" event, which would
+      # land in the ubuntu-only branch below. publish.yml passes full_matrix so a release is tested
+      # on every platform it ships to.
       - id: compute
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ contains(github.event.pull_request.labels.*.name, 'full-ci') }}" = "true" ]; then
-            echo 'os=["ubuntu-latest", "macos-latest", "windows-2022"]' >> "$GITHUB_OUTPUT"
+          full='["ubuntu-latest", "macos-latest", "windows-2022"]'
+          if [ "${{ inputs.full_matrix }}" = "true" ]; then
+            echo "os=$full" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ contains(github.event.pull_request.labels.*.name, 'full-ci') }}" = "true" ]; then
+            echo "os=$full" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "push" ]; then
             echo 'os=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
           else
-            echo 'os=["ubuntu-latest", "macos-latest", "windows-2022"]' >> "$GITHUB_OUTPUT"
+            echo "os=$full" >> "$GITHUB_OUTPUT"
           fi
 
   unit:
