@@ -7,11 +7,17 @@ import stylistic from '@stylistic/eslint-plugin'
 
 export default defineConfig([
   {
-    ignores: ['dist/**', '.vite/**', 'out/**'],
+    ignores: ['dist/**', '.vite/**', 'out/**', '.claude/**'],
   },
   {
     files: ['**/*.{js,ts,jsx,tsx}'],
     extends: [js.configs.recommended, tseslint.configs.strict],
+    languageOptions: {
+      parserOptions: {
+        // A nested checkout brings a second tsconfig.json; without this the parser refuses to guess between them.
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     plugins: {
       '@stylistic': stylistic
     },

@@ -7,6 +7,7 @@ import { defineConfig } from '@playwright/test';
 process.env['E2E_TEST'] = '1';
 
 export default defineConfig({
-  testMatch: /.\/test\/e2e\/.*\.spec.ts/,
+  testDir: './test/e2e',
+  testMatch: /.*\.spec\.ts/,
   workers: 1,
 });
