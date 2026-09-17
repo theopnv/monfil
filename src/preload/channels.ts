@@ -72,6 +72,7 @@ export type OneWayRendererToMainChannelPayloads = {
   'link:open': string;
   'feeds:show-feed-context-menu': number;
   'feeds:show-category-context-menu': number;
+  'workspaces:show-context-menu': number;
   'app:reveal-database-file': undefined;
 }
 export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayloads;
@@ -86,6 +87,7 @@ export type OneWayMainToRendererChannelPayloads = {
   'feeds:delete-feed-requested': number;
   'feeds:rename-category-requested': number;
   'feeds:delete-category-requested': number;
+  'workspaces:edit-requested': number;
 };
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;

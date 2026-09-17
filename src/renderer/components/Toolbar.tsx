@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "@tanstack/react-router";
 import { Link } from "react-aria-components";
 import { Plus, Sliders01 } from "@untitledui/icons";
@@ -6,6 +6,7 @@ import { Button } from "./untitled-ui/base/buttons/button";
 import { cx } from "./untitled-ui/utils/cx";
 import MonfilLogo from "@/components/common/MonfilLogo";
 import WorkspaceDialog from "@/components/Workspace/WorkspaceDialog";
+import { useClearEditWorkspaceRequest, useEditWorkspaceRequestedId } from "@/lib/ipc-bridge";
 import { workspaceIconComponent } from "@/lib/workspace-icons";
 import { useWorkspaces } from "@/providers/workspace-provider";
 import type { WorkspaceSummary } from "../../preload/channels";
@@ -19,6 +20,10 @@ function WorkspaceButton({ workspace, isActive }: { workspace: WorkspaceSummary;
     <Link
       href={`/workspace/${workspace.id}`}
       aria-label={workspace.name}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        window.electron.ipcRenderer.sendMessage('workspaces:show-context-menu', workspace.id);
+      }}
       className={cx(
         "group relative flex size-9 flex-none items-center justify-center rounded-xl outline-brand transition duration-100 ease-linear focus-visible:outline-2 focus-visible:outline-offset-2",
         isActive && "ring-2 ring-inset ring-brand",
@@ -37,6 +42,21 @@ export default function Toolbar() {
   const { pathname } = useLocation();
   const workspaces = useWorkspaces();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingWorkspace, setEditingWorkspace] = useState<WorkspaceSummary | null>(null);
+
+  const editWorkspaceRequestedId = useEditWorkspaceRequestedId();
+  const clearEditWorkspaceRequest = useClearEditWorkspaceRequest();
+
+  useEffect(() => {
+    if (editWorkspaceRequestedId === null) {
+      return;
+    }
+    const workspace = workspaces.find((candidate) => candidate.id === editWorkspaceRequestedId);
+    if (workspace) {
+      setEditingWorkspace(workspace);
+    }
+    clearEditWorkspaceRequest();
+  }, [editWorkspaceRequestedId, workspaces, clearEditWorkspaceRequest]);
 
   return (
     <nav className="flex h-full w-16 flex-none flex-col items-center gap-1.5 border-r border-secondary bg-secondary py-4.5">
@@ -66,6 +86,15 @@ export default function Toolbar() {
       />
 
       <WorkspaceDialog isOpen={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      <WorkspaceDialog
+        isOpen={editingWorkspace !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingWorkspace(null);
+          }
+        }}
+        {...(editingWorkspace ? { workspace: editingWorkspace } : {})}
+      />
     </nav>
   );
 }

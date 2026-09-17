@@ -7,6 +7,7 @@ export const uiKeys = {
   deleteFeedRequestedId: ['ui', 'delete-feed-requested'] as const,
   renameCategoryRequestedId: ['ui', 'rename-category-requested'] as const,
   deleteCategoryRequestedId: ['ui', 'delete-category-requested'] as const,
+  editWorkspaceRequestedId: ['ui', 'edit-workspace-requested'] as const,
   pendingRefreshCount: ['ui', 'pending-refresh-count'] as const,
 };
 
@@ -54,6 +55,10 @@ export function useIpcBridge(): void {
 
       window.electron.ipcRenderer.on('feeds:delete-category-requested', (categoryId) => {
         queryClient.setQueryData(uiKeys.deleteCategoryRequestedId, categoryId);
+      }),
+
+      window.electron.ipcRenderer.on('workspaces:edit-requested', (workspaceId) => {
+        queryClient.setQueryData(uiKeys.editWorkspaceRequestedId, workspaceId);
       }),
     ];
 
@@ -137,5 +142,24 @@ export function useClearDeleteCategoryRequest(): () => void {
   const queryClient = useQueryClient();
   return useCallback(() => {
     queryClient.setQueryData(uiKeys.deleteCategoryRequestedId, null);
+  }, [queryClient]);
+}
+
+/** The workspace id an "Edit workspace" context-menu click asked to edit, or `null` when none is pending. */
+export function useEditWorkspaceRequestedId(): number | null {
+  const { data } = useQuery({
+    queryKey: uiKeys.editWorkspaceRequestedId,
+    queryFn: (): number | null => null,
+    initialData: null,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+  return data;
+}
+
+export function useClearEditWorkspaceRequest(): () => void {
+  const queryClient = useQueryClient();
+  return useCallback(() => {
+    queryClient.setQueryData(uiKeys.editWorkspaceRequestedId, null);
   }, [queryClient]);
 }

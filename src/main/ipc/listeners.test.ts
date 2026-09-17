@@ -1,5 +1,5 @@
 import { beforeAll, describe, afterEach, test, expect, vi } from 'vitest';
-import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu } from './listeners';
+import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu } from './listeners';
 import { initializeDatabase } from '../db/database';
 import { BrowserWindow, Menu, shell } from 'electron';
 
@@ -220,5 +220,92 @@ describe('feeds:show-category-context-menu IPC listener', () => {
     // Assert
     expect(mockedFromWebContents).toHaveBeenCalledWith(event.sender);
     expect(popup).toHaveBeenCalledWith({ window: fakeWindow });
+  });
+});
+
+describe('workspaces:show-context-menu IPC listener', () => {
+  const fakeWindow = {} as Electron.BrowserWindow;
+
+  function mockEvent(isDestroyed = false) {
+    return {
+      sender: { isDestroyed: () => isDestroyed, send: vi.fn() },
+    } as unknown as Electron.IpcMainEvent;
+  }
+
+  afterEach(() => {
+    mockedBuildFromTemplate.mockReset();
+    mockedFromWebContents.mockReset();
+  });
+
+  test('builds a template holding one item labelled "Edit workspace"', () => {
+    // Arrange
+    mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+
+    // Act
+    listenToShowWorkspaceContextMenu(mockEvent(), 1);
+
+    // Assert
+    const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
+    expect(template).toHaveLength(1);
+    expect(template?.[0]?.label).toBe('Edit workspace');
+  });
+
+  test("the template item's click sends workspaces:edit-requested with the workspace id", () => {
+    // Arrange
+    mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+    const event = mockEvent();
+
+    // Act
+    listenToShowWorkspaceContextMenu(event, 3);
+    const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
+    template?.[0]?.click?.(undefined as never, undefined, undefined as never);
+
+    // Assert
+    expect(event.sender.send).toHaveBeenCalledWith('workspaces:edit-requested', 3);
+  });
+
+  test('a destroyed sender sends nothing when the item is clicked', () => {
+    // Arrange
+    mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+    const event = mockEvent(true);
+
+    // Act
+    listenToShowWorkspaceContextMenu(event, 3);
+    const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
+    template?.[0]?.click?.(undefined as never, undefined, undefined as never);
+
+    // Assert
+    expect(event.sender.send).not.toHaveBeenCalled();
+  });
+
+  test('pops the menu at the window resolved from event.sender', () => {
+    // Arrange
+    const popup = vi.fn();
+    mockedBuildFromTemplate.mockReturnValue({ popup } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+    const event = mockEvent();
+
+    // Act
+    listenToShowWorkspaceContextMenu(event, 1);
+
+    // Assert
+    expect(mockedFromWebContents).toHaveBeenCalledWith(event.sender);
+    expect(popup).toHaveBeenCalledWith({ window: fakeWindow });
+  });
+
+  test('does not pop the menu when no window resolves from the sender', () => {
+    // Arrange
+    const popup = vi.fn();
+    mockedBuildFromTemplate.mockReturnValue({ popup } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(null);
+
+    // Act
+    listenToShowWorkspaceContextMenu(mockEvent(), 1);
+
+    // Assert
+    expect(popup).not.toHaveBeenCalled();
   });
 });

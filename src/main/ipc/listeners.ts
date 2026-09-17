@@ -50,3 +50,16 @@ export function listenToShowCategoryContextMenu(event: IpcMainEvent, categoryId:
     menu.popup({ window });
   }
 }
+
+export function listenToShowWorkspaceContextMenu(event: IpcMainEvent, workspaceId: OneWayRendererToMainChannelPayloads["workspaces:show-context-menu"]) {
+  const menu = Menu.buildFromTemplate([
+    {
+      label: "Edit workspace",
+      click: () => sendToRenderer(event.sender, "workspaces:edit-requested", workspaceId),
+    },
+  ]);
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) {
+    menu.popup({ window });
+  }
+}

@@ -5,8 +5,11 @@ import { render } from 'vitest-browser-react';
 import { RouteProvider } from '@/providers/route-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useFeeds } from '@/providers/feeds-provider';
+import { useIpcBridge } from '@/lib/ipc-bridge';
 import { createTestQueryClient } from '@/lib/test/render-with-query-client';
 import Toolbar from './Toolbar';
+import type { UpdateWorkspaceError } from '../../main/db/crud/update';
+import type { Result } from '../../main/lib/utils';
 import type { FeedSummary, WorkspaceSummary } from '../../preload/channels';
 
 function createWorkspace(overrides: Partial<WorkspaceSummary> = {}): WorkspaceSummary {
@@ -45,12 +48,17 @@ function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
 
 let workspaces: WorkspaceSummary[];
 let feedsByWorkspace: Record<number, FeedSummary[]>;
+let updateWorkspaceResult: Result<WorkspaceSummary, UpdateWorkspaceError> | undefined;
+let editWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
+let invokeMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   workspaces = [];
   feedsByWorkspace = {};
+  updateWorkspaceResult = undefined;
+  editWorkspaceRequestedHandler = undefined;
 
-  const invokeMock = vi.fn((channel: string, arg: unknown) => {
+  invokeMock = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
       case 'workspaces:list':
         return Promise.resolve(workspaces);
@@ -58,6 +66,15 @@ beforeEach(() => {
         return Promise.resolve(feedsByWorkspace[(arg as { workspaceId: number }).workspaceId] ?? []);
       case 'feeds:list-categories':
         return Promise.resolve([]);
+      case 'workspaces:update': {
+        const { workspaceId, ...patch } = arg as { workspaceId: number; name?: string; icon?: string; color?: string };
+        const existing = workspaces.find((workspace) => workspace.id === workspaceId);
+        const result = updateWorkspaceResult ?? (existing && { success: true, data: { ...existing, ...patch } });
+        if (result?.success) {
+          workspaces = workspaces.map((workspace) => (workspace.id === workspaceId ? { ...workspace, ...patch } : workspace));
+        }
+        return Promise.resolve(result);
+      }
       default:
         return Promise.resolve([]);
     }
@@ -66,7 +83,12 @@ beforeEach(() => {
   window.electron = {
     ipcRenderer: {
       invoke: invokeMock,
-      on: vi.fn(() => vi.fn()),
+      on: vi.fn((channel: string, handler: (payload: never) => void) => {
+        if (channel === 'workspaces:edit-requested') {
+          editWorkspaceRequestedHandler = handler as typeof editWorkspaceRequestedHandler;
+        }
+        return vi.fn();
+      }),
       sendMessage: vi.fn(),
       once: vi.fn(),
     },
@@ -78,11 +100,17 @@ function FeedsList() {
   return <ul aria-label="Feeds in workspace">{feeds.map((feed) => <li key={feed.id}>{feed.title}</li>)}</ul>;
 }
 
+function IpcBridgeMount() {
+  useIpcBridge();
+  return null;
+}
+
 function renderApp(initialPath: string) {
   const rootRoute = createRootRoute({
     component: () => (
       <RouteProvider>
         <ActiveWorkspaceIdProvider>
+          <IpcBridgeMount />
           <div className="flex">
             <Toolbar />
             <Outlet />
@@ -138,4 +166,64 @@ test('switching tabs swaps the river to the other workspace\'s feeds', async () 
   // Assert
   await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Home feed', { exact: true })).not.toBeInTheDocument();
+});
+
+test('right-clicking a workspace sends workspaces:show-context-menu with its id', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' })];
+  const { getByRole } = await renderApp('/workspace/1');
+
+  // Act
+  await getByRole('link', { name: 'Home' }).click({ button: 'right' });
+
+  // Assert
+  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('workspaces:show-context-menu', 1);
+});
+
+test('firing workspaces:edit-requested opens the edit dialog prefilled with the workspace', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch', icon: 'Terminal', color: '#3b82f6' })];
+  const { getByRole } = await renderApp('/workspace/2');
+
+  // Act
+  editWorkspaceRequestedHandler?.(2);
+
+  // Assert
+  await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
+  await expect.element(getByRole('textbox', { name: 'Name' })).toHaveValue('CI/CD watch');
+  await expect.element(getByRole('button', { name: 'Terminal' })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('saving the edit dialog renames the workspace and updates its icon and colour', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch', icon: 'Terminal', color: '#3b82f6' })];
+  const { getByRole } = await renderApp('/workspace/2');
+  editWorkspaceRequestedHandler?.(2);
+  await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
+
+  // Act
+  await getByRole('textbox', { name: 'Name' }).fill('Infra watch');
+  await getByRole('button', { name: 'Rocket02' }).click();
+  await getByRole('button', { name: 'Colour #ef4444' }).click();
+  await getByRole('button', { name: 'Save changes' }).click();
+
+  // Assert
+  expect(invokeMock).toHaveBeenCalledWith('workspaces:update', { workspaceId: 2, name: 'Infra watch', icon: 'Rocket02', color: '#ef4444' });
+  await expect.element(getByRole('heading', { name: 'Edit workspace' })).not.toBeInTheDocument();
+  await expect.element(getByRole('link', { name: 'Infra watch' })).toBeInTheDocument();
+});
+
+test('a failed edit keeps the dialog open and shows the error', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  updateWorkspaceResult = { success: false, error: { name: 'DB_ERROR', message: 'Could not update the workspace.' } };
+  const { getByRole, getByText } = await renderApp('/workspace/2');
+  editWorkspaceRequestedHandler?.(2);
+
+  // Act
+  await getByRole('button', { name: 'Save changes' }).click();
+
+  // Assert
+  await expect.element(getByText('Could not update the workspace.', { exact: true })).toBeInTheDocument();
+  await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
 });
