@@ -5,6 +5,7 @@ import path from 'node:path';
 import SQLite from 'better-sqlite3';
 import { sql } from 'kysely';
 import { closeDatabase, db, dbReady, initializeDatabase } from './database';
+import { HOME_WORKSPACE_ID } from './types';
 import { rmTestDir } from '../lib/rmTestDir';
 
 describe('initializeDatabase', () => {
@@ -16,13 +17,13 @@ describe('initializeDatabase', () => {
     await closeDatabase();
   });
 
-  test('creates the feedCategory, feedMetadata, feedItem, setting and articleContent tables', async () => {
+  test('creates the workspace, feedCategory, feedMetadata, feedPlacement, feedItem, setting and articleContent tables', async () => {
     // Act
     const tables = await db.introspection.getTables();
 
     // Assert
     expect(tables.map((table) => table.name).sort()).toEqual([
-      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'setting',
+      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'feedPlacement', 'setting', 'workspace',
     ]);
   });
 
@@ -33,8 +34,10 @@ describe('initializeDatabase', () => {
       tables.find((table) => table.name === tableName)?.columns.map((column) => column.name).sort();
 
     // Assert
-    expect(columnsOf('feedCategory')).toEqual(['id', 'name']);
-    expect(columnsOf('feedMetadata')).toEqual(['category_id', 'icon', 'id', 'last_error', 'last_fetched_at', 'link', 'showInHome', 'title', 'type']);
+    expect(columnsOf('workspace')).toEqual(['color', 'icon', 'id', 'installed_at', 'name', 'position', 'source_slug', 'source_version']);
+    expect(columnsOf('feedCategory')).toEqual(['id', 'name', 'workspace_id']);
+    expect(columnsOf('feedMetadata')).toEqual(['icon', 'id', 'last_error', 'last_fetched_at', 'link', 'title', 'type']);
+    expect(columnsOf('feedPlacement')).toEqual(['category_id', 'feed_id', 'showInWorkspace', 'workspace_id']);
     expect(columnsOf('feedItem')).toEqual(['author', 'description', 'excerpt', 'extra', 'feed_id', 'guid', 'id', 'image', 'link', 'pubDate', 'published_at', 'read_at', 'title']);
     expect(columnsOf('setting')).toEqual(['key', 'value']);
     expect(columnsOf('articleContent')).toEqual(['html', 'item_id', 'status', 'text', 'word_count']);
@@ -75,7 +78,7 @@ describe('reopening an already-migrated file', () => {
 
   test('data written by one connection is readable by a later connection to the same file', async () => {
     // Arrange
-    await db.insertInto('feedCategory').values({ name: 'tech' }).execute();
+    await db.insertInto('feedCategory').values({ name: 'tech', workspace_id: HOME_WORKSPACE_ID }).execute();
     await closeDatabase();
 
     // Act

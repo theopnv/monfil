@@ -8,7 +8,7 @@ import type { DeleteCategoryError } from '../../../main/db/crud/delete';
 import type { DeleteFeedError } from '../../../main/db/crud/delete';
 import type { CreateCategoryError } from '../../../main/db/crud/insert';
 import type { UpdateCategoryError } from '../../../main/db/crud/update';
-import type { FeedCategory, FeedSummary } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary } from '../../../preload/channels';
 import type { Result } from '../../../main/lib/utils';
 import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../preload/channels';
 
@@ -16,13 +16,13 @@ const feedA: FeedSummary = {
   id: 1,
   link: 'https://a.example/feed',
   title: 'Feed A',
-  category_id: 1,
   type: 'rss',
-  showInHome: 1,
+  showInWorkspace: 1,
+  workspaceId: HOME_WORKSPACE_ID,
   last_fetched_at: undefined,
   last_error: undefined,
   icon: undefined,
-  category: { id: 1, name: 'Tech' },
+  category: { id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID },
   itemCount: 1,
   unreadCount: 1,
 };
@@ -31,13 +31,13 @@ const feedB: FeedSummary = {
   id: 2,
   link: 'https://b.example/feed',
   title: 'Feed B',
-  category_id: 1,
   type: 'rss',
-  showInHome: 1,
+  showInWorkspace: 1,
+  workspaceId: HOME_WORKSPACE_ID,
   last_fetched_at: undefined,
   last_error: undefined,
   icon: undefined,
-  category: { id: 1, name: 'Tech' },
+  category: { id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID },
   itemCount: 0,
   unreadCount: 0,
 };
@@ -46,13 +46,13 @@ const feedC: FeedSummary = {
   id: 3,
   link: 'https://c.example/feed',
   title: 'Feed C',
-  category_id: 2,
   type: 'rss',
-  showInHome: 1,
+  showInWorkspace: 1,
+  workspaceId: HOME_WORKSPACE_ID,
   last_fetched_at: undefined,
   last_error: undefined,
   icon: undefined,
-  category: { id: 2, name: 'News' },
+  category: { id: 2, name: 'News', workspace_id: HOME_WORKSPACE_ID },
   itemCount: 0,
   unreadCount: 0,
 };
@@ -77,7 +77,7 @@ function stubElectron(overrides: {
   categories?: FeedCategory[];
   deleteFeed?: Result<void, DeleteFeedError>;
   createCategory?: Result<FeedCategory, CreateCategoryError>;
-  renameCategory?: Result<{ id: number; name: string }, UpdateCategoryError>;
+  renameCategory?: Result<FeedCategory, UpdateCategoryError>;
   deleteCategory?: Result<void, DeleteCategoryError>;
   moveFeedsToCategory?: Result<void, UpdateCategoryError>;
 } = {}) {
@@ -99,14 +99,14 @@ function stubElectron(overrides: {
       case 'feeds:delete-feed':
         return Promise.resolve(overrides.deleteFeed ?? { success: true, data: undefined }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:create-category': {
-        const result = overrides.createCategory ?? { success: true, data: { id: 99, name: (arg as { name: string }).name } };
+        const result = overrides.createCategory ?? { success: true, data: { id: 99, name: (arg as { name: string }).name, workspace_id: HOME_WORKSPACE_ID } };
         if (result.success) {
           currentCategories = [...currentCategories, result.data];
         }
         return Promise.resolve(result) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       }
       case 'feeds:rename-category': {
-        const result = overrides.renameCategory ?? { success: true, data: { id: 1, name: 'Renamed' } };
+        const result = overrides.renameCategory ?? { success: true, data: { id: 1, name: 'Renamed', workspace_id: HOME_WORKSPACE_ID } };
         if (result.success) {
           currentCategories = currentCategories.map((category) => (category.id === result.data.id ? result.data : category));
         }
@@ -215,7 +215,7 @@ describe('feed row visibility rotation', () => {
 
   test('clicking a hidden feed row asks to show it with the others', async () => {
     // Arrange
-    const hiddenFeedA: FeedSummary = { ...feedA, showInHome: 0 };
+    const hiddenFeedA: FeedSummary = { ...feedA, showInWorkspace: 0 };
     const onSetVisibility = vi.fn();
     const { getByRole } = await renderWithQueryClient(
       <RiverSidebar feeds={[hiddenFeedA]} categories={categoriesFrom([hiddenFeedA])} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
@@ -255,7 +255,7 @@ describe('feed row current-state label', () => {
 
   test('a hidden feed is titled "Hidden", not the "home" state it moves to next', async () => {
     // Arrange
-    const hiddenFeedA: FeedSummary = { ...feedA, showInHome: 0 };
+    const hiddenFeedA: FeedSummary = { ...feedA, showInWorkspace: 0 };
     const { getByRole } = await renderWithQueryClient(
       <RiverSidebar feeds={[hiddenFeedA]} categories={categoriesFrom([hiddenFeedA])} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
     );
@@ -283,7 +283,7 @@ describe('folder visibility rotation', () => {
 
   test('a mixed folder resets to home on the first click', async () => {
     // Arrange
-    const hiddenFeedB: FeedSummary = { ...feedB, showInHome: 0 };
+    const hiddenFeedB: FeedSummary = { ...feedB, showInWorkspace: 0 };
     const onSetVisibility = vi.fn();
     const { getByRole } = await renderWithQueryClient(
       <RiverSidebar feeds={[feedA, hiddenFeedB]} categories={categoriesFrom([feedA, hiddenFeedB])} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
@@ -504,7 +504,7 @@ describe('folder context menu and rename', () => {
 
   test('an empty folder can be renamed', async () => {
     // Arrange
-    const empty: FeedCategory = { id: 5, name: 'Recipes' };
+    const empty: FeedCategory = { id: 5, name: 'Recipes', workspace_id: HOME_WORKSPACE_ID };
     stubElectron({ feeds: [feedA], categories: [feedA.category, empty] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
     // Waits for the categories query to resolve — a right-click on this row (what the request
@@ -588,7 +588,7 @@ describe('folder create', () => {
 
   test('pressing Enter submits the name via feeds:create-category', async () => {
     // Arrange
-    stubElectron({ createCategory: { success: true, data: { id: 5, name: 'Recipes' } } });
+    stubElectron({ createCategory: { success: true, data: { id: 5, name: 'Recipes', workspace_id: HOME_WORKSPACE_ID } } });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
     await getByRole('button', { name: 'New folder' }).click();
     await getByRole('textbox', { name: 'New folder name' }).fill('Recipes');
@@ -605,7 +605,7 @@ describe('folder create', () => {
 
   test('the new folder appears in the sidebar with no feeds in it', async () => {
     // Arrange
-    stubElectron({ feeds: [feedA], categories: [feedA.category, { id: 5, name: 'Recipes' }] });
+    stubElectron({ feeds: [feedA], categories: [feedA.category, { id: 5, name: 'Recipes', workspace_id: HOME_WORKSPACE_ID }] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
 
     // Assert
@@ -692,7 +692,7 @@ describe('folder delete', () => {
   // request handler must look it up in `categories` instead, or it silently does nothing.
   test('firing feeds:delete-category-requested opens the dialog for a folder with no feeds in it', async () => {
     // Arrange
-    const empty: FeedCategory = { id: 5, name: 'Recipes' };
+    const empty: FeedCategory = { id: 5, name: 'Recipes', workspace_id: HOME_WORKSPACE_ID };
     stubElectron({ feeds: [feedA], categories: [feedA.category, empty] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
 
@@ -706,7 +706,7 @@ describe('folder delete', () => {
 
   test('confirm removes an empty folder from the sidebar', async () => {
     // Arrange
-    const empty: FeedCategory = { id: 5, name: 'Recipes' };
+    const empty: FeedCategory = { id: 5, name: 'Recipes', workspace_id: HOME_WORKSPACE_ID };
     stubElectron({ feeds: [feedA], categories: [feedA.category, empty], deleteCategory: { success: true, data: undefined } });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
     deleteCategoryRequestedHandler?.(empty.id);

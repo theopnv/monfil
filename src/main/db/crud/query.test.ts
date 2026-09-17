@@ -1,6 +1,7 @@
 import { beforeEach, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../database';
-import { countFeedItems, countFeedMetadata, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage } from './query';
+import { HOME_WORKSPACE_ID } from '../types';
+import { countFeedItems, countFeedMetadata, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from './query';
 
 beforeAll(async () => {
   await initializeDatabase(':memory:');
@@ -9,14 +10,16 @@ beforeAll(async () => {
 afterEach(async () => {
   await db.deleteFrom('articleContent').execute();
   await db.deleteFrom('feedItem').execute();
+  await db.deleteFrom('feedPlacement').execute();
   await db.deleteFrom('feedMetadata').execute();
   await db.deleteFrom('feedCategory').execute();
+  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
 });
 
 describe('queryFeedCategory', () => {
   test('returns every category when no criteria are given', async () => {
     // Arrange
-    await db.insertInto('feedCategory').values([{ name: 'tech' }, { name: 'news' }]).execute();
+    await db.insertInto('feedCategory').values([{ name: 'tech', workspace_id: HOME_WORKSPACE_ID }, { name: 'news', workspace_id: HOME_WORKSPACE_ID }]).execute();
 
     // Act
     const result = await queryFeedCategory({});
@@ -27,7 +30,7 @@ describe('queryFeedCategory', () => {
 
   test('filters by name', async () => {
     // Arrange
-    await db.insertInto('feedCategory').values([{ name: 'tech' }, { name: 'news' }]).execute();
+    await db.insertInto('feedCategory').values([{ name: 'tech', workspace_id: HOME_WORKSPACE_ID }, { name: 'news', workspace_id: HOME_WORKSPACE_ID }]).execute();
 
     // Act
     const result = await queryFeedCategory({ name: 'tech' });
@@ -44,23 +47,27 @@ describe('queryFeedCategory', () => {
     // Assert
     expect(result).toEqual([]);
   });
+
+  test('scoped to a workspace, still returns categories in creation order rather than alphabetically', async () => {
+    // Arrange: "Tech" is created first and sorts after "News" alphabetically, so this only passes
+    // with an explicit ORDER BY, not whatever order the (workspace_id, name) index happens to give.
+    await db.insertInto('feedCategory').values([{ name: 'Tech', workspace_id: HOME_WORKSPACE_ID }, { name: 'News', workspace_id: HOME_WORKSPACE_ID }]).execute();
+
+    // Act
+    const result = await queryFeedCategory({ workspace_id: HOME_WORKSPACE_ID });
+
+    // Assert
+    expect(result.map((category) => category.name)).toEqual(['Tech', 'News']);
+  });
 });
 
 describe('queryFeedMetadata', () => {
-  let category: { id: number; };
-
   beforeEach(async () => {
-    category = await db
-      .insertInto('feedCategory')
-      .values({ name: 'tech' })
-      .returning(['id'])
-      .executeTakeFirstOrThrow();
-
     await db
       .insertInto('feedMetadata')
       .values([
-        { link: 'https://a.example/feed', title: 'Feed A', category_id: category.id },
-        { link: 'https://b.example/feed', title: 'Feed B', category_id: category.id },
+        { link: 'https://a.example/feed', title: 'Feed A' },
+        { link: 'https://b.example/feed', title: 'Feed B' },
       ])
       .execute();
   });
@@ -82,43 +89,15 @@ describe('queryFeedMetadata', () => {
     expect(result).toHaveLength(1);
     expect(result[0]?.link).toBe('https://b.example/feed');
   });
-
-  test('filters by category_id', async () => {
-    // Act
-    const result = await queryFeedMetadata({ category_id: category.id });
-
-    // Assert
-    expect(result).toHaveLength(2);
-  });
-
-  test('filters by showInHome', async () => {
-    // Arrange
-    await db
-      .insertInto('feedMetadata')
-      .values({ link: 'https://c.example/feed', title: 'Feed C', category_id: category.id, showInHome: 0 })
-      .execute();
-
-    // Act
-    const result = await queryFeedMetadata({ showInHome: 0 });
-
-    // Assert
-    expect(result).toHaveLength(1);
-    expect(result[0]?.title).toBe('Feed C');
-  });
 });
 
 describe('queryFeedItems', () => {
   let feed: { id: number; };
 
   beforeEach(async () => {
-    const category = await db
-      .insertInto('feedCategory')
-      .values({ name: 'tech' })
-      .returning(['id'])
-      .executeTakeFirstOrThrow();
     feed = await db
       .insertInto('feedMetadata')
-      .values({ link: 'https://a.example/feed', title: 'Feed A', category_id: category.id })
+      .values({ link: 'https://a.example/feed', title: 'Feed A' })
       .returning(['id'])
       .executeTakeFirstOrThrow();
 
@@ -177,14 +156,9 @@ describe('queryFeedItems', () => {
 
 describe('queryArticleContent', () => {
   async function createItem(): Promise<number> {
-    const category = await db
-      .insertInto('feedCategory')
-      .values({ name: 'tech' })
-      .returning(['id'])
-      .executeTakeFirstOrThrow();
     const feed = await db
       .insertInto('feedMetadata')
-      .values({ link: 'https://a.example/feed', title: 'Feed A', category_id: category.id })
+      .values({ link: 'https://a.example/feed', title: 'Feed A' })
       .returning(['id'])
       .executeTakeFirstOrThrow();
     const item = await db
@@ -233,10 +207,9 @@ describe('queryArticleContent', () => {
 describe('countFeedMetadata', () => {
   test('counts every feed', async () => {
     // Arrange
-    const category = await db.insertInto('feedCategory').values({ name: 'tech' }).returning(['id']).executeTakeFirstOrThrow();
     await db.insertInto('feedMetadata').values([
-      { link: 'https://a.example/feed', title: 'Feed A', category_id: category.id },
-      { link: 'https://b.example/feed', title: 'Feed B', category_id: category.id },
+      { link: 'https://a.example/feed', title: 'Feed A' },
+      { link: 'https://b.example/feed', title: 'Feed B' },
     ]).execute();
 
     // Act
@@ -258,8 +231,7 @@ describe('countFeedMetadata', () => {
 describe('countFeedItems', () => {
   test('counts every item across every feed', async () => {
     // Arrange
-    const category = await db.insertInto('feedCategory').values({ name: 'tech' }).returning(['id']).executeTakeFirstOrThrow();
-    const feed = await db.insertInto('feedMetadata').values({ link: 'https://a.example/feed', title: 'Feed A', category_id: category.id }).returning(['id']).executeTakeFirstOrThrow();
+    const feed = await db.insertInto('feedMetadata').values({ link: 'https://a.example/feed', title: 'Feed A' }).returning(['id']).executeTakeFirstOrThrow();
     await db.insertInto('feedItem').values([
       { feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', guid: 'https://a.example/1', pubDate: '2024-01-01', description: '' },
       { feed_id: feed.id, title: 'Item 2', link: 'https://a.example/2', guid: 'https://a.example/2', pubDate: '2024-01-02', description: '' },
@@ -281,21 +253,27 @@ describe('countFeedItems', () => {
   });
 });
 
-async function seedFeed(overrides: Partial<{ title: string; link: string; showInHome: number; categoryName: string }> = {}): Promise<number> {
+async function seedFeed(overrides: Partial<{ title: string; link: string; showInWorkspace: number; categoryName: string; workspaceId: number }> = {}): Promise<number> {
+  const workspaceId = overrides.workspaceId ?? HOME_WORKSPACE_ID;
   const category = await db.insertInto('feedCategory')
-    .values({ name: overrides.categoryName ?? 'tech' })
-    .onConflict((oc) => oc.column('name').doUpdateSet((eb) => ({ name: eb.ref('excluded.name') })))
+    .values({ name: overrides.categoryName ?? 'tech', workspace_id: workspaceId })
+    .onConflict((oc) => oc.columns(['workspace_id', 'name']).doUpdateSet((eb) => ({ name: eb.ref('excluded.name') })))
     .returning(['id'])
     .executeTakeFirstOrThrow();
   const feed = await db.insertInto('feedMetadata')
     .values({
       link: overrides.link ?? 'https://a.example/feed',
       title: overrides.title ?? 'Feed A',
-      category_id: category.id,
-      showInHome: overrides.showInHome ?? 1,
     })
     .returning(['id'])
     .executeTakeFirstOrThrow();
+  await db.insertInto('feedPlacement')
+    .values({ feed_id: feed.id, category_id: category.id, workspace_id: workspaceId, showInWorkspace: overrides.showInWorkspace ?? 1 })
+    .onConflict((oc) => oc.columns(['feed_id', 'workspace_id']).doUpdateSet((eb) => ({
+      category_id: eb.ref('excluded.category_id'),
+      showInWorkspace: eb.ref('excluded.showInWorkspace'),
+    })))
+    .execute();
   return feed.id;
 }
 
@@ -327,7 +305,7 @@ describe('queryFeedSummaries', () => {
     await seedFeed();
 
     // Act
-    const [summary] = await queryFeedSummaries();
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
 
     // Assert
     expect(summary).toMatchObject({ itemCount: 0, unreadCount: 0 });
@@ -340,7 +318,7 @@ describe('queryFeedSummaries', () => {
     await seedItem(feedId);
 
     // Act
-    const [summary] = await queryFeedSummaries();
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
 
     // Assert
     expect(summary).toMatchObject({ itemCount: 2, unreadCount: 1 });
@@ -353,7 +331,7 @@ describe('queryFeedSummaries', () => {
     await seedItem(feedId);
 
     // Act
-    const [summary] = await queryFeedSummaries();
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
 
     // Assert
     expect(summary).toMatchObject({ itemCount: 2, unreadCount: 2 });
@@ -364,7 +342,7 @@ describe('queryFeedSummaries', () => {
     await seedFeed();
 
     // Act
-    const [summary] = await queryFeedSummaries();
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
 
     // Assert
     expect(summary?.category.name).toBe('tech');
@@ -372,10 +350,73 @@ describe('queryFeedSummaries', () => {
 
   test('returns an empty array when there are no feeds', async () => {
     // Act
-    const result = await queryFeedSummaries();
+    const result = await queryFeedSummaries(HOME_WORKSPACE_ID);
 
     // Assert
     expect(result).toEqual([]);
+  });
+
+  test('only returns feeds placed in the given workspace', async () => {
+    // Arrange
+    await seedFeed({ title: 'Home feed' });
+    const otherWorkspace = await db.insertInto('workspace')
+      .values({ name: 'Pack', icon: 'Stars01', color: '#000000', position: 1 })
+      .returning(['id'])
+      .executeTakeFirstOrThrow();
+    await seedFeed({ title: 'Pack feed', link: 'https://pack.example/feed', workspaceId: otherWorkspace.id });
+
+    // Act
+    const homeSummaries = await queryFeedSummaries(HOME_WORKSPACE_ID);
+    const otherSummaries = await queryFeedSummaries(otherWorkspace.id);
+
+    // Assert
+    expect(homeSummaries.map((summary) => summary.title)).toEqual(['Home feed']);
+    expect(otherSummaries.map((summary) => summary.title)).toEqual(['Pack feed']);
+  });
+});
+
+describe('queryWorkspaceSummaries', () => {
+  test('returns every workspace in rail order', async () => {
+    // Arrange
+    await db.insertInto('workspace').values({ name: 'Pack', icon: 'Stars01', color: '#000000', position: 1 }).execute();
+
+    // Act
+    const result = await queryWorkspaceSummaries();
+
+    // Assert
+    expect(result.map((workspace) => workspace.name)).toEqual(['Home', 'Pack']);
+  });
+
+  test('hasUnread is false for a workspace with no items', async () => {
+    // Act
+    const [home] = await queryWorkspaceSummaries();
+
+    // Assert
+    expect(home?.hasUnread).toBe(false);
+  });
+
+  test('hasUnread is true when a placement holds an unread item, even with showInWorkspace off', async () => {
+    // Arrange
+    const feedId = await seedFeed({ showInWorkspace: 0 });
+    await seedItem(feedId);
+
+    // Act
+    const [home] = await queryWorkspaceSummaries();
+
+    // Assert
+    expect(home?.hasUnread).toBe(true);
+  });
+
+  test('hasUnread is false once every item in the workspace is read', async () => {
+    // Arrange
+    const feedId = await seedFeed();
+    await seedItem(feedId, { readAt: '2024-01-02T00:00:00.000Z' });
+
+    // Act
+    const [home] = await queryWorkspaceSummaries();
+
+    // Assert
+    expect(home?.hasUnread).toBe(false);
   });
 });
 
@@ -388,7 +429,7 @@ describe('queryRiverPage', () => {
     await seedItem(feedId, { title: 'Newest', publishedAt: 3 });
 
     // Act
-    const page = await queryRiverPage({ limit: 2 });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 2 });
 
     // Assert
     expect(page.rows.map((row) => row.title)).toEqual(['Newest', 'Middle']);
@@ -401,10 +442,10 @@ describe('queryRiverPage', () => {
     await seedItem(feedId, { title: 'Oldest', publishedAt: 1 });
     await seedItem(feedId, { title: 'Middle', publishedAt: 2 });
     await seedItem(feedId, { title: 'Newest', publishedAt: 3 });
-    const firstPage = await queryRiverPage({ limit: 2 });
+    const firstPage = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 2 });
 
     // Act
-    const secondPage = await queryRiverPage({ limit: 2, ...(firstPage.nextCursor ? { cursor: firstPage.nextCursor } : {}) });
+    const secondPage = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 2, ...(firstPage.nextCursor ? { cursor: firstPage.nextCursor } : {}) });
 
     // Assert
     expect(secondPage.rows.map((row) => row.title)).toEqual(['Oldest']);
@@ -418,7 +459,7 @@ describe('queryRiverPage', () => {
     await seedItem(feedId, { publishedAt: 2 });
 
     // Act
-    const page = await queryRiverPage({ limit: 2 });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 2 });
 
     // Assert
     expect(page.rows).toHaveLength(2);
@@ -432,7 +473,7 @@ describe('queryRiverPage', () => {
     const secondId = await seedItem(feedId, { title: 'Second inserted', publishedAt: 5 });
 
     // Act
-    const page = await queryRiverPage({ limit: 10 });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10 });
 
     // Assert
     expect(page.rows.map((row) => row.id)).toEqual([secondId, firstId]);
@@ -446,21 +487,21 @@ describe('queryRiverPage', () => {
     await seedItem(feedB, { title: 'From B' });
 
     // Act
-    const page = await queryRiverPage({ limit: 10, feedIds: [feedA] });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, feedIds: [feedA] });
 
     // Assert
     expect(page.rows.map((row) => row.title)).toEqual(['From A']);
   });
 
-  test('defaults to feeds with showInHome when no feedIds are given', async () => {
+  test('defaults to feeds with showInWorkspace when no feedIds are given', async () => {
     // Arrange
-    const shown = await seedFeed({ link: 'https://a.example/feed', title: 'Shown', showInHome: 1 });
-    const hidden = await seedFeed({ link: 'https://b.example/feed', title: 'Hidden', showInHome: 0 });
+    const shown = await seedFeed({ link: 'https://a.example/feed', title: 'Shown', showInWorkspace: 1 });
+    const hidden = await seedFeed({ link: 'https://b.example/feed', title: 'Hidden', showInWorkspace: 0 });
     await seedItem(shown, { title: 'Visible' });
     await seedItem(hidden, { title: 'Not visible' });
 
     // Act
-    const page = await queryRiverPage({ limit: 10 });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10 });
 
     // Assert
     expect(page.rows.map((row) => row.title)).toEqual(['Visible']);
@@ -468,12 +509,12 @@ describe('queryRiverPage', () => {
 
   test('filters to exact ids regardless of the default feed filter', async () => {
     // Arrange
-    const feedId = await seedFeed({ showInHome: 0 });
+    const feedId = await seedFeed({ showInWorkspace: 0 });
     const targetId = await seedItem(feedId, { title: 'Deep link target' });
     await seedItem(feedId, { title: 'Not requested' });
 
     // Act
-    const page = await queryRiverPage({ limit: 10, feedIds: [feedId], ids: [targetId] });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, feedIds: [feedId], ids: [targetId] });
 
     // Assert
     expect(page.rows.map((row) => row.title)).toEqual(['Deep link target']);
@@ -486,7 +527,7 @@ describe('queryRiverPage', () => {
     await seedItem(feedId, { title: 'Unread' });
 
     // Act
-    const page = await queryRiverPage({ limit: 10, unreadOnly: true });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, unreadOnly: true });
 
     // Assert
     expect(page.rows.map((row) => row.title)).toEqual(['Unread']);
@@ -499,7 +540,7 @@ describe('queryRiverPage', () => {
     await seedItem(feedId, { title: 'Rust only' });
 
     // Act
-    const page = await queryRiverPage({ limit: 10, search: 'rust systems' });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, search: 'rust systems' });
 
     // Assert
     expect(page.rows.map((row) => row.title)).toEqual(['Rust programming']);
@@ -511,7 +552,7 @@ describe('queryRiverPage', () => {
     await seedItem(feedId, { title: 'Unrelated title', excerpt: 'unrelated excerpt' });
 
     // Act
-    const page = await queryRiverPage({ limit: 10, search: 'distinctive' });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, search: 'distinctive' });
 
     // Assert
     expect(page.rows).toHaveLength(1);
@@ -524,7 +565,7 @@ describe('queryRiverPage', () => {
     await seedItem(feedId, { title: 'Full price' });
 
     // Act
-    const page = await queryRiverPage({ limit: 10, search: '50%' });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, search: '50%' });
 
     // Assert
     expect(page.rows.map((row) => row.title)).toEqual(['50% off sale']);
@@ -532,9 +573,35 @@ describe('queryRiverPage', () => {
 
   test('returns an empty page for an empty database', async () => {
     // Act
-    const page = await queryRiverPage({ limit: 10 });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10 });
 
     // Assert
     expect(page).toEqual({ rows: [] });
+  });
+
+  test('returns an item exactly once per workspace it is placed in', async () => {
+    // Arrange
+    const feedId = await seedFeed({ title: 'Shared feed' });
+    await seedItem(feedId, { title: 'Shared item' });
+
+    const otherWorkspace = await db.insertInto('workspace')
+      .values({ name: 'Pack', icon: 'Stars01', color: '#000000', position: 1 })
+      .returning(['id'])
+      .executeTakeFirstOrThrow();
+    const otherCategory = await db.insertInto('feedCategory')
+      .values({ name: 'tech', workspace_id: otherWorkspace.id })
+      .returning(['id'])
+      .executeTakeFirstOrThrow();
+    await db.insertInto('feedPlacement')
+      .values({ feed_id: feedId, category_id: otherCategory.id, workspace_id: otherWorkspace.id, showInWorkspace: 1 })
+      .execute();
+
+    // Act
+    const homePage = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10 });
+    const otherPage = await queryRiverPage({ workspaceId: otherWorkspace.id, limit: 10 });
+
+    // Assert
+    expect(homePage.rows.map((row) => row.title)).toEqual(['Shared item']);
+    expect(otherPage.rows.map((row) => row.title)).toEqual(['Shared item']);
   });
 });

@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
-import type { FeedSummary, SourceType } from '../../src/preload/channels';
+import { HOME_WORKSPACE_ID, type FeedSummary, type SourceType } from '../../src/preload/channels';
 
 interface Article {
   title: string;
@@ -75,14 +75,14 @@ const deleteFeedTest = base.extend<DeleteFeedTestFixtures>({
 
 // Subscribes without going through the wizard. The row is enough for a refresh to find the feed.
 async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Promise<void> {
-  await page.evaluate(({ link, type }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title: 'Local feed', type, items: [], categoryName: 'tech', showInHome: true,
-  }), { link: url, type });
+  await page.evaluate(({ link, type, workspaceId }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
+    link, title: 'Local feed', type, items: [], categoryName: 'tech', workspaceId, showInWorkspace: true,
+  }), { link: url, type, workspaceId: HOME_WORKSPACE_ID });
   await page.getByRole('button', { name: 'Refresh feeds' }).click();
 }
 
 async function feedIdFor(page: Page, link: string): Promise<number> {
-  const feeds = await page.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list', undefined)) as FeedSummary[];
+  const feeds = await page.evaluate((workspaceId) => window.electron.ipcRenderer.invoke('feeds:list', { workspaceId }), HOME_WORKSPACE_ID) as FeedSummary[];
   const feed = feeds.find((candidate) => candidate.link === link);
   if (!feed) {
     throw new Error(`expected a feed for ${link}`);

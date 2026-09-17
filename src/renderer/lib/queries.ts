@@ -1,5 +1,5 @@
 import { infiniteQueryOptions, queryOptions, type InfiniteData } from '@tanstack/react-query';
-import type { FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow } from '../../preload/channels';
+import type { FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow, WorkspaceSummary } from '../../preload/channels';
 
 export const RIVER_PAGE_SIZE = 50;
 export const RIVER_MAX_PAGES = 8;
@@ -16,23 +16,32 @@ function normalizeScope(scope: RiverScope): RiverScope {
 }
 
 export const queryKeys = {
-  feeds: ['feeds'] as const,
-  categories: ['categories'] as const,
+  feeds: (workspaceId: number) => ['feeds', workspaceId] as const,
+  categories: (workspaceId: number) => ['categories', workspaceId] as const,
+  workspaces: ['workspaces'] as const,
   river: (scope: RiverScope) => ['river', normalizeScope(scope)] as const,
 };
 
-export function feedsQuery() {
+export function feedsQuery(workspaceId: number) {
   return queryOptions({
-    queryKey: queryKeys.feeds,
-    queryFn: (): Promise<FeedSummary[]> => window.electron.ipcRenderer.invoke('feeds:list', undefined),
+    queryKey: queryKeys.feeds(workspaceId),
+    queryFn: (): Promise<FeedSummary[]> => window.electron.ipcRenderer.invoke('feeds:list', { workspaceId }),
   });
 }
 
-/** Every category, including one with no feeds in it yet — unlike `FeedSummary.category`, which only surfaces a category through a feed that belongs to it. */
-export function categoriesQuery() {
+/** Every category in `workspaceId`, including one with no feeds in it yet — unlike `FeedSummary.category`, which only surfaces a category through a feed that belongs to it. */
+export function categoriesQuery(workspaceId: number) {
   return queryOptions({
-    queryKey: queryKeys.categories,
-    queryFn: (): Promise<FeedCategory[]> => window.electron.ipcRenderer.invoke('feeds:list-categories', undefined),
+    queryKey: queryKeys.categories(workspaceId),
+    queryFn: (): Promise<FeedCategory[]> => window.electron.ipcRenderer.invoke('feeds:list-categories', { workspaceId }),
+  });
+}
+
+/** Every workspace, in rail order. */
+export function workspacesQuery() {
+  return queryOptions({
+    queryKey: queryKeys.workspaces,
+    queryFn: (): Promise<WorkspaceSummary[]> => window.electron.ipcRenderer.invoke('workspaces:list', undefined),
   });
 }
 

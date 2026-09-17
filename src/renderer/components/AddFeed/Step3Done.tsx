@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Check } from "@untitledui/icons";
 import { formatRelativeTime } from "@/lib/river/utils";
 import { useRiver } from "@/providers/feeds-provider";
-import type { FeedSummary } from "../../../preload/channels";
+import { HOME_WORKSPACE_ID, type FeedSummary } from "../../../preload/channels";
 
 export interface Step3DoneProps {
   feed: FeedSummary;
@@ -11,7 +11,7 @@ export interface Step3DoneProps {
 const PREVIEW_COUNT = 5;
 
 export default function Step3Done({ feed }: Step3DoneProps) {
-  const scope = useMemo(() => ({ feedIds: [feed.id] }), [feed.id]);
+  const scope = useMemo(() => ({ workspaceId: HOME_WORKSPACE_ID, feedIds: [feed.id] }), [feed.id]);
   const { data } = useRiver(scope);
   const items = useMemo(() => (data?.pages.flatMap((page) => page.rows) ?? []).slice(0, PREVIEW_COUNT), [data]);
 

@@ -7,27 +7,27 @@ import type { SourceType } from "../db/types";
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
 import { fetchUrl } from "../lib/fetch";
-import { addFeedToDatabase, createCategory, updateFeedItemImage, upsertArticleContent, type AddFeedError, type CreateCategoryError, type NewFeedInput } from "../db/crud/insert";
-import { deleteCategory, deleteFeedFromDatabase, type DeleteCategoryError, type DeleteFeedError } from "../db/crud/delete";
-import { moveFeedsToCategory, renameCategory, setFeedsShowInHome, setFeedItemsRead, type UpdateCategoryError, type UpdateFeedError, type UpdateItemError } from "../db/crud/update";
-import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage } from "../db/crud/query";
+import { addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent, type AddFeedError, type CreateCategoryError, type CreateWorkspaceError, type NewFeedInput } from "../db/crud/insert";
+import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace, type DeleteCategoryError, type DeleteFeedError, type DeleteWorkspaceError } from "../db/crud/delete";
+import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace, type MoveFeedError, type UpdateCategoryError, type UpdateFeedError, type UpdateItemError, type UpdateWorkspaceError } from "../db/crud/update";
+import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from "../db/crud/query";
 import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type MaxFeedItems, type RefreshInterval } from "../settings";
 import { getAppInfo, type AppInfo } from "../app-info";
 import { sendToRenderer } from "./sendToRenderer";
 import type { IpcMainInvokeEvent } from "electron";
-import type { FeedCategory, FeedSummary, ItemBody, RefreshSummary, RiverPage, RiverQuery } from "../../preload/channels";
+import type { FeedCategory, FeedSummary, ItemBody, RefreshSummary, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from "../../preload/channels";
 import type { Result } from "../lib/utils";
 
 export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource, FeedFetchError>> {
   return resolveSource(payload.query, payload.type).fetch(payload.query, await getMaxFeedItems());
 }
 
-export function handleFeedsListCategories(): Promise<FeedCategory[]> {
-  return queryFeedCategory({});
+export function handleFeedsListCategories(_event: IpcMainInvokeEvent, payload: { workspaceId: number }): Promise<FeedCategory[]> {
+  return queryFeedCategory({ workspace_id: payload.workspaceId });
 }
 
-export function handleFeedsList(): Promise<FeedSummary[]> {
-  return queryFeedSummaries();
+export function handleFeedsList(_event: IpcMainInvokeEvent, payload: { workspaceId: number }): Promise<FeedSummary[]> {
+  return queryFeedSummaries(payload.workspaceId);
 }
 
 export function handleItemsQuery(_event: IpcMainInvokeEvent, payload: RiverQuery): Promise<RiverPage> {
@@ -68,8 +68,8 @@ export async function handleFeedsDeleteFeed(_event: IpcMainInvokeEvent, feedId: 
   return deleteFeedFromDatabase(feedId);
 }
 
-export async function handleFeedsSetShowInHome(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInHome: boolean }): Promise<Result<void, UpdateFeedError>> {
-  return setFeedsShowInHome(payload.feedIds, payload.showInHome);
+export async function handleFeedsSetShowInWorkspace(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInWorkspace: boolean }): Promise<Result<void, UpdateFeedError>> {
+  return setFeedsShowInWorkspace(payload.feedIds, payload.showInWorkspace);
 }
 
 export async function handleFeedsCreateCategory(_event: IpcMainInvokeEvent, payload: { name: string }): Promise<Result<FeedCategory, CreateCategoryError>> {
@@ -86,6 +86,35 @@ export async function handleFeedsDeleteCategory(_event: IpcMainInvokeEvent, payl
 
 export async function handleFeedsMoveFeedsToCategory(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; categoryId: number }): Promise<Result<void, UpdateCategoryError>> {
   return moveFeedsToCategory(payload.feedIds, payload.categoryId);
+}
+
+export async function handleFeedsMoveToWorkspace(_event: IpcMainInvokeEvent, payload: { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string }): Promise<Result<void, MoveFeedError>> {
+  return moveFeedToWorkspace(payload.feedId, payload.fromWorkspaceId, payload.toWorkspaceId, payload.categoryName);
+}
+
+export function handleWorkspacesList(): Promise<WorkspaceSummary[]> {
+  return queryWorkspaceSummaries();
+}
+
+export async function handleWorkspacesCreate(_event: IpcMainInvokeEvent, payload: { name: string; icon: string; color: string }): Promise<Result<Workspace, CreateWorkspaceError>> {
+  return createWorkspace(payload.name, payload.icon, payload.color);
+}
+
+export async function handleWorkspacesUpdate(_event: IpcMainInvokeEvent, payload: { workspaceId: number; name?: string; icon?: string; color?: string }): Promise<Result<Workspace, UpdateWorkspaceError>> {
+  const { workspaceId, ...patch } = payload;
+  return updateWorkspace(workspaceId, {
+    ...(patch.name !== undefined ? { name: patch.name } : {}),
+    ...(patch.icon !== undefined ? { icon: patch.icon } : {}),
+    ...(patch.color !== undefined ? { color: patch.color } : {}),
+  });
+}
+
+export async function handleWorkspacesDelete(_event: IpcMainInvokeEvent, payload: { workspaceId: number }): Promise<Result<void, DeleteWorkspaceError>> {
+  return deleteWorkspace(payload.workspaceId);
+}
+
+export async function handleWorkspacesReorder(_event: IpcMainInvokeEvent, payload: { orderedIds: number[] }): Promise<Result<void, UpdateWorkspaceError>> {
+  return reorderWorkspaces(payload.orderedIds);
 }
 
 export function handleSettingsGetRefreshInterval(): Promise<RefreshInterval> {

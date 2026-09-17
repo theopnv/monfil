@@ -7,6 +7,7 @@ import { announce } from "@/lib/announcer";
 import { useClearPendingRefreshCount, usePendingRefreshCount } from "@/lib/ipc-bridge";
 import { useFeedsRefresh } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
+import { useActiveWorkspace } from "@/providers/workspace-provider";
 
 const REFRESH_FAILED_MESSAGE = "Couldn't refresh feeds. Check your connection and try again.";
 
@@ -37,6 +38,7 @@ export interface RiverHeaderProps {
 export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: RiverHeaderProps) {
   const { refreshNow, isRefreshing, refreshFailed } = useFeedsRefresh();
   const { preferences, setPreference } = usePreferences();
+  const activeWorkspace = useActiveWorkspace();
   const pendingRefreshCount = usePendingRefreshCount();
   const clearPendingRefreshCount = useClearPendingRefreshCount();
   const queryClient = useQueryClient();
@@ -73,7 +75,7 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: R
         <div className="flex items-end gap-5">
           <div className="min-w-0 flex-1">
             <div className="mb-1 text-xs font-semibold tracking-wide text-brand-secondary uppercase">{getGreeting()}</div>
-            <h1 className="font-display text-display-md leading-none text-primary">Home</h1>
+            <h1 className="font-display text-display-md leading-none text-primary">{activeWorkspace?.name ?? "Home"}</h1>
           </div>
 
           {hasFeeds && (

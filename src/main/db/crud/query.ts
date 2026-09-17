@@ -1,7 +1,7 @@
 import { sql, type SelectQueryBuilder } from 'kysely';
 import { type ArticleContent, type Database, type FeedCategory, type FeedItem, type FeedMetadata, type Setting } from '../types';
 import { db, dbReady } from '../database';
-import type { FeedSummary, RiverPage, RiverQuery, RiverRow } from '../../../preload/channels';
+import type { FeedSummary, RiverPage, RiverQuery, RiverRow, WorkspaceSummary } from '../../../preload/channels';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
 // Adding a new field to a table object and forgetting to add it here will result in a compilation error.
@@ -54,8 +54,6 @@ const feedMetadataHandlers = {
   id: (q, v) => q.where('id', '=', v),
   link: (q, v) => q.where('link', '=', v),
   title: (q, v) => q.where('title', '=', v),
-  category_id: (q, v) => q.where('category_id', '=', v),
-  showInHome: (q, v) => q.where('showInHome', '=', v),
   type: (q, v) => q.where('type', '=', v),
   last_fetched_at: (q, v) => q.where('last_fetched_at', '=', v),
   last_error: (q, v) => q.where('last_error', '=', v),
@@ -70,11 +68,15 @@ export async function queryFeedMetadata(criteria: Partial<FeedMetadata>): Promis
 const feedCategoryHandlers = {
   id: (q, v) => q.where('id', '=', v),
   name: (q, v) => q.where('name', '=', v),
+  workspace_id: (q, v) => q.where('workspace_id', '=', v),
 } satisfies CriteriaHandlers<'feedCategory', FeedCategory>;
 
+// Ordered explicitly, same reasoning as queryFeedItems: filtering by workspace_id lets SQLite
+// satisfy the query from the (workspace_id, name) unique index, which returns rows alphabetically
+// by name rather than in creation order once that index is used instead of a full table scan.
 export async function queryFeedCategory(criteria: Partial<FeedCategory>): Promise<FeedCategory[]> {
   await dbReady;
-  return applyCriteria(db.selectFrom('feedCategory').selectAll(), criteria, feedCategoryHandlers).execute();
+  return applyCriteria(db.selectFrom('feedCategory').selectAll(), criteria, feedCategoryHandlers).orderBy('id').execute();
 }
 
 const articleContentHandlers = {
@@ -116,12 +118,18 @@ export async function countFeedMetadata(): Promise<number> {
   return count;
 }
 
-/** Every feed with its category and item counts, in one statement. No items: use `queryRiverPage` for those. */
-export async function queryFeedSummaries(): Promise<FeedSummary[]> {
+/**
+ * Every feed placed in `workspaceId`, with its category and item counts, in one statement. No
+ * items: use `queryRiverPage` for those. Scoping the join to one workspace is what keeps this one
+ * row per feed even though a feed can hold a placement in several workspaces at once.
+ * @param workspaceId the workspace to list feeds for
+ */
+export async function queryFeedSummaries(workspaceId: number): Promise<FeedSummary[]> {
   await dbReady;
 
   const rows = await db.selectFrom('feedMetadata as f')
-    .innerJoin('feedCategory as c', 'c.id', 'f.category_id')
+    .innerJoin('feedPlacement as p', (join) => join.onRef('p.feed_id', '=', 'f.id').on('p.workspace_id', '=', workspaceId))
+    .innerJoin('feedCategory as c', 'c.id', 'p.category_id')
     .leftJoin(
       (eb) => eb.selectFrom('feedItem')
         .select('feed_id')
@@ -135,14 +143,15 @@ export async function queryFeedSummaries(): Promise<FeedSummary[]> {
       'f.id as id',
       'f.link as link',
       'f.title as title',
-      'f.category_id as category_id',
-      'f.showInHome as showInHome',
+      'p.showInWorkspace as showInWorkspace',
+      'p.workspace_id as workspaceId',
       'f.type as type',
       'f.last_fetched_at as last_fetched_at',
       'f.last_error as last_error',
       'f.icon as icon',
       'c.id as categoryId',
       'c.name as categoryName',
+      'c.workspace_id as categoryWorkspaceId',
       'stats.itemCount as itemCount',
       'stats.unreadCount as unreadCount',
     ])
@@ -152,15 +161,59 @@ export async function queryFeedSummaries(): Promise<FeedSummary[]> {
     id: row.id,
     link: row.link,
     title: row.title,
-    category_id: row.category_id,
-    showInHome: row.showInHome,
+    showInWorkspace: row.showInWorkspace,
+    workspaceId: row.workspaceId,
     type: row.type,
     last_fetched_at: row.last_fetched_at,
     last_error: row.last_error,
     icon: row.icon,
-    category: { id: row.categoryId, name: row.categoryName },
+    category: { id: row.categoryId, name: row.categoryName, workspace_id: row.categoryWorkspaceId },
     itemCount: row.itemCount ?? 0,
     unreadCount: row.unreadCount ?? 0,
+  }));
+}
+
+/**
+ * Every workspace in rail order, each with `hasUnread`: whether any of its placements (regardless
+ * of `showInWorkspace`) hold an unread item. The rail shows a dot, never a number.
+ */
+export async function queryWorkspaceSummaries(): Promise<WorkspaceSummary[]> {
+  await dbReady;
+
+  const rows = await db.selectFrom('workspace as w')
+    .leftJoin(
+      (eb) => eb.selectFrom('feedPlacement as p')
+        .innerJoin('feedItem as i', 'i.feed_id', 'p.feed_id')
+        .select('p.workspace_id')
+        .select(() => sql<number>`count(*) filter (where i.read_at is null)`.as('unreadCount'))
+        .groupBy('p.workspace_id')
+        .as('stats'),
+      (join) => join.onRef('stats.workspace_id', '=', 'w.id'),
+    )
+    .select([
+      'w.id as id',
+      'w.name as name',
+      'w.icon as icon',
+      'w.color as color',
+      'w.position as position',
+      'w.source_slug as source_slug',
+      'w.source_version as source_version',
+      'w.installed_at as installed_at',
+      'stats.unreadCount as unreadCount',
+    ])
+    .orderBy('w.position')
+    .execute();
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    icon: row.icon,
+    color: row.color,
+    position: row.position,
+    source_slug: row.source_slug,
+    source_version: row.source_version,
+    installed_at: row.installed_at,
+    hasUnread: (row.unreadCount ?? 0) > 0,
   }));
 }
 
@@ -179,7 +232,8 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
 
   let builder = db.selectFrom('feedItem as i')
     .innerJoin('feedMetadata as f', 'f.id', 'i.feed_id')
-    .innerJoin('feedCategory as c', 'c.id', 'f.category_id')
+    .innerJoin('feedPlacement as p', (join) => join.onRef('p.feed_id', '=', 'f.id').on('p.workspace_id', '=', query.workspaceId))
+    .innerJoin('feedCategory as c', 'c.id', 'p.category_id')
     .select([
       'i.id as id',
       'i.title as title',
@@ -198,7 +252,7 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
 
   builder = query.feedIds
     ? builder.where('f.id', 'in', query.feedIds)
-    : builder.where('f.showInHome', '=', 1);
+    : builder.where('p.showInWorkspace', '=', 1);
 
   if (query.ids) {
     builder = builder.where('i.id', 'in', query.ids);

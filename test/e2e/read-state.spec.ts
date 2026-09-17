@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
-import type { SourceType } from '../../src/preload/channels';
+import { HOME_WORKSPACE_ID, type SourceType } from '../../src/preload/channels';
 
 interface Article {
   title: string;
@@ -75,9 +75,9 @@ const readStateTest = base.extend<ReadStateTestFixtures>({
 
 // Subscribes without going through the wizard. The row is enough for a refresh to find the feed.
 async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Promise<void> {
-  await page.evaluate(({ link, type }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title: 'Local feed', type, items: [], categoryName: 'tech', showInHome: true,
-  }), { link: url, type });
+  await page.evaluate(({ link, type, workspaceId }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
+    link, title: 'Local feed', type, items: [], categoryName: 'tech', workspaceId, showInWorkspace: true,
+  }), { link: url, type, workspaceId: HOME_WORKSPACE_ID });
   await page.getByRole('button', { name: 'Refresh feeds' }).click();
 }
 
@@ -95,14 +95,14 @@ readStateTest('an opened article is still read after a restart', async ({ feedSe
   // The read mark is written asynchronously behind the optimistic UI update, so wait for the
   // database to confirm it before restarting.
   await expect
-    .poll(() => firstRun.evaluate(() => window.electron.ipcRenderer.invoke('items:query', { limit: 100 })
+    .poll(() => firstRun.evaluate(() => window.electron.ipcRenderer.invoke('items:query', { workspaceId: 1, limit: 100 })
       .then((page) => page.rows.some((row) => row.title === 'First article' && Boolean(row.readAt)))))
     .toBe(true);
 
   const secondRun = await launchApp();
 
   // Assert
-  const page = await secondRun.evaluate(() => window.electron.ipcRenderer.invoke('items:query', { limit: 100 }));
+  const page = await secondRun.evaluate(() => window.electron.ipcRenderer.invoke('items:query', { workspaceId: 1, limit: 100 }));
   const item = page.rows.find((candidate) => candidate.title === 'First article');
   expect(item?.readAt).toBeTruthy();
 });

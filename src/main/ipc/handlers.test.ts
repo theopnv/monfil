@@ -5,7 +5,7 @@ import { fetchUrl } from '../lib/fetch';
 import { handleItemsGetContent } from './handlers';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 import type { IpcMainInvokeEvent } from 'electron';
-import type { SourceType } from '../db/types';
+import { HOME_WORKSPACE_ID, type SourceType } from '../db/types';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
 
@@ -27,7 +27,8 @@ async function createItem(link: string | undefined, options: { type?: SourceType
     items: [{ title: 'Item', link, guid: link ?? 'monfil:test:linkless', pubDate: '2024-01-01', description: options.description ?? '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
     type: options.type ?? 'rss',
     categoryName: 'tech',
-    showInHome: true,
+    workspaceId: HOME_WORKSPACE_ID,
+    showInWorkspace: true,
   });
   if (!result.success) {
     throw new Error('expected the feed to be created');

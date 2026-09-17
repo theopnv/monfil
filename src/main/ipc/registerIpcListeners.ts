@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import type { IpcMainEvent } from "electron";
 import type { OneWayRendererToMainChannelPayloads, OneWayRendererToMainChannels } from "../../preload/channels";
-import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu } from "./listeners";
+import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu } from "./listeners";
 
 // IPC Listeners - Renderer to main
 // Triggered from the renderer side (exposed through preload): ipcRenderer.send(channel, payload)
@@ -17,6 +17,7 @@ const listeners: { [C in OneWayRendererToMainChannels]: Listener<C> } = {
   "link:open": listenToLinkOpen,
   "feeds:show-feed-context-menu": listenToShowFeedContextMenu,
   "feeds:show-category-context-menu": listenToShowCategoryContextMenu,
+  "workspaces:show-context-menu": listenToShowWorkspaceContextMenu,
   "app:reveal-database-file": listenToRevealDatabaseFile,
 };
 

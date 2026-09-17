@@ -5,6 +5,7 @@ import path from 'node:path';
 import { initializeDatabase, closeDatabase } from '../../src/main/db/database';
 import { addFeedToDatabase } from '../../src/main/db/crud/insert';
 import { DB_FILE_NAME } from '../../src/main/constants';
+import { HOME_WORKSPACE_ID } from '../../src/main/db/types';
 
 const FEED_COUNT = 20;
 const ITEMS_PER_FEED = 30; // 600 items total, well past RIVER_MAX_PAGES * RIVER_PAGE_SIZE.
@@ -41,7 +42,8 @@ async function seedDatabase(userDataDir: string): Promise<void> {
         type: 'rss',
         items,
         categoryName: 'volume',
-        showInHome: true,
+        workspaceId: HOME_WORKSPACE_ID,
+        showInWorkspace: true,
       });
       if (!result.success) {
         throw new Error(`failed to seed feed ${feedIndex}: ${result.error.message}`);

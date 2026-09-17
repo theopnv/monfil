@@ -58,7 +58,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
       return;
     }
     let cancelled = false;
-    window.electron.ipcRenderer.invoke('items:query', { ids: [id], limit: 1 })
+    window.electron.ipcRenderer.invoke('items:query', { workspaceId: scope.workspaceId, ids: [id], limit: 1 })
       .then((page) => {
         if (!cancelled) {
           mergeRows(page.rows);
@@ -68,7 +68,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
     return () => {
       cancelled = true;
     };
-  }, [currentItem, id, mergeRows]);
+  }, [currentItem, id, mergeRows, scope.workspaceId]);
 
   // `nextUnread` found nothing locally: ask main for the next unread row past this one's cursor.
   useEffect(() => {

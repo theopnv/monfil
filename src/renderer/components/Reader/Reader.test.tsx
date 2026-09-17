@@ -7,7 +7,7 @@ import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import Reader from './Reader';
 import type { ReaderProps } from './Reader';
-import type { FeedSummary, ItemBody, RiverPage, RiverQuery, RiverRow } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID, type FeedSummary, type ItemBody, type RiverPage, type RiverQuery, type RiverRow } from '../../../preload/channels';
 
 let nextFeedId = 1;
 let nextItemId = 1;
@@ -18,13 +18,13 @@ function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
     id,
     link: `https://example.com/feed-${id}`,
     title: `Feed ${id}`,
-    category_id: 1,
     type: 'rss',
-    showInHome: 1,
+    showInWorkspace: 1,
+    workspaceId: HOME_WORKSPACE_ID,
     last_fetched_at: undefined,
     last_error: undefined,
     icon: undefined,
-    category: { id: 1, name: 'Tech' },
+    category: { id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID },
     itemCount: 0,
     unreadCount: 0,
     ...overrides,
@@ -63,7 +63,7 @@ function computeRiverPage(query: RiverQuery): RiverPage {
   let candidates = allRows;
   candidates = query.feedIds
     ? candidates.filter((row) => new Set(query.feedIds).has(row.feedId))
-    : candidates.filter((row) => allFeeds.find((feed) => feed.id === row.feedId)?.showInHome !== 0);
+    : candidates.filter((row) => allFeeds.find((feed) => feed.id === row.feedId)?.showInWorkspace !== 0);
   if (query.ids) {
     const idSet = new Set(query.ids);
     candidates = candidates.filter((row) => idSet.has(row.id));

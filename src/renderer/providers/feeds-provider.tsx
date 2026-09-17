@@ -5,37 +5,42 @@ import type { DeleteCategoryError, DeleteFeedError } from "../../main/db/crud/de
 import type { AddFeedError, CreateCategoryError, NewFeedInput } from "../../main/db/crud/insert";
 import type { UpdateCategoryError, UpdateFeedError } from "../../main/db/crud/update";
 import type { Result } from "../../main/lib/utils";
-import { categoriesQuery, feedsQuery, patchRiverRows, queryKeys, riverQuery, type RiverScope } from "../lib/queries";
+import { categoriesQuery, feedsQuery, patchRiverRows, riverQuery, type RiverScope } from "../lib/queries";
+import { useActiveWorkspaceId } from "./workspace-provider";
 
+/** Every feed placed in the active workspace. */
 export const useFeeds = (): FeedSummary[] => {
-  const { data } = useQuery(feedsQuery());
+  const workspaceId = useActiveWorkspaceId();
+  const { data } = useQuery(feedsQuery(workspaceId));
   return data ?? [];
 };
 
-/** Every category, including ones with no feeds in them yet. */
+/** Every category in the active workspace, including ones with no feeds in them yet. */
 export const useCategories = (): FeedCategory[] => {
-  const { data } = useQuery(categoriesQuery());
+  const workspaceId = useActiveWorkspaceId();
+  const { data } = useQuery(categoriesQuery(workspaceId));
   return data ?? [];
 };
 
 export const useRiver = (scope: RiverScope): UseInfiniteQueryResult<InfiniteData<RiverPage>> => useInfiniteQuery(riverQuery(scope));
 
-export const useAddFeed = (): ((input: NewFeedInput) => Promise<Result<FeedSummary, AddFeedError>>) => {
+export const useAddFeed = (): ((input: Omit<NewFeedInput, 'workspaceId'>) => Promise<Result<FeedSummary, AddFeedError>>) => {
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: (input: NewFeedInput) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', input),
     onSuccess: (result) => {
       if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
         // A feed can be filed under a brand new category name (see CategoryPicker's "+ New
         // category"), which creates that category as a side effect.
-        void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+        void queryClient.invalidateQueries({ queryKey: ['categories'] });
         void queryClient.invalidateQueries({ queryKey: ['river'] });
       }
     },
   });
   const { mutateAsync } = mutation;
-  return useCallback((input: NewFeedInput) => mutateAsync(input), [mutateAsync]);
+  return useCallback((input: Omit<NewFeedInput, 'workspaceId'>) => mutateAsync({ ...input, workspaceId }), [mutateAsync, workspaceId]);
 };
 
 export const useDeleteFeed = (): ((feedId: number) => Promise<Result<void, DeleteFeedError>>) => {
@@ -44,7 +49,7 @@ export const useDeleteFeed = (): ((feedId: number) => Promise<Result<void, Delet
     mutationFn: (feedId: number) => window.electron.ipcRenderer.invoke('feeds:delete-feed', feedId),
     onSuccess: (result) => {
       if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
         void queryClient.invalidateQueries({ queryKey: ['river'] });
       }
     },
@@ -53,19 +58,19 @@ export const useDeleteFeed = (): ((feedId: number) => Promise<Result<void, Delet
   return useCallback((feedId: number) => mutateAsync(feedId), [mutateAsync]);
 };
 
-export const useSetShowInHome = (): ((feedIds: number[], showInHome: boolean) => Promise<Result<void, UpdateFeedError>>) => {
+export const useSetShowInWorkspace = (): ((feedIds: number[], showInWorkspace: boolean) => Promise<Result<void, UpdateFeedError>>) => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (variables: { feedIds: number[]; showInHome: boolean }) => window.electron.ipcRenderer.invoke('feeds:set-show-in-home', variables),
+    mutationFn: (variables: { feedIds: number[]; showInWorkspace: boolean }) => window.electron.ipcRenderer.invoke('feeds:set-show-in-workspace', variables),
     onSuccess: (result) => {
       if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
         void queryClient.invalidateQueries({ queryKey: ['river'] });
       }
     },
   });
   const { mutateAsync } = mutation;
-  return useCallback((feedIds: number[], showInHome: boolean) => mutateAsync({ feedIds, showInHome }), [mutateAsync]);
+  return useCallback((feedIds: number[], showInWorkspace: boolean) => mutateAsync({ feedIds, showInWorkspace }), [mutateAsync]);
 };
 
 export const useCreateCategory = (): ((name: string) => Promise<Result<FeedCategory, CreateCategoryError>>) => {
@@ -74,7 +79,7 @@ export const useCreateCategory = (): ((name: string) => Promise<Result<FeedCateg
     mutationFn: (name: string) => window.electron.ipcRenderer.invoke('feeds:create-category', { name }),
     onSuccess: (result) => {
       if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+        void queryClient.invalidateQueries({ queryKey: ['categories'] });
       }
     },
   });
@@ -88,8 +93,8 @@ export const useRenameCategory = (): ((categoryId: number, name: string) => Prom
     mutationFn: (variables: { categoryId: number; name: string }) => window.electron.ipcRenderer.invoke('feeds:rename-category', variables),
     onSuccess: (result) => {
       if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
+        void queryClient.invalidateQueries({ queryKey: ['categories'] });
         void queryClient.invalidateQueries({ queryKey: ['river'] });
       }
     },
@@ -104,8 +109,8 @@ export const useDeleteCategory = (): ((categoryId: number, reassignTo: number) =
     mutationFn: (variables: { categoryId: number; reassignTo: number }) => window.electron.ipcRenderer.invoke('feeds:delete-category', variables),
     onSuccess: (result) => {
       if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
+        void queryClient.invalidateQueries({ queryKey: ['categories'] });
         void queryClient.invalidateQueries({ queryKey: ['river'] });
       }
     },
@@ -120,7 +125,7 @@ export const useMoveFeeds = (): ((feedIds: number[], categoryId: number) => Prom
     mutationFn: (variables: { feedIds: number[]; categoryId: number }) => window.electron.ipcRenderer.invoke('feeds:move-feeds-to-category', variables),
     onSuccess: (result) => {
       if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
         void queryClient.invalidateQueries({ queryKey: ['river'] });
       }
     },
@@ -142,7 +147,7 @@ export const useFeedsRefresh = (): FeedsRefresh => {
     onSuccess: () => {
       // A user-initiated refresh gets its content immediately; an automatic cycle's `feeds:refreshed`
       // push only raises the pill (see `useIpcBridge`), so it never moves the river under the user.
-      void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+      void queryClient.invalidateQueries({ queryKey: ['feeds'] });
       void queryClient.invalidateQueries({ queryKey: ['river'] });
     },
     onError: (error: unknown) => {
@@ -214,7 +219,7 @@ export const useReadState = (): ReadState => {
       );
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.feeds });
+      void queryClient.invalidateQueries({ queryKey: ['feeds'] });
     },
   });
 

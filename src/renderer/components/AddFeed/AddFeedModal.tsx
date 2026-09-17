@@ -9,6 +9,7 @@ import WizardFooter from "./WizardFooter";
 import WizardHeader, { type WizardStep } from "./WizardHeader";
 import type { AddFeedError } from "../../../main/db/crud/insert";
 import type { FeedCategory, FeedSummary } from "../../../preload/channels";
+import { useActiveWorkspaceId } from "../../providers/workspace-provider";
 
 export interface AddFeedModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export interface AddFeedModalProps {
 
 export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps) {
   const addFeed = useAddFeed();
+  const workspaceId = useActiveWorkspaceId();
 
   const [step, setStep] = useState<WizardStep>(1);
   const [maxStepReached, setMaxStepReached] = useState<WizardStep>(1);
@@ -25,7 +27,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   const [categories, setCategories] = useState<FeedCategory[]>([]);
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [showInHome, setShowInHome] = useState(true);
+  const [showInWorkspace, setShowInWorkspace] = useState(true);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "loading" | "error">("idle");
   const [submitError, setSubmitError] = useState<AddFeedError | null>(null);
   const [result, setResult] = useState<FeedSummary | null>(null);
@@ -39,7 +41,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
     setType(undefined);
     setSelectedCategoryName(null);
     setNewCategoryName("");
-    setShowInHome(true);
+    setShowInWorkspace(true);
     setSubmitStatus("idle");
     setSubmitError(null);
     setResult(null);
@@ -51,10 +53,10 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
     }
     resetWizard();
     window.electron.ipcRenderer
-      .invoke("feeds:list-categories", undefined)
+      .invoke("feeds:list-categories", { workspaceId })
       .then(setCategories)
       .catch(() => setCategories([]));
-  }, [isOpen]);
+  }, [isOpen, workspaceId]);
 
   function goToStep(target: WizardStep) {
     if (target <= maxStepReached) {
@@ -92,7 +94,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
       type: validation.feed.type,
       items: validation.feed.items,
       categoryName: selectedCategoryName,
-      showInHome,
+      showInWorkspace,
       ...(validation.feed.icon !== undefined ? { icon: validation.feed.icon } : {}),
     });
 
@@ -134,8 +136,8 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
               newCategoryName={newCategoryName}
               onNewCategoryNameChange={setNewCategoryName}
               onAddNewCategory={handleAddNewCategory}
-              showInHome={showInHome}
-              onShowInHomeChange={setShowInHome}
+              showInWorkspace={showInWorkspace}
+              onShowInWorkspaceChange={setShowInWorkspace}
             />
           )}
 

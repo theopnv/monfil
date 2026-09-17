@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/providers/theme-provider';
 import { PreferencesProvider } from '@/providers/preferences-provider';
 import { SearchProvider } from '@/providers/search-provider';
 import { RiverScopeProvider } from '@/providers/river-scope-provider';
+import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
 import AppShell from '@/components/AppShell';
 
@@ -27,9 +28,11 @@ function RootComponent() {
         <PreferencesProvider>
           <SearchProvider>
             <RiverScopeProvider>
-              <QueryClientProvider client={queryClient}>
-                <IpcBridgedAppShell />
-              </QueryClientProvider>
+              <ActiveWorkspaceIdProvider>
+                <QueryClientProvider client={queryClient}>
+                  <IpcBridgedAppShell />
+                </QueryClientProvider>
+              </ActiveWorkspaceIdProvider>
             </RiverScopeProvider>
           </SearchProvider>
         </PreferencesProvider>

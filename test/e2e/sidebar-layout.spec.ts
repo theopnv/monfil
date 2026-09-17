@@ -2,6 +2,7 @@ import { test as base, expect, _electron as electron, type Locator, type Page } 
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { HOME_WORKSPACE_ID } from '../../src/preload/channels';
 
 type SidebarLayoutFixtures = {
   userDataDir: string;
@@ -35,9 +36,9 @@ const sidebarTest = base.extend<SidebarLayoutFixtures>({
 // The reload is what puts the new feed in the sidebar: only the add-feed wizard refreshes the feed
 // query, and this writes behind its back.
 async function subscribe(page: Page, link: string, title: string, categoryName: string): Promise<void> {
-  await page.evaluate(({ link, title, categoryName }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title, type: 'rss', items: [], categoryName, showInHome: true,
-  }), { link, title, categoryName });
+  await page.evaluate(({ link, title, categoryName, workspaceId }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
+    link, title, type: 'rss', items: [], categoryName, workspaceId, showInWorkspace: true,
+  }), { link, title, categoryName, workspaceId: HOME_WORKSPACE_ID });
   await page.reload();
 }
 
