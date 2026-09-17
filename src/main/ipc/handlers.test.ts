@@ -101,7 +101,7 @@ describe('handleItemsGetContent', () => {
     const result = await handleItemsGetContent(fakeEvent, itemId);
 
     // Assert
-    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/long-article', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
+    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/long-article', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
     expect(result.article?.html).toContain('<p>');
     const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
     expect(stored.status).toBe('ok');

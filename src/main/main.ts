@@ -9,6 +9,7 @@ import { DB_FILE_NAME } from './constants';
 import { startRefreshScheduler, stopRefreshScheduler } from './feed/scheduler';
 import { resolveDevUserDataDir } from './dev-user-data-dir';
 import { denyWebPermissions, hardenWebContents } from './window-security';
+import { allowPrivateHosts } from './lib/fetch';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // app.quit() only schedules an exit, so without this return the rest of the module (and its app.on(...) wiring)
@@ -36,8 +37,12 @@ function bootstrap() {
   });
 
   // Playwright's electron.launch() sets this so e2e runs never raise a real window and steal
-  // OS focus from whatever the developer is doing
+  // OS focus from whatever the developer is doing, and so article fetches may reach the
+  // loopback server the specs stand up.
   const isE2ETest = process.env['E2E_TEST'] === '1';
+  if (isE2ETest) {
+    allowPrivateHosts();
+  }
 
   // extraResource copies this next to the packaged app; unpackaged, it's still in the source tree.
   const iconPath = app.isPackaged

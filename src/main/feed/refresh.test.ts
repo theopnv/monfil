@@ -215,6 +215,6 @@ describe('refreshAllFeeds', () => {
 
     // Assert
     expect(mockedFetchUrl).toHaveBeenCalledTimes(1);
-    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/new', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
+    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/new', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
   });
 });

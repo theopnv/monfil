@@ -174,6 +174,7 @@ function mapFetchError(error: FetchUrlError): FeedFetchError {
     case 'NETWORK_ERROR':
     case 'NOT_ALLOWED_OR_ABORTED_ERROR':
     case 'RESPONSE_TOO_LARGE_ERROR':
+    case 'BLOCKED_URL_ERROR':
       return error;
     default: {
       const exhaustiveCheck: never = error;

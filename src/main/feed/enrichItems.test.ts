@@ -40,8 +40,8 @@ describe('enrichItems', () => {
 
     // Assert
     expect(mockedFetchUrl).toHaveBeenCalledTimes(2);
-    expect(mockedFetchUrl).toHaveBeenCalledWith('https://example.com/1', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
-    expect(mockedFetchUrl).toHaveBeenCalledWith('http://example.com/2', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
+    expect(mockedFetchUrl).toHaveBeenCalledWith('https://example.com/1', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+    expect(mockedFetchUrl).toHaveBeenCalledWith('http://example.com/2', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
   });
 
   test('one fetch feeds both the image and the content extractor', async () => {
