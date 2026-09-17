@@ -1,6 +1,7 @@
 import { BrowserWindow, Menu, shell, type IpcMainEvent } from "electron";
 import type { OneWayRendererToMainChannelPayloads } from "../../preload/channels";
 import { dbFilePath } from "../db/database";
+import { HOME_WORKSPACE_ID } from "../db/types";
 import { sendToRenderer } from "./sendToRenderer";
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {
@@ -61,6 +62,11 @@ export function listenToShowWorkspaceContextMenu(event: IpcMainEvent, workspaceI
       label: "Export as OPML",
       click: () => sendToRenderer(event.sender, "workspaces:export-requested", workspaceId),
     },
+    // Home is the one workspace every install always has; it cannot be deleted.
+    ...(workspaceId === HOME_WORKSPACE_ID ? [] : [{
+      label: "Delete workspace",
+      click: () => sendToRenderer(event.sender, "workspaces:delete-requested", workspaceId),
+    }]),
   ]);
   const window = BrowserWindow.fromWebContents(event.sender);
   if (window) {

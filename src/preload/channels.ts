@@ -91,6 +91,7 @@ export type OneWayMainToRendererChannelPayloads = {
   'feeds:delete-category-requested': number;
   'workspaces:edit-requested': number;
   'workspaces:export-requested': number;
+  'workspaces:delete-requested': number;
 };
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;

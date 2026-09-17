@@ -1,16 +1,24 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Link } from "react-aria-components";
 import { Plus, Sliders01 } from "@untitledui/icons";
 import { Button } from "./untitled-ui/base/buttons/button";
 import { cx } from "./untitled-ui/utils/cx";
 import MonfilLogo from "@/components/common/MonfilLogo";
+import DeleteWorkspaceDialog from "@/components/Workspace/DeleteWorkspaceDialog";
 import WorkspaceDialog from "@/components/Workspace/WorkspaceDialog";
-import { useClearEditWorkspaceRequest, useClearExportWorkspaceRequest, useEditWorkspaceRequestedId, useExportWorkspaceRequestedId } from "@/lib/ipc-bridge";
+import {
+  useClearDeleteWorkspaceRequest,
+  useClearEditWorkspaceRequest,
+  useClearExportWorkspaceRequest,
+  useDeleteWorkspaceRequestedId,
+  useEditWorkspaceRequestedId,
+  useExportWorkspaceRequestedId,
+} from "@/lib/ipc-bridge";
 import { workspaceIconComponent } from "@/lib/workspace-icons";
 import { useExportOpml } from "@/providers/opml-provider";
-import { useWorkspaces } from "@/providers/workspace-provider";
-import type { WorkspaceSummary } from "../../preload/channels";
+import { useActiveWorkspaceId, useWorkspaces } from "@/providers/workspace-provider";
+import { HOME_WORKSPACE_ID, type WorkspaceSummary } from "../../preload/channels";
 
 const activeNavClasses = "rounded-xl bg-brand-secondary *:data-icon:text-fg-brand-secondary hover:bg-brand-secondary hover:*:data-icon:text-fg-brand-secondary";
 
@@ -41,14 +49,19 @@ function WorkspaceButton({ workspace, isActive }: { workspace: WorkspaceSummary;
 
 export default function Toolbar() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const activeWorkspaceId = useActiveWorkspaceId();
   const workspaces = useWorkspaces();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<WorkspaceSummary | null>(null);
+  const [workspacePendingDelete, setWorkspacePendingDelete] = useState<WorkspaceSummary | null>(null);
 
   const editWorkspaceRequestedId = useEditWorkspaceRequestedId();
   const clearEditWorkspaceRequest = useClearEditWorkspaceRequest();
   const exportWorkspaceRequestedId = useExportWorkspaceRequestedId();
   const clearExportWorkspaceRequest = useClearExportWorkspaceRequest();
+  const deleteWorkspaceRequestedId = useDeleteWorkspaceRequestedId();
+  const clearDeleteWorkspaceRequest = useClearDeleteWorkspaceRequest();
   const exportOpml = useExportOpml();
 
   useEffect(() => {
@@ -69,6 +82,23 @@ export default function Toolbar() {
     void exportOpml(exportWorkspaceRequestedId);
     clearExportWorkspaceRequest();
   }, [exportWorkspaceRequestedId, exportOpml, clearExportWorkspaceRequest]);
+
+  useEffect(() => {
+    if (deleteWorkspaceRequestedId === null) {
+      return;
+    }
+    const workspace = workspaces.find((candidate) => candidate.id === deleteWorkspaceRequestedId);
+    if (workspace) {
+      setWorkspacePendingDelete(workspace);
+    }
+    clearDeleteWorkspaceRequest();
+  }, [deleteWorkspaceRequestedId, workspaces, clearDeleteWorkspaceRequest]);
+
+  function handleWorkspaceDeleted(workspaceId: number) {
+    if (activeWorkspaceId === workspaceId) {
+      void navigate({ to: '/workspace/$workspaceId', params: { workspaceId: String(HOME_WORKSPACE_ID) } });
+    }
+  }
 
   return (
     <nav className="flex h-full w-16 flex-none flex-col items-center gap-1.5 border-r border-secondary bg-secondary py-4.5">
@@ -106,6 +136,15 @@ export default function Toolbar() {
           }
         }}
         {...(editingWorkspace ? { workspace: editingWorkspace } : {})}
+      />
+      <DeleteWorkspaceDialog
+        workspace={workspacePendingDelete}
+        onOpenChange={(open) => {
+          if (!open) {
+            setWorkspacePendingDelete(null);
+          }
+        }}
+        onDeleted={handleWorkspaceDeleted}
       />
     </nav>
   );
