@@ -1,6 +1,6 @@
 import { db, dbReady } from '../db/database';
 import { addFeedItemsToDatabase, updateFeedItemImage, upsertArticleContent } from '../db/crud/insert';
-import { queryFeedMetadata } from '../db/crud/query';
+import { queryFeedMetadata, queryFeedMetadataByIds } from '../db/crud/query';
 import type { FeedItem, FeedMetadata, SourceType } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
@@ -34,14 +34,7 @@ async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<Fee
   return inserted.data;
 }
 
-/**
- * Fetches every stored feed and inserts the items that are not stored yet. Nothing is updated or deleted.
- * A feed that fails to fetch is logged and skipped, so the others still get their items.
- * @returns how many items each feed gained, so the renderer can show a pill without receiving the rows themselves
- */
-export async function refreshAllFeeds(): Promise<RefreshSummary> {
-  await dbReady;
-  const [feedList, maxItems] = await Promise.all([queryFeedMetadata({}), getMaxFeedItems()]);
+async function refreshFeedList(feedList: FeedMetadata[], maxItems: number): Promise<RefreshSummary> {
   const insertedByFeedId = new Map<number, FeedItem[]>();
 
   await runWithConcurrency(feedList, FEED_FETCH_CONCURRENCY, async (feed) => {
@@ -58,6 +51,31 @@ export async function refreshAllFeeds(): Promise<RefreshSummary> {
   return {
     perFeed: [...insertedByFeedId.entries()].map(([feedId, items]) => ({ feedId, inserted: items.length })),
   };
+}
+
+/**
+ * Fetches every stored feed and inserts the items that are not stored yet. Nothing is updated or deleted.
+ * A feed that fails to fetch is logged and skipped, so the others still get their items.
+ * @returns how many items each feed gained, so the renderer can show a pill without receiving the rows themselves
+ */
+export async function refreshAllFeeds(): Promise<RefreshSummary> {
+  await dbReady;
+  const [feedList, maxItems] = await Promise.all([queryFeedMetadata({}), getMaxFeedItems()]);
+  return refreshFeedList(feedList, maxItems);
+}
+
+/**
+ * Fetches only the given feeds. Used right after an OPML import (or pack install), whose rows
+ * are written with no items so the new tab has something to show while this runs.
+ * @param feedIds the ids of the feeds to fetch
+ */
+export async function refreshFeeds(feedIds: number[]): Promise<RefreshSummary> {
+  if (feedIds.length === 0) {
+    return { perFeed: [] };
+  }
+  await dbReady;
+  const [feedList, maxItems] = await Promise.all([queryFeedMetadataByIds(feedIds), getMaxFeedItems()]);
+  return refreshFeedList(feedList, maxItems);
 }
 
 async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedItem[]>, typeByFeedId: ReadonlyMap<number, SourceType>): Promise<void> {

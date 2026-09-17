@@ -6,6 +6,8 @@ import type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
 import type { MaxFeedItems, RefreshInterval } from '../main/settings';
 import type { AppInfo } from '../main/app-info';
 import type { Result } from '../main/lib/utils';
+import type { ImportOpmlError, ImportOpmlTarget, ImportSummary } from '../main/opml/import';
+import type { ExportOpmlError } from '../main/opml/export';
 
 // =====================================
 // ============== TYPES ================
@@ -88,6 +90,8 @@ export type OneWayMainToRendererChannelPayloads = {
   'feeds:rename-category-requested': number;
   'feeds:delete-category-requested': number;
   'workspaces:edit-requested': number;
+  'workspaces:export-requested': number;
+  'workspaces:delete-requested': number;
 };
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
@@ -121,6 +125,8 @@ export type TwoWayRendererMainChannelPayloads = {
   'settings:get-max-feed-items': MaxFeedItems;
   'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': AppInfo;
+  'opml:import': Result<ImportSummary, ImportOpmlError>;
+  'opml:export': Result<void, ExportOpmlError>;
 }
 
 export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
@@ -132,12 +138,12 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'items:query': RiverQuery;
   'feeds:refresh': undefined;
   'feeds:submit-add-feed': NewFeedInput;
-  'feeds:delete-feed': number;
-  'feeds:set-show-in-workspace': { feedIds: number[]; showInWorkspace: boolean };
-  'feeds:create-category': { name: string };
-  'feeds:rename-category': { categoryId: number; name: string };
-  'feeds:delete-category': { categoryId: number; reassignTo: number };
-  'feeds:move-feeds-to-category': { feedIds: number[]; categoryId: number };
+  'feeds:delete-feed': { feedId: number; workspaceId: number };
+  'feeds:set-show-in-workspace': { feedIds: number[]; showInWorkspace: boolean; workspaceId: number };
+  'feeds:create-category': { name: string; workspaceId: number };
+  'feeds:rename-category': { categoryId: number; name: string; workspaceId: number };
+  'feeds:delete-category': { categoryId: number; reassignTo: number; workspaceId: number };
+  'feeds:move-feeds-to-category': { feedIds: number[]; categoryId: number; workspaceId: number };
   'feeds:move-to-workspace': { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string };
   'workspaces:list': undefined;
   'workspaces:create': { name: string; icon: string; color: string };
@@ -153,6 +159,8 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'settings:get-max-feed-items': undefined;
   'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': undefined;
+  'opml:import': { target: ImportOpmlTarget };
+  'opml:export': { workspaceId: number };
 };
 
 // ============= Combined channel types ==============

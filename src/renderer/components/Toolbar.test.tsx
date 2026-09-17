@@ -8,6 +8,7 @@ import { useFeeds } from '@/providers/feeds-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
 import { createTestQueryClient } from '@/lib/test/render-with-query-client';
 import Toolbar from './Toolbar';
+import type { DeleteWorkspaceError } from '../../main/db/crud/delete';
 import type { UpdateWorkspaceError } from '../../main/db/crud/update';
 import type { Result } from '../../main/lib/utils';
 import type { FeedSummary, WorkspaceSummary } from '../../preload/channels';
@@ -49,14 +50,20 @@ function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
 let workspaces: WorkspaceSummary[];
 let feedsByWorkspace: Record<number, FeedSummary[]>;
 let updateWorkspaceResult: Result<WorkspaceSummary, UpdateWorkspaceError> | undefined;
+let deleteWorkspaceResult: Result<void, DeleteWorkspaceError> | undefined;
 let editWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
+let exportWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
+let deleteWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let invokeMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   workspaces = [];
   feedsByWorkspace = {};
   updateWorkspaceResult = undefined;
+  deleteWorkspaceResult = undefined;
   editWorkspaceRequestedHandler = undefined;
+  exportWorkspaceRequestedHandler = undefined;
+  deleteWorkspaceRequestedHandler = undefined;
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
@@ -75,6 +82,16 @@ beforeEach(() => {
         }
         return Promise.resolve(result);
       }
+      case 'workspaces:delete': {
+        const { workspaceId } = arg as { workspaceId: number };
+        const result = deleteWorkspaceResult ?? { success: true, data: undefined };
+        if (result.success) {
+          workspaces = workspaces.filter((workspace) => workspace.id !== workspaceId);
+        }
+        return Promise.resolve(result);
+      }
+      case 'opml:export':
+        return Promise.resolve({ success: true, data: undefined });
       default:
         return Promise.resolve([]);
     }
@@ -86,6 +103,12 @@ beforeEach(() => {
       on: vi.fn((channel: string, handler: (payload: never) => void) => {
         if (channel === 'workspaces:edit-requested') {
           editWorkspaceRequestedHandler = handler as typeof editWorkspaceRequestedHandler;
+        }
+        if (channel === 'workspaces:export-requested') {
+          exportWorkspaceRequestedHandler = handler as typeof exportWorkspaceRequestedHandler;
+        }
+        if (channel === 'workspaces:delete-requested') {
+          deleteWorkspaceRequestedHandler = handler as typeof deleteWorkspaceRequestedHandler;
         }
         return vi.fn();
       }),
@@ -213,6 +236,18 @@ test('saving the edit dialog renames the workspace and updates its icon and colo
   await expect.element(getByRole('link', { name: 'Infra watch' })).toBeInTheDocument();
 });
 
+test('firing workspaces:export-requested invokes opml:export with the workspace id', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  await renderApp('/workspace/2');
+
+  // Act
+  exportWorkspaceRequestedHandler?.(2);
+
+  // Assert
+  await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('opml:export', { workspaceId: 2 }));
+});
+
 test('a failed edit keeps the dialog open and shows the error', async () => {
   // Arrange
   workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
@@ -226,4 +261,62 @@ test('a failed edit keeps the dialog open and shows the error', async () => {
   // Assert
   await expect.element(getByText('Could not update the workspace.', { exact: true })).toBeInTheDocument();
   await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
+});
+
+test('firing workspaces:delete-requested opens the delete dialog for that workspace', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  const { getByRole, getByText } = await renderApp('/workspace/2');
+
+  // Act
+  deleteWorkspaceRequestedHandler?.(2);
+
+  // Assert
+  await expect.element(getByRole('heading', { name: 'Delete workspace' })).toBeInTheDocument();
+  await expect.element(getByText('CI/CD watch', { exact: true })).toBeInTheDocument();
+});
+
+test('exporting from the delete dialog invokes opml:export and leaves the dialog open', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  const { getByRole } = await renderApp('/workspace/2');
+  deleteWorkspaceRequestedHandler?.(2);
+
+  // Act
+  await getByRole('button', { name: 'Export as OPML' }).click();
+
+  // Assert
+  await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('opml:export', { workspaceId: 2 }));
+  await expect.element(getByRole('heading', { name: 'Delete workspace' })).toBeInTheDocument();
+});
+
+test('confirming delete on the active workspace removes it and navigates to Home', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  feedsByWorkspace = { 1: [createFeed({ id: 1, title: 'Home feed', workspaceId: 1 })] };
+  const { getByRole, getByText } = await renderApp('/workspace/2');
+  deleteWorkspaceRequestedHandler?.(2);
+
+  // Act
+  await getByRole('button', { name: 'Delete workspace' }).click();
+
+  // Assert
+  expect(invokeMock).toHaveBeenCalledWith('workspaces:delete', { workspaceId: 2 });
+  await expect.element(getByRole('link', { name: 'CI/CD watch' })).not.toBeInTheDocument();
+  await expect.element(getByText('Home feed', { exact: true })).toBeInTheDocument();
+});
+
+test('a failed delete keeps the dialog open and shows the error', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  deleteWorkspaceResult = { success: false, error: { name: 'DB_ERROR', message: 'Could not delete the workspace.' } };
+  const { getByRole, getByText } = await renderApp('/workspace/2');
+  deleteWorkspaceRequestedHandler?.(2);
+
+  // Act
+  await getByRole('button', { name: 'Delete workspace' }).click();
+
+  // Assert
+  await expect.element(getByText('Could not delete the workspace.', { exact: true })).toBeInTheDocument();
+  await expect.element(getByRole('heading', { name: 'Delete workspace' })).toBeInTheDocument();
 });

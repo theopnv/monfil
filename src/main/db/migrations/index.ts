@@ -3,12 +3,14 @@ import * as initialSchema from './0001_initial_schema';
 import * as feedIcon from './0002_feed_icon';
 import * as riverIndex from './0003_river_index';
 import * as workspaces from './0004_workspaces';
+import * as placementCategoryWorkspace from './0005_placement_category_workspace';
 
 const migrations: Record<string, Migration> = {
   '0001_initial_schema': initialSchema,
   '0002_feed_icon': feedIcon,
   '0003_river_index': riverIndex,
   '0004_workspaces': workspaces,
+  '0005_placement_category_workspace': placementCategoryWorkspace,
 };
 
 export const migrationProvider: MigrationProvider = {

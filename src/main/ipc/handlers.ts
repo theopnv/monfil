@@ -14,6 +14,8 @@ import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetada
 import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type MaxFeedItems, type RefreshInterval } from "../settings";
 import { getAppInfo, type AppInfo } from "../app-info";
 import { sendToRenderer } from "./sendToRenderer";
+import { openAndImportOpml, type ImportOpmlError, type ImportOpmlTarget, type ImportSummary } from "../opml/import";
+import { exportWorkspaceOpml, type ExportOpmlError } from "../opml/export";
 import type { IpcMainInvokeEvent } from "electron";
 import type { FeedCategory, FeedSummary, ItemBody, RefreshSummary, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from "../../preload/channels";
 import type { Result } from "../lib/utils";
@@ -64,28 +66,28 @@ export function handleFeedsRefresh(): Promise<RefreshSummary> {
   return refreshAllFeeds();
 }
 
-export async function handleFeedsDeleteFeed(_event: IpcMainInvokeEvent, feedId: number): Promise<Result<void, DeleteFeedError>> {
-  return deleteFeedFromDatabase(feedId);
+export async function handleFeedsDeleteFeed(_event: IpcMainInvokeEvent, payload: { feedId: number; workspaceId: number }): Promise<Result<void, DeleteFeedError>> {
+  return deleteFeedFromDatabase(payload.feedId, payload.workspaceId);
 }
 
-export async function handleFeedsSetShowInWorkspace(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInWorkspace: boolean }): Promise<Result<void, UpdateFeedError>> {
-  return setFeedsShowInWorkspace(payload.feedIds, payload.showInWorkspace);
+export async function handleFeedsSetShowInWorkspace(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; showInWorkspace: boolean; workspaceId: number }): Promise<Result<void, UpdateFeedError>> {
+  return setFeedsShowInWorkspace(payload.feedIds, payload.showInWorkspace, payload.workspaceId);
 }
 
-export async function handleFeedsCreateCategory(_event: IpcMainInvokeEvent, payload: { name: string }): Promise<Result<FeedCategory, CreateCategoryError>> {
-  return createCategory(payload.name);
+export async function handleFeedsCreateCategory(_event: IpcMainInvokeEvent, payload: { name: string; workspaceId: number }): Promise<Result<FeedCategory, CreateCategoryError>> {
+  return createCategory(payload.name, payload.workspaceId);
 }
 
-export async function handleFeedsRenameCategory(_event: IpcMainInvokeEvent, payload: { categoryId: number; name: string }): Promise<Result<FeedCategory, UpdateCategoryError>> {
-  return renameCategory(payload.categoryId, payload.name);
+export async function handleFeedsRenameCategory(_event: IpcMainInvokeEvent, payload: { categoryId: number; name: string; workspaceId: number }): Promise<Result<FeedCategory, UpdateCategoryError>> {
+  return renameCategory(payload.categoryId, payload.name, payload.workspaceId);
 }
 
-export async function handleFeedsDeleteCategory(_event: IpcMainInvokeEvent, payload: { categoryId: number; reassignTo: number }): Promise<Result<void, DeleteCategoryError>> {
-  return deleteCategory(payload.categoryId, payload.reassignTo);
+export async function handleFeedsDeleteCategory(_event: IpcMainInvokeEvent, payload: { categoryId: number; reassignTo: number; workspaceId: number }): Promise<Result<void, DeleteCategoryError>> {
+  return deleteCategory(payload.categoryId, payload.reassignTo, payload.workspaceId);
 }
 
-export async function handleFeedsMoveFeedsToCategory(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; categoryId: number }): Promise<Result<void, UpdateCategoryError>> {
-  return moveFeedsToCategory(payload.feedIds, payload.categoryId);
+export async function handleFeedsMoveFeedsToCategory(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; categoryId: number; workspaceId: number }): Promise<Result<void, UpdateCategoryError>> {
+  return moveFeedsToCategory(payload.feedIds, payload.categoryId, payload.workspaceId);
 }
 
 export async function handleFeedsMoveToWorkspace(_event: IpcMainInvokeEvent, payload: { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string }): Promise<Result<void, MoveFeedError>> {
@@ -194,4 +196,12 @@ export function handleSettingsGetMaxFeedItems(): Promise<MaxFeedItems> {
 export async function handleSettingsSetMaxFeedItems(_event: IpcMainInvokeEvent, payload: MaxFeedItems): Promise<MaxFeedItems> {
   await setMaxFeedItems(payload);
   return payload;
+}
+
+export async function handleOpmlImport(_event: IpcMainInvokeEvent, payload: { target: ImportOpmlTarget }): Promise<Result<ImportSummary, ImportOpmlError>> {
+  return openAndImportOpml(payload.target);
+}
+
+export async function handleOpmlExport(_event: IpcMainInvokeEvent, payload: { workspaceId: number }): Promise<Result<void, ExportOpmlError>> {
+  return exportWorkspaceOpml(payload.workspaceId);
 }

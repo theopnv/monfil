@@ -363,7 +363,7 @@ describe('upsertArticleContent', () => {
 describe('createCategory', () => {
   test('creates a new, empty category', async () => {
     // Act
-    const result = await createCategory('Newsletters');
+    const result = await createCategory('Newsletters', HOME_WORKSPACE_ID);
 
     // Assert
     expect(result.success).toBe(true);
@@ -377,10 +377,10 @@ describe('createCategory', () => {
 
   test('a duplicate name returns DUPLICATE_NAME and creates nothing', async () => {
     // Arrange
-    await createCategory('Newsletters');
+    await createCategory('Newsletters', HOME_WORKSPACE_ID);
 
     // Act
-    const result = await createCategory('Newsletters');
+    const result = await createCategory('Newsletters', HOME_WORKSPACE_ID);
 
     // Assert
     expect(result.success).toBe(false);

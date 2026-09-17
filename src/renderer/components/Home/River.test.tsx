@@ -1,13 +1,15 @@
 import type { PropsWithChildren } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { createRootRoute, createRoute, createRouter, createMemoryHistory, RouterProvider } from '@tanstack/react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { PreferencesProvider } from '@/providers/preferences-provider';
 import { SearchProvider } from '@/providers/search-provider';
 import { RiverScopeProvider } from '@/providers/river-scope-provider';
+import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import River from './River';
-import { HOME_WORKSPACE_ID, type FeedSummary, type RiverPage, type RiverQuery, type RiverRow } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID, type FeedSummary, type RiverPage, type RiverQuery, type RiverRow, type WorkspaceSummary } from '../../../preload/channels';
 
 let nextFeedId = 1;
 let nextItemId = 1;
@@ -54,7 +56,24 @@ function createRow(feed: FeedSummary, overrides: Partial<RiverRow> = {}): RiverR
 
 let allFeeds: FeedSummary[];
 let allRows: RiverRow[];
+let workspaces: WorkspaceSummary[];
+let opmlImportResult: unknown;
 let invokeMock: ReturnType<typeof vi.fn>;
+
+function createWorkspace(overrides: Partial<WorkspaceSummary> = {}): WorkspaceSummary {
+  return {
+    id: HOME_WORKSPACE_ID,
+    name: 'Home',
+    icon: 'Home02',
+    color: '#d67f48',
+    position: 0,
+    source_slug: undefined,
+    source_version: undefined,
+    installed_at: undefined,
+    hasUnread: false,
+    ...overrides,
+  };
+}
 
 function computeRiverPage(query: RiverQuery): RiverPage {
   let candidates = allRows;
@@ -95,6 +114,8 @@ beforeEach(() => {
   nextPublishedAt = 1_000_000;
   allFeeds = [];
   allRows = [];
+  workspaces = [];
+  opmlImportResult = { success: true, data: { workspaceId: HOME_WORKSPACE_ID, imported: 0, skipped: [], failed: [] } };
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
@@ -105,6 +126,10 @@ beforeEach(() => {
         })));
       case 'items:query':
         return Promise.resolve(computeRiverPage(arg as RiverQuery));
+      case 'workspaces:list':
+        return Promise.resolve(workspaces);
+      case 'opml:import':
+        return Promise.resolve(opmlImportResult);
       case 'items:set-read': {
         const { itemIds, read } = arg as { itemIds: number[]; read: boolean };
         const targetIds = new Set(itemIds);
@@ -371,6 +396,44 @@ test('shows an onboarding empty state with zero feeds and opens the Add Feed mod
 
   // Assert
   await expect.element(getByRole('heading', { name: 'Add a feed' })).toBeInTheDocument();
+});
+
+test('an empty non-Home workspace can import OPML, and the summary survives the workspace no longer being empty', async () => {
+  // Arrange: the workspace starts with no feeds, so River renders EmptyRiver's "Import OPML" CTA.
+  // The import dialog itself must live above EmptyRiver, since a successful import makes the
+  // workspace non-empty and would otherwise unmount EmptyRiver (and any dialog nested inside it)
+  // before the user ever sees the result.
+  allFeeds = [];
+  allRows = [];
+  workspaces = [createWorkspace(), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  opmlImportResult = { success: true, data: { workspaceId: 2, imported: 1, skipped: [], failed: [] } };
+
+  const rootRoute = createRootRoute({
+    component: () => (
+      <ActiveWorkspaceIdProvider>
+        <Session><River onOpenItem={vi.fn()} /></Session>
+      </ActiveWorkspaceIdProvider>
+    ),
+  });
+  const workspaceRoute = createRoute({ getParentRoute: () => rootRoute, path: '/workspace/$workspaceId' });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([workspaceRoute]),
+    history: createMemoryHistory({ initialEntries: ['/workspace/2'] }),
+  });
+  const { getByRole, queryClient } = await renderWithQueryClient(<RouterProvider router={router} />);
+
+  // Act
+  await getByRole('button', { name: 'Import OPML' }).click();
+  await getByRole('button', { name: 'Import', exact: true }).click();
+  await expect.element(getByRole('heading', { name: 'Import complete' })).toBeInTheDocument();
+
+  // Act: simulate the feed list catching up with what the import just wrote, forcing the exact
+  // hasFeeds transition that used to unmount EmptyRiver (and the dialog nested inside it).
+  allFeeds = [createFeed({ title: 'Feed A', workspaceId: 2 })];
+  await queryClient.invalidateQueries({ queryKey: ['feeds'] });
+
+  // Assert: the summary is still visible once the workspace stops being empty.
+  await expect.element(getByRole('heading', { name: 'Import complete' })).toBeInTheDocument();
 });
 
 test('opening a link externally sends link:open, marks it read, and does not navigate', async () => {

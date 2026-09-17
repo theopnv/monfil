@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Folder } from "@untitledui/icons";
+import { Folder, UploadCloud01 } from "@untitledui/icons";
+import ImportOpmlDialog from "@/components/Workspace/ImportOpmlDialog";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import type { AppInfo } from "../../../main/app-info";
@@ -20,6 +21,7 @@ function formatBytes(bytes: number): string {
 
 export default function DataSection() {
   const [info, setInfo] = useState<AppInfo | undefined>(undefined);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   useEffect(() => {
     const load = () => {
@@ -50,14 +52,21 @@ export default function DataSection() {
         </div>
       </div>
 
-      <Button
-        color="secondary"
-        iconLeading={Folder}
-        className="self-start"
-        onPress={() => window.electron.ipcRenderer.sendMessage("app:reveal-database-file", undefined)}
-      >
-        Reveal database file
-      </Button>
+      <div className="flex gap-2.5">
+        <Button
+          color="secondary"
+          iconLeading={Folder}
+          className="self-start"
+          onPress={() => window.electron.ipcRenderer.sendMessage("app:reveal-database-file", undefined)}
+        >
+          Reveal database file
+        </Button>
+        <Button color="secondary" iconLeading={UploadCloud01} className="self-start" onPress={() => setIsImportOpen(true)}>
+          Import OPML
+        </Button>
+      </div>
+
+      <ImportOpmlDialog isOpen={isImportOpen} onOpenChange={setIsImportOpen} />
     </SettingsSection>
   );
 }

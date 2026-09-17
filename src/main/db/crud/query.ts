@@ -1,5 +1,5 @@
 import { sql, type SelectQueryBuilder } from 'kysely';
-import { type ArticleContent, type Database, type FeedCategory, type FeedItem, type FeedMetadata, type Setting } from '../types';
+import { type ArticleContent, type Database, type FeedCategory, type FeedItem, type FeedMetadata, type Setting, type Workspace } from '../types';
 import { db, dbReady } from '../database';
 import type { FeedSummary, RiverPage, RiverQuery, RiverRow, WorkspaceSummary } from '../../../preload/channels';
 
@@ -63,6 +63,15 @@ const feedMetadataHandlers = {
 export async function queryFeedMetadata(criteria: Partial<FeedMetadata>): Promise<FeedMetadata[]> {
   await dbReady;
   return applyCriteria(db.selectFrom('feedMetadata').selectAll(), criteria, feedMetadataHandlers).execute();
+}
+
+/** Every stored feed whose id is in `ids`, in no particular order. Used to refresh a specific batch (e.g. a freshly imported OPML) rather than every feed. */
+export async function queryFeedMetadataByIds(ids: number[]): Promise<FeedMetadata[]> {
+  await dbReady;
+  if (ids.length === 0) {
+    return [];
+  }
+  return db.selectFrom('feedMetadata').selectAll().where('id', 'in', ids).execute();
 }
 
 const feedCategoryHandlers = {
@@ -215,6 +224,12 @@ export async function queryWorkspaceSummaries(): Promise<WorkspaceSummary[]> {
     installed_at: row.installed_at,
     hasUnread: (row.unreadCount ?? 0) > 0,
   }));
+}
+
+/** One workspace by id, or `undefined` if it does not exist. */
+export async function queryWorkspaceById(workspaceId: number): Promise<Workspace | undefined> {
+  await dbReady;
+  return db.selectFrom('workspace').selectAll().where('id', '=', workspaceId).executeTakeFirst();
 }
 
 // Escapes SQLite LIKE wildcards so a search word is matched literally rather than as a pattern.

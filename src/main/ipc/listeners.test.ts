@@ -237,7 +237,7 @@ describe('workspaces:show-context-menu IPC listener', () => {
     mockedFromWebContents.mockReset();
   });
 
-  test('builds a template holding one item labelled "Edit workspace"', () => {
+  test('Home gets "Edit workspace" and "Export as OPML" but no "Delete workspace"', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
@@ -247,11 +247,41 @@ describe('workspaces:show-context-menu IPC listener', () => {
 
     // Assert
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
-    expect(template).toHaveLength(1);
+    expect(template).toHaveLength(2);
     expect(template?.[0]?.label).toBe('Edit workspace');
+    expect(template?.[1]?.label).toBe('Export as OPML');
   });
 
-  test("the template item's click sends workspaces:edit-requested with the workspace id", () => {
+  test('a non-Home workspace also gets "Delete workspace"', () => {
+    // Arrange
+    mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+
+    // Act
+    listenToShowWorkspaceContextMenu(mockEvent(), 3);
+
+    // Assert
+    const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
+    expect(template).toHaveLength(3);
+    expect(template?.[2]?.label).toBe('Delete workspace');
+  });
+
+  test('"Delete workspace" sends workspaces:delete-requested with the workspace id', () => {
+    // Arrange
+    mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+    const event = mockEvent();
+
+    // Act
+    listenToShowWorkspaceContextMenu(event, 3);
+    const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
+    template?.[2]?.click?.(undefined as never, undefined, undefined as never);
+
+    // Assert
+    expect(event.sender.send).toHaveBeenCalledWith('workspaces:delete-requested', 3);
+  });
+
+  test('"Edit workspace" sends workspaces:edit-requested with the workspace id', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
@@ -266,7 +296,22 @@ describe('workspaces:show-context-menu IPC listener', () => {
     expect(event.sender.send).toHaveBeenCalledWith('workspaces:edit-requested', 3);
   });
 
-  test('a destroyed sender sends nothing when the item is clicked', () => {
+  test('"Export as OPML" sends workspaces:export-requested with the workspace id', () => {
+    // Arrange
+    mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+    const event = mockEvent();
+
+    // Act
+    listenToShowWorkspaceContextMenu(event, 3);
+    const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
+    template?.[1]?.click?.(undefined as never, undefined, undefined as never);
+
+    // Assert
+    expect(event.sender.send).toHaveBeenCalledWith('workspaces:export-requested', 3);
+  });
+
+  test('a destroyed sender sends nothing when an item is clicked', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
