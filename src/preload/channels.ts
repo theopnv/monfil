@@ -138,12 +138,12 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'items:query': RiverQuery;
   'feeds:refresh': undefined;
   'feeds:submit-add-feed': NewFeedInput;
-  'feeds:delete-feed': number;
-  'feeds:set-show-in-workspace': { feedIds: number[]; showInWorkspace: boolean };
-  'feeds:create-category': { name: string };
-  'feeds:rename-category': { categoryId: number; name: string };
-  'feeds:delete-category': { categoryId: number; reassignTo: number };
-  'feeds:move-feeds-to-category': { feedIds: number[]; categoryId: number };
+  'feeds:delete-feed': { feedId: number; workspaceId: number };
+  'feeds:set-show-in-workspace': { feedIds: number[]; showInWorkspace: boolean; workspaceId: number };
+  'feeds:create-category': { name: string; workspaceId: number };
+  'feeds:rename-category': { categoryId: number; name: string; workspaceId: number };
+  'feeds:delete-category': { categoryId: number; reassignTo: number; workspaceId: number };
+  'feeds:move-feeds-to-category': { feedIds: number[]; categoryId: number; workspaceId: number };
   'feeds:move-to-workspace': { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string };
   'workspaces:list': undefined;
   'workspaces:create': { name: string; icon: string; color: string };

@@ -1,7 +1,7 @@
 import { type Kysely } from 'kysely';
 import { db, dbReady } from '../database';
 import { queryFeedItems } from './query';
-import { HOME_WORKSPACE_ID, type Database, type FeedCategory, type FeedItem, type FeedMetadata, type NewArticleContent, type SourceType, type Workspace } from '../types';
+import { type Database, type FeedCategory, type FeedItem, type FeedMetadata, type NewArticleContent, type SourceType, type Workspace } from '../types';
 import type { Result } from '../../lib/utils';
 import { stripHtml, truncateOnWordBoundary } from '../../lib/strip-html';
 
@@ -26,15 +26,16 @@ export type CreateCategoryError =
   | { name: 'DUPLICATE_NAME'; message: string };
 
 /**
- * Creates a new, empty category in the Home workspace. Unlike `addFeedCategoryToDatabase`, a name
+ * Creates a new, empty category in `workspaceId`. Unlike `addFeedCategoryToDatabase`, a name
  * already in use is an error rather than a silent reuse, since this path is a deliberate "new folder"
  * action.
- * @param name the category's display name, unique within Home
+ * @param name the category's display name, unique within the workspace
+ * @param workspaceId the workspace the category is created in
  */
-export async function createCategory(name: string): Promise<Result<FeedCategory, CreateCategoryError>> {
+export async function createCategory(name: string, workspaceId: number): Promise<Result<FeedCategory, CreateCategoryError>> {
   await dbReady;
   try {
-    const category = await db.insertInto('feedCategory').values({ name, workspace_id: HOME_WORKSPACE_ID }).returningAll().executeTakeFirstOrThrow();
+    const category = await db.insertInto('feedCategory').values({ name, workspace_id: workspaceId }).returningAll().executeTakeFirstOrThrow();
     return { success: true, data: category };
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {

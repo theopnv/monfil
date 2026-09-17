@@ -324,6 +324,89 @@ describe('0004_workspaces backfill', () => {
   });
 });
 
+describe('0005_placement_category_workspace backfill', () => {
+  /** A Home feed filed under a category owned by `otherWorkspaceName`, as moveFeedsToCategory used to allow. */
+  async function seedMismatchedPlacement(otherWorkspaceName: string): Promise<{ feedId: number; foreignCategoryId: number }> {
+    const seeded = await seed();
+    const other = await db.insertInto('workspace')
+      .values({ name: otherWorkspaceName, icon: 'Stars01', color: '#000000', position: 1 })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+    const foreign = await db.insertInto('feedCategory')
+      .values({ name: 'Foreign', workspace_id: other.id })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+    await db.updateTable('feedPlacement').set({ category_id: foreign.id }).where('feed_id', '=', seeded.feedId).execute();
+
+    return { feedId: seeded.feedId, foreignCategoryId: foreign.id };
+  }
+
+  test('repoints a placement filed under another workspace onto a category of its own', async () => {
+    // Arrange
+    assertMigrated(await migrateTo('0004_workspaces'));
+    const { feedId, foreignCategoryId } = await seedMismatchedPlacement('Other');
+
+    // Act
+    assertMigrated(await migrateToLatest());
+
+    // Assert
+    const placement = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', feedId).executeTakeFirstOrThrow();
+    expect(placement['category_id']).not.toBe(foreignCategoryId);
+    const category = await db.selectFrom('feedCategory').selectAll().where('id', '=', placement['category_id']).executeTakeFirstOrThrow();
+    expect(category).toMatchObject({ name: 'Foreign', workspace_id: HOME_WORKSPACE_ID });
+    expect(await brokenForeignKeys()).toEqual([]);
+  });
+
+  test('reuses a category the workspace already has under that name', async () => {
+    // Arrange
+    assertMigrated(await migrateTo('0004_workspaces'));
+    const { feedId } = await seedMismatchedPlacement('Other');
+    const existing = await db.insertInto('feedCategory')
+      .values({ name: 'Foreign', workspace_id: HOME_WORKSPACE_ID })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+
+    // Act
+    assertMigrated(await migrateToLatest());
+
+    // Assert
+    const placement = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', feedId).executeTakeFirstOrThrow();
+    expect(placement['category_id']).toBe(existing.id);
+  });
+
+  test('leaves a placement already filed in its own workspace alone', async () => {
+    // Arrange
+    assertMigrated(await migrateTo('0004_workspaces'));
+    const seeded = await seed();
+
+    // Act
+    assertMigrated(await migrateToLatest());
+
+    // Assert
+    const placement = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', seeded.feedId).executeTakeFirstOrThrow();
+    expect(placement).toMatchObject({ category_id: seeded.categoryId, workspace_id: HOME_WORKSPACE_ID });
+  });
+
+  test('refuses a placement filed under another workspace once it has run', async () => {
+    // Arrange
+    assertMigrated(await migrateToLatest());
+    const seeded = await seed();
+    const other = await db.insertInto('workspace')
+      .values({ name: 'Other', icon: 'Stars01', color: '#000000', position: 1 })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+    const foreign = await db.insertInto('feedCategory')
+      .values({ name: 'Foreign', workspace_id: other.id })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+
+    // Act, Assert
+    await expect(
+      db.updateTable('feedPlacement').set({ category_id: foreign.id }).where('feed_id', '=', seeded.feedId).execute(),
+    ).rejects.toThrow(/FOREIGN KEY/);
+  });
+});
+
 describe('the migration list', () => {
   test('has unique names, already in the order Migrator will run them', () => {
     // Assert

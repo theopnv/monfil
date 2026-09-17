@@ -177,3 +177,113 @@ workspacesTest('adding a feed through the wizard while on a workspace adds it th
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
 });
+
+workspacesTest('creating a folder while on a workspace creates it there, not Home', async ({ launchApp }) => {
+  // Arrange: a workspace to be on when creating the folder.
+  const { page } = await launchApp();
+  await page.getByRole('button', { name: 'New workspace' }).click();
+  await page.getByRole('textbox', { name: 'Name' }).fill('CI/CD watch');
+  await page.getByRole('button', { name: 'Create workspace' }).click();
+  await expect(page.getByRole('link', { name: 'CI/CD watch' })).toBeVisible();
+
+  // Act: create a folder through the sidebar while on that workspace, not Home.
+  await page.getByRole('button', { name: 'New folder' }).click();
+  await page.getByLabel('New folder name').fill('Alerts');
+  await page.getByLabel('New folder name').press('Enter');
+
+  // Assert: the workspace it was created from lists it.
+  await expect(page.getByRole('button', { name: 'Alerts', exact: true })).toBeVisible();
+
+  // Assert: Home does not.
+  await page.getByRole('link', { name: 'Home' }).click();
+  await expect(page.getByRole('button', { name: 'Alerts', exact: true })).not.toBeVisible();
+});
+
+workspacesTest('a folder name another workspace already uses is free to reuse', async ({ launchApp }) => {
+  // Arrange: Home already has a Tech folder, and a second workspace to create one from.
+  const { page } = await launchApp();
+  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
+  await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'New workspace' }).click();
+  await page.getByRole('textbox', { name: 'Name' }).fill('CI/CD watch');
+  await page.getByRole('button', { name: 'Create workspace' }).click();
+  await expect(page.getByRole('link', { name: 'CI/CD watch' })).toBeVisible();
+
+  // Act: create a folder there under the name Home already holds.
+  await page.getByRole('button', { name: 'New folder' }).click();
+  await page.getByLabel('New folder name').fill('Tech');
+  await page.getByLabel('New folder name').press('Enter');
+
+  // Assert: it is created, with no duplicate-name complaint.
+  await expect(page.getByText('A folder with that name already exists.')).not.toBeVisible();
+  await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
+});
+
+workspacesTest('renaming a folder while on a workspace leaves the same-named Home folder alone', async ({ launchApp }) => {
+  // Arrange: a Tech folder in Home, and a Tech folder in a second workspace.
+  const { app, page } = await launchApp();
+  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
+  await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'New workspace' }).click();
+  await page.getByRole('textbox', { name: 'Name' }).fill('CI/CD watch');
+  await page.getByRole('button', { name: 'Create workspace' }).click();
+  await expect(page.getByRole('link', { name: 'CI/CD watch' })).toBeVisible();
+  const workspaceId = await workspaceIdFor(page, 'CI/CD watch');
+  await subscribe(page, 'http://127.0.0.1/feed-b', 'Feed B', 'Tech', workspaceId);
+  await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
+
+  // Act: rename it from the workspace it belongs to.
+  const categoryId = await page.evaluate(async (id) => {
+    const categories = await window.electron.ipcRenderer.invoke('feeds:list-categories', { workspaceId: id });
+    return categories.find((category) => category.name === 'Tech')?.id;
+  }, workspaceId);
+  if (categoryId === undefined) {
+    throw new Error('expected a Tech folder in the workspace');
+  }
+  await app.evaluate(({ BrowserWindow }, id) => {
+    BrowserWindow.getAllWindows()[0]?.webContents.send('feeds:rename-category-requested', id);
+  }, categoryId);
+  await page.getByRole('textbox', { name: 'Rename Tech' }).fill('Alerts');
+  await page.getByRole('textbox', { name: 'Rename Tech' }).press('Enter');
+
+  // Assert: renamed where it was renamed from.
+  await expect(page.getByRole('button', { name: 'Alerts', exact: true })).toBeVisible();
+
+  // Assert: Home's Tech folder is untouched.
+  await page.getByRole('link', { name: 'Home' }).click();
+  await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
+});
+
+workspacesTest('deleting a feed from one workspace leaves it in place in another', async ({ launchApp }) => {
+  // Arrange: the same feed placed in both Home and a second workspace.
+  const { app, page } = await launchApp();
+  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
+  await ensureFolderOpen(page, 'Tech', /^Feed A/);
+  await expect(page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
+
+  await page.getByRole('button', { name: 'New workspace' }).click();
+  await page.getByRole('textbox', { name: 'Name' }).fill('CI/CD watch');
+  await page.getByRole('button', { name: 'Create workspace' }).click();
+  await expect(page.getByRole('link', { name: 'CI/CD watch' })).toBeVisible();
+  const workspaceId = await workspaceIdFor(page, 'CI/CD watch');
+  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech', workspaceId);
+  await ensureFolderOpen(page, 'Tech', /^Feed A/);
+  await expect(page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
+  const feedId = await feedIdFor(page, 'http://127.0.0.1/feed-a');
+
+  // Act: delete it while on the CI/CD watch workspace, standing in for the native menu's click.
+  await app.evaluate(({ BrowserWindow }, id) => {
+    BrowserWindow.getAllWindows()[0]?.webContents.send('feeds:delete-feed-requested', id);
+  }, feedId);
+  await expect(page.getByRole('heading', { name: 'Delete feed' })).toBeVisible();
+  await page.getByRole('button', { name: 'Delete feed' }).click();
+
+  // Assert: gone from the workspace it was deleted from.
+  await expect(page.getByRole('button', { name: /^Feed A/ })).not.toBeVisible();
+
+  // Assert: still in Home.
+  await page.getByRole('link', { name: 'Home' }).click();
+  await expect(page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
+});

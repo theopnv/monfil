@@ -1,12 +1,14 @@
 import { db, dbReady } from '../database';
 import type { Result } from '../../lib/utils';
-import { HOME_WORKSPACE_ID, type FeedCategory, type Workspace } from '../types';
+import { type FeedCategory, type Workspace } from '../types';
 
 export type UpdateFeedError =
   | { name: 'DB_ERROR'; message: string }
   | { name: 'FEED_NOT_FOUND'; message: string };
 
-export type MoveFeedError = { name: 'DB_ERROR'; message: string };
+export type MoveFeedError =
+  | { name: 'DB_ERROR'; message: string }
+  | { name: 'FEED_NOT_FOUND'; message: string };
 
 export type UpdateWorkspaceError =
   | { name: 'DB_ERROR'; message: string }
@@ -24,14 +26,21 @@ export type UpdateCategoryError =
   | { name: 'DUPLICATE_NAME'; message: string };
 
 /**
- * Renames a category in place.
+ * Renames a category in place. A category id that belongs to another workspace is reported as
+ * missing rather than renamed, so an action taken from one workspace can never reach another's.
  * @param categoryId the id of the category to rename
- * @param name the new name, unique across every category
+ * @param name the new name, unique within the workspace
+ * @param workspaceId the workspace the category belongs to
  */
-export async function renameCategory(categoryId: number, name: string): Promise<Result<FeedCategory, UpdateCategoryError>> {
+export async function renameCategory(categoryId: number, name: string, workspaceId: number): Promise<Result<FeedCategory, UpdateCategoryError>> {
   await dbReady;
   try {
-    const updated = await db.updateTable('feedCategory').set({ name }).where('id', '=', categoryId).returningAll().executeTakeFirst();
+    const updated = await db.updateTable('feedCategory')
+      .set({ name })
+      .where('id', '=', categoryId)
+      .where('workspace_id', '=', workspaceId)
+      .returningAll()
+      .executeTakeFirst();
     if (!updated) {
       return { success: false, error: { name: 'CATEGORY_NOT_FOUND', message: `No category found with id ${categoryId}` } };
     }
@@ -45,11 +54,13 @@ export async function renameCategory(categoryId: number, name: string): Promise<
 }
 
 /**
- * Moves a batch of feeds into a category in one statement, within the Home workspace.
+ * Moves a batch of feeds into a category in one statement, within `workspaceId`. A category owned by
+ * another workspace is refused by `feedPlacement_category_workspace_fk` and reported as missing.
  * @param feedIds the ids of the feeds to move
  * @param categoryId the id of the destination category
+ * @param workspaceId the workspace both the feeds and the category belong to
  */
-export async function moveFeedsToCategory(feedIds: number[], categoryId: number): Promise<Result<void, UpdateCategoryError>> {
+export async function moveFeedsToCategory(feedIds: number[], categoryId: number, workspaceId: number): Promise<Result<void, UpdateCategoryError>> {
   if (feedIds.length === 0) {
     return { success: true, data: undefined };
   }
@@ -59,7 +70,7 @@ export async function moveFeedsToCategory(feedIds: number[], categoryId: number)
     await db.updateTable('feedPlacement')
       .set({ category_id: categoryId })
       .where('feed_id', 'in', feedIds)
-      .where('workspace_id', '=', HOME_WORKSPACE_ID)
+      .where('workspace_id', '=', workspaceId)
       .execute();
     return { success: true, data: undefined };
   } catch (error) {
@@ -71,12 +82,16 @@ export async function moveFeedsToCategory(feedIds: number[], categoryId: number)
 }
 
 /**
- * Sets `showInWorkspace` on a batch of feeds' Home placement in one statement.
+ * Sets `showInWorkspace` on a batch of feeds' placement in `workspaceId`, in one statement. Every id
+ * has to resolve to a placement there: a partially applied batch is reported as a failure, since the
+ * caller asked for all of them.
  * @param feedIds the ids of the feeds to update
  * @param showInWorkspace the value to set
+ * @param workspaceId the workspace the placement belongs to
  */
-export async function setFeedsShowInWorkspace(feedIds: number[], showInWorkspace: boolean): Promise<Result<void, UpdateFeedError>> {
-  if (feedIds.length === 0) {
+export async function setFeedsShowInWorkspace(feedIds: number[], showInWorkspace: boolean, workspaceId: number): Promise<Result<void, UpdateFeedError>> {
+  const ids = [...new Set(feedIds)];
+  if (ids.length === 0) {
     return { success: true, data: undefined };
   }
 
@@ -84,11 +99,11 @@ export async function setFeedsShowInWorkspace(feedIds: number[], showInWorkspace
   try {
     const result = await db.updateTable('feedPlacement')
       .set({ showInWorkspace: showInWorkspace ? 1 : 0 })
-      .where('feed_id', 'in', feedIds)
-      .where('workspace_id', '=', HOME_WORKSPACE_ID)
+      .where('feed_id', 'in', ids)
+      .where('workspace_id', '=', workspaceId)
       .executeTakeFirst();
-    if (result.numUpdatedRows === 0n) {
-      return { success: false, error: { name: 'FEED_NOT_FOUND', message: `No feed found for ids ${feedIds.join(', ')}` } };
+    if (result.numUpdatedRows !== BigInt(ids.length)) {
+      return { success: false, error: { name: 'FEED_NOT_FOUND', message: `No feed found in workspace ${workspaceId} for every id of ${ids.join(', ')}` } };
     }
     return { success: true, data: undefined };
   } catch (error) {
@@ -145,7 +160,9 @@ export async function setFeedItemsRead(itemIds: number[], read: boolean): Promis
 
 /**
  * Moves a feed's placement from `fromWorkspaceId` into `toWorkspaceId`, filing it under
- * `categoryName` there. That category is created first if the destination does not have it yet.
+ * `categoryName` there. That category is created first if the destination does not have it yet. The
+ * source placement has to exist, otherwise this would add a placement rather than move one, and it
+ * carries its `showInWorkspace` across so a hidden feed stays hidden.
  * @param feedId the id of the feed to move
  * @param fromWorkspaceId the workspace the feed currently sits in
  * @param toWorkspaceId the workspace to place it in instead
@@ -154,23 +171,37 @@ export async function setFeedItemsRead(itemIds: number[], read: boolean): Promis
 export async function moveFeedToWorkspace(feedId: number, fromWorkspaceId: number, toWorkspaceId: number, categoryName: string): Promise<Result<void, MoveFeedError>> {
   await dbReady;
   try {
-    await db.transaction().execute(async (trx) => {
+    const moved = await db.transaction().execute(async (trx) => {
+      const source = await trx.deleteFrom('feedPlacement')
+        .where('feed_id', '=', feedId)
+        .where('workspace_id', '=', fromWorkspaceId)
+        .returningAll()
+        .executeTakeFirst();
+
+      if (!source) {
+        return false;
+      }
+
       const category = await trx.insertInto('feedCategory')
         .values({ name: categoryName, workspace_id: toWorkspaceId })
         .onConflict((oc) => oc.columns(['workspace_id', 'name']).doUpdateSet((eb) => ({ name: eb.ref('excluded.name') })))
         .returningAll()
         .executeTakeFirstOrThrow();
 
-      await trx.deleteFrom('feedPlacement').where('feed_id', '=', feedId).where('workspace_id', '=', fromWorkspaceId).execute();
-
       await trx.insertInto('feedPlacement')
-        .values({ feed_id: feedId, category_id: category.id, workspace_id: toWorkspaceId, showInWorkspace: 1 })
+        .values({ feed_id: feedId, category_id: category.id, workspace_id: toWorkspaceId, showInWorkspace: source.showInWorkspace })
         .onConflict((oc) => oc.columns(['feed_id', 'workspace_id']).doUpdateSet((eb) => ({
           category_id: eb.ref('excluded.category_id'),
           showInWorkspace: eb.ref('excluded.showInWorkspace'),
         })))
         .execute();
+
+      return true;
     });
+
+    if (!moved) {
+      return { success: false, error: { name: 'FEED_NOT_FOUND', message: `No feed found with id ${feedId} in workspace ${fromWorkspaceId}` } };
+    }
     return { success: true, data: undefined };
   } catch (error) {
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };

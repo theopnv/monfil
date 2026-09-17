@@ -46,7 +46,7 @@ describe('deleteFeedFromDatabase', () => {
     }
 
     // Act
-    const result = await deleteFeedFromDatabase(inserted.data.id);
+    const result = await deleteFeedFromDatabase(inserted.data.id, HOME_WORKSPACE_ID);
 
     // Assert
     expect(result.success).toBe(true);
@@ -65,7 +65,7 @@ describe('deleteFeedFromDatabase', () => {
     }
 
     // Act
-    await deleteFeedFromDatabase(insertedA.data.id);
+    await deleteFeedFromDatabase(insertedA.data.id, HOME_WORKSPACE_ID);
 
     // Assert
     const metadata = await db.selectFrom('feedMetadata').selectAll().where('id', '=', insertedB.data.id).execute();
@@ -82,7 +82,7 @@ describe('deleteFeedFromDatabase', () => {
     }
 
     // Act
-    const result = await deleteFeedFromDatabase(inserted.data.id);
+    const result = await deleteFeedFromDatabase(inserted.data.id, HOME_WORKSPACE_ID);
 
     // Assert
     expect(result.success).toBe(true);
@@ -90,7 +90,7 @@ describe('deleteFeedFromDatabase', () => {
 
   test('an unknown id returns FEED_NOT_FOUND and writes nothing', async () => {
     // Act
-    const result = await deleteFeedFromDatabase(999999);
+    const result = await deleteFeedFromDatabase(999999, HOME_WORKSPACE_ID);
 
     // Assert
     expect(result.success).toBe(false);
@@ -113,7 +113,7 @@ describe('deleteFeedFromDatabase', () => {
     await upsertArticleContent({ item_id: itemId, html: '<p>Body</p>', text: 'Body', word_count: 1, status: 'ok' });
 
     // Act
-    await deleteFeedFromDatabase(inserted.data.id);
+    await deleteFeedFromDatabase(inserted.data.id, HOME_WORKSPACE_ID);
 
     // Assert
     const content = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).execute();
@@ -128,11 +128,72 @@ describe('deleteFeedFromDatabase', () => {
     }
 
     // Act
-    await deleteFeedFromDatabase(inserted.data.id);
+    await deleteFeedFromDatabase(inserted.data.id, HOME_WORKSPACE_ID);
 
     // Assert
     const categories = await db.selectFrom('feedCategory').selectAll().where('id', '=', inserted.data.category.id).execute();
     expect(categories).toHaveLength(1);
+  });
+
+  test('removing a feed placed in two workspaces only drops the given workspace\'s placement', async () => {
+    // Arrange
+    const other = await createWorkspace('Pack', 'Stars01', '#000000');
+    if (!other.success) {
+      throw new Error('expected the workspace to be created');
+    }
+    const home = await addFeedToDatabase(feedA);
+    const inOther = await addFeedToDatabase({ ...feedA, workspaceId: other.data.id });
+    if (!home.success || !inOther.success) {
+      throw new Error('expected the feed to be placed in both workspaces');
+    }
+
+    // Act
+    const result = await deleteFeedFromDatabase(inOther.data.id, other.data.id);
+
+    // Assert
+    expect(result.success).toBe(true);
+    const otherPlacement = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', home.data.id).where('workspace_id', '=', other.data.id).execute();
+    expect(otherPlacement).toEqual([]);
+    const homePlacement = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', home.data.id).where('workspace_id', '=', HOME_WORKSPACE_ID).execute();
+    expect(homePlacement).toHaveLength(1);
+    const metadata = await db.selectFrom('feedMetadata').selectAll().where('id', '=', home.data.id).execute();
+    expect(metadata).toHaveLength(1);
+  });
+
+  test('removing a feed from its only workspace deletes the underlying feed', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+
+    // Act
+    await deleteFeedFromDatabase(inserted.data.id, HOME_WORKSPACE_ID);
+
+    // Assert
+    const metadata = await db.selectFrom('feedMetadata').selectAll().where('id', '=', inserted.data.id).execute();
+    expect(metadata).toEqual([]);
+  });
+
+  test('an id not placed in the given workspace returns FEED_NOT_FOUND and writes nothing', async () => {
+    // Arrange
+    const other = await createWorkspace('Pack', 'Stars01', '#000000');
+    const inserted = await addFeedToDatabase(feedA);
+    if (!other.success || !inserted.success) {
+      throw new Error('expected the workspace and feed to be created');
+    }
+
+    // Act
+    const result = await deleteFeedFromDatabase(inserted.data.id, other.data.id);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('FEED_NOT_FOUND');
+    const metadata = await db.selectFrom('feedMetadata').selectAll().where('id', '=', inserted.data.id).execute();
+    expect(metadata).toHaveLength(1);
   });
 });
 
@@ -143,13 +204,13 @@ describe('deleteCategory', () => {
     if (!inserted.success) {
       throw new Error('expected the feed to be created');
     }
-    const destination = await createCategory('Destination');
+    const destination = await createCategory('Destination', HOME_WORKSPACE_ID);
     if (!destination.success) {
       throw new Error('expected the category to be created');
     }
 
     // Act
-    const result = await deleteCategory(inserted.data.category.id, destination.data.id);
+    const result = await deleteCategory(inserted.data.category.id, destination.data.id, HOME_WORKSPACE_ID);
 
     // Assert
     expect(result.success).toBe(true);
@@ -161,14 +222,14 @@ describe('deleteCategory', () => {
 
   test('an empty category still deletes', async () => {
     // Arrange
-    const empty = await createCategory('Empty');
-    const destination = await createCategory('Destination');
+    const empty = await createCategory('Empty', HOME_WORKSPACE_ID);
+    const destination = await createCategory('Destination', HOME_WORKSPACE_ID);
     if (!empty.success || !destination.success) {
       throw new Error('expected both categories to be created');
     }
 
     // Act
-    const result = await deleteCategory(empty.data.id, destination.data.id);
+    const result = await deleteCategory(empty.data.id, destination.data.id, HOME_WORKSPACE_ID);
 
     // Assert
     expect(result.success).toBe(true);
@@ -176,13 +237,13 @@ describe('deleteCategory', () => {
 
   test('an unknown id returns CATEGORY_NOT_FOUND and writes nothing', async () => {
     // Arrange
-    const destination = await createCategory('Destination');
+    const destination = await createCategory('Destination', HOME_WORKSPACE_ID);
     if (!destination.success) {
       throw new Error('expected the category to be created');
     }
 
     // Act
-    const result = await deleteCategory(999999, destination.data.id);
+    const result = await deleteCategory(999999, destination.data.id, HOME_WORKSPACE_ID);
 
     // Assert
     expect(result.success).toBe(false);
@@ -190,6 +251,58 @@ describe('deleteCategory', () => {
       return;
     }
     expect(result.error.name).toBe('CATEGORY_NOT_FOUND');
+  });
+
+  test('a category owned by another workspace returns CATEGORY_NOT_FOUND and survives', async () => {
+    // Arrange
+    const other = await createWorkspace('Other', 'Code01', '#3b82f6');
+    if (!other.success) {
+      throw new Error('expected the workspace to be created');
+    }
+    const foreign = await createCategory('Foreign', other.data.id);
+    const destination = await createCategory('Destination', HOME_WORKSPACE_ID);
+    if (!foreign.success || !destination.success) {
+      throw new Error('expected both categories to be created');
+    }
+
+    // Act
+    const result = await deleteCategory(foreign.data.id, destination.data.id, HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('CATEGORY_NOT_FOUND');
+    const rows = await db.selectFrom('feedCategory').selectAll().where('id', '=', foreign.data.id).execute();
+    expect(rows).toHaveLength(1);
+  });
+
+  test('a destination in another workspace returns CATEGORY_NOT_FOUND and moves nothing', async () => {
+    // Arrange
+    const other = await createWorkspace('Other', 'Code01', '#3b82f6');
+    const inserted = await addFeedToDatabase(feedA);
+    if (!other.success || !inserted.success) {
+      throw new Error('expected the workspace and feed to be created');
+    }
+    const foreign = await createCategory('Foreign', other.data.id);
+    if (!foreign.success) {
+      throw new Error('expected the category to be created');
+    }
+
+    // Act
+    const result = await deleteCategory(inserted.data.category.id, foreign.data.id, HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('CATEGORY_NOT_FOUND');
+    const placement = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', inserted.data.id).executeTakeFirstOrThrow();
+    expect(placement.category_id).toBe(inserted.data.category.id);
+    const rows = await db.selectFrom('feedCategory').selectAll().where('id', '=', inserted.data.category.id).execute();
+    expect(rows).toHaveLength(1);
   });
 });
 

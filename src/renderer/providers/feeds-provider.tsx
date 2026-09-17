@@ -44,9 +44,10 @@ export const useAddFeed = (): ((input: Omit<NewFeedInput, 'workspaceId'>) => Pro
 };
 
 export const useDeleteFeed = (): ((feedId: number) => Promise<Result<void, DeleteFeedError>>) => {
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (feedId: number) => window.electron.ipcRenderer.invoke('feeds:delete-feed', feedId),
+    mutationFn: (variables: { feedId: number; workspaceId: number }) => window.electron.ipcRenderer.invoke('feeds:delete-feed', variables),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });
@@ -55,13 +56,14 @@ export const useDeleteFeed = (): ((feedId: number) => Promise<Result<void, Delet
     },
   });
   const { mutateAsync } = mutation;
-  return useCallback((feedId: number) => mutateAsync(feedId), [mutateAsync]);
+  return useCallback((feedId: number) => mutateAsync({ feedId, workspaceId }), [mutateAsync, workspaceId]);
 };
 
 export const useSetShowInWorkspace = (): ((feedIds: number[], showInWorkspace: boolean) => Promise<Result<void, UpdateFeedError>>) => {
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (variables: { feedIds: number[]; showInWorkspace: boolean }) => window.electron.ipcRenderer.invoke('feeds:set-show-in-workspace', variables),
+    mutationFn: (variables: { feedIds: number[]; showInWorkspace: boolean; workspaceId: number }) => window.electron.ipcRenderer.invoke('feeds:set-show-in-workspace', variables),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });
@@ -70,13 +72,14 @@ export const useSetShowInWorkspace = (): ((feedIds: number[], showInWorkspace: b
     },
   });
   const { mutateAsync } = mutation;
-  return useCallback((feedIds: number[], showInWorkspace: boolean) => mutateAsync({ feedIds, showInWorkspace }), [mutateAsync]);
+  return useCallback((feedIds: number[], showInWorkspace: boolean) => mutateAsync({ feedIds, showInWorkspace, workspaceId }), [mutateAsync, workspaceId]);
 };
 
 export const useCreateCategory = (): ((name: string) => Promise<Result<FeedCategory, CreateCategoryError>>) => {
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (name: string) => window.electron.ipcRenderer.invoke('feeds:create-category', { name }),
+    mutationFn: (name: string) => window.electron.ipcRenderer.invoke('feeds:create-category', { name, workspaceId }),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -88,9 +91,10 @@ export const useCreateCategory = (): ((name: string) => Promise<Result<FeedCateg
 };
 
 export const useRenameCategory = (): ((categoryId: number, name: string) => Promise<Result<FeedCategory, UpdateCategoryError>>) => {
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (variables: { categoryId: number; name: string }) => window.electron.ipcRenderer.invoke('feeds:rename-category', variables),
+    mutationFn: (variables: { categoryId: number; name: string; workspaceId: number }) => window.electron.ipcRenderer.invoke('feeds:rename-category', variables),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });
@@ -100,13 +104,14 @@ export const useRenameCategory = (): ((categoryId: number, name: string) => Prom
     },
   });
   const { mutateAsync } = mutation;
-  return useCallback((categoryId: number, name: string) => mutateAsync({ categoryId, name }), [mutateAsync]);
+  return useCallback((categoryId: number, name: string) => mutateAsync({ categoryId, name, workspaceId }), [mutateAsync, workspaceId]);
 };
 
 export const useDeleteCategory = (): ((categoryId: number, reassignTo: number) => Promise<Result<void, DeleteCategoryError>>) => {
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (variables: { categoryId: number; reassignTo: number }) => window.electron.ipcRenderer.invoke('feeds:delete-category', variables),
+    mutationFn: (variables: { categoryId: number; reassignTo: number; workspaceId: number }) => window.electron.ipcRenderer.invoke('feeds:delete-category', variables),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });
@@ -116,13 +121,14 @@ export const useDeleteCategory = (): ((categoryId: number, reassignTo: number) =
     },
   });
   const { mutateAsync } = mutation;
-  return useCallback((categoryId: number, reassignTo: number) => mutateAsync({ categoryId, reassignTo }), [mutateAsync]);
+  return useCallback((categoryId: number, reassignTo: number) => mutateAsync({ categoryId, reassignTo, workspaceId }), [mutateAsync, workspaceId]);
 };
 
 export const useMoveFeeds = (): ((feedIds: number[], categoryId: number) => Promise<Result<void, UpdateCategoryError>>) => {
+  const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (variables: { feedIds: number[]; categoryId: number }) => window.electron.ipcRenderer.invoke('feeds:move-feeds-to-category', variables),
+    mutationFn: (variables: { feedIds: number[]; categoryId: number; workspaceId: number }) => window.electron.ipcRenderer.invoke('feeds:move-feeds-to-category', variables),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });
@@ -131,7 +137,7 @@ export const useMoveFeeds = (): ((feedIds: number[], categoryId: number) => Prom
     },
   });
   const { mutateAsync } = mutation;
-  return useCallback((feedIds: number[], categoryId: number) => mutateAsync({ feedIds, categoryId }), [mutateAsync]);
+  return useCallback((feedIds: number[], categoryId: number) => mutateAsync({ feedIds, categoryId, workspaceId }), [mutateAsync, workspaceId]);
 };
 
 interface FeedsRefresh {
