@@ -99,7 +99,7 @@ const config: ForgeConfig = {
           name: 'monfil'
         },
         prerelease: false,
-        draft: false
+        draft: true
       }
     }
   ]

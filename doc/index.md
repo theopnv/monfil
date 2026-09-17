@@ -38,6 +38,6 @@ Run `npm run test` to run all of them.
 
 ## Publishing
 
-Push a tag matching `v*` (e.g. `v1.2.3`) to trigger the [publish workflow](.github/workflows/publish.yml). It builds on Linux, macOS and Windows, and creates a **draft** GitHub release with all platform artifacts attached.
+Push a tag matching `v*` (e.g. `v1.2.3`) to trigger the [publish workflow](.github/workflows/publish.yml). The tag must be `v` followed by the `version` field of `package.json`, or the workflow stops before it builds anything. It then runs the full test suite on Linux, macOS and Windows, builds on each, and creates a **draft** GitHub release with all platform artifacts attached.
 
 Once the run finishes, review the draft release on GitHub (download and test the artifacts), then click **Edit → Publish release** to make it public. Nothing rebuilds at that point — publishing only flips the release's visibility.
