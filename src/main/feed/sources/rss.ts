@@ -80,6 +80,7 @@ async function fetchFeed(link: string, maxItems: number = DEFAULT_MAX_FEED_ITEMS
         case 'NETWORK_ERROR':
         case 'NOT_ALLOWED_OR_ABORTED_ERROR':
         case 'RESPONSE_TOO_LARGE_ERROR':
+        case 'BLOCKED_URL_ERROR':
           return { success: false, error: result.error };
         default: {
           const exhaustiveCheck: never = result.error;

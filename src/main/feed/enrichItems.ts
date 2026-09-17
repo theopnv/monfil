@@ -30,7 +30,7 @@ export type NewArticleContentPayload = Omit<NewArticleContent, 'item_id'>;
 /**
  * Fetches each candidate item's page once, and feeds that one fetch to both extractors: the
  * og:image (skipped when the item already has an image) and the article body.
- * @param items the items to consider; only those with an absolute http(s) link are fetched
+ * @param items the items to consider; only those with an absolute http(s) link to a public host are fetched
  * @param onImageFound called for each item whose page yields an og:image / twitter:image
  * @param onContentFound called for every fetched item with its extraction outcome, success or not
  */
@@ -40,7 +40,7 @@ export async function enrichItems(
   onContentFound: (itemId: number, content: NewArticleContentPayload) => void,
 ): Promise<void> {
   await runWithConcurrency(toCandidates(items), ENRICHMENT_CONCURRENCY, async (candidate) => {
-    const result = await fetchUrl(candidate.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS });
+    const result = await fetchUrl(candidate.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
     if (!result.success) {
       return;
     }

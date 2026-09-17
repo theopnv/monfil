@@ -349,6 +349,7 @@ describe('fetchFeed', () => {
     { name: 'NETWORK_ERROR', message: 'offline' },
     { name: 'NOT_ALLOWED_OR_ABORTED_ERROR', message: 'blocked' },
     { name: 'RESPONSE_TOO_LARGE_ERROR', message: 'too big' },
+    { name: 'BLOCKED_URL_ERROR', message: 'private' },
   ];
 
   test.each(fetchUrlErrors)('passes a $name feed fetch failure straight through', async (error) => {

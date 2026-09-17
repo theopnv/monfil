@@ -113,3 +113,6 @@ src/renderer/routeTree.gen.ts
 .ai/skills/graft/
 .mcp.json
 .claude/helpers/statusline-merged.sh
+
+# Claude Code agent worktrees: full checkouts of this repo, each with its own node_modules.
+.claude/worktrees/
