@@ -6,8 +6,9 @@ import { Button } from "./untitled-ui/base/buttons/button";
 import { cx } from "./untitled-ui/utils/cx";
 import MonfilLogo from "@/components/common/MonfilLogo";
 import WorkspaceDialog from "@/components/Workspace/WorkspaceDialog";
-import { useClearEditWorkspaceRequest, useEditWorkspaceRequestedId } from "@/lib/ipc-bridge";
+import { useClearEditWorkspaceRequest, useClearExportWorkspaceRequest, useEditWorkspaceRequestedId, useExportWorkspaceRequestedId } from "@/lib/ipc-bridge";
 import { workspaceIconComponent } from "@/lib/workspace-icons";
+import { useExportOpml } from "@/providers/opml-provider";
 import { useWorkspaces } from "@/providers/workspace-provider";
 import type { WorkspaceSummary } from "../../preload/channels";
 
@@ -46,6 +47,9 @@ export default function Toolbar() {
 
   const editWorkspaceRequestedId = useEditWorkspaceRequestedId();
   const clearEditWorkspaceRequest = useClearEditWorkspaceRequest();
+  const exportWorkspaceRequestedId = useExportWorkspaceRequestedId();
+  const clearExportWorkspaceRequest = useClearExportWorkspaceRequest();
+  const exportOpml = useExportOpml();
 
   useEffect(() => {
     if (editWorkspaceRequestedId === null) {
@@ -57,6 +61,14 @@ export default function Toolbar() {
     }
     clearEditWorkspaceRequest();
   }, [editWorkspaceRequestedId, workspaces, clearEditWorkspaceRequest]);
+
+  useEffect(() => {
+    if (exportWorkspaceRequestedId === null) {
+      return;
+    }
+    void exportOpml(exportWorkspaceRequestedId);
+    clearExportWorkspaceRequest();
+  }, [exportWorkspaceRequestedId, exportOpml, clearExportWorkspaceRequest]);
 
   return (
     <nav className="flex h-full w-16 flex-none flex-col items-center gap-1.5 border-r border-secondary bg-secondary py-4.5">

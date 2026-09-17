@@ -14,6 +14,8 @@ import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetada
 import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type MaxFeedItems, type RefreshInterval } from "../settings";
 import { getAppInfo, type AppInfo } from "../app-info";
 import { sendToRenderer } from "./sendToRenderer";
+import { openAndImportOpml, type ImportOpmlError, type ImportOpmlTarget, type ImportSummary } from "../opml/import";
+import { exportWorkspaceOpml, type ExportOpmlError } from "../opml/export";
 import type { IpcMainInvokeEvent } from "electron";
 import type { FeedCategory, FeedSummary, ItemBody, RefreshSummary, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from "../../preload/channels";
 import type { Result } from "../lib/utils";
@@ -194,4 +196,12 @@ export function handleSettingsGetMaxFeedItems(): Promise<MaxFeedItems> {
 export async function handleSettingsSetMaxFeedItems(_event: IpcMainInvokeEvent, payload: MaxFeedItems): Promise<MaxFeedItems> {
   await setMaxFeedItems(payload);
   return payload;
+}
+
+export async function handleOpmlImport(_event: IpcMainInvokeEvent, payload: { target: ImportOpmlTarget }): Promise<Result<ImportSummary, ImportOpmlError>> {
+  return openAndImportOpml(payload.target);
+}
+
+export async function handleOpmlExport(_event: IpcMainInvokeEvent, payload: { workspaceId: number }): Promise<Result<void, ExportOpmlError>> {
+  return exportWorkspaceOpml(payload.workspaceId);
 }

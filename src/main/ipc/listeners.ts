@@ -57,6 +57,10 @@ export function listenToShowWorkspaceContextMenu(event: IpcMainEvent, workspaceI
       label: "Edit workspace",
       click: () => sendToRenderer(event.sender, "workspaces:edit-requested", workspaceId),
     },
+    {
+      label: "Export as OPML",
+      click: () => sendToRenderer(event.sender, "workspaces:export-requested", workspaceId),
+    },
   ]);
   const window = BrowserWindow.fromWebContents(event.sender);
   if (window) {

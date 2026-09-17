@@ -1,16 +1,17 @@
 import { beforeEach, expect, test, vi } from 'vitest';
-import { render } from 'vitest-browser-react';
 import { PreferencesProvider } from '@/providers/preferences-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
+import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import Settings from './Settings';
 import type { AppInfo } from '../../../main/app-info';
+import { HOME_WORKSPACE_ID } from '../../../preload/channels';
 
 const appInfo: AppInfo = { version: '1.2.3', feedCount: 2, itemCount: 42, databaseSizeBytes: 2048 };
 
 let invokeImpl: (channel: string) => Promise<unknown>;
 
 function renderSettings() {
-  return render(
+  return renderWithQueryClient(
     <ThemeProvider>
       <PreferencesProvider>
         <Settings />
@@ -30,6 +31,7 @@ beforeEach(() => {
       case 'settings:set-refresh-on-launch': return Promise.resolve(false);
       case 'settings:get-max-feed-items': return Promise.resolve(30);
       case 'settings:set-max-feed-items': return Promise.resolve(100);
+      case 'opml:import': return Promise.resolve({ success: true, data: { workspaceId: 2, imported: 1, skipped: [], failed: [] } });
       default: return Promise.resolve(undefined);
     }
   };
@@ -161,5 +163,19 @@ test('shows the your-data stats from app:get-info', async () => {
   // Assert
   await expect.element(getByText('2', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('42', { exact: true })).toBeInTheDocument();
+});
+
+test('importing OPML merged into Home invokes opml:import with that target', async () => {
+  // Arrange
+  const { getByRole } = await renderSettings();
+
+  // Act
+  await getByRole('button', { name: 'Import OPML' }).click();
+  await getByRole('radio', { name: 'Merge into Home' }).click();
+  await getByRole('button', { name: 'Import', exact: true }).click();
+
+  // Assert
+  await expect.element(getByRole('heading', { name: 'Import complete' })).toBeInTheDocument();
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('opml:import', { target: { kind: 'merge-workspace', workspaceId: HOME_WORKSPACE_ID } });
 });
 

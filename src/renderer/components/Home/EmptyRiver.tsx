@@ -5,7 +5,16 @@ import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useActiveWorkspaceId } from "@/providers/workspace-provider";
 import { HOME_WORKSPACE_ID } from "../../../preload/channels";
 
-export default function EmptyRiver() {
+export interface EmptyRiverProps {
+  /**
+   * Opens the OPML import dialog. Rendered by the caller rather than here: the dialog's own
+   * "Import complete" summary must outlive this component, which unmounts the moment the import
+   * succeeds and the workspace stops being empty.
+   */
+  onImportOpml: () => void;
+}
+
+export default function EmptyRiver({ onImportOpml }: EmptyRiverProps) {
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
   const isHome = useActiveWorkspaceId() === HOME_WORKSPACE_ID;
 
@@ -28,9 +37,12 @@ export default function EmptyRiver() {
       ) : (
         <>
           <h2 className="mb-1.75 text-lg leading-tight font-bold text-primary">Nothing here yet</h2>
-          <p className="max-w-[44ch] text-sm leading-relaxed text-tertiary text-pretty">
-            This workspace has no sources yet. Pack install and OPML import are on their way.
+          <p className="mb-5.5 max-w-[44ch] text-sm leading-relaxed text-tertiary text-pretty">
+            This workspace has no sources yet. Import an OPML file to fill it in one go.
           </p>
+          <Button color="primary" className="rounded-full" onPress={onImportOpml}>
+            Import OPML
+          </Button>
         </>
       )}
     </div>

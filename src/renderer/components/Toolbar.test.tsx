@@ -50,6 +50,7 @@ let workspaces: WorkspaceSummary[];
 let feedsByWorkspace: Record<number, FeedSummary[]>;
 let updateWorkspaceResult: Result<WorkspaceSummary, UpdateWorkspaceError> | undefined;
 let editWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
+let exportWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let invokeMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
@@ -57,6 +58,7 @@ beforeEach(() => {
   feedsByWorkspace = {};
   updateWorkspaceResult = undefined;
   editWorkspaceRequestedHandler = undefined;
+  exportWorkspaceRequestedHandler = undefined;
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
@@ -75,6 +77,8 @@ beforeEach(() => {
         }
         return Promise.resolve(result);
       }
+      case 'opml:export':
+        return Promise.resolve({ success: true, data: undefined });
       default:
         return Promise.resolve([]);
     }
@@ -86,6 +90,9 @@ beforeEach(() => {
       on: vi.fn((channel: string, handler: (payload: never) => void) => {
         if (channel === 'workspaces:edit-requested') {
           editWorkspaceRequestedHandler = handler as typeof editWorkspaceRequestedHandler;
+        }
+        if (channel === 'workspaces:export-requested') {
+          exportWorkspaceRequestedHandler = handler as typeof exportWorkspaceRequestedHandler;
         }
         return vi.fn();
       }),
@@ -211,6 +218,18 @@ test('saving the edit dialog renames the workspace and updates its icon and colo
   expect(invokeMock).toHaveBeenCalledWith('workspaces:update', { workspaceId: 2, name: 'Infra watch', icon: 'Rocket02', color: '#ef4444' });
   await expect.element(getByRole('heading', { name: 'Edit workspace' })).not.toBeInTheDocument();
   await expect.element(getByRole('link', { name: 'Infra watch' })).toBeInTheDocument();
+});
+
+test('firing workspaces:export-requested invokes opml:export with the workspace id', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  await renderApp('/workspace/2');
+
+  // Act
+  exportWorkspaceRequestedHandler?.(2);
+
+  // Assert
+  await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('opml:export', { workspaceId: 2 }));
 });
 
 test('a failed edit keeps the dialog open and shows the error', async () => {

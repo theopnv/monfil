@@ -8,6 +8,7 @@ export const uiKeys = {
   renameCategoryRequestedId: ['ui', 'rename-category-requested'] as const,
   deleteCategoryRequestedId: ['ui', 'delete-category-requested'] as const,
   editWorkspaceRequestedId: ['ui', 'edit-workspace-requested'] as const,
+  exportWorkspaceRequestedId: ['ui', 'export-workspace-requested'] as const,
   pendingRefreshCount: ['ui', 'pending-refresh-count'] as const,
 };
 
@@ -59,6 +60,10 @@ export function useIpcBridge(): void {
 
       window.electron.ipcRenderer.on('workspaces:edit-requested', (workspaceId) => {
         queryClient.setQueryData(uiKeys.editWorkspaceRequestedId, workspaceId);
+      }),
+
+      window.electron.ipcRenderer.on('workspaces:export-requested', (workspaceId) => {
+        queryClient.setQueryData(uiKeys.exportWorkspaceRequestedId, workspaceId);
       }),
     ];
 
@@ -161,5 +166,24 @@ export function useClearEditWorkspaceRequest(): () => void {
   const queryClient = useQueryClient();
   return useCallback(() => {
     queryClient.setQueryData(uiKeys.editWorkspaceRequestedId, null);
+  }, [queryClient]);
+}
+
+/** The workspace id an "Export as OPML" context-menu click asked to export, or `null` when none is pending. */
+export function useExportWorkspaceRequestedId(): number | null {
+  const { data } = useQuery({
+    queryKey: uiKeys.exportWorkspaceRequestedId,
+    queryFn: (): number | null => null,
+    initialData: null,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+  return data;
+}
+
+export function useClearExportWorkspaceRequest(): () => void {
+  const queryClient = useQueryClient();
+  return useCallback(() => {
+    queryClient.setQueryData(uiKeys.exportWorkspaceRequestedId, null);
   }, [queryClient]);
 }

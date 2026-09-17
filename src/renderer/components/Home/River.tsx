@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EmptyRiver from "@/components/Home/EmptyRiver";
 import RiverHeader from "@/components/Home/RiverHeader";
 import RiverList from "@/components/Home/RiverList";
 import RiverSidebar from "@/components/Home/RiverSidebar";
+import ImportOpmlDialog from "@/components/Workspace/ImportOpmlDialog";
 import { announce } from "@/lib/announcer";
 import { type FeedVisibility } from "@/lib/river/feed-visibility";
 import { openLink } from "@/lib/river/utils";
@@ -13,6 +14,7 @@ import { useRiverScope } from "@/lib/river/useRiverScope";
 import { useCategories, useFeeds, useReadState, useRiver, useSetShowInWorkspace } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import { useSearch } from "@/providers/search-provider";
+import { useActiveWorkspace } from "@/providers/workspace-provider";
 import type { FeedSummary } from "../../../preload/channels";
 
 export interface RiverProps {
@@ -27,6 +29,8 @@ export default function River({ onOpenItem }: RiverProps) {
   const { preferences } = usePreferences();
   const { query: searchQuery, setQuery: setSearchQuery } = useSearch();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const activeWorkspace = useActiveWorkspace();
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const { scope, visibleFeedIdsSet, showOnlyLinks, setShowOnlyLinks, debouncedSearch } = useRiverScope(feeds);
 
@@ -112,7 +116,7 @@ export default function River({ onOpenItem }: RiverProps) {
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">
             {!hasFeeds ? (
-              <EmptyRiver />
+              <EmptyRiver onImportOpml={() => setIsImportOpen(true)} />
             ) : debouncedSearch.length > 0 ? (
               visibleItems.length === 0
                 ? <p className="py-20 text-center text-md font-regular text-tertiary">No results for &quot;{debouncedSearch}&quot;</p>
@@ -125,6 +129,10 @@ export default function River({ onOpenItem }: RiverProps) {
           </div>
         </div>
       </div>
+
+      {activeWorkspace && (
+        <ImportOpmlDialog isOpen={isImportOpen} onOpenChange={setIsImportOpen} workspace={{ id: activeWorkspace.id, name: activeWorkspace.name }} />
+      )}
     </div>
   );
 }

@@ -6,6 +6,8 @@ import type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
 import type { MaxFeedItems, RefreshInterval } from '../main/settings';
 import type { AppInfo } from '../main/app-info';
 import type { Result } from '../main/lib/utils';
+import type { ImportOpmlError, ImportOpmlTarget, ImportSummary } from '../main/opml/import';
+import type { ExportOpmlError } from '../main/opml/export';
 
 // =====================================
 // ============== TYPES ================
@@ -88,6 +90,7 @@ export type OneWayMainToRendererChannelPayloads = {
   'feeds:rename-category-requested': number;
   'feeds:delete-category-requested': number;
   'workspaces:edit-requested': number;
+  'workspaces:export-requested': number;
 };
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
@@ -121,6 +124,8 @@ export type TwoWayRendererMainChannelPayloads = {
   'settings:get-max-feed-items': MaxFeedItems;
   'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': AppInfo;
+  'opml:import': Result<ImportSummary, ImportOpmlError>;
+  'opml:export': Result<void, ExportOpmlError>;
 }
 
 export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
@@ -153,6 +158,8 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'settings:get-max-feed-items': undefined;
   'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': undefined;
+  'opml:import': { target: ImportOpmlTarget };
+  'opml:export': { workspaceId: number };
 };
 
 // ============= Combined channel types ==============
