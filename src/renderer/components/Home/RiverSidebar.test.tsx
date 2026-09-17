@@ -389,7 +389,7 @@ describe('feed row context menu and delete', () => {
     expect(invokeMock).not.toHaveBeenCalledWith('feeds:delete-feed', expect.anything());
   });
 
-  test('confirm invokes feeds:delete-feed with the feed id and calls onFeedDeleted', async () => {
+  test('confirm invokes feeds:delete-feed and calls onFeedDeleted', async () => {
     // Arrange
     stubElectron({ feeds: [feedA, feedB], deleteFeed: { success: true, data: undefined } });
     const onFeedDeleted = vi.fn();
@@ -401,7 +401,7 @@ describe('feed row context menu and delete', () => {
     await getByRole('button', { name: 'Delete feed' }).click();
 
     // Assert
-    expect(invokeMock).toHaveBeenCalledWith('feeds:delete-feed', feedA.id);
+    expect(invokeMock).toHaveBeenCalledWith('feeds:delete-feed', { feedId: feedA.id, workspaceId: HOME_WORKSPACE_ID });
     await expect.element(getByRole('heading', { name: 'Delete feed' })).not.toBeInTheDocument();
     expect(onFeedDeleted).toHaveBeenCalledWith(feedA);
   });
@@ -498,7 +498,7 @@ describe('folder context menu and rename', () => {
 
     // Assert
     await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledWith('feeds:rename-category', { categoryId: feedC.category.id, name: 'Politics' });
+      expect(invokeMock).toHaveBeenCalledWith('feeds:rename-category', { categoryId: feedC.category.id, name: 'Politics', workspaceId: HOME_WORKSPACE_ID });
     });
   });
 
@@ -519,7 +519,7 @@ describe('folder context menu and rename', () => {
 
     // Assert
     await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledWith('feeds:rename-category', { categoryId: empty.id, name: 'Meals' });
+      expect(invokeMock).toHaveBeenCalledWith('feeds:rename-category', { categoryId: empty.id, name: 'Meals', workspaceId: HOME_WORKSPACE_ID });
     });
   });
 
@@ -535,7 +535,7 @@ describe('folder context menu and rename', () => {
 
     // Assert
     await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledWith('feeds:rename-category', { categoryId: feedA.category.id, name: 'Engineering' });
+      expect(invokeMock).toHaveBeenCalledWith('feeds:rename-category', { categoryId: feedA.category.id, name: 'Engineering', workspaceId: HOME_WORKSPACE_ID });
     });
     await expect.element(getByRole('textbox')).not.toBeInTheDocument();
   });
@@ -598,7 +598,7 @@ describe('folder create', () => {
 
     // Assert
     await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledWith('feeds:create-category', { name: 'Recipes' });
+      expect(invokeMock).toHaveBeenCalledWith('feeds:create-category', { name: 'Recipes', workspaceId: HOME_WORKSPACE_ID });
     });
     await expect.element(getByRole('textbox', { name: 'New folder name' })).not.toBeInTheDocument();
   });
@@ -673,7 +673,7 @@ describe('folder delete', () => {
     await getByRole('button', { name: 'Delete folder' }).click();
 
     // Assert
-    expect(invokeMock).toHaveBeenCalledWith('feeds:delete-category', { categoryId: feedA.category.id, reassignTo: feedC.category.id });
+    expect(invokeMock).toHaveBeenCalledWith('feeds:delete-category', { categoryId: feedA.category.id, reassignTo: feedC.category.id, workspaceId: HOME_WORKSPACE_ID });
     await expect.element(getByRole('heading', { name: 'Delete folder' })).not.toBeInTheDocument();
   });
 
@@ -716,7 +716,7 @@ describe('folder delete', () => {
     await getByRole('button', { name: 'Delete folder' }).click();
 
     // Assert
-    expect(invokeMock).toHaveBeenCalledWith('feeds:delete-category', { categoryId: empty.id, reassignTo: feedA.category.id });
+    expect(invokeMock).toHaveBeenCalledWith('feeds:delete-category', { categoryId: empty.id, reassignTo: feedA.category.id, workspaceId: HOME_WORKSPACE_ID });
     await expect.element(getByRole('button', { name: 'Recipes', exact: true })).not.toBeInTheDocument();
   });
 });
