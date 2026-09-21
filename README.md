@@ -8,7 +8,7 @@
 
 Monfil is an open-source desktop feed reader for engineers who want to follow the sources they choose—not whatever social-media algorithms decide to show them.
 
-Start with curated feed packs for topics such as general Tech announcements and trends. Or CI/CD, test automation, testing frameworks, and software-supply-chain security. Or submit your own!
+Start with curated feed packs for topics such as "General Tech announcements and trends". Or "DevSecOps", for info about CI/CD, test automation, testing frameworks and software-supply-chain security. Or submit your own!
 
 "Mon fil" means "My feed" in french.
 
@@ -17,11 +17,12 @@ Start with curated feed packs for topics such as general Tech announcements and 
 [Download Monfil](https://github.com/theopnv/monfil/releases) · [Browse feed packs](./feedpacks/) · [Contribute](CONTRIBUTING.md)
 
 <p align="center">
-  <img src="./doc/gallery/home-light.png" width="49%" alt="Monfil home, light mode">
-  <img src="./doc/gallery/home-dark.png" width="49%" alt="Monfil home, dark mode">
+  <img src="./doc/gallery/workspace1-light.png" width="49%" alt="Monfil workspace, light mode">
+  <img src="./doc/gallery/workspace1-dark.png" width="49%" alt="Monfil workspace, dark mode">
 </p>
 <p align="center">
-  <img src="./doc/gallery/reader.png" width="100%" alt="Monfil reader view">
+  <img src="./doc/gallery/reader.png" width="49%" alt="Monfil reader">
+  <img src="./doc/gallery/home.png" width="49%" alt="Monfil home">
 </p>
 
 ## Problem
