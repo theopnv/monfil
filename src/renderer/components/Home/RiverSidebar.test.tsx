@@ -176,7 +176,7 @@ test('clicking "Add feed" opens the add-feed modal', async () => {
   await expect.element(getByRole('heading', { name: 'Add a feed' })).not.toBeInTheDocument();
 
   // Act
-  await getByRole('button', { name: 'Add feed' }).click();
+  await getByRole('button', { name: 'Add feed', exact: true }).click();
 
   // Assert
   await expect.element(getByRole('heading', { name: 'Add a feed' })).toBeInTheDocument();

@@ -12,6 +12,7 @@
     "test:integration": "vitest --run --config=vitest.browser.config.mts",
     "pretest:e2e": "npm run package",
     "test:e2e": "npx playwright test",
+    "check:feedpacks": "node scripts/check-feedpacks.mjs",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",

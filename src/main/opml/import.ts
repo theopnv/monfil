@@ -23,6 +23,11 @@ export interface ImportSummary {
   failed: ImportFailed[];
 }
 
+export interface StartedOpmlImport {
+  summary: ImportSummary;
+  completion: Promise<ImportSummary>;
+}
+
 export type ImportOpmlTarget =
   // `name` left blank falls back to the OPML document's own title.
   | { kind: 'new-workspace'; name: string; icon: string; color: string; sourceSlug?: string; sourceVersion?: string }
@@ -35,14 +40,16 @@ export type ImportOpmlError =
   | { name: 'CANCELLED'; message: string };
 
 /**
- * The shared installer behind plain OPML import and pack install (`doc/feedpacks.md`): parses the
- * document, writes categories and feed placements in one transaction, then refreshes the feeds it
- * just created. Feed rows carry no items on insert; the refresh right after is what fills them in,
- * so the caller's summary can report which ones failed to fetch.
+ * Parses an OPML document and writes its workspace, categories, and feed placements in one
+ * transaction. Refresh starts after the transaction and is exposed separately to callers that do
+ * not need to wait for fetched items.
  * @param xml the raw OPML document
  * @param target where to install it: a brand new workspace, or merged into an existing one
  */
-export async function importOpml(xml: string, target: ImportOpmlTarget): Promise<Result<ImportSummary, ImportOpmlError>> {
+export async function startOpmlImport(
+  xml: string,
+  target: ImportOpmlTarget,
+): Promise<Result<StartedOpmlImport, ImportOpmlError>> {
   const parsed = parseOpmlDocument(xml);
   if (!parsed.success) {
     return parsed;
@@ -118,11 +125,26 @@ export async function importOpml(xml: string, target: ImportOpmlTarget): Promise
       return { workspaceId, insertedFeedIds, skipped };
     });
 
-    await refreshFeeds(insertedFeedIds);
-    const refreshed = await queryFeedMetadataByIds(insertedFeedIds);
-    const failed: ImportFailed[] = refreshed.flatMap((feed) => (feed.last_error ? [{ title: feed.title, message: feed.last_error }] : []));
+    const summary: ImportSummary = { workspaceId, imported: insertedFeedIds.length, skipped, failed: [] };
+    const completion = refreshFeeds(insertedFeedIds).then(async () => {
+      const refreshed = await queryFeedMetadataByIds(insertedFeedIds);
+      const failed: ImportFailed[] = refreshed.flatMap((feed) => (feed.last_error ? [{ title: feed.title, message: feed.last_error }] : []));
+      return { ...summary, failed };
+    });
 
-    return { success: true, data: { workspaceId, imported: insertedFeedIds.length, skipped, failed } };
+    return { success: true, data: { summary, completion } };
+  } catch (error) {
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
+}
+
+export async function importOpml(xml: string, target: ImportOpmlTarget): Promise<Result<ImportSummary, ImportOpmlError>> {
+  const started = await startOpmlImport(xml, target);
+  if (!started.success) {
+    return started;
+  }
+  try {
+    return { success: true, data: await started.data.completion };
   } catch (error) {
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
   }

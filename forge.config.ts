@@ -14,7 +14,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     icon: 'assets/icons/icon',
-    extraResource: ['assets/icons/icon.png'],
+    extraResource: ['assets/icons/icon.png', 'feedpacks'],
     // The Vite plugin's own `ignore` keeps only `.vite/**`, dropping node_modules entirely.
     // vite.main.config.mts marks a few packages (better-sqlite3, jsdom) as Rollup `external`
     // since they can't be bundled, so their real files need to survive packaging. Keeping

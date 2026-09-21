@@ -5,11 +5,11 @@ import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import EmptyRiver from './EmptyRiver';
 import { HOME_WORKSPACE_ID } from '../../../preload/channels';
 
-function renderAt(initialPath: string, onImportOpml: () => void) {
+function renderAt(initialPath: string, onImportOpml: () => void, onImportFeedpack = vi.fn()) {
   const rootRoute = createRootRoute({
     component: () => (
       <ActiveWorkspaceIdProvider>
-        <EmptyRiver onImportOpml={onImportOpml} />
+        <EmptyRiver onImportOpml={onImportOpml} onImportFeedpack={onImportFeedpack} />
       </ActiveWorkspaceIdProvider>
     ),
   });
@@ -52,4 +52,16 @@ test('clicking "Import OPML" calls onImportOpml', async () => {
 
   // Assert
   expect(onImportOpml).toHaveBeenCalled();
+});
+
+test('clicking "Import feedpack" calls onImportFeedpack', async () => {
+  // Arrange
+  const onImportFeedpack = vi.fn();
+  const { getByRole } = await renderAt('/workspace/2', vi.fn(), onImportFeedpack);
+
+  // Act
+  await getByRole('button', { name: 'Import feedpack' }).click();
+
+  // Assert
+  expect(onImportFeedpack).toHaveBeenCalled();
 });

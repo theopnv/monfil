@@ -7,6 +7,7 @@ import { cx } from "./untitled-ui/utils/cx";
 import MonfilLogo from "@/components/common/MonfilLogo";
 import DeleteWorkspaceDialog from "@/components/Workspace/DeleteWorkspaceDialog";
 import WorkspaceDialog from "@/components/Workspace/WorkspaceDialog";
+import FeedpackInstallDialog from '@/components/Feedpacks/FeedpackInstallDialog';
 import {
   useClearDeleteWorkspaceRequest,
   useClearEditWorkspaceRequest,
@@ -53,6 +54,7 @@ export default function Toolbar() {
   const activeWorkspaceId = useActiveWorkspaceId();
   const workspaces = useWorkspaces();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isFeedpackBrowserOpen, setIsFeedpackBrowserOpen] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<WorkspaceSummary | null>(null);
   const [workspacePendingDelete, setWorkspacePendingDelete] = useState<WorkspaceSummary | null>(null);
 
@@ -100,6 +102,11 @@ export default function Toolbar() {
     }
   }
 
+  function openFeedpackBrowser() {
+    setIsCreateOpen(false);
+    setIsFeedpackBrowserOpen(true);
+  }
+
   return (
     <nav className="flex h-full w-16 flex-none flex-col items-center gap-1.5 border-r border-secondary bg-secondary py-4.5">
       <div className="flex flex-col items-center gap-3.5">
@@ -114,7 +121,9 @@ export default function Toolbar() {
         ))}
       </div>
 
-      <Button aria-label="New workspace" size="md" color="tertiary" className="rounded-xl" iconLeading={<Plus />} onPress={() => setIsCreateOpen(true)} />
+      <Button aria-label="New workspace" size="md" color="tertiary" className="rounded-xl" iconLeading={<Plus />} onPress={() => {
+        setIsCreateOpen(true);
+      }} />
 
       <div className="mt-auto" />
 
@@ -127,7 +136,8 @@ export default function Toolbar() {
         iconLeading={<Sliders01 />}
       />
 
-      <WorkspaceDialog isOpen={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      <WorkspaceDialog isOpen={isCreateOpen} onOpenChange={setIsCreateOpen} onBrowseFeedpacks={openFeedpackBrowser} />
+      <FeedpackInstallDialog isOpen={isFeedpackBrowserOpen} onOpenChange={setIsFeedpackBrowserOpen} />
       <WorkspaceDialog
         isOpen={editingWorkspace !== null}
         onOpenChange={(open) => {

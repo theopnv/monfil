@@ -3,6 +3,9 @@ import type { IpcMainInvokeEvent } from "electron";
 import type { ChannelPayloads, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../preload/channels";
 import {
   handleAppGetInfo,
+  handleFeedpacksInstall,
+  handleFeedpacksList,
+  handleFeedpacksPreview,
   handleFeedsCreateCategory,
   handleFeedsDeleteCategory,
   handleFeedsDeleteFeed,
@@ -68,6 +71,9 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "items:query": handleItemsQuery,
   "opml:import": handleOpmlImport,
   "opml:export": handleOpmlExport,
+  "feedpacks:list": handleFeedpacksList,
+  "feedpacks:preview": handleFeedpacksPreview,
+  "feedpacks:install": handleFeedpacksInstall,
   "settings:get-refresh-on-launch": handleSettingsGetRefreshOnLaunch,
   "settings:set-refresh-on-launch": handleSettingsSetRefreshOnLaunch,
   "settings:get-max-feed-items": handleSettingsGetMaxFeedItems,

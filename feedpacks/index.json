@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "packs": [
+    {
+      "slug": "devsecops",
+      "title": "DevSecOps",
+      "description": "Testing, continuous delivery, code quality, and engineering platform sources.",
+      "tags": ["devsecops", "testing", "ci-cd"],
+      "curator": "Monfil",
+      "sourceCount": 18,
+      "updatedAt": "2026-09-21",
+      "opml": "devsecops.opml"
+    }
+  ]
+}

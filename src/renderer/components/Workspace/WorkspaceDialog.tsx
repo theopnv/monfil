@@ -16,11 +16,12 @@ const DEFAULT_COLOR = WORKSPACE_COLORS[0];
 export interface WorkspaceDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  onBrowseFeedpacks?: () => void;
   /** The workspace to edit. Omitted, the dialog creates a new one. */
   workspace?: WorkspaceSummary;
 }
 
-export default function WorkspaceDialog({ isOpen, onOpenChange, workspace }: WorkspaceDialogProps) {
+export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBrowseFeedpacks }: WorkspaceDialogProps) {
   const createWorkspace = useCreateWorkspace();
   const updateWorkspace = useUpdateWorkspace();
   const navigate = useNavigate();
@@ -143,6 +144,11 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace }: Wor
           {error && <p className="px-6 pb-2 text-sm text-error-primary">{error.message}</p>}
 
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+            {!isEditing && onBrowseFeedpacks && (
+              <Button color="secondary" size="md" className="rounded-full" onPress={onBrowseFeedpacks}>
+                Browse feedpacks
+              </Button>
+            )}
             <Button color="secondary" size="md" className="rounded-full" onPress={() => onOpenChange(false)}>
               Cancel
             </Button>

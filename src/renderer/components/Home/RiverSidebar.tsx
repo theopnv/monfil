@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight, DotsGrid, FolderPlus, Plus } from "@untitledui/icons";
+import { ChevronRight, DotsGrid, FolderPlus, LayersTwo01, Plus } from "@untitledui/icons";
 import { Button as DragHandleButton, GridList, GridListItem, useDragAndDrop } from "react-aria-components";
 import AddFeedModal from "@/components/AddFeed/AddFeedModal";
 import DeleteCategoryDialog from "@/components/Home/DeleteCategoryDialog";
 import DeleteFeedDialog from "@/components/Home/DeleteFeedDialog";
 import FeedAvatar from "@/components/Home/FeedAvatar";
+import FeedpackInstallDialog from '@/components/Feedpacks/FeedpackInstallDialog';
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { categoryErrorMessage } from "@/lib/river/category-errors";
@@ -20,6 +21,7 @@ import {
 import { resolveFeedIcon } from "@/lib/favicon";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import { useCreateCategory, useMoveFeeds, useRenameCategory } from "@/providers/feeds-provider";
+import { useActiveWorkspaceId } from '@/providers/workspace-provider';
 import type { FeedCategory, FeedSummary } from "../../../preload/channels";
 
 export interface RiverSidebarProps {
@@ -114,8 +116,10 @@ function dropCategoryId(items: SidebarItem[], key: string): number | null {
 }
 
 export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVisibility, onFeedDeleted }: RiverSidebarProps) {
+  const activeWorkspaceId = useActiveWorkspaceId();
   const [folders, setFolders] = useState(() => groupByCategory(categories, feeds));
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
+  const [isFeedpackBrowserOpen, setIsFeedpackBrowserOpen] = useState(false);
   const [feedPendingDelete, setFeedPendingDelete] = useState<FeedSummary | null>(null);
   const [categoryPendingDelete, setCategoryPendingDelete] = useState<FeedCategory | null>(null);
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
@@ -287,6 +291,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
         <div className="flex items-center gap-1">
           <Button aria-label="New folder" size="xs" color="tertiary" iconLeading={FolderPlus} onPress={startCreatingFolder} />
           <Button aria-label="Add feed" size="xs" color="tertiary" iconLeading={Plus} onPress={() => setIsAddFeedOpen(true)} />
+          <Button aria-label="Add feedpack" size="xs" color="tertiary" iconLeading={LayersTwo01} onPress={() => setIsFeedpackBrowserOpen(true)} />
         </div>
       </div>
       {isCreatingFolder && (
@@ -313,6 +318,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
         </div>
       )}
       <AddFeedModal isOpen={isAddFeedOpen} onOpenChange={setIsAddFeedOpen} />
+      <FeedpackInstallDialog isOpen={isFeedpackBrowserOpen} onOpenChange={setIsFeedpackBrowserOpen} workspaceId={activeWorkspaceId} />
       <DeleteFeedDialog
         feed={feedPendingDelete}
         onOpenChange={(isOpen) => {

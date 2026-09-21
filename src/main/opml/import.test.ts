@@ -3,7 +3,7 @@ import { db, initializeDatabase } from '../db/database';
 import { HOME_WORKSPACE_ID } from '../db/types';
 import { rssSource } from '../feed/sources/rss';
 import type { ParsedSource } from '../feed/sources/types';
-import { importOpml } from './import';
+import { importOpml, startOpmlImport } from './import';
 
 vi.mock(import('../feed/sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: false, fetch: vi.fn(), parse: vi.fn() } }));
 vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
@@ -168,5 +168,30 @@ describe('importOpml', () => {
       return;
     }
     expect(result.data.failed).toEqual([{ title: 'Feed A', message: 'offline' }]);
+  });
+});
+
+describe('startOpmlImport', () => {
+  test('returns the write summary before refresh completes', async () => {
+    // Arrange
+    let finishRefresh: ((result: Awaited<ReturnType<typeof rssSource.fetch>>) => void) | undefined;
+    mockedFetchFeed.mockReturnValue(new Promise((resolve) => {
+      finishRefresh = resolve;
+    }));
+    const xml = opml('<outline text="Tech"><outline type="rss" text="Feed A" xmlUrl="https://a.example/feed"/></outline>');
+
+    // Act
+    const result = await startOpmlImport(xml, { kind: 'new-workspace', name: 'Pack', icon: 'Code01', color: '#3b82f6' });
+
+    // Assert
+    expect(result).toMatchObject({
+      success: true,
+      data: { summary: { imported: 1, skipped: [], failed: [] } },
+    });
+    if (!result.success || !finishRefresh) {
+      return;
+    }
+    finishRefresh({ success: true, data: parsed('https://a.example/feed') });
+    await expect(result.data.completion).resolves.toMatchObject({ imported: 1, failed: [] });
   });
 });

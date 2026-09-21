@@ -11,6 +11,7 @@ export const uiKeys = {
   exportWorkspaceRequestedId: ['ui', 'export-workspace-requested'] as const,
   deleteWorkspaceRequestedId: ['ui', 'delete-workspace-requested'] as const,
   pendingRefreshCount: ['ui', 'pending-refresh-count'] as const,
+  feedpackRefreshing: (workspaceId: number) => ['ui', 'feedpack-refreshing', workspaceId] as const,
 };
 
 /**
@@ -70,6 +71,12 @@ export function useIpcBridge(): void {
       window.electron.ipcRenderer.on('workspaces:delete-requested', (workspaceId) => {
         queryClient.setQueryData(uiKeys.deleteWorkspaceRequestedId, workspaceId);
       }),
+
+      window.electron.ipcRenderer.on('feedpacks:install-finished', ({ workspaceId }) => {
+        queryClient.setQueryData(uiKeys.feedpackRefreshing(workspaceId), false);
+        void queryClient.invalidateQueries({ queryKey: ['feeds', workspaceId] });
+        void queryClient.invalidateQueries({ queryKey: ['river'] });
+      }),
     ];
 
     return () => {
@@ -95,6 +102,17 @@ export function useClearPendingRefreshCount(): () => void {
   return useCallback(() => {
     queryClient.setQueryData(uiKeys.pendingRefreshCount, 0);
   }, [queryClient]);
+}
+
+export function useFeedpackRefreshing(workspaceId: number | undefined): boolean {
+  const { data } = useQuery({
+    queryKey: uiKeys.feedpackRefreshing(workspaceId ?? -1),
+    queryFn: (): boolean => false,
+    initialData: false,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+  return data;
 }
 
 /** The feed id a "Delete feed" context-menu click asked to confirm, or `null` when none is pending. */
