@@ -3,9 +3,9 @@ import { db, initializeDatabase } from '../db/database';
 import { addFeedToDatabase } from '../db/crud/insert';
 import { fetchUrl } from '../lib/fetch';
 import { rssSource } from './sources/rss';
-import type { ParsedSource } from './sources/types';
+import { HOME_WORKSPACE_ID, type ParsedSource } from '../../shared/contracts';
 import { refreshAllFeeds } from './refresh';
-import { HOME_WORKSPACE_ID, type FeedItem } from '../db/types';
+import type { FeedItem } from '../db/types';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 
 vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: true, fetch: vi.fn(), parse: vi.fn() } }));

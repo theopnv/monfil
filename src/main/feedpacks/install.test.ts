@@ -1,8 +1,9 @@
 import { describe, expect, test, vi } from 'vitest';
+import type { Feedpack } from '../../shared/contracts';
 import { fetchUrl } from '../lib/fetch';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { startOpmlImport } from '../opml/import';
-import { getFeedpackCatalog, readBundledFeedpack, usesBundledFeedpacks, type Feedpack } from './catalog';
+import { getFeedpackCatalog, readBundledFeedpack, usesBundledFeedpacks } from './catalog';
 import { installFeedpack, previewFeedpack } from './install';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));

@@ -19,7 +19,7 @@ import {
 import { workspaceIconComponent } from "@/lib/workspace-icons";
 import { useExportOpml } from "@/providers/opml-provider";
 import { useActiveWorkspaceId, useWorkspaces } from "@/providers/workspace-provider";
-import { HOME_WORKSPACE_ID, type WorkspaceSummary } from "../../preload/channels";
+import { HOME_WORKSPACE_ID, type WorkspaceSummary } from "../../shared/contracts";
 
 const activeNavClasses = "rounded-xl bg-brand-secondary *:data-icon:text-fg-brand-secondary hover:bg-brand-secondary hover:*:data-icon:text-fg-brand-secondary";
 

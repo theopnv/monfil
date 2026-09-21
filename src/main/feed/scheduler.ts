@@ -1,4 +1,5 @@
-import { getRefreshInterval, getRefreshOnLaunch, type RefreshInterval } from '../settings';
+import type { RefreshInterval } from '../../shared/contracts';
+import { getRefreshInterval, getRefreshOnLaunch } from '../settings';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { refreshAllFeeds } from './refresh';
 

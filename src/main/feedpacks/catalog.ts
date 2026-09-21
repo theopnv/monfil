@@ -1,32 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { app } from 'electron';
-import { fetchUrl, type FetchUrlError } from '../lib/fetch';
-import type { Result } from '../lib/utils';
+import type { CatalogError, Feedpack, FeedpackCatalog, FetchUrlError } from '../../shared/contracts';
+import { fetchUrl } from '../lib/fetch';
+import type { Result } from '../../shared/result';
 
 const CATALOG_URL = 'https://raw.githubusercontent.com/theopnv/monfil/main/feedpacks/index.json';
 const CATALOG_VERSION = 1;
-
-export interface Feedpack {
-  slug: string;
-  title: string;
-  description: string;
-  tags: string[];
-  curator: string;
-  sourceCount: number;
-  updatedAt: string;
-  opml: string;
-}
-
-export interface FeedpackCatalog {
-  version: 1;
-  packs: Feedpack[];
-}
-
-export type CatalogError =
-  | { name: 'UNSUPPORTED_VERSION'; message: string }
-  | { name: 'INVALID_CATALOG'; message: string }
-  | { name: 'UNAVAILABLE'; message: string };
 
 export interface CatalogDependencies {
   fetch: (url: string) => Promise<Result<string, FetchUrlError>>;

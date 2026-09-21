@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import type { IpcMainEvent } from "electron";
-import type { OneWayRendererToMainChannelPayloads, OneWayRendererToMainChannels } from "../../preload/channels";
+import type { OneWayRendererToMainChannelPayloads, OneWayRendererToMainChannels } from "../../shared/channels";
 import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu } from "./listeners";
 
 // IPC Listeners - Renderer to main

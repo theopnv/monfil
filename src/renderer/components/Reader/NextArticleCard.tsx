@@ -1,6 +1,6 @@
 import { ArrowRight } from "@untitledui/icons";
 import { estimateReadTime, formatRelativeTime } from "@/lib/river/utils";
-import type { RiverRow } from "../../../preload/channels";
+import type { RiverRow } from "../../../shared/contracts";
 
 export interface NextArticleCardProps {
   item: RiverRow;

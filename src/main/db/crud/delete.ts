@@ -1,10 +1,6 @@
 import { db, dbReady } from '../database';
-import type { Result } from '../../lib/utils';
-import { HOME_WORKSPACE_ID } from '../types';
-
-export type DeleteFeedError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'FEED_NOT_FOUND'; message: string };
+import { HOME_WORKSPACE_ID, type DeleteCategoryError, type DeleteFeedError, type DeleteWorkspaceError } from '../../../shared/contracts';
+import type { Result } from '../../../shared/result';
 
 /**
  * Removes a feed from `workspaceId`. The underlying feed, and through the `feedItem.feed_id`
@@ -41,10 +37,6 @@ export async function deleteFeedFromDatabase(feedId: number, workspaceId: number
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
   }
 }
-
-export type DeleteCategoryError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'CATEGORY_NOT_FOUND'; message: string };
 
 class CategoryNotFoundError extends Error {}
 
@@ -93,11 +85,6 @@ export async function deleteCategory(categoryId: number, reassignTo: number, wor
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
   }
 }
-
-export type DeleteWorkspaceError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'WORKSPACE_NOT_FOUND'; message: string }
-  | { name: 'HOME_NOT_DELETABLE'; message: string };
 
 /**
  * Deletes a workspace along with its categories and placements, then collects any feed left with

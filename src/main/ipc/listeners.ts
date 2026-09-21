@@ -1,7 +1,7 @@
 import { BrowserWindow, Menu, shell, type IpcMainEvent } from "electron";
-import type { OneWayRendererToMainChannelPayloads } from "../../preload/channels";
+import type { OneWayRendererToMainChannelPayloads } from "../../shared/channels";
+import { HOME_WORKSPACE_ID } from "../../shared/contracts";
 import { dbFilePath } from "../db/database";
-import { HOME_WORKSPACE_ID } from "../db/types";
 import { sendToRenderer } from "./sendToRenderer";
 import { openExternalLink } from "../window-security";
 

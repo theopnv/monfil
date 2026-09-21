@@ -1,8 +1,8 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { db, initializeDatabase } from '../db/database';
-import { HOME_WORKSPACE_ID } from '../db/types';
+import { HOME_WORKSPACE_ID } from '../../shared/contracts';
 import { rssSource } from '../feed/sources/rss';
-import type { ParsedSource } from '../feed/sources/types';
+import type { ParsedSource } from '../../shared/contracts';
 import { importOpml, startOpmlImport } from './import';
 
 vi.mock(import('../feed/sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: false, fetch: vi.fn(), parse: vi.fn() } }));

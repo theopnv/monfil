@@ -1,5 +1,5 @@
 import { infiniteQueryOptions, queryOptions, type InfiniteData } from '@tanstack/react-query';
-import type { FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow, WorkspaceSummary } from '../../preload/channels';
+import type { FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow, WorkspaceSummary } from '../../shared/contracts';
 
 export const RIVER_PAGE_SIZE = 50;
 export const RIVER_MAX_PAGES = 8;

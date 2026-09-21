@@ -4,8 +4,8 @@ import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/applicatio
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { WORKSPACE_COLORS, WORKSPACE_ICONS } from "@/lib/workspace-icons";
 import { useImportOpml } from "@/providers/opml-provider";
-import { HOME_WORKSPACE_ID } from "../../../preload/channels";
-import type { ImportOpmlError, ImportSummary } from "../../../main/opml/import";
+import { HOME_WORKSPACE_ID } from "../../../shared/contracts";
+import type { ImportOpmlError, ImportSummary } from "../../../shared/contracts";
 
 export interface ImportOpmlDialogProps {
   isOpen: boolean;

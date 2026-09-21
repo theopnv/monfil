@@ -2,7 +2,7 @@ import { Readability } from '@mozilla/readability';
 import createDOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
 import type { ArticleContentStatus } from '../db/types';
-import { SANITIZE_CONFIG } from '../lib/sanitize-html';
+import { SANITIZE_CONFIG } from '../../shared/sanitize-html';
 import { MIN_ARTICLE_LENGTH } from '../constants';
 
 export interface ExtractedArticle {

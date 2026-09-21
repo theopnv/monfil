@@ -4,8 +4,8 @@ import { resolveFeedIcon } from "@/lib/favicon";
 import { computeFeedContentType, computePublishRate } from "@/lib/addFeed/feedStats";
 import CategoryPicker from "./CategoryPicker";
 import FeedMatchCard from "./FeedMatchCard";
-import type { ParsedSource } from "../../../preload/channels";
-import type { FeedCategory } from "../../../preload/channels";
+import type { ParsedSource } from "../../../shared/contracts";
+import type { FeedCategory } from "../../../shared/contracts";
 
 export interface Step2ConfigureProps {
   feed: ParsedSource | null;

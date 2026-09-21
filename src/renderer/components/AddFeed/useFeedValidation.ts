@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import type { ParsedSource, FeedFetchError, SourceType } from '../../../preload/channels';
+import type { ParsedSource, FeedFetchError, SourceType } from '../../../shared/contracts';
 
 export type FeedValidationStatus = 'idle' | 'loading' | 'found' | 'not-found';
 

@@ -5,7 +5,7 @@ import { fetchUrl } from '../lib/fetch';
 import { handleItemsGetContent } from './handlers';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 import type { IpcMainInvokeEvent } from 'electron';
-import { HOME_WORKSPACE_ID, type SourceType } from '../db/types';
+import { HOME_WORKSPACE_ID, type SourceType } from '../../shared/contracts';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
 

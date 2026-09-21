@@ -1,21 +1,10 @@
 import { fetchUrl } from '../lib/fetch';
+import type { Feedpack, FeedpackError, FeedpackInstallTarget, FeedpackPreview, ImportOpmlTarget, ImportSummary, InstallFeedpackError } from '../../shared/contracts';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
-import type { Result } from '../lib/utils';
-import { startOpmlImport, type ImportOpmlError, type ImportSummary, type ImportOpmlTarget } from '../opml/import';
-import { parseOpmlDocument, type ParsedOpml, type ParseOpmlError } from '../opml/parse';
-import { feedpackOpmlUrl, getFeedpackCatalog, readBundledFeedpack, usesBundledFeedpacks, type CatalogError, type Feedpack } from './catalog';
-
-export type FeedpackError = CatalogError | ParseOpmlError | { name: 'PACK_NOT_FOUND'; message: string } | { name: 'FETCH_ERROR'; message: string };
-export type InstallFeedpackError = FeedpackError | ImportOpmlError;
-
-export interface FeedpackPreview {
-  pack: Feedpack;
-  sources: ParsedOpml;
-}
-
-export type FeedpackInstallTarget =
-  | { kind: 'new-workspace'; name: string; icon: string; color: string }
-  | { kind: 'merge-workspace'; workspaceId: number };
+import type { Result } from '../../shared/result';
+import { startOpmlImport } from '../opml/import';
+import { parseOpmlDocument } from '../opml/parse';
+import { feedpackOpmlUrl, getFeedpackCatalog, readBundledFeedpack, usesBundledFeedpacks } from './catalog';
 
 async function loadFeedpack(slug: string): Promise<Result<{ pack: Feedpack; xml: string }, FeedpackError>> {
   const catalog = await getFeedpackCatalog();

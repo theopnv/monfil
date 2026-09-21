@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { extractChannel, isYoutubeLink, parseFeedContent, parseYoutubeInput, youtubeSource } from './youtube';
 import { fetchUrl } from '../../lib/fetch';
-import type { FetchUrlError } from '../../lib/fetch';
+import type { FetchUrlError } from '../../../shared/contracts';
 
 vi.mock(import('../../lib/fetch'), () => ({
   fetchUrl: vi.fn(),

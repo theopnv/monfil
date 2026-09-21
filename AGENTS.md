@@ -29,21 +29,22 @@ When you are tasked with fixing a bug, always write a test reproducing the issue
 
 ## Architecture
 
-Electron with three source trees, each built by its own Vite config. See `forge.config.ts`.
+Electron has three process trees, each built by its own Vite config, plus one process-neutral tree. See `forge.config.ts`.
 
 - `src/main`: the Node side. Network, parsing, database. See [doc/backend.md](doc/backend.md) and [doc/database.md](doc/database.md).
 - `src/preload`: the context bridge. It exposes `window.electron.ipcRenderer`.
 - `src/renderer`: the React app. See [doc/frontend.md](doc/frontend.md).
+- `src/shared`: data contracts, IPC channel maps, and runtime values that more than one process uses. It must not import from a process tree.
 
 ### IPC contract
 
-`src/preload/channels.ts` declares the payload of every channel. Both sides import it, so a mismatch fails to compile. Do not type a payload at a call site.
+`src/shared/channels.ts` declares the payload of every channel and the renderer-facing bridge interface. Cross-process data types and tagged errors live in `src/shared/contracts.ts`. Do not type a payload at a call site.
 
 ## Conventions
 
-- Type-only imports need the `type` keyword. The root `tsconfig.json` is strict: `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noPropertyAccessFromIndexSignature`, `noUnusedLocals`, `verbatimModuleSyntax`.
-- The `@/` alias points at `src/renderer/` only. It is declared twice, in `tsconfig.json` and in `vite.renderer.config.mts`. Keep them in step.
-- Fallible operations return the `Result` union from `src/utils.ts` instead of throwing. Errors are tagged unions with a `name` field. Discriminate them with a `switch` that ends in a `never` exhaustiveness check, as in `src/main/feed/sources/rss.ts`.
+- Type-only imports need the `type` keyword. `tsconfig.base.json` holds the strict rules. `tsconfig.json` references the separate main, preload, and renderer projects so each process gets only its own environment types.
+- The `@/` alias points at `src/renderer/` only. It is declared in `tsconfig.renderer.json`, the vendored Untitled UI config, and `vite.renderer.config.mts`. Keep them in step.
+- Fallible operations return the `Result` union from `src/shared/result.ts` instead of throwing. Errors are tagged unions with a `name` field. Discriminate them with a `switch` that ends in a `never` exhaustiveness check, as in `src/main/feed/sources/rss.ts`.
 - Documentation files use kebab-case names and live in `doc/`.
 - Use JSDoc @params and @return to document functions (only the important, external facing APIs or helpers).
 

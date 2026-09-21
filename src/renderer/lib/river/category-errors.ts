@@ -1,6 +1,6 @@
-import type { DeleteCategoryError } from "../../../main/db/crud/delete";
-import type { CreateCategoryError } from "../../../main/db/crud/insert";
-import type { UpdateCategoryError } from "../../../main/db/crud/update";
+import type { DeleteCategoryError } from "../../../shared/contracts";
+import type { CreateCategoryError } from "../../../shared/contracts";
+import type { UpdateCategoryError } from "../../../shared/contracts";
 
 export function categoryErrorMessage(error: CreateCategoryError | UpdateCategoryError | DeleteCategoryError): string {
   switch (error.name) {

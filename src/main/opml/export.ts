@@ -1,13 +1,9 @@
 import fs from 'node:fs/promises';
 import { dialog } from 'electron';
+import type { ExportOpmlError } from '../../shared/contracts';
 import { queryFeedSummaries, queryWorkspaceById } from '../db/crud/query';
-import type { Result } from '../lib/utils';
+import type { Result } from '../../shared/result';
 import { generateWorkspaceOpml, type OpmlCategoryInput } from './generate';
-
-export type ExportOpmlError =
-  | { name: 'WORKSPACE_NOT_FOUND'; message: string }
-  | { name: 'CANCELLED'; message: string }
-  | { name: 'FS_ERROR'; message: string };
 
 /**
  * Writes one workspace out as OPML, category by category, after asking the user where to save it.
@@ -22,7 +18,7 @@ export async function exportWorkspaceOpml(workspaceId: number): Promise<Result<v
   const feeds = await queryFeedSummaries(workspaceId);
   const categoriesByName = new Map<string, OpmlCategoryInput>();
   for (const feed of feeds) {
-    const category = categoriesByName.get(feed.category.name) ?? { name: feed.category.name, feeds: [] };
+    const category: OpmlCategoryInput = categoriesByName.get(feed.category.name) ?? { name: feed.category.name, feeds: [] };
     category.feeds.push({ title: feed.title, xmlUrl: feed.link });
     categoriesByName.set(feed.category.name, category);
   }

@@ -1,8 +1,9 @@
 import { type Kysely } from 'kysely';
 import { db, dbReady } from '../database';
 import { queryFeedItems } from './query';
-import { type Database, type FeedCategory, type FeedItem, type FeedMetadata, type NewArticleContent, type SourceType, type Workspace } from '../types';
-import type { Result } from '../../lib/utils';
+import { type Database, type FeedItem, type NewArticleContent } from '../types';
+import type { AddFeedError, CreateCategoryError, CreateWorkspaceError, FeedCategory, FeedMetadata, NewFeedInput, SourceType, Workspace } from '../../../shared/contracts';
+import type { Result } from '../../../shared/result';
 import { stripHtml, truncateOnWordBoundary } from '../../lib/strip-html';
 
 const EXCERPT_MAX_LENGTH = 200;
@@ -20,10 +21,6 @@ async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: st
     .returningAll()
     .executeTakeFirstOrThrow();
 }
-
-export type CreateCategoryError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'DUPLICATE_NAME'; message: string };
 
 /**
  * Creates a new, empty category in `workspaceId`. Unlike `addFeedCategoryToDatabase`, a name
@@ -44,8 +41,6 @@ export async function createCategory(name: string, workspaceId: number): Promise
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
   }
 }
-
-export type CreateWorkspaceError = { name: 'DB_ERROR'; message: string };
 
 /**
  * Creates a new workspace, appended after every existing one in rail order.
@@ -123,19 +118,6 @@ export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId:
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
   }
 }
-
-export interface NewFeedInput {
-  link: string;
-  title: string;
-  type: SourceType;
-  items: Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>[];
-  categoryName: string;
-  workspaceId: number;
-  showInWorkspace: boolean;
-  icon?: string;
-}
-
-export type AddFeedError = { name: 'DB_ERROR'; message: string };
 
 /** The full row set a freshly added feed needs internally (e.g. to enrich its items). Never sent over IPC as-is. */
 export type AddedFeed = FeedMetadata & { items: FeedItem[]; category: FeedCategory; showInWorkspace: number; workspaceId: number };

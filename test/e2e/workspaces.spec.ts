@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { HOME_WORKSPACE_ID, type FeedSummary, type WorkspaceSummary } from '../../src/preload/channels';
+import { HOME_WORKSPACE_ID, type FeedSummary, type WorkspaceSummary } from '../../src/shared/contracts';
 
 function rss(): string {
   return '<?xml version="1.0"?><rss version="2.0"><channel><title>Imported feed</title><description>A local feed</description>'

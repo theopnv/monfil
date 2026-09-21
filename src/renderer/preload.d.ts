@@ -1,4 +1,4 @@
-import { ElectronHandler } from '../preload/preload';
+import type { ElectronHandler } from '../shared/channels';
 
 declare global {
   interface Window {

@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
-import type { ChannelPayloads, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../preload/channels";
+import type { ChannelPayloads, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../shared/channels";
 import {
   handleAppGetInfo,
   handleFeedpacksInstall,

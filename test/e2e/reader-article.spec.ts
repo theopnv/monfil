@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { HOME_WORKSPACE_ID, type SourceType } from '../../src/preload/channels';
+import { HOME_WORKSPACE_ID, type SourceType } from '../../src/shared/contracts';
 
 const ARTICLE_PARAGRAPH = 'This sentence only exists in the full article page, fetched from the source, not in the feed teaser. '.repeat(6);
 

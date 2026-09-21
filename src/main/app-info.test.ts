@@ -6,7 +6,7 @@ import { sql } from 'kysely';
 import { getAppInfo } from './app-info';
 import { closeDatabase, db, initializeDatabase } from './db/database';
 import { addFeedToDatabase } from './db/crud/insert';
-import { HOME_WORKSPACE_ID } from './db/types';
+import { HOME_WORKSPACE_ID } from '../shared/contracts';
 import { rmTestDir } from './lib/rmTestDir';
 
 vi.mock(import('electron'), () => ({

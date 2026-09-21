@@ -2,7 +2,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { useReadState, useRiver } from './feeds-provider';
 import { useIpcBridge, usePendingRefreshCount } from '../lib/ipc-bridge';
 import { renderWithQueryClient } from '../lib/test/render-with-query-client';
-import { HOME_WORKSPACE_ID, type RiverPage, type RiverRow } from '../../preload/channels';
+import { HOME_WORKSPACE_ID, type RiverPage, type RiverRow } from '../../shared/contracts';
 
 let nextItemId = 1;
 

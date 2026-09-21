@@ -1,29 +1,8 @@
 import { db, dbReady } from '../database';
-import type { Result } from '../../lib/utils';
-import { type FeedCategory, type Workspace } from '../types';
-
-export type UpdateFeedError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'FEED_NOT_FOUND'; message: string };
-
-export type MoveFeedError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'FEED_NOT_FOUND'; message: string };
-
-export type UpdateWorkspaceError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'WORKSPACE_NOT_FOUND'; message: string };
+import type { FeedCategory, MoveFeedError, UpdateCategoryError, UpdateFeedError, UpdateItemError, UpdateWorkspaceError, Workspace } from '../../../shared/contracts';
+import type { Result } from '../../../shared/result';
 
 class WorkspaceNotFoundError extends Error {}
-
-export type UpdateItemError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'ITEM_NOT_FOUND'; message: string };
-
-export type UpdateCategoryError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'CATEGORY_NOT_FOUND'; message: string }
-  | { name: 'DUPLICATE_NAME'; message: string };
 
 /**
  * Renames a category in place. A category id that belongs to another workspace is reported as

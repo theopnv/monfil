@@ -1,4 +1,4 @@
-import type { RiverRow } from '../../../preload/channels';
+import type { RiverRow } from '../../../shared/contracts';
 
 export interface ReaderNavigation {
   previous: RiverRow | undefined;

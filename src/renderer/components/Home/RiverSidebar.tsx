@@ -22,7 +22,7 @@ import { resolveFeedIcon } from "@/lib/favicon";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import { useCreateCategory, useMoveFeeds, useRenameCategory } from "@/providers/feeds-provider";
 import { useActiveWorkspaceId } from '@/providers/workspace-provider';
-import type { FeedCategory, FeedSummary } from "../../../preload/channels";
+import type { FeedCategory, FeedSummary } from "../../../shared/contracts";
 
 export interface RiverSidebarProps {
   feeds: FeedSummary[];

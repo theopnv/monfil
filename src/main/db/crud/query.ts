@@ -1,7 +1,7 @@
 import { sql, type SelectQueryBuilder } from 'kysely';
-import { type ArticleContent, type Database, type FeedCategory, type FeedItem, type FeedMetadata, type Setting, type Workspace } from '../types';
+import { type ArticleContent, type Database, type FeedItem, type Setting } from '../types';
 import { db, dbReady } from '../database';
-import type { FeedSummary, RiverPage, RiverQuery, RiverRow, WorkspaceSummary } from '../../../preload/channels';
+import type { FeedCategory, FeedMetadata, FeedSummary, RiverPage, RiverQuery, RiverRow, Workspace, WorkspaceSummary } from '../../../shared/contracts';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
 // Adding a new field to a table object and forgetting to add it here will result in a compilation error.

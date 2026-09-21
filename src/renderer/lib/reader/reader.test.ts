@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { deriveStandfirst, getReaderNavigation, renderPlainTextDescription } from './reader';
-import type { RiverRow } from '../../../preload/channels';
+import type { RiverRow } from '../../../shared/contracts';
 
 function createItem(overrides: Partial<RiverRow> = {}): RiverRow {
   return {

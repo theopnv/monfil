@@ -6,7 +6,7 @@ import { useActiveWorkspaceId } from '../../providers/workspace-provider';
 import { usePreferences } from '../../providers/preferences-provider';
 import { useSearch } from '../../providers/search-provider';
 import type { RiverScope } from '../queries';
-import type { FeedSummary } from '../../../preload/channels';
+import type { FeedSummary } from '../../../shared/contracts';
 
 export interface RiverScopeResult {
   scope: RiverScope;

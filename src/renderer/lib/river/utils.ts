@@ -1,4 +1,4 @@
-import type { RiverRow, SourceType } from '../../../preload/channels';
+import type { RiverRow, SourceType } from '../../../shared/contracts';
 
 export type Density = "Cards" | "Magazine" | "Compact";
 

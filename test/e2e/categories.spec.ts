@@ -2,7 +2,7 @@ import { test as base, expect, _electron as electron, type ElectronApplication, 
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { HOME_WORKSPACE_ID, type FeedCategory } from '../../src/preload/channels';
+import { HOME_WORKSPACE_ID, type FeedCategory } from '../../src/shared/contracts';
 
 type CategoriesTestFixtures = {
   userDataDir: string;

@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Heading } from "react-aria-components";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useDeleteCategory } from "@/providers/feeds-provider";
-import type { DeleteCategoryError } from "../../../main/db/crud/delete";
-import type { FeedCategory } from "../../../preload/channels";
+import type { DeleteCategoryError } from "../../../shared/contracts";
+import type { FeedCategory } from "../../../shared/contracts";
 
 export interface DeleteCategoryDialogProps {
   category: FeedCategory | null;
@@ -19,11 +19,12 @@ export default function DeleteCategoryDialog({ category, feedCount, otherCategor
   const [reassignTo, setReassignTo] = useState<number | undefined>(otherCategories[0]?.id);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<DeleteCategoryError | null>(null);
+  const resetDestination = useEffectEvent(() => setReassignTo(otherCategories[0]?.id));
 
   // A fresh dialog target needs its own default destination; refreshing on every `otherCategories`
   // render would stomp a selection the user just made while nothing else about the request changed.
   useEffect(() => {
-    setReassignTo(otherCategories[0]?.id);
+    resetDestination();
   }, [category?.id]);
 
   const needsReassignment = feedCount > 0;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
-import type { RiverPage } from '../../preload/channels';
+import type { RiverPage } from '../../shared/contracts';
 import { patchRiverRows } from './queries';
 
 export const uiKeys = {

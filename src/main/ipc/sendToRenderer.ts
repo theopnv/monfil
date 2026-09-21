@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron';
 import type { WebContents } from 'electron';
-import type { OneWayMainToRendererChannelPayloads, OneWayMainToRendererChannels } from '../../preload/channels';
+import type { OneWayMainToRendererChannelPayloads, OneWayMainToRendererChannels } from '../../shared/channels';
 
 export function sendToRenderer<C extends OneWayMainToRendererChannels>(
   sender: WebContents,

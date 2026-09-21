@@ -3,7 +3,7 @@ import { Rss01 } from "@untitledui/icons";
 import AddFeedModal from "@/components/AddFeed/AddFeedModal";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useActiveWorkspaceId } from "@/providers/workspace-provider";
-import { HOME_WORKSPACE_ID } from "../../../preload/channels";
+import { HOME_WORKSPACE_ID } from "../../../shared/contracts";
 
 export interface EmptyRiverProps {
   /**

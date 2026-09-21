@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Check } from "@untitledui/icons";
 import { formatRelativeTime } from "@/lib/river/utils";
 import { useRiver } from "@/providers/feeds-provider";
-import { HOME_WORKSPACE_ID, type FeedSummary } from "../../../preload/channels";
+import { HOME_WORKSPACE_ID, type FeedSummary } from "../../../shared/contracts";
 
 export interface Step3DoneProps {
   feed: FeedSummary;

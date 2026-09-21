@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { ExportOpmlError } from "../../main/opml/export";
-import type { ImportOpmlError, ImportOpmlTarget, ImportSummary } from "../../main/opml/import";
-import type { Result } from "../../main/lib/utils";
+import type { ExportOpmlError } from "../../shared/contracts";
+import type { ImportOpmlError, ImportOpmlTarget, ImportSummary } from "../../shared/contracts";
+import type { Result } from "../../shared/result";
 import { queryKeys } from "../lib/queries";
 
 export const useImportOpml = (): ((target: ImportOpmlTarget) => Promise<Result<ImportSummary, ImportOpmlError>>) => {

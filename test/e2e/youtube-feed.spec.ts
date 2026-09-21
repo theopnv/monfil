@@ -2,8 +2,8 @@ import { test as base, expect, _electron as electron, type ElectronApplication, 
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import type { NewFeedInput } from '../../src/main/db/crud/insert';
-import { HOME_WORKSPACE_ID } from '../../src/preload/channels';
+import type { NewFeedInput } from '../../src/shared/contracts';
+import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
 
 type YoutubeFeedTestFixtures = {
   userDataDir: string;

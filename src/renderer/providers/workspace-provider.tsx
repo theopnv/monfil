@@ -1,12 +1,12 @@
 import { createContext, useCallback, useContext, type PropsWithChildren } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import type { DeleteWorkspaceError } from "../../main/db/crud/delete";
-import type { CreateWorkspaceError } from "../../main/db/crud/insert";
-import type { MoveFeedError, UpdateWorkspaceError } from "../../main/db/crud/update";
-import type { Result } from "../../main/lib/utils";
+import type { DeleteWorkspaceError } from "../../shared/contracts";
+import type { CreateWorkspaceError } from "../../shared/contracts";
+import type { MoveFeedError, UpdateWorkspaceError } from "../../shared/contracts";
+import type { Result } from "../../shared/result";
 import { queryKeys, workspacesQuery } from "../lib/queries";
-import { HOME_WORKSPACE_ID, type Workspace, type WorkspaceSummary } from "../../preload/channels";
+import { HOME_WORKSPACE_ID, type Workspace, type WorkspaceSummary } from "../../shared/contracts";
 
 const ActiveWorkspaceIdContext = createContext<number>(HOME_WORKSPACE_ID);
 

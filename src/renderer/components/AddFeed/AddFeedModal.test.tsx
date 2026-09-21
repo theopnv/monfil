@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import AddFeedModal from './AddFeedModal';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
-import type { Result } from '../../../main/lib/utils';
-import type { AddFeedError } from '../../../main/db/crud/insert';
-import { HOME_WORKSPACE_ID, type FeedCategory, type FeedFetchError, type FeedSummary, type ParsedSource, type RiverPage, type RiverQuery, type TwoWayRendererMainChannelsInvokeArgs, type TwoWayRendererMainChannelPayloads } from '../../../preload/channels';
+import type { Result } from '../../../shared/result';
+import type { AddFeedError } from '../../../shared/contracts';
+import { HOME_WORKSPACE_ID, type FeedCategory, type FeedFetchError, type FeedSummary, type ParsedSource, type RiverPage, type RiverQuery } from '../../../shared/contracts';
+import type { TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannelPayloads } from '../../../shared/channels';
 
 const categories: FeedCategory[] = [{ id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID }];
 

@@ -17,7 +17,7 @@ import { useCategories, useFeeds, useReadState, useRiver, useSetShowInWorkspace 
 import { usePreferences } from "@/providers/preferences-provider";
 import { useSearch } from "@/providers/search-provider";
 import { useActiveWorkspace, useActiveWorkspaceId } from "@/providers/workspace-provider";
-import type { FeedSummary } from "../../../preload/channels";
+import type { FeedSummary } from "../../../shared/contracts";
 
 export interface RiverProps {
   onOpenItem: (id: number) => void;

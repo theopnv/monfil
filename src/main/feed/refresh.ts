@@ -1,12 +1,12 @@
 import { db, dbReady } from '../db/database';
 import { addFeedItemsToDatabase, updateFeedItemImage, upsertArticleContent } from '../db/crud/insert';
 import { queryFeedMetadata, queryFeedMetadataByIds } from '../db/crud/query';
-import type { FeedItem, FeedMetadata, SourceType } from '../db/types';
+import type { FeedItem } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
 import { sourceFor } from './sources/registry';
 import { setFeedFetchResult } from '../db/crud/update';
-import type { RefreshSummary } from '../../preload/channels';
+import type { FeedMetadata, RefreshSummary, SourceType } from '../../shared/contracts';
 import { runWithConcurrency } from '../lib/utils';
 import { FEED_FETCH_CONCURRENCY } from '../constants';
 import { getMaxFeedItems } from '../settings';

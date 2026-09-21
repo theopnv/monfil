@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { describeRiverCard, estimateReadTime, formatRelativeTime } from './utils';
-import type { RiverRow } from '../../../preload/channels';
+import type { RiverRow } from '../../../shared/contracts';
 
 function createRow(overrides: Partial<RiverRow> = {}): RiverRow {
   return {

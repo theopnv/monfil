@@ -2,25 +2,60 @@ import { enrichItems } from "../feed/enrichItems";
 import { ARTICLE_FETCH_TIMEOUT_MS } from "../constants";
 import { deriveArticleContentStatus, extractArticle } from "../feed/extractArticle";
 import { resolveSource, sourceFor } from "../feed/sources/registry";
-import type { FeedFetchError, ParsedSource } from "../feed/sources/types";
-import type { SourceType } from "../db/types";
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
 import { fetchUrl } from "../lib/fetch";
-import { addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent, type AddFeedError, type CreateCategoryError, type CreateWorkspaceError, type NewFeedInput } from "../db/crud/insert";
-import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace, type DeleteCategoryError, type DeleteFeedError, type DeleteWorkspaceError } from "../db/crud/delete";
-import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace, type MoveFeedError, type UpdateCategoryError, type UpdateFeedError, type UpdateItemError, type UpdateWorkspaceError } from "../db/crud/update";
+import { addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent } from "../db/crud/insert";
+import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from "../db/crud/delete";
+import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace } from "../db/crud/update";
 import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from "../db/crud/query";
-import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type MaxFeedItems, type RefreshInterval } from "../settings";
-import { getAppInfo, type AppInfo } from "../app-info";
+import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval } from "../settings";
+import { getAppInfo } from "../app-info";
 import { sendToRenderer } from "./sendToRenderer";
-import { openAndImportOpml, type ImportOpmlError, type ImportOpmlTarget, type ImportSummary } from "../opml/import";
-import { exportWorkspaceOpml, type ExportOpmlError } from "../opml/export";
-import { getFeedpackCatalog, type CatalogError, type FeedpackCatalog } from '../feedpacks/catalog';
-import { installFeedpack, previewFeedpack, type FeedpackError, type FeedpackInstallTarget, type FeedpackPreview, type InstallFeedpackError } from '../feedpacks/install';
+import { openAndImportOpml } from "../opml/import";
+import { exportWorkspaceOpml } from "../opml/export";
+import { getFeedpackCatalog } from '../feedpacks/catalog';
+import { installFeedpack, previewFeedpack } from '../feedpacks/install';
 import type { IpcMainInvokeEvent } from "electron";
-import type { FeedCategory, FeedSummary, ItemBody, RefreshSummary, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from "../../preload/channels";
-import type { Result } from "../lib/utils";
+import type {
+  AddFeedError,
+  AppInfo,
+  CatalogError,
+  CreateCategoryError,
+  CreateWorkspaceError,
+  DeleteCategoryError,
+  DeleteFeedError,
+  DeleteWorkspaceError,
+  ExportOpmlError,
+  FeedCategory,
+  FeedFetchError,
+  FeedpackCatalog,
+  FeedpackError,
+  FeedpackInstallTarget,
+  FeedpackPreview,
+  FeedSummary,
+  ImportOpmlError,
+  ImportOpmlTarget,
+  ImportSummary,
+  InstallFeedpackError,
+  ItemBody,
+  MaxFeedItems,
+  MoveFeedError,
+  NewFeedInput,
+  ParsedSource,
+  RefreshInterval,
+  RefreshSummary,
+  RiverPage,
+  RiverQuery,
+  SourceType,
+  UpdateCategoryError,
+  UpdateFeedError,
+  UpdateItemError,
+  UpdateWorkspaceError,
+  Workspace,
+  WorkspaceSummary,
+} from "../../shared/contracts";
+import type { Result } from "../../shared/result";
 
 export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource, FeedFetchError>> {
   return resolveSource(payload.query, payload.type).fetch(payload.query, await getMaxFeedItems());

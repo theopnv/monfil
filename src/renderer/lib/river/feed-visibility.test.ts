@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { feedVisibility, folderVisibility, nextVisibility, visibleFeedIds } from './feed-visibility';
-import { HOME_WORKSPACE_ID, type FeedSummary } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID, type FeedSummary } from '../../../shared/contracts';
 
 function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
   return {

@@ -3,7 +3,7 @@ import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { getRefreshInterval, getRefreshOnLaunch } from '../settings';
 import { refreshAllFeeds } from './refresh';
 import { rescheduleRefresh, startRefreshScheduler, stopRefreshScheduler } from './scheduler';
-import type { RefreshSummary } from '../../preload/channels';
+import type { RefreshSummary } from '../../shared/contracts';
 
 vi.mock(import('./refresh'), () => ({ refreshAllFeeds: vi.fn() }));
 vi.mock(import('../settings'), () => ({ getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn() }));

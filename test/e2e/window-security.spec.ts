@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { HOME_WORKSPACE_ID } from '../../src/preload/channels';
+import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
 
 const ARTICLE_PARAGRAPH = 'This sentence exists so that Readability keeps the paragraph and the link inside it. '.repeat(6);
 

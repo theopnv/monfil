@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CatalogError, FeedpackCatalog } from '../../main/feedpacks/catalog';
-import type { FeedpackError, FeedpackInstallTarget, FeedpackPreview, InstallFeedpackError } from '../../main/feedpacks/install';
-import type { ImportSummary } from '../../main/opml/import';
-import type { Result } from '../../main/lib/utils';
+import type { CatalogError, FeedpackCatalog } from '../../shared/contracts';
+import type { FeedpackError, FeedpackInstallTarget, FeedpackPreview, InstallFeedpackError } from '../../shared/contracts';
+import type { ImportSummary } from '../../shared/contracts';
+import type { Result } from '../../shared/result';
 import { queryKeys } from '@/lib/queries';
 import { uiKeys } from '@/lib/ipc-bridge';
 

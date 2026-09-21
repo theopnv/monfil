@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { render } from 'vitest-browser-react';
 import ArticleMeta from './ArticleMeta';
-import type { RiverRow } from '../../../preload/channels';
+import type { RiverRow } from '../../../shared/contracts';
 
 function createItem(overrides: Partial<RiverRow> = {}): RiverRow {
   return {

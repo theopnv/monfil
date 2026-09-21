@@ -1,7 +1,6 @@
 import { db, dbReady } from './db/database';
 import { querySettings } from './db/crud/query';
-
-export type RefreshInterval = 15 | 30 | 60 | 360 | 'manual';
+import type { MaxFeedItems, RefreshInterval } from '../shared/contracts';
 
 export const REFRESH_INTERVALS: readonly RefreshInterval[] = [15, 30, 60, 360, 'manual'];
 
@@ -81,8 +80,6 @@ export async function setRefreshOnLaunch(value: boolean): Promise<void> {
     .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
     .execute();
 }
-
-export type MaxFeedItems = 10 | 30 | 50 | 100;
 
 export const MAX_FEED_ITEMS_OPTIONS: readonly MaxFeedItems[] = [10, 30, 50, 100];
 

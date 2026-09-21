@@ -7,8 +7,8 @@ import path from 'node:path';
 import SQLite from 'better-sqlite3';
 import { Kysely, SqliteDialect, sql } from 'kysely';
 import { Migrator, NO_MIGRATIONS, type MigrationResultSet } from 'kysely/migration';
+import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 import { migrationProvider } from './index.ts';
-import { HOME_WORKSPACE_ID } from '../types.ts';
 import { rmTestDir } from '../../lib/rmTestDir';
 
 // A real file rather than ':memory:', so the table rebuilds run the way they will run on a user's install.

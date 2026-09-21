@@ -3,7 +3,7 @@ import { Folder, UploadCloud01 } from "@untitledui/icons";
 import ImportOpmlDialog from "@/components/Workspace/ImportOpmlDialog";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
-import type { AppInfo } from "../../../main/app-info";
+import type { AppInfo } from "../../../shared/contracts";
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) {

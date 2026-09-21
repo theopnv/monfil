@@ -5,7 +5,7 @@ import { Dialog, Modal, ModalOverlay } from '@/components/untitled-ui/applicatio
 import { Button } from '@/components/untitled-ui/base/buttons/button';
 import { WORKSPACE_COLORS, WORKSPACE_ICONS } from '@/lib/workspace-icons';
 import { useInstallFeedpack } from '@/providers/feedpacks-provider';
-import type { FeedpackInstallTarget, FeedpackPreview } from '../../../main/feedpacks/install';
+import type { FeedpackInstallTarget, FeedpackPreview } from '../../../shared/contracts';
 import FeedpackBrowser from './FeedpackBrowser';
 
 export interface FeedpackInstallDialogProps {

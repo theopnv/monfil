@@ -1,9 +1,3 @@
-// Result
-type Success<S> = { success: true; data: S };
-type Failure<E> = { success: false; error: E };
-
-export type Result<S, E = Error> = Success<S> | Failure<E>;
-
 /**
  * Runs `worker` over every item, never more than `limit` at a time, and resolves once they have all settled.
  * @param items the list of items to run the worker onto

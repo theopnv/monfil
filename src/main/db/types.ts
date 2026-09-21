@@ -5,6 +5,9 @@ import type {
   Selectable,
   Updateable,
 } from 'kysely'
+import type {
+  SourceType,
+} from '../../shared/contracts';
 
 export interface Database {
   workspace: WorkspaceTable
@@ -30,13 +33,9 @@ export interface WorkspaceTable {
   installed_at: string | undefined;
 }
 
-export type Workspace = Selectable<WorkspaceTable>;
+export type WorkspaceRow = Selectable<WorkspaceTable>;
 export type NewWorkspace = Insertable<WorkspaceTable>;
 export type UpdateWorkspace = Updateable<WorkspaceTable>;
-
-// Home is inserted as the first row by the migration that creates this table, and it can never be
-// deleted, so its id is permanently 1.
-export const HOME_WORKSPACE_ID = 1;
 
 // =============== Feed Category ===============
 // A category is a name (e.g. "Tech", "News"...) scoped to one workspace.
@@ -47,15 +46,13 @@ export interface FeedCategoryTable {
   workspace_id: number;
 };
 
-export type FeedCategory = Selectable<FeedCategoryTable>;
+export type FeedCategoryRow = Selectable<FeedCategoryTable>;
 export type NewFeedCategory = Insertable<FeedCategoryTable>;
 export type UpdateFeedCategory = Updateable<FeedCategoryTable>;
 
 // =============== Feed ===============
 // A feed is anything the user wants to subscribe to (e.g. RSS, podcasts, bluesky feed, etc). Identity
 // only: where it appears (category, workspace, visibility) is feedPlacement, below.
-
-export type SourceType = 'rss' | 'youtube';
 
 export interface FeedMetadataTable {
   id: Generated<number>;
@@ -68,7 +65,7 @@ export interface FeedMetadataTable {
   icon: string | undefined;
 }
 
-export type FeedMetadata = Selectable<FeedMetadataTable>;
+export type FeedMetadataRow = Selectable<FeedMetadataTable>;
 export type NewFeedMetadata = Insertable<FeedMetadataTable>;
 export type UpdateFeedMetadata = Updateable<FeedMetadataTable>;
 

@@ -4,7 +4,7 @@ import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/applicatio
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useExportOpml } from "@/providers/opml-provider";
 import { useDeleteWorkspace } from "@/providers/workspace-provider";
-import type { WorkspaceSummary } from "../../../preload/channels";
+import type { WorkspaceSummary } from "../../../shared/contracts";
 
 export interface DeleteWorkspaceDialogProps {
   workspace: WorkspaceSummary | null;

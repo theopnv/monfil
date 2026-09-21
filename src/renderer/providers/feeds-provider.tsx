@@ -1,10 +1,10 @@
 import { useCallback } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData, type UseInfiniteQueryResult } from "@tanstack/react-query";
-import type { FeedCategory, FeedSummary, RiverPage } from "../../preload/channels";
-import type { DeleteCategoryError, DeleteFeedError } from "../../main/db/crud/delete";
-import type { AddFeedError, CreateCategoryError, NewFeedInput } from "../../main/db/crud/insert";
-import type { UpdateCategoryError, UpdateFeedError } from "../../main/db/crud/update";
-import type { Result } from "../../main/lib/utils";
+import type { FeedCategory, FeedSummary, RiverPage } from "../../shared/contracts";
+import type { DeleteCategoryError, DeleteFeedError } from "../../shared/contracts";
+import type { AddFeedError, CreateCategoryError, NewFeedInput } from "../../shared/contracts";
+import type { UpdateCategoryError, UpdateFeedError } from "../../shared/contracts";
+import type { Result } from "../../shared/result";
 import { categoriesQuery, feedsQuery, patchRiverRows, riverQuery, type RiverScope } from "../lib/queries";
 import { useActiveWorkspaceId } from "./workspace-provider";
 

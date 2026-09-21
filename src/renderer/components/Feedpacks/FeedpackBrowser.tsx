@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/untitled-ui/base/buttons/button';
 import { useFeedpackCatalog, useFeedpackPreview } from '@/providers/feedpacks-provider';
-import type { Feedpack } from '../../../main/feedpacks/catalog';
-import type { FeedpackPreview } from '../../../main/feedpacks/install';
+import type { Feedpack } from '../../../shared/contracts';
+import type { FeedpackPreview } from '../../../shared/contracts';
 
 export interface FeedpackBrowserProps {
   isActive: boolean;

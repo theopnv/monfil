@@ -1,18 +1,8 @@
-import type { FeedItem, FeedMetadata, SourceType } from '../../db/types';
-import type { FetchUrlError } from '../../lib/fetch';
-import type { Result } from '../../lib/utils';
+import type { FeedItem } from '../../db/types';
+import type { FeedFetchError, ParsedSource, SourceType } from '../../../shared/contracts';
+import type { Result } from '../../../shared/result';
 
 export type NewSourceItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>;
-
-export type ParsedSource = Omit<FeedMetadata, 'id' | 'last_fetched_at' | 'last_error'> & {
-  description: string;
-  items: NewSourceItem[];
-};
-
-type ParseErrorCode = 'PARSE_ERROR' | 'UNKNOWN_ERROR' | 'UNSUPPORTED_FORMAT';
-export type FeedFetchError =
-  | FetchUrlError
-  | { name: ParseErrorCode; message: string };
 
 /**
  * One source type the app can subscribe to. `registry.ts` holds one adapter per `SourceType`.

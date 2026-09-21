@@ -1,28 +1,7 @@
 import { parseOpml, type Opml } from 'feedsmith';
-import type { SourceType } from '../db/types';
-import type { Result } from '../lib/utils';
+import type { ParsedOpml, ParsedOpmlCategory, ParsedOpmlFeed, ParseOpmlError } from '../../shared/contracts';
+import type { Result } from '../../shared/result';
 import { isYoutubeLink } from '../feed/sources/youtube';
-
-export interface ParsedOpmlFeed {
-  title: string;
-  xmlUrl: string;
-  htmlUrl?: string;
-  type: SourceType;
-}
-
-export interface ParsedOpmlCategory {
-  name: string;
-  feeds: ParsedOpmlFeed[];
-}
-
-export interface ParsedOpml {
-  title: string;
-  categories: ParsedOpmlCategory[];
-}
-
-export type ParseOpmlError =
-  | { name: 'MALFORMED_XML'; message: string }
-  | { name: 'NO_FEEDS'; message: string };
 
 const DEFAULT_TITLE = 'Imported';
 

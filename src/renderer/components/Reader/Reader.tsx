@@ -16,7 +16,7 @@ import { useReaderContent } from "@/lib/reader/useReaderContent";
 import { useRiverScope } from "@/lib/river/useRiverScope";
 import { useCategories, useFeeds, useReadState, useRiver } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
-import type { RiverPage } from "../../../preload/channels";
+import type { RiverPage } from "../../../shared/contracts";
 
 export interface ReaderProps {
   itemId: string;
@@ -40,6 +40,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
   const { data } = useRiver(scope);
   const riverItems = useMemo(() => data?.pages.flatMap((page) => page.rows) ?? [], [data]);
   const currentItem = useMemo(() => riverItems.find((item) => item.id === id), [riverItems, id]);
+  const currentItemId = currentItem?.id;
   const isRead = useCallback((candidateId: number) => !!riverItems.find((item) => item.id === candidateId)?.readAt, [riverItems]);
   const navigation = useMemo(() => getReaderNavigation(riverItems, id, isRead), [riverItems, id, isRead]);
   const readerHighlightedLinks = useMemo(() => new Set(currentItem ? [currentItem.feedLink] : []), [currentItem]);
@@ -90,11 +91,11 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
   }, [currentItem, navigation.nextUnread, scope, mergeRows]);
 
   useEffect(() => {
-    if (currentItem) {
-      markRead(currentItem.id);
+    if (currentItemId !== undefined) {
+      markRead(currentItemId);
     }
     // Route reuse means this effect must re-run per article id, not once on mount.
-  }, [currentItem?.id, markRead]);
+  }, [currentItemId, markRead]);
 
   useEffect(() => {
     if (!preferences.keyboardNavigation) {
@@ -128,7 +129,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
     };
     el.addEventListener('scroll', handleScroll, { passive: true });
     return () => el.removeEventListener('scroll', handleScroll);
-  }, [currentItem?.id]);
+  }, [currentItemId]);
 
   if (!currentItem) {
     return (

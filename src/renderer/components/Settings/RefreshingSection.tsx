@@ -3,7 +3,7 @@ import SegmentedControl from "@/components/common/SegmentedControl";
 import SettingsRow from "@/components/Settings/SettingsRow";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import { Toggle } from "@/components/untitled-ui/base/toggle/toggle";
-import type { MaxFeedItems, RefreshInterval } from "../../../preload/channels";
+import type { MaxFeedItems, RefreshInterval } from "../../../shared/contracts";
 
 const REFRESH_OPTIONS = [
   { interval: 15, label: "15 min" },

@@ -1,28 +1,8 @@
-import type { Result } from './utils.ts'
+import type { Result } from '../../shared/result.ts'
+import type { FetchUrlError } from '../../shared/contracts.ts'
 import { FETCH_TIMEOUT_MS, MAX_FETCH_BYTES, MAX_REDIRECTS } from '../constants.ts'
 import { classifyHost } from './private-network.ts'
 
-interface GenericFetchError extends Error {
-  name: 'GENERIC_FETCH_ERROR';
-}
-
-interface NetworkError extends Error {
-  name: 'NETWORK_ERROR';
-}
-
-interface NotAllowedOrAbortedError extends Error {
-  name: 'NOT_ALLOWED_OR_ABORTED_ERROR';
-}
-
-interface ResponseTooLargeError extends Error {
-  name: 'RESPONSE_TOO_LARGE_ERROR';
-}
-
-interface BlockedUrlError extends Error {
-  name: 'BLOCKED_URL_ERROR';
-}
-
-export type FetchUrlError = GenericFetchError | NetworkError | NotAllowedOrAbortedError | ResponseTooLargeError | BlockedUrlError;
 type FetchUrlResult = Result<string, FetchUrlError>;
 
 export interface FetchUrlOptions {
@@ -44,11 +24,11 @@ export function allowPrivateHosts(): void {
   privateHostsAllowed = true;
 }
 
-function tooLarge(): Result<string, ResponseTooLargeError> {
+function tooLarge(): Result<string, Extract<FetchUrlError, { name: 'RESPONSE_TOO_LARGE_ERROR' }>> {
   return { success: false, error: { name: 'RESPONSE_TOO_LARGE_ERROR', message: 'This feed is too large to read.' } };
 }
 
-function blocked(message: string): BlockedUrlError {
+function blocked(message: string): Extract<FetchUrlError, { name: 'BLOCKED_URL_ERROR' }> {
   return { name: 'BLOCKED_URL_ERROR', message };
 }
 
@@ -77,7 +57,7 @@ async function findRefusal(target: URL, blockPrivateHosts: boolean): Promise<Fet
 
 // Mirrors what `Response.text()` does (UTF-8, BOM-stripped), but as a stream so a cap can be
 // enforced without holding the whole body in memory first.
-async function readCappedText(response: Response): Promise<Result<string, ResponseTooLargeError>> {
+async function readCappedText(response: Response): Promise<Result<string, Extract<FetchUrlError, { name: 'RESPONSE_TOO_LARGE_ERROR' }>>> {
   const contentLength = response.headers.get('content-length');
   if (contentLength && Number(contentLength) > MAX_FETCH_BYTES) {
     return tooLarge();
