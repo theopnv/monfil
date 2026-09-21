@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>DevSecOps</title></head>
+  <body>
+    <outline text="Blog">
+      <outline text="A Seasoned Tester's Crystal Ball" title="A Seasoned Tester's Crystal Ball" type="rss" xmlUrl="https://visible-quality.blogspot.com/feeds/posts/default"/>
+      <outline text="Holistic Testing with Lisa Crispin" title="Holistic Testing with Lisa Crispin" type="rss" xmlUrl="https://lisacrispin.com/feed/"/>
+      <outline text="Nicola Lindgren – A journey through testing, automation, development and agile" title="Nicola Lindgren – A journey through testing, automation, development and agile" type="rss" xmlUrl="https://nicolalindgren.com/index.xml"/>
+      <outline text="On Test Automation" title="On Test Automation" type="rss" xmlUrl="https://www.ontestautomation.com/feed.xml"/>
+      <outline text="Release notes from vitest" title="Release notes from vitest" type="rss" xmlUrl="http://github.com/vitest-dev/vitest/releases.atom"/>
+      <outline text="Software Testing Magazine" title="Software Testing Magazine" type="rss" xmlUrl="https://www.softwaretestingmagazine.com/feed/"/>
+      <outline text="Test &amp; Code" title="Test &amp; Code" type="rss" xmlUrl="https://testandcode.org/index.xml"/>
+      <outline text="The Green Report | Quality Assurance Blog" title="The Green Report | Quality Assurance Blog" type="rss" xmlUrl="https://www.thegreenreport.blog/resources/xml/feeds.xml"/>
+      <outline text="jd:/dev/blog" title="jd:/dev/blog" type="rss" xmlUrl="https://julien.danjou.info/rss.xml"/>
+      <outline text="thoughts from the test eye" title="thoughts from the test eye" type="rss" xmlUrl="https://thetesteye.com/blog/feed/"/>
+    </outline>
+    <outline text="Engineering">
+      <outline text="Argo Project - Medium" title="Argo Project - Medium" type="rss" xmlUrl="https://blog.argoproj.io/feed"/>
+      <outline text="Buildkite Changelog" title="Buildkite Changelog" type="rss" xmlUrl="https://buildkite.com/changelog.atom"/>
+      <outline text="GitLab" title="GitLab" type="rss" xmlUrl="https://about.gitlab.com/atom.xml"/>
+      <outline text="Google Testing Blog" title="Google Testing Blog" type="rss" xmlUrl="http://googletesting.blogspot.com/atom.xml"/>
+      <outline text="Jenkins Blog" title="Jenkins Blog" type="rss" xmlUrl="http://feeds.feedburner.com/continuousblog"/>
+      <outline text="Mergify Blog" title="Mergify Blog" type="rss" xmlUrl="https://mergify.com/blog/rss.xml"/>
+      <outline text="Sonar Blog" title="Sonar Blog" type="rss" xmlUrl="https://www.sonarsource.com/blog/rss.xml"/>
+      <outline text="The CircleCI Blog Feed | CircleCI" title="The CircleCI Blog Feed | CircleCI" type="rss" xmlUrl="https://circleci.com/blog/feed.xml"/>
+    </outline>
+  </body>
+</opml>

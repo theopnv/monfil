@@ -8,6 +8,8 @@ import type { AppInfo } from '../main/app-info';
 import type { Result } from '../main/lib/utils';
 import type { ImportOpmlError, ImportOpmlTarget, ImportSummary } from '../main/opml/import';
 import type { ExportOpmlError } from '../main/opml/export';
+import type { CatalogError, FeedpackCatalog } from '../main/feedpacks/catalog';
+import type { FeedpackError, FeedpackInstallTarget, FeedpackPreview, InstallFeedpackError } from '../main/feedpacks/install';
 
 // =====================================
 // ============== TYPES ================
@@ -92,6 +94,7 @@ export type OneWayMainToRendererChannelPayloads = {
   'workspaces:edit-requested': number;
   'workspaces:export-requested': number;
   'workspaces:delete-requested': number;
+  'feedpacks:install-finished': { workspaceId: number; imported: number; failed: { title: string; message: string }[] };
 };
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
@@ -127,6 +130,9 @@ export type TwoWayRendererMainChannelPayloads = {
   'app:get-info': AppInfo;
   'opml:import': Result<ImportSummary, ImportOpmlError>;
   'opml:export': Result<void, ExportOpmlError>;
+  'feedpacks:list': Result<FeedpackCatalog, CatalogError>;
+  'feedpacks:preview': Result<FeedpackPreview, FeedpackError>;
+  'feedpacks:install': Result<ImportSummary, InstallFeedpackError>;
 }
 
 export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
@@ -161,6 +167,9 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'app:get-info': undefined;
   'opml:import': { target: ImportOpmlTarget };
   'opml:export': { workspaceId: number };
+  'feedpacks:list': undefined;
+  'feedpacks:preview': { slug: string };
+  'feedpacks:install': { slug: string; target: FeedpackInstallTarget };
 };
 
 // ============= Combined channel types ==============

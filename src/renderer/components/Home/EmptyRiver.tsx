@@ -12,9 +12,10 @@ export interface EmptyRiverProps {
    * succeeds and the workspace stops being empty.
    */
   onImportOpml: () => void;
+  onImportFeedpack: () => void;
 }
 
-export default function EmptyRiver({ onImportOpml }: EmptyRiverProps) {
+export default function EmptyRiver({ onImportOpml, onImportFeedpack }: EmptyRiverProps) {
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
   const isHome = useActiveWorkspaceId() === HOME_WORKSPACE_ID;
 
@@ -40,9 +41,10 @@ export default function EmptyRiver({ onImportOpml }: EmptyRiverProps) {
           <p className="mb-5.5 max-w-[44ch] text-sm leading-relaxed text-tertiary text-pretty">
             This workspace has no sources yet. Import an OPML file to fill it in one go.
           </p>
-          <Button color="primary" className="rounded-full" onPress={onImportOpml}>
-            Import OPML
-          </Button>
+          <div className="flex gap-2.5">
+            <Button color="primary" className="rounded-full" onPress={onImportOpml}>Import OPML</Button>
+            <Button color="secondary" className="rounded-full" onPress={onImportFeedpack}>Import feedpack</Button>
+          </div>
         </>
       )}
     </div>

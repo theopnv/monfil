@@ -55,6 +55,7 @@ let editWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let exportWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let deleteWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let invokeMock: ReturnType<typeof vi.fn>;
+let feedpacks: { slug: string; title: string; description: string; tags: string[]; curator: string; sourceCount: number; updatedAt: string; opml: string }[];
 
 beforeEach(() => {
   workspaces = [];
@@ -64,6 +65,7 @@ beforeEach(() => {
   editWorkspaceRequestedHandler = undefined;
   exportWorkspaceRequestedHandler = undefined;
   deleteWorkspaceRequestedHandler = undefined;
+  feedpacks = [];
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
@@ -92,6 +94,16 @@ beforeEach(() => {
       }
       case 'opml:export':
         return Promise.resolve({ success: true, data: undefined });
+      case 'feedpacks:list':
+        return Promise.resolve({ success: true, data: { version: 1, packs: feedpacks } });
+      case 'feedpacks:preview': {
+        const pack = feedpacks.find((candidate) => candidate.slug === (arg as { slug: string }).slug);
+        return Promise.resolve(pack
+          ? { success: true, data: { pack, sources: { title: pack.title, categories: [{ name: 'Engineering', feeds: [{ title: 'Source', xmlUrl: 'https://example.com/feed', type: 'rss' }] }] } } }
+          : { success: false, error: { name: 'PACK_NOT_FOUND', message: 'Missing pack.' } });
+      }
+      case 'feedpacks:install':
+        return Promise.resolve({ success: true, data: { workspaceId: 3, imported: 1, skipped: [], failed: [] } });
       default:
         return Promise.resolve([]);
     }
@@ -168,6 +180,60 @@ test('shows a dot only for a workspace with unread items', async () => {
   // Assert
   await expect.element(getByRole('link', { name: 'CI/CD watch' }).getByTestId('unread-dot')).toBeInTheDocument();
   await expect.element(getByRole('link', { name: 'Home' }).getByTestId('unread-dot')).not.toBeInTheDocument();
+});
+
+test('loads the feedpack catalog only when its browser opens', async () => {
+  // Arrange
+  workspaces = [createWorkspace()];
+  const { getByRole } = await renderApp('/workspace/1');
+
+  // Assert
+  expect(invokeMock).not.toHaveBeenCalledWith('feedpacks:list', undefined);
+
+  // Act
+  await getByRole('button', { name: 'New workspace' }).click();
+  await getByRole('button', { name: 'Browse feedpacks' }).click();
+
+  // Assert
+  await expect.poll(() => invokeMock.mock.calls.some(([channel]) => channel === 'feedpacks:list')).toBe(true);
+});
+
+test('installs a selected feedpack with standard workspace details', async () => {
+  // Arrange
+  feedpacks = [{ slug: 'devsecops-watch', title: 'DevSecOps Watch', description: 'Testing sources.', tags: ['testing'], curator: 'Monfil', sourceCount: 1, updatedAt: '2026-09-21', opml: 'devsecops-watch.opml' }];
+  const { getByRole } = await renderApp('/workspace/1');
+  await getByRole('button', { name: 'New workspace' }).click();
+  await getByRole('button', { name: 'Browse feedpacks' }).click();
+
+  // Act
+  await getByRole('button', { name: /DevSecOps Watch.*Testing sources/ }).click();
+  await getByRole('button', { name: 'Install' }).click();
+
+  // Assert
+  await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('feedpacks:install', {
+    slug: 'devsecops-watch',
+    target: {
+      kind: 'new-workspace',
+      name: 'DevSecOps Watch',
+      icon: 'Code01',
+      color: '#d67f48',
+    },
+  }));
+});
+
+test('keeps workspace details out of the feedpack browser', async () => {
+  // Arrange
+  feedpacks = [{ slug: 'devsecops-watch', title: 'DevSecOps Watch', description: 'Testing sources.', tags: ['testing'], curator: 'Monfil', sourceCount: 1, updatedAt: '2026-09-21', opml: 'devsecops-watch.opml' }];
+  const { getByRole } = await renderApp('/workspace/1');
+  await getByRole('button', { name: 'New workspace' }).click();
+  await getByRole('button', { name: 'Browse feedpacks' }).click();
+
+  // Act
+  await getByRole('button', { name: /DevSecOps Watch.*Testing sources/ }).click();
+
+  // Assert
+  await expect.element(getByRole('button', { name: 'ShieldTick' })).not.toBeInTheDocument();
+  await expect.element(getByRole('button', { name: 'Colour #a855f7' })).not.toBeInTheDocument();
 });
 
 test('switching tabs swaps the river to the other workspace\'s feeds', async () => {

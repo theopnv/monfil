@@ -16,6 +16,8 @@ import { getAppInfo, type AppInfo } from "../app-info";
 import { sendToRenderer } from "./sendToRenderer";
 import { openAndImportOpml, type ImportOpmlError, type ImportOpmlTarget, type ImportSummary } from "../opml/import";
 import { exportWorkspaceOpml, type ExportOpmlError } from "../opml/export";
+import { getFeedpackCatalog, type CatalogError, type FeedpackCatalog } from '../feedpacks/catalog';
+import { installFeedpack, previewFeedpack, type FeedpackError, type FeedpackInstallTarget, type FeedpackPreview, type InstallFeedpackError } from '../feedpacks/install';
 import type { IpcMainInvokeEvent } from "electron";
 import type { FeedCategory, FeedSummary, ItemBody, RefreshSummary, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from "../../preload/channels";
 import type { Result } from "../lib/utils";
@@ -204,4 +206,16 @@ export async function handleOpmlImport(_event: IpcMainInvokeEvent, payload: { ta
 
 export async function handleOpmlExport(_event: IpcMainInvokeEvent, payload: { workspaceId: number }): Promise<Result<void, ExportOpmlError>> {
   return exportWorkspaceOpml(payload.workspaceId);
+}
+
+export function handleFeedpacksList(): Promise<Result<FeedpackCatalog, CatalogError>> {
+  return getFeedpackCatalog();
+}
+
+export function handleFeedpacksPreview(_event: IpcMainInvokeEvent, payload: { slug: string }): Promise<Result<FeedpackPreview, FeedpackError>> {
+  return previewFeedpack(payload.slug);
+}
+
+export function handleFeedpacksInstall(_event: IpcMainInvokeEvent, payload: { slug: string; target: FeedpackInstallTarget }): Promise<Result<ImportSummary, InstallFeedpackError>> {
+  return installFeedpack(payload.slug, payload.target);
 }

@@ -24,7 +24,7 @@ const sidebarTest = base.extend<SidebarLayoutFixtures>({
     try {
       const page = await app.firstWindow();
       // The renderer answers `feeds:submit-add-feed` only once its IPC bridge is mounted.
-      await expect(page.getByRole('button', { name: 'Add feed' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
       await use(page);
     } finally {
       await app.close();

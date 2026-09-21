@@ -70,7 +70,8 @@ no `xmlUrl` that contains other outlines is a folder. Feedly, Inoreader, NetNews
 and write that shape. Each folder outline becomes a category in the new workspace. Category names are scoped per
 workspace, so two packs can both have a "Testing" category without colliding.
 
-Icon and colour are not in the file. The user picks them at install.
+Icon and colour are not in the file. Monfil uses its standard workspace icon and colour when it creates the
+workspace.
 
 Catalog metadata that OPML cannot carry lives in one `feedpacks/index.json`:
 
@@ -113,9 +114,8 @@ unbounded wait. Link rot is continuous and must be fixable without shipping a bi
 This does not make monfil non-local. There is no account and no server holding the user's data. The launch path
 stays offline.
 
-There is no submission process yet. The first packs are written in-repo, by hand. CI checks that every `xmlUrl`
-resolves. There is no rule on source count, publishing frequency, or category count. A community tier, separated
-visibly from curated packs in the browser, is the shape to grow into once contributions actually arrive.
+New feedpacks are submitted through pull requests. See [Submit a feedpack](./submit-a-feedpack.md) for the file
+format, catalog fields, validation command, and review criteria. CI checks that every `xmlUrl` resolves.
 
 Sharing a pack does not need the catalog at all: a user curates a workspace, exports it as OPML, and sends the file.
 

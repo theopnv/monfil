@@ -6,13 +6,15 @@
 
 <p align="center">What if you could reclaim control over the algorithm and create your own news feed?</p>
 
-Monfil helps you doing exactly that by choosing and filtering your own sources of information. It currently supports RSS and Youtube channels, but aims to support other formats in the future, such as atmosphere content (Bluesky), podcasts, subreddits and even regular websites.
+Monfil is an open-source desktop feed reader for engineers who want to follow the sources they choose—not whatever social-media algorithms decide to show them.
 
-It means "My feed" in french.
+Start with curated feed packs for topics such as general Tech announcements and trends. Or CI/CD, test automation, testing frameworks, and software-supply-chain security. Or submit your own!
+
+"Mon fil" means "My feed" in french.
 
 ➡️ ["Hate “The Algorithm?” RSS Is One of the Tools You’ve Been Looking For"](https://www.eff.org/deeplinks/2026/06/hate-algorithm-rss-one-tools-youve-been-looking)
 
-[![Publish](https://github.com/theopnv/monfil/actions/workflows/publish.yml/badge.svg)](https://github.com/theopnv/monfil/actions/workflows/publish.yml)
+[Download Monfil](https://github.com/theopnv/monfil/releases) · [Browse feed packs](./feedpacks/) · [Contribute](CONTRIBUTING.md)
 
 <p align="center">
   <img src="./doc/gallery/home-light.png" width="49%" alt="Monfil home, light mode">
@@ -22,12 +24,23 @@ It means "My feed" in french.
   <img src="./doc/gallery/reader.png" width="100%" alt="Monfil reader view">
 </p>
 
-## Features
+## Problem
+Keeping up with software engineering is increasingly difficult.
 
-- 🪡 **Your own sources.** Add RSS/Atom feeds and YouTube channels by pasting any link; monfil figures out what it is. Support for more source types (Bluesky, podcasts, subreddits, plain websites) is planned.
-- 🗂️ **Folders.** Group feeds into folders, and show or hide any feed or folder from Home with a click.
-- 🌗 **Light, dark, or system theme.**
-- 🔐 **Local and private.** Everything lives in a single SQLite database on your machine. No account, no server, no tracking. Settings shows exactly how many feeds/articles you have and how big that file is, and can reveal it in Finder/Explorer.
+Important information is scattered across blogs, release notes, changelogs, YouTube channels, GitHub repositories, and security advisories. Social networks make discovery easier, but their algorithms can narrow what you see.
+
+Monfil gives you a transparent alternative: choose your sources, organize them into workspaces, and read them in one focused place.
+
+## Solution
+
+Monfil combines:
+
+- A distraction-free desktop feed reader
+- Feedpacks: curated source packs for specific technical fields
+- RSS and YouTube support
+- Workspaces, search and read/unread tracking
+- Keyboard shortcuts
+- OPML import/export support
 
 ## Install
 
@@ -61,6 +74,10 @@ xattr -cr /Applications/monfil.app
 - Paste a link to an RSS feed, a YouTube channel, a handle, or a video. Monfil resolves what it points to.
 - Put it in a folder, existing or new, then confirm.
 - Create a folder with the folder icon next to '+' in the sidebar.
+- Create a workspace with the '+' button in the left rail. Each workspace keeps its sources and river separate.
+- Open the feedpack browser from the new-workspace dialog, an empty workspace, or the feed sidebar.
+- Import an OPML file to create a workspace, add it to Home, or add its sources to the current workspace.
+- Right-click a workspace to export it as OPML.
 - Right-click a folder to rename or delete it. Deleting one asks where to move its feeds first, unless it's already empty.
 - Drag a feed onto a folder to move it there.
 - Remove a feed with a right-click on it in the sidebar.
@@ -70,7 +87,11 @@ xattr -cr /Applications/monfil.app
 ## FAQ
 
 **Why does this exist? Don't RSS readers already exist?**
-Plenty do. Monfil exists because most ways of following the internet today hand curation to an algorithm optimizing for engagement, not for what you actually asked for. An RSS reader is the opposite: you choose exactly what shows up, nothing more, nothing less. Monfil is a bet that this idea is worth a modern, pleasant interface instead of stopping at "it's for power users."
+
+- You choose the sources: No opaque recommendation algorithm decides what deserves your attention.
+- Start with a pack: You do not need to spend hours discovering and configuring sources. Begin with a curated pack, then customize it.
+- Focus on technical signals: Monfil is designed for following projects, tools, releases, changelogs, and security information, not general social content.
+- Own your information diet: Monfil is open source and built around transparency, portability, and control.
 
 **Is my data private?**
 Yes. Monfil has no account, no server, and no analytics. Everything — your feeds, your read state, your articles — lives in one SQLite file on your machine. Settings shows you exactly how big it is and can reveal it in Finder/Explorer.
@@ -83,4 +104,3 @@ Yes, and it's [MIT-licensed](LICENSE) open source. No ads.
 
 **How do I report a bug or request a feature?**
 Open an issue on GitHub. Read [CONTRIBUTING.md](CONTRIBUTING.md) first if you're planning to send a pull request — small, focused PRs are easiest to review.
-

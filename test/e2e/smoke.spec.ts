@@ -38,9 +38,8 @@ smokeTest('clicking "Add feed" opens the add-feed wizard', async ({ electronApp 
   const window = await electronApp.firstWindow();
 
   // Act
-  await window.getByRole('button', { name: 'Add feed' }).click();
+  await window.getByRole('button', { name: 'Add feed', exact: true }).click();
 
   // Assert
   await expect(window.getByRole('heading', { name: 'Add a feed' })).toBeVisible();
 })
-
