@@ -16,7 +16,7 @@ const config: ForgeConfig = {
     icon: 'assets/icons/icon',
     extraResource: ['assets/icons/icon.png', 'feedpacks'],
     // The Vite plugin's own `ignore` keeps only `.vite/**`, dropping node_modules entirely.
-    // vite.main.config.mts marks a few packages (better-sqlite3, jsdom) as Rollup `external`
+    // src/main/vite.config.mts marks a few packages (better-sqlite3, jsdom) as Rollup `external`
     // since they can't be bundled, so their real files need to survive packaging. Keeping
     // node_modules here lets the default `prune` step (packagerConfig.prune, on unless set
     // false) trim it back down to production dependencies only.
@@ -59,19 +59,19 @@ const config: ForgeConfig = {
         {
           // `entry` is just an alias for `build.lib.entry` in the corresponding file of `config`.
           entry: 'src/main/main.ts',
-          config: 'vite.main.config.mts',
+          config: 'src/main/vite.config.mts',
           target: 'main',
         },
         {
           entry: 'src/preload/preload.ts',
-          config: 'vite.preload.config.mts',
+          config: 'src/preload/vite.config.mts',
           target: 'preload',
         },
       ],
       renderer: [
         {
           name: 'main_window',
-          config: 'vite.renderer.config.mts',
+          config: 'src/renderer/vite.config.mts',
         },
       ],
     }),

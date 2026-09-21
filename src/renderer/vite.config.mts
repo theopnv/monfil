@@ -58,7 +58,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': `${import.meta.dirname}/src/renderer`,
+      '@': import.meta.dirname,
     },
   },
 });

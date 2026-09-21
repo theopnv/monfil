@@ -42,8 +42,8 @@ Electron has three process trees, each built by its own Vite config, plus one pr
 
 ## Conventions
 
-- Type-only imports need the `type` keyword. `tsconfig.base.json` holds the strict rules. `tsconfig.json` references the separate main, preload, and renderer projects so each process gets only its own environment types.
-- The `@/` alias points at `src/renderer/` only. It is declared in `tsconfig.renderer.json`, the vendored Untitled UI config, and `vite.renderer.config.mts`. Keep them in step.
+- Type-only imports need the `type` keyword. `tsconfig.base.json` holds the strict rules. `tsconfig.json` references the process projects in `src/main/`, `src/preload/`, and `src/renderer/` so each process gets only its own environment types.
+- The `@/` alias points at `src/renderer/` only. It is declared in `src/renderer/tsconfig.json`, the vendored Untitled UI config, and `src/renderer/vite.config.mts`. Keep them in step.
 - Fallible operations return the `Result` union from `src/shared/result.ts` instead of throwing. Errors are tagged unions with a `name` field. Discriminate them with a `switch` that ends in a `never` exhaustiveness check, as in `src/main/feed/sources/rss.ts`.
 - Documentation files use kebab-case names and live in `doc/`.
 - Use JSDoc @params and @return to document functions (only the important, external facing APIs or helpers).

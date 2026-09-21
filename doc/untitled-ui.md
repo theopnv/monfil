@@ -4,7 +4,7 @@ React 19 + Tailwind CSS v4 + React Aria Components, wired up per the [Untitled U
 
 ## Layout
 
-Renderer code lives under `src/renderer/`, a sibling of `src/main/`, `src/preload/`, and the process-neutral `src/shared/` tree. The `@/` import alias points at `src/renderer/`, **not** the repo root. It is declared in `tsconfig.renderer.json`, `src/renderer/components/untitled-ui/tsconfig.json`, and `vite.renderer.config.mts`.
+Renderer code lives under `src/renderer/`, a sibling of `src/main/`, `src/preload/`, and the process-neutral `src/shared/` tree. The `@/` import alias points at `src/renderer/`, **not** the repo root. It is declared in `src/renderer/tsconfig.json`, `src/renderer/components/untitled-ui/tsconfig.json`, and `src/renderer/vite.config.mts`.
 
 ## Adding components
 
@@ -24,6 +24,6 @@ The CLI doesn't know about this project's `src/renderer/` nesting: `-p` doesn't 
 
 - Files: kebab-case (`date-picker.tsx`, not `DatePicker.tsx`)
 - Imports from `react-aria-components` get an `Aria` prefix to avoid clashing with local component names: `import { Button as AriaButton } from "react-aria-components"`
-- `src/renderer/components/untitled-ui/tsconfig.json` extends `tsconfig.base.json`, scopes to just that folder, and turns off `exactOptionalPropertyTypes`. `tsconfig.renderer.json` references it as a separate project so generated code keeps its required optional-property rule.
+- `src/renderer/components/untitled-ui/tsconfig.json` extends `tsconfig.base.json`, scopes to just that folder, and turns off `exactOptionalPropertyTypes`. `src/renderer/tsconfig.json` references it as a separate project so generated code keeps its required optional-property rule.
 - Icons: `import { Home01 } from "@untitledui/icons"`; pass as a component reference where possible (`iconLeading={ChevronDown}`); JSX usage needs `data-icon`
 - Brand color: edit the `--color-brand-*` scale (25–950) in `theme.css`; semantic tokens (`text-brand-primary`, `bg-brand-solid`, ...) derive from it for both light and dark mode automatically

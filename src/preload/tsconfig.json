@@ -1,10 +1,10 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
     "noEmit": true,
     "lib": ["ES2023"],
     "types": ["node", "electron"]
   },
-  "include": ["src/preload/**/*.ts", "src/shared/**/*.ts"]
+  "include": ["**/*.ts", "../shared/**/*.ts", "vite.config.mts"]
 }

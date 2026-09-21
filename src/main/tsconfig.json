@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "lib": ["ES2023"],
+    "types": ["node", "electron"]
+  },
+  "include": [
+    "**/*.ts",
+    "../shared/**/*.ts",
+    "../../test/e2e/**/*.ts",
+    "../../eslint.config.ts",
+    "../../forge.config.ts",
+    "../../forge.env.d.ts",
+    "../../playwright.config.ts",
+    "vite.config.mts",
+    "../renderer/vite.config.mts",
+    "../../vitest.browser.config.mts",
+    "../../vitest.config.mts"
+  ]
+}
