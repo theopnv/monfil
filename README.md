@@ -5,6 +5,7 @@
 <h1 align="center">Monfil</h1>
 
 <p align="center">What if you could reclaim control over the algorithm and create your own news feed?</p>
+<p align="center"><a href="https://github.com/theopnv/monfil/releases">Download Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="CONTRIBUTING.md">Contribute</a></p>
 
 Monfil is an open-source desktop feed reader for engineers who want to follow the sources they choose—not whatever social-media algorithms decide to show them.
 
@@ -13,8 +14,6 @@ Start with curated feed packs for topics such as "General Tech announcements and
 "Mon fil" means "My feed" in french.
 
 ➡️ ["Hate “The Algorithm?” RSS Is One of the Tools You’ve Been Looking For"](https://www.eff.org/deeplinks/2026/06/hate-algorithm-rss-one-tools-youve-been-looking)
-
-[Download Monfil](https://github.com/theopnv/monfil/releases) · [Browse feed packs](./feedpacks/) · [Contribute](CONTRIBUTING.md)
 
 <p align="center">
   <img src="./doc/gallery/workspace1-light.png" width="49%" alt="Monfil workspace, light mode">
