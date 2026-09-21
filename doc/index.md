@@ -14,6 +14,7 @@ This is an Electron project based on [Vite](https://vite.dev):
 - [Frontend](./frontend.md)
   - [Untitled UI](./untitled-ui.md)
 - [Feedpacks](./feedpacks.md)
+- [Submit a feedpack](./submit-a-feedpack.md)
 
 ## Debugging
 

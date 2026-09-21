@@ -154,7 +154,7 @@ workspacesTest('adding a feed through the wizard while on a workspace adds it th
     await expect(page.getByRole('link', { name: 'CI/CD watch' })).toBeVisible();
 
     // Act: add the feed through the wizard while the app is on that workspace, not Home.
-    await page.getByRole('button', { name: 'Add feed' }).click();
+    await page.getByRole('button', { name: 'Add feed', exact: true }).click();
     await page.getByLabel('Feed URL').fill(feedUrl);
     await expect(page.getByText('Feed found', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Continue' }).click();

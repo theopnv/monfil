@@ -151,7 +151,7 @@ windowSecurityTest('middle-clicking an article link opens it in the browser, not
 windowSecurityTest('the window refuses to navigate away from the app', async ({ feedServer, launchApp }) => {
   // Arrange
   const { page } = await launchApp();
-  await expect(page.getByRole('button', { name: 'Add feed' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
   const appUrl = page.url();
   const navigation = page.waitForEvent('framenavigated', { timeout: 1500 }).then(() => 'navigated', () => 'stayed');
 
@@ -206,7 +206,7 @@ windowSecurityTest('the app renders under its content security policy without a 
 
   // Act
   await page.reload();
-  await page.getByRole('button', { name: 'Add feed' }).click();
+  await page.getByRole('button', { name: 'Add feed', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Add a feed' })).toBeVisible();
 
   // Assert
