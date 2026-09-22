@@ -2,14 +2,17 @@ import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { db, initializeDatabase } from '../db/database';
 import { addFeedToDatabase, upsertArticleContent } from '../db/crud/insert';
 import { fetchUrl } from '../lib/fetch';
+import { extractArticleInUtilityProcess } from '../feed/extractArticleUtility';
 import { handleItemsGetContent } from './handlers';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 import type { IpcMainInvokeEvent } from 'electron';
 import { HOME_WORKSPACE_ID, type SourceType } from '../../shared/contracts';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
+vi.mock(import('../feed/extractArticleUtility'), () => ({ extractArticleInUtilityProcess: vi.fn() }));
 
 const mockedFetchUrl = vi.mocked(fetchUrl);
+const mockedExtractArticleInUtilityProcess = vi.mocked(extractArticleInUtilityProcess);
 const fakeEvent = {} as IpcMainInvokeEvent;
 
 const PARAGRAPH = 'This is a long paragraph about something interesting that readers care about deeply. '.repeat(6);
@@ -46,6 +49,7 @@ beforeAll(async () => {
 
 afterEach(async () => {
   mockedFetchUrl.mockReset();
+  mockedExtractArticleInUtilityProcess.mockReset();
   await db.deleteFrom('articleContent').execute();
   await db.deleteFrom('feedItem').execute();
   await db.deleteFrom('feedMetadata').execute();
@@ -96,13 +100,15 @@ describe('handleItemsGetContent', () => {
     // Arrange
     const itemId = await createItem('https://a.example/long-article');
     mockedFetchUrl.mockResolvedValue({ success: true, data: ARTICLE_PAGE_HTML });
+    mockedExtractArticleInUtilityProcess.mockResolvedValue({ html: '<p>Full article</p>', text: PARAGRAPH, wordCount: 80 });
 
     // Act
     const result = await handleItemsGetContent(fakeEvent, itemId);
 
     // Assert
     expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/long-article', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
-    expect(result.article?.html).toContain('<p>');
+    expect(mockedExtractArticleInUtilityProcess).toHaveBeenCalledWith(ARTICLE_PAGE_HTML, 'https://a.example/long-article');
+    expect(result.article).toEqual({ html: '<p>Full article</p>', wordCount: 80 });
     const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
     expect(stored.status).toBe('ok');
     expect(stored.html).toContain('<p>');
@@ -120,6 +126,7 @@ describe('handleItemsGetContent', () => {
     expect(result).toEqual({ description: '', article: undefined });
     const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
     expect(stored.status).toBe('failed');
+    expect(mockedExtractArticleInUtilityProcess).not.toHaveBeenCalled();
   });
 
   test('an item with no link returns its description without fetching', async () => {

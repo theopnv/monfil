@@ -1,5 +1,5 @@
 import { db, dbReady } from '../db/database';
-import { addFeedItemsToDatabase, updateFeedItemImage, upsertArticleContent } from '../db/crud/insert';
+import { addFeedItemsToDatabase, updateFeedItemImage } from '../db/crud/insert';
 import { queryFeedMetadata, queryFeedMetadataByIds } from '../db/crud/query';
 import type { FeedItem } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
@@ -10,6 +10,8 @@ import type { FeedMetadata, RefreshSummary, SourceType } from '../../shared/cont
 import { runWithConcurrency } from '../lib/utils';
 import { FEED_FETCH_CONCURRENCY } from '../constants';
 import { getMaxFeedItems } from '../settings';
+
+const ENRICHMENT_BUDGET = 200;
 
 async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<FeedItem[]> {
   const result = await sourceFor(feed.type).fetch(feed.link, maxItems);
@@ -79,18 +81,21 @@ export async function refreshFeeds(feedIds: number[]): Promise<RefreshSummary> {
 }
 
 async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedItem[]>, typeByFeedId: ReadonlyMap<number, SourceType>): Promise<void> {
+  let remaining = ENRICHMENT_BUDGET;
   for (const [feedId, items] of insertedByFeedId) {
+    if (remaining === 0) {
+      return;
+    }
     if (!sourceFor(typeByFeedId.get(feedId) ?? 'rss').fetchesFullArticle) {
       continue;
     }
+    const candidates = items.slice(0, remaining);
+    remaining -= candidates.length;
     await enrichItems(
-      items,
+      candidates,
       (itemId, image) => {
         void updateFeedItemImage(itemId, image);
         broadcastToRenderers('feeds:item-image-fetched', { feedId, itemId, image });
-      },
-      (itemId, content) => {
-        void upsertArticleContent({ item_id: itemId, ...content });
       },
     );
   }

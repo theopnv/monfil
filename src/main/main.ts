@@ -7,6 +7,7 @@ import { registerIpcListeners } from './ipc/registerIpcListeners';
 import { closeDatabase, initializeDatabase } from './db/database';
 import { DB_FILE_NAME } from './constants';
 import { startRefreshScheduler, stopRefreshScheduler } from './feed/scheduler';
+import { stopArticleExtractionProcess } from './feed/extractArticleUtility';
 import { resolveDevUserDataDir } from './dev-user-data-dir';
 import { denyWebPermissions, hardenWebContents } from './window-security';
 import { allowPrivateHosts } from './lib/fetch';
@@ -118,6 +119,7 @@ function bootstrap() {
 
   app.on('before-quit', () => {
     stopRefreshScheduler();
+    stopArticleExtractionProcess();
     closeDatabase().catch((error) => {
       console.error('Failed to close the database cleanly.', error);
     });

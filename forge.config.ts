@@ -63,6 +63,11 @@ const config: ForgeConfig = {
           target: 'main',
         },
         {
+          entry: 'src/main/feed/extractArticleProcess.ts',
+          config: 'src/main/vite.config.mts',
+          target: 'main',
+        },
+        {
           entry: 'src/preload/preload.ts',
           config: 'src/preload/vite.config.mts',
           target: 'preload',

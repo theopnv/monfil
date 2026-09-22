@@ -1,6 +1,7 @@
 import { enrichItems } from "../feed/enrichItems";
 import { ARTICLE_FETCH_TIMEOUT_MS } from "../constants";
-import { deriveArticleContentStatus, extractArticle } from "../feed/extractArticle";
+import { deriveArticleContentStatus } from "../feed/extractArticle";
+import { extractArticleInUtilityProcess } from '../feed/extractArticleUtility';
 import { resolveSource, sourceFor } from "../feed/sources/registry";
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
@@ -81,16 +82,10 @@ export async function handleFeedsSubmitAddFeed(event: IpcMainInvokeEvent, payloa
 
   const { items, category, ...metadata } = result.data;
   if (sourceFor(payload.type).fetchesFullArticle) {
-    void enrichItems(
-      items,
-      (itemId, image) => {
-        void updateFeedItemImage(itemId, image);
-        sendToRenderer(event.sender, 'feeds:item-image-fetched', { feedId: metadata.id, itemId, image });
-      },
-      (itemId, content) => {
-        void upsertArticleContent({ item_id: itemId, ...content });
-      },
-    );
+    void enrichItems(items, (itemId, image) => {
+      void updateFeedItemImage(itemId, image);
+      sendToRenderer(event.sender, 'feeds:item-image-fetched', { feedId: metadata.id, itemId, image });
+    });
   }
 
   return {
@@ -203,7 +198,14 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
   }
 
   const fetched = await fetchUrl(item.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
-  const article = fetched.success ? extractArticle(fetched.data, item.link) : undefined;
+  let article;
+  if (fetched.success) {
+    try {
+      article = await extractArticleInUtilityProcess(fetched.data, item.link);
+    } catch (error) {
+      console.error(`Failed to extract article content for ${item.link}.`, error);
+    }
+  }
   const status = deriveArticleContentStatus(article);
   await upsertArticleContent({ item_id: itemId, html: article?.html, text: article?.text, word_count: article?.wordCount, status });
 

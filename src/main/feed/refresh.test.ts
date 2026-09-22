@@ -217,4 +217,21 @@ describe('refreshAllFeeds', () => {
     expect(mockedFetchUrl).toHaveBeenCalledTimes(1);
     expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/new', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
   });
+
+  test('limits image enrichment to 200 new items per refresh', async () => {
+    // Arrange
+    const link = 'https://a.example/feed';
+    await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({
+      success: true,
+      data: parsed(link, Array.from({ length: 201 }, (_, index) => item({ title: `Item ${index}`, link: `https://a.example/${index}` }))),
+    });
+
+    // Act
+    await refreshAllFeeds();
+    await vi.waitFor(() => expect(mockedFetchUrl).toHaveBeenCalledTimes(200));
+
+    // Assert
+    expect(mockedFetchUrl).not.toHaveBeenCalledWith('https://a.example/200', expect.anything());
+  });
 });
