@@ -1,4 +1,5 @@
 import { type Kysely } from 'kysely';
+import { logger } from '../../logging/logger';
 import { db, dbReady } from '../database';
 import { queryFeedItems } from './query';
 import { type Database, type FeedItem, type NewArticleContent } from '../types';
@@ -127,7 +128,7 @@ export async function updateFeedItemImage(itemId: number, image: string): Promis
   try {
     await db.updateTable('feedItem').set({ image }).where('id', '=', itemId).execute();
   } catch (error) {
-    console.error(`Failed to persist image for feed item ${itemId}.`, error);
+    logger.error('operation.failure', { operation: 'persist-image', entityId: itemId }, error);
   }
 }
 
@@ -149,7 +150,7 @@ export async function upsertArticleContent(content: NewArticleContent): Promise<
       })))
       .execute();
   } catch (error) {
-    console.error(`Failed to persist article content for item ${content.item_id}.`, error);
+    logger.error('operation.failure', { operation: 'persist-article', entityId: content.item_id }, error);
   }
 }
 

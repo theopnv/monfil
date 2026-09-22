@@ -1,4 +1,5 @@
 import { enrichItems } from "../feed/enrichItems";
+import { logger } from '../logging/logger';
 import { ARTICLE_FETCH_TIMEOUT_MS } from "../constants";
 import { deriveArticleContentStatus } from "../feed/extractArticle";
 import { extractArticleInUtilityProcess } from '../feed/extractArticleUtility';
@@ -10,7 +11,7 @@ import { addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage
 import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from "../db/crud/delete";
 import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace } from "../db/crud/update";
 import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from "../db/crud/query";
-import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval } from "../settings";
+import { getDetailedLogging, getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setDetailedLogging, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval } from "../settings";
 import { getAppInfo } from "../app-info";
 import { sendToRenderer } from "./sendToRenderer";
 import { openAndImportOpml } from "../opml/import";
@@ -57,6 +58,9 @@ import type {
   WorkspaceSummary,
 } from "../../shared/contracts";
 import type { Result } from "../../shared/result";
+import { dbReady, dbStatus } from '../db/database';
+import type { StartupHealth } from '../../shared/contracts';
+import { setDetailedLogging as applyDetailedLogging } from '../logging/logger';
 
 export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource, FeedFetchError>> {
   return resolveSource(payload.query, payload.type).fetch(payload.query, await getMaxFeedItems());
@@ -203,7 +207,7 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
     try {
       article = await extractArticleInUtilityProcess(fetched.data, item.link);
     } catch (error) {
-      console.error(`Failed to extract article content for ${item.link}.`, error);
+      logger.error('operation.failure', { operation: 'extract-article', entityId: itemId }, error);
     }
   }
   const status = deriveArticleContentStatus(article);
@@ -234,6 +238,28 @@ export function handleSettingsGetMaxFeedItems(): Promise<MaxFeedItems> {
 
 export async function handleSettingsSetMaxFeedItems(_event: IpcMainInvokeEvent, payload: MaxFeedItems): Promise<MaxFeedItems> {
   await setMaxFeedItems(payload);
+  return payload;
+}
+
+export async function handleAppGetStartupHealth(): Promise<StartupHealth> {
+  try {
+    await dbReady;
+  } catch {
+    // dbStatus contains the safe failure state returned below.
+  }
+  if (dbStatus.name === 'OK') {
+    return dbStatus;
+  }
+  return { name: dbStatus.name, incidentId: dbStatus.incidentId };
+}
+
+export function handleSettingsGetDetailedLogging(): Promise<boolean> {
+  return getDetailedLogging();
+}
+
+export async function handleSettingsSetDetailedLogging(_event: IpcMainInvokeEvent, payload: boolean): Promise<boolean> {
+  await setDetailedLogging(payload);
+  applyDetailedLogging(payload);
   return payload;
 }
 

@@ -1,5 +1,5 @@
 import { extractArticle } from './extractArticle';
-import { isExtractArticleRequest, type ExtractArticleResponse } from './extractArticleProtocol';
+import { isExtractArticleRequest, type ExtractArticleLog, type ExtractArticleResponse } from './extractArticleProtocol';
 
 process.parentPort.on('message', (event) => {
   if (!isExtractArticleRequest(event.data)) {
@@ -11,7 +11,8 @@ process.parentPort.on('message', (event) => {
   try {
     article = extractArticle(html, url);
   } catch (error) {
-    console.error(`Failed to extract article content for ${url}.`, error);
+    const record: ExtractArticleLog = { type: 'log', message: error instanceof Error ? error.message : String(error) };
+    process.parentPort.postMessage(record);
   }
   const response: ExtractArticleResponse = { id, article };
   process.parentPort.postMessage(response);

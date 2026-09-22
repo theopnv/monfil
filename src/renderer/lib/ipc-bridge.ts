@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react';
+import { ipc } from '@/lib/ipc-client';
 import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import type { RiverPage } from '../../shared/contracts';
 import { patchRiverRows } from './queries';
@@ -31,7 +32,7 @@ export function useIpcBridge(): void {
       // loaded yet to disturb, so it just shows whatever is current once it resolves. Raising the
       // pill anyway would leave it stuck on screen after that fetch already caught up on its own,
       // since the click has nothing left to do.
-      window.electron.ipcRenderer.on('feeds:refreshed', (summary) => {
+      ipc.on('feeds:refreshed', (summary) => {
         const inserted = summary.perFeed.reduce((total, feed) => total + feed.inserted, 0);
         const hasRenderedRiver = queryClient.getQueriesData<InfiniteData<RiverPage>>({ queryKey: ['river'] })
           .some(([, data]) => data !== undefined);
@@ -41,38 +42,38 @@ export function useIpcBridge(): void {
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });
       }),
 
-      window.electron.ipcRenderer.on('feeds:item-image-fetched', ({ itemId, image }) => {
+      ipc.on('feeds:item-image-fetched', ({ itemId, image }) => {
         queryClient.setQueriesData<InfiniteData<RiverPage>>(
           { queryKey: ['river'] },
           (data) => (data ? patchRiverRows(data, new Set([itemId]), (row) => ({ ...row, image })) : data),
         );
       }),
 
-      window.electron.ipcRenderer.on('feeds:delete-feed-requested', (feedId) => {
+      ipc.on('feeds:delete-feed-requested', (feedId) => {
         queryClient.setQueryData(uiKeys.deleteFeedRequestedId, feedId);
       }),
 
-      window.electron.ipcRenderer.on('feeds:rename-category-requested', (categoryId) => {
+      ipc.on('feeds:rename-category-requested', (categoryId) => {
         queryClient.setQueryData(uiKeys.renameCategoryRequestedId, categoryId);
       }),
 
-      window.electron.ipcRenderer.on('feeds:delete-category-requested', (categoryId) => {
+      ipc.on('feeds:delete-category-requested', (categoryId) => {
         queryClient.setQueryData(uiKeys.deleteCategoryRequestedId, categoryId);
       }),
 
-      window.electron.ipcRenderer.on('workspaces:edit-requested', (workspaceId) => {
+      ipc.on('workspaces:edit-requested', (workspaceId) => {
         queryClient.setQueryData(uiKeys.editWorkspaceRequestedId, workspaceId);
       }),
 
-      window.electron.ipcRenderer.on('workspaces:export-requested', (workspaceId) => {
+      ipc.on('workspaces:export-requested', (workspaceId) => {
         queryClient.setQueryData(uiKeys.exportWorkspaceRequestedId, workspaceId);
       }),
 
-      window.electron.ipcRenderer.on('workspaces:delete-requested', (workspaceId) => {
+      ipc.on('workspaces:delete-requested', (workspaceId) => {
         queryClient.setQueryData(uiKeys.deleteWorkspaceRequestedId, workspaceId);
       }),
 
-      window.electron.ipcRenderer.on('feedpacks:install-finished', ({ workspaceId }) => {
+      ipc.on('feedpacks:install-finished', ({ workspaceId }) => {
         queryClient.setQueryData(uiKeys.feedpackRefreshing(workspaceId), false);
         void queryClient.invalidateQueries({ queryKey: ['feeds', workspaceId] });
         void queryClient.invalidateQueries({ queryKey: ['river'] });

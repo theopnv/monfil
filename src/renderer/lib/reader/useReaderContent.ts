@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ipc } from '@/lib/ipc-client';
 import type { ItemBody, RiverRow, SourceType } from '../../../shared/contracts';
 import { deriveStandfirst, renderPlainTextDescription } from './reader';
 
@@ -53,8 +54,7 @@ export function useReaderContent(item: RiverRow | undefined): ReaderContent {
     let cancelled = false;
     setBody({ state: 'loading' });
 
-    window.electron.ipcRenderer
-      .invoke('items:get-content', itemId)
+    ipc.invoke('items:get-content', itemId)
       .then((result) => {
         if (!cancelled) {
           setBody({ state: 'ready', body: result });

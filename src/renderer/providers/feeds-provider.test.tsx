@@ -213,7 +213,6 @@ test('marking an item read updates it optimistically and keeps it once the write
 
 test('a rejected items:set-read rolls back the optimistic read state', async () => {
   // Arrange
-  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   const row = createRow({ title: 'Row A' });
   invokeImpl = (channel) => (channel === 'items:query'
     ? Promise.resolve({ rows: [row] } satisfies RiverPage)
@@ -233,14 +232,13 @@ test('a rejected items:set-read rolls back the optimistic read state', async () 
 
   // Assert: read immediately (optimistic), then rolled back once the write fails.
   await vi.waitFor(() => {
-    expect(consoleError).toHaveBeenCalled();
+    expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('log:write', expect.objectContaining({ level: 'error' }));
   });
   await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 });
 
 test('two read-state mutations racing each keep their own outcome', async () => {
   // Arrange: item A's write is slow and fails; item B's write is fast and succeeds.
-  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   const rowA = createRow({ title: 'Row A' });
   const rowB = createRow({ title: 'Row B' });
   let resolveA!: () => void;
@@ -277,7 +275,7 @@ test('two read-state mutations racing each keep their own outcome', async () => 
 
   // Assert: A rolls back to unread, B stays read, neither mutation clobbered the other's row.
   await vi.waitFor(() => {
-    expect(consoleError).toHaveBeenCalled();
+    expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('log:write', expect.objectContaining({ level: 'error' }));
   });
   await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Row B: read', { exact: true })).toBeInTheDocument();

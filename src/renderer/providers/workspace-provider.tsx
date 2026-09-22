@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, type PropsWithChildren } from "react";
+import { ipc } from '@/lib/ipc-client';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import type { DeleteWorkspaceError } from "../../shared/contracts";
@@ -44,7 +45,7 @@ export const useActiveWorkspace = (): WorkspaceSummary | undefined => {
 export const useCreateWorkspace = (): ((input: { name: string; icon: string; color: string }) => Promise<Result<Workspace, CreateWorkspaceError>>) => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (input: { name: string; icon: string; color: string }) => window.electron.ipcRenderer.invoke('workspaces:create', input),
+    mutationFn: (input: { name: string; icon: string; color: string }) => ipc.invoke('workspaces:create', input),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
@@ -58,7 +59,7 @@ export const useCreateWorkspace = (): ((input: { name: string; icon: string; col
 export const useUpdateWorkspace = (): ((workspaceId: number, patch: { name?: string; icon?: string; color?: string }) => Promise<Result<Workspace, UpdateWorkspaceError>>) => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (variables: { workspaceId: number; name?: string; icon?: string; color?: string }) => window.electron.ipcRenderer.invoke('workspaces:update', variables),
+    mutationFn: (variables: { workspaceId: number; name?: string; icon?: string; color?: string }) => ipc.invoke('workspaces:update', variables),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
@@ -72,7 +73,7 @@ export const useUpdateWorkspace = (): ((workspaceId: number, patch: { name?: str
 export const useDeleteWorkspace = (): ((workspaceId: number) => Promise<Result<void, DeleteWorkspaceError>>) => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (workspaceId: number) => window.electron.ipcRenderer.invoke('workspaces:delete', { workspaceId }),
+    mutationFn: (workspaceId: number) => ipc.invoke('workspaces:delete', { workspaceId }),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
@@ -89,7 +90,7 @@ export const useDeleteWorkspace = (): ((workspaceId: number) => Promise<Result<v
 export const useReorderWorkspaces = (): ((orderedIds: number[]) => Promise<Result<void, UpdateWorkspaceError>>) => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (orderedIds: number[]) => window.electron.ipcRenderer.invoke('workspaces:reorder', { orderedIds }),
+    mutationFn: (orderedIds: number[]) => ipc.invoke('workspaces:reorder', { orderedIds }),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
@@ -103,7 +104,7 @@ export const useReorderWorkspaces = (): ((orderedIds: number[]) => Promise<Resul
 export const useMoveFeedToWorkspace = (): ((feedId: number, fromWorkspaceId: number, toWorkspaceId: number, categoryName: string) => Promise<Result<void, MoveFeedError>>) => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (variables: { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string }) => window.electron.ipcRenderer.invoke('feeds:move-to-workspace', variables),
+    mutationFn: (variables: { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string }) => ipc.invoke('feeds:move-to-workspace', variables),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });

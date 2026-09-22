@@ -119,3 +119,19 @@ export async function setMaxFeedItems(value: MaxFeedItems): Promise<void> {
     .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
     .execute();
 }
+
+export const DEFAULT_DETAILED_LOGGING = false;
+const DETAILED_LOGGING_KEY = 'detailedLogging';
+
+export async function getDetailedLogging(): Promise<boolean> {
+  const [row] = await querySettings({ key: DETAILED_LOGGING_KEY });
+  return toRefreshOnLaunch(row?.value ?? DEFAULT_DETAILED_LOGGING);
+}
+
+export async function setDetailedLogging(value: boolean): Promise<void> {
+  await dbReady;
+  await db.insertInto('setting')
+    .values({ key: DETAILED_LOGGING_KEY, value: String(value) })
+    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
+    .execute();
+}

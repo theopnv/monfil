@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { ipc } from '@/lib/ipc-client';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ExportOpmlError } from "../../shared/contracts";
 import type { ImportOpmlError, ImportOpmlTarget, ImportSummary } from "../../shared/contracts";
@@ -8,7 +9,7 @@ import { queryKeys } from "../lib/queries";
 export const useImportOpml = (): ((target: ImportOpmlTarget) => Promise<Result<ImportSummary, ImportOpmlError>>) => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (target: ImportOpmlTarget) => window.electron.ipcRenderer.invoke('opml:import', { target }),
+    mutationFn: (target: ImportOpmlTarget) => ipc.invoke('opml:import', { target }),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
@@ -24,7 +25,7 @@ export const useImportOpml = (): ((target: ImportOpmlTarget) => Promise<Result<I
 
 export const useExportOpml = (): ((workspaceId: number) => Promise<Result<void, ExportOpmlError>>) => {
   const mutation = useMutation({
-    mutationFn: (workspaceId: number) => window.electron.ipcRenderer.invoke('opml:export', { workspaceId }),
+    mutationFn: (workspaceId: number) => ipc.invoke('opml:export', { workspaceId }),
   });
   const { mutateAsync } = mutation;
   return useCallback((workspaceId: number) => mutateAsync(workspaceId), [mutateAsync]);

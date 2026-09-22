@@ -11,6 +11,11 @@ export interface ExtractArticleResponse {
   article: ExtractedArticle | undefined;
 }
 
+export interface ExtractArticleLog {
+  type: 'log';
+  message: string;
+}
+
 export function isExtractArticleRequest(value: unknown): value is ExtractArticleRequest {
   if (!value || typeof value !== 'object') {
     return false;
@@ -28,4 +33,12 @@ export function isExtractArticleResponse(value: unknown): value is ExtractArticl
     && (response.article === undefined || (typeof response.article.html === 'string'
       && typeof response.article.text === 'string'
       && typeof response.article.wordCount === 'number'));
+}
+
+export function isExtractArticleLog(value: unknown): value is ExtractArticleLog {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const record = value as Partial<ExtractArticleLog>;
+  return record.type === 'log' && typeof record.message === 'string';
 }

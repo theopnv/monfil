@@ -2,7 +2,8 @@ import { utilityProcess } from 'electron';
 import path from 'node:path';
 import type { UtilityProcess } from 'electron';
 import type { ExtractedArticle } from './extractArticle';
-import { isExtractArticleResponse, type ExtractArticleRequest } from './extractArticleProtocol';
+import { isExtractArticleLog, isExtractArticleResponse, type ExtractArticleRequest } from './extractArticleProtocol';
+import { logger } from '../logging/logger';
 
 interface PendingExtraction {
   resolve: (article: ExtractedArticle | undefined) => void;
@@ -24,6 +25,10 @@ function startExtractionProcess(): UtilityProcess {
   const child = utilityProcess.fork(path.join(__dirname, 'extractArticleProcess.js'));
   extractionProcess = child;
   child.on('message', (message: unknown) => {
+    if (isExtractArticleLog(message)) {
+      logger.error('operation.failure', { operation: 'extract-article-utility' }, message.message);
+      return;
+    }
     if (!isExtractArticleResponse(message)) {
       return;
     }

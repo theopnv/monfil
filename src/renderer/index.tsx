@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider, createHashHistory, createRouter } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen.ts';
 import '@/styles/globals.css';
+import { RootErrorBoundary } from '@/components/errors/RootErrorBoundary';
 
 // The renderer is loaded via the `file://` protocol in production, so browser
 // history (path-based routing) can't resolve routes against the filesystem path.
@@ -26,6 +27,8 @@ const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
 root.render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <RootErrorBoundary>
+      <RouterProvider router={router} />
+    </RootErrorBoundary>
   </StrictMode>
 );

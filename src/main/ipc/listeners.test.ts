@@ -1,7 +1,8 @@
 import { beforeAll, describe, afterEach, test, expect, vi } from 'vitest';
-import { listenToLinkOpen, listenToRevealDatabaseFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu } from './listeners';
+import { listenToLinkOpen, listenToRevealDatabaseFile, listenToRevealLogFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu } from './listeners';
 import { initializeDatabase } from '../db/database';
 import { BrowserWindow, Menu, shell } from 'electron';
+import { setLogFilePath } from '../main-state';
 
 vi.mock(import('electron'), () => ({
   shell: {
@@ -60,6 +61,24 @@ describe('app:reveal-database-file IPC listener', () => {
 
     // Assert
     expect(mockedShowItemInFolder).toHaveBeenCalledWith(':memory:');
+  });
+});
+
+describe('app:reveal-log-file IPC listener', () => {
+  afterEach(() => {
+    mockedShowItemInFolder.mockReset();
+  });
+
+  test('reveals the active log file in the OS file browser', () => {
+    // Arrange
+    const logPath = 'mock-user-data/monfil.log';
+    setLogFilePath(logPath);
+
+    // Act
+    listenToRevealLogFile();
+
+    // Assert
+    expect(mockedShowItemInFolder).toHaveBeenCalledWith(logPath);
   });
 });
 

@@ -29,6 +29,7 @@ import type {
   RiverPage,
   RiverQuery,
   SourceType,
+  StartupHealth,
   UpdateCategoryError,
   UpdateFeedError,
   UpdateItemError,
@@ -37,6 +38,7 @@ import type {
   WorkspaceSummary,
 } from './contracts';
 import type { Result } from './result';
+import type { LogEventMap, LogEventName, LogLevel } from './logging';
 
 export type OneWayRendererToMainChannelPayloads = {
   'link:open': string;
@@ -44,6 +46,10 @@ export type OneWayRendererToMainChannelPayloads = {
   'feeds:show-category-context-menu': number;
   'workspaces:show-context-menu': number;
   'app:reveal-database-file': undefined;
+  'app:reveal-log-file': undefined;
+  'app:reveal-database-backup': undefined;
+  'app:restart': undefined;
+  'log:write': { level: LogLevel; event: LogEventName; data: LogEventMap[LogEventName]; error?: string };
 };
 
 export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayloads;
@@ -90,6 +96,9 @@ export type TwoWayRendererMainChannelPayloads = {
   'settings:get-max-feed-items': MaxFeedItems;
   'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': AppInfo;
+  'app:get-startup-health': StartupHealth;
+  'settings:get-detailed-logging': boolean;
+  'settings:set-detailed-logging': boolean;
   'opml:import': Result<ImportSummary, ImportOpmlError>;
   'opml:export': Result<void, ExportOpmlError>;
   'feedpacks:list': Result<FeedpackCatalog, CatalogError>;
@@ -127,6 +136,9 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'settings:get-max-feed-items': undefined;
   'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': undefined;
+  'app:get-startup-health': undefined;
+  'settings:get-detailed-logging': undefined;
+  'settings:set-detailed-logging': boolean;
   'opml:import': { target: ImportOpmlTarget };
   'opml:export': { workspaceId: number };
   'feedpacks:list': undefined;

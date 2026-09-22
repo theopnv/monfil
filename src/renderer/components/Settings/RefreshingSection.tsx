@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ipc, rendererLogger } from '@/lib/ipc-client';
 import SegmentedControl from "@/components/common/SegmentedControl";
 import SettingsRow from "@/components/Settings/SettingsRow";
 import SettingsSection from "@/components/Settings/SettingsSection";
@@ -24,47 +25,47 @@ export default function RefreshingSection() {
   const [maxFeedItems, setMaxFeedItemsState] = useState<MaxFeedItems | undefined>(undefined);
 
   useEffect(() => {
-    window.electron.ipcRenderer.invoke("settings:get-refresh-interval", undefined)
+    ipc.invoke("settings:get-refresh-interval", undefined)
       .then(setRefreshIntervalState)
       .catch((error: unknown) => {
-        console.error("Error loading the refresh interval:", error);
+        rendererLogger.error('renderer.failure', { message: 'Error loading the refresh interval:' }, error);
       });
-    window.electron.ipcRenderer.invoke("settings:get-refresh-on-launch", undefined)
+    ipc.invoke("settings:get-refresh-on-launch", undefined)
       .then(setRefreshOnLaunchState)
       .catch((error: unknown) => {
-        console.error("Error loading the refresh-on-launch preference:", error);
+        rendererLogger.error('renderer.failure', { message: 'Error loading the refresh-on-launch preference:' }, error);
       });
-    window.electron.ipcRenderer.invoke("settings:get-max-feed-items", undefined)
+    ipc.invoke("settings:get-max-feed-items", undefined)
       .then(setMaxFeedItemsState)
       .catch((error: unknown) => {
-        console.error("Error loading the max feed items preference:", error);
+        rendererLogger.error('renderer.failure', { message: 'Error loading the max feed items preference:' }, error);
       });
   }, []);
 
   const onIntervalChange = (interval: RefreshInterval) => {
     setRefreshIntervalState(interval);
-    window.electron.ipcRenderer.invoke("settings:set-refresh-interval", interval)
+    ipc.invoke("settings:set-refresh-interval", interval)
       .then(setRefreshIntervalState)
       .catch((error: unknown) => {
-        console.error("Error saving the refresh interval:", error);
+        rendererLogger.error('renderer.failure', { message: 'Error saving the refresh interval:' }, error);
       });
   };
 
   const onRefreshOnLaunchChange = (value: boolean) => {
     setRefreshOnLaunchState(value);
-    window.electron.ipcRenderer.invoke("settings:set-refresh-on-launch", value)
+    ipc.invoke("settings:set-refresh-on-launch", value)
       .then(setRefreshOnLaunchState)
       .catch((error: unknown) => {
-        console.error("Error saving the refresh-on-launch preference:", error);
+        rendererLogger.error('renderer.failure', { message: 'Error saving the refresh-on-launch preference:' }, error);
       });
   };
 
   const onMaxFeedItemsChange = (value: MaxFeedItems) => {
     setMaxFeedItemsState(value);
-    window.electron.ipcRenderer.invoke("settings:set-max-feed-items", value)
+    ipc.invoke("settings:set-max-feed-items", value)
       .then(setMaxFeedItemsState)
       .catch((error: unknown) => {
-        console.error("Error saving the max feed items preference:", error);
+        rendererLogger.error('renderer.failure', { message: 'Error saving the max feed items preference:' }, error);
       });
   };
 

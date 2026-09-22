@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { ipc } from '@/lib/ipc-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CatalogError, FeedpackCatalog } from '../../shared/contracts';
 import type { FeedpackError, FeedpackInstallTarget, FeedpackPreview, InstallFeedpackError } from '../../shared/contracts';
@@ -9,13 +10,13 @@ import { uiKeys } from '@/lib/ipc-bridge';
 
 export const useFeedpackCatalog = (enabled: boolean) => useQuery({
   queryKey: ['feedpacks', 'catalog'],
-  queryFn: () => window.electron.ipcRenderer.invoke('feedpacks:list', undefined),
+  queryFn: () => ipc.invoke('feedpacks:list', undefined),
   enabled,
   staleTime: Infinity,
 });
 
 export const useFeedpackPreview = (): ((slug: string) => Promise<Result<FeedpackPreview, FeedpackError>>) => {
-  const mutation = useMutation({ mutationFn: (slug: string) => window.electron.ipcRenderer.invoke('feedpacks:preview', { slug }) });
+  const mutation = useMutation({ mutationFn: (slug: string) => ipc.invoke('feedpacks:preview', { slug }) });
   const { mutateAsync } = mutation;
   return useCallback((slug: string) => mutateAsync(slug), [mutateAsync]);
 };
@@ -23,7 +24,7 @@ export const useFeedpackPreview = (): ((slug: string) => Promise<Result<Feedpack
 export const useInstallFeedpack = (): ((slug: string, target: FeedpackInstallTarget) => Promise<Result<ImportSummary, InstallFeedpackError>>) => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: ({ slug, target }: { slug: string; target: FeedpackInstallTarget }) => window.electron.ipcRenderer.invoke('feedpacks:install', { slug, target }),
+    mutationFn: ({ slug, target }: { slug: string; target: FeedpackInstallTarget }) => ipc.invoke('feedpacks:install', { slug, target }),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.setQueryData(uiKeys.feedpackRefreshing(result.data.workspaceId), true);

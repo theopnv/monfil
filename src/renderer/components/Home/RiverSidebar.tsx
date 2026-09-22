@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ipc } from '@/lib/ipc-client';
 import { ChevronRight, DotsGrid, FolderPlus, LayersTwo01, Plus } from "@untitledui/icons";
 import { Button as DragHandleButton, GridList, GridListItem, useDragAndDrop } from "react-aria-components";
 import AddFeedModal from "@/components/AddFeed/AddFeedModal";
@@ -365,7 +366,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                 <div
                   onContextMenu={(event) => {
                     event.preventDefault();
-                    window.electron.ipcRenderer.sendMessage('feeds:show-category-context-menu', folder.id);
+                    ipc.send('feeds:show-category-context-menu', folder.id);
                   }}
                   className={cx(
                     "group flex w-full items-center gap-1.5 rounded-xl px-2.25 py-1.75 text-sm font-semibold hover:bg-primary_hover",
@@ -451,7 +452,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                   onClick={() => onSetVisibility([feed], next)}
                   onContextMenu={(event) => {
                     event.preventDefault();
-                    window.electron.ipcRenderer.sendMessage('feeds:show-feed-context-menu', feed.id);
+                    ipc.send('feeds:show-feed-context-menu', feed.id);
                   }}
                   className={cx(
                     "group flex min-w-0 flex-1 items-center gap-2.25 rounded-xl px-2.25 py-1.5 text-left text-sm hover:bg-primary_hover",
@@ -462,6 +463,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                 >
                   <FeedAvatar title={feed.title} faviconUrl={resolveFeedIcon(feed.icon, feed.link)} size="sm" />
                   <span className="min-w-0 flex-1 truncate">{feed.title}</span>
+                  {feed.last_error && <span role="img" aria-label={`${feed.title} refresh failed`} title="The last refresh failed" className="text-warning-primary">!</span>}
                   <NextIcon aria-hidden className="size-3.5 flex-none text-quaternary opacity-0 group-hover:opacity-100" />
                   <span data-testid="feed-count" className={COUNT_CLASSES}>{feed.unreadCount > 0 ? feed.unreadCount : ''}</span>
                 </button>

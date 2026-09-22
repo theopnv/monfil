@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ipc } from '@/lib/ipc-client';
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import RiverSidebar from "@/components/Home/RiverSidebar";
 import ArticleBody from "@/components/Reader/ArticleBody";
@@ -59,7 +60,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
       return;
     }
     let cancelled = false;
-    window.electron.ipcRenderer.invoke('items:query', { workspaceId: scope.workspaceId, ids: [id], limit: 1 })
+    ipc.invoke('items:query', { workspaceId: scope.workspaceId, ids: [id], limit: 1 })
       .then((page) => {
         if (!cancelled) {
           mergeRows(page.rows);
@@ -77,8 +78,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
       return;
     }
     let cancelled = false;
-    window.electron.ipcRenderer
-      .invoke('items:query', { ...scope, unreadOnly: true, cursor: { publishedAt: currentItem.publishedAt, id: currentItem.id }, limit: 1 })
+    ipc.invoke('items:query', { ...scope, unreadOnly: true, cursor: { publishedAt: currentItem.publishedAt, id: currentItem.id }, limit: 1 })
       .then((page) => {
         if (!cancelled) {
           mergeRows(page.rows);

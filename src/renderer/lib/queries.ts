@@ -1,4 +1,5 @@
 import { infiniteQueryOptions, queryOptions, type InfiniteData } from '@tanstack/react-query';
+import { ipc } from '@/lib/ipc-client';
 import type { FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow, WorkspaceSummary } from '../../shared/contracts';
 
 export const RIVER_PAGE_SIZE = 50;
@@ -25,7 +26,7 @@ export const queryKeys = {
 export function feedsQuery(workspaceId: number) {
   return queryOptions({
     queryKey: queryKeys.feeds(workspaceId),
-    queryFn: (): Promise<FeedSummary[]> => window.electron.ipcRenderer.invoke('feeds:list', { workspaceId }),
+    queryFn: (): Promise<FeedSummary[]> => ipc.invoke('feeds:list', { workspaceId }),
   });
 }
 
@@ -33,7 +34,7 @@ export function feedsQuery(workspaceId: number) {
 export function categoriesQuery(workspaceId: number) {
   return queryOptions({
     queryKey: queryKeys.categories(workspaceId),
-    queryFn: (): Promise<FeedCategory[]> => window.electron.ipcRenderer.invoke('feeds:list-categories', { workspaceId }),
+    queryFn: (): Promise<FeedCategory[]> => ipc.invoke('feeds:list-categories', { workspaceId }),
   });
 }
 
@@ -41,7 +42,7 @@ export function categoriesQuery(workspaceId: number) {
 export function workspacesQuery() {
   return queryOptions({
     queryKey: queryKeys.workspaces,
-    queryFn: (): Promise<WorkspaceSummary[]> => window.electron.ipcRenderer.invoke('workspaces:list', undefined),
+    queryFn: (): Promise<WorkspaceSummary[]> => ipc.invoke('workspaces:list', undefined),
   });
 }
 
@@ -49,7 +50,7 @@ export function riverQuery(scope: RiverScope) {
   const normalized = normalizeScope(scope);
   return infiniteQueryOptions({
     queryKey: queryKeys.river(scope),
-    queryFn: ({ pageParam }): Promise<RiverPage> => window.electron.ipcRenderer.invoke('items:query', {
+    queryFn: ({ pageParam }): Promise<RiverPage> => ipc.invoke('items:query', {
       ...normalized,
       limit: RIVER_PAGE_SIZE,
       ...(pageParam ? { cursor: pageParam } : {}),

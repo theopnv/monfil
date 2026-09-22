@@ -1,4 +1,5 @@
 import type { RefreshInterval } from '../../shared/contracts';
+import { logger } from '../logging/logger';
 import { getRefreshInterval, getRefreshOnLaunch } from '../settings';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { refreshAllFeeds } from './refresh';
@@ -17,7 +18,7 @@ async function runCycle(): Promise<void> {
   try {
     broadcastToRenderers('feeds:refreshed', await refreshAllFeeds());
   } catch (error) {
-    console.error('Feed refresh cycle failed.', error);
+    logger.error('feed.refresh', { outcome: 'failed' }, error);
   } finally {
     running = false;
   }

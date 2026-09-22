@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ipc } from '@/lib/ipc-client';
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
 import { useAddFeed } from "@/providers/feeds-provider";
 import Step1Find, { type FeedType } from "./Step1Find";
@@ -52,8 +53,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
       return;
     }
     resetWizard();
-    window.electron.ipcRenderer
-      .invoke("feeds:list-categories", { workspaceId })
+    ipc.invoke("feeds:list-categories", { workspaceId })
       .then(setCategories)
       .catch(() => setCategories([]));
   }, [isOpen, workspaceId]);

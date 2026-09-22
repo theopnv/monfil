@@ -20,6 +20,9 @@ export default defineConfig([
       parserOptions: {
         // A nested checkout brings a second tsconfig.json; without this the parser refuses to guess between them.
         tsconfigRootDir: import.meta.dirname,
+        projectService: {
+          allowDefaultProject: ['eslint.config.test.ts', 'src/*/boundary-test.ts', 'src/*/example.ts'],
+        },
       },
     },
     plugins: {
@@ -33,6 +36,8 @@ export default defineConfig([
       '@stylistic/brace-style': ['error', '1tbs'],
       '@stylistic/nonblock-statement-body-position': ['error', 'below'],
       '@stylistic/indent': ['error', 2],
+      'no-console': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
     },
   },
   {
@@ -41,18 +46,44 @@ export default defineConfig([
       'react-hooks': reactHooks as unknown as ESLintPlugin,
     },
     rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'error',
+      'no-restricted-syntax': ['error', {
+        selector: "MemberExpression[object.object.object.name='window'][object.object.property.name='electron'][object.property.name='ipcRenderer']",
+        message: 'Use the typed renderer IPC client.',
+      }],
+      'no-restricted-imports': ['error', {
+        patterns: [
+          { group: ['**/main/**', '**/preload/**'], message: 'Renderer code can import cross-process data only from src/shared.' },
+          { group: ['sonner'], message: 'Import Sonner only through the notification adapter.' },
+        ],
+      }],
+    },
+  },
+  {
+    files: ['src/renderer/lib/ipc-client.ts'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
+  {
+    files: ['src/renderer/**/*.test.{ts,tsx}'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
+  {
+    files: ['src/renderer/lib/notifications.tsx'],
+    rules: {
       'no-restricted-imports': ['error', {
         patterns: [{ group: ['**/main/**', '**/preload/**'], message: 'Renderer code can import cross-process data only from src/shared.' }],
       }],
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'error',
     },
   },
   {
     files: ['src/main/**/*.ts'],
     rules: {
       'no-restricted-imports': ['error', {
-        patterns: [{ group: ['**/renderer/**', '**/preload/**'], message: 'Main code can import cross-process data only from src/shared.' }],
+        patterns: [
+          { group: ['**/renderer/**', '**/preload/**'], message: 'Main code can import cross-process data only from src/shared.' },
+          { group: ['electron-log', 'electron-log/*'], message: 'Import electron-log only through the logging adapter.' },
+        ],
       }],
       'no-restricted-globals': ['error',
         { name: 'document', message: 'The main process has no DOM.' },
@@ -60,6 +91,14 @@ export default defineConfig([
         { name: 'localStorage', message: 'The main process has no DOM.' },
         { name: 'navigator', message: 'The main process has no DOM.' },
       ],
+    },
+  },
+  {
+    files: ['src/main/logging/logger.ts'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{ group: ['**/renderer/**', '**/preload/**'], message: 'Main code can import cross-process data only from src/shared.' }],
+      }],
     },
   },
   {

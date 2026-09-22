@@ -1,4 +1,5 @@
 import { rm } from 'node:fs/promises';
+import { logger } from '../logging/logger';
 
 const CLEANUP_TIMEOUT_MS = 5000;
 
@@ -14,14 +15,14 @@ const CLEANUP_TIMEOUT_MS = 5000;
 export async function rmTestDir(dir: string): Promise<void> {
   await new Promise<void>((resolve) => {
     const timer = setTimeout(() => {
-      console.warn(`Timed out removing temp test directory "${dir}".`);
+      logger.warn('operation.failure', { operation: 'remove-test-directory-timeout' });
       resolve();
     }, CLEANUP_TIMEOUT_MS);
     timer.unref();
 
     rm(dir, { recursive: true, maxRetries: 3, retryDelay: 200 })
       .catch((error: unknown) => {
-        console.warn(`Could not remove temp test directory "${dir}".`, error);
+        logger.warn('operation.failure', { operation: 'remove-test-directory' }, error);
       })
       .finally(() => {
         clearTimeout(timer);

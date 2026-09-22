@@ -1,4 +1,5 @@
 import { db, dbReady } from '../db/database';
+import { logger } from '../logging/logger';
 import { addFeedItemsToDatabase, updateFeedItemImage } from '../db/crud/insert';
 import { queryFeedMetadata, queryFeedMetadataByIds } from '../db/crud/query';
 import type { FeedItem } from '../db/types';
@@ -13,45 +14,51 @@ import { getMaxFeedItems } from '../settings';
 
 const ENRICHMENT_BUDGET = 200;
 
-async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<FeedItem[]> {
+async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<{ items: FeedItem[]; failed: boolean }> {
   const result = await sourceFor(feed.type).fetch(feed.link, maxItems);
   if (!result.success) {
-    console.error(`Failed to refresh feed "${feed.title}" (${feed.link}).`, result.error);
+    logger.warn('feed.refresh', { outcome: 'failed', feedId: feed.id, errorCode: result.error.name }, result.error);
     const updated = await setFeedFetchResult(feed.id, { last_error: result.error.message });
     if (!updated.success) {
-      console.error(`Failed to store the refresh failure of feed "${feed.title}" (${feed.link}).`, updated.error);
+      logger.error('operation.failure', { operation: 'store-refresh-failure', entityId: feed.id }, updated.error);
     }
-    return [];
+    return { items: [], failed: true };
   }
   const updated = await setFeedFetchResult(feed.id, { last_error: null });
   if (!updated.success) {
-    console.error(`Failed to clear the refresh failure of feed "${feed.title}" (${feed.link}).`, updated.error);
+    logger.error('operation.failure', { operation: 'clear-refresh-failure', entityId: feed.id }, updated.error);
   }
 
   const inserted = await addFeedItemsToDatabase(db, feed.id, result.data.items);
   if (!inserted.success) {
-    console.error(`Failed to store the refreshed items of feed "${feed.title}" (${feed.link}).`, inserted.error);
-    return [];
+    logger.error('operation.failure', { operation: 'store-refreshed-items', entityId: feed.id }, inserted.error);
+    return { items: [], failed: true };
   }
-  return inserted.data;
+  return { items: inserted.data, failed: false };
 }
 
 async function refreshFeedList(feedList: FeedMetadata[], maxItems: number): Promise<RefreshSummary> {
   const insertedByFeedId = new Map<number, FeedItem[]>();
+  const failedFeedIds: number[] = [];
 
   await runWithConcurrency(feedList, FEED_FETCH_CONCURRENCY, async (feed) => {
-    insertedByFeedId.set(feed.id, await refreshOneFeed(feed, maxItems));
+    const result = await refreshOneFeed(feed, maxItems);
+    insertedByFeedId.set(feed.id, result.items);
+    if (result.failed) {
+      failedFeedIds.push(feed.id);
+    }
   });
 
   const typeByFeedId = new Map(feedList.map((feed) => [feed.id, feed.type]));
 
   // Images take a page fetch each, so they arrive later through their own push rather than holding up the list.
   enrichRefreshedItems(insertedByFeedId, typeByFeedId).catch((error: unknown) => {
-    console.error('Failed to enrich the images of the refreshed items.', error);
+    logger.error('operation.failure', { operation: 'enrich-feed-images' }, error);
   });
 
   return {
     perFeed: [...insertedByFeedId.entries()].map(([feedId, items]) => ({ feedId, inserted: items.length })),
+    ...(failedFeedIds.length > 0 ? { failedFeedIds } : {}),
   };
 }
 

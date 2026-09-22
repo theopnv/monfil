@@ -6,6 +6,11 @@ export type SourceType = 'rss' | 'youtube';
 export type RefreshInterval = 15 | 30 | 60 | 360 | 'manual';
 export type MaxFeedItems = 10 | 30 | 50 | 100;
 
+export type StartupHealth =
+  | { name: 'OK' }
+  | { name: 'RESET'; incidentId: string }
+  | { name: 'FAILED'; incidentId: string };
+
 export interface Workspace {
   id: number;
   name: string;
@@ -150,6 +155,7 @@ export interface RiverPage {
 
 export interface RefreshSummary {
   perFeed: { feedId: number; inserted: number }[];
+  failedFeedIds?: number[];
 }
 
 export interface ItemBody {
