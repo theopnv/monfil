@@ -48,7 +48,7 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      - run: npx vite build --config vite.renderer.config.mts
+      - run: npx vite build --config src/renderer/vite.config.mts
 
       - run: npm run lint
 
