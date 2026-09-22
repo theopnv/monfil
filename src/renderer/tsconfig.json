@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "types": ["vite/client"],
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["./**/*", "../shared/**/*.ts"],
+  "exclude": ["vite.config.mts", "components/untitled-ui/**"],
+  "references": [{ "path": "./components/untitled-ui" }]
+}

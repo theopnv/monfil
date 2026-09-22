@@ -9,7 +9,7 @@ import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import River from './River';
-import { HOME_WORKSPACE_ID, type FeedSummary, type RiverPage, type RiverQuery, type RiverRow, type WorkspaceSummary } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID, type FeedSummary, type RiverPage, type RiverQuery, type RiverRow, type WorkspaceSummary } from '../../../shared/contracts';
 
 let nextFeedId = 1;
 let nextItemId = 1;

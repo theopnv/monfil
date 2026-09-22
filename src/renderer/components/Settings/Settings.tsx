@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { ipc, rendererLogger } from '@/lib/ipc-client';
+import DiagnosticsSection from '@/components/Settings/DiagnosticsSection';
 import AboutSection from "@/components/Settings/AboutSection";
 import AppearanceSection from "@/components/Settings/AppearanceSection";
 import DataSection from "@/components/Settings/DataSection";
@@ -11,6 +13,7 @@ const SECTIONS = [
   { id: "reading", label: "Reading" },
   { id: "refreshing", label: "Refreshing" },
   { id: "data", label: "Your data" },
+  { id: "diagnostics", label: "Diagnostics" },
   { id: "about", label: "About" },
 ] as const;
 
@@ -18,10 +21,10 @@ export default function Settings() {
   const [version, setVersion] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    window.electron.ipcRenderer.invoke("app:get-info", undefined)
+    ipc.invoke("app:get-info", undefined)
       .then((info) => setVersion(info.version))
       .catch((error: unknown) => {
-        console.error("Error loading the app version:", error);
+        rendererLogger.error('renderer.failure', { message: 'Error loading the app version:' }, error);
       });
   }, []);
 
@@ -42,6 +45,7 @@ export default function Settings() {
           <ReadingSection />
           <RefreshingSection />
           <DataSection />
+          <DiagnosticsSection />
           <AboutSection version={version} />
         </div>
       </div>

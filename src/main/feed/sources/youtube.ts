@@ -1,9 +1,10 @@
 import { parseFeed } from 'feedsmith';
-import { fetchUrl, type FetchUrlError } from '../../lib/fetch';
-import type { Result } from '../../lib/utils';
+import { fetchUrl } from '../../lib/fetch';
+import type { Result } from '../../../shared/result';
 import { DEFAULT_MAX_FEED_ITEMS } from '../../settings';
 import { decodeOptional, decodeText, resolveGuid } from './text';
-import type { FeedFetchError, NewSourceItem, ParsedSource, SourceAdapter } from './types';
+import type { FeedFetchError, FetchUrlError, ParsedSource } from '../../../shared/contracts';
+import type { NewSourceItem, SourceAdapter } from './types';
 
 export type YoutubeTarget =
   | { kind: 'channel'; channelId: string }

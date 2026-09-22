@@ -1,5 +1,5 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     // Untitled UI's CLI generates components against a standard strict
     // template, not this project's additional exactOptionalPropertyTypes.
@@ -8,11 +8,17 @@
     "exactOptionalPropertyTypes": false,
 
     // Project reference: makes this folder its own TS Program with its own
-    // rules. The root project consumes only the emitted .d.ts, so importing
+    // rules. The renderer project consumes only the emitted .d.ts, so importing
     // app code never re-checks this source under the root's stricter
     // settings (which a plain tsconfig `exclude` can't do — TS shares one
     // rule set across any files pulled into the same connected Program).
     "composite": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "types": ["vite/client"],
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["../../../../src/renderer/*"]
+    },
     "declaration": true,
     "noEmit": false,
     "emitDeclarationOnly": true,

@@ -1,14 +1,8 @@
 import { stat } from 'node:fs/promises';
 import { app } from 'electron';
+import type { AppInfo } from '../shared/contracts';
 import { dbFilePath } from './db/database';
 import { countFeedItems, countFeedMetadata } from './db/crud/query';
-
-export interface AppInfo {
-  version: string;
-  feedCount: number;
-  itemCount: number;
-  databaseSizeBytes: number;
-}
 
 async function sizeOf(filePath: string): Promise<number> {
   try {

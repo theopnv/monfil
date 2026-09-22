@@ -1,4 +1,4 @@
-import type { SourceType } from '../../db/types';
+import type { SourceType } from '../../../shared/contracts';
 import { rssSource } from './rss';
 import type { SourceAdapter } from './types';
 import { isYoutubeLink, youtubeSource } from './youtube';

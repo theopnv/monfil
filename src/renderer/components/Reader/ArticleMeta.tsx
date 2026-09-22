@@ -1,6 +1,6 @@
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { estimateReadTime, formatRelativeTime, SOURCE_TYPE_LABEL } from "@/lib/river/utils";
-import type { RiverRow } from "../../../preload/channels";
+import type { RiverRow } from "../../../shared/contracts";
 
 export interface ArticleMetaProps {
   item: RiverRow;

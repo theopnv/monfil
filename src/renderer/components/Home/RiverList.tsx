@@ -2,7 +2,7 @@ import RiverCardArticle from "@/components/Home/RiverCardArticle";
 import RiverCardCompact from "@/components/Home/RiverCardCompact";
 import RiverCardMagazine from "@/components/Home/RiverCardMagazine";
 import type { Density } from "@/lib/river/utils";
-import type { RiverRow } from "../../../preload/channels";
+import type { RiverRow } from "../../../shared/contracts";
 
 export interface RiverListProps {
   items: RiverRow[];

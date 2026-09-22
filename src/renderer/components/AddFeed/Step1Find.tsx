@@ -4,7 +4,7 @@ import { Input } from "@/components/untitled-ui/base/input/input";
 import { resolveFeedIcon } from "@/lib/favicon";
 import FeedMatchCard from "./FeedMatchCard";
 import type { FeedValidationStatus } from "./useFeedValidation";
-import type { ParsedSource, FeedFetchError, SourceType } from "../../../preload/channels";
+import type { ParsedSource, FeedFetchError, SourceType } from "../../../shared/contracts";
 
 export type FeedType = SourceType | undefined;
 

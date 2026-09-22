@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { ipc } from '@/lib/ipc-client';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import type { ParsedSource, FeedFetchError, SourceType } from '../../../preload/channels';
+import type { ParsedSource, FeedFetchError, SourceType } from '../../../shared/contracts';
 
 export type FeedValidationStatus = 'idle' | 'loading' | 'found' | 'not-found';
 
@@ -25,8 +26,7 @@ export function useFeedValidation(query: string, type?: SourceType): FeedValidat
     let cancelled = false;
     setState((prev) => ({ ...prev, status: 'loading' }));
 
-    window.electron.ipcRenderer
-      .invoke('feeds:validate-feed-url', { query: debouncedQuery, ...(type !== undefined ? { type } : {}) })
+    ipc.invoke('feeds:validate-feed-url', { query: debouncedQuery, ...(type !== undefined ? { type } : {}) })
       .then((result) => {
         if (cancelled) {
           return;

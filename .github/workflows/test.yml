@@ -30,7 +30,7 @@ jobs:
       - uses: ./.github/actions/setup
 
       # tsc needs routeTree.gen.ts, which the router plugin only writes as a build side effect.
-      - run: npx vite build --config vite.renderer.config.mts
+      - run: npx vite build --config src/renderer/vite.config.mts
 
       - run: npm run lint
 

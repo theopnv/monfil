@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { useReaderContent } from './useReaderContent';
-import type { ItemBody, RiverRow } from '../../../preload/channels';
+import type { ItemBody, RiverRow } from '../../../shared/contracts';
 
 function createItem(overrides: Partial<RiverRow> = {}): RiverRow {
   return {
@@ -76,6 +76,26 @@ describe('useReaderContent', () => {
     await expect.element(getByTestId('word-count')).toHaveTextContent('42');
     await expect.element(getByTestId('loading')).toHaveTextContent('false');
     await expect.element(getByTestId('unavailable')).toHaveTextContent('false');
+  });
+
+  test('changing the item fetches and shows the new article', async () => {
+    // Arrange
+    const first = createItem({ id: 10 });
+    const second = createItem({ id: 20, excerpt: 'Second teaser.' });
+    invokeMock.mockImplementation((_channel: string, itemId: number) => Promise.resolve({
+      description: `Description ${itemId}`,
+      article: { html: `<p>Article ${itemId}</p>`, wordCount: itemId },
+    } satisfies ItemBody));
+    const screen = await render(<Probe item={first} />);
+    await expect.element(screen.getByTestId('html')).toHaveTextContent('Article 10');
+
+    // Act
+    await screen.rerender(<Probe item={second} />);
+
+    // Assert
+    expect(invokeMock).toHaveBeenLastCalledWith('items:get-content', second.id);
+    await expect.element(screen.getByTestId('html')).toHaveTextContent('Article 20');
+    await expect.element(screen.getByTestId('word-count')).toHaveTextContent('20');
   });
 
   test('an rss item falls back to the raw description when the article is unavailable', async () => {

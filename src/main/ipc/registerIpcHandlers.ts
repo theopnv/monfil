@@ -1,8 +1,11 @@
 import { ipcMain } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
-import type { ChannelPayloads, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../preload/channels";
+import type { ChannelPayloads, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../shared/channels";
+import { createIncidentId } from '../logging/incident';
+import { logger } from '../logging/logger';
 import {
   handleAppGetInfo,
+  handleAppGetStartupHealth,
   handleFeedpacksInstall,
   handleFeedpacksList,
   handleFeedpacksPreview,
@@ -24,9 +27,11 @@ import {
   handleOpmlExport,
   handleOpmlImport,
   handleSettingsGetMaxFeedItems,
+  handleSettingsGetDetailedLogging,
   handleSettingsGetRefreshInterval,
   handleSettingsGetRefreshOnLaunch,
   handleSettingsSetMaxFeedItems,
+  handleSettingsSetDetailedLogging,
   handleSettingsSetRefreshInterval,
   handleSettingsSetRefreshOnLaunch,
   handleWorkspacesCreate,
@@ -79,10 +84,24 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "settings:get-max-feed-items": handleSettingsGetMaxFeedItems,
   "settings:set-max-feed-items": handleSettingsSetMaxFeedItems,
   "app:get-info": handleAppGetInfo,
+  "app:get-startup-health": handleAppGetStartupHealth,
+  "settings:get-detailed-logging": handleSettingsGetDetailedLogging,
+  "settings:set-detailed-logging": handleSettingsSetDetailedLogging,
 };
 
 export function registerIpcHandlers() {
   for (const [channel, handler] of Object.entries(handlers) as [TwoWayRendererMainChannels, Handler<TwoWayRendererMainChannels>][]) {
-    ipcMain.handle(channel, handler);
+    ipcMain.handle(channel, async (event, arg) => {
+      try {
+        return await handler(event, arg);
+      } catch (error) {
+        const incidentId = createIncidentId();
+        logger.error('ipc.failure', { channel, incidentId }, error);
+        return {
+          success: false,
+          error: { name: 'UNEXPECTED_ERROR', message: 'The operation could not be completed.', incidentId },
+        };
+      }
+    });
   }
 }

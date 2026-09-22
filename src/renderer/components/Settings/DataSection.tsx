@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { ipc, rendererLogger } from '@/lib/ipc-client';
 import { Folder, UploadCloud01 } from "@untitledui/icons";
 import ImportOpmlDialog from "@/components/Workspace/ImportOpmlDialog";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
-import type { AppInfo } from "../../../main/app-info";
+import type { AppInfo } from "../../../shared/contracts";
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) {
@@ -25,14 +26,14 @@ export default function DataSection() {
 
   useEffect(() => {
     const load = () => {
-      window.electron.ipcRenderer.invoke("app:get-info", undefined)
+      ipc.invoke("app:get-info", undefined)
         .then(setInfo)
         .catch((error: unknown) => {
-          console.error("Error loading app info:", error);
+          rendererLogger.error('renderer.failure', { message: 'Error loading app info:' }, error);
         });
     };
     load();
-    return window.electron.ipcRenderer.on("feeds:refreshed", load);
+    return ipc.on("feeds:refreshed", load);
   }, []);
 
   return (
@@ -57,7 +58,7 @@ export default function DataSection() {
           color="secondary"
           iconLeading={Folder}
           className="self-start"
-          onPress={() => window.electron.ipcRenderer.sendMessage("app:reveal-database-file", undefined)}
+          onPress={() => ipc.send("app:reveal-database-file", undefined)}
         >
           Reveal database file
         </Button>

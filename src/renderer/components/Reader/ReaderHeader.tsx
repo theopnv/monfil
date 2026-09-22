@@ -4,7 +4,7 @@ import ArticleSourceLink from "@/components/Reader/ArticleSourceLink";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Tooltip } from "@/components/untitled-ui/base/tooltip/tooltip";
 import { resolveFeedIcon } from "@/lib/favicon";
-import type { RiverRow } from "../../../preload/channels";
+import type { RiverRow } from "../../../shared/contracts";
 
 export interface ReaderHeaderProps {
   item: RiverRow;

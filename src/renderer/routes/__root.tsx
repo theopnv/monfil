@@ -9,11 +9,20 @@ import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
 import AppShell from '@/components/AppShell';
+import { ErrorRecovery } from '@/components/errors/ErrorRecovery';
+import { StartupGate } from '@/components/errors/StartupGate';
+import { NotificationHost } from '@/lib/notifications';
 
 const queryClient = new QueryClient();
 
 export const Route = createRootRoute({
   component: RootComponent,
+  errorComponent: ({ error, reset }) => (
+    <ErrorRecovery error={error} onRetry={async () => {
+      await queryClient.resetQueries();
+      reset();
+    }} variant="route" />
+  ),
 });
 
 function IpcBridgedAppShell() {
@@ -30,7 +39,10 @@ function RootComponent() {
             <RiverScopeProvider>
               <ActiveWorkspaceIdProvider>
                 <QueryClientProvider client={queryClient}>
-                  <IpcBridgedAppShell />
+                  <StartupGate>
+                    <IpcBridgedAppShell />
+                  </StartupGate>
+                  <NotificationHost />
                 </QueryClientProvider>
               </ActiveWorkspaceIdProvider>
             </RiverScopeProvider>

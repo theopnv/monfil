@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import SQLite from 'better-sqlite3';
 import { sql } from 'kysely';
+import { HOME_WORKSPACE_ID } from '../../shared/contracts';
 import { closeDatabase, db, dbReady, initializeDatabase } from './database';
-import { HOME_WORKSPACE_ID } from './types';
 import { rmTestDir } from '../lib/rmTestDir';
 
 describe('initializeDatabase', () => {

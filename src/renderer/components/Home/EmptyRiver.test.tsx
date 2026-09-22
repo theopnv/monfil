@@ -3,7 +3,7 @@ import { expect, test, vi } from 'vitest';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import EmptyRiver from './EmptyRiver';
-import { HOME_WORKSPACE_ID } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 
 function renderAt(initialPath: string, onImportOpml: () => void, onImportFeedpack = vi.fn()) {
   const rootRoute = createRootRoute({

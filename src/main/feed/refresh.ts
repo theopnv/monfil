@@ -1,55 +1,64 @@
 import { db, dbReady } from '../db/database';
-import { addFeedItemsToDatabase, updateFeedItemImage, upsertArticleContent } from '../db/crud/insert';
+import { logger } from '../logging/logger';
+import { addFeedItemsToDatabase, updateFeedItemImage } from '../db/crud/insert';
 import { queryFeedMetadata, queryFeedMetadataByIds } from '../db/crud/query';
-import type { FeedItem, FeedMetadata, SourceType } from '../db/types';
+import type { FeedItem } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
 import { sourceFor } from './sources/registry';
 import { setFeedFetchResult } from '../db/crud/update';
-import type { RefreshSummary } from '../../preload/channels';
+import type { FeedMetadata, RefreshSummary, SourceType } from '../../shared/contracts';
 import { runWithConcurrency } from '../lib/utils';
 import { FEED_FETCH_CONCURRENCY } from '../constants';
 import { getMaxFeedItems } from '../settings';
 
-async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<FeedItem[]> {
+const ENRICHMENT_BUDGET = 200;
+
+async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<{ items: FeedItem[]; failed: boolean }> {
   const result = await sourceFor(feed.type).fetch(feed.link, maxItems);
   if (!result.success) {
-    console.error(`Failed to refresh feed "${feed.title}" (${feed.link}).`, result.error);
+    logger.warn('feed.refresh', { outcome: 'failed', feedId: feed.id, errorCode: result.error.name }, result.error);
     const updated = await setFeedFetchResult(feed.id, { last_error: result.error.message });
     if (!updated.success) {
-      console.error(`Failed to store the refresh failure of feed "${feed.title}" (${feed.link}).`, updated.error);
+      logger.error('operation.failure', { operation: 'store-refresh-failure', entityId: feed.id }, updated.error);
     }
-    return [];
+    return { items: [], failed: true };
   }
   const updated = await setFeedFetchResult(feed.id, { last_error: null });
   if (!updated.success) {
-    console.error(`Failed to clear the refresh failure of feed "${feed.title}" (${feed.link}).`, updated.error);
+    logger.error('operation.failure', { operation: 'clear-refresh-failure', entityId: feed.id }, updated.error);
   }
 
   const inserted = await addFeedItemsToDatabase(db, feed.id, result.data.items);
   if (!inserted.success) {
-    console.error(`Failed to store the refreshed items of feed "${feed.title}" (${feed.link}).`, inserted.error);
-    return [];
+    logger.error('operation.failure', { operation: 'store-refreshed-items', entityId: feed.id }, inserted.error);
+    return { items: [], failed: true };
   }
-  return inserted.data;
+  return { items: inserted.data, failed: false };
 }
 
 async function refreshFeedList(feedList: FeedMetadata[], maxItems: number): Promise<RefreshSummary> {
   const insertedByFeedId = new Map<number, FeedItem[]>();
+  const failedFeedIds: number[] = [];
 
   await runWithConcurrency(feedList, FEED_FETCH_CONCURRENCY, async (feed) => {
-    insertedByFeedId.set(feed.id, await refreshOneFeed(feed, maxItems));
+    const result = await refreshOneFeed(feed, maxItems);
+    insertedByFeedId.set(feed.id, result.items);
+    if (result.failed) {
+      failedFeedIds.push(feed.id);
+    }
   });
 
   const typeByFeedId = new Map(feedList.map((feed) => [feed.id, feed.type]));
 
   // Images take a page fetch each, so they arrive later through their own push rather than holding up the list.
   enrichRefreshedItems(insertedByFeedId, typeByFeedId).catch((error: unknown) => {
-    console.error('Failed to enrich the images of the refreshed items.', error);
+    logger.error('operation.failure', { operation: 'enrich-feed-images' }, error);
   });
 
   return {
     perFeed: [...insertedByFeedId.entries()].map(([feedId, items]) => ({ feedId, inserted: items.length })),
+    ...(failedFeedIds.length > 0 ? { failedFeedIds } : {}),
   };
 }
 
@@ -79,18 +88,21 @@ export async function refreshFeeds(feedIds: number[]): Promise<RefreshSummary> {
 }
 
 async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedItem[]>, typeByFeedId: ReadonlyMap<number, SourceType>): Promise<void> {
+  let remaining = ENRICHMENT_BUDGET;
   for (const [feedId, items] of insertedByFeedId) {
+    if (remaining === 0) {
+      return;
+    }
     if (!sourceFor(typeByFeedId.get(feedId) ?? 'rss').fetchesFullArticle) {
       continue;
     }
+    const candidates = items.slice(0, remaining);
+    remaining -= candidates.length;
     await enrichItems(
-      items,
+      candidates,
       (itemId, image) => {
         void updateFeedItemImage(itemId, image);
         broadcastToRenderers('feeds:item-image-fetched', { feedId, itemId, image });
-      },
-      (itemId, content) => {
-        void upsertArticleContent({ item_id: itemId, ...content });
       },
     );
   }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
 import { cx } from "@/components/untitled-ui/utils/cx";
-import type { FeedCategory } from "../../../preload/channels";
+import type { FeedCategory } from "../../../shared/contracts";
 
 export interface CategoryPickerProps {
   categories: FeedCategory[];

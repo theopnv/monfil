@@ -7,7 +7,7 @@ import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import Reader from './Reader';
 import type { ReaderProps } from './Reader';
-import { HOME_WORKSPACE_ID, type FeedSummary, type ItemBody, type RiverPage, type RiverQuery, type RiverRow } from '../../../preload/channels';
+import { HOME_WORKSPACE_ID, type FeedSummary, type ItemBody, type RiverPage, type RiverQuery, type RiverRow } from '../../../shared/contracts';
 
 let nextFeedId = 1;
 let nextItemId = 1;

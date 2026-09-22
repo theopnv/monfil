@@ -3,8 +3,8 @@ import { Heading } from "react-aria-components";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useDeleteFeed } from "@/providers/feeds-provider";
-import type { DeleteFeedError } from "../../../main/db/crud/delete";
-import type { FeedSummary } from "../../../preload/channels";
+import type { DeleteFeedError } from "../../../shared/contracts";
+import type { FeedSummary } from "../../../shared/contracts";
 
 export interface DeleteFeedDialogProps {
   feed: FeedSummary | null;

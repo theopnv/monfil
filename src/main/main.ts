@@ -4,12 +4,17 @@ import { mkdirSync } from 'node:fs';
 import started from 'electron-squirrel-startup';
 import { registerIpcHandlers } from './ipc/registerIpcHandlers';
 import { registerIpcListeners } from './ipc/registerIpcListeners';
-import { closeDatabase, initializeDatabase } from './db/database';
+import { closeDatabase, dbStatus, initializeDatabase } from './db/database';
 import { DB_FILE_NAME } from './constants';
 import { startRefreshScheduler, stopRefreshScheduler } from './feed/scheduler';
+import { stopArticleExtractionProcess } from './feed/extractArticleUtility';
 import { resolveDevUserDataDir } from './dev-user-data-dir';
 import { denyWebPermissions, hardenWebContents } from './window-security';
 import { allowPrivateHosts } from './lib/fetch';
+import { configureLogging, logger } from './logging/logger';
+import { installFatalHandlers } from './logging/fatal';
+import { setLogFilePath } from './main-state';
+import { getDetailedLogging } from './settings';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // app.quit() only schedules an exit, so without this return the rest of the module (and its app.on(...) wiring)
@@ -32,9 +37,16 @@ function bootstrap() {
     app.setPath('userData', devUserDataDir);
   }
 
-  initializeDatabase(path.join(app.getPath('userData'), DB_FILE_NAME)).catch((error: unknown) => {
-    console.error('Failed to initialize the database.', error);
-  });
+  const logFilePath = path.join(app.getPath('userData'), 'monfil.log');
+  setLogFilePath(logFilePath);
+  configureLogging(logFilePath, false);
+  installFatalHandlers(logger, logFilePath);
+
+  initializeDatabase(path.join(app.getPath('userData'), DB_FILE_NAME))
+    .then(async () => configureLogging(logFilePath, await getDetailedLogging()))
+    .catch((error: unknown) => {
+      logger.error('database.recovery', { outcome: 'failed', ...(dbStatus.name === 'FAILED' ? { incidentId: dbStatus.incidentId } : {}) }, error);
+    });
 
   // Playwright's electron.launch() sets this so e2e runs never raise a real window and steal
   // OS focus from whatever the developer is doing, and so article fetches may reach the
@@ -66,9 +78,9 @@ function bootstrap() {
     mainWindow.maximize();
 
     if (import.meta.env.DEV && MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-      mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+      void mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
     } else {
-      mainWindow.loadFile(
+      void mainWindow.loadFile(
         path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
       );
     }
@@ -86,7 +98,7 @@ function bootstrap() {
     registerIpcHandlers();
     createWindow();
     startRefreshScheduler().catch((error: unknown) => {
-      console.error('Failed to start the feed refresh scheduler.', error);
+      logger.error('feed.refresh', { outcome: 'failed' }, error);
     });
   }
 
@@ -118,8 +130,9 @@ function bootstrap() {
 
   app.on('before-quit', () => {
     stopRefreshScheduler();
+    stopArticleExtractionProcess();
     closeDatabase().catch((error) => {
-      console.error('Failed to close the database cleanly.', error);
+      logger.error('database.recovery', { outcome: 'failed' }, error);
     });
   });
 }

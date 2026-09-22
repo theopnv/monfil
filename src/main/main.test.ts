@@ -46,6 +46,30 @@ vi.mock(import('./ipc/registerIpcListeners'), () => ({
 vi.mock(import('./db/database'), () => ({
   initializeDatabase: vi.fn().mockResolvedValue(undefined),
   closeDatabase: vi.fn().mockResolvedValue(undefined),
+  dbStatus: { name: 'OK' } as const,
+}));
+
+vi.mock(import('./settings'), () => ({
+  getDetailedLogging: vi.fn().mockResolvedValue(false),
+}));
+
+vi.mock(import('./logging/logger'), () => ({
+  configureLogging: vi.fn(),
+  logger: {
+    child: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock(import('./logging/fatal'), () => ({
+  installFatalHandlers: vi.fn(),
+}));
+
+vi.mock(import('./main-state'), () => ({
+  setLogFilePath: vi.fn(),
 }));
 
 vi.mock(import('./feed/scheduler'), () => ({

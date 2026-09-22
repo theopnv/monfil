@@ -4,13 +4,13 @@ import { useCategories, useFeeds } from '@/providers/feeds-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import RiverSidebar from './RiverSidebar';
-import type { DeleteCategoryError } from '../../../main/db/crud/delete';
-import type { DeleteFeedError } from '../../../main/db/crud/delete';
-import type { CreateCategoryError } from '../../../main/db/crud/insert';
-import type { UpdateCategoryError } from '../../../main/db/crud/update';
-import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary } from '../../../preload/channels';
-import type { Result } from '../../../main/lib/utils';
-import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../preload/channels';
+import type { DeleteCategoryError } from '../../../shared/contracts';
+import type { DeleteFeedError } from '../../../shared/contracts';
+import type { CreateCategoryError } from '../../../shared/contracts';
+import type { UpdateCategoryError } from '../../../shared/contracts';
+import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary } from '../../../shared/contracts';
+import type { Result } from '../../../shared/result';
+import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../shared/channels';
 
 const feedA: FeedSummary = {
   id: 1,

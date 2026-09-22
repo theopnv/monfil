@@ -1,4 +1,5 @@
-import type { RiverRow, SourceType } from '../../../preload/channels';
+import type { RiverRow, SourceType } from '../../../shared/contracts';
+import { ipc } from '@/lib/ipc-client';
 
 export type Density = "Cards" | "Magazine" | "Compact";
 
@@ -54,5 +55,5 @@ export function openLink(link: string | undefined): void {
   if (!link) {
     return;
   }
-  window.electron.ipcRenderer.sendMessage('link:open', link);
+  ipc.send('link:open', link);
 }

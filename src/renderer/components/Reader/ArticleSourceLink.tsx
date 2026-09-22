@@ -1,7 +1,7 @@
 import { LinkExternal01 } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { openLink } from "@/lib/river/utils";
-import type { RiverRow } from "../../../preload/channels";
+import type { RiverRow } from "../../../shared/contracts";
 
 export interface ArticleSourceLinkProps {
   item: RiverRow;

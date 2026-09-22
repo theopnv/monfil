@@ -3,9 +3,9 @@ import { db, initializeDatabase } from '../db/database';
 import { addFeedToDatabase } from '../db/crud/insert';
 import { fetchUrl } from '../lib/fetch';
 import { rssSource } from './sources/rss';
-import type { ParsedSource } from './sources/types';
+import { HOME_WORKSPACE_ID, type ParsedSource } from '../../shared/contracts';
 import { refreshAllFeeds } from './refresh';
-import { HOME_WORKSPACE_ID, type FeedItem } from '../db/types';
+import type { FeedItem } from '../db/types';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 
 vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: true, fetch: vi.fn(), parse: vi.fn() } }));
@@ -216,5 +216,22 @@ describe('refreshAllFeeds', () => {
     // Assert
     expect(mockedFetchUrl).toHaveBeenCalledTimes(1);
     expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/new', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+  });
+
+  test('limits image enrichment to 200 new items per refresh', async () => {
+    // Arrange
+    const link = 'https://a.example/feed';
+    await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({
+      success: true,
+      data: parsed(link, Array.from({ length: 201 }, (_, index) => item({ title: `Item ${index}`, link: `https://a.example/${index}` }))),
+    });
+
+    // Act
+    await refreshAllFeeds();
+    await vi.waitFor(() => expect(mockedFetchUrl).toHaveBeenCalledTimes(200));
+
+    // Assert
+    expect(mockedFetchUrl).not.toHaveBeenCalledWith('https://a.example/200', expect.anything());
   });
 });

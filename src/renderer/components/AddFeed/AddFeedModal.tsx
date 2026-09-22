@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ipc } from '@/lib/ipc-client';
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
 import { useAddFeed } from "@/providers/feeds-provider";
 import Step1Find, { type FeedType } from "./Step1Find";
@@ -7,8 +8,8 @@ import Step3Done from "./Step3Done";
 import { useFeedValidation } from "./useFeedValidation";
 import WizardFooter from "./WizardFooter";
 import WizardHeader, { type WizardStep } from "./WizardHeader";
-import type { AddFeedError } from "../../../main/db/crud/insert";
-import type { FeedCategory, FeedSummary } from "../../../preload/channels";
+import type { AddFeedError } from "../../../shared/contracts";
+import type { FeedCategory, FeedSummary } from "../../../shared/contracts";
 import { useActiveWorkspaceId } from "../../providers/workspace-provider";
 
 export interface AddFeedModalProps {
@@ -52,8 +53,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
       return;
     }
     resetWizard();
-    window.electron.ipcRenderer
-      .invoke("feeds:list-categories", { workspaceId })
+    ipc.invoke("feeds:list-categories", { workspaceId })
       .then(setCategories)
       .catch(() => setCategories([]));
   }, [isOpen, workspaceId]);

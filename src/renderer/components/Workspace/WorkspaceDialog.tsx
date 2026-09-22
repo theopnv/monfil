@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Heading } from "react-aria-components";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
@@ -6,9 +6,9 @@ import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { WORKSPACE_COLORS, WORKSPACE_ICONS, workspaceIconComponent, type WorkspaceIconName } from "@/lib/workspace-icons";
 import { useCreateWorkspace, useUpdateWorkspace } from "@/providers/workspace-provider";
-import type { CreateWorkspaceError } from "../../../main/db/crud/insert";
-import type { UpdateWorkspaceError } from "../../../main/db/crud/update";
-import type { WorkspaceSummary } from "../../../preload/channels";
+import type { CreateWorkspaceError } from "../../../shared/contracts";
+import type { UpdateWorkspaceError } from "../../../shared/contracts";
+import type { WorkspaceSummary } from "../../../shared/contracts";
 
 const DEFAULT_ICON = WORKSPACE_ICONS[0];
 const DEFAULT_COLOR = WORKSPACE_COLORS[0];
@@ -31,6 +31,12 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
   const [color, setColor] = useState<(typeof WORKSPACE_COLORS)[number]>(DEFAULT_COLOR);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<CreateWorkspaceError | UpdateWorkspaceError | null>(null);
+  const resetForm = useEffectEvent(() => {
+    setName(workspace?.name ?? '');
+    setIcon((workspace?.icon as WorkspaceIconName | undefined) ?? DEFAULT_ICON);
+    setColor((workspace?.color as (typeof WORKSPACE_COLORS)[number] | undefined) ?? DEFAULT_COLOR);
+    setError(null);
+  });
 
   // Seeds on open rather than on close: the form must show the workspace passed in for *this*
   // open, and a right-click can retarget `workspace` between one open and the next.
@@ -38,10 +44,7 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
     if (!isOpen) {
       return;
     }
-    setName(workspace?.name ?? '');
-    setIcon((workspace?.icon as WorkspaceIconName | undefined) ?? DEFAULT_ICON);
-    setColor((workspace?.color as (typeof WORKSPACE_COLORS)[number] | undefined) ?? DEFAULT_COLOR);
-    setError(null);
+    resetForm();
   }, [isOpen, workspace?.id]);
 
   async function handleSubmit() {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ipc } from '@/lib/ipc-client';
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Link } from "react-aria-components";
 import { Plus, Sliders01 } from "@untitledui/icons";
@@ -19,7 +20,7 @@ import {
 import { workspaceIconComponent } from "@/lib/workspace-icons";
 import { useExportOpml } from "@/providers/opml-provider";
 import { useActiveWorkspaceId, useWorkspaces } from "@/providers/workspace-provider";
-import { HOME_WORKSPACE_ID, type WorkspaceSummary } from "../../preload/channels";
+import { HOME_WORKSPACE_ID, type WorkspaceSummary } from "../../shared/contracts";
 
 const activeNavClasses = "rounded-xl bg-brand-secondary *:data-icon:text-fg-brand-secondary hover:bg-brand-secondary hover:*:data-icon:text-fg-brand-secondary";
 
@@ -32,7 +33,7 @@ function WorkspaceButton({ workspace, isActive }: { workspace: WorkspaceSummary;
       aria-label={workspace.name}
       onContextMenu={(event) => {
         event.preventDefault();
-        window.electron.ipcRenderer.sendMessage('workspaces:show-context-menu', workspace.id);
+        ipc.send('workspaces:show-context-menu', workspace.id);
       }}
       className={cx(
         "group relative flex size-9 flex-none items-center justify-center rounded-xl outline-brand transition duration-100 ease-linear focus-visible:outline-2 focus-visible:outline-offset-2",

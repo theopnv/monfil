@@ -1,4 +1,6 @@
 import type { Database } from './types.ts'
+import { logger } from '../logging/logger';
+import { createIncidentId } from '../logging/incident';
 import SQLite from 'better-sqlite3'
 import { Kysely, SqliteDialect } from 'kysely'
 import { Migrator } from 'kysely/migration'
@@ -13,8 +15,8 @@ export let dbFilePath!: string;
 
 export type DatabaseStatus =
   | { name: 'OK' }
-  | { name: 'RESET'; quarantinePath: string }
-  | { name: 'FAILED'; message: string };
+  | { name: 'RESET'; quarantinePath: string; incidentId: string }
+  | { name: 'FAILED'; message: string; incidentId: string };
 
 // Latched outcome of the last initializeDatabase() call. No consumer yet: this is the seam a later
 // step reads over an `invoke` channel, once there is a renderer surface for it.
@@ -58,7 +60,7 @@ async function openAndMigrate(filePath: string): Promise<void> {
 
   results?.forEach((result) => {
     if (result.status === 'Error') {
-      console.error(`Migration "${result.migrationName}" failed.`);
+      logger.error('operation.failure', { operation: 'database-migration' });
     }
   });
 
@@ -78,10 +80,10 @@ export function initializeDatabase(filePath: string): Promise<void> {
   dbFilePath = filePath;
   dbReady = withCorruptionRecovery(filePath, () => openAndMigrate(filePath), () => db.destroy())
     .then((quarantinePath) => {
-      dbStatus = quarantinePath ? { name: 'RESET', quarantinePath } : { name: 'OK' };
+      dbStatus = quarantinePath ? { name: 'RESET', quarantinePath, incidentId: createIncidentId() } : { name: 'OK' };
     })
     .catch((error: unknown) => {
-      dbStatus = { name: 'FAILED', message: error instanceof Error ? error.message : String(error) };
+      dbStatus = { name: 'FAILED', message: error instanceof Error ? error.message : String(error), incidentId: createIncidentId() };
       throw error;
     });
   return dbReady;

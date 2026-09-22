@@ -1,26 +1,66 @@
 import { enrichItems } from "../feed/enrichItems";
+import { logger } from '../logging/logger';
 import { ARTICLE_FETCH_TIMEOUT_MS } from "../constants";
-import { deriveArticleContentStatus, extractArticle } from "../feed/extractArticle";
+import { deriveArticleContentStatus } from "../feed/extractArticle";
+import { extractArticleInUtilityProcess } from '../feed/extractArticleUtility';
 import { resolveSource, sourceFor } from "../feed/sources/registry";
-import type { FeedFetchError, ParsedSource } from "../feed/sources/types";
-import type { SourceType } from "../db/types";
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
 import { fetchUrl } from "../lib/fetch";
-import { addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent, type AddFeedError, type CreateCategoryError, type CreateWorkspaceError, type NewFeedInput } from "../db/crud/insert";
-import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace, type DeleteCategoryError, type DeleteFeedError, type DeleteWorkspaceError } from "../db/crud/delete";
-import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace, type MoveFeedError, type UpdateCategoryError, type UpdateFeedError, type UpdateItemError, type UpdateWorkspaceError } from "../db/crud/update";
+import { addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent } from "../db/crud/insert";
+import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from "../db/crud/delete";
+import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace } from "../db/crud/update";
 import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from "../db/crud/query";
-import { getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval, type MaxFeedItems, type RefreshInterval } from "../settings";
-import { getAppInfo, type AppInfo } from "../app-info";
+import { getDetailedLogging, getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setDetailedLogging, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval } from "../settings";
+import { getAppInfo } from "../app-info";
 import { sendToRenderer } from "./sendToRenderer";
-import { openAndImportOpml, type ImportOpmlError, type ImportOpmlTarget, type ImportSummary } from "../opml/import";
-import { exportWorkspaceOpml, type ExportOpmlError } from "../opml/export";
-import { getFeedpackCatalog, type CatalogError, type FeedpackCatalog } from '../feedpacks/catalog';
-import { installFeedpack, previewFeedpack, type FeedpackError, type FeedpackInstallTarget, type FeedpackPreview, type InstallFeedpackError } from '../feedpacks/install';
+import { openAndImportOpml } from "../opml/import";
+import { exportWorkspaceOpml } from "../opml/export";
+import { getFeedpackCatalog } from '../feedpacks/catalog';
+import { installFeedpack, previewFeedpack } from '../feedpacks/install';
 import type { IpcMainInvokeEvent } from "electron";
-import type { FeedCategory, FeedSummary, ItemBody, RefreshSummary, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from "../../preload/channels";
-import type { Result } from "../lib/utils";
+import type {
+  AddFeedError,
+  AppInfo,
+  CatalogError,
+  CreateCategoryError,
+  CreateWorkspaceError,
+  DeleteCategoryError,
+  DeleteFeedError,
+  DeleteWorkspaceError,
+  ExportOpmlError,
+  FeedCategory,
+  FeedFetchError,
+  FeedpackCatalog,
+  FeedpackError,
+  FeedpackInstallTarget,
+  FeedpackPreview,
+  FeedSummary,
+  ImportOpmlError,
+  ImportOpmlTarget,
+  ImportSummary,
+  InstallFeedpackError,
+  ItemBody,
+  MaxFeedItems,
+  MoveFeedError,
+  NewFeedInput,
+  ParsedSource,
+  RefreshInterval,
+  RefreshSummary,
+  RiverPage,
+  RiverQuery,
+  SourceType,
+  UpdateCategoryError,
+  UpdateFeedError,
+  UpdateItemError,
+  UpdateWorkspaceError,
+  Workspace,
+  WorkspaceSummary,
+} from "../../shared/contracts";
+import type { Result } from "../../shared/result";
+import { dbReady, dbStatus } from '../db/database';
+import type { StartupHealth } from '../../shared/contracts';
+import { setDetailedLogging as applyDetailedLogging } from '../logging/logger';
 
 export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource, FeedFetchError>> {
   return resolveSource(payload.query, payload.type).fetch(payload.query, await getMaxFeedItems());
@@ -46,16 +86,10 @@ export async function handleFeedsSubmitAddFeed(event: IpcMainInvokeEvent, payloa
 
   const { items, category, ...metadata } = result.data;
   if (sourceFor(payload.type).fetchesFullArticle) {
-    void enrichItems(
-      items,
-      (itemId, image) => {
-        void updateFeedItemImage(itemId, image);
-        sendToRenderer(event.sender, 'feeds:item-image-fetched', { feedId: metadata.id, itemId, image });
-      },
-      (itemId, content) => {
-        void upsertArticleContent({ item_id: itemId, ...content });
-      },
-    );
+    void enrichItems(items, (itemId, image) => {
+      void updateFeedItemImage(itemId, image);
+      sendToRenderer(event.sender, 'feeds:item-image-fetched', { feedId: metadata.id, itemId, image });
+    });
   }
 
   return {
@@ -168,7 +202,14 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
   }
 
   const fetched = await fetchUrl(item.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
-  const article = fetched.success ? extractArticle(fetched.data, item.link) : undefined;
+  let article;
+  if (fetched.success) {
+    try {
+      article = await extractArticleInUtilityProcess(fetched.data, item.link);
+    } catch (error) {
+      logger.error('operation.failure', { operation: 'extract-article', entityId: itemId }, error);
+    }
+  }
   const status = deriveArticleContentStatus(article);
   await upsertArticleContent({ item_id: itemId, html: article?.html, text: article?.text, word_count: article?.wordCount, status });
 
@@ -197,6 +238,28 @@ export function handleSettingsGetMaxFeedItems(): Promise<MaxFeedItems> {
 
 export async function handleSettingsSetMaxFeedItems(_event: IpcMainInvokeEvent, payload: MaxFeedItems): Promise<MaxFeedItems> {
   await setMaxFeedItems(payload);
+  return payload;
+}
+
+export async function handleAppGetStartupHealth(): Promise<StartupHealth> {
+  try {
+    await dbReady;
+  } catch {
+    // dbStatus contains the safe failure state returned below.
+  }
+  if (dbStatus.name === 'OK') {
+    return dbStatus;
+  }
+  return { name: dbStatus.name, incidentId: dbStatus.incidentId };
+}
+
+export function handleSettingsGetDetailedLogging(): Promise<boolean> {
+  return getDetailedLogging();
+}
+
+export async function handleSettingsSetDetailedLogging(_event: IpcMainInvokeEvent, payload: boolean): Promise<boolean> {
+  await setDetailedLogging(payload);
+  applyDetailedLogging(payload);
   return payload;
 }
 

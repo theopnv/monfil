@@ -1,9 +1,11 @@
-import { BrowserWindow, Menu, shell, type IpcMainEvent } from "electron";
-import type { OneWayRendererToMainChannelPayloads } from "../../preload/channels";
-import { dbFilePath } from "../db/database";
-import { HOME_WORKSPACE_ID } from "../db/types";
+import { app, BrowserWindow, Menu, shell, type IpcMainEvent } from "electron";
+import type { OneWayRendererToMainChannelPayloads } from "../../shared/channels";
+import { HOME_WORKSPACE_ID } from "../../shared/contracts";
+import { dbFilePath, dbStatus } from "../db/database";
 import { sendToRenderer } from "./sendToRenderer";
 import { openExternalLink } from "../window-security";
+import { logFilePath } from '../main-state';
+import { logger } from '../logging/logger';
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {
   openExternalLink(url);
@@ -11,6 +13,25 @@ export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMain
 
 export function listenToRevealDatabaseFile() {
   shell.showItemInFolder(dbFilePath);
+}
+
+export function listenToRevealLogFile() {
+  shell.showItemInFolder(logFilePath);
+}
+
+export function listenToRevealDatabaseBackup() {
+  if (dbStatus.name === 'RESET') {
+    shell.showItemInFolder(dbStatus.quarantinePath);
+  }
+}
+
+export function listenToRestart() {
+  app.relaunch();
+  app.exit(0);
+}
+
+export function listenToRendererLog(_event: IpcMainEvent, payload: OneWayRendererToMainChannelPayloads['log:write']) {
+  logger[payload.level](payload.event, payload.data, payload.error);
 }
 
 export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayRendererToMainChannelPayloads["feeds:show-feed-context-menu"]) {

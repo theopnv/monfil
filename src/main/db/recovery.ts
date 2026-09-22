@@ -1,4 +1,5 @@
 import { existsSync, renameSync, rmSync } from 'node:fs';
+import { logger } from '../logging/logger';
 
 // WAL mode keeps uncommitted pages in these sidecar files. Deleting only the main file (e.g. to reset a
 // dev database by hand) leaves them behind pointing at a database that no longer exists, which SQLite
@@ -41,7 +42,7 @@ export async function withCorruptionRecovery(filePath: string, attempt: () => Pr
   }
 
   if (!existsSync(filePath) && sidecarFilesOf(filePath).some(existsSync)) {
-    console.error(`Found leftover WAL files for a missing database at "${filePath}". Removing them before starting fresh.`);
+    logger.warn('database.recovery', { outcome: 'reset' });
     sidecarFilesOf(filePath).forEach((sidecar) => rmSync(sidecar, { force: true }));
   }
 
@@ -53,7 +54,7 @@ export async function withCorruptionRecovery(filePath: string, attempt: () => Pr
       throw error;
     }
 
-    console.error(`Database at "${filePath}" could not be opened and looks corrupted. Quarantining it and starting fresh.`, error);
+    logger.warn('database.recovery', { outcome: 'reset' }, error);
     try {
       await close();
     } catch {

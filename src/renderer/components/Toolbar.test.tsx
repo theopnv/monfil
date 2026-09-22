@@ -8,10 +8,10 @@ import { useFeeds } from '@/providers/feeds-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
 import { createTestQueryClient } from '@/lib/test/render-with-query-client';
 import Toolbar from './Toolbar';
-import type { DeleteWorkspaceError } from '../../main/db/crud/delete';
-import type { UpdateWorkspaceError } from '../../main/db/crud/update';
-import type { Result } from '../../main/lib/utils';
-import type { FeedSummary, WorkspaceSummary } from '../../preload/channels';
+import type { DeleteWorkspaceError } from '../../shared/contracts';
+import type { UpdateWorkspaceError } from '../../shared/contracts';
+import type { Result } from '../../shared/result';
+import type { FeedSummary, WorkspaceSummary } from '../../shared/contracts';
 
 function createWorkspace(overrides: Partial<WorkspaceSummary> = {}): WorkspaceSummary {
   return {
@@ -281,6 +281,24 @@ test('firing workspaces:edit-requested opens the edit dialog prefilled with the 
   await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
   await expect.element(getByRole('textbox', { name: 'Name' })).toHaveValue('CI/CD watch');
   await expect.element(getByRole('button', { name: 'Terminal' })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('an open edit dialog retargets to another workspace', async () => {
+  // Arrange
+  workspaces = [
+    createWorkspace({ id: 2, name: 'CI/CD watch', icon: 'Terminal', color: '#3b82f6' }),
+    createWorkspace({ id: 3, name: 'Design watch', icon: 'Rocket02', color: '#ef4444' }),
+  ];
+  const { getByRole } = await renderApp('/workspace/2');
+  editWorkspaceRequestedHandler?.(2);
+  await expect.element(getByRole('textbox', { name: 'Name' })).toHaveValue('CI/CD watch');
+
+  // Act
+  editWorkspaceRequestedHandler?.(3);
+
+  // Assert
+  await expect.element(getByRole('textbox', { name: 'Name' })).toHaveValue('Design watch');
+  await expect.element(getByRole('button', { name: 'Rocket02' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('saving the edit dialog renames the workspace and updates its icon and colour', async () => {

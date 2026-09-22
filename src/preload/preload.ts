@@ -1,8 +1,17 @@
 import { contextBridge, ipcRenderer } from "electron/renderer";
 import type { IpcRendererEvent } from "electron";
-import type { OneWayRendererToMainChannels, OneWayRendererToMainChannelPayloads, OneWayMainToRendererChannels, OneWayMainToRendererChannelPayloads, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels, TwoWayRendererMainChannelPayloads } from "./channels";
+import type {
+  ElectronHandler,
+  OneWayMainToRendererChannelPayloads,
+  OneWayMainToRendererChannels,
+  OneWayRendererToMainChannelPayloads,
+  OneWayRendererToMainChannels,
+  TwoWayRendererMainChannelPayloads,
+  TwoWayRendererMainChannels,
+  TwoWayRendererMainChannelsInvokeArgs,
+} from "../shared/channels";
 
-const electronHandler = {
+const electronHandler: ElectronHandler = {
   ipcRenderer: {
     sendMessage<C extends OneWayRendererToMainChannels>(channel: C, payload: OneWayRendererToMainChannelPayloads[C]) {
       ipcRenderer.send(channel, payload);
@@ -26,5 +35,3 @@ const electronHandler = {
 };
 
 contextBridge.exposeInMainWorld('electron', electronHandler);
-
-export type ElectronHandler = typeof electronHandler;

@@ -1,6 +1,6 @@
 import { EyeOff, LayersThree01, LayerSingle } from "@untitledui/icons";
 import type { FC } from "react";
-import type { FeedSummary } from "../../../preload/channels";
+import type { FeedSummary } from "../../../shared/contracts";
 
 export type FeedVisibility = "home" | "only" | "hidden";
 

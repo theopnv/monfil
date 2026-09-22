@@ -1,9 +1,9 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { HOME_WORKSPACE_ID, type NewFeedInput } from '../../../shared/contracts';
 import { db, initializeDatabase } from '../database';
 import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from './delete';
-import { addFeedToDatabase, createCategory, createWorkspace, upsertArticleContent, type NewFeedInput } from './insert';
+import { addFeedToDatabase, createCategory, createWorkspace, upsertArticleContent } from './insert';
 import { moveFeedToWorkspace } from './update';
-import { HOME_WORKSPACE_ID } from '../types';
 
 const feedA: NewFeedInput = {
   link: 'https://a.example/feed',

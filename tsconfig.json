@@ -1,46 +1,8 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    // "allowJs": true,
-    "esModuleInterop": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "resolveJsonModule": true,
-
-    // Other Outputs
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
-
-    // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "strictNullChecks": true,
-
-    // Style Options
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noImplicitOverride": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noPropertyAccessFromIndexSignature": true,
-
-    // Recommended Options
-    "strict": true,
-    "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true,
-
-    // Untitled UI
-    "paths": {
-      "@/*": ["./src/renderer/*"]
-    }
-  },
-  "exclude": ["src/renderer/components/untitled-ui/**"],
-  "references": [{ "path": "./src/renderer/components/untitled-ui" }]
+  "files": [],
+  "references": [
+    { "path": "./src/main" },
+    { "path": "./src/preload" },
+    { "path": "./src/renderer" }
+  ]
 }

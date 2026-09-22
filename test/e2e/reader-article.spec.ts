@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { HOME_WORKSPACE_ID, type SourceType } from '../../src/preload/channels';
+import { HOME_WORKSPACE_ID, type SourceType } from '../../src/shared/contracts';
 
 const ARTICLE_PARAGRAPH = 'This sentence only exists in the full article page, fetched from the source, not in the feed teaser. '.repeat(6);
 
@@ -115,8 +115,7 @@ readerArticleTest('shows the fetched article body instead of the feed descriptio
   await page.getByText('Full Article', { exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Full Article' })).toBeVisible();
 
-  // Assert: the extraction may already be stored from refresh, or run on demand when the
-  // reader opens the item, so allow the body to catch up either way.
+  // Assert: the reader asks the utility process for the article after the item opens.
   await expect(page.getByTestId('article-body')).toContainText('only exists in the full article page', { timeout: 15000 });
   await expect(page.getByTestId('article-body')).not.toContainText('Short feed teaser.');
 });

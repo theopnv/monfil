@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 import { db, initializeDatabase } from '../database';
-import { HOME_WORKSPACE_ID } from '../types';
 import { countFeedItems, countFeedMetadata, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from './query';
 
 beforeAll(async () => {

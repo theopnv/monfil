@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
-import { HOME_WORKSPACE_ID, type SourceType } from '../../src/preload/channels';
+import { HOME_WORKSPACE_ID, type SourceType } from '../../src/shared/contracts';
 
 interface Article {
   title: string;

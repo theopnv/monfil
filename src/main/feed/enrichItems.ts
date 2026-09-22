@@ -1,7 +1,6 @@
-import type { FeedItem, NewArticleContent } from '../db/types';
+import type { FeedItem } from '../db/types';
 import { runWithConcurrency } from '../lib/utils';
 import { fetchUrl } from '../lib/fetch';
-import { deriveArticleContentStatus, extractArticle } from './extractArticle';
 import { extractOgImageUrl } from './extractOgImage';
 import { ENRICHMENT_CONCURRENCY, ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 
@@ -10,7 +9,15 @@ const ABSOLUTE_HTTP_URL_REGEX = /^https?:\/\//i;
 interface Candidate {
   id: number;
   link: string;
-  hasImage: boolean;
+  host: string;
+}
+
+function hostFor(link: string): string {
+  try {
+    return new URL(link).host;
+  } catch {
+    return link;
+  }
 }
 
 function toCandidates(items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[]): Candidate[] {
@@ -20,45 +27,37 @@ function toCandidates(items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[])
       continue;
     }
     // better-sqlite3 reads a NULL column back as `null`, not `undefined`, despite the FeedItem type.
-    candidates.push({ id: item.id, link: item.link, hasImage: !!item.image });
+    if (item.image) {
+      continue;
+    }
+    candidates.push({ id: item.id, link: item.link, host: hostFor(item.link) });
   }
   return candidates;
 }
 
-export type NewArticleContentPayload = Omit<NewArticleContent, 'item_id'>;
-
 /**
- * Fetches each candidate item's page once, and feeds that one fetch to both extractors: the
- * og:image (skipped when the item already has an image) and the article body.
+ * Fetches pages for items without an image and reports the first image found in their metadata.
  * @param items the items to consider; only those with an absolute http(s) link to a public host are fetched
  * @param onImageFound called for each item whose page yields an og:image / twitter:image
- * @param onContentFound called for every fetched item with its extraction outcome, success or not
  */
 export async function enrichItems(
   items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[],
   onImageFound: (itemId: number, image: string) => void,
-  onContentFound: (itemId: number, content: NewArticleContentPayload) => void,
 ): Promise<void> {
+  const previousByHost = new Map<string, Promise<void>>();
   await runWithConcurrency(toCandidates(items), ENRICHMENT_CONCURRENCY, async (candidate) => {
-    const result = await fetchUrl(candidate.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
-    if (!result.success) {
-      return;
-    }
-    const html = result.data;
-
-    if (!candidate.hasImage) {
-      const image = extractOgImageUrl(html);
+    const previous = previousByHost.get(candidate.host) ?? Promise.resolve();
+    const current = previous.then(async () => {
+      const result = await fetchUrl(candidate.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+      if (!result.success) {
+        return;
+      }
+      const image = extractOgImageUrl(result.data);
       if (image) {
         onImageFound(candidate.id, image);
       }
-    }
-
-    const article = extractArticle(html, candidate.link);
-    onContentFound(candidate.id, {
-      html: article?.html,
-      text: article?.text,
-      word_count: article?.wordCount,
-      status: deriveArticleContentStatus(article),
     });
+    previousByHost.set(candidate.host, current);
+    await current;
   });
 }

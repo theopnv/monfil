@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { useFeedValidation } from './useFeedValidation';
-import type { ParsedSource, FeedFetchError, SourceType } from '../../../preload/channels';
-import type { Result } from '../../../main/lib/utils';
+import type { ParsedSource, FeedFetchError, SourceType } from '../../../shared/contracts';
+import type { Result } from '../../../shared/result';
 
 const validFeed: ParsedSource = { type: 'rss', link: 'https://example.com/feed', title: 'Example Feed', description: 'An example feed', icon: undefined, items: [] };
 const notFoundError: FeedFetchError = { name: 'UNSUPPORTED_FORMAT', message: 'nope' };

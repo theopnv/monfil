@@ -1,90 +1,59 @@
-import type { FeedMetadata, FeedCategory, SourceType, Workspace } from '../main/db/types';
-import type { NewFeedInput, AddFeedError, CreateCategoryError, CreateWorkspaceError } from '../main/db/crud/insert';
-import type { DeleteCategoryError, DeleteFeedError, DeleteWorkspaceError } from '../main/db/crud/delete';
-import type { MoveFeedError, UpdateCategoryError, UpdateFeedError, UpdateItemError, UpdateWorkspaceError } from '../main/db/crud/update';
-import type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
-import type { MaxFeedItems, RefreshInterval } from '../main/settings';
-import type { AppInfo } from '../main/app-info';
-import type { Result } from '../main/lib/utils';
-import type { ImportOpmlError, ImportOpmlTarget, ImportSummary } from '../main/opml/import';
-import type { ExportOpmlError } from '../main/opml/export';
-import type { CatalogError, FeedpackCatalog } from '../main/feedpacks/catalog';
-import type { FeedpackError, FeedpackInstallTarget, FeedpackPreview, InstallFeedpackError } from '../main/feedpacks/install';
+import type {
+  AddFeedError,
+  AppInfo,
+  CatalogError,
+  CreateCategoryError,
+  CreateWorkspaceError,
+  DeleteCategoryError,
+  DeleteFeedError,
+  DeleteWorkspaceError,
+  ExportOpmlError,
+  FeedCategory,
+  FeedFetchError,
+  FeedpackCatalog,
+  FeedpackError,
+  FeedpackInstallTarget,
+  FeedpackPreview,
+  FeedSummary,
+  ImportOpmlError,
+  ImportOpmlTarget,
+  ImportSummary,
+  InstallFeedpackError,
+  ItemBody,
+  MaxFeedItems,
+  MoveFeedError,
+  NewFeedInput,
+  ParsedSource,
+  RefreshInterval,
+  RefreshSummary,
+  RiverPage,
+  RiverQuery,
+  SourceType,
+  StartupHealth,
+  UpdateCategoryError,
+  UpdateFeedError,
+  UpdateItemError,
+  UpdateWorkspaceError,
+  Workspace,
+  WorkspaceSummary,
+} from './contracts';
+import type { Result } from './result';
+import type { LogEventMap, LogEventName, LogLevel } from './logging';
 
-// =====================================
-// ============== TYPES ================
-// =====================================
-
-// Expose types from main process to preload, so that the renderer can use them without importing from main directly.
-export type { RefreshInterval, MaxFeedItems } from '../main/settings';
-export type { FeedCategory, SourceType, Workspace } from '../main/db/types';
-export { HOME_WORKSPACE_ID } from '../main/db/types';
-export type { ParsedSource, FeedFetchError } from '../main/feed/sources/types';
-
-// Some types are only used in the preload layer, so we define them here instead of main.
-export type FeedSummary = FeedMetadata & {
-  showInWorkspace: number;
-  workspaceId: number;
-  category: FeedCategory;
-  itemCount: number;
-  unreadCount: number;
-};
-
-export type WorkspaceSummary = Workspace & { hasUnread: boolean };
-
-export type RiverRow = {
-  id: number;
-  title: string;
-  link: string | undefined;
-  publishedAt: number;
-  excerpt: string;
-  image: string | undefined;
-  readAt: string | undefined;
-  feedId: number;
-  feedTitle: string;
-  feedLink: string;
-  feedIcon: string | undefined;
-  categoryName: string;
-  type: SourceType;
-};
-
-export type RiverCursor = { publishedAt: number; id: number };
-
-export type RiverQuery = {
-  workspaceId: number;
-  feedIds?: number[]; // omitted = every feed with showInWorkspace = 1
-  ids?: number[]; // exact rows, for a Reader deep link outside the window
-  unreadOnly?: boolean;
-  search?: string;
-  cursor?: RiverCursor;
-  limit: number;
-};
-
-export type RiverPage = { rows: RiverRow[]; nextCursor?: RiverCursor };
-export type RefreshSummary = { perFeed: { feedId: number; inserted: number }[] };
-export type ItemBody = {
-  description: string; // raw, unstripped
-  article: { html: string; wordCount: number } | undefined;
-};
-
-// =====================================
-// ============= CHANNELS ==============
-// =====================================
-
-// ============= One-way channels (renderer -> main) ==============
 export type OneWayRendererToMainChannelPayloads = {
   'link:open': string;
   'feeds:show-feed-context-menu': number;
   'feeds:show-category-context-menu': number;
   'workspaces:show-context-menu': number;
   'app:reveal-database-file': undefined;
-}
+  'app:reveal-log-file': undefined;
+  'app:reveal-database-backup': undefined;
+  'app:restart': undefined;
+  'log:write': { level: LogLevel; event: LogEventName; data: LogEventMap[LogEventName]; error?: string };
+};
+
 export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayloads;
 
-// ============= One-way channels (main -> renderer) ==============
-
-// webContents.send does not buffer, so the renderer's listener must attach before it is sent.
-// Make sure this is set up correctly before sending through new channels.
 export type OneWayMainToRendererChannelPayloads = {
   'feeds:item-image-fetched': { feedId: number; itemId: number; image: string };
   'feeds:refreshed': RefreshSummary;
@@ -99,7 +68,6 @@ export type OneWayMainToRendererChannelPayloads = {
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
 
-// ============ Two-way channels (renderer <-> main) ==============
 export type TwoWayRendererMainChannelPayloads = {
   'feeds:validate-feed-url': Result<ParsedSource, FeedFetchError>;
   'feeds:list-categories': FeedCategory[];
@@ -128,12 +96,15 @@ export type TwoWayRendererMainChannelPayloads = {
   'settings:get-max-feed-items': MaxFeedItems;
   'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': AppInfo;
+  'app:get-startup-health': StartupHealth;
+  'settings:get-detailed-logging': boolean;
+  'settings:set-detailed-logging': boolean;
   'opml:import': Result<ImportSummary, ImportOpmlError>;
   'opml:export': Result<void, ExportOpmlError>;
   'feedpacks:list': Result<FeedpackCatalog, CatalogError>;
   'feedpacks:preview': Result<FeedpackPreview, FeedpackError>;
   'feedpacks:install': Result<ImportSummary, InstallFeedpackError>;
-}
+};
 
 export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
 
@@ -165,6 +136,9 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'settings:get-max-feed-items': undefined;
   'settings:set-max-feed-items': MaxFeedItems;
   'app:get-info': undefined;
+  'app:get-startup-health': undefined;
+  'settings:get-detailed-logging': undefined;
+  'settings:set-detailed-logging': boolean;
   'opml:import': { target: ImportOpmlTarget };
   'opml:export': { workspaceId: number };
   'feedpacks:list': undefined;
@@ -172,9 +146,17 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feedpacks:install': { slug: string; target: FeedpackInstallTarget };
 };
 
-// ============= Combined channel types ==============
 export type ChannelPayloads = OneWayRendererToMainChannelPayloads
   & OneWayMainToRendererChannelPayloads
   & TwoWayRendererMainChannelPayloads;
 
 export type Channels = keyof ChannelPayloads;
+
+export interface ElectronHandler {
+  ipcRenderer: {
+    sendMessage<C extends OneWayRendererToMainChannels>(channel: C, payload: OneWayRendererToMainChannelPayloads[C]): void;
+    on<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void): () => void;
+    once<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void): void;
+    invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<TwoWayRendererMainChannelPayloads[C]>;
+  };
+}

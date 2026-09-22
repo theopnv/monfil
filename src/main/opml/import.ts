@@ -1,43 +1,16 @@
 import fs from 'node:fs/promises';
 import { dialog } from 'electron';
+import type { ImportFailed, ImportOpmlError, ImportOpmlTarget, ImportSkipped, ImportSummary } from '../../shared/contracts';
 import { db, dbReady } from '../db/database';
 import { queryFeedMetadataByIds } from '../db/crud/query';
-import type { Result } from '../lib/utils';
+import type { Result } from '../../shared/result';
 import { refreshFeeds } from '../feed/refresh';
-import { parseOpmlDocument, type ParseOpmlError } from './parse';
-
-export interface ImportSkipped {
-  title: string;
-  reason: string;
-}
-
-export interface ImportFailed {
-  title: string;
-  message: string;
-}
-
-export interface ImportSummary {
-  workspaceId: number;
-  imported: number;
-  skipped: ImportSkipped[];
-  failed: ImportFailed[];
-}
+import { parseOpmlDocument } from './parse';
 
 export interface StartedOpmlImport {
   summary: ImportSummary;
   completion: Promise<ImportSummary>;
 }
-
-export type ImportOpmlTarget =
-  // `name` left blank falls back to the OPML document's own title.
-  | { kind: 'new-workspace'; name: string; icon: string; color: string; sourceSlug?: string; sourceVersion?: string }
-  | { kind: 'merge-workspace'; workspaceId: number };
-
-export type ImportOpmlError =
-  | ParseOpmlError
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'FS_ERROR'; message: string }
-  | { name: 'CANCELLED'; message: string };
 
 /**
  * Parses an OPML document and writes its workspace, categories, and feed placements in one

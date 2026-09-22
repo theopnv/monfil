@@ -3,8 +3,8 @@ import { PreferencesProvider } from '@/providers/preferences-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import Settings from './Settings';
-import type { AppInfo } from '../../../main/app-info';
-import { HOME_WORKSPACE_ID } from '../../../preload/channels';
+import type { AppInfo } from '../../../shared/contracts';
+import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 
 const appInfo: AppInfo = { version: '1.2.3', feedCount: 2, itemCount: 42, databaseSizeBytes: 2048 };
 
