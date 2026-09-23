@@ -1,13 +1,15 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { extractChannel, isYoutubeLink, parseFeedContent, parseYoutubeInput, youtubeSource } from './youtube';
-import { fetchUrl } from '../../lib/fetch';
+import { fetchConditional, fetchText } from '../../lib/fetch';
 import type { FetchUrlError } from '../../../shared/contracts';
 
 vi.mock(import('../../lib/fetch'), () => ({
-  fetchUrl: vi.fn(),
+  fetchConditional: vi.fn(),
+  fetchText: vi.fn(),
 }));
 
-const mockedFetchUrl = vi.mocked(fetchUrl);
+const mockedFetchConditional = vi.mocked(fetchConditional);
+const mockedFetchText = vi.mocked(fetchText);
 const fetchFeed = youtubeSource.fetch;
 
 const CHANNEL_ID = 'UCWedHS9qKebauVIK2J7383g';
@@ -222,7 +224,8 @@ describe('parseFeedContent', () => {
 
 describe('fetchFeed', () => {
   afterEach(() => {
-    mockedFetchUrl.mockReset();
+    mockedFetchConditional.mockReset();
+    mockedFetchText.mockReset();
   });
 
   function channelPageHtml(channelId: string = CHANNEL_ID): string {
@@ -256,92 +259,127 @@ describe('fetchFeed', () => {
 </feed>`;
   }
 
-  function mockResponses(responses: Record<string, { success: true; data: string } | { success: false; error: FetchUrlError }>) {
-    mockedFetchUrl.mockImplementation((url: string) =>
+  function fetched(body: string) {
+    return { success: true as const, data: { body, validators: { etag: undefined, last_modified: undefined } } };
+  }
+
+  function mockResponses(responses: Record<string, ReturnType<typeof fetched> | { success: false; error: FetchUrlError }>) {
+    mockedFetchText.mockImplementation((url: string) =>
       Promise.resolve(responses[url] ?? { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: `unexpected fetch: ${url}` } }),
     );
   }
 
   test('the channel path fetches the avatar page and the feed', async () => {
     mockResponses({
-      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: { success: true, data: channelPageHtml() },
-      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: { success: true, data: channelFeedXml() },
+      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: fetched(channelPageHtml()),
+      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: fetched(channelFeedXml()),
     });
 
-    const result = await fetchFeed(CHANNEL_ID);
+    const result = await fetchFeed({ link: CHANNEL_ID });
 
     expect(result).toEqual({
       success: true,
-      data: expect.objectContaining({
-        type: 'youtube',
-        link: `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`,
-        title: 'Underscore_',
-        icon: AVATAR_NORMALIZED,
-      }),
+      data: {
+        validators: { etag: undefined, last_modified: undefined },
+        parsed: expect.objectContaining({
+          type: 'youtube',
+          link: `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`,
+          title: 'Underscore_',
+          icon: AVATAR_NORMALIZED,
+        }),
+      },
     });
-    expect(mockedFetchUrl).toHaveBeenCalledTimes(2);
+    expect(mockedFetchText).toHaveBeenCalledTimes(2);
   });
 
   test('the handle path resolves the channel id and avatar from the one page fetch', async () => {
     mockResponses({
-      'https://www.youtube.com/@Underscore_': { success: true, data: channelPageHtml() },
-      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: { success: true, data: channelFeedXml() },
+      'https://www.youtube.com/@Underscore_': fetched(channelPageHtml()),
+      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: fetched(channelFeedXml()),
     });
 
-    const result = await fetchFeed('@Underscore_');
+    const result = await fetchFeed({ link: '@Underscore_' });
 
     expect(result).toEqual({
       success: true,
-      data: expect.objectContaining({ icon: AVATAR_NORMALIZED, link: `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}` }),
+      data: {
+        validators: { etag: undefined, last_modified: undefined },
+        parsed: expect.objectContaining({ icon: AVATAR_NORMALIZED, link: `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}` }),
+      },
     });
-    expect(mockedFetchUrl).toHaveBeenCalledTimes(2);
-    expect(mockedFetchUrl).not.toHaveBeenCalledWith(`https://www.youtube.com/channel/${CHANNEL_ID}`);
+    expect(mockedFetchText).toHaveBeenCalledTimes(2);
+    expect(mockedFetchText).not.toHaveBeenCalledWith(`https://www.youtube.com/channel/${CHANNEL_ID}`);
   });
 
   test('the playlist path reads the owner from the feed-level yt:channelId', async () => {
     mockResponses({
-      'https://www.youtube.com/feeds/videos.xml?playlist_id=PL1': { success: true, data: playlistFeedXml() },
-      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: { success: true, data: channelPageHtml() },
+      'https://www.youtube.com/feeds/videos.xml?playlist_id=PL1': fetched(playlistFeedXml()),
+      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: fetched(channelPageHtml()),
     });
 
-    const result = await fetchFeed('https://www.youtube.com/playlist?list=PL1');
+    const result = await fetchFeed({ link: 'https://www.youtube.com/playlist?list=PL1' });
 
     expect(result).toEqual({
       success: true,
-      data: expect.objectContaining({
-        link: 'https://www.youtube.com/feeds/videos.xml?playlist_id=PL1',
-        title: 'A Playlist',
-        icon: AVATAR_NORMALIZED,
-      }),
+      data: {
+        validators: { etag: undefined, last_modified: undefined },
+        parsed: expect.objectContaining({
+          link: 'https://www.youtube.com/feeds/videos.xml?playlist_id=PL1',
+          title: 'A Playlist',
+          icon: AVATAR_NORMALIZED,
+        }),
+      },
     });
-    expect(mockedFetchUrl).toHaveBeenCalledTimes(2);
+    expect(mockedFetchText).toHaveBeenCalledTimes(2);
+  });
+
+  test('the playlist path returns 304 without downloading the feed body', async () => {
+    // Arrange
+    mockedFetchConditional.mockResolvedValue({ success: true, data: { notModified: true } });
+
+    // Act
+    const result = await fetchFeed({
+      link: 'https://www.youtube.com/playlist?list=PL1',
+      validators: { etag: '"v1"', last_modified: undefined },
+    });
+
+    // Assert
+    expect(result).toEqual({ success: true, data: { notModified: true } });
+    expect(mockedFetchConditional).toHaveBeenCalledWith(
+      'https://www.youtube.com/feeds/videos.xml?playlist_id=PL1',
+      { validators: { etag: '"v1"', last_modified: undefined } },
+    );
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('the video path resolves the channel from the watch page, then continues as a channel', async () => {
     mockResponses({
-      'https://www.youtube.com/watch?v=abc123': { success: true, data: watchPageHtml() },
-      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: { success: true, data: channelPageHtml() },
-      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: { success: true, data: channelFeedXml() },
+      'https://www.youtube.com/watch?v=abc123': fetched(watchPageHtml()),
+      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: fetched(channelPageHtml()),
+      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: fetched(channelFeedXml()),
     });
 
-    const result = await fetchFeed('https://www.youtube.com/watch?v=abc123');
+    const result = await fetchFeed({ link: 'https://www.youtube.com/watch?v=abc123' });
 
     expect(result).toEqual({
       success: true,
-      data: expect.objectContaining({ icon: AVATAR_NORMALIZED, link: `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}` }),
+      data: {
+        validators: { etag: undefined, last_modified: undefined },
+        parsed: expect.objectContaining({ icon: AVATAR_NORMALIZED, link: `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}` }),
+      },
     });
-    expect(mockedFetchUrl).toHaveBeenCalledTimes(3);
+    expect(mockedFetchText).toHaveBeenCalledTimes(3);
   });
 
   test('a failing avatar fetch still returns the feed, with icon undefined', async () => {
     mockResponses({
       [`https://www.youtube.com/channel/${CHANNEL_ID}`]: { success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } },
-      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: { success: true, data: channelFeedXml() },
+      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: fetched(channelFeedXml()),
     });
 
-    const result = await fetchFeed(CHANNEL_ID);
+    const result = await fetchFeed({ link: CHANNEL_ID });
 
-    expect(result).toEqual({ success: true, data: expect.objectContaining({ icon: undefined }) });
+    expect(result).toEqual({ success: true, data: { validators: { etag: undefined, last_modified: undefined }, parsed: expect.objectContaining({ icon: undefined }) } });
   });
 
   const fetchUrlErrors: FetchUrlError[] = [
@@ -354,35 +392,38 @@ describe('fetchFeed', () => {
 
   test.each(fetchUrlErrors)('passes a $name feed fetch failure straight through', async (error) => {
     mockResponses({
-      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: { success: true, data: channelPageHtml() },
+      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: fetched(channelPageHtml()),
       [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: { success: false, error },
     });
 
-    const result = await fetchFeed(CHANNEL_ID);
+    const result = await fetchFeed({ link: CHANNEL_ID });
 
     expect(result).toEqual({ success: false, error });
   });
 
   test('returns UNSUPPORTED_FORMAT for an input with no recognizable shape', async () => {
-    const result = await fetchFeed('https://example.com/nothing');
+    const result = await fetchFeed({ link: 'https://example.com/nothing' });
 
     expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: expect.any(String) } });
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('regression: a channel feed with a truncated feed-level yt:channelId still resolves the full id', async () => {
     // The feed body below carries the real, buggy truncated value (no "UC" prefix). The adapter
     // must never read it: for a channel target the id is already known before the feed is fetched.
     mockResponses({
-      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: { success: true, data: channelPageHtml() },
-      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: { success: true, data: channelFeedXml('WedHS9qKebauVIK2J7383g') },
+      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: fetched(channelPageHtml()),
+      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: fetched(channelFeedXml('WedHS9qKebauVIK2J7383g')),
     });
 
-    const result = await fetchFeed(CHANNEL_ID);
+    const result = await fetchFeed({ link: CHANNEL_ID });
 
     expect(result).toEqual({
       success: true,
-      data: expect.objectContaining({ link: `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}` }),
+      data: {
+        validators: { etag: undefined, last_modified: undefined },
+        parsed: expect.objectContaining({ link: `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}` }),
+      },
     });
   });
 });

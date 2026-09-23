@@ -92,15 +92,23 @@ export async function setFeedsShowInWorkspace(feedIds: number[], showInWorkspace
 
 /**
  * Records the outcome of one refresh of one feed. `last_fetched_at` moves on both paths, so a feed that
- * keeps failing is distinguishable from a feed that has published nothing.
+ * keeps failing is distinguishable from a feed that has published nothing. Validators left out keep
+ * their stored value; a validator set to `null` is cleared, which is how a body without validators
+ * retires a stale one.
  * @param feedId the id of the feed that was fetched
- * @param result the failure to record, or `{ last_error: null }` to clear a previous one
+ * @param result the failure to record, or `{ last_error: null }` to clear a previous one, plus the
+ *   validators to persist
  */
-export async function setFeedFetchResult(feedId: number, result: { last_error: string | null }): Promise<Result<void, UpdateFeedError>> {
+export async function setFeedFetchResult(feedId: number, result: { last_error: string | null; etag?: string | undefined | null; last_modified?: string | undefined | null }): Promise<Result<void, UpdateFeedError>> {
   await dbReady;
   try {
     const updated = await db.updateTable('feedMetadata')
-      .set({ last_fetched_at: new Date().toISOString(), last_error: result.last_error })
+      .set({
+        last_fetched_at: new Date().toISOString(),
+        last_error: result.last_error,
+        ...(result.etag !== undefined ? { etag: result.etag } : {}),
+        ...(result.last_modified !== undefined ? { last_modified: result.last_modified } : {}),
+      })
       .where('id', '=', feedId)
       .executeTakeFirst();
     if (updated.numUpdatedRows === 0n) {

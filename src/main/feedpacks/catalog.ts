@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { app } from 'electron';
 import type { CatalogError, Feedpack, FeedpackCatalog, FetchUrlError } from '../../shared/contracts';
-import { fetchUrl } from '../lib/fetch';
+import { fetchText } from '../lib/fetch';
 import type { Result } from '../../shared/result';
 
 const CATALOG_URL = 'https://raw.githubusercontent.com/theopnv/monfil/main/feedpacks/index.json';
@@ -114,7 +114,7 @@ let catalog: ReturnType<typeof createCatalogService> | undefined;
 /** Loads the remote catalog only when the pack browser requests it. */
 export function getFeedpackCatalog(): Promise<Result<FeedpackCatalog, CatalogError>> {
   catalog ??= createCatalogService({
-    fetch: fetchUrl,
+    fetch: fetchCatalogText,
     readFile: fs.readFile,
     writeFile: fs.writeFile,
     mkdir: fs.mkdir,
@@ -127,6 +127,15 @@ export function getFeedpackCatalog(): Promise<Result<FeedpackCatalog, CatalogErr
 
 export function feedpackOpmlUrl(pack: Feedpack): string {
   return `https://raw.githubusercontent.com/theopnv/monfil/main/feedpacks/${encodeURIComponent(pack.opml)}`;
+}
+
+/** Drops the validators the fetch layer attaches, which the catalog has no use for. */
+async function fetchCatalogText(url: string): Promise<Result<string, FetchUrlError>> {
+  const result = await fetchText(url);
+  if (!result.success) {
+    return result;
+  }
+  return { success: true, data: result.data.body };
 }
 
 export function usesBundledFeedpacks(): boolean {

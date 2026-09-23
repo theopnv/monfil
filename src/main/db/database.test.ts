@@ -36,7 +36,7 @@ describe('initializeDatabase', () => {
     // Assert
     expect(columnsOf('workspace')).toEqual(['color', 'icon', 'id', 'installed_at', 'name', 'position', 'source_slug', 'source_version']);
     expect(columnsOf('feedCategory')).toEqual(['id', 'name', 'workspace_id']);
-    expect(columnsOf('feedMetadata')).toEqual(['icon', 'id', 'last_error', 'last_fetched_at', 'link', 'title', 'type']);
+    expect(columnsOf('feedMetadata')).toEqual(['etag', 'icon', 'id', 'last_error', 'last_fetched_at', 'last_modified', 'link', 'title', 'type']);
     expect(columnsOf('feedPlacement')).toEqual(['category_id', 'feed_id', 'showInWorkspace', 'workspace_id']);
     expect(columnsOf('feedItem')).toEqual(['author', 'description', 'excerpt', 'extra', 'feed_id', 'guid', 'id', 'image', 'link', 'pubDate', 'published_at', 'read_at', 'title']);
     expect(columnsOf('setting')).toEqual(['key', 'value']);

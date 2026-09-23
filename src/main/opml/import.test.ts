@@ -23,7 +23,7 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
-  mockedFetchFeed.mockImplementation((link: string) => Promise.resolve({ success: true, data: parsed(link) }));
+  mockedFetchFeed.mockImplementation((input) => Promise.resolve({ success: true, data: { parsed: parsed(input.link), validators: { etag: undefined, last_modified: undefined } } }));
 });
 
 afterEach(async () => {
@@ -191,7 +191,7 @@ describe('startOpmlImport', () => {
     if (!result.success || !finishRefresh) {
       return;
     }
-    finishRefresh({ success: true, data: parsed('https://a.example/feed') });
+    finishRefresh({ success: true, data: { parsed: parsed('https://a.example/feed'), validators: { etag: undefined, last_modified: undefined } } });
     await expect(result.data.completion).resolves.toMatchObject({ imported: 1, failed: [] });
   });
 });

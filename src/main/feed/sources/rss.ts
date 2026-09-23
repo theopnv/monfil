@@ -1,11 +1,11 @@
 import { parseFeed } from 'feedsmith';
-import { fetchUrl } from '../../lib/fetch';
+import { fetchConditional, fetchText } from '../../lib/fetch';
 import type { Result } from '../../../shared/result';
 import { extractAtomImageUrl, extractImageUrl } from '../extractImage';
 import { DEFAULT_MAX_FEED_ITEMS } from '../../settings';
 import { decodeOptional, decodeText, resolveGuid } from './text';
-import type { FeedFetchError, ParsedSource } from '../../../shared/contracts';
-import type { NewSourceItem, SourceAdapter } from './types';
+import type { FeedFetchError } from '../../../shared/contracts';
+import type { NewSourceItem, SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
 
 interface ParsedFeedContent {
   title: string;
@@ -71,10 +71,13 @@ export function parseFeedContent(content: string, maxItems: number = 0): ParsedF
   }
 }
 
-async function fetchFeed(link: string, maxItems: number = DEFAULT_MAX_FEED_ITEMS): Promise<Result<ParsedSource, FeedFetchError>> {
-  const normalizedLink = /^https?:\/\//i.test(link) ? link : `https://${link}`;
+async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchResult, FeedFetchError>> {
+  const normalizedLink = /^https?:\/\//i.test(input.link) ? input.link : `https://${input.link}`;
+  const maxItems = input.maxItems ?? DEFAULT_MAX_FEED_ITEMS;
   try {
-    const result = await fetchUrl(normalizedLink);
+    const result = input.validators
+      ? await fetchConditional(normalizedLink, { validators: input.validators })
+      : await fetchText(normalizedLink);
     if (!result.success) {
       switch (result.error.name) {
         case 'GENERIC_FETCH_ERROR':
@@ -89,11 +92,20 @@ async function fetchFeed(link: string, maxItems: number = DEFAULT_MAX_FEED_ITEMS
         }
       }
     }
-    const parsed = parseFeedContent(result.data, maxItems);
+    if ('notModified' in result.data) {
+      return { success: true, data: result.data };
+    }
+    const parsed = parseFeedContent(result.data.body, maxItems);
     if (!parsed) {
       return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported RSS or Atom feed." } };
     }
-    return { success: true, data: { type: 'rss', link: normalizedLink, title: parsed.title, description: parsed.description, items: parsed.items, icon: undefined } };
+    return {
+      success: true,
+      data: {
+        validators: result.data.validators,
+        parsed: { type: 'rss', link: normalizedLink, title: parsed.title, description: parsed.description, items: parsed.items, icon: undefined },
+      },
+    };
   } catch (error) {
     if (error instanceof Error) {
       return { success: false, error: { name: 'PARSE_ERROR', message: error.message } };

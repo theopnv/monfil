@@ -1,10 +1,10 @@
 import { parseFeed } from 'feedsmith';
-import { fetchUrl } from '../../lib/fetch';
+import { fetchConditional, fetchText, type FetchedText } from '../../lib/fetch';
 import type { Result } from '../../../shared/result';
 import { DEFAULT_MAX_FEED_ITEMS } from '../../settings';
 import { decodeOptional, decodeText, resolveGuid } from './text';
-import type { FeedFetchError, FetchUrlError, ParsedSource } from '../../../shared/contracts';
-import type { NewSourceItem, SourceAdapter } from './types';
+import type { FeedFetchError, FetchUrlError } from '../../../shared/contracts';
+import type { NewSourceItem, SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
 
 export type YoutubeTarget =
   | { kind: 'channel'; channelId: string }
@@ -165,8 +165,8 @@ function playlistFeedUrl(playlistId: string): string {
 }
 
 async function fetchChannelPage(channelId: string): Promise<ExtractedChannel | undefined> {
-  const result = await fetchUrl(`https://www.youtube.com/channel/${channelId}`);
-  return result.success ? extractChannel(result.data) : undefined;
+  const result = await fetchText(`https://www.youtube.com/channel/${channelId}`);
+  return result.success ? extractChannel(result.data.body) : undefined;
 }
 
 function mapFetchError(error: FetchUrlError): FeedFetchError {
@@ -189,32 +189,35 @@ interface Resolution {
   icon: string | undefined;
   feedLink: string;
   // Set only when the resolution step already fetched the feed body (the playlist path), so the caller does not fetch it twice.
-  feedResult: Result<string, FetchUrlError> | undefined;
+  feedResult: Result<FetchedText, FetchUrlError> | undefined;
 }
 
-async function resolveTarget(target: YoutubeTarget): Promise<Result<Resolution, FeedFetchError>> {
+async function resolveTarget(
+  target: YoutubeTarget,
+  validators?: SourceFetchInput['validators'],
+): Promise<Result<Resolution | Extract<SourceFetchResult, { notModified: true }>, FeedFetchError>> {
   switch (target.kind) {
     case 'channel': {
       const page = await fetchChannelPage(target.channelId);
       return { success: true, data: { channelId: target.channelId, icon: page?.icon, feedLink: channelFeedUrl(target.channelId), feedResult: undefined } };
     }
     case 'page': {
-      const pageResult = await fetchUrl(`https://www.youtube.com${target.path}`);
+      const pageResult = await fetchText(`https://www.youtube.com${target.path}`);
       if (!pageResult.success) {
         return { success: false, error: mapFetchError(pageResult.error) };
       }
-      const extracted = extractChannel(pageResult.data);
+      const extracted = extractChannel(pageResult.data.body);
       if (!extracted.channelId) {
         return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find a YouTube channel at that address." } };
       }
       return { success: true, data: { channelId: extracted.channelId, icon: extracted.icon, feedLink: channelFeedUrl(extracted.channelId), feedResult: undefined } };
     }
     case 'video': {
-      const pageResult = await fetchUrl(`https://www.youtube.com/watch?v=${target.videoId}`);
+      const pageResult = await fetchText(`https://www.youtube.com/watch?v=${target.videoId}`);
       if (!pageResult.success) {
         return { success: false, error: mapFetchError(pageResult.error) };
       }
-      const extracted = extractChannel(pageResult.data);
+      const extracted = extractChannel(pageResult.data.body);
       if (!extracted.channelId) {
         return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel for that video." } };
       }
@@ -223,16 +226,21 @@ async function resolveTarget(target: YoutubeTarget): Promise<Result<Resolution, 
     }
     case 'playlist': {
       const feedLink = playlistFeedUrl(target.playlistId);
-      const feedResult = await fetchUrl(feedLink);
+      const feedResult = validators
+        ? await fetchConditional(feedLink, { validators })
+        : await fetchText(feedLink);
       if (!feedResult.success) {
         return { success: false, error: mapFetchError(feedResult.error) };
       }
-      const ownerId = extractPlaylistOwner(feedResult.data);
+      if ('notModified' in feedResult.data) {
+        return { success: true, data: feedResult.data };
+      }
+      const ownerId = extractPlaylistOwner(feedResult.data.body);
       if (!ownerId) {
         return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel that owns that playlist." } };
       }
       const page = await fetchChannelPage(ownerId);
-      return { success: true, data: { channelId: ownerId, icon: page?.icon, feedLink, feedResult } };
+      return { success: true, data: { channelId: ownerId, icon: page?.icon, feedLink, feedResult: { success: true, data: feedResult.data } } };
     }
     default: {
       const exhaustiveCheck: never = target;
@@ -282,24 +290,34 @@ export function parseFeedContent(content: string, maxItems: number = 0): ParsedY
   };
 }
 
-async function fetchFeed(link: string, maxItems: number = DEFAULT_MAX_FEED_ITEMS): Promise<Result<ParsedSource, FeedFetchError>> {
+async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchResult, FeedFetchError>> {
+  const maxItems = input.maxItems ?? DEFAULT_MAX_FEED_ITEMS;
   try {
-    const target = parseYoutubeInput(link, true);
+    const target = parseYoutubeInput(input.link, true);
     if (!target) {
       return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel, playlist or video." } };
     }
 
-    const resolution = await resolveTarget(target);
+    const resolution = await resolveTarget(target, input.validators);
     if (!resolution.success) {
       return resolution;
     }
+    if ('notModified' in resolution.data) {
+      return { success: true, data: resolution.data };
+    }
 
-    const feedResult = resolution.data.feedResult ?? await fetchUrl(resolution.data.feedLink);
+    const feedResult = resolution.data.feedResult
+      ?? (input.validators
+        ? await fetchConditional(resolution.data.feedLink, { validators: input.validators })
+        : await fetchText(resolution.data.feedLink));
     if (!feedResult.success) {
       return { success: false, error: mapFetchError(feedResult.error) };
     }
+    if ('notModified' in feedResult.data) {
+      return { success: true, data: feedResult.data };
+    }
 
-    const parsed = parseFeedContent(feedResult.data, maxItems);
+    const parsed = parseFeedContent(feedResult.data.body, maxItems);
     if (!parsed) {
       return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel feed." } };
     }
@@ -307,12 +325,15 @@ async function fetchFeed(link: string, maxItems: number = DEFAULT_MAX_FEED_ITEMS
     return {
       success: true,
       data: {
-        type: 'youtube',
-        link: resolution.data.feedLink,
-        title: parsed.title,
-        description: parsed.description,
-        items: parsed.items,
-        icon: resolution.data.icon,
+        validators: feedResult.data.validators,
+        parsed: {
+          type: 'youtube',
+          link: resolution.data.feedLink,
+          title: parsed.title,
+          description: parsed.description,
+          items: parsed.items,
+          icon: resolution.data.icon,
+        },
       },
     };
   } catch (error) {

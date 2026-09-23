@@ -2,15 +2,15 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { extractArticle } from './extractArticle';
 import { extractOgImageUrl } from './extractOgImage';
 import { enrichItems } from './enrichItems';
-import { fetchUrl } from '../lib/fetch';
+import { fetchText } from '../lib/fetch';
 import type { FeedItem } from '../db/types';
 import { ARTICLE_FETCH_TIMEOUT_MS, ENRICHMENT_CONCURRENCY } from '../constants';
 
-vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
+vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
 vi.mock(import('./extractOgImage'), () => ({ extractOgImageUrl: vi.fn() }));
 vi.mock(import('./extractArticle'), () => ({ extractArticle: vi.fn() }));
 
-const mockedFetchUrl = vi.mocked(fetchUrl);
+const mockedFetchText = vi.mocked(fetchText);
 const mockedExtractOgImageUrl = vi.mocked(extractOgImageUrl);
 const mockedExtractArticle = vi.mocked(extractArticle);
 
@@ -19,7 +19,7 @@ function item(overrides: Partial<Pick<FeedItem, 'id' | 'link' | 'image'>> = {}):
 }
 
 afterEach(() => {
-  mockedFetchUrl.mockReset();
+  mockedFetchText.mockReset();
   mockedExtractOgImageUrl.mockReset();
   mockedExtractArticle.mockReset();
 });
@@ -27,7 +27,7 @@ afterEach(() => {
 describe('enrichItems', () => {
   test('fetches only items missing an image with an absolute http(s) link', async () => {
     // Arrange
-    mockedFetchUrl.mockResolvedValue({ success: true, data: '<html></html>' });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } });
     mockedExtractOgImageUrl.mockReturnValue(undefined);
     const items = [item({ id: 1, link: 'https://example.com/1' }), item({ id: 2, link: 'http://example.com/2' })];
 
@@ -35,14 +35,14 @@ describe('enrichItems', () => {
     await enrichItems(items, vi.fn());
 
     // Assert
-    expect(mockedFetchUrl).toHaveBeenCalledTimes(2);
-    expect(mockedFetchUrl).toHaveBeenCalledWith('https://example.com/1', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
-    expect(mockedFetchUrl).toHaveBeenCalledWith('http://example.com/2', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+    expect(mockedFetchText).toHaveBeenCalledTimes(2);
+    expect(mockedFetchText).toHaveBeenCalledWith('https://example.com/1', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+    expect(mockedFetchText).toHaveBeenCalledWith('http://example.com/2', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
   });
 
   test('uses each fetched page only to find its image', async () => {
     // Arrange
-    mockedFetchUrl.mockResolvedValue({ success: true, data: '<html>page</html>' });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: '<html>page</html>', validators: { etag: undefined, last_modified: undefined } } });
     mockedExtractOgImageUrl.mockReturnValue('https://example.com/found.jpg');
     const onImageFound = vi.fn();
     const items = [item({ id: 1, link: 'https://example.com/1' })];
@@ -51,7 +51,7 @@ describe('enrichItems', () => {
     await enrichItems(items, onImageFound);
 
     // Assert
-    expect(mockedFetchUrl).toHaveBeenCalledTimes(1);
+    expect(mockedFetchText).toHaveBeenCalledTimes(1);
     expect(mockedExtractOgImageUrl).toHaveBeenCalledWith('<html>page</html>');
     expect(mockedExtractArticle).not.toHaveBeenCalled();
     expect(onImageFound).toHaveBeenCalledWith(1, 'https://example.com/found.jpg');
@@ -59,20 +59,20 @@ describe('enrichItems', () => {
 
   test('does not fetch an item that already has an image', async () => {
     // Arrange
-    mockedFetchUrl.mockResolvedValue({ success: true, data: '<html></html>' });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } });
     const items = [item({ id: 1, image: 'https://example.com/existing.jpg' })];
 
     // Act
     await enrichItems(items, vi.fn());
 
     // Assert
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
     expect(mockedExtractOgImageUrl).not.toHaveBeenCalled();
   });
 
   test('treats a null image (as read back from sqlite) as missing', async () => {
     // Arrange
-    mockedFetchUrl.mockResolvedValue({ success: true, data: '<html></html>' });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } });
     mockedExtractOgImageUrl.mockReturnValue(undefined);
     // better-sqlite3 reads a NULL column back as `null`, not `undefined`, despite the FeedItem type.
     const items = [{ id: 1, link: 'https://example.com/1', image: null }] as unknown as Pick<FeedItem, 'id' | 'link' | 'image'>[];
@@ -92,7 +92,7 @@ describe('enrichItems', () => {
     await enrichItems(items, vi.fn());
 
     // Assert
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('skips a non-http(s) link', async () => {
@@ -103,15 +103,15 @@ describe('enrichItems', () => {
     await enrichItems(items, vi.fn());
 
     // Assert
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('a fetch failure does not stop the other items', async () => {
     // Arrange
-    mockedFetchUrl.mockImplementation((link) => Promise.resolve(
+    mockedFetchText.mockImplementation((link) => Promise.resolve(
       link === 'https://example.com/1'
         ? { success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } }
-        : { success: true, data: '<html></html>' },
+        : { success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } },
     ));
     const onImageFound = vi.fn();
     const items = [item({ id: 1, link: 'https://example.com/1' }), item({ id: 2, link: 'https://example.com/2' })];
@@ -120,12 +120,12 @@ describe('enrichItems', () => {
     await enrichItems(items, onImageFound);
 
     // Assert
-    expect(mockedFetchUrl).toHaveBeenCalledTimes(2);
+    expect(mockedFetchText).toHaveBeenCalledTimes(2);
   });
 
   test('resolves once every candidate has settled', async () => {
     // Arrange
-    mockedFetchUrl.mockResolvedValue({ success: true, data: '<html></html>' });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } });
     const items = [
       item({ id: 1, link: 'https://example.com/1' }),
       item({ id: 2, link: 'https://example.com/2' }),
@@ -136,20 +136,20 @@ describe('enrichItems', () => {
     await enrichItems(items, vi.fn());
 
     // Assert
-    expect(mockedFetchUrl).toHaveBeenCalledTimes(3);
+    expect(mockedFetchText).toHaveBeenCalledTimes(3);
   });
 
   test('never runs more than ENRICHMENT_CONCURRENCY fetches at once', async () => {
     // Arrange
     let active = 0;
     let maxActive = 0;
-    mockedFetchUrl.mockImplementation(() => {
+    mockedFetchText.mockImplementation(() => {
       active += 1;
       maxActive = Math.max(maxActive, active);
       return new Promise((resolve) => {
         queueMicrotask(() => {
           active -= 1;
-          resolve({ success: true, data: '<html></html>' });
+          resolve({ success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } });
         });
       });
     });
@@ -167,13 +167,13 @@ describe('enrichItems', () => {
     // Arrange
     let active = 0;
     let maxActive = 0;
-    mockedFetchUrl.mockImplementation(() => {
+    mockedFetchText.mockImplementation(() => {
       active += 1;
       maxActive = Math.max(maxActive, active);
       return new Promise((resolve) => {
         queueMicrotask(() => {
           active -= 1;
-          resolve({ success: true, data: '<html></html>' });
+          resolve({ success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } });
         });
       });
     });
@@ -192,7 +192,7 @@ describe('enrichItems', () => {
     await enrichItems([], vi.fn());
 
     // Assert
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
     expect(mockedExtractOgImageUrl).not.toHaveBeenCalled();
     expect(mockedExtractArticle).not.toHaveBeenCalled();
   });

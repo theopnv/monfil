@@ -63,6 +63,10 @@ export interface FeedMetadataTable {
   // Update additionally allows `null`, so a successful fetch can clear the last failure.
   last_error: string | undefined | null;
   icon: string | undefined;
+  // Validators for conditional GET on refresh. The fetch layer may return either or both; each
+  // gets sent back as its own header. `null` clears a stale validator after a full re-download.
+  etag: string | undefined | null;
+  last_modified: string | undefined | null;
 }
 
 export type FeedMetadataRow = Selectable<FeedMetadataTable>;

@@ -169,7 +169,22 @@ export async function addFeedToDatabase(input: NewFeedInput): Promise<Result<Add
     });
 
     const items = await queryFeedItems({ feed_id: metadata.id });
-    return { success: true, data: { ...metadata, items, category, showInWorkspace: placement.showInWorkspace, workspaceId: placement.workspace_id } };
+    return {
+      success: true,
+      data: {
+        id: metadata.id,
+        link: metadata.link,
+        title: metadata.title,
+        type: metadata.type,
+        last_fetched_at: metadata.last_fetched_at,
+        last_error: metadata.last_error,
+        icon: metadata.icon,
+        items,
+        category,
+        showInWorkspace: placement.showInWorkspace,
+        workspaceId: placement.workspace_id,
+      },
+    };
   } catch (error) {
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
   }
