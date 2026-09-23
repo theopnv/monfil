@@ -10,6 +10,16 @@
       "sourceCount": 18,
       "updatedAt": "2026-09-21",
       "opml": "devsecops.opml"
+    },
+    {
+      "slug": "ai",
+      "title": "AI",
+      "description": "Research, reporting, and updates from AI labs, companies, and independent voices.",
+      "tags": ["ai", "artificial-intelligence", "research"],
+      "curator": "Monfil",
+      "sourceCount": 13,
+      "updatedAt": "2026-09-23",
+      "opml": "ai.opml"
     }
   ]
 }

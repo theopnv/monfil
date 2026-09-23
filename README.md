@@ -14,6 +14,7 @@ Start with curated feed packs for topics such as "General Tech announcements and
 "Mon fil" means "My feed" in french.
 
 ➡️ ["We should bring back RSS" - Andrej Karpathy](https://x.com/karpathy/status/2018043254986703167?s=20)
+
 ➡️ ["Hate “The Algorithm?” RSS Is One of the Tools You’ve Been Looking For"](https://www.eff.org/deeplinks/2026/06/hate-algorithm-rss-one-tools-youve-been-looking)
 
 <p align="center">

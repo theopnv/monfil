@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>AI</title></head>
+  <body>
+    <outline text="News">
+      <outline text="TLDR AI Feed" title="TLDR AI Feed" type="rss" xmlUrl="https://bullrich.dev/tldr-rss/ai.rss"/>
+      <outline text="Artificial intelligence – MIT Technology Review" title="Artificial intelligence – MIT Technology Review" type="rss" xmlUrl="https://www.technologyreview.com/topic/artificial-intelligence/feed/"/>
+      <outline text="Feed: Artificial Intelligence Latest" title="Feed: Artificial Intelligence Latest" type="rss" xmlUrl="https://www.wired.com/feed/tag/ai/latest/rss"/>
+      <outline text="AINews" title="AINews" type="rss" xmlUrl="https://news.smol.ai/rss.xml"/>
+      <outline text="AI Engineer" title="AI Engineer" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCLKPca3kwwd-B59HNr-_lvA"/>
+    </outline>
+    <outline text="Labs">
+      <outline text="OpenAI News" title="OpenAI News" type="rss" xmlUrl="https://openai.com/news/rss.xml"/>
+      <outline text="AI" title="AI" type="rss" xmlUrl="https://blog.google/technology/ai/rss/"/>
+      <outline text="NVIDIA Blog" title="NVIDIA Blog" type="rss" xmlUrl="http://feeds.feedburner.com/nvidiablog"/>
+    </outline>
+    <outline text="AI Companies">
+      <outline text="Hugging Face - Blog" title="Hugging Face - Blog" type="rss" xmlUrl="https://huggingface.co/blog/feed.xml"/>
+      <outline text="Artificial Intelligence" title="Artificial Intelligence" type="rss" xmlUrl="https://aws.amazon.com/blogs/ai/feed"/>
+    </outline>
+    <outline text="People">
+      <outline text="karpathy" title="karpathy" type="rss" xmlUrl="https://karpathy.bearblog.dev/feed/"/>
+      <outline text="Sam Altman" title="Sam Altman" type="rss" xmlUrl="http://blog.samaltman.com/posts.atom"/>
+      <outline text="Sebastian Raschka" title="Sebastian Raschka" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC_CzsS7UTjcxJ-xXp1ftxtA"/>
+    </outline>
+  </body>
+</opml>
