@@ -344,6 +344,8 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
         aria-label="Feeds"
         items={items}
         selectionMode="none"
+        // The rename input needs horizontal arrows for its text caret.
+        keyboardNavigationBehavior={editingCategoryId === null ? 'arrow' : 'tab'}
         // Typeahead would otherwise intercept keystrokes typed into the folder rename field
         // whenever they matched another row's leading letters, swallowing the keystroke and
         // shifting focus away from the input.
@@ -387,7 +389,9 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                       onFocus={(event) => event.stopPropagation()}
                       onChange={(event) => setEditingName(event.target.value)}
                       onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
+                        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                          event.stopPropagation();
+                        } else if (event.key === 'Enter') {
                           void submitRename(event.currentTarget.value);
                         } else if (event.key === 'Escape') {
                           cancelRename();

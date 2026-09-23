@@ -14,6 +14,7 @@ import { announce } from "@/lib/announcer";
 import { queryKeys, mergeRiverRows } from "@/lib/queries";
 import { getReaderNavigation } from "@/lib/reader/reader";
 import { useReaderContent } from "@/lib/reader/useReaderContent";
+import { isTypingTarget } from "@/lib/river/useRiverKeyboardNav";
 import { useAppliedRefreshVersion } from '@/lib/ipc-bridge';
 import { useRiverScope } from "@/lib/river/useRiverScope";
 import { useCategories, useFeeds, useReadState, useRiver } from "@/providers/feeds-provider";
@@ -104,6 +105,9 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
       return;
     }
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || isTypingTarget(event.target)) {
+        return;
+      }
       if (event.key === "Escape") {
         onNavigateHome();
       } else if (event.key === "j" && navigation.next) {
