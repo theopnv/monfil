@@ -1,17 +1,21 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
-import { getRefreshInterval, getRefreshOnLaunch } from '../settings';
+import { getRefreshInterval, getRefreshOnLaunch, getRetentionDays } from '../settings';
+import { pruneExpiredItems } from '../db/retention';
 import { refreshAllFeeds } from './refresh';
 import { rescheduleRefresh, startRefreshScheduler, stopRefreshScheduler } from './scheduler';
 import type { RefreshSummary } from '../../shared/contracts';
 
 vi.mock(import('./refresh'), () => ({ refreshAllFeeds: vi.fn() }));
-vi.mock(import('../settings'), () => ({ getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn() }));
+vi.mock(import('../settings'), () => ({ getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn(), getRetentionDays: vi.fn() }));
+vi.mock(import('../db/retention'), () => ({ pruneExpiredItems: vi.fn() }));
 vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedRefreshAllFeeds = vi.mocked(refreshAllFeeds);
 const mockedGetRefreshInterval = vi.mocked(getRefreshInterval);
 const mockedGetRefreshOnLaunch = vi.mocked(getRefreshOnLaunch);
+const mockedGetRetentionDays = vi.mocked(getRetentionDays);
+const mockedPruneExpiredItems = vi.mocked(pruneExpiredItems);
 const mockedBroadcast = vi.mocked(broadcastToRenderers);
 
 const MINUTE = 60 * 1000;
@@ -23,6 +27,8 @@ beforeEach(() => {
   mockedRefreshAllFeeds.mockResolvedValue(summary);
   mockedGetRefreshInterval.mockResolvedValue(15);
   mockedGetRefreshOnLaunch.mockResolvedValue(true);
+  mockedGetRetentionDays.mockResolvedValue(30);
+  mockedPruneExpiredItems.mockResolvedValue(0);
 });
 
 afterEach(() => {
@@ -31,10 +37,25 @@ afterEach(() => {
   mockedRefreshAllFeeds.mockReset();
   mockedGetRefreshInterval.mockReset();
   mockedGetRefreshOnLaunch.mockReset();
+  mockedGetRetentionDays.mockReset();
+  mockedPruneExpiredItems.mockReset();
   mockedBroadcast.mockReset();
 });
 
 describe('startRefreshScheduler', () => {
+  test('prunes stored items at launch without a refresh', async () => {
+    // Arrange
+    mockedGetRefreshOnLaunch.mockResolvedValue(false);
+    mockedPruneExpiredItems.mockResolvedValue(4);
+
+    // Act
+    await startRefreshScheduler();
+
+    // Assert
+    expect(mockedPruneExpiredItems).toHaveBeenCalledWith(30);
+    expect(mockedBroadcast).toHaveBeenCalledWith('feeds:refreshed', { perFeed: [], removed: 4, applyImmediately: true });
+  });
+
   test('refreshes once at launch and then on every period', async () => {
     // Act
     await startRefreshScheduler();

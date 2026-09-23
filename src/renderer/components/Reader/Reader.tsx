@@ -14,6 +14,7 @@ import { announce } from "@/lib/announcer";
 import { queryKeys, mergeRiverRows } from "@/lib/queries";
 import { getReaderNavigation } from "@/lib/reader/reader";
 import { useReaderContent } from "@/lib/reader/useReaderContent";
+import { useAppliedRefreshVersion } from '@/lib/ipc-bridge';
 import { useRiverScope } from "@/lib/river/useRiverScope";
 import { useCategories, useFeeds, useReadState, useRiver } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
@@ -45,7 +46,8 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
   const isRead = useCallback((candidateId: number) => !!riverItems.find((item) => item.id === candidateId)?.readAt, [riverItems]);
   const navigation = useMemo(() => getReaderNavigation(riverItems, id, isRead), [riverItems, id, isRead]);
   const readerHighlightedLinks = useMemo(() => new Set(currentItem ? [currentItem.feedLink] : []), [currentItem]);
-  const content = useReaderContent(currentItem);
+  const appliedRefreshVersion = useAppliedRefreshVersion();
+  const content = useReaderContent(currentItem, appliedRefreshVersion);
 
   const mergeRows = useCallback((rows: RiverPage['rows']) => {
     if (rows.length === 0) {

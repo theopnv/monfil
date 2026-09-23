@@ -1,6 +1,6 @@
 import { db, dbReady } from './db/database';
 import { querySettings } from './db/crud/query';
-import type { MaxFeedItems, RefreshInterval } from '../shared/contracts';
+import type { RefreshInterval, RetentionDays } from '../shared/contracts';
 
 export const REFRESH_INTERVALS: readonly RefreshInterval[] = [15, 30, 60, 360, 'manual'];
 
@@ -81,41 +81,23 @@ export async function setRefreshOnLaunch(value: boolean): Promise<void> {
     .execute();
 }
 
-export const MAX_FEED_ITEMS_OPTIONS: readonly MaxFeedItems[] = [10, 30, 50, 100];
+export const RETENTION_OPTIONS: readonly RetentionDays[] = [15, 30, 60, 90, 180];
+export const DEFAULT_RETENTION_DAYS: RetentionDays = 30;
+const RETENTION_KEY = 'retentionDays';
 
-export const DEFAULT_MAX_FEED_ITEMS: MaxFeedItems = 30;
-
-const MAX_FEED_ITEMS_KEY = 'maxFeedItems';
-
-/**
- * Narrows an untrusted value, such as a hand-edited database row or an IPC payload, to a supported item count.
- * @param value anything that is meant to be the max feed items preference
- * @returns the matching count, or `DEFAULT_MAX_FEED_ITEMS` when there is no match
- */
-export function toMaxFeedItems(value: unknown): MaxFeedItems {
+export function toRetentionDays(value: unknown): RetentionDays {
   const candidate = typeof value === 'string' ? Number(value) : value;
-  return MAX_FEED_ITEMS_OPTIONS.includes(candidate as MaxFeedItems)
-    ? candidate as MaxFeedItems
-    : DEFAULT_MAX_FEED_ITEMS;
+  return RETENTION_OPTIONS.includes(candidate as RetentionDays) ? candidate as RetentionDays : DEFAULT_RETENTION_DAYS;
 }
 
-/**
- * Reads how many items are kept per feed when it is fetched.
- * @returns the stored count, or `DEFAULT_MAX_FEED_ITEMS` when none is stored
- */
-export async function getMaxFeedItems(): Promise<MaxFeedItems> {
-  const [row] = await querySettings({ key: MAX_FEED_ITEMS_KEY });
-  return toMaxFeedItems(row?.value);
+export async function getRetentionDays(): Promise<RetentionDays> {
+  const [row] = await querySettings({ key: RETENTION_KEY });
+  return toRetentionDays(row?.value);
 }
 
-/**
- * Stores how many items are kept per feed when it is fetched.
- * @param value the item count to store
- */
-export async function setMaxFeedItems(value: MaxFeedItems): Promise<void> {
+export async function setRetentionDays(value: RetentionDays): Promise<void> {
   await dbReady;
-  await db.insertInto('setting')
-    .values({ key: MAX_FEED_ITEMS_KEY, value: String(value) })
+  await db.insertInto('setting').values({ key: RETENTION_KEY, value: String(toRetentionDays(value)) })
     .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
     .execute();
 }

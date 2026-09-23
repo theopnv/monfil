@@ -1,6 +1,7 @@
 import type { RefreshInterval } from '../../shared/contracts';
 import { logger } from '../logging/logger';
-import { getRefreshInterval, getRefreshOnLaunch } from '../settings';
+import { getRefreshInterval, getRefreshOnLaunch, getRetentionDays } from '../settings';
+import { pruneExpiredItems } from '../db/retention';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { refreshAllFeeds } from './refresh';
 
@@ -38,7 +39,11 @@ function armTimer(interval: RefreshInterval): void {
  * refresh-on-launch preference is off.
  */
 export async function startRefreshScheduler(): Promise<void> {
-  const [interval, onLaunch] = await Promise.all([getRefreshInterval(), getRefreshOnLaunch()]);
+  const [interval, onLaunch, retentionDays] = await Promise.all([getRefreshInterval(), getRefreshOnLaunch(), getRetentionDays()]);
+  const removed = await pruneExpiredItems(retentionDays);
+  if (removed > 0) {
+    broadcastToRenderers('feeds:refreshed', { perFeed: [], removed, applyImmediately: true });
+  }
   // The period counts from launch, so the timer is armed before the launch refresh rather than after it.
   armTimer(interval);
   if (onLaunch) {

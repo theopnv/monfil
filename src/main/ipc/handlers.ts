@@ -11,7 +11,7 @@ import { addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage
 import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from "../db/crud/delete";
 import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace } from "../db/crud/update";
 import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from "../db/crud/query";
-import { getDetailedLogging, getMaxFeedItems, getRefreshInterval, getRefreshOnLaunch, setDetailedLogging, setMaxFeedItems, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval } from "../settings";
+import { getDetailedLogging, getRefreshInterval, getRefreshOnLaunch, setDetailedLogging, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval } from "../settings";
 import { getAppInfo } from "../app-info";
 import { sendToRenderer } from "./sendToRenderer";
 import { openAndImportOpml } from "../opml/import";
@@ -41,7 +41,6 @@ import type {
   ImportSummary,
   InstallFeedpackError,
   ItemBody,
-  MaxFeedItems,
   MoveFeedError,
   NewFeedInput,
   ParsedSource,
@@ -61,9 +60,15 @@ import type { Result } from "../../shared/result";
 import { dbReady, dbStatus } from '../db/database';
 import type { StartupHealth } from '../../shared/contracts';
 import { setDetailedLogging as applyDetailedLogging } from '../logging/logger';
+import { getRetentionDays, setRetentionDays, toRetentionDays } from '../settings';
+import { retainedFetchedItems, pruneExpiredItems, retentionCutoff } from '../db/retention';
+import { broadcastToRenderers } from './sendToRenderer';
+import { backUpDatabase } from '../db/database';
+import { dialog } from 'electron';
+import type { RetentionDays } from '../../shared/contracts';
 
 export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource, FeedFetchError>> {
-  const result = await resolveSource(payload.query, payload.type).fetch({ link: payload.query, maxItems: await getMaxFeedItems() });
+  const result = await resolveSource(payload.query, payload.type).fetch({ link: payload.query });
   if (!result.success) {
     return result;
   }
@@ -86,7 +91,8 @@ export function handleItemsQuery(_event: IpcMainInvokeEvent, payload: RiverQuery
 }
 
 export async function handleFeedsSubmitAddFeed(event: IpcMainInvokeEvent, payload: NewFeedInput): Promise<Result<FeedSummary, AddFeedError>> {
-  const result = await addFeedToDatabase(payload);
+  const cutoff = retentionCutoff(await getRetentionDays());
+  const result = await addFeedToDatabase({ ...payload, items: retainedFetchedItems(payload.items, cutoff) }, cutoff);
   if (!result.success) {
     return result;
   }
@@ -239,13 +245,38 @@ export function handleAppGetInfo(): Promise<AppInfo> {
   return getAppInfo();
 }
 
-export function handleSettingsGetMaxFeedItems(): Promise<MaxFeedItems> {
-  return getMaxFeedItems();
+export function handleSettingsGetRetentionDays(): Promise<RetentionDays> {
+  return getRetentionDays();
 }
 
-export async function handleSettingsSetMaxFeedItems(_event: IpcMainInvokeEvent, payload: MaxFeedItems): Promise<MaxFeedItems> {
-  await setMaxFeedItems(payload);
-  return payload;
+export async function handleSettingsSetRetentionDays(_event: IpcMainInvokeEvent, payload: RetentionDays): Promise<RetentionDays> {
+  const days = toRetentionDays(payload);
+  const previous = await getRetentionDays();
+  await setRetentionDays(days);
+  const removed = await pruneExpiredItems(days);
+  if (days > previous) {
+    const refreshed = await refreshAllFeeds(true);
+    broadcastToRenderers('feeds:refreshed', { ...refreshed, removed: (refreshed.removed ?? 0) + removed, applyImmediately: true });
+  } else if (removed > 0) {
+    broadcastToRenderers('feeds:refreshed', { perFeed: [], removed, applyImmediately: true });
+  }
+  return days;
+}
+
+export async function handleAppBackUpDatabase(): Promise<Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string }>> {
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    defaultPath: `monfil-backup-${new Date().toISOString().slice(0, 10)}.db`,
+    filters: [{ name: 'SQLite database', extensions: ['db'] }],
+  });
+  if (canceled || !filePath) {
+    return { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } };
+  }
+  try {
+    await backUpDatabase(filePath);
+    return { success: true, data: undefined };
+  } catch (error) {
+    return { success: false, error: { name: 'BACKUP_FAILED', message: error instanceof Error ? error.message : String(error) } };
+  }
 }
 
 export async function handleAppGetStartupHealth(): Promise<StartupHealth> {

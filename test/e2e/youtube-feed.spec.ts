@@ -5,6 +5,8 @@ import path from 'node:path';
 import type { NewFeedInput } from '../../src/shared/contracts';
 import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
 
+const FIXTURE_PUB_DATE = new Date().toUTCString();
+
 type YoutubeFeedTestFixtures = {
   userDataDir: string;
   launchApp: () => Promise<Page>;
@@ -55,7 +57,7 @@ async function subscribeYoutube(page: Page): Promise<void> {
         title: 'A Video',
         guid: 'yt:video:abc123',
         link: 'https://www.youtube.com/watch?v=abc123',
-        pubDate: 'Mon, 01 Jan 2024 00:00:00 GMT',
+        pubDate: FIXTURE_PUB_DATE,
         description: VIDEO_DESCRIPTION,
         image: THUMBNAIL_URL,
         author: 'Local Channel',

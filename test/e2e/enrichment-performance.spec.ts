@@ -6,6 +6,8 @@ import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
 
+const FIXTURE_PUB_DATE = new Date().toUTCString();
+
 const FEED_COUNT = 40;
 const ITEMS_PER_FEED = 30;
 const QUERY_BUDGET_MS = 100;
@@ -14,7 +16,7 @@ const ARTICLE_RESPONSE_DELAY_MS = 1000;
 function rss(feedIndex: number, port: number): string {
   const items = Array.from({ length: ITEMS_PER_FEED }, (_, itemIndex) => {
     const link = `http://127.0.0.1:${port}/article/${feedIndex}/${itemIndex}`;
-    return `<item><title>Feed ${feedIndex} item ${itemIndex}</title><link>${link}</link><pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate><description>Article teaser</description></item>`;
+    return `<item><title>Feed ${feedIndex} item ${itemIndex}</title><link>${link}</link><pubDate>${FIXTURE_PUB_DATE}</pubDate><description>Article teaser</description></item>`;
   }).join('');
   return `<?xml version="1.0"?><rss version="2.0"><channel><title>Feed ${feedIndex}</title><description>Load test feed</description>${items}</channel></rss>`;
 }

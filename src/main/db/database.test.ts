@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, beforeEach } from 'vitest';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import SQLite from 'better-sqlite3';
@@ -23,7 +23,7 @@ describe('initializeDatabase', () => {
 
     // Assert
     expect(tables.map((table) => table.name).sort()).toEqual([
-      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'feedPlacement', 'setting', 'workspace',
+      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'feedPlacement', 'setting', 'undatedItem', 'workspace',
     ]);
   });
 
@@ -39,6 +39,7 @@ describe('initializeDatabase', () => {
     expect(columnsOf('feedMetadata')).toEqual(['etag', 'icon', 'id', 'last_error', 'last_fetched_at', 'last_modified', 'link', 'title', 'type']);
     expect(columnsOf('feedPlacement')).toEqual(['category_id', 'feed_id', 'showInWorkspace', 'workspace_id']);
     expect(columnsOf('feedItem')).toEqual(['author', 'description', 'excerpt', 'extra', 'feed_id', 'guid', 'id', 'image', 'link', 'pubDate', 'published_at', 'read_at', 'title']);
+    expect(columnsOf('undatedItem')).toEqual(['feed_id', 'first_fetched_at', 'guid']);
     expect(columnsOf('setting')).toEqual(['key', 'value']);
     expect(columnsOf('articleContent')).toEqual(['html', 'item_id', 'status', 'text', 'word_count']);
   });
@@ -87,6 +88,26 @@ describe('reopening an already-migrated file', () => {
 
     // Assert
     expect(categories.map((category) => category.name)).toEqual(['tech']);
+  });
+
+  test('creates a consistent backup before a pending migration', async () => {
+    // Arrange
+    await closeDatabase();
+    const old = new SQLite(filePath);
+    old.pragma('journal_mode = WAL');
+    old.exec("DROP INDEX feedItem_retention; DROP TABLE undatedItem; DELETE FROM kysely_migration WHERE name = '0007_item_retention'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
+
+    // Act
+    await initializeDatabase(filePath);
+    const backups = (await readdir(dir)).filter((name) => name.includes('.migration-'));
+    const backup = new SQLite(path.join(dir, backups[0] ?? ''), { readonly: true });
+
+    // Assert
+    expect(backups).toHaveLength(1);
+    expect(backup.prepare("SELECT value FROM setting WHERE key = 'wal-row'").get()).toEqual({ value: 'present' });
+    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0007_item_retention'").get()).toBeUndefined();
+    backup.close();
+    old.close();
   });
 });
 

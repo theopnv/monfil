@@ -2,7 +2,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { useReadState, useRiver } from './feeds-provider';
 import { useIpcBridge, usePendingRefreshCount } from '../lib/ipc-bridge';
 import { renderWithQueryClient } from '../lib/test/render-with-query-client';
-import { HOME_WORKSPACE_ID, type RiverPage, type RiverRow } from '../../shared/contracts';
+import { HOME_WORKSPACE_ID, type RefreshSummary, type RiverPage, type RiverRow } from '../../shared/contracts';
 
 let nextItemId = 1;
 
@@ -62,7 +62,7 @@ function IpcBridgeMount() {
 }
 
 let itemImageFetchedHandler: ((payload: { feedId: number; itemId: number; image: string }) => void) | undefined;
-let feedsRefreshedHandler: ((payload: { perFeed: { feedId: number; inserted: number }[] }) => void) | undefined;
+let feedsRefreshedHandler: ((payload: RefreshSummary) => void) | undefined;
 let invokeImpl: (channel: string, arg: unknown) => Promise<unknown>;
 
 beforeEach(() => {
@@ -145,6 +145,20 @@ test('a feeds:refreshed push raises the pending count without moving the river w
   // Assert
   await expect.element(getByText('3 new', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
+});
+
+test('publisher edits and removals raise the pending count', async () => {
+  // Arrange
+  const row = createRow({ title: 'Row A' });
+  invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [row] } satisfies RiverPage : []);
+  const { getByText } = await renderWithQueryClient(<><IpcBridgeMount /><PendingPill /><RiverRows /></>);
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
+
+  // Act
+  feedsRefreshedHandler?.({ perFeed: [{ feedId: 1, inserted: 0, updated: 2 }], removed: 1 });
+
+  // Assert
+  await expect.element(getByText('3 new', { exact: true })).toBeInTheDocument();
 });
 
 test('a feeds:refreshed push before the river has ever rendered raises no pill', async () => {

@@ -17,6 +17,7 @@ const mockedFetchFeed = vi.mocked(rssSource.fetch);
 const mockedFetchText = vi.mocked(fetchText);
 
 type NewItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>;
+const TEST_PUB_DATE = new Date().toISOString();
 
 function item(overrides: Partial<NewItem> = {}): NewItem {
   const link = 'link' in overrides ? overrides.link : 'https://a.example/1';
@@ -26,7 +27,7 @@ function item(overrides: Partial<NewItem> = {}): NewItem {
     // The parser falls back to the link, then to a digest, when a feed supplies no guid. Mirror that here.
     guid: link ?? `monfil:test:${title}`,
     link,
-    pubDate: '2024-01-01',
+    pubDate: TEST_PUB_DATE,
     description: '',
     image: undefined,
     author: undefined,
@@ -76,6 +77,21 @@ afterEach(async () => {
 });
 
 describe('refreshAllFeeds', () => {
+  test('reports publisher edits and removes expired unread items', async () => {
+    // Arrange
+    const link = 'https://a.example/feed';
+    const feedId = await storeFeed(link, [item({ guid: 'stable', title: 'Old' }), item({ guid: 'expired', title: 'Expired', pubDate: '2020-01-01' }), ...Array.from({ length: 10 }, (_, index) => item({ guid: `recent-${index}`, title: `Recent ${index}` }))]);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, [item({ guid: 'stable', title: 'Edited', link: 'https://a.example/edited' }), item({ guid: 'old-fetch', title: 'Old fetch', pubDate: '2020-01-01' })]) });
+
+    // Act
+    const summary = await refreshAllFeeds();
+
+    // Assert
+    expect(summary.perFeed).toContainEqual({ feedId, inserted: 0, updated: 1 });
+    expect(summary.removed).toBe(1);
+    expect(await storedTitles()).toEqual(['Edited', ...Array.from({ length: 10 }, (_, index) => `Recent ${index}`)]);
+  });
+
   test('stores the items published since the feed was added', async () => {
     // Arrange
     const link = 'https://a.example/feed';
@@ -94,6 +110,38 @@ describe('refreshAllFeeds', () => {
     // Assert
     expect(await storedTitles()).toEqual(['Old item', 'New item']);
     expect(summary.perFeed).toContainEqual({ feedId, inserted: 1 });
+  });
+
+  test('keeps ten old entries from a newly fetched quiet source', async () => {
+    // Arrange
+    const link = 'https://quiet.example/feed';
+    const feedId = await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, Array.from({ length: 12 }, (_, index) => item({ guid: `old-${index}`, link: `https://quiet.example/${index}`, pubDate: new Date(Date.now() - (365 + index) * 86400000).toISOString() }))) });
+
+    // Act
+    const summary = await refreshAllFeeds();
+
+    // Assert
+    expect(summary.perFeed).toContainEqual({ feedId, inserted: 10 });
+    expect(await db.selectFrom('feedItem').select('guid').execute()).toHaveLength(10);
+  });
+
+  test('keeps the first fetch date for an undated item', async () => {
+    // Arrange
+    const link = 'https://undated.example/feed';
+    const feedId = await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, [item({ guid: 'undated', pubDate: 'bad date' })]) });
+    const first = Date.parse('2026-01-01T00:00:00Z');
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(first);
+
+    // Act
+    await refreshAllFeeds();
+    clock.mockReturnValue(first + 86400000);
+    await refreshAllFeeds();
+
+    // Assert
+    const stored = await db.selectFrom('feedItem').selectAll().where('feed_id', '=', feedId).executeTakeFirstOrThrow();
+    expect(stored.published_at).toBe(first);
   });
 
   test('does not duplicate an item that is already stored', async () => {
@@ -167,9 +215,24 @@ describe('refreshAllFeeds', () => {
     const stored = await db.selectFrom('feedMetadata').selectAll().where('id', '=', feedId).executeTakeFirstOrThrow();
 
     // Assert
-    expect(mockedFetchFeed).toHaveBeenCalledWith({ link, maxItems: 30, validators: { etag: '"old"', last_modified: 'Mon, 01 Jan 2024 00:00:00 GMT' } });
+    expect(mockedFetchFeed).toHaveBeenCalledWith({ link, validators: { etag: '"old"', last_modified: 'Mon, 01 Jan 2024 00:00:00 GMT' } });
     expect(stored.etag).toBe('"new"');
     expect(stored.last_modified).toBeNull();
+  });
+
+  test('fetches the full source when retention increases', async () => {
+    // Arrange
+    const link = 'https://a.example/feed';
+    const feedId = await storeFeed(link);
+    await db.updateTable('feedMetadata').set({ etag: '"old"' }).where('id', '=', feedId).execute();
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, [item({ guid: 'history', pubDate: new Date(Date.now() - 45 * 86400000).toISOString() })]) });
+
+    // Act
+    const summary = await refreshAllFeeds(true);
+
+    // Assert
+    expect(mockedFetchFeed).toHaveBeenCalledWith({ link });
+    expect(summary.perFeed).toContainEqual({ feedId, inserted: 1 });
   });
 
   test('keeps the stored validators when refreshed items cannot be inserted', async () => {

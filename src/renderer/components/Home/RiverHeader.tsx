@@ -104,7 +104,7 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: R
               </div>
               {pendingRefreshCount > 0 && (
                 <Button color="primary" className="flex-none rounded-full" onPress={handlePendingClick}>
-                  {pendingRefreshCount} new
+                  {pendingRefreshCount} updates
                 </Button>
               )}
               <Button

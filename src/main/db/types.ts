@@ -15,6 +15,7 @@ export interface Database {
   feedMetadata: FeedMetadataTable
   feedPlacement: FeedPlacementTable
   feedItem: FeedItemTable
+  undatedItem: UndatedItemTable
   setting: SettingTable
   articleContent: ArticleContentTable
 }
@@ -99,7 +100,7 @@ export interface FeedItemTable {
   link: string | undefined;
   pubDate: string;
   description: string;
-  // Derived from `pubDate` on insert, since SQLite cannot parse RFC-822 in SQL. Epoch ms, `0` when unparseable.
+  // Derived from `pubDate` on insert, since SQLite cannot parse RFC-822 in SQL. Missing dates use the first fetch time.
   // `Generated`, like `showInWorkspace`: the DB default only matters for a row that bypasses `addFeedItemsToDatabase`.
   published_at: Generated<number>;
   // Derived from `description` on insert: plain text, truncated. Powers the river list without shipping the full body.
@@ -116,6 +117,15 @@ export interface FeedItemTable {
 export type FeedItem = Selectable<FeedItemTable>;
 export type NewFeedItem = Insertable<FeedItemTable>;
 export type UpdateFeedItem = Updateable<FeedItemTable>;
+
+export interface UndatedItemTable {
+  feed_id: number;
+  guid: string;
+  first_fetched_at: number;
+}
+
+export type UndatedItem = Selectable<UndatedItemTable>;
+export type NewUndatedItem = Insertable<UndatedItemTable>;
 
 // =============== Article Content ===============
 // Article content is the full text of a feed item, fetched and stored separately from the feed item itself.

@@ -7,7 +7,6 @@ export type NewSourceItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | '
 
 export interface SourceFetchInput {
   link: string;
-  maxItems?: number;
   /** Validators from the feed's previous fetch, replayed as conditional GET headers. */
   validators?: FetchValidators;
 }
@@ -26,5 +25,5 @@ export interface SourceAdapter {
   /** Retrieves and parses a subscription at `link`. */
   fetch(input: SourceFetchInput): Promise<Result<SourceFetchResult, FeedFetchError>>;
   /** Parses already-retrieved content, so callers can test the parse without the network. */
-  parse(content: string, maxItems?: number): { title: string; description: string; items: NewSourceItem[] } | null;
+  parse(content: string): { title: string; description: string; items: NewSourceItem[] } | null;
 }

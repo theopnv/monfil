@@ -35,6 +35,19 @@ describe('parseFeedContent', () => {
     </rss>
   `;
 
+  test('reads every item in a busy feed', () => {
+    // Arrange
+    const entries = Array.from({ length: 40 }, (_, index) => `<item><guid>item-${index}</guid><title>Item ${index}</title><pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate></item>`).join('');
+    const content = `<rss version="2.0"><channel><title>Busy feed</title>${entries}</channel></rss>`;
+
+    // Act
+    const result = parseFeedContent(content);
+
+    // Assert
+    expect(result?.items).toHaveLength(40);
+    expect(result?.items[39]?.guid).toBe('item-39');
+  });
+
   test('decodes literal entities left over from CDATA titles and descriptions', () => {
     // Some feeds (e.g. The Verge) wrap titles in CDATA but still entity-encode punctuation inside
     // it, so the XML parser leaves entities like "&#8217;" and "&#8230;" as literal text.
@@ -53,7 +66,7 @@ describe('parseFeedContent', () => {
       </rss>
     `;
 
-    const result = parseFeedContent(feedWithEncodedEntities, 30);
+    const result = parseFeedContent(feedWithEncodedEntities);
 
     expect(result?.title).toBe('Feed ’n stuff');
     expect(result?.description).toBe('A … feed');
@@ -62,8 +75,7 @@ describe('parseFeedContent', () => {
   });
 
   test('should return the feed title, description and items when format is rss', () => {
-    // A maxItems of 0 (the default) means "return zero items" per feedsmith's semantics, so pass an explicit limit here.
-    const result = parseFeedContent(validRssFeed, 30);
+    const result = parseFeedContent(validRssFeed);
     expect(result).toEqual({
       title: 'Test Feed',
       description: 'A feed for testing',
@@ -128,7 +140,7 @@ describe('parseFeedContent', () => {
   `;
 
   test('should return the feed title, description and items when format is atom', () => {
-    const result = parseFeedContent(validAtomFeed, 30);
+    const result = parseFeedContent(validAtomFeed);
     expect(result).toEqual({
       title: 'Test Feed',
       description: 'A feed for testing',
@@ -197,7 +209,7 @@ describe('parseFeedContent', () => {
   });
 
   test('should return the feed title, description and items when format is json', () => {
-    const result = parseFeedContent(validJsonFeed, 30);
+    const result = parseFeedContent(validJsonFeed);
     expect(result).toEqual({
       title: 'Test Feed',
       description: 'A feed for testing',
@@ -251,7 +263,7 @@ describe('parseFeedContent', () => {
   `;
 
   test('should return the feed title, description and items when format is rdf', () => {
-    const result = parseFeedContent(validRdfFeed, 30);
+    const result = parseFeedContent(validRdfFeed);
     expect(result).toEqual({
       title: 'Test Feed',
       description: 'A feed for testing',
@@ -285,7 +297,7 @@ describe('parseFeedContent', () => {
 
 describe('item identity', () => {
   function guidsOf(content: string): (string | undefined)[] {
-    return parseFeedContent(content, 30)?.items.map((item) => item.guid) ?? [];
+    return parseFeedContent(content)?.items.map((item) => item.guid) ?? [];
   }
 
   test('prefers the rss <guid> over the link', () => {
@@ -382,7 +394,7 @@ describe('author', () => {
     `;
 
     // Act
-    const result = parseFeedContent(content, 30);
+    const result = parseFeedContent(content);
 
     // Assert
     expect(result?.items[0]?.author).toBe('Ada Lovelace');
@@ -402,7 +414,7 @@ describe('author', () => {
     `;
 
     // Act
-    const result = parseFeedContent(content, 30);
+    const result = parseFeedContent(content);
 
     // Assert
     expect(result?.items[0]?.author).toBe('Ada Lovelace');
@@ -420,7 +432,7 @@ describe('author', () => {
     `;
 
     // Act
-    const result = parseFeedContent(content, 30);
+    const result = parseFeedContent(content);
 
     // Assert
     expect(result?.items[0]?.author).toBeUndefined();

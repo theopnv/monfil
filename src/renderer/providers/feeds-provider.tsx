@@ -9,6 +9,7 @@ import type { UpdateCategoryError, UpdateFeedError } from "../../shared/contract
 import type { Result } from "../../shared/result";
 import { categoriesQuery, feedsQuery, patchRiverRows, riverQuery, type RiverScope } from "../lib/queries";
 import { useActiveWorkspaceId } from "./workspace-provider";
+import { uiKeys } from '../lib/ipc-bridge';
 
 /** Every feed placed in the active workspace. */
 export const useFeeds = (): FeedSummary[] => {
@@ -157,6 +158,7 @@ export const useFeedsRefresh = (): FeedsRefresh => {
       // push only raises the pill (see `useIpcBridge`), so it never moves the river under the user.
       void queryClient.invalidateQueries({ queryKey: ['feeds'] });
       void queryClient.invalidateQueries({ queryKey: ['river'] });
+      queryClient.setQueryData<number>(uiKeys.appliedRefreshVersion, (version) => (version ?? 0) + 1);
       if (summary.failedFeedIds?.length) {
         const count = summary.failedFeedIds.length;
         notifyWarning(`${count} ${count === 1 ? 'feed' : 'feeds'} could not be refreshed.`, 'manual-refresh-failures');

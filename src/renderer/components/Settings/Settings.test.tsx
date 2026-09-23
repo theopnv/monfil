@@ -29,8 +29,9 @@ beforeEach(() => {
       case 'settings:get-refresh-on-launch': return Promise.resolve(true);
       case 'settings:set-refresh-interval': return Promise.resolve(60);
       case 'settings:set-refresh-on-launch': return Promise.resolve(false);
-      case 'settings:get-max-feed-items': return Promise.resolve(30);
-      case 'settings:set-max-feed-items': return Promise.resolve(100);
+      case 'settings:get-retention-days': return Promise.resolve(30);
+      case 'settings:set-retention-days': return Promise.resolve(90);
+      case 'app:back-up-database': return Promise.resolve({ success: true, data: undefined });
       case 'opml:import': return Promise.resolve({ success: true, data: { workspaceId: 2, imported: 1, skipped: [], failed: [] } });
       default: return Promise.resolve(undefined);
     }
@@ -118,16 +119,26 @@ test('choosing a refresh interval invokes settings:set-refresh-interval', async 
   expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set-refresh-interval', 60);
 });
 
-test('choosing items per feed invokes settings:set-max-feed-items', async () => {
+test('choosing retention saves the age limit', async () => {
   // Arrange
   const { getByRole } = await renderSettings();
-  await expect.element(getByRole('button', { name: '100' })).toBeInTheDocument();
 
   // Act
-  await getByRole('button', { name: '100' }).click();
+  await getByRole('button', { name: '90 days' }).click();
 
   // Assert
-  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set-max-feed-items', 100);
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set-retention-days', 90);
+});
+
+test('starts a database backup from Settings', async () => {
+  // Arrange
+  const { getByRole } = await renderSettings();
+
+  // Act
+  await getByRole('button', { name: 'Back up database…' }).click();
+
+  // Assert
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('app:back-up-database', undefined);
 });
 
 test('toggling "Refresh on launch" invokes settings:set-refresh-on-launch', async () => {
@@ -178,4 +189,3 @@ test('importing OPML merged into Home invokes opml:import with that target', asy
   await expect.element(getByRole('heading', { name: 'Import complete' })).toBeInTheDocument();
   expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('opml:import', { target: { kind: 'merge-workspace', workspaceId: HOME_WORKSPACE_ID } });
 });
-

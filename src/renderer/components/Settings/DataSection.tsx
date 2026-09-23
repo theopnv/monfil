@@ -23,6 +23,7 @@ function formatBytes(bytes: number): string {
 export default function DataSection() {
   const [info, setInfo] = useState<AppInfo | undefined>(undefined);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [backupMessage, setBackupMessage] = useState<string | undefined>();
 
   useEffect(() => {
     const load = () => {
@@ -54,6 +55,15 @@ export default function DataSection() {
       </div>
 
       <div className="flex gap-2.5">
+        <Button color="secondary" className="self-start" onPress={() => {
+          void ipc.invoke('app:back-up-database', undefined).then((result) => {
+            if (result.success) {
+              setBackupMessage('Database backup saved.');
+            } else if (result.error.name !== 'CANCELLED') {
+              setBackupMessage(`Backup failed: ${result.error.message}`);
+            }
+          }).catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Database backup failed:' }, error));
+        }}>Back up database…</Button>
         <Button
           color="secondary"
           iconLeading={Folder}
@@ -66,6 +76,7 @@ export default function DataSection() {
           Import OPML
         </Button>
       </div>
+      {backupMessage && <p role="status" className="text-sm text-secondary">{backupMessage}</p>}
 
       <ImportOpmlDialog isOpen={isImportOpen} onOpenChange={setIsImportOpen} />
     </SettingsSection>

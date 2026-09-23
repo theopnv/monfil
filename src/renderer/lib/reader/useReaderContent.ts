@@ -41,7 +41,7 @@ type BodyState =
  * for sources the registry marks as fetching full articles, the extracted article, in one call.
  * @param item the item to show, or `undefined` while it has not resolved yet
  */
-export function useReaderContent(item: RiverRow | undefined): ReaderContent {
+export function useReaderContent(item: RiverRow | undefined, refreshVersion = 0): ReaderContent {
   const [body, setBody] = useState<BodyState>({ state: 'loading' });
   const itemId = item?.id;
 
@@ -71,7 +71,7 @@ export function useReaderContent(item: RiverRow | undefined): ReaderContent {
     return () => {
       cancelled = true;
     };
-  }, [itemId]);
+  }, [itemId, item, refreshVersion]);
 
   const strategy = item ? STRATEGY_BY_TYPE[item.type] : undefined;
 

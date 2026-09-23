@@ -12,6 +12,7 @@ export const uiKeys = {
   exportWorkspaceRequestedId: ['ui', 'export-workspace-requested'] as const,
   deleteWorkspaceRequestedId: ['ui', 'delete-workspace-requested'] as const,
   pendingRefreshCount: ['ui', 'pending-refresh-count'] as const,
+  appliedRefreshVersion: ['ui', 'applied-refresh-version'] as const,
   feedpackRefreshing: (workspaceId: number) => ['ui', 'feedpack-refreshing', workspaceId] as const,
 };
 
@@ -33,10 +34,13 @@ export function useIpcBridge(): void {
       // pill anyway would leave it stuck on screen after that fetch already caught up on its own,
       // since the click has nothing left to do.
       ipc.on('feeds:refreshed', (summary) => {
-        const inserted = summary.perFeed.reduce((total, feed) => total + feed.inserted, 0);
+        const inserted = summary.perFeed.reduce((total, feed) => total + feed.inserted + (feed.updated ?? 0), summary.removed ?? 0);
         const hasRenderedRiver = queryClient.getQueriesData<InfiniteData<RiverPage>>({ queryKey: ['river'] })
           .some(([, data]) => data !== undefined);
-        if (inserted > 0 && hasRenderedRiver) {
+        if (summary.applyImmediately) {
+          queryClient.setQueryData<number>(uiKeys.appliedRefreshVersion, (version) => (version ?? 0) + 1);
+          void queryClient.invalidateQueries({ queryKey: ['river'] });
+        } else if (inserted > 0 && hasRenderedRiver) {
           queryClient.setQueryData<number>(uiKeys.pendingRefreshCount, (prev) => (prev ?? 0) + inserted);
         }
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });
@@ -102,7 +106,13 @@ export function useClearPendingRefreshCount(): () => void {
   const queryClient = useQueryClient();
   return useCallback(() => {
     queryClient.setQueryData(uiKeys.pendingRefreshCount, 0);
+    queryClient.setQueryData<number>(uiKeys.appliedRefreshVersion, (version) => (version ?? 0) + 1);
   }, [queryClient]);
+}
+
+export function useAppliedRefreshVersion(): number {
+  const { data } = useQuery({ queryKey: uiKeys.appliedRefreshVersion, queryFn: () => 0, initialData: 0, staleTime: Infinity, gcTime: Infinity });
+  return data;
 }
 
 export function useFeedpackRefreshing(workspaceId: number | undefined): boolean {

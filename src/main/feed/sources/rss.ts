@@ -2,7 +2,6 @@ import { parseFeed } from 'feedsmith';
 import { fetchConditional, fetchText } from '../../lib/fetch';
 import type { Result } from '../../../shared/result';
 import { extractAtomImageUrl, extractImageUrl, extractJsonImageUrl, extractRdfImageUrl } from '../extractImage';
-import { DEFAULT_MAX_FEED_ITEMS } from '../../settings';
 import { decodeOptional, decodeText, resolveGuid } from './text';
 import type { FeedFetchError } from '../../../shared/contracts';
 import type { NewSourceItem, SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
@@ -13,8 +12,8 @@ interface ParsedFeedContent {
   items: NewSourceItem[];
 }
 
-export function parseFeedContent(content: string, maxItems: number = 0): ParsedFeedContent | null {
-  const { format, feed } = parseFeed(content, { maxItems });
+export function parseFeedContent(content: string): ParsedFeedContent | null {
+  const { format, feed } = parseFeed(content);
   switch (format) {
     case 'rss':
       return {
@@ -114,7 +113,6 @@ export function parseFeedContent(content: string, maxItems: number = 0): ParsedF
 
 async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchResult, FeedFetchError>> {
   const normalizedLink = /^https?:\/\//i.test(input.link) ? input.link : `https://${input.link}`;
-  const maxItems = input.maxItems ?? DEFAULT_MAX_FEED_ITEMS;
   try {
     const result = input.validators
       ? await fetchConditional(normalizedLink, { validators: input.validators })
@@ -136,7 +134,7 @@ async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchRes
     if ('notModified' in result.data) {
       return { success: true, data: result.data };
     }
-    const parsed = parseFeedContent(result.data.body, maxItems);
+    const parsed = parseFeedContent(result.data.body);
     if (!parsed) {
       return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported feed." } };
     }
