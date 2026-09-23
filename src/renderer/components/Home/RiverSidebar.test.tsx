@@ -471,23 +471,22 @@ describe('folder context menu and rename', () => {
     const input = getByRole('textbox');
     await expect.element(input).toHaveValue('Tech');
     await input.click();
-    await input.evaluate((element) => {
-      (element as HTMLInputElement).setSelectionRange(1, 1);
-    });
+    const inputElement = input.element() as HTMLInputElement;
+    inputElement.setSelectionRange(1, 1);
 
     // Act
     await userEvent.keyboard('{ArrowLeft}');
 
     // Assert
-    await expect.poll(() => input.evaluate((element) => (element as HTMLInputElement).selectionStart)).toBe(0);
-    await expect.poll(() => input.evaluate((element) => document.activeElement === element)).toBe(true);
+    expect(inputElement.selectionStart).toBe(0);
+    expect(document.activeElement).toBe(inputElement);
 
     // Act
     await userEvent.keyboard('{ArrowRight}');
 
     // Assert
-    await expect.poll(() => input.evaluate((element) => (element as HTMLInputElement).selectionStart)).toBe(1);
-    await expect.poll(() => input.evaluate((element) => document.activeElement === element)).toBe(true);
+    expect(inputElement.selectionStart).toBe(1);
+    expect(document.activeElement).toBe(inputElement);
   });
 
   // A letter matching another row's own first letter used to be swallowed by GridList's keyboard
