@@ -14,6 +14,7 @@ interface Article {
 interface FeedServer {
   url: string;
   publish: (articles: Article[]) => void;
+  requests: () => { userAgent: string | undefined; ifNoneMatch: string | undefined }[];
 }
 
 type RefreshTestFixtures = {
@@ -32,16 +33,37 @@ function rss(articles: Article[]): string {
 const refreshTest = base.extend<RefreshTestFixtures>({
   feedServer: async ({}, use) => {
     let body = rss([]);
-    const server = createServer((_request, response) => {
-      response.writeHead(200, { 'Content-Type': 'application/rss+xml' });
+    let version = 0;
+    let etag = '"v0"';
+    const requests: { userAgent: string | undefined; ifNoneMatch: string | undefined }[] = [];
+    const server = createServer((request, response) => {
+      const userAgent = request.headers['user-agent'];
+      const ifNoneMatchHeader = request.headers['if-none-match'];
+      const ifNoneMatch = Array.isArray(ifNoneMatchHeader) ? ifNoneMatchHeader[0] : ifNoneMatchHeader;
+      requests.push({
+        userAgent: Array.isArray(userAgent) ? userAgent[0] : userAgent,
+        ifNoneMatch,
+      });
+      if (ifNoneMatch === etag) {
+        response.writeHead(304, { ETag: etag });
+        response.end();
+        return;
+      }
+      response.writeHead(200, { 'Content-Type': 'application/rss+xml', ETag: etag });
       response.end(body);
     });
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     const { port } = server.address() as AddressInfo;
     try {
-      await use({ url: `http://127.0.0.1:${port}/feed.xml`, publish: (articles) => {
-        body = rss(articles);
-      } });
+      await use({
+        url: `http://127.0.0.1:${port}/feed.xml`,
+        publish: (articles) => {
+          body = rss(articles);
+          version += 1;
+          etag = `"v${version}"`;
+        },
+        requests: () => [...requests],
+      });
     } finally {
       await new Promise<void>((resolve) => server.close(() => {
         resolve();
@@ -128,4 +150,23 @@ refreshTest('the refresh button picks up the items published while the app is op
 
   // Assert
   await expect(page.getByText('Second article', { exact: true })).toBeVisible();
+});
+
+refreshTest('uses Electron networking and accepts an unchanged feed response', async ({ feedServer, launchApp }) => {
+  // Arrange
+  feedServer.publish([{ title: 'Stable article', link: 'http://127.0.0.1/stable' }]);
+  const page = await launchApp();
+  await subscribe(page, feedServer.url);
+  await expect(page.getByText('Stable article', { exact: true })).toBeVisible();
+
+  // Act
+  const summary = await page.evaluate(() => window.electron.ipcRenderer.invoke('feeds:refresh', undefined));
+
+  // Assert
+  const requests = feedServer.requests();
+  expect(requests.every((request) => request.userAgent?.startsWith('monfil/'))).toBe(true);
+  expect(requests.some((request) => request.ifNoneMatch === undefined)).toBe(true);
+  expect(requests.some((request) => request.ifNoneMatch === '"v1"')).toBe(true);
+  expect(summary.perFeed).toContainEqual(expect.objectContaining({ inserted: 0 }));
+  expect(summary.failedFeedIds).toBeUndefined();
 });

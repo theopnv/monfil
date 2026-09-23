@@ -1,4 +1,4 @@
-import { fetchUrl } from '../lib/fetch';
+import { fetchText } from '../lib/fetch';
 import type { Feedpack, FeedpackError, FeedpackInstallTarget, FeedpackPreview, ImportOpmlTarget, ImportSummary, InstallFeedpackError } from '../../shared/contracts';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import type { Result } from '../../shared/result';
@@ -22,9 +22,9 @@ async function loadFeedpack(slug: string): Promise<Result<{ pack: Feedpack; xml:
       return { success: false, error: { name: 'FETCH_ERROR', message: `Could not read local ${pack.title}.` } };
     }
   }
-  const fetched = await fetchUrl(feedpackOpmlUrl(pack));
+  const fetched = await fetchText(feedpackOpmlUrl(pack));
   if (fetched.success) {
-    return { success: true, data: { pack, xml: fetched.data } };
+    return { success: true, data: { pack, xml: fetched.data.body } };
   }
   try {
     return { success: true, data: { pack, xml: await readBundledFeedpack(pack) } };

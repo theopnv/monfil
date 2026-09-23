@@ -1,7 +1,7 @@
 import { sql, type SelectQueryBuilder } from 'kysely';
-import { type ArticleContent, type Database, type FeedItem, type Setting } from '../types';
+import { type ArticleContent, type Database, type FeedItem, type FeedMetadataRow, type Setting } from '../types';
 import { db, dbReady } from '../database';
-import type { FeedCategory, FeedMetadata, FeedSummary, RiverPage, RiverQuery, RiverRow, Workspace, WorkspaceSummary } from '../../../shared/contracts';
+import type { FeedCategory, FeedSummary, RiverPage, RiverQuery, RiverRow, Workspace, WorkspaceSummary } from '../../../shared/contracts';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
 // Adding a new field to a table object and forgetting to add it here will result in a compilation error.
@@ -58,15 +58,17 @@ const feedMetadataHandlers = {
   last_fetched_at: (q, v) => q.where('last_fetched_at', '=', v),
   last_error: (q, v) => q.where('last_error', '=', v),
   icon: (q, v) => q.where('icon', '=', v),
-} satisfies CriteriaHandlers<'feedMetadata', FeedMetadata>;
+  etag: (q, v) => q.where('etag', '=', v),
+  last_modified: (q, v) => q.where('last_modified', '=', v),
+} satisfies CriteriaHandlers<'feedMetadata', FeedMetadataRow>;
 
-export async function queryFeedMetadata(criteria: Partial<FeedMetadata>): Promise<FeedMetadata[]> {
+export async function queryFeedMetadata(criteria: Partial<FeedMetadataRow>): Promise<FeedMetadataRow[]> {
   await dbReady;
   return applyCriteria(db.selectFrom('feedMetadata').selectAll(), criteria, feedMetadataHandlers).execute();
 }
 
 /** Every stored feed whose id is in `ids`, in no particular order. Used to refresh a specific batch (e.g. a freshly imported OPML) rather than every feed. */
-export async function queryFeedMetadataByIds(ids: number[]): Promise<FeedMetadata[]> {
+export async function queryFeedMetadataByIds(ids: number[]): Promise<FeedMetadataRow[]> {
   await dbReady;
   if (ids.length === 0) {
     return [];

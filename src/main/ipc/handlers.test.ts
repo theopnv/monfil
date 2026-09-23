@@ -1,17 +1,17 @@
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { db, initializeDatabase } from '../db/database';
 import { addFeedToDatabase, upsertArticleContent } from '../db/crud/insert';
-import { fetchUrl } from '../lib/fetch';
+import { fetchText } from '../lib/fetch';
 import { extractArticleInUtilityProcess } from '../feed/extractArticleUtility';
 import { handleItemsGetContent } from './handlers';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 import type { IpcMainInvokeEvent } from 'electron';
 import { HOME_WORKSPACE_ID, type SourceType } from '../../shared/contracts';
 
-vi.mock(import('../lib/fetch'), () => ({ fetchUrl: vi.fn() }));
+vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
 vi.mock(import('../feed/extractArticleUtility'), () => ({ extractArticleInUtilityProcess: vi.fn() }));
 
-const mockedFetchUrl = vi.mocked(fetchUrl);
+const mockedFetchText = vi.mocked(fetchText);
 const mockedExtractArticleInUtilityProcess = vi.mocked(extractArticleInUtilityProcess);
 const fakeEvent = {} as IpcMainInvokeEvent;
 
@@ -48,7 +48,7 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
-  mockedFetchUrl.mockReset();
+  mockedFetchText.mockReset();
   mockedExtractArticleInUtilityProcess.mockReset();
   await db.deleteFrom('articleContent').execute();
   await db.deleteFrom('feedItem').execute();
@@ -67,7 +67,7 @@ describe('handleItemsGetContent', () => {
 
     // Assert
     expect(result).toEqual({ description: '', article: { html: '<p>Stored</p>', wordCount: 1 } });
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('leaves out the article for a stored "failed" row without fetching again', async () => {
@@ -80,7 +80,7 @@ describe('handleItemsGetContent', () => {
 
     // Assert
     expect(result).toEqual({ description: '', article: undefined });
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('leaves out the article for a stored "too_short" row without fetching again', async () => {
@@ -93,20 +93,20 @@ describe('handleItemsGetContent', () => {
 
     // Assert
     expect(result).toEqual({ description: '', article: undefined });
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('a missing row fetches, extracts, stores and returns the article', async () => {
     // Arrange
     const itemId = await createItem('https://a.example/long-article');
-    mockedFetchUrl.mockResolvedValue({ success: true, data: ARTICLE_PAGE_HTML });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: ARTICLE_PAGE_HTML, validators: { etag: undefined, last_modified: undefined } } });
     mockedExtractArticleInUtilityProcess.mockResolvedValue({ html: '<p>Full article</p>', text: PARAGRAPH, wordCount: 80 });
 
     // Act
     const result = await handleItemsGetContent(fakeEvent, itemId);
 
     // Assert
-    expect(mockedFetchUrl).toHaveBeenCalledWith('https://a.example/long-article', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+    expect(mockedFetchText).toHaveBeenCalledWith('https://a.example/long-article', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
     expect(mockedExtractArticleInUtilityProcess).toHaveBeenCalledWith(ARTICLE_PAGE_HTML, 'https://a.example/long-article');
     expect(result.article).toEqual({ html: '<p>Full article</p>', wordCount: 80 });
     const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
@@ -117,7 +117,7 @@ describe('handleItemsGetContent', () => {
   test('a fetch failure stores a "failed" row and leaves out the article', async () => {
     // Arrange
     const itemId = await createItem('https://a.example/article');
-    mockedFetchUrl.mockResolvedValue({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
+    mockedFetchText.mockResolvedValue({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
 
     // Act
     const result = await handleItemsGetContent(fakeEvent, itemId);
@@ -138,7 +138,7 @@ describe('handleItemsGetContent', () => {
 
     // Assert
     expect(result).toEqual({ description: 'Fallback text', article: undefined });
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('an unknown item id returns an empty body without fetching', async () => {
@@ -147,7 +147,7 @@ describe('handleItemsGetContent', () => {
 
     // Assert
     expect(result).toEqual({ description: '', article: undefined });
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('a source that does not fetch full articles skips extraction entirely', async () => {
@@ -159,6 +159,6 @@ describe('handleItemsGetContent', () => {
 
     // Assert
     expect(result).toEqual({ description: 'Video description', article: undefined });
-    expect(mockedFetchUrl).not.toHaveBeenCalled();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 });

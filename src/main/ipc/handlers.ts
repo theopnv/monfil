@@ -6,7 +6,7 @@ import { extractArticleInUtilityProcess } from '../feed/extractArticleUtility';
 import { resolveSource, sourceFor } from "../feed/sources/registry";
 import { refreshAllFeeds } from "../feed/refresh";
 import { rescheduleRefresh } from "../feed/scheduler";
-import { fetchUrl } from "../lib/fetch";
+import { fetchText } from "../lib/fetch";
 import { addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent } from "../db/crud/insert";
 import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from "../db/crud/delete";
 import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace } from "../db/crud/update";
@@ -63,7 +63,14 @@ import type { StartupHealth } from '../../shared/contracts';
 import { setDetailedLogging as applyDetailedLogging } from '../logging/logger';
 
 export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource, FeedFetchError>> {
-  return resolveSource(payload.query, payload.type).fetch(payload.query, await getMaxFeedItems());
+  const result = await resolveSource(payload.query, payload.type).fetch({ link: payload.query, maxItems: await getMaxFeedItems() });
+  if (!result.success) {
+    return result;
+  }
+  if ('notModified' in result.data) {
+    return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: 'The feed did not change since it was last fetched.' } };
+  }
+  return { success: true, data: result.data.parsed };
 }
 
 export function handleFeedsListCategories(_event: IpcMainInvokeEvent, payload: { workspaceId: number }): Promise<FeedCategory[]> {
@@ -201,11 +208,11 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
     return { description: item.description, article: undefined };
   }
 
-  const fetched = await fetchUrl(item.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+  const fetched = await fetchText(item.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
   let article;
   if (fetched.success) {
     try {
-      article = await extractArticleInUtilityProcess(fetched.data, item.link);
+      article = await extractArticleInUtilityProcess(fetched.data.body, item.link);
     } catch (error) {
       logger.error('operation.failure', { operation: 'extract-article', entityId: itemId }, error);
     }

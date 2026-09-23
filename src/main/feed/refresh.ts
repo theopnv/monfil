@@ -2,20 +2,20 @@ import { db, dbReady } from '../db/database';
 import { logger } from '../logging/logger';
 import { addFeedItemsToDatabase, updateFeedItemImage } from '../db/crud/insert';
 import { queryFeedMetadata, queryFeedMetadataByIds } from '../db/crud/query';
-import type { FeedItem } from '../db/types';
+import type { FeedItem, FeedMetadataRow } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
 import { sourceFor } from './sources/registry';
 import { setFeedFetchResult } from '../db/crud/update';
-import type { FeedMetadata, RefreshSummary, SourceType } from '../../shared/contracts';
+import type { RefreshSummary, SourceType } from '../../shared/contracts';
 import { runWithConcurrency } from '../lib/utils';
 import { FEED_FETCH_CONCURRENCY } from '../constants';
 import { getMaxFeedItems } from '../settings';
 
 const ENRICHMENT_BUDGET = 200;
 
-async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<{ items: FeedItem[]; failed: boolean }> {
-  const result = await sourceFor(feed.type).fetch(feed.link, maxItems);
+async function refreshOneFeed(feed: FeedMetadataRow, maxItems: number): Promise<{ items: FeedItem[]; failed: boolean }> {
+  const result = await sourceFor(feed.type).fetch({ link: feed.link, maxItems, validators: { etag: feed.etag ?? undefined, last_modified: feed.last_modified ?? undefined } });
   if (!result.success) {
     logger.warn('feed.refresh', { outcome: 'failed', feedId: feed.id, errorCode: result.error.name }, result.error);
     const updated = await setFeedFetchResult(feed.id, { last_error: result.error.message });
@@ -24,20 +24,37 @@ async function refreshOneFeed(feed: FeedMetadata, maxItems: number): Promise<{ i
     }
     return { items: [], failed: true };
   }
-  const updated = await setFeedFetchResult(feed.id, { last_error: null });
-  if (!updated.success) {
-    logger.error('operation.failure', { operation: 'clear-refresh-failure', entityId: feed.id }, updated.error);
+
+  // A 304 keeps the stored validators as-is; a full fetch replaces them with the ones the server
+  // just sent, which may be none.
+  const outcome = result.data;
+  if ('notModified' in outcome) {
+    const updated = await setFeedFetchResult(feed.id, { last_error: null });
+    if (!updated.success) {
+      logger.error('operation.failure', { operation: 'clear-refresh-failure', entityId: feed.id }, updated.error);
+    }
+    return { items: [], failed: false };
   }
 
-  const inserted = await addFeedItemsToDatabase(db, feed.id, result.data.items);
+  const inserted = await addFeedItemsToDatabase(db, feed.id, outcome.parsed.items);
   if (!inserted.success) {
     logger.error('operation.failure', { operation: 'store-refreshed-items', entityId: feed.id }, inserted.error);
     return { items: [], failed: true };
   }
+
+  // Advance validators only after the response items are stored, so a 304 cannot hide an insert failure.
+  const updated = await setFeedFetchResult(feed.id, {
+    last_error: null,
+    etag: outcome.validators.etag ?? null,
+    last_modified: outcome.validators.last_modified ?? null,
+  });
+  if (!updated.success) {
+    logger.error('operation.failure', { operation: 'clear-refresh-failure', entityId: feed.id }, updated.error);
+  }
   return { items: inserted.data, failed: false };
 }
 
-async function refreshFeedList(feedList: FeedMetadata[], maxItems: number): Promise<RefreshSummary> {
+async function refreshFeedList(feedList: FeedMetadataRow[], maxItems: number): Promise<RefreshSummary> {
   const insertedByFeedId = new Map<number, FeedItem[]>();
   const failedFeedIds: number[] = [];
 
@@ -98,12 +115,16 @@ async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedIt
     }
     const candidates = items.slice(0, remaining);
     remaining -= candidates.length;
-    await enrichItems(
-      candidates,
-      (itemId, image) => {
-        void updateFeedItemImage(itemId, image);
-        broadcastToRenderers('feeds:item-image-fetched', { feedId, itemId, image });
-      },
-    );
+    try {
+      await enrichItems(
+        candidates,
+        (itemId, image) => {
+          void updateFeedItemImage(itemId, image);
+          broadcastToRenderers('feeds:item-image-fetched', { feedId, itemId, image });
+        },
+      );
+    } catch (error) {
+      logger.error('operation.failure', { operation: 'enrich-feed-images', entityId: feedId }, error);
+    }
   }
 }

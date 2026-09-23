@@ -1,6 +1,6 @@
 import type { FeedItem } from '../db/types';
 import { runWithConcurrency } from '../lib/utils';
-import { fetchUrl } from '../lib/fetch';
+import { fetchText } from '../lib/fetch';
 import { extractOgImageUrl } from './extractOgImage';
 import { ENRICHMENT_CONCURRENCY, ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 
@@ -48,11 +48,11 @@ export async function enrichItems(
   await runWithConcurrency(toCandidates(items), ENRICHMENT_CONCURRENCY, async (candidate) => {
     const previous = previousByHost.get(candidate.host) ?? Promise.resolve();
     const current = previous.then(async () => {
-      const result = await fetchUrl(candidate.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+      const result = await fetchText(candidate.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
       if (!result.success) {
         return;
       }
-      const image = extractOgImageUrl(result.data);
+      const image = extractOgImageUrl(result.data.body);
       if (image) {
         onImageFound(candidate.id, image);
       }

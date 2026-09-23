@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { parseFeedContent, rssSource } from './rss';
-import { fetchUrl } from '../../lib/fetch';
+import { fetchText } from '../../lib/fetch';
 
 vi.mock(import('../../lib/fetch'), () => ({
-  fetchUrl: vi.fn(),
+  fetchText: vi.fn(),
 }));
 
-const mockedFetchUrl = vi.mocked(fetchUrl);
+const mockedFetchText = vi.mocked(fetchText);
 const fetchFeed = rssSource.fetch;
 const SYNTHETIC_GUID = expect.stringMatching(/^monfil:hash:[0-9a-f]{40}$/) as unknown as string;
 
@@ -444,7 +444,7 @@ describe('fetchFeed', () => {
   `;
 
   afterEach(() => {
-    mockedFetchUrl.mockReset();
+    mockedFetchText.mockReset();
   });
 
   const validAtomFeed = `
@@ -461,110 +461,134 @@ describe('fetchFeed', () => {
   `;
 
   test('returns the link, title, description and items on success for rss', async () => {
-    mockedFetchUrl.mockResolvedValue({ success: true, data: validRssFeed });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: validRssFeed, validators: { etag: undefined, last_modified: undefined } } });
 
-    const result = await fetchFeed('https://example.com/feed');
+    const result = await fetchFeed({ link: 'https://example.com/feed' });
 
     expect(result).toEqual({
       success: true,
       data: {
-        type: 'rss',
-        link: 'https://example.com/feed',
-        title: 'Test Feed',
-        description: 'A feed for testing',
-        items: [
-          {
-            title: 'Item 1',
-            guid: 'http://example.com/item1',
-            link: 'http://example.com/item1',
-            pubDate: 'Mon, 01 Jan 2024 00:00:00 GMT',
-            description: 'Item 1 description'
-          }
-        ]
+        validators: { etag: undefined, last_modified: undefined },
+        parsed: {
+          type: 'rss',
+          link: 'https://example.com/feed',
+          title: 'Test Feed',
+          description: 'A feed for testing',
+          items: [
+            {
+              title: 'Item 1',
+              guid: 'http://example.com/item1',
+              link: 'http://example.com/item1',
+              pubDate: 'Mon, 01 Jan 2024 00:00:00 GMT',
+              description: 'Item 1 description'
+            }
+          ]
+        }
       }
     });
   });
 
   test('returns the link, title, description and items on success for atom', async () => {
-    mockedFetchUrl.mockResolvedValue({ success: true, data: validAtomFeed });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: validAtomFeed, validators: { etag: undefined, last_modified: undefined } } });
 
-    const result = await fetchFeed('https://example.com/feed');
+    const result = await fetchFeed({ link: 'https://example.com/feed' });
 
     expect(result).toEqual({
       success: true,
       data: {
-        type: 'rss',
-        link: 'https://example.com/feed',
-        title: 'Test Feed',
-        description: 'A feed for testing',
-        items: [
-          {
-            title: 'Item 1',
-            guid: 'http://example.com/item1',
-            link: 'http://example.com/item1',
-            pubDate: '2024-01-01T00:00:00Z',
-            description: 'Item 1 description'
-          }
-        ]
+        validators: { etag: undefined, last_modified: undefined },
+        parsed: {
+          type: 'rss',
+          link: 'https://example.com/feed',
+          title: 'Test Feed',
+          description: 'A feed for testing',
+          items: [
+            {
+              title: 'Item 1',
+              guid: 'http://example.com/item1',
+              link: 'http://example.com/item1',
+              pubDate: '2024-01-01T00:00:00Z',
+              description: 'Item 1 description'
+            }
+          ]
+        }
       }
     });
   });
 
   test('returns PARSE_ERROR when the content is not a recognized feed', async () => {
-    mockedFetchUrl.mockResolvedValue({ success: true, data: '<html><body>Not a feed</body></html>' });
+    // Arrange
+    mockedFetchText.mockResolvedValue({
+      success: true,
+      data: {
+        body: '<html><body>Not a feed</body></html>',
+        validators: { etag: undefined, last_modified: undefined },
+      },
+    });
 
-    const result = await fetchFeed('https://example.com/feed');
+    // Act
+    const result = await fetchFeed({ link: 'https://example.com/feed' });
 
+    // Assert
     expect(result).toEqual({ success: false, error: { name: 'PARSE_ERROR', message: 'Unrecognized feed format' } });
   });
 
   test('returns the link, title, description and items on success for json feed', async () => {
-    mockedFetchUrl.mockResolvedValue({
+    // Arrange
+    mockedFetchText.mockResolvedValue({
       success: true,
-      data: JSON.stringify({
-        version: 'https://jsonfeed.org/version/1.1',
-        title: 'Test Feed',
-        description: 'A feed for testing',
-        items: [{ id: '1', url: 'https://example.com/items/1', title: 'Item 1', content_text: 'Item 1 text', date_published: '2024-01-01T00:00:00Z' }],
-      }),
+      data: {
+        body: JSON.stringify({
+          version: 'https://jsonfeed.org/version/1.1',
+          title: 'Test Feed',
+          description: 'A feed for testing',
+          items: [{ id: '1', url: 'https://example.com/items/1', title: 'Item 1', content_text: 'Item 1 text', date_published: '2024-01-01T00:00:00Z' }],
+        }),
+        validators: { etag: undefined, last_modified: undefined },
+      },
     });
 
-    const result = await fetchFeed('https://example.com/feed');
+    // Act
+    const result = await fetchFeed({ link: 'https://example.com/feed' });
 
+    // Assert
     expect(result).toEqual({
       success: true,
       data: {
-        type: 'rss',
-        link: 'https://example.com/feed',
-        title: 'Test Feed',
-        description: 'A feed for testing',
-        items: [
-          {
-            title: 'Item 1',
-            guid: '1',
-            link: 'https://example.com/items/1',
-            pubDate: '2024-01-01T00:00:00Z',
-            description: 'Item 1 text'
-          }
-        ]
-      }
+        validators: { etag: undefined, last_modified: undefined },
+        parsed: {
+          type: 'rss',
+          link: 'https://example.com/feed',
+          title: 'Test Feed',
+          description: 'A feed for testing',
+          items: [
+            {
+              title: 'Item 1',
+              guid: '1',
+              link: 'https://example.com/items/1',
+              pubDate: '2024-01-01T00:00:00Z',
+              description: 'Item 1 text',
+            },
+          ],
+        },
+      },
     });
   });
 
-  test('passes through a fetchUrl failure', async () => {
-    mockedFetchUrl.mockResolvedValue({ success: false, error: { name: 'NETWORK_ERROR', message: 'boom' } });
+  test('passes through a fetchText failure', async () => {
+    mockedFetchText.mockResolvedValue({ success: false, error: { name: 'NETWORK_ERROR', message: 'boom' } });
 
-    const result = await fetchFeed('https://example.com/feed');
+    const result = await fetchFeed({ link: 'https://example.com/feed' });
 
     expect(result).toEqual({ success: false, error: { name: 'NETWORK_ERROR', message: 'boom' } });
   });
 
   test('normalizes a bare domain to an https url', async () => {
-    mockedFetchUrl.mockResolvedValue({ success: true, data: validRssFeed });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: validRssFeed, validators: { etag: undefined, last_modified: undefined } } });
 
-    const result = await fetchFeed('example.com/feed');
+    const result = await fetchFeed({ link: 'example.com/feed' });
 
-    expect(mockedFetchUrl).toHaveBeenCalledWith('https://example.com/feed');
-    expect(result).toEqual({ success: true, data: expect.objectContaining({ link: 'https://example.com/feed' }) });
+    expect(mockedFetchText).toHaveBeenCalledWith('https://example.com/feed');
+    expect(result).toEqual({ success: true, data: expect.objectContaining({ parsed: expect.objectContaining({ link: 'https://example.com/feed' }) }) });
   });
 });
