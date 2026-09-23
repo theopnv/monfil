@@ -10,7 +10,7 @@ export type FeedType = SourceType | undefined;
 
 const KINDS: { id: FeedType; label: string }[] = [
   { id: undefined, label: "Anything" },
-  { id: "rss", label: "RSS · Atom" },
+  { id: "rss", label: "RSS" },
   { id: "youtube", label: "YouTube" },
 ];
 

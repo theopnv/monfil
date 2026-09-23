@@ -1,7 +1,7 @@
 import { parseFeed } from 'feedsmith';
 import { fetchConditional, fetchText } from '../../lib/fetch';
 import type { Result } from '../../../shared/result';
-import { extractAtomImageUrl, extractImageUrl } from '../extractImage';
+import { extractAtomImageUrl, extractImageUrl, extractJsonImageUrl, extractRdfImageUrl } from '../extractImage';
 import { DEFAULT_MAX_FEED_ITEMS } from '../../settings';
 import { decodeOptional, decodeText, resolveGuid } from './text';
 import type { FeedFetchError } from '../../../shared/contracts';
@@ -62,8 +62,49 @@ export function parseFeedContent(content: string, maxItems: number = 0): ParsedF
           : [],
       };
     case 'rdf':
+      return {
+        title: decodeText(feed.title ?? ''),
+        description: decodeText(feed.description ?? ''),
+        items: feed.items
+          ? feed.items.map(item => {
+            const title = decodeText(item.title ?? 'No title');
+            const pubDate = item.dc?.dates?.[0] ?? 'No publication date';
+            return {
+              title,
+              guid: resolveGuid(item.rdf?.about, item.link, title, pubDate),
+              link: item.link,
+              pubDate,
+              description: decodeText(item.description ?? ''),
+              image: extractRdfImageUrl(item),
+              author: decodeOptional(item.dc?.creators?.[0]),
+              extra: undefined,
+              read_at: undefined,
+            };
+          })
+          : [],
+      };
     case 'json':
-      return null;
+      return {
+        title: decodeText(feed.title ?? ''),
+        description: decodeText(feed.description ?? ''),
+        items: feed.items
+          ? feed.items.map(item => {
+            const title = decodeText(item.title ?? 'No title');
+            const pubDate = item.date_published ?? 'No publication date';
+            return {
+              title,
+              guid: resolveGuid(item.id, item.url, title, pubDate),
+              link: item.url,
+              pubDate,
+              description: decodeText(item.content_html ?? item.content_text ?? item.summary ?? ''),
+              image: extractJsonImageUrl(item),
+              author: decodeOptional(item.authors?.[0]?.name),
+              extra: undefined,
+              read_at: undefined,
+            };
+          })
+          : [],
+      };
     default: {
       const exhaustiveCheck: never = format;
       return exhaustiveCheck;
@@ -97,7 +138,7 @@ async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchRes
     }
     const parsed = parseFeedContent(result.data.body, maxItems);
     if (!parsed) {
-      return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported RSS or Atom feed." } };
+      return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported feed." } };
     }
     return {
       success: true,

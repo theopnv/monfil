@@ -50,6 +50,10 @@ runs:
     - run: npm ci
       shell: bash
 
+    - name: Install Electron binary
+      run: node node_modules/electron/install.js
+      shell: bash
+
     - name: Install Playwright browsers
       if: inputs.playwright == 'true'
       run: npx playwright install

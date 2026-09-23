@@ -11,12 +11,6 @@ const fetchFeed = rssSource.fetch;
 const SYNTHETIC_GUID = expect.stringMatching(/^monfil:hash:[0-9a-f]{40}$/) as unknown as string;
 
 describe('parseFeedContent', () => {
-  test('should be null for an unsupported format like json feed', () => {
-    const content = JSON.stringify({ version: 'https://jsonfeed.org/version/1.1', title: 'JSON Feed', items: [] });
-    const result = parseFeedContent(content);
-    expect(result).toBeNull();
-  })
-
   const validRssFeed = `
     <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
       <channel>
@@ -168,6 +162,118 @@ describe('parseFeedContent', () => {
           pubDate: '2024-01-03T00:00:00Z',
           description: '<p>intro</p><img src="http://example.com/item3-thumb.jpg">',
           image: 'http://example.com/item3-thumb.jpg',
+          author: undefined,
+          extra: undefined,
+          read_at: undefined,
+        }
+      ]
+    });
+  });
+
+  const validJsonFeed = JSON.stringify({
+    version: 'https://jsonfeed.org/version/1.1',
+    title: 'Test Feed',
+    home_page_url: 'https://example.com',
+    description: 'A feed for testing',
+    items: [
+      {
+        id: 'https://example.com/items/1',
+        url: 'https://example.com/items/1',
+        title: 'Item 1',
+        content_html: '<p>Item 1 content</p><img src="https://example.com/item1.jpg">',
+        summary: 'Item 1 summary',
+        date_published: '2024-01-01T00:00:00Z',
+        authors: [{ name: 'Ada Lovelace' }],
+      },
+      {
+        id: '2',
+        url: 'https://example.com/items/2',
+        title: 'Item 2',
+        content_text: 'Item 2 plain text',
+        date_published: '2024-01-02T00:00:00Z',
+        image: 'https://example.com/item2.jpg',
+      },
+    ],
+  });
+
+  test('should return the feed title, description and items when format is json', () => {
+    const result = parseFeedContent(validJsonFeed, 30);
+    expect(result).toEqual({
+      title: 'Test Feed',
+      description: 'A feed for testing',
+      items: [
+        {
+          title: 'Item 1',
+          guid: 'https://example.com/items/1',
+          link: 'https://example.com/items/1',
+          pubDate: '2024-01-01T00:00:00Z',
+          description: '<p>Item 1 content</p><img src="https://example.com/item1.jpg">',
+          image: 'https://example.com/item1.jpg',
+          author: 'Ada Lovelace',
+          extra: undefined,
+          read_at: undefined,
+        },
+        {
+          title: 'Item 2',
+          guid: '2',
+          link: 'https://example.com/items/2',
+          pubDate: '2024-01-02T00:00:00Z',
+          description: 'Item 2 plain text',
+          image: 'https://example.com/item2.jpg',
+          author: undefined,
+          extra: undefined,
+          read_at: undefined,
+        }
+      ]
+    });
+  });
+
+  const validRdfFeed = `
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://purl.org/rss/1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <channel rdf:about="http://example.com">
+        <title>Test Feed</title>
+        <link>http://example.com</link>
+        <description>A feed for testing</description>
+      </channel>
+      <item rdf:about="http://example.com/item1">
+        <title>Item 1</title>
+        <link>http://example.com/item1</link>
+        <description>Item 1 description</description>
+        <dc:creator>Ada Lovelace</dc:creator>
+        <dc:date>2024-01-01T00:00:00Z</dc:date>
+      </item>
+      <item rdf:about="http://example.com/item2">
+        <title>Item 2</title>
+        <link>http://example.com/item2</link>
+        <dc:date>2024-01-02T00:00:00Z</dc:date>
+      </item>
+    </rdf:RDF>
+  `;
+
+  test('should return the feed title, description and items when format is rdf', () => {
+    const result = parseFeedContent(validRdfFeed, 30);
+    expect(result).toEqual({
+      title: 'Test Feed',
+      description: 'A feed for testing',
+      items: [
+        {
+          title: 'Item 1',
+          guid: 'http://example.com/item1',
+          link: 'http://example.com/item1',
+          pubDate: '2024-01-01T00:00:00Z',
+          description: 'Item 1 description',
+          image: undefined,
+          author: 'Ada Lovelace',
+          extra: undefined,
+          read_at: undefined,
+        },
+        {
+          title: 'Item 2',
+          guid: 'http://example.com/item2',
+          link: 'http://example.com/item2',
+          pubDate: '2024-01-02T00:00:00Z',
+          description: '',
+          image: undefined,
           author: undefined,
           extra: undefined,
           read_at: undefined,
@@ -410,12 +516,63 @@ describe('fetchFeed', () => {
     });
   });
 
-  test('returns UNSUPPORTED_FORMAT when the content is not a recognized rss or atom feed', async () => {
-    mockedFetchText.mockResolvedValue({ success: true, data: { body: JSON.stringify({ version: 'https://jsonfeed.org/version/1.1', title: 'JSON Feed', items: [] }), validators: { etag: undefined, last_modified: undefined } } });
+  test('returns PARSE_ERROR when the content is not a recognized feed', async () => {
+    // Arrange
+    mockedFetchText.mockResolvedValue({
+      success: true,
+      data: {
+        body: '<html><body>Not a feed</body></html>',
+        validators: { etag: undefined, last_modified: undefined },
+      },
+    });
 
+    // Act
     const result = await fetchFeed({ link: 'https://example.com/feed' });
 
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: expect.any(String) } });
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'PARSE_ERROR', message: 'Unrecognized feed format' } });
+  });
+
+  test('returns the link, title, description and items on success for json feed', async () => {
+    // Arrange
+    mockedFetchText.mockResolvedValue({
+      success: true,
+      data: {
+        body: JSON.stringify({
+          version: 'https://jsonfeed.org/version/1.1',
+          title: 'Test Feed',
+          description: 'A feed for testing',
+          items: [{ id: '1', url: 'https://example.com/items/1', title: 'Item 1', content_text: 'Item 1 text', date_published: '2024-01-01T00:00:00Z' }],
+        }),
+        validators: { etag: undefined, last_modified: undefined },
+      },
+    });
+
+    // Act
+    const result = await fetchFeed({ link: 'https://example.com/feed' });
+
+    // Assert
+    expect(result).toEqual({
+      success: true,
+      data: {
+        validators: { etag: undefined, last_modified: undefined },
+        parsed: {
+          type: 'rss',
+          link: 'https://example.com/feed',
+          title: 'Test Feed',
+          description: 'A feed for testing',
+          items: [
+            {
+              title: 'Item 1',
+              guid: '1',
+              link: 'https://example.com/items/1',
+              pubDate: '2024-01-01T00:00:00Z',
+              description: 'Item 1 text',
+            },
+          ],
+        },
+      },
+    });
   });
 
   test('passes through a fetchText failure', async () => {
