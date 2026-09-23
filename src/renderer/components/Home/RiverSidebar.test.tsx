@@ -463,6 +463,32 @@ describe('folder context menu and rename', () => {
     await expect.element(getByRole('textbox')).toHaveValue('TechX');
   });
 
+  test('left and right arrows move the caret in the rename field', async () => {
+    // Arrange
+    stubElectron({ feeds: [feedA] });
+    const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
+    renameCategoryRequestedHandler?.(feedA.category.id);
+    const input = getByRole('textbox');
+    await expect.element(input).toHaveValue('Tech');
+    await input.click();
+    const inputElement = input.element() as HTMLInputElement;
+    inputElement.setSelectionRange(1, 1);
+
+    // Act
+    await userEvent.keyboard('{ArrowLeft}');
+
+    // Assert
+    expect(inputElement.selectionStart).toBe(0);
+    expect(document.activeElement).toBe(inputElement);
+
+    // Act
+    await userEvent.keyboard('{ArrowRight}');
+
+    // Assert
+    expect(inputElement.selectionStart).toBe(1);
+    expect(document.activeElement).toBe(inputElement);
+  });
+
   // A letter matching another row's own first letter used to be swallowed by GridList's keyboard
   // typeahead (which also lives on 't', 's', ... depending on what's in the collection) instead of
   // reaching the input: see doc/frontend.md's React Aria collections note.

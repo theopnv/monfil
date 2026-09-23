@@ -4,10 +4,11 @@ import { userEvent } from 'vitest/browser';
 import { PreferencesProvider } from '@/providers/preferences-provider';
 import { SearchProvider } from '@/providers/search-provider';
 import { RiverScopeProvider } from '@/providers/river-scope-provider';
+import { useIpcBridge } from '@/lib/ipc-bridge';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import Reader from './Reader';
 import type { ReaderProps } from './Reader';
-import { HOME_WORKSPACE_ID, type FeedSummary, type ItemBody, type RiverPage, type RiverQuery, type RiverRow } from '../../../shared/contracts';
+import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary, type ItemBody, type RiverPage, type RiverQuery, type RiverRow } from '../../../shared/contracts';
 
 let nextFeedId = 1;
 let nextItemId = 1;
@@ -91,17 +92,25 @@ function setUpThreeItemRiver() {
   const itemC = createRow(feedB, { title: 'Oldest item', publishedAt: 1 });
   allFeeds = [feedA, feedB];
   allRows = [itemA, itemB, itemC];
-  return { itemA, itemB, itemC };
+  return { itemA, itemB, itemC, feedA };
 }
 
 function Session({ children }: PropsWithChildren) {
   return (
     <SearchProvider>
       <RiverScopeProvider>
-        <PreferencesProvider>{children}</PreferencesProvider>
+        <PreferencesProvider>
+          <IpcBridgeMount />
+          {children}
+        </PreferencesProvider>
       </RiverScopeProvider>
     </SearchProvider>
   );
+}
+
+function IpcBridgeMount() {
+  useIpcBridge();
+  return null;
 }
 
 function renderReader(props: ReaderProps) {
@@ -109,6 +118,7 @@ function renderReader(props: ReaderProps) {
 }
 
 let invokeMock: ReturnType<typeof vi.fn>;
+let renameCategoryRequestedHandler: ((categoryId: number) => void) | undefined;
 
 beforeEach(() => {
   localStorage.clear();
@@ -118,11 +128,17 @@ beforeEach(() => {
   allRows = [];
   descriptionsById = new Map();
   itemBodyOverride = undefined;
+  renameCategoryRequestedHandler = undefined;
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
       case 'feeds:list':
         return Promise.resolve(allFeeds);
+      case 'feeds:list-categories': {
+        const categories = new Map<number, FeedCategory>();
+        allFeeds.forEach((feed) => categories.set(feed.category.id, feed.category));
+        return Promise.resolve([...categories.values()]);
+      }
       case 'items:query':
         return Promise.resolve(computeRiverPage(arg as RiverQuery));
       case 'items:get-content': {
@@ -145,7 +161,12 @@ beforeEach(() => {
   window.electron = {
     ipcRenderer: {
       invoke: invokeMock,
-      on: vi.fn(() => vi.fn()),
+      on: vi.fn((channel: string, handler: (payload: never) => void) => {
+        if (channel === 'feeds:rename-category-requested') {
+          renameCategoryRequestedHandler = handler as (categoryId: number) => void;
+        }
+        return vi.fn();
+      }),
       sendMessage: vi.fn(),
       once: vi.fn(),
     },
@@ -240,6 +261,48 @@ test('pressing j and k navigates to the next and previous neighbor', async () =>
 
   // Assert
   expect(onNavigateToItem).toHaveBeenCalledWith(itemA.id);
+});
+
+test('Reader shortcuts ignore modifier keys', async () => {
+  // Arrange
+  const { itemB } = setUpThreeItemRiver();
+  const onNavigateToItem = vi.fn();
+  const onNavigateHome = vi.fn();
+  const { getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem, onNavigateHome });
+  await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
+
+  // Act
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j', ctrlKey: true, bubbles: true }));
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }));
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', altKey: true, bubbles: true }));
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', shiftKey: true, bubbles: true }));
+
+  // Assert
+  expect(onNavigateHome).not.toHaveBeenCalled();
+  expect(onNavigateToItem).not.toHaveBeenCalled();
+});
+
+test('typing in the category rename field does not trigger Reader shortcuts', async () => {
+  // Arrange
+  const { itemB, feedA } = setUpThreeItemRiver();
+  const onNavigateToItem = vi.fn();
+  const onNavigateHome = vi.fn();
+  const { getByRole, getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem, onNavigateHome });
+  await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
+  await expect.element(getByRole('button', { name: 'Tech', exact: true })).toBeInTheDocument();
+  await vi.waitFor(() => expect(renameCategoryRequestedHandler).toBeDefined());
+
+  // Act
+  renameCategoryRequestedHandler?.(feedA.category.id);
+  const renameInput = getByRole('textbox', { name: 'Rename Tech' });
+  await expect.element(renameInput).toHaveValue('Tech');
+  await userEvent.clear(renameInput);
+  await userEvent.type(renameInput, 'junk');
+
+  // Assert
+  expect(onNavigateToItem).not.toHaveBeenCalled();
+  await userEvent.keyboard('{Escape}');
+  expect(onNavigateHome).not.toHaveBeenCalled();
 });
 
 test('disabling the keyboard navigation preference turns off Escape, j and k', async () => {

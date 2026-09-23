@@ -1,6 +1,6 @@
 import { useEffect, type RefObject } from 'react';
 
-function isTypingTarget(target: EventTarget | null): boolean {
+export function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
   }
