@@ -182,8 +182,21 @@ function channelFeedXml(feedLevelChannelId?: string): string {
 }
 
 describe('parseFeedContent', () => {
+  test('reads every entry in a busy feed', () => {
+    // Arrange
+    const entries = Array.from({ length: 40 }, (_, index) => `<entry><id>video-${index}</id><title>Video ${index}</title><published>2024-01-01T00:00:00Z</published></entry>`).join('');
+    const content = `<feed xmlns="http://www.w3.org/2005/Atom"><title>Busy channel</title>${entries}</feed>`;
+
+    // Act
+    const result = parseFeedContent(content);
+
+    // Assert
+    expect(result?.items).toHaveLength(40);
+    expect(result?.items[39]?.guid).toBe('video-39');
+  });
+
   test('maps description, thumbnail, guid and extra from an entry', () => {
-    const result = parseFeedContent(channelFeedXml(), 30);
+    const result = parseFeedContent(channelFeedXml());
 
     expect(result?.title).toBe('Underscore_');
     expect(result?.description).toBe('Channel feed');
@@ -201,7 +214,7 @@ describe('parseFeedContent', () => {
   });
 
   test('gives an entry with no media:group an empty description and extra', () => {
-    const result = parseFeedContent(channelFeedXml(), 30);
+    const result = parseFeedContent(channelFeedXml());
 
     expect(result?.items[1]).toEqual({
       title: 'No Media Entry',

@@ -1,28 +1,29 @@
 import { db, dbReady } from '../db/database';
 import { logger } from '../logging/logger';
-import { addFeedItemsToDatabase, updateFeedItemImage } from '../db/crud/insert';
+import { syncFeedItemsToDatabase, updateFeedItemImage } from '../db/crud/insert';
 import { queryFeedMetadata, queryFeedMetadataByIds } from '../db/crud/query';
 import type { FeedItem, FeedMetadataRow } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
 import { sourceFor } from './sources/registry';
 import { setFeedFetchResult } from '../db/crud/update';
-import type { RefreshSummary, SourceType } from '../../shared/contracts';
+import type { RefreshSummary, RetentionDays, SourceType } from '../../shared/contracts';
 import { runWithConcurrency } from '../lib/utils';
 import { FEED_FETCH_CONCURRENCY } from '../constants';
-import { getMaxFeedItems } from '../settings';
+import { getRetentionDays } from '../settings';
+import { pruneExpiredItems, retentionCutoff } from '../db/retention';
 
 const ENRICHMENT_BUDGET = 200;
 
-async function refreshOneFeed(feed: FeedMetadataRow, maxItems: number): Promise<{ items: FeedItem[]; failed: boolean }> {
-  const result = await sourceFor(feed.type).fetch({ link: feed.link, maxItems, validators: { etag: feed.etag ?? undefined, last_modified: feed.last_modified ?? undefined } });
+async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: boolean): Promise<{ items: FeedItem[]; updated: number; failed: boolean }> {
+  const result = await sourceFor(feed.type).fetch({ link: feed.link, ...(force ? {} : { validators: { etag: feed.etag ?? undefined, last_modified: feed.last_modified ?? undefined } }) });
   if (!result.success) {
     logger.warn('feed.refresh', { outcome: 'failed', feedId: feed.id, errorCode: result.error.name }, result.error);
     const updated = await setFeedFetchResult(feed.id, { last_error: result.error.message });
     if (!updated.success) {
       logger.error('operation.failure', { operation: 'store-refresh-failure', entityId: feed.id }, updated.error);
     }
-    return { items: [], failed: true };
+    return { items: [], updated: 0, failed: true };
   }
 
   // A 304 keeps the stored validators as-is; a full fetch replaces them with the ones the server
@@ -33,13 +34,13 @@ async function refreshOneFeed(feed: FeedMetadataRow, maxItems: number): Promise<
     if (!updated.success) {
       logger.error('operation.failure', { operation: 'clear-refresh-failure', entityId: feed.id }, updated.error);
     }
-    return { items: [], failed: false };
+    return { items: [], updated: 0, failed: false };
   }
 
-  const inserted = await addFeedItemsToDatabase(db, feed.id, outcome.parsed.items);
+  const inserted = await syncFeedItemsToDatabase(db, feed.id, outcome.parsed.items, cutoff);
   if (!inserted.success) {
     logger.error('operation.failure', { operation: 'store-refreshed-items', entityId: feed.id }, inserted.error);
-    return { items: [], failed: true };
+    return { items: [], updated: 0, failed: true };
   }
 
   // Advance validators only after the response items are stored, so a 304 cannot hide an insert failure.
@@ -51,20 +52,25 @@ async function refreshOneFeed(feed: FeedMetadataRow, maxItems: number): Promise<
   if (!updated.success) {
     logger.error('operation.failure', { operation: 'clear-refresh-failure', entityId: feed.id }, updated.error);
   }
-  return { items: inserted.data, failed: false };
+  return { items: inserted.data.inserted, updated: inserted.data.updated, failed: false };
 }
 
-async function refreshFeedList(feedList: FeedMetadataRow[], maxItems: number): Promise<RefreshSummary> {
+async function refreshFeedList(feedList: FeedMetadataRow[], retentionDays: RetentionDays, force = false): Promise<RefreshSummary> {
   const insertedByFeedId = new Map<number, FeedItem[]>();
+  const updatedByFeedId = new Map<number, number>();
   const failedFeedIds: number[] = [];
+  const cutoff = retentionCutoff(retentionDays);
 
   await runWithConcurrency(feedList, FEED_FETCH_CONCURRENCY, async (feed) => {
-    const result = await refreshOneFeed(feed, maxItems);
+    const result = await refreshOneFeed(feed, cutoff, force);
     insertedByFeedId.set(feed.id, result.items);
+    updatedByFeedId.set(feed.id, result.updated);
     if (result.failed) {
       failedFeedIds.push(feed.id);
     }
   });
+
+  const removed = await pruneExpiredItems(retentionDays);
 
   const typeByFeedId = new Map(feedList.map((feed) => [feed.id, feed.type]));
 
@@ -74,20 +80,24 @@ async function refreshFeedList(feedList: FeedMetadataRow[], maxItems: number): P
   });
 
   return {
-    perFeed: [...insertedByFeedId.entries()].map(([feedId, items]) => ({ feedId, inserted: items.length })),
+    perFeed: [...insertedByFeedId.entries()].map(([feedId, items]) => {
+      const updated = updatedByFeedId.get(feedId) ?? 0;
+      return { feedId, inserted: items.length, ...(updated > 0 ? { updated } : {}) };
+    }),
+    ...(removed > 0 ? { removed } : {}),
     ...(failedFeedIds.length > 0 ? { failedFeedIds } : {}),
   };
 }
 
 /**
- * Fetches every stored feed and inserts the items that are not stored yet. Nothing is updated or deleted.
+ * Fetches every stored feed and synchronizes publisher changes and retained history.
  * A feed that fails to fetch is logged and skipped, so the others still get their items.
  * @returns how many items each feed gained, so the renderer can show a pill without receiving the rows themselves
  */
-export async function refreshAllFeeds(): Promise<RefreshSummary> {
+export async function refreshAllFeeds(force = false): Promise<RefreshSummary> {
   await dbReady;
-  const [feedList, maxItems] = await Promise.all([queryFeedMetadata({}), getMaxFeedItems()]);
-  return refreshFeedList(feedList, maxItems);
+  const [feedList, retentionDays] = await Promise.all([queryFeedMetadata({}), getRetentionDays()]);
+  return refreshFeedList(feedList, retentionDays, force);
 }
 
 /**
@@ -100,8 +110,8 @@ export async function refreshFeeds(feedIds: number[]): Promise<RefreshSummary> {
     return { perFeed: [] };
   }
   await dbReady;
-  const [feedList, maxItems] = await Promise.all([queryFeedMetadataByIds(feedIds), getMaxFeedItems()]);
-  return refreshFeedList(feedList, maxItems);
+  const [feedList, retentionDays] = await Promise.all([queryFeedMetadataByIds(feedIds), getRetentionDays()]);
+  return refreshFeedList(feedList, retentionDays);
 }
 
 async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedItem[]>, typeByFeedId: ReadonlyMap<number, SourceType>): Promise<void> {

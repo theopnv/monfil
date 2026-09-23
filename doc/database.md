@@ -34,6 +34,8 @@ Add a migration by creating `000X_description.ts` next to `index.ts` and adding 
 
 `0002_feed_icon` adds a nullable `icon` text column to `feedMetadata`: a remote URL for a feed's own picture (a YouTube channel avatar, for instance), left `undefined` for a feed whose adapter has none to offer. Existing rows are not retyped or backfilled.
 
+Before each pending migration of an existing database, Monfil writes a consistent `VACUUM INTO` copy beside the database. It keeps the two newest migration copies. A failed copy stops the migration. Settings also offers a manual backup to a file chosen by the user. On quit, Monfil checkpoints the WAL before closing the database.
+
 ## Tests
 
 Unit tests import the same `db` singleton that the app uses. There is no fixture database. Call `initializeDatabase(':memory:')` in `beforeAll` to migrate a fresh in-memory database before using `db`. Delete the rows in `afterEach` so each test starts clean, and delete children before parents to respect the foreign keys.

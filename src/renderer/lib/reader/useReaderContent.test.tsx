@@ -22,8 +22,8 @@ function createItem(overrides: Partial<RiverRow> = {}): RiverRow {
   };
 }
 
-function Probe({ item }: { item: RiverRow | undefined }) {
-  const content = useReaderContent(item);
+function Probe({ item, refreshVersion = 0 }: { item: RiverRow | undefined; refreshVersion?: number }) {
+  const content = useReaderContent(item, refreshVersion);
   return (
     <div>
       <span data-testid="html">{content.html}</span>
@@ -50,6 +50,20 @@ beforeEach(() => {
 });
 
 describe('useReaderContent', () => {
+  test('an applied refresh reloads an open item', async () => {
+    // Arrange
+    const item = createItem();
+    invokeMock.mockResolvedValueOnce({ description: 'Old', article: undefined }).mockResolvedValueOnce({ description: 'Edited', article: undefined });
+    const screen = await render(<Probe item={item} />);
+    await expect.element(screen.getByTestId('html')).toHaveTextContent('Old');
+
+    // Act
+    await screen.rerender(<Probe item={item} refreshVersion={1} />);
+
+    // Assert
+    await expect.element(screen.getByTestId('html')).toHaveTextContent('Edited');
+  });
+
   test('an rss item shows the raw description while the fetched article is loading', async () => {
     // Arrange
     invokeMock.mockReturnValue(new Promise(() => { }));

@@ -6,6 +6,8 @@ import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { HOME_WORKSPACE_ID, type SourceType } from '../../src/shared/contracts';
 
+const FIXTURE_PUB_DATE = new Date().toUTCString();
+
 interface Article {
   title: string;
   link: string;
@@ -25,7 +27,7 @@ type RefreshTestFixtures = {
 
 function rss(articles: Article[]): string {
   const items = articles
-    .map((article) => `<item><title>${article.title}</title><link>${article.link}</link><pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate><description>An article</description></item>`)
+    .map((article) => `<item><title>${article.title}</title><link>${article.link}</link><pubDate>${FIXTURE_PUB_DATE}</pubDate><description>An article</description></item>`)
     .join('');
   return `<?xml version="1.0"?><rss version="2.0"><channel><title>Local feed</title><description>A local feed</description>${items}</channel></rss>`;
 }

@@ -1,7 +1,6 @@
 import { parseFeed } from 'feedsmith';
 import { fetchConditional, fetchText, type FetchedText } from '../../lib/fetch';
 import type { Result } from '../../../shared/result';
-import { DEFAULT_MAX_FEED_ITEMS } from '../../settings';
 import { decodeOptional, decodeText, resolveGuid } from './text';
 import type { FeedFetchError, FetchUrlError } from '../../../shared/contracts';
 import type { NewSourceItem, SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
@@ -255,8 +254,8 @@ interface ParsedYoutubeFeedContent {
   items: NewSourceItem[];
 }
 
-export function parseFeedContent(content: string, maxItems: number = 0): ParsedYoutubeFeedContent | null {
-  const { format, feed } = parseFeed(content, { maxItems });
+export function parseFeedContent(content: string): ParsedYoutubeFeedContent | null {
+  const { format, feed } = parseFeed(content);
   if (format !== 'atom') {
     return null;
   }
@@ -291,7 +290,6 @@ export function parseFeedContent(content: string, maxItems: number = 0): ParsedY
 }
 
 async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchResult, FeedFetchError>> {
-  const maxItems = input.maxItems ?? DEFAULT_MAX_FEED_ITEMS;
   try {
     const target = parseYoutubeInput(input.link, true);
     if (!target) {
@@ -317,7 +315,7 @@ async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchRes
       return { success: true, data: feedResult.data };
     }
 
-    const parsed = parseFeedContent(feedResult.data.body, maxItems);
+    const parsed = parseFeedContent(feedResult.data.body);
     if (!parsed) {
       return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel feed." } };
     }

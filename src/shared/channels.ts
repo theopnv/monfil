@@ -20,12 +20,12 @@ import type {
   ImportSummary,
   InstallFeedpackError,
   ItemBody,
-  MaxFeedItems,
   MoveFeedError,
   NewFeedInput,
   ParsedSource,
   RefreshInterval,
   RefreshSummary,
+  RetentionDays,
   RiverPage,
   RiverQuery,
   SourceType,
@@ -93,8 +93,9 @@ export type TwoWayRendererMainChannelPayloads = {
   'items:get-content': ItemBody;
   'settings:get-refresh-on-launch': boolean;
   'settings:set-refresh-on-launch': boolean;
-  'settings:get-max-feed-items': MaxFeedItems;
-  'settings:set-max-feed-items': MaxFeedItems;
+  'settings:get-retention-days': RetentionDays;
+  'settings:set-retention-days': RetentionDays;
+  'app:back-up-database': Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string }>;
   'app:get-info': AppInfo;
   'app:get-startup-health': StartupHealth;
   'settings:get-detailed-logging': boolean;
@@ -133,8 +134,9 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'items:get-content': number;
   'settings:get-refresh-on-launch': undefined;
   'settings:set-refresh-on-launch': boolean;
-  'settings:get-max-feed-items': undefined;
-  'settings:set-max-feed-items': MaxFeedItems;
+  'settings:get-retention-days': undefined;
+  'settings:set-retention-days': RetentionDays;
+  'app:back-up-database': undefined;
   'app:get-info': undefined;
   'app:get-startup-health': undefined;
   'settings:get-detailed-logging': undefined;

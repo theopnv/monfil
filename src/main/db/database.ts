@@ -6,12 +6,15 @@ import { Kysely, SqliteDialect } from 'kysely'
 import { Migrator } from 'kysely/migration'
 import { migrationProvider } from './migrations/index.ts'
 import { withCorruptionRecovery } from './recovery.ts'
+import { backUpBeforeMigration, createBackup } from './backup.ts'
+import { renameSync, rmSync } from 'node:fs';
 
 // Populated by initializeDatabase().
 // Every consumer's contract is "await dbReady, then use db", so nothing reads these before initializeDatabase has run.
 export let db!: Kysely<Database>;
 export let dbReady!: Promise<void>;
 export let dbFilePath!: string;
+let sqliteConnection: SQLite.Database | undefined;
 
 export type DatabaseStatus =
   | { name: 'OK' }
@@ -47,6 +50,17 @@ async function openAndMigrate(filePath: string): Promise<void> {
   }
 
   db = new Kysely<Database>({ dialect: new SqliteDialect({ database: sqlite }) });
+  sqliteConnection = sqlite;
+
+  let pendingMigrations: string[] = [];
+  if (filePath !== ':memory:') {
+    const migrationTable = sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'kysely_migration'").get();
+    if (migrationTable) {
+      const applied = new Set((sqlite.prepare('SELECT name FROM kysely_migration').all() as { name: string }[]).map((row) => row.name));
+      const available = await migrationProvider.getMigrations();
+      pendingMigrations = Object.keys(available).filter((name) => !applied.has(name)).sort();
+    }
+  }
 
   // A migration that rebuilds a table (an in-place ALTER cannot drop a column carrying a REFERENCES
   // constraint, or change a unique constraint) does so with DROP TABLE, which fires the parent's
@@ -56,17 +70,21 @@ async function openAndMigrate(filePath: string): Promise<void> {
   sqlite.pragma('foreign_keys = OFF');
 
   const migrator = new Migrator({ db, provider: migrationProvider });
-  const { error, results } = await migrator.migrateToLatest();
-
-  results?.forEach((result) => {
-    if (result.status === 'Error') {
-      logger.error('operation.failure', { operation: 'database-migration' });
+  const targets = pendingMigrations.length > 0 ? pendingMigrations : [undefined];
+  for (const target of targets) {
+    if (target) {
+      backUpBeforeMigration(sqlite, filePath);
     }
-  });
-
-  if (error) {
-    sqlite.pragma('foreign_keys = ON');
-    throw error instanceof Error ? error : new Error(String(error));
+    const { error, results } = target ? await migrator.migrateTo(target) : await migrator.migrateToLatest();
+    results?.forEach((result) => {
+      if (result.status === 'Error') {
+        logger.error('operation.failure', { operation: 'database-migration' });
+      }
+    });
+    if (error) {
+      sqlite.pragma('foreign_keys = ON');
+      throw error instanceof Error ? error : new Error(String(error));
+    }
   }
 
   const brokenForeignKeys = sqlite.pragma('foreign_key_check') as unknown[];
@@ -82,13 +100,50 @@ export function initializeDatabase(filePath: string): Promise<void> {
     .then((quarantinePath) => {
       dbStatus = quarantinePath ? { name: 'RESET', quarantinePath, incidentId: createIncidentId() } : { name: 'OK' };
     })
-    .catch((error: unknown) => {
+    .catch(async (error: unknown) => {
       dbStatus = { name: 'FAILED', message: error instanceof Error ? error.message : String(error), incidentId: createIncidentId() };
+      if (sqliteConnection?.open) {
+        await db.destroy();
+        sqliteConnection = undefined;
+      }
       throw error;
     });
   return dbReady;
 }
 
 export async function closeDatabase(): Promise<void> {
+  if (sqliteConnection?.open && dbFilePath !== ':memory:') {
+    try {
+      sqliteConnection.pragma('wal_checkpoint(TRUNCATE)');
+    } catch (error) {
+      logger.error('operation.failure', { operation: 'database-wal-checkpoint' }, error);
+    }
+  }
   await db.destroy();
+  sqliteConnection = undefined;
+}
+
+export async function backUpDatabase(destination: string): Promise<void> {
+  await dbReady;
+  if (!sqliteConnection) {
+    throw new Error('Database is closed');
+  }
+  const temporary = `${destination}.partial-${process.hrtime.bigint()}`;
+  try {
+    createBackup(sqliteConnection, temporary);
+    renameSync(temporary, destination);
+  } catch (error) {
+    rmSync(temporary, { force: true });
+    throw error;
+  }
+}
+
+export function vacuumDatabase(): void {
+  if (!sqliteConnection) {
+    return;
+  }
+  sqliteConnection.exec('VACUUM');
+  if (dbFilePath !== ':memory:') {
+    sqliteConnection.pragma('wal_checkpoint(TRUNCATE)');
+  }
 }

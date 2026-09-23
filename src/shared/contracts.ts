@@ -4,7 +4,7 @@ export const HOME_WORKSPACE_ID = 1;
 
 export type SourceType = 'rss' | 'youtube';
 export type RefreshInterval = 15 | 30 | 60 | 360 | 'manual';
-export type MaxFeedItems = 10 | 30 | 50 | 100;
+export type RetentionDays = 15 | 30 | 60 | 90 | 180;
 
 export type StartupHealth =
   | { name: 'OK' }
@@ -154,7 +154,9 @@ export interface RiverPage {
 }
 
 export interface RefreshSummary {
-  perFeed: { feedId: number; inserted: number }[];
+  perFeed: { feedId: number; inserted: number; updated?: number }[];
+  removed?: number;
+  applyImmediately?: boolean;
   failedFeedIds?: number[];
 }
 

@@ -10,9 +10,28 @@ import { stripHtml, truncateOnWordBoundary } from '../../lib/strip-html';
 const EXCERPT_MAX_LENGTH = 200;
 
 // SQLite cannot parse RFC-822 pubDates, so this must run in JS rather than in SQL.
-function parsePublishedAt(pubDate: string): number {
+function parsePublishedAt(pubDate: string, fetchedAt: number): number {
   const timestamp = new Date(pubDate).getTime();
-  return Number.isNaN(timestamp) ? 0 : timestamp;
+  return Number.isFinite(timestamp) ? timestamp : fetchedAt;
+}
+
+type IncomingItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>;
+
+async function itemDates(executor: Kysely<Database>, feedId: number, items: IncomingItem[], fetchedAt: number): Promise<Map<string, number>> {
+  const undated = items.filter((item) => !Number.isFinite(new Date(item.pubDate).getTime()));
+  const existing = undated.length > 0
+    ? await executor.selectFrom('undatedItem').selectAll().where('feed_id', '=', feedId).where('guid', 'in', undated.map((item) => item.guid)).execute()
+    : [];
+  const dates = new Map(existing.map((row) => [row.guid, row.first_fetched_at]));
+  const fresh = undated.filter((item) => !dates.has(item.guid));
+  if (fresh.length > 0) {
+    await executor.insertInto('undatedItem').values(fresh.map((item) => ({ feed_id: feedId, guid: item.guid, first_fetched_at: fetchedAt })))
+      .onConflict((oc) => oc.columns(['feed_id', 'guid']).doNothing()).execute();
+    for (const item of fresh) {
+      dates.set(item.guid, fetchedAt);
+    }
+  }
+  return dates;
 }
 
 async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: string, workspaceId: number) {
@@ -92,31 +111,102 @@ async function addFeedPlacementToDatabase(trx: Kysely<Database>, feedId: number,
 
 export type AddFeedItemsError = { name: 'DB_ERROR'; message: string };
 
+async function insertFeedItems(executor: Kysely<Database>, feedId: number, items: IncomingItem[]): Promise<FeedItem[]> {
+  if (items.length === 0) {
+    return [];
+  }
+  const fetchedAt = Date.now();
+  const dates = await itemDates(executor, feedId, items, fetchedAt);
+  return executor.insertInto('feedItem')
+    .values(items.map((item) => ({
+      feed_id: feedId,
+      ...item,
+      published_at: parsePublishedAt(item.pubDate, dates.get(item.guid) ?? fetchedAt),
+      excerpt: truncateOnWordBoundary(stripHtml(item.description), EXCERPT_MAX_LENGTH),
+    })))
+    .onConflict((oc) => oc.columns(['feed_id', 'guid']).doNothing())
+    .returningAll()
+    .execute();
+}
+
 /**
  * Inserts the items of one feed, skipping the guids that feed already holds.
- * @param executor the `db` singleton, or a transaction to insert within
- * @param feedId the id of the feed the items belong to
+ * @param executor the database connection
+ * @param feedId the feed that owns the items
  * @param items the items to insert
- * @returns only the rows it wrote, since `ON CONFLICT DO NOTHING ... RETURNING *` leaves out the skipped ones
+ * @returns the inserted rows
  */
-export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId: number, items: Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>[]): Promise<Result<FeedItem[], AddFeedItemsError>> {
-  if (items.length === 0) {
-    return { success: true, data: [] };
-  }
+export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId: number, items: IncomingItem[]): Promise<Result<FeedItem[], AddFeedItemsError>> {
   try {
-    const inserted = await executor.insertInto('feedItem')
-      .values(items.map((item) => ({
-        feed_id: feedId,
-        ...item,
-        published_at: parsePublishedAt(item.pubDate),
-        excerpt: truncateOnWordBoundary(stripHtml(item.description), EXCERPT_MAX_LENGTH),
-      })))
-      .onConflict((oc) => oc.columns(['feed_id', 'guid']).doNothing())
-      .returningAll()
-      .execute();
+    const inserted = await executor.transaction().execute((trx) => insertFeedItems(trx, feedId, items));
     return { success: true, data: inserted };
   } catch (error) {
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
+}
+
+async function syncFeedItemsInTransaction(trx: Kysely<Database>, feedId: number, items: IncomingItem[], cutoff: number): Promise<{ inserted: FeedItem[]; updated: number }> {
+  if (items.length === 0) {
+    return { inserted: [], updated: 0 };
+  }
+  const fetchedAt = Date.now();
+  const oldMarkers = await trx.selectFrom('undatedItem').selectAll().where('feed_id', '=', feedId).where('guid', 'in', items.map((item) => item.guid)).execute();
+  const markerByGuid = await itemDates(trx, feedId, items, fetchedAt);
+  const tombstones = new Set(oldMarkers.map((row) => row.guid));
+  const previous = await trx.selectFrom('feedItem').selectAll().where('feed_id', '=', feedId).where('guid', 'in', items.map((item) => item.guid)).execute();
+  const byGuid = new Map(previous.map((item) => [item.guid, item]));
+  const newestStored = await trx.selectFrom('feedItem').select(['guid', 'published_at'])
+    .where('feed_id', '=', feedId).orderBy('published_at', 'desc').orderBy('id', 'desc').limit(10).execute();
+  const rank = new Map(newestStored.map((row) => [row.guid, row.published_at]));
+  for (const item of items) {
+    rank.set(item.guid, parsePublishedAt(item.pubDate, markerByGuid.get(item.guid) ?? fetchedAt));
+  }
+  const protectedGuids = new Set([...rank].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([guid]) => guid));
+  const fresh = items.filter((item) => {
+    if (byGuid.has(item.guid)) {
+      return false;
+    }
+    const date = parsePublishedAt(item.pubDate, markerByGuid.get(item.guid) ?? fetchedAt);
+    if (tombstones.has(item.guid) && date < cutoff && !Number.isFinite(new Date(item.pubDate).getTime())) {
+      return false;
+    }
+    return date >= cutoff || protectedGuids.has(item.guid);
+  });
+  const added = await insertFeedItems(trx, feedId, fresh);
+  let updated = 0;
+  for (const item of items) {
+    const old = byGuid.get(item.guid);
+    if (!old) {
+      continue;
+    }
+    const patch = {
+      title: item.title, link: item.link, pubDate: item.pubDate, description: item.description,
+      image: item.image, author: item.author, extra: item.extra,
+      published_at: parsePublishedAt(item.pubDate, markerByGuid.get(item.guid) ?? old.published_at),
+      excerpt: truncateOnWordBoundary(stripHtml(item.description), EXCERPT_MAX_LENGTH),
+    };
+    if ((Object.keys(patch) as (keyof typeof patch)[]).every((key) => (old[key] ?? undefined) === (patch[key] ?? undefined))) {
+      continue;
+    }
+    if (old.link !== item.link || old.description !== item.description) {
+      await trx.deleteFrom('articleContent').where('item_id', '=', old.id).execute();
+    }
+    await trx.updateTable('feedItem').set(patch).where('id', '=', old.id).execute();
+    updated++;
+  }
+  const corrected = items.filter((item) => Number.isFinite(new Date(item.pubDate).getTime()));
+  if (corrected.length > 0) {
+    await trx.deleteFrom('undatedItem').where('feed_id', '=', feedId).where('guid', 'in', corrected.map((item) => item.guid)).execute();
+  }
+  return { inserted: added, updated };
+}
+
+export async function syncFeedItemsToDatabase(executor: Kysely<Database>, feedId: number, items: IncomingItem[], cutoff = Number.NEGATIVE_INFINITY): Promise<Result<{ inserted: FeedItem[]; updated: number }, AddFeedItemsError>> {
+  try {
+    const data = await executor.transaction().execute((trx) => syncFeedItemsInTransaction(trx, feedId, items, cutoff));
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : String(error) } };
   }
 }
 
@@ -154,17 +244,14 @@ export async function upsertArticleContent(content: NewArticleContent): Promise<
   }
 }
 
-export async function addFeedToDatabase(input: NewFeedInput): Promise<Result<AddedFeed, AddFeedError>> {
+export async function addFeedToDatabase(input: NewFeedInput, cutoff = Number.NEGATIVE_INFINITY): Promise<Result<AddedFeed, AddFeedError>> {
   await dbReady;
   try {
     const { category, metadata, placement } = await db.transaction().execute(async (trx) => {
       const category = await addFeedCategoryToDatabase(trx, input.categoryName, input.workspaceId);
       const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, input.type, input.icon);
       const placement = await addFeedPlacementToDatabase(trx, metadata.id, category.id, input.workspaceId, input.showInWorkspace);
-      const items = await addFeedItemsToDatabase(trx, metadata.id, input.items);
-      if (!items.success) {
-        throw new Error(items.error.message);
-      }
+      await syncFeedItemsInTransaction(trx, metadata.id, input.items, cutoff);
       return { category, metadata, placement };
     });
 

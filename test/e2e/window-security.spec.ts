@@ -6,6 +6,8 @@ import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
 
+const FIXTURE_PUB_DATE = new Date().toUTCString();
+
 const ARTICLE_PARAGRAPH = 'This sentence exists so that Readability keeps the paragraph and the link inside it. '.repeat(6);
 
 interface FeedServer {
@@ -31,7 +33,7 @@ interface CspProbeWindow {
 
 function rss(articleUrl: string): string {
   return `<?xml version="1.0"?><rss version="2.0"><channel><title>Local feed</title><description>A local feed</description>`
-    + `<item><title>Full Article</title><link>${articleUrl}</link><pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate><description>Short feed teaser.</description></item>`
+    + `<item><title>Full Article</title><link>${articleUrl}</link><pubDate>${FIXTURE_PUB_DATE}</pubDate><description>Short feed teaser.</description></item>`
     + `</channel></rss>`;
 }
 

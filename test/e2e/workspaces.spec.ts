@@ -6,9 +6,11 @@ import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { HOME_WORKSPACE_ID, type FeedSummary, type WorkspaceSummary } from '../../src/shared/contracts';
 
+const FIXTURE_PUB_DATE = new Date().toUTCString();
+
 function rss(): string {
   return '<?xml version="1.0"?><rss version="2.0"><channel><title>Imported feed</title><description>A local feed</description>'
-    + '<item><title>Article</title><link>http://127.0.0.1/article</link><pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate><description>An article</description></item>'
+    + `<item><title>Article</title><link>http://127.0.0.1/article</link><pubDate>${FIXTURE_PUB_DATE}</pubDate><description>An article</description></item>`
     + '</channel></rss>';
 }
 

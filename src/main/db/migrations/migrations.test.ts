@@ -242,18 +242,39 @@ describe('0003_river_index backfill', () => {
     expect(item['published_at']).toBe(Date.parse('2024-01-01T00:00:00.000Z'));
   });
 
-  test('falls back to 0 for an unparseable pubDate', async () => {
+  test('uses the migration time for an unparseable pubDate', async () => {
     // Arrange
     assertMigrated(await migrateTo('0002_feed_icon'));
     const seeded = await seed();
     await db.updateTable('feedItem').set({ pubDate: 'not-a-date' }).where('id', '=', seeded.itemId).execute();
 
     // Act
+    const before = Date.now();
     assertMigrated(await migrateToLatest());
 
     // Assert
     const item = await db.selectFrom('feedItem').selectAll().where('id', '=', seeded.itemId).executeTakeFirstOrThrow();
-    expect(item['published_at']).toBe(0);
+    expect(item['published_at']).toBeGreaterThanOrEqual(before);
+    expect(item['published_at']).toBeLessThanOrEqual(Date.now());
+    expect(await db.selectFrom('undatedItem').selectAll().where('guid', '=', item['guid']).executeTakeFirstOrThrow()).toMatchObject({ first_fetched_at: item['published_at'] });
+  });
+
+  test('backfills many undated items without changing a valid epoch date', async () => {
+    // Arrange
+    assertMigrated(await migrateTo('0006_feed_conditional_get'));
+    const seeded = await seed();
+    await db.insertInto('feedItem').values([
+      { feed_id: seeded.feedId, guid: 'epoch', title: 'Epoch', pubDate: '1970-01-01T00:00:00.000Z', description: '', published_at: 0 },
+      ...Array.from({ length: 601 }, (_, index) => ({ feed_id: seeded.feedId, guid: `undated-${index}`, title: 'Undated', pubDate: '', description: '', published_at: 0 })),
+    ]).execute();
+
+    // Act
+    assertMigrated(await migrateToLatest());
+
+    // Assert
+    expect((await db.selectFrom('feedItem').select('published_at').where('guid', '=', 'epoch').executeTakeFirstOrThrow())['published_at']).toBe(0);
+    expect(await db.selectFrom('undatedItem').select('guid').execute()).toHaveLength(601);
+    expect(await db.selectFrom('feedItem').select('id').where('guid', 'like', 'undated-%').where('published_at', '=', 0).execute()).toHaveLength(0);
   });
 
   test('derives excerpt by stripping the description down to plain text', async () => {

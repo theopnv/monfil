@@ -2,7 +2,7 @@ import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { HOME_WORKSPACE_ID, type NewFeedInput } from '../../../shared/contracts';
 import { db, initializeDatabase } from '../database';
 import type { FeedItem } from '../types';
-import { addFeedItemsToDatabase, addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent } from './insert';
+import { addFeedItemsToDatabase, addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent, syncFeedItemsToDatabase } from './insert';
 
 const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', type: 'rss', items: [], categoryName: 'tech', workspaceId: HOME_WORKSPACE_ID, showInWorkspace: true };
 const feedB: NewFeedInput = { link: 'https://b.example/feed', title: 'Feed B', type: 'rss', items: [], categoryName: 'tech', workspaceId: HOME_WORKSPACE_ID, showInWorkspace: true };
@@ -32,9 +32,8 @@ describe('addFeedToDatabase', () => {
       showInWorkspace: true,
     });
 
-    expect(result.success).toBe(true);
     if (!result.success) {
-      return;
+      throw new Error(result.error.message);
     }
     expect(result.data.title).toBe(feedA.title);
     expect(result.data.category.name).toBe('tech');
@@ -250,6 +249,42 @@ describe('addFeedItemsToDatabase', () => {
     const stored = await db.selectFrom('feedItem').selectAll().where('feed_id', '=', feedId).execute();
     expect(stored).toHaveLength(1);
     expect(stored[0]?.title).toBe('First');
+  });
+});
+
+describe('syncFeedItemsToDatabase', () => {
+  test('updates a publisher edit and keeps the item identity and read state', async () => {
+    // Arrange
+    const feed = await addFeedToDatabase(feedA);
+    if (!feed.success) {
+      throw new Error('feed insert failed');
+    }
+    const feedId = feed.data.id;
+    const original = { guid: 'stable', title: 'Old', link: 'https://a.example/old', pubDate: '2026-09-22', description: '<p>Old</p>', image: undefined, author: undefined, extra: undefined, read_at: undefined };
+    const saved = await addFeedItemsToDatabase(db, feedId, [original]);
+    if (!saved.success) {
+      throw new Error('insert failed');
+    }
+    const firstItem = saved.data[0];
+    if (!firstItem) {
+      throw new Error('item insert failed');
+    }
+    const itemId = firstItem.id;
+    await db.updateTable('feedItem').set({ read_at: '2026-01-01' }).where('id', '=', itemId).execute();
+    await upsertArticleContent({ item_id: itemId, html: '<p>Cached</p>', text: 'Cached', word_count: 1, status: 'ok' });
+
+    // Act
+    const result = await syncFeedItemsToDatabase(db, feedId, [{ ...original, title: 'New', link: 'https://a.example/new', description: '<p>New words</p>', image: 'https://a.example/image', author: 'Author', extra: '{"source":1}' }]);
+
+    // Assert
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
+    expect(result.data.inserted).toEqual([]);
+    expect(result.data.updated).toBe(1);
+    expect(await db.selectFrom('feedItem').selectAll().where('id', '=', itemId).executeTakeFirstOrThrow()).toMatchObject({ id: itemId, title: 'New', link: 'https://a.example/new', excerpt: 'New words', read_at: '2026-01-01', author: 'Author', extra: '{"source":1}' });
+    expect(await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).execute()).toEqual([]);
   });
 });
 

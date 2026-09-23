@@ -4,7 +4,7 @@ import SegmentedControl from "@/components/common/SegmentedControl";
 import SettingsRow from "@/components/Settings/SettingsRow";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import { Toggle } from "@/components/untitled-ui/base/toggle/toggle";
-import type { MaxFeedItems, RefreshInterval } from "../../../shared/contracts";
+import type { RefreshInterval, RetentionDays } from "../../../shared/contracts";
 
 const REFRESH_OPTIONS = [
   { interval: 15, label: "15 min" },
@@ -17,12 +17,12 @@ const REFRESH_OPTIONS = [
 const REFRESH_INTERVALS = REFRESH_OPTIONS.map((option) => option.interval);
 const REFRESH_LABELS = Object.fromEntries(REFRESH_OPTIONS.map((option) => [option.interval, option.label])) as Record<RefreshInterval, string>;
 
-const MAX_ITEMS_OPTIONS = [10, 30, 50, 100] as const satisfies readonly MaxFeedItems[];
+const RETENTION_OPTIONS = [15, 30, 60, 90, 180] as const satisfies readonly RetentionDays[];
 
 export default function RefreshingSection() {
   const [refreshInterval, setRefreshIntervalState] = useState<RefreshInterval | undefined>(undefined);
   const [refreshOnLaunch, setRefreshOnLaunchState] = useState<boolean | undefined>(undefined);
-  const [maxFeedItems, setMaxFeedItemsState] = useState<MaxFeedItems | undefined>(undefined);
+  const [retentionDays, setRetentionDaysState] = useState<RetentionDays | undefined>(undefined);
 
   useEffect(() => {
     ipc.invoke("settings:get-refresh-interval", undefined)
@@ -35,11 +35,9 @@ export default function RefreshingSection() {
       .catch((error: unknown) => {
         rendererLogger.error('renderer.failure', { message: 'Error loading the refresh-on-launch preference:' }, error);
       });
-    ipc.invoke("settings:get-max-feed-items", undefined)
-      .then(setMaxFeedItemsState)
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error loading the max feed items preference:' }, error);
-      });
+    ipc.invoke("settings:get-retention-days", undefined)
+      .then(setRetentionDaysState)
+      .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error loading retention:' }, error));
   }, []);
 
   const onIntervalChange = (interval: RefreshInterval) => {
@@ -60,13 +58,11 @@ export default function RefreshingSection() {
       });
   };
 
-  const onMaxFeedItemsChange = (value: MaxFeedItems) => {
-    setMaxFeedItemsState(value);
-    ipc.invoke("settings:set-max-feed-items", value)
-      .then(setMaxFeedItemsState)
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error saving the max feed items preference:' }, error);
-      });
+  const onRetentionChange = (value: RetentionDays) => {
+    setRetentionDaysState(value);
+    ipc.invoke("settings:set-retention-days", value)
+      .then(setRetentionDaysState)
+      .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error saving retention:' }, error));
   };
 
   return (
@@ -74,12 +70,6 @@ export default function RefreshingSection() {
       <SettingsRow label="Refresh feeds" hint="How often Monfil checks your feeds for new items.">
         {refreshInterval !== undefined && (
           <SegmentedControl options={REFRESH_INTERVALS} value={refreshInterval} onChange={onIntervalChange} getLabel={(option) => REFRESH_LABELS[option]} />
-        )}
-      </SettingsRow>
-
-      <SettingsRow label="Items per feed" hint="How many recent items to keep each time a feed is fetched.">
-        {maxFeedItems !== undefined && (
-          <SegmentedControl options={MAX_ITEMS_OPTIONS} value={maxFeedItems} onChange={onMaxFeedItemsChange} />
         )}
       </SettingsRow>
 
@@ -91,6 +81,12 @@ export default function RefreshingSection() {
         isDisabled={refreshOnLaunch === undefined}
         onChange={onRefreshOnLaunchChange}
       />
+
+      <SettingsRow label="Keep articles for" hint="Remove older articles after this many days. Keep at least 10 per feed.">
+        {retentionDays !== undefined && (
+          <SegmentedControl options={RETENTION_OPTIONS} value={retentionDays} onChange={onRetentionChange} getLabel={(days) => `${days} days`} />
+        )}
+      </SettingsRow>
     </SettingsSection>
   );
 }

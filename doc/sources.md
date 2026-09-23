@@ -12,8 +12,8 @@ Each type is one adapter in `src/main/feed/sources/`. Nothing outside that direc
 interface SourceAdapter {
   readonly type: SourceType;
   readonly fetchesFullArticle: boolean;
-  fetch(link: string, maxItems?: number): Promise<Result<ParsedSource, FeedFetchError>>;
-  parse(content: string, maxItems?: number): { title; description; items } | null;
+  fetch(input: SourceFetchInput): Promise<Result<SourceFetchResult, FeedFetchError>>;
+  parse(content: string): { title; description; items } | null;
 }
 ```
 
