@@ -135,7 +135,7 @@ describe('AddFeedModal', () => {
     invokeMock.mockClear();
 
     // Act: the text is unchanged, only the toggle moves.
-    await getByRole('button', { name: 'RSS · Atom' }).click();
+    await getByRole('button', { name: 'RSS' }).click();
 
     // Assert
     await vi.waitFor(() => {
