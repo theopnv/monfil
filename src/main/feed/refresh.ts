@@ -115,12 +115,16 @@ async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedIt
     }
     const candidates = items.slice(0, remaining);
     remaining -= candidates.length;
-    await enrichItems(
-      candidates,
-      (itemId, image) => {
-        void updateFeedItemImage(itemId, image);
-        broadcastToRenderers('feeds:item-image-fetched', { feedId, itemId, image });
-      },
-    );
+    try {
+      await enrichItems(
+        candidates,
+        (itemId, image) => {
+          void updateFeedItemImage(itemId, image);
+          broadcastToRenderers('feeds:item-image-fetched', { feedId, itemId, image });
+        },
+      );
+    } catch (error) {
+      logger.error('operation.failure', { operation: 'enrich-feed-images', entityId: feedId }, error);
+    }
   }
 }

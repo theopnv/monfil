@@ -2,6 +2,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 import { db, initializeDatabase } from '../db/database';
 import { addFeedToDatabase } from '../db/crud/insert';
 import { fetchText } from '../lib/fetch';
+import { logger } from '../logging/logger';
 import { rssSource } from './sources/rss';
 import { HOME_WORKSPACE_ID, type ParsedSource } from '../../shared/contracts';
 import { refreshAllFeeds } from './refresh';
@@ -66,6 +67,7 @@ beforeEach(() => {
 afterEach(async () => {
   // Image enrichment outlives refreshAllFeeds on purpose; let it finish before the next test starts.
   await new Promise((resolve) => setImmediate(resolve));
+  vi.restoreAllMocks();
   mockedFetchFeed.mockReset();
   mockedFetchText.mockReset();
   await db.deleteFrom('feedItem').execute();
@@ -279,6 +281,32 @@ describe('refreshAllFeeds', () => {
     // Assert
     expect(mockedFetchText).toHaveBeenCalledTimes(1);
     expect(mockedFetchText).toHaveBeenCalledWith('https://a.example/new', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+  });
+
+  test('keeps enriching later feeds when an item fails', async () => {
+    // Arrange
+    const failingLink = 'https://a.example/feed';
+    const workingLink = 'https://b.example/feed';
+    await storeFeed(failingLink);
+    await storeFeed(workingLink);
+    mockedFetchFeed.mockImplementation((input) => Promise.resolve({
+      success: true,
+      data: fetched(input.link, [item({ title: input.link, link: `${input.link}/1` })]),
+    }));
+    mockedFetchText.mockImplementation(async (link) => {
+      if (link === `${failingLink}/1`) {
+        throw new Error('page failed');
+      }
+      return { success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } };
+    });
+    vi.spyOn(logger, 'error').mockImplementation(() => undefined);
+
+    // Act
+    await refreshAllFeeds();
+    await vi.waitFor(() => expect(mockedFetchText).toHaveBeenCalledTimes(2));
+
+    // Assert
+    expect(mockedFetchText.mock.calls.map(([link]) => link)).toEqual([`${failingLink}/1`, `${workingLink}/1`]);
   });
 
   test('limits image enrichment to 200 new items per refresh', async () => {
