@@ -8,6 +8,7 @@ This is an Electron project based on [Vite](https://vite.dev):
 ## Table of Content
 
 - [Storage](./storage.md)
+- [Privacy notice](./privacy.md)
 - [Database](./database.md)
 - [Backend](./backend.md)
   - [Sources](./sources.md)

@@ -72,6 +72,18 @@ describe('sanitizeArticleHtml', () => {
     expect(result).toBe('<p>Before</p><hr><p>After</p>');
   });
 
+  test('keeps only the embed marker attribute', () => {
+    // Arrange
+    const html = '<a data-monfil-embed="youtube" data-unsafe="x" href="https://www.youtube.com/watch?v=5HcjtbfJfCY">Video</a>';
+
+    // Act
+    const result = sanitizeArticleHtml(html);
+
+    // Assert
+    expect(result).toContain('data-monfil-embed="youtube"');
+    expect(result).not.toContain('data-unsafe');
+  });
+
   test('returns empty output for empty input', () => {
     // Act
     const result = sanitizeArticleHtml('');

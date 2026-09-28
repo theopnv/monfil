@@ -12,6 +12,7 @@ const CONTENT_SECURITY_POLICY = {
   'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
   'font-src': ["'self'", 'https://fonts.gstatic.com'],
   'img-src': ["'self'", 'http:', 'https:', 'data:'],
+  'frame-src': ['https://www.youtube-nocookie.com', 'https://platform.twitter.com', 'https://player.vimeo.com', 'https://www.instagram.com', 'https://open.spotify.com'],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
 };
