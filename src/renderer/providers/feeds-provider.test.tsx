@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { beforeEach, expect, test, vi } from 'vitest';
 import { useReadState, useRiver } from './feeds-provider';
 import { useIpcBridge, usePendingRefreshCount } from '../lib/ipc-bridge';

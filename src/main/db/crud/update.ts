@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { db, dbReady } from '../database';
 import type { FeedCategory, MoveFeedError, UpdateCategoryError, UpdateFeedError, UpdateItemError, UpdateWorkspaceError, Workspace } from '../../../shared/contracts';
 import type { Result } from '../../../shared/result';

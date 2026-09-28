@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { shell, type Session, type WebContents } from 'electron';
 import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents, isSameDocument, openExternalLink } from './window-security';

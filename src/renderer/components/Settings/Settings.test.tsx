@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { beforeEach, expect, test, vi } from 'vitest';
 import { PreferencesProvider } from '@/providers/preferences-provider';
 import { ThemeProvider } from '@/providers/theme-provider';

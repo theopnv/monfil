@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { app, BrowserWindow, session } from 'electron';
 import path from 'node:path';
 import { mkdirSync } from 'node:fs';

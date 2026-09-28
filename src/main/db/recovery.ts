@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { existsSync, renameSync, rmSync } from 'node:fs';
 import { logger } from '../logging/logger';
 

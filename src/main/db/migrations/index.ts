@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import type { Migration, MigrationProvider } from 'kysely/migration';
 import * as initialSchema from './0001_initial_schema';
 import * as feedIcon from './0002_feed_icon';

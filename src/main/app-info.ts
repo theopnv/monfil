@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { stat } from 'node:fs/promises';
 import { app } from 'electron';
 import type { AppInfo } from '../shared/contracts';

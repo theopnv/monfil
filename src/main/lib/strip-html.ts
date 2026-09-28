@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { decode, EntityLevel } from 'entities';
 
 // <style>/<script> content never renders as text; Blogger/Blogspot feeds in particular embed a

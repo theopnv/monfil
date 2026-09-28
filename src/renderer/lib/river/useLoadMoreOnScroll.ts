@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { useEffect, type RefObject } from 'react';
 
 const NEAR_BOTTOM_PX = 600;

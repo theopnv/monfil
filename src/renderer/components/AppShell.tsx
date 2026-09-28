@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import type { CSSProperties } from 'react';
 import LiveRegion from '@/components/common/LiveRegion';
 import Toolbar from '@/components/Toolbar';

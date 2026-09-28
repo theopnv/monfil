@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { sql, type SelectQueryBuilder } from 'kysely';
 import { type ArticleContent, type Database, type FeedItem, type FeedMetadataRow, type Setting } from '../types';
 import { db, dbReady } from '../database';

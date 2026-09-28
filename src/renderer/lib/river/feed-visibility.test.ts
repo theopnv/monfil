@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { describe, expect, test } from 'vitest';
 import { feedVisibility, folderVisibility, nextVisibility, visibleFeedIds } from './feed-visibility';
 import { HOME_WORKSPACE_ID, type FeedSummary } from '../../../shared/contracts';

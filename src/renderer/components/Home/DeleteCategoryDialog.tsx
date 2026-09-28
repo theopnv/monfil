@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { useEffect, useEffectEvent, useState } from "react";
 import { Heading } from "react-aria-components";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";

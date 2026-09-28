@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { type PropsWithChildren } from "react";
 import { RouterProvider } from "react-aria-components";
 import { useRouter } from "@tanstack/react-router";

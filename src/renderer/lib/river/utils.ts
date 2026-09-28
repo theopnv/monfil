@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import type { RiverRow, SourceType } from '../../../shared/contracts';
 import { ipc } from '@/lib/ipc-client';
 

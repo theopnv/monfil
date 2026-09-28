@@ -7,7 +7,7 @@
 <p align="center">What if you could reclaim control over the algorithm and create your own news feed?</p>
 <p align="center"><a href="https://github.com/theopnv/monfil/releases">Download Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="CONTRIBUTING.md">Contribute</a></p>
 
-Monfil is an open-source desktop feed reader for engineers who want to follow the sources they choose—not whatever social-media algorithms decide to show them.
+Monfil is a source-available desktop feed reader for engineers who want to follow the sources they choose—not whatever social-media algorithms decide to show them.
 
 Start with curated feed packs for topics such as "General Tech announcements and trends". Or "DevSecOps", for info about CI/CD, test automation, testing frameworks and software-supply-chain security. Or submit your own!
 
@@ -56,7 +56,7 @@ Monfil combines:
 
 ### Why does my OS warn me about this app?
 
-Monfil isn't code-signed. Signing costs money every year ($100/year for an Apple Developer account to sign macOS builds, and a paid certificate for Windows) and this is a free, one-person open source project, so that cost isn't covered. That means both macOS and Windows will flag monfil as coming from an "unidentified developer." This is a warning about the *lack of a paid signature*, not a sign that the app is unsafe: every line of monfil's code is public in this repository for anyone to read, and the [release build](.github/workflows/publish.yml) is produced straight from that source, in the open, by GitHub's own servers.
+Monfil isn't code-signed. Signing costs money every year ($100/year for an Apple Developer account to sign macOS builds, and a paid certificate for Windows) and this is a free, one-person project, so that cost isn't covered. That means both macOS and Windows will flag monfil as coming from an "unidentified developer." This is a warning about the *lack of a paid signature*, not a sign that the app is unsafe: every line of monfil's code is public in this repository for anyone to read, and the [release build](.github/workflows/publish.yml) is produced straight from that source, in the open, by GitHub's own servers.
 
 **macOS**: opening the app shows *"monfil.app is damaged and can't be opened."* This is Gatekeeper reacting to the missing signature, not an actually broken download. Open Terminal and run:
 
@@ -93,7 +93,7 @@ xattr -cr /Applications/monfil.app
 - You choose the sources: No opaque recommendation algorithm decides what deserves your attention.
 - Start with a pack: You do not need to spend hours discovering and configuring sources. Begin with a curated pack, then customize it.
 - Focus on technical signals: Monfil is designed for following projects, tools, releases, changelogs, and security information, not general social content.
-- Own your information diet: Monfil is open source and built around transparency, portability, and control.
+- Own your information diet: Monfil's source is available for review and built around transparency, portability, and control.
 
 **Is my data private?**
 Monfil has no account, Monfil server, or usage analytics. Your feeds, read state, and saved articles stay on your device. Fetching feeds and articles, showing remote images, and loading embeds make requests to other sites. See the [privacy notice](doc/privacy.md) for details.
@@ -102,7 +102,17 @@ Monfil has no account, Monfil server, or usage analytics. Your feeds, read state
 Not currently. Monfil is a desktop app (macOS, Windows, Linux) built with Electron. There's no mobile version planned right now.
 
 **Is monfil free?**
-Yes, and it's [MIT-licensed](LICENSE) open source. No ads.
+Yes. Monfil has no ads. See the [license terms](LICENSE) for permitted uses.
 
 **How do I report a bug or request a feature?**
 Open an issue on GitHub. Read [CONTRIBUTING.md](CONTRIBUTING.md) first if you're planning to send a pull request — small, focused PRs are easiest to review.
+
+## License
+
+Monfil is source-available under [Business Source License 1.1](LICENSE) from v0.0.6 onward. Releases and tags before v0.0.6 remain under the original MIT license.
+
+BUSL 1.1 permits copying, modification, redistribution, and non-production use. The Additional Use Grant also permits internal business and personal use, including modified versions. It does not permit use to offer a product or service that competes with Monfil. Only releases published by Théo Penavaire through the official repository are official Monfil releases. Contributions intended for the official project must go through that repository.
+
+Each BUSL-licensed version automatically changes to the MIT License four years after its first release. Read the [full license](LICENSE) for the terms. Third-party code keeps its own licenses, listed in [NOTICE](NOTICE).
+
+All new contributors must sign the [Contributor License Agreement](CLA.md) through CLA Assistant before a pull request can be merged. For licensing questions, contact support@theopnv.com.

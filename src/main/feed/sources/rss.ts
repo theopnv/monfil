@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { parseFeed } from 'feedsmith';
 import { fetchConditional, fetchText } from '../../lib/fetch';
 import type { Result } from '../../../shared/result';

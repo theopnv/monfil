@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 /**
  * Reads and JSON-parses a localStorage value.
  * @returns The parsed value, or `undefined` if the key is missing or the value isn't valid JSON.

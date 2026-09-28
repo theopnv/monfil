@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { existsSync, renameSync } from 'node:fs';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';

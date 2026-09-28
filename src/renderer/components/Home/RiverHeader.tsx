@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Eye, RefreshCw01, SearchLg, XClose } from "@untitledui/icons";

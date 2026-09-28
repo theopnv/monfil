@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 type Success<S> = { success: true; data: S };
 type Failure<E> = { success: false; error: E };
 

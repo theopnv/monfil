@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from './db/database';
 import { DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, getRefreshInterval, getRefreshOnLaunch, setRefreshInterval, setRefreshOnLaunch } from './settings';

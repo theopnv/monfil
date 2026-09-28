@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 // As per https://kysely.dev/docs/migrations, migrations are typed against Kysely<any>.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { sql, type Kysely } from 'kysely';

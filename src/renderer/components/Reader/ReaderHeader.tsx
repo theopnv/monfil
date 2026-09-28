@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { ArrowLeft, ChevronDown, ChevronUp, Circle } from "@untitledui/icons";
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import ArticleSourceLink from "@/components/Reader/ArticleSourceLink";

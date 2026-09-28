@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { describe, expect, test } from 'vitest';
 import path from 'node:path';
 import { resolveDevUserDataDir } from './dev-user-data-dir';

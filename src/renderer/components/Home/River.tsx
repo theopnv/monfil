@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EmptyRiver from "@/components/Home/EmptyRiver";
 import RiverHeader from "@/components/Home/RiverHeader";

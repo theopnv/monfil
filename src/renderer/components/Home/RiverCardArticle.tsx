@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import RiverCardImage from "@/components/Home/RiverCardImage";
 import { cx } from "@/components/untitled-ui/utils/cx";

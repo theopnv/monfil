@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { useEffect, useMemo, useState } from 'react';
 import { ipc } from '@/lib/ipc-client';
 import type { ItemBody, RiverRow, SourceType } from '../../../shared/contracts';
