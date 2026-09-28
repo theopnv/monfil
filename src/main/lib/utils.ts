@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 /**
  * Runs `worker` over every item, never more than `limit` at a time.
  * It throws after all items have been attempted if a worker failed.

@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { useEffect, useMemo, useState } from "react";
 import { ipc } from '@/lib/ipc-client';
 import { ChevronRight, DotsGrid, FolderPlus, LayersTwo01, Plus } from "@untitledui/icons";

@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 /**
  * The icon to show for a feed: its own stored icon (a YouTube channel avatar, for instance),
  * falling back to the site favicon RSS feeds don't carry one for.

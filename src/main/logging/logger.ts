@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import electronLog from 'electron-log/main';
 import { appendFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';

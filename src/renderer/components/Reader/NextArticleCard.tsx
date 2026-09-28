@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { ArrowRight } from "@untitledui/icons";
 import { estimateReadTime, formatRelativeTime } from "@/lib/river/utils";
 import type { RiverRow } from "../../../shared/contracts";

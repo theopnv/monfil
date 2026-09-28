@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { enrichItems } from "../feed/enrichItems";
 import { logger } from '../logging/logger';
 import { ARTICLE_FETCH_TIMEOUT_MS } from "../constants";

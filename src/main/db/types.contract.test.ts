@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import type { Selectable } from 'kysely';
 import { expectTypeOf, test } from 'vitest';
 import type { FeedCategory, FeedMetadata, Workspace } from '../../shared/contracts';

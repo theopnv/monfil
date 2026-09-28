@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import type { DeleteCategoryError } from "../../../shared/contracts";
 import type { CreateCategoryError } from "../../../shared/contracts";
 import type { UpdateCategoryError } from "../../../shared/contracts";

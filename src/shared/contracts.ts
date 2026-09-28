@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 // Home is inserted as the first row by the migration that creates this table, and it can never be
 // deleted, so its id is permanently 1.
 export const HOME_WORKSPACE_ID = 1;

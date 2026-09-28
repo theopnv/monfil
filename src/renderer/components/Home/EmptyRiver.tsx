@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { useState } from "react";
 import { Rss01 } from "@untitledui/icons";
 import AddFeedModal from "@/components/AddFeed/AddFeedModal";

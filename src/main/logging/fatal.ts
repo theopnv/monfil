@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { app, dialog, shell } from 'electron';
 import type { Logger } from './logger';
 import { createIncidentId, shortIncidentId } from './incident';

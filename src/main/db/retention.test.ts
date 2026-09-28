@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { beforeAll, afterEach, expect, test, vi } from 'vitest';
 import { db, initializeDatabase } from './database';
 import { addFeedToDatabase, syncFeedItemsToDatabase, upsertArticleContent } from './crud/insert';

@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import SettingsSection from "@/components/Settings/SettingsSection";
 import { Toggle } from "@/components/untitled-ui/base/toggle/toggle";
 import { usePreferences } from "@/providers/preferences-provider";

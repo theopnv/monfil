@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { createElement, useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import { openLink } from "@/lib/river/utils";
 import { sanitizeArticleHtml } from "@/lib/sanitize-html";

@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { EyeOff, LayersThree01, LayerSingle } from "@untitledui/icons";
 import type { FC } from "react";
 import type { FeedSummary } from "../../../shared/contracts";

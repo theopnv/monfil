@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { Cloud01, Code01, CpuChip01, Database02, GitBranch01, Globe02, Home02, LayersTwo01, Package, Rocket02, Rss01, ShieldTick, Terminal } from "@untitledui/icons";
 import type { IconComponentType } from "@/components/untitled-ui/base/badges/badge-types";
 

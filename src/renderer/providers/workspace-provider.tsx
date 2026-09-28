@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { createContext, useCallback, useContext, type PropsWithChildren } from "react";
 import { ipc } from '@/lib/ipc-client';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

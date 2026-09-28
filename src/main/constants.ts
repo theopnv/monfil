@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 // Fixed values that tune the app's behavior. Unlike `settings.ts`, none of these are user-facing:
 // there is no IPC channel or UI control for them, and they are not meant to grow one.
 

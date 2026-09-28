@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { app, net } from 'electron';
 import type { Result } from '../../shared/result.ts';
 import type { FetchUrlError } from '../../shared/contracts.ts';

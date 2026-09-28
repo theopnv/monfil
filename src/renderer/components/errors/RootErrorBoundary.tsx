@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { ErrorRecovery } from './ErrorRecovery';
 import { rendererLogger } from '@/lib/ipc-client';

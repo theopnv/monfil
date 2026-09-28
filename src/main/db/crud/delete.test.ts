@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { HOME_WORKSPACE_ID, type NewFeedInput } from '../../../shared/contracts';
 import { db, initializeDatabase } from '../database';

@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import { useEffect, useState } from "react";
 
 // Offsets the "active" line below the header, so a section's heading must clear it before stealing

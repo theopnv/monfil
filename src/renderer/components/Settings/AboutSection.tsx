@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Théo Penavaire
+// SPDX-License-Identifier: BUSL-1.1
+// See LICENSE in the repository root for full terms.
+
 import SettingsSection from "@/components/Settings/SettingsSection";
 import MonfilLogo from "@/components/common/MonfilLogo";
 
