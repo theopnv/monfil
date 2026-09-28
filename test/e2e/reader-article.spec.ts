@@ -13,6 +13,7 @@ const ARTICLE_PARAGRAPH = 'This sentence only exists in the full article page, f
 interface Article {
   title: string;
   link: string;
+  body?: string;
 }
 
 interface FeedServer {
@@ -33,10 +34,10 @@ function rss(articles: Article[]): string {
   return `<?xml version="1.0"?><rss version="2.0"><channel><title>Local feed</title><description>A local feed</description>${items}</channel></rss>`;
 }
 
-function articlePage(title: string): string {
+function articlePage(title: string, body = `<p>${ARTICLE_PARAGRAPH}</p>`): string {
   return `<!doctype html><html><head><title>${title}</title></head><body>
 <nav><a href="/">Home</a></nav>
-<article><h1>${title}</h1><p>${ARTICLE_PARAGRAPH}</p></article>
+<article><h1>${title}</h1>${body}</article>
 <footer>Copyright</footer>
 </body></html>`;
 }
@@ -53,7 +54,7 @@ const readerArticleTest = base.extend<ReaderArticleTestFixtures>({
       const article = articles.find((candidate) => request.url === new URL(candidate.link).pathname);
       if (article) {
         response.writeHead(200, { 'Content-Type': 'text/html' });
-        response.end(articlePage(article.title));
+        response.end(articlePage(article.title, article.body));
         return;
       }
       response.writeHead(404);
@@ -120,4 +121,40 @@ readerArticleTest('shows the fetched article body instead of the feed descriptio
   // Assert: the reader asks the utility process for the article after the item opens.
   await expect(page.getByTestId('article-body')).toContainText('only exists in the full article page', { timeout: 15000 });
   await expect(page.getByTestId('article-body')).not.toContainText('Short feed teaser.');
+});
+
+readerArticleTest('loads one provider frame only after a click', async ({ feedServer, launchApp }) => {
+  // Arrange
+  feedServer.publish([{
+    title: 'Embedded Article',
+    link: '/article/embedded',
+    body: `<p>${ARTICLE_PARAGRAPH}</p><figure><iframe src="https://www.youtube.com/embed/5HcjtbfJfCY" title="Video"></iframe></figure><figure><iframe src="https://player.vimeo.com/video/12345678" title="Second video"></iframe></figure><p>${ARTICLE_PARAGRAPH}</p>`,
+  }]);
+  const page = await launchApp();
+  const requested: string[] = [];
+  await page.route(/https:\/\/(www\.youtube-nocookie\.com|player\.vimeo\.com)\//, async (route) => {
+    requested.push(route.request().url());
+    await route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><body>Provider frame</body></html>' });
+  });
+  await subscribe(page, feedServer.url);
+
+  // Act
+  await page.getByText('Embedded Article', { exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Load YouTube' })).toBeVisible();
+
+  // Assert
+  expect(requested).toHaveLength(0);
+  await expect(page.locator('[data-testid="article-body"] iframe')).toHaveCount(0);
+
+  // Act
+  await page.getByRole('button', { name: 'Load YouTube' }).click();
+
+  // Assert
+  await expect(page.frameLocator('iframe').getByText('Provider frame')).toBeVisible();
+  expect(requested).toHaveLength(1);
+  expect(requested[0]).toContain('www.youtube-nocookie.com');
+  await expect(page.getByRole('button', { name: 'Load Vimeo' })).toBeVisible();
+  const frame = page.frames().find((candidate) => candidate.url().includes('www.youtube-nocookie.com/embed/'));
+  expect(frame).toBeDefined();
+  expect(await frame?.evaluate(() => 'electron' in window)).toBe(false);
 });

@@ -96,7 +96,7 @@ xattr -cr /Applications/monfil.app
 - Own your information diet: Monfil is open source and built around transparency, portability, and control.
 
 **Is my data private?**
-Yes. Monfil has no account, no server, and no analytics. Everything — your feeds, your read state, your articles — lives in one SQLite file on your machine. Settings shows you exactly how big it is and can reveal it in Finder/Explorer.
+Monfil has no account, Monfil server, or usage analytics. Your feeds, read state, and saved articles stay on your device. Fetching feeds and articles, showing remote images, and loading embeds make requests to other sites. See the [privacy notice](doc/privacy.md) for details.
 
 **Is there a mobile app?**
 Not currently. Monfil is a desktop app (macOS, Windows, Linux) built with Electron. There's no mobile version planned right now.

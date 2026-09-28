@@ -9,7 +9,7 @@ import { DB_FILE_NAME } from './constants';
 import { startRefreshScheduler, stopRefreshScheduler } from './feed/scheduler';
 import { stopArticleExtractionProcess } from './feed/extractArticleUtility';
 import { resolveDevUserDataDir } from './dev-user-data-dir';
-import { denyWebPermissions, hardenWebContents } from './window-security';
+import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents } from './window-security';
 import { allowPrivateHosts } from './lib/fetch';
 import { configureLogging, logger } from './logging/logger';
 import { installFatalHandlers } from './logging/fatal';
@@ -94,6 +94,7 @@ function bootstrap() {
 
   const main = () => {
     denyWebPermissions(session.defaultSession);
+    configureYouTubeEmbedReferrer(session.defaultSession);
     registerIpcListeners();
     registerIpcHandlers();
     createWindow();

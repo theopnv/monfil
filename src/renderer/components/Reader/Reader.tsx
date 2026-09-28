@@ -195,7 +195,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
               <p className="mb-4 text-sm text-tertiary">Loading full article…</p>
             )}
 
-            <ArticleBody html={content.html} />
+            <ArticleBody key={currentItemId} html={content.html} sourceUrl={currentItem.link ?? undefined} />
 
             {content.isUnavailable && (
               <p className="mb-4 text-sm text-tertiary">The full article could not be loaded. Read it at the source instead.</p>

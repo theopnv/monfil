@@ -65,3 +65,13 @@ export function denyWebPermissions(session: Session): void {
   });
   session.setPermissionCheckHandler(() => false);
 }
+
+export function configureYouTubeEmbedReferrer(session: Session): void {
+  session.webRequest.onBeforeSendHeaders({ urls: ['https://www.youtube-nocookie.com/embed/*'] }, (details, callback) => {
+    // YouTube rejects file-backed desktop embeds without an app identity in the Referer header.
+    const requestHeaders = details.resourceType === 'subFrame'
+      ? { ...details.requestHeaders, Referer: 'app://monfil' }
+      : details.requestHeaders;
+    callback({ requestHeaders });
+  });
+}

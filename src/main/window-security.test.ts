@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { shell, type Session, type WebContents } from 'electron';
-import { denyWebPermissions, hardenWebContents, isSameDocument, openExternalLink } from './window-security';
+import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents, isSameDocument, openExternalLink } from './window-security';
 
 vi.mock(import('electron'), () => ({
   shell: {
@@ -164,5 +164,37 @@ describe('denyWebPermissions', () => {
     // Assert
     expect(callback).toHaveBeenCalledWith(false);
     expect(checkHandler?.()).toBe(false);
+  });
+});
+
+describe('configureYouTubeEmbedReferrer', () => {
+  test('identifies the app on YouTube frame requests', () => {
+    // Arrange
+    const onBeforeSendHeaders = vi.fn();
+    const session = { webRequest: { onBeforeSendHeaders } };
+    const callback = vi.fn();
+
+    // Act
+    configureYouTubeEmbedReferrer(session as unknown as Session);
+    const listener = onBeforeSendHeaders.mock.calls[0]?.[1] as ((details: { resourceType: string; requestHeaders: Record<string, string> }, callback: (response: unknown) => void) => void) | undefined;
+    listener?.({ resourceType: 'subFrame', requestHeaders: { Accept: 'text/html' } }, callback);
+
+    // Assert
+    expect(onBeforeSendHeaders.mock.calls[0]?.[0]).toEqual({ urls: ['https://www.youtube-nocookie.com/embed/*'] });
+    expect(callback).toHaveBeenCalledWith({ requestHeaders: { Accept: 'text/html', Referer: 'app://monfil' } });
+  });
+
+  test('leaves other request types alone', () => {
+    // Arrange
+    const onBeforeSendHeaders = vi.fn();
+    configureYouTubeEmbedReferrer({ webRequest: { onBeforeSendHeaders } } as unknown as Session);
+    const callback = vi.fn();
+    const listener = onBeforeSendHeaders.mock.calls[0]?.[1] as ((details: { resourceType: string; requestHeaders: Record<string, string> }, callback: (response: unknown) => void) => void) | undefined;
+
+    // Act
+    listener?.({ resourceType: 'xhr', requestHeaders: { Accept: 'application/json' } }, callback);
+
+    // Assert
+    expect(callback).toHaveBeenCalledWith({ requestHeaders: { Accept: 'application/json' } });
   });
 });
