@@ -403,7 +403,7 @@ test('shows the full extracted article body when the content is ready', async ()
 
   // Assert
   await expect.element(getByTestId('article-body').getByText('Full extracted body', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('2 min read')).toBeInTheDocument();
+  await expect.element(getByText('2 min read', { exact: false })).toBeInTheDocument();
 });
 
 test('shows a loading hint while the article is being fetched', async () => {

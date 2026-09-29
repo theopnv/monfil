@@ -90,7 +90,7 @@ describe('useReaderContent', () => {
     const { getByTestId } = await render(<Probe item={item} />);
 
     // Assert
-    await expect.element(getByTestId('html')).toHaveTextContent('Full article');
+    await expect.element(getByTestId('html')).toMatchTextContent('Full article');
     await expect.element(getByTestId('word-count')).toHaveTextContent('42');
     await expect.element(getByTestId('loading')).toHaveTextContent('false');
     await expect.element(getByTestId('unavailable')).toHaveTextContent('false');
@@ -105,14 +105,14 @@ describe('useReaderContent', () => {
       article: { html: `<p>Article ${itemId}</p>`, wordCount: itemId },
     } satisfies ItemBody));
     const screen = await render(<Probe item={first} />);
-    await expect.element(screen.getByTestId('html')).toHaveTextContent('Article 10');
+    await expect.element(screen.getByTestId('html')).toMatchTextContent('Article 10');
 
     // Act
     await screen.rerender(<Probe item={second} />);
 
     // Assert
     expect(invokeMock).toHaveBeenLastCalledWith('items:get-content', second.id);
-    await expect.element(screen.getByTestId('html')).toHaveTextContent('Article 20');
+    await expect.element(screen.getByTestId('html')).toMatchTextContent('Article 20');
     await expect.element(screen.getByTestId('word-count')).toHaveTextContent('20');
   });
 

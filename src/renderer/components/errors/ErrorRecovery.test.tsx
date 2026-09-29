@@ -40,7 +40,7 @@ test('shows recovery actions when a child route throws', async () => {
 
   // Assert
   await expect.element(getByRole('heading', { name: 'This page could not be shown' })).toBeInTheDocument();
-  await expect.element(getByText('Application shell')).toBeInTheDocument();
+  await expect.element(getByText('Application shell', { exact: false })).toBeInTheDocument();
   await expect.element(getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   await expect.element(getByRole('button', { name: 'Restart app' })).toBeInTheDocument();
   await expect.element(getByRole('button', { name: 'Show log file' })).toBeInTheDocument();

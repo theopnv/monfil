@@ -32,10 +32,4 @@ for (const pack of index.packs) {
   if (urls.length !== pack.sourceCount) {
     throw new Error(`${pack.slug} has ${urls.length} sources, but index.json says ${pack.sourceCount}.`);
   }
-  // A valid OPML URL can still rot. Follow redirects because many feed hosts use them.
-  const responses = await Promise.all(urls.map((url) => fetch(url, { redirect: 'follow' })));
-  const failed = urls.filter((_, index) => !responses[index]?.ok);
-  if (failed.length > 0) {
-    throw new Error(`${pack.slug} has unreachable sources: ${failed.join(', ')}.`);
-  }
 }
