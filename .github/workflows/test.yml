@@ -34,7 +34,7 @@ jobs:
 
       - run: npm run lint
 
-      # Check that pack metadata matches its OPML sources, and every listed source still resolves.
+      # Check that pack metadata matches its OPML sources.
       - run: npm run check:feedpacks
 
   os_matrix:
