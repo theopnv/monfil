@@ -23,6 +23,8 @@ export default defineConfig({
     include: [
       'src/renderer/**/*.{test,spec}.?(c|m)[jt]s?(x)',
     ],
+    // Concurrent instances hitting one dev server cause flaky "failed to import" and "failed to find the runner" errors in CI: vitest-dev/vitest#9509, #9473, #8447
+    fileParallelism: false,
     browser: {
       enabled: true,
       provider: playwright(),
@@ -34,8 +36,6 @@ export default defineConfig({
         // { browser: 'firefox' },
         // { browser: 'webkit' },
       ],
-      // Concurrent instances hitting one dev server cause flaky "failed to import" and "failed to find the runner" errors in CI: vitest-dev/vitest#9509, #9473, #8447
-      fileParallelism: false,
     },
   },
 })
