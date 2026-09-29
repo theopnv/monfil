@@ -149,7 +149,7 @@ test('toggling "Refresh on launch" invokes settings:set-refresh-on-launch', asyn
   // Arrange
   const { getByRole, getByText } = await renderSettings();
   // The switch starts disabled until the current preference loads.
-  await expect.element(getByRole('switch', { name: 'Refresh on launch' })).toBeEnabled();
+  await expect.element(getByRole('switch', { name: /^Refresh on launch/ })).toBeEnabled();
 
   // Act
   // The switch input is visually hidden behind its label (react-aria's Switch pattern), so the
