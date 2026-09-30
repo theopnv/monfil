@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { app, BrowserWindow, session } from 'electron';
+import { app, BrowserWindow, nativeTheme, session } from 'electron';
 import path from 'node:path';
 import { mkdirSync } from 'node:fs';
 import started from 'electron-squirrel-startup';
@@ -19,6 +19,7 @@ import { configureLogging, logger } from './logging/logger';
 import { installFatalHandlers } from './logging/fatal';
 import { setLogFilePath } from './main-state';
 import { getDetailedLogging } from './settings';
+import { titleBarOverlayForTheme } from './window-chrome';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // app.quit() only schedules an exit, so without this return the rest of the module (and its app.on(...) wiring)
@@ -68,6 +69,9 @@ function bootstrap() {
   const createWindow = () => {
     const mainWindow = new BrowserWindow({
       titleBarStyle: 'hidden',
+      titleBarOverlay: process.platform === 'darwin'
+        ? false
+        : titleBarOverlayForTheme(nativeTheme.shouldUseDarkColors ? 'dark' : 'light'),
       show: !isE2ETest,
       icon: iconPath,
       webPreferences: {

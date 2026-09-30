@@ -10,6 +10,7 @@ import { sendToRenderer } from "./sendToRenderer";
 import { openExternalLink } from "../window-security";
 import { logFilePath } from '../main-state';
 import { logger } from '../logging/logger';
+import { titleBarOverlayForTheme } from '../window-chrome';
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {
   openExternalLink(url);
@@ -32,6 +33,13 @@ export function listenToRevealDatabaseBackup() {
 export function listenToRestart() {
   app.relaunch();
   app.exit(0);
+}
+
+export function listenToSetWindowTheme(event: IpcMainEvent, theme: OneWayRendererToMainChannelPayloads['app:set-window-theme']) {
+  if (process.platform === 'darwin' || (theme !== 'light' && theme !== 'dark')) {
+    return;
+  }
+  BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay(titleBarOverlayForTheme(theme));
 }
 
 export function listenToRendererLog(_event: IpcMainEvent, payload: OneWayRendererToMainChannelPayloads['log:write']) {

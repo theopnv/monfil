@@ -4,6 +4,7 @@
 
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
+import { ipc } from '@/lib/ipc-client';
 
 type Theme = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
@@ -63,6 +64,7 @@ export const ThemeProvider = ({ children, defaultTheme = "system", storageKey = 
 
       root.classList.toggle(darkModeClass, effectiveTheme === "dark");
       setResolvedTheme(effectiveTheme);
+      ipc.send('app:set-window-theme', effectiveTheme);
 
       if (theme === "system") {
         localStorage.removeItem(storageKey);

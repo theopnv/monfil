@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { redact } from './logger';
+import { redact, serializeError } from './logger';
 
 describe('log redaction', () => {
   test('removes sensitive fields and keeps identifiers', () => {
@@ -27,5 +27,18 @@ describe('log redaction', () => {
 
     // Assert
     expect(result).not.toContain(sensitivePath);
+  });
+});
+
+describe('log errors', () => {
+  test('serializes a tagged error object', () => {
+    // Arrange
+    const error = { name: 'NETWORK_ERROR', message: 'Could not resolve example.com.' };
+
+    // Act
+    const result = serializeError(error);
+
+    // Assert
+    expect(result).toEqual(error);
   });
 });

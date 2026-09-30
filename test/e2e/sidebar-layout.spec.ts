@@ -99,3 +99,78 @@ sidebarTest('folder and feed counts share a right edge', async ({ page }) => {
   const feedCount = await boxOf(page.getByTestId('feed-count'));
   expect(Math.abs((folderCount.x + folderCount.width) - (feedCount.x + feedCount.width))).toBeLessThan(1);
 });
+
+sidebarTest('window controls reserve title bar space', async ({ userDataDir }) => {
+  sidebarTest.skip(process.platform === 'darwin');
+
+  // Arrange
+  const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
+  try {
+    const page = await app.firstWindow();
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.showInactive());
+
+    // Act
+    const overlay = await page.evaluate(() => {
+      const controls = (navigator as Navigator & {
+        windowControlsOverlay?: { visible: boolean; getTitlebarAreaRect(): DOMRect };
+      }).windowControlsOverlay;
+      return {
+        visible: controls?.visible,
+        width: controls?.getTitlebarAreaRect().width,
+        height: controls?.getTitlebarAreaRect().height,
+        windowWidth: window.innerWidth,
+      };
+    });
+
+    // Assert
+    expect(overlay.visible).toBe(true);
+    expect(overlay.width).toBeLessThan(overlay.windowWidth);
+    expect(overlay.height).toBe(32);
+  } finally {
+    await app.close();
+  }
+});
+
+sidebarTest('window controls follow the app theme', async ({ userDataDir }) => {
+  sidebarTest.skip(process.platform === 'darwin');
+
+  // Arrange
+  const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
+  try {
+    const page = await app.firstWindow();
+    await app.evaluate(({ BrowserWindow }) => {
+      const window = BrowserWindow.getAllWindows()[0];
+      if (!window) {
+        throw new Error('expected an app window');
+      }
+      const setTitleBarOverlay = window.setTitleBarOverlay.bind(window);
+      window.setTitleBarOverlay = (options) => {
+        (window as typeof window & { lastTitleBarOverlay?: typeof options }).lastTitleBarOverlay = options;
+        setTitleBarOverlay(options);
+      };
+    });
+
+    const lastTitleBarOverlay = () => app.evaluate(({ BrowserWindow }) => {
+      const window = BrowserWindow.getAllWindows()[0] as (typeof BrowserWindow.prototype) & {
+        lastTitleBarOverlay?: { color?: string; symbolColor?: string; height?: number };
+      };
+      return window.lastTitleBarOverlay;
+    });
+
+    // Act
+    await page.evaluate(() => localStorage.setItem('ui-theme', 'light'));
+    await page.reload();
+
+    // Assert
+    await expect.poll(lastTitleBarOverlay).toEqual({ color: '#ebddc5', symbolColor: '#201e1d', height: 32 });
+
+    // Act
+    await page.evaluate(() => localStorage.setItem('ui-theme', 'dark'));
+    await page.reload();
+
+    // Assert
+    await expect.poll(lastTitleBarOverlay).toEqual({ color: '#272019', symbolColor: '#f2e7d6', height: 32 });
+  } finally {
+    await app.close();
+  }
+});
