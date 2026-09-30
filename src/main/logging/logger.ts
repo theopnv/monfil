@@ -45,7 +45,7 @@ export function redact(value: unknown, key = ''): unknown {
   return value;
 }
 
-function serializeError(error: unknown): LogRecord['error'] | undefined {
+export function serializeError(error: unknown): LogRecord['error'] | undefined {
   if (error === undefined) {
     return undefined;
   }
@@ -55,6 +55,10 @@ function serializeError(error: unknown): LogRecord['error'] | undefined {
       message: safeMessage(error.message),
       ...(error.stack ? { stack: safeMessage(error.stack) } : {}),
     };
+  }
+  if (error && typeof error === 'object' && 'name' in error && typeof error.name === 'string'
+    && 'message' in error && typeof error.message === 'string') {
+    return { name: safeMessage(error.name), message: safeMessage(error.message) };
   }
   return { name: 'UnknownError', message: safeMessage(String(error)) };
 }
