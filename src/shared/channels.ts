@@ -53,6 +53,7 @@ export type OneWayRendererToMainChannelPayloads = {
   'app:reveal-log-file': undefined;
   'app:reveal-database-backup': undefined;
   'app:restart': undefined;
+  'app:set-window-theme': 'light' | 'dark';
   'log:write': { level: LogLevel; event: LogEventName; data: LogEventMap[LogEventName]; error?: string };
 };
 
