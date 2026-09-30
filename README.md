@@ -7,7 +7,7 @@
 <p align="center">What if you could reclaim control over the algorithm and create your own news feed?</p>
 <p align="center"><a href="https://github.com/theopnv/monfil/releases">Download Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="CONTRIBUTING.md">Contribute</a></p>
 
-Monfil is a source-available desktop feed reader for engineers who want to follow the sources they choose—not whatever social-media algorithms decide to show them.
+Monfil is a source-available, cross-platform desktop feed reader for engineers who want to follow the sources they choose—not whatever social-media algorithms decide to show them.
 
 Start with curated feed packs for topics such as "General Tech announcements and trends". Or "DevSecOps", for info about CI/CD, test automation, testing frameworks and software-supply-chain security. Or submit your own!
 
