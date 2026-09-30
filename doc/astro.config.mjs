@@ -6,19 +6,20 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
 	integrations: [
 		starlight({
-			title: 'My Docs',
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
+			title: 'Monfil',
+			customCss: ['./src/styles/monfil.css'],
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/theopnv/monfil' }],
 			sidebar: [
 				{
-					label: 'Guides',
+					label: 'User Guide',
 					items: [
 						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', slug: 'guides/example' },
+						{ label: 'User Guide', slug: 'user-guide/home' },
 					],
 				},
 				{
-					label: 'Reference',
-					items: [{ autogenerate: { directory: 'reference' } }],
+					label: 'Contributor Guide',
+					items: [{ autogenerate: { directory: 'contributor-guide' } }],
 				},
 			],
 		}),
