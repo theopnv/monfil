@@ -37,6 +37,12 @@ jobs:
       # Check that pack metadata matches its OPML sources.
       - run: npm run check:feedpacks
 
+      - run: npm run lint:docs
+
+      - run: npm ci --prefix doc
+
+      - run: npm --prefix doc run build
+
   os_matrix:
     runs-on: ubuntu-latest
     outputs:
