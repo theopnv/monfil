@@ -1,1 +1,9 @@
 npm run lint
+
+if ! git diff --cached --quiet -- \
+  README.md \
+  CONTRIBUTING.md \
+  ':(glob)doc/src/content/docs/**/*.md' \
+  ':(glob)doc/src/content/docs/**/*.mdx'; then
+  npm run lint:docs
+fi

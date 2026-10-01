@@ -8,6 +8,6 @@ Every contributor must sign the [Contributor License Agreement](CLA.md) through 
 
 After you open a pull request, CLA Assistant will add a comment with a link to sign. Follow that link, sign in with your GitHub account, read the agreement, and sign it. CLA Assistant will then update the pull request's CLA status.
 
-If an employer owns your contribution, an authorized representative must sign the Corporate Contributor agreement. Contact support@theopnv.com for licensing or CLA questions.
+If an employer owns your contribution, an authorized representative must sign the Corporate Contributor agreement. Contact <support@theopnv.com> for licensing or CLA questions.
 
-To propose a curated source collection, follow the [feedpack submission guide](doc/submit-a-feedpack.md) and submit the result as a pull request.
+To propose a curated source collection, follow the [feedpack submission guide](doc/src/content/docs/user-guide/submit-a-feedpack.md) and submit the result as a pull request.

@@ -114,8 +114,8 @@ unbounded wait. Link rot is continuous and must be fixable without shipping a bi
 This does not make monfil non-local. There is no account and no server holding the user's data. The launch path
 stays offline.
 
-New feedpacks are submitted through pull requests. See [Submit a feedpack](./submit-a-feedpack.md) for the file
-format, catalog fields, validation command, and review criteria. CI checks that every `xmlUrl` resolves.
+New feedpacks are submitted through pull requests. See [Submit a feedpack](../doc/src/content/docs/user-guide/submit-a-feedpack.md) for the file
+format, catalog fields, validation command, and review criteria. CI checks that the OPML file exists and that its source count matches the catalog.
 
 Sharing a pack does not need the catalog at all: a user curates a workspace, exports it as OPML, and sends the file.
 

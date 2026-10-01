@@ -1,4 +1,7 @@
-# Privacy notice
+---
+title: Privacy notice
+description: How Monfil stores data and connects to other sites.
+---
 
 Last updated: 28 September 2026.
 

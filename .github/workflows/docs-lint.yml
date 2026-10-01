@@ -1,0 +1,111 @@
+name: Docs lint
+
+on:
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-lint
+  cancel-in-progress: false
+
+jobs:
+  markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: DavidAnson/markdownlint-cli2-action@v24
+        with:
+          globs: |
+            README.md
+            CONTRIBUTING.md
+            doc/src/content/docs/**/*.{md,mdx}
+
+  links:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: doc/package-lock.json
+
+      - run: npm ci --prefix doc
+
+      - run: node doc/scripts/generate-changelog.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - run: npm run build --prefix doc
+
+      - name: Prepare site link root
+        run: |
+          mkdir -p "$RUNNER_TEMP/docs-link-root"
+          ln -s "$GITHUB_WORKSPACE/doc/dist" "$RUNNER_TEMP/docs-link-root/monfil"
+
+      - name: Check links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --root-dir "$RUNNER_TEMP/docs-link-root" --no-progress
+            'doc/dist/**/*.html' README.md CONTRIBUTING.md
+          fail: false
+          output: lychee/out.md
+
+      - name: Update broken links issue
+        if: steps.lychee.outputs.exit_code == '0' || steps.lychee.outputs.exit_code == '2'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- docs-link-check -->';
+            const title = 'Docs broken links';
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const issue = issues.find((item) =>
+              !item.pull_request && item.title === title && item.body?.startsWith(marker)
+            );
+
+            if ('${{ steps.lychee.outputs.exit_code }}' === '2') {
+              const report = fs.readFileSync('lychee/out.md', 'utf8');
+              const runUrl = `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+              const body = `${marker}\n${report}\n\n[Docs lint run](${runUrl})`;
+
+              if (issue) {
+                await github.rest.issues.update({
+                  ...context.repo,
+                  issue_number: issue.number,
+                  body,
+                });
+              } else {
+                await github.rest.issues.create({
+                  ...context.repo,
+                  title,
+                  body,
+                });
+              }
+            } else if (issue) {
+              await github.rest.issues.update({
+                ...context.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'completed',
+              });
+            }
+
+      - name: Check link checker result
+        if: steps.lychee.outputs.exit_code != '0' && steps.lychee.outputs.exit_code != '2'
+        run: exit 1

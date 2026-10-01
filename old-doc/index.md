@@ -8,14 +8,14 @@ This is an Electron project based on [Vite](https://vite.dev):
 ## Table of Content
 
 - [Storage](./storage.md)
-- [Privacy notice](./privacy.md)
+- [Privacy notice](../doc/src/content/docs/user-guide/privacy.md)
 - [Database](./database.md)
 - [Backend](./backend.md)
   - [Sources](./sources.md)
 - [Frontend](./frontend.md)
   - [Untitled UI](./untitled-ui.md)
 - [Feedpacks](./feedpacks.md)
-- [Submit a feedpack](./submit-a-feedpack.md)
+- [Submit a feedpack](../doc/src/content/docs/user-guide/submit-a-feedpack.md)
 
 ## Debugging
 

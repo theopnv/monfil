@@ -27,6 +27,7 @@ Start with curated feed packs for topics such as "General Tech announcements and
 </p>
 
 ## Problem
+
 Keeping up with software engineering is increasingly difficult.
 
 Important information is scattered across blogs, release notes, changelogs, YouTube channels, GitHub repositories, and security advisories. Social networks make discovery easier, but their algorithms can narrow what you see.
@@ -86,6 +87,8 @@ xattr -cr /Applications/monfil.app
 - Click an item to open it in the reader; use `j`/`k`/`Esc` to move around without the mouse.
 - Open Settings (gear icon) to change theme, density, refresh interval, and reading behavior.
 
+For steps and screenshot locations, see the [user guide](doc/src/content/docs/user-guide/home.md).
+
 ## FAQ
 
 **Why does this exist? Don't RSS readers already exist?**
@@ -96,7 +99,7 @@ xattr -cr /Applications/monfil.app
 - Own your information diet: Monfil's source is available for review and built around transparency, portability, and control.
 
 **Is my data private?**
-Monfil has no account, Monfil server, or usage analytics. Your feeds, read state, and saved articles stay on your device. Fetching feeds and articles, showing remote images, and loading embeds make requests to other sites. See the [privacy notice](doc/privacy.md) for details.
+Monfil has no account, Monfil server, or usage analytics. Your feeds, read state, and saved articles stay on your device. Fetching feeds and articles, showing remote images, and loading embeds make requests to other sites. See the [privacy notice](doc/src/content/docs/user-guide/privacy.md) for details.
 
 **Is there a mobile app?**
 Not currently. Monfil is a desktop app (macOS, Windows, Linux) built with Electron. There's no mobile version planned right now.
@@ -115,4 +118,4 @@ BUSL 1.1 permits copying, modification, redistribution, and non-production use. 
 
 Each BUSL-licensed version automatically changes to the MIT License four years after its first release. Read the [full license](LICENSE) for the terms. Third-party code keeps its own licenses, listed in [NOTICE](NOTICE).
 
-All new contributors must sign the [Contributor License Agreement](CLA.md) through CLA Assistant before a pull request can be merged. For licensing questions, contact support@theopnv.com.
+All new contributors must sign the [Contributor License Agreement](CLA.md) through CLA Assistant before a pull request can be merged. For licensing questions, contact <support@theopnv.com>.
