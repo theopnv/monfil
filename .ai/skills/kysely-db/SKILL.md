@@ -5,7 +5,7 @@ description: Kysely query-builder patterns and conventions for monfil's database
 
 # Kysely database patterns
 
-This project's database architecture (file layout, `dbReady`, the `CriteriaHandlers` exhaustiveness trick, native module packaging) is documented in `doc/database.md` — read that first for the "where does this go" question. This skill covers the "how do I write this query correctly" question: the Kysely syntax this codebase relies on, and the mistakes that are easy to make with it.
+This project's database architecture is documented in `doc/src/content/docs/contributor-guide/database.md`. Read that first for the "where does this go" question. This skill covers the Kysely syntax this codebase uses and mistakes that are easy to make with it.
 
 For anything not covered below, the full Kysely docs are at https://kysely.dev/llms-full.txt.
 

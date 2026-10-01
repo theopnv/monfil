@@ -3,7 +3,7 @@ title: Use Monfil
 description: Add feeds, organize sources, and read articles in Monfil.
 ---
 
-Monfil opens in Home. Your workspaces are in the narrow rail on the left. The next sidebar holds your feeds and folders. Articles from the selected workspace appear in the main area.
+[Install Monfil](../install/) before you start. Monfil opens in Home. Your workspaces are in the narrow rail on the left. The next sidebar holds your feeds and folders. Articles from the selected workspace appear in the main area.
 
 ![Monfil Home with the workspace rail, feed folders, and article cards.](../../../assets/user-guide/main-window.png)
 

@@ -495,7 +495,7 @@ describe('folder context menu and rename', () => {
 
   // A letter matching another row's own first letter used to be swallowed by GridList's keyboard
   // typeahead (which also lives on 't', 's', ... depending on what's in the collection) instead of
-  // reaching the input: see doc/frontend.md's React Aria collections note.
+  // reaching the input: see doc/src/content/docs/contributor-guide/renderer.md's React Aria collections note.
   test('typing a letter that matches a folder name does not get swallowed', async () => {
     // Arrange
     stubElectron({ feeds: [feedA] });

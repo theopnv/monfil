@@ -1,6 +1,6 @@
 # Contributing
 
-Submit all contributions as pull requests to the [official Monfil repository](https://github.com/theopnv/monfil). Start with an issue before you spend time on a large change. Read the [documentation](doc/index.md), keep each pull request focused, and run `npm run lint` and the relevant tests before you submit it.
+Submit all contributions as pull requests to the [official Monfil repository](https://github.com/theopnv/monfil). Start with an issue before you spend time on a large change. Read the [contributor guide](doc/src/content/docs/contributor-guide/home.md), keep each pull request focused, and run `npm run lint` and the relevant tests before you submit it.
 
 You may fork Monfil to develop and test a proposed change. The [BUSL 1.1 license](LICENSE) governs use and distribution of the code. A fork or independent distribution is not an official Monfil release. Théo Penavaire publishes official releases through the official repository.
 
