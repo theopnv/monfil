@@ -1,11 +1,26 @@
-<p align="center">
-  <img src="./src/renderer/styles/monfil-logo.svg" alt="Monfil logo" width="140">
-</p>
+---
+title: Monfil
+description: Source-available desktop feed reader for engineers who want to follow the sources they choose.
+# template: splash
+hero:
+  tagline: What if you could reclaim control over the algorithm and create your own news feed?
+  image:
+    file: ../../assets/icon.png
+  actions:
+    - text: Install Monfil
+      link: ./user-guide/install/
+      icon: download
+    - text: Browse feed packs
+      link: https://github.com/theopnv/monfil/tree/main/feedpacks
+      icon: external
+      variant: minimal
+---
 
-<h1 align="center">Monfil</h1>
-
-<p align="center">What if you could reclaim control over the algorithm and create your own news feed?</p>
-<p align="center"><a href="doc/src/content/docs/user-guide/install.md">Install Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="doc/src/content/docs/contributor-guide/home.md">Contribute</a></p>
+import { Image } from 'astro:assets';
+import workspaceLight from '../../assets/gallery/workspace1-light.png';
+import workspaceDark from '../../assets/gallery/workspace1-dark.png';
+import reader from '../../assets/gallery/reader.png';
+import home from '../../assets/gallery/home.png';
 
 Monfil is a source-available, cross-platform desktop feed reader for engineers who want to follow the sources they choose—not whatever social-media algorithms decide to show them.
 
@@ -17,14 +32,12 @@ Start with curated feed packs for topics such as "General Tech announcements and
 
 ➡️ ["Hate “The Algorithm?” RSS Is One of the Tools You’ve Been Looking For"](https://www.eff.org/deeplinks/2026/06/hate-algorithm-rss-one-tools-youve-been-looking)
 
-<p align="center">
-  <img src="./doc/src/assets/gallery/workspace1-light.png" width="49%" alt="Monfil workspace, light mode">
-  <img src="./doc/src/assets/gallery/workspace1-dark.png" width="49%" alt="Monfil workspace, dark mode">
-</p>
-<p align="center">
-  <img src="./doc/src/assets/gallery/reader.png" width="49%" alt="Monfil reader">
-  <img src="./doc/src/assets/gallery/home.png" width="49%" alt="Monfil home">
-</p>
+<div className="monfil-gallery not-content">
+  <Image src={workspaceLight} alt="Monfil workspace, light mode" width={960} format="webp" />
+  <Image src={workspaceDark} alt="Monfil workspace, dark mode" width={960} format="webp" />
+  <Image src={reader} alt="Monfil reader" width={960} format="webp" />
+  <Image src={home} alt="Monfil home" width={960} format="webp" />
+</div>
 
 ## Problem
 
@@ -47,9 +60,9 @@ Monfil combines:
 
 ## Guides
 
-- [Install Monfil](doc/src/content/docs/user-guide/install.md)
-- [Use Monfil](doc/src/content/docs/user-guide/home.md)
-- [Contribute to Monfil](doc/src/content/docs/contributor-guide/home.md)
+- [Install Monfil](./user-guide/install/)
+- [Use Monfil](./user-guide/home/)
+- [Contribute to Monfil](./contributor-guide/home/)
 
 ## FAQ
 
@@ -61,23 +74,23 @@ Monfil combines:
 - Own your information diet: Monfil's source is available for review and built around transparency, portability, and control.
 
 **Is my data private?**
-Monfil has no account, Monfil server, or usage analytics. Your feeds, read state, and saved articles stay on your device. Fetching feeds and articles, showing remote images, and loading embeds make requests to other sites. See the [privacy notice](doc/src/content/docs/user-guide/privacy.md) for details.
+Monfil has no account, Monfil server, or usage analytics. Your feeds, read state, and saved articles stay on your device. Fetching feeds and articles, showing remote images, and loading embeds make requests to other sites. See the [privacy notice](./user-guide/privacy/) for details.
 
 **Is there a mobile app?**
 Not currently. Monfil is a desktop app (macOS, Windows, Linux) built with Electron. There's no mobile version planned right now.
 
 **Is monfil free?**
-Yes. Monfil has no ads. See the [license terms](LICENSE) for permitted uses.
+Yes. Monfil has no ads. See the [license terms](https://github.com/theopnv/monfil/blob/main/LICENSE) for permitted uses.
 
 **How do I report a bug or request a feature?**
-Open an issue on GitHub. Read [CONTRIBUTING.md](CONTRIBUTING.md) first if you're planning to send a pull request — small, focused PRs are easiest to review.
+Open an issue on GitHub. Read [CONTRIBUTING.md](https://github.com/theopnv/monfil/blob/main/CONTRIBUTING.md) first if you're planning to send a pull request — small, focused PRs are easiest to review.
 
 ## License
 
-Monfil is source-available under [Business Source License 1.1](LICENSE) from v0.0.6 onward. Releases and tags before v0.0.6 remain under the original MIT license.
+Monfil is source-available under [Business Source License 1.1](https://github.com/theopnv/monfil/blob/main/LICENSE) from v0.0.6 onward. Releases and tags before v0.0.6 remain under the original MIT license.
 
 BUSL 1.1 permits copying, modification, redistribution, and non-production use. The Additional Use Grant also permits internal business and personal use, including modified versions. It does not permit use to offer a product or service that competes with Monfil. Only releases published by Théo Penavaire through the official repository are official Monfil releases. Contributions intended for the official project must go through that repository.
 
-Each BUSL-licensed version automatically changes to the MIT License four years after its first release. Read the [full license](LICENSE) for the terms. Third-party code keeps its own licenses, listed in [NOTICE](NOTICE).
+Each BUSL-licensed version automatically changes to the MIT License four years after its first release. Read the [full license](https://github.com/theopnv/monfil/blob/main/LICENSE) for the terms. Third-party code keeps its own licenses, listed in [NOTICE](https://github.com/theopnv/monfil/blob/main/NOTICE).
 
-All new contributors must sign the [Contributor License Agreement](CLA.md) through CLA Assistant before a pull request can be merged. For licensing questions, contact <support@theopnv.com>.
+All new contributors must sign the [Contributor License Agreement](https://github.com/theopnv/monfil/blob/main/CLA.md) through CLA Assistant before a pull request can be merged. For licensing questions, contact support@theopnv.com.

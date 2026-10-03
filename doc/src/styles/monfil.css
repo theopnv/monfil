@@ -1,0 +1,45 @@
+:root {
+	--sl-color-white: #f5ead8;
+	--sl-color-gray-1: #eee7db;
+	--sl-color-gray-2: #dcd3c4;
+	--sl-color-gray-3: #a19786;
+	--sl-color-gray-4: #82796a;
+	--sl-color-gray-5: #474238;
+	--sl-color-gray-6: #272019;
+	--sl-color-black: #1d1815;
+	--sl-color-accent-low: #643312;
+	--sl-color-accent: #f6a06b;
+	--sl-color-accent-high: #ffc6a5;
+	--sl-color-bg-nav: #272019;
+	--sl-color-bg-sidebar: #272019;
+}
+
+:root[data-theme='light'] {
+	--sl-color-white: #201e1d;
+	--sl-color-gray-1: #2e2b25;
+	--sl-color-gray-2: #474238;
+	--sl-color-gray-3: #645c50;
+	--sl-color-gray-4: #82796a;
+	--sl-color-gray-5: #c0b6a5;
+	--sl-color-gray-6: #e3d3b6;
+	--sl-color-gray-7: #efe2cc;
+	--sl-color-black: #f5ead8;
+	--sl-color-accent-low: #ffe1d0;
+	--sl-color-accent: #8c491a;
+	--sl-color-accent-high: #643312;
+	--sl-color-bg-nav: #ebddc5;
+	--sl-color-bg-sidebar: #f5ead8;
+}
+
+.monfil-gallery {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+	gap: 1rem;
+	margin-block: 1.5rem;
+}
+
+.monfil-gallery img {
+	width: 100%;
+	height: auto;
+	border-radius: 0.75rem;
+}

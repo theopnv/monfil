@@ -25,7 +25,7 @@ export interface Database {
 }
 
 // =============== Workspace ===============
-// A workspace is a tab in the left rail: Home, or an installed pack / OPML import. See doc/feedpacks.md.
+// A workspace is a tab in the left rail: Home, or an installed pack / OPML import. See doc/src/content/docs/contributor-guide/feedpacks-and-opml.md.
 
 export interface WorkspaceTable {
   id: Generated<number>;
@@ -111,7 +111,7 @@ export interface FeedItemTable {
   excerpt: Generated<string>;
   image: string | undefined;
   author: string | undefined;
-  // A JSON blob for the fields only some source types carry. See doc/sources.md.
+  // A JSON blob for the fields only some source types carry. See doc/src/content/docs/contributor-guide/feed-sources.md.
   extra: string | undefined;
   // Select/insert stay `string | undefined`, per the nullable-column convention (see `link`, `image`).
   // Update additionally allows `null`, the one write path that must be able to clear the column back to unread.

@@ -20,7 +20,7 @@ export type SourceFetchResult = { parsed: ParsedSource; validators: FetchValidat
 
 /**
  * One source type the app can subscribe to. `registry.ts` holds one adapter per `SourceType`.
- * See doc/sources.md for how to add a second one.
+ * See doc/src/content/docs/contributor-guide/feed-sources.md for how to add one.
  */
 export interface SourceAdapter {
   readonly type: SourceType;

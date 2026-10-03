@@ -14,7 +14,7 @@ export interface SettingsNavProps {
   items: readonly SettingsNavItem[];
 }
 
-// A plain anchor href would rewrite the router's hash (the app uses hash history, per doc/frontend.md),
+// A plain anchor href would rewrite the router's hash (the app uses hash history, per doc/src/content/docs/contributor-guide/renderer.md),
 // so a section is reached by scrolling it into view instead of navigating to `#<id>`.
 export default function SettingsNav({ items }: SettingsNavProps) {
   const activeId = useActiveSection(items.map((item) => item.id));

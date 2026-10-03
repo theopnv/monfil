@@ -1,58 +1,59 @@
-# AGENTS.md
+# Working in Monfil
 
-This file provides guidance to LLMs when working with code in this repository.
+Monfil is a source-available desktop feed reader for macOS, Windows, and Linux. It uses Electron, React, TypeScript, SQLite, and Astro for its documentation site. Keep this file focused on facts and rules that apply across the repository. Use `doc/AGENTS.md` for work in `doc/` and the relevant `.ai/skills/` guide for a specialized workflow.
+
+## Find the right code
+
+- If a local `graft/` index and the `graft` command are available, use them to locate code and trace dependencies before searching source files. Graft is optional and is not included in a fresh clone. Otherwise, use `rg` to find the relevant files. Read only the files needed for the task.
+- `src/main/` owns Electron startup, network access, feed parsing and refresh, SQLite, OPML, feedpacks, settings, logging, and IPC handlers.
+- `src/preload/` exposes the restricted IPC bridge to the renderer.
+- `src/renderer/` owns the React UI. Routes live in `src/renderer/routes/`; providers and query hooks hold UI state.
+- `src/shared/` holds contracts and values used across processes. It must not import from a process tree.
+- `feedpacks/` contains curated OPML packs and their catalog. `scripts/check-feedpacks.mjs` checks them.
+- `doc/src/content/docs/` contains the Astro Starlight site, including the contributor guide. Check current code before relying on documentation.
 
 ## Commands
 
-```bash
-npm start                 # electron-forge dev run (Vite dev server + Electron)
-npm run lint              # tsc -b . && eslint  (also the pre-commit hook)
-npm test                  # unit (vitest), integration (vitest browser mode), then e2e (playwright); packaging runs in pretest
-npm run package           # build into .vite/build ; required before e2e tests
-npm run make              # platform installers in out/<os>
-```
+Run commands from the repository root unless a command says otherwise.
 
-Single tests:
+| Task | Command |
+| --- | --- |
+| Start the Electron app | `npm start` |
+| Check TypeScript and ESLint | `npm run lint` |
+| Run Node unit tests | `npm run test:unit` |
+| Run renderer tests in Chromium | `npm run test:integration` |
+| Build and run Electron end-to-end tests | `npm run test:e2e` |
+| Run all test suites | `npm test` |
+| Package the app | `npm run package` |
+| Make platform installers | `npm run make` |
+| Check feedpacks | `npm run check:feedpacks` |
+| Lint public Markdown docs | `npm run lint:docs` |
+| Build the documentation site | `npm --prefix doc run build` |
 
-```bash
-npx vitest run src/main/db/query.test.ts        # one unit test file
-npx vitest run -t "filters by name"             # one unit test by name
-npx playwright test test/e2e/settings.spec.ts   # one e2e file
-```
+Use `npx vitest run path/to/file.test.ts` for one Node test file. Use `npx vitest run --config=vitest.browser.config.mts path/to/file.test.tsx` for one renderer test file. Use `npx playwright test test/e2e/file.spec.ts` for one end-to-end file.
 
-Playwright launches the built app, not the sources. It reads `main` from `package.json`, which points into `.vite/build`. Run `npm run package` after a change, or the e2e tests
-run against old code.
+Playwright launches `.vite/build/main.js`. `npm run test:e2e` packages the current code through its `pretest:e2e` script. Run `npm run package` first when you call `npx playwright test` directly. The full `npm test` command runs the Node, renderer, and Electron suites in that order. The pre-commit hook runs `npm run lint` and also runs `npm run lint:docs` when public Markdown docs are staged.
 
-In VS Code, use the `Main + renderer` compound launch configuration to debug both processes.
+In VS Code, the `Main + renderer` compound launch configuration debugs both Electron processes. Use `.ai/skills/vm-debug/SKILL.md` when reproducing a Windows or Linux issue in a local VM.
 
-When you are tasked with fixing a bug, always write a test reproducing the issue first. This gives confidence the fix actually works.
+## Code boundaries
 
-## Architecture
+- `forge.config.ts` defines the Electron build. The main, preload, and renderer processes have separate Vite and TypeScript configs.
+- Define cross-process payloads in `src/shared/channels.ts` and shared data types in `src/shared/contracts.ts`. Keep IPC calls aligned with those contracts; do not add local payload types at call sites.
+- Keep network, filesystem, and database access in the main process. Use the preload bridge for renderer requests. Treat feed content and external URLs as untrusted input; preserve the existing fetch, window security, and HTML sanitization boundaries.
+- Database queries live in `src/main/db/`. Add schema changes as a new numbered migration and register it in `src/main/db/migrations/index.ts`. Use `.ai/skills/kysely-db/SKILL.md` for database edits.
+- Feed source adapters live in `src/main/feed/sources/`. RSS, RDF, JSON Feed, and YouTube feed support share the refresh path. Item enrichment and article extraction run in `src/main/feed/`; retention and backup work live in `src/main/db/`.
+- Diagnostic logging and error recovery span `src/main/logging/`, `src/renderer/components/errors/`, and the Settings diagnostics section.
+- The renderer uses TanStack Router and TanStack Query. Its `@/` alias points only to `src/renderer/`. Keep the alias declarations in the renderer TypeScript, Vite, and vendored UI configs aligned.
+- Use `type` for type-only imports. Use the `Result` union in `src/shared/result.ts` for expected failures. Handle tagged errors by `name` and keep exhaustive switches exhaustive.
 
-Electron has three process trees, each built by its own Vite config, plus one process-neutral tree. See `forge.config.ts`.
+## Changes and checks
 
-- `src/main`: the Node side. Network, parsing, database. See [doc/backend.md](doc/backend.md) and [doc/database.md](doc/database.md).
-- `src/preload`: the context bridge. It exposes `window.electron.ipcRenderer`.
-- `src/renderer`: the React app. See [doc/frontend.md](doc/frontend.md).
-- `src/shared`: data contracts, IPC channel maps, and runtime values that more than one process uses. It must not import from a process tree.
-
-### IPC contract
-
-`src/shared/channels.ts` declares the payload of every channel and the renderer-facing bridge interface. Cross-process data types and tagged errors live in `src/shared/contracts.ts`. Do not type a payload at a call site.
-
-## Conventions
-
-- Type-only imports need the `type` keyword. `tsconfig.base.json` holds the strict rules. `tsconfig.json` references the process projects in `src/main/`, `src/preload/`, and `src/renderer/` so each process gets only its own environment types.
-- The `@/` alias points at `src/renderer/` only. It is declared in `src/renderer/tsconfig.json`, the vendored Untitled UI config, and `src/renderer/vite.config.mts`. Keep them in step.
-- Fallible operations return the `Result` union from `src/shared/result.ts` instead of throwing. Errors are tagged unions with a `name` field. Discriminate them with a `switch` that ends in a `never` exhaustiveness check, as in `src/main/feed/sources/rss.ts`.
-- Documentation files use kebab-case names and live in `doc/`.
-- Use JSDoc @params and @return to document functions (only the important, external facing APIs or helpers).
-
-### Test conventions
-- Unit tests sit next to the code they cover (`file.test.ts`) and e2e tests live in `test/e2e/` (`file.spec.ts`).
-- Tests mark their steps with `// Arrange`, `// Act`, `// Assert` comments.
-- Use fixtures when possible, and/or setup/teardown hoos (before/after). Do not just call regular functions at the beginning or end of the tests to act as the setup/teardown.
-- A good test covers: the successful paths, the error paths and the edge case paths (boundaries, no or empty input, ...)
-- Don't overmock. Don't test the internals of the code under testing, test the contract (input + output) visible from the outside.
-- For vitest mocks, always use `vi.mock(import('./module.ts'))` instead of `vi.mock('./module.ts')`. This ensures type safety with typescript.
-- Prefer short test names.
+- For a bug fix, first add a test that fails for the reported behavior. Then fix the code and run the affected test again.
+- Keep unit tests next to source as `*.test.ts` or `*.test.tsx`. Put Electron end-to-end tests in `test/e2e/*.spec.ts`. Renderer component tests run in Vitest Browser Mode, not the Node suite.
+- Test observable behavior. Use fixtures and setup or teardown hooks when they help. Mark test phases with `// Arrange`, `// Act`, and `// Assert`. Use `vi.mock(import('./module.ts'))` for Vitest module mocks.
+- Run focused checks for the area you changed. Run `npm run lint` for TypeScript changes. Run broader suites when a change crosses process boundaries or affects packaging, migrations, or security.
+- Keep repository paths relative to its root in code, comments, docs, tests, and CI. Do not add machine-specific paths or identifiers.
+- Add a code comment only when it explains a lasting constraint that the code cannot show. Keep existing comments unless the constraint has changed. Use JSDoc for important external APIs and helpers.
+- Keep documentation filenames in kebab case. The public site lives under `doc/src/content/docs/`.
+- Do not overwrite unrelated work in the working tree. Finish the requested change, check the diff, and report any checks you could not run.
