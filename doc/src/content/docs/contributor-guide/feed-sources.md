@@ -5,11 +5,9 @@ sidebar:
   order: 8
 ---
 
-Monfil defines a `Source` and a corresponding `SourceAdapter` for each content type. Sources include RSS, Youtube.
+Monfil uses a `SourceAdapter` for each source type. The [source adapters](https://github.com/theopnv/monfil/tree/main/src/main/feed/sources) cover RSS, Atom, RDF, JSON Feed, and YouTube.
 
-`src/main/feed/sources/` holds the RSS and YouTube adapters. The RSS adapter also parses Atom, RDF, and JSON Feed. Each adapter implements `SourceAdapter` from `types.ts`: `fetch` returns a parsed source or a tagged fetch error, and `parse` handles content without a network request. `fetchesFullArticle` tells the enrichment path whether item links need article extraction.
-
-`registry.ts` maps every `SourceType` to an adapter. `sourceFor` selects one for a stored feed. `resolveSource` selects one for a link the user has entered, with an optional type hint from the Add Feed UI. The registry uses TypeScript's `satisfies` check so a new source type requires an adapter.
+## Follow an item
 
 ```text
 User link -> resolveSource -> adapter.fetch -> parsed source -> Add Feed -> database
@@ -18,6 +16,17 @@ Stored feed -> sourceFor -> adapter.fetch -> refresh -> items -> river
 Reader item -> content request -> article extraction -> stored body
 ```
 
-To add a source type, extend `SourceType` in `src/shared/contracts.ts`, add the adapter, register it, and teach `resolveSource` how to recognize its links. Give each item a stable GUID so refresh can recognize it again. Put fields specific to one source in `feedItem.extra`; add a shared column and migration when every source needs the field. Test parsing with fixtures and test the fetch behavior at the adapter boundary.
+An adapter's `fetch` method returns a parsed source or a tagged error. Its `parse` method handles content without a network request. `fetchesFullArticle` tells the enrichment path whether an item link needs article extraction. The [registry](https://github.com/theopnv/monfil/blob/main/src/main/feed/sources/registry.ts) picks an adapter for a stored feed or a link entered in Add Feed.
 
-The refresh scheduler reads its interval from the database. Refresh uses conditional requests when a feed has validators, records per-feed errors, and applies item retention. Keep feed-owned item links behind the private-network check when adding a fetch path. `src/main/feed/refresh.ts`, `src/main/feed/enrichItems.ts`, and `src/main/lib/fetch.ts` show those boundaries.
+## Add a source type
+
+1. Extend `SourceType` in the [shared contracts](https://github.com/theopnv/monfil/blob/main/src/shared/contracts.ts).
+2. Add an adapter and register it. Teach `resolveSource` to recognize its links.
+3. Give each item a stable GUID so a later refresh can find it again.
+4. Test parsing with fixtures and test fetch behavior at the adapter boundary.
+
+Keep fields that only this source uses in `feedItem.extra`. When every source needs a field, add a shared column and migration.
+
+:::caution[Keep the fetch boundary]
+Refresh uses conditional requests, records errors for each feed, and applies item retention. When a new path fetches item links, keep the private-network check in the [network helpers](https://github.com/theopnv/monfil/tree/main/src/main/lib). See the [feed workflow](https://github.com/theopnv/monfil/tree/main/src/main/feed) before changing when enrichment runs.
+:::

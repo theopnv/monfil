@@ -5,26 +5,20 @@ sidebar:
   order: 4
 ---
 
-`src/main/main.ts` starts the Electron app. Main responsibilities:
+The [main process](https://github.com/theopnv/monfil/tree/main/src/main) starts Electron, opens the database, registers IPC, creates the window, and schedules feed refreshes. It owns Node.js APIs. Put network requests, filesystem work, and SQLite access here; the renderer reaches them through the [IPC API](../api/).
 
-- Data directory
-- Logging
-- Database
-- Registering IPC
-- Creating a window
-- Feed refresh scheduler
+## Follow a feed refresh
 
-The main process owns Node.js APIs. Put network requests, filesystem work, and SQLite access here. The renderer reaches them through the [IPC API](../api/).
+The scheduler reads the stored refresh settings and arms a timer. Each cycle fetches feeds through their adapters, saves new items, removes expired ones, and reports a summary. Image enrichment can continue after the feed list returns. See [Feed sources](../feed-sources/) for the adapter path.
 
-## Feed work
+When the reader requests an article body through `items:get-content`, main extracts and stores it for later reads.
 
-`src/main/feed/scheduler.ts` runs refreshes on a timer or at launch, based on stored settings. `src/main/feed/refresh.ts` gets the stored feeds, asks the right source adapter to fetch each one, writes new items, prunes old items, and reports a summary. Image enrichment can finish after the feed list returns.
-See [Feed sources](../feed-sources/).
+:::caution[Untrusted content]
+Keep third-party HTML behind the sanitization path before it reaches the reader. Changes to item links must preserve the private-network check.
+:::
 
-The reader can request an article's body through `items:get-content`. Article extraction runs outside the renderer. The main process stores the extracted result for later reads. Keep third-party HTML behind the existing sanitization path before it reaches the reader.
+## Keep network and window boundaries
 
-## Network and windows
+The [network helpers](https://github.com/theopnv/monfil/tree/main/src/main/lib) accept HTTP and HTTPS URLs and check redirects. [Window security](https://github.com/theopnv/monfil/blob/main/src/main/window-security.ts) keeps app windows on the app document, denies web permissions, and opens external links in the system browser.
 
-`src/main/lib/fetch.ts` is the shared outbound fetch path. It accepts HTTP and HTTPS URLs and checks each redirect. Fetches of item links use the private-network guard in `src/main/lib/private-network.ts`.
-
-`src/main/window-security.ts` keeps app windows on the app document, denies web permissions, and sends external links to the system browser. The renderer's Vite config supplies the Content Security Policy. Changes to URL handling, article content, or window creation must keep these boundaries intact. The packaged app's window behavior is covered by `test/e2e/window-security.spec.ts`.
+The renderer's Vite config supplies the Content Security Policy. Run the [window security tests](https://github.com/theopnv/monfil/blob/main/test/e2e/window-security.spec.ts) when you change URL handling or window behavior.

@@ -5,8 +5,14 @@ sidebar:
   order: 10
 ---
 
-Main-process logs live in `src/main/logging/`. The renderer reports errors through the `log:write` IPC channel. Settings can reveal the log file and enable detailed logging. Keep sensitive feed URLs and content behind the existing redaction path in `logger.ts`.
+Main-process logs live in the [logging folder](https://github.com/theopnv/monfil/tree/main/src/main/logging). The renderer reports errors through `log:write`. In Settings, a user can reveal the log file or enable detailed logging.
 
-Expected failures return a tagged `Result` to the caller. Unexpected IPC failures receive an incident ID in `src/main/ipc/registerIpcHandlers.ts`; the renderer can show that ID with a retry and a link to the log. Startup has a separate health result. `src/renderer/components/errors/StartupGate.tsx` and `ErrorRecovery.tsx` show the paths for a database reset or failed startup.
+:::caution[Protect feed data]
+Keep feed URLs and content behind the existing [log redaction](https://github.com/theopnv/monfil/blob/main/src/main/logging/logger.ts) when you add diagnostics.
+:::
 
-When you investigate a report, reproduce the action, note its incident ID, and inspect the log entry with that ID. Test the operation at its owning boundary. Use an Electron end-to-end test when the behavior depends on the packaged window, preload bridge, or filesystem layout. `AGENTS.md` lists the focused test commands.
+## Follow a failure
+
+Expected failures return a tagged `Result` to the caller. An unexpected IPC failure gets an incident ID, which the renderer can show beside a retry action and a link to the log. Startup has a separate health result; the [error components](https://github.com/theopnv/monfil/tree/main/src/renderer/components/errors) handle a database reset or failed startup.
+
+To investigate a report, reproduce the action and note its incident ID. Find that ID in the log, then test the operation at the boundary that owns it. Use an Electron end-to-end test when the result depends on the packaged window, preload bridge, or filesystem layout. The repository's [contribution instructions](https://github.com/theopnv/monfil/blob/main/AGENTS.md) list focused test commands.

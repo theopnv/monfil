@@ -5,49 +5,36 @@ sidebar:
   order: 2
 ---
 
-You need Git, GitHub access, Node.js and npm.
+You need Git, GitHub access, Node.js, and npm.
 
 ## Run the app
 
-Fork the [Monfil repository](https://github.com/theopnv/monfil). Clone your fork, then make a branch. Replace `YOUR_ACCOUNT` with your GitHub name:
+Fork the [Monfil repository](https://github.com/theopnv/monfil), clone your fork, and make a branch. Replace `YOUR_ACCOUNT` with your GitHub name:
 
 ```sh
 git clone https://github.com/YOUR_ACCOUNT/monfil.git
 cd monfil
 git switch -c my-first-change
-```
-
-From the repository root:
-
-```sh
 npm install
 npm start
 ```
 
-Electron Forge starts the main process and the renderer dev server. The app uses a separate data directory in development, so a development run does not use the installed app's database.
+Electron Forge starts the main process and renderer development server. Development uses a separate data directory, so your installed app's database stays untouched.
 
-## Make one small change
+## Send a small change
 
-For a first pull request, choose a small issue or a documentation error you can check against the code. For a large change, open a GitHub issue so we can discuss it before you spend time on it.
+For a first pull request, choose an issue or a documentation error that you can check against the code. Discuss larger changes in a GitHub issue before you start.
 
-1. Make the change and run the checks that apply:
+1. Make the change. Run the checks that apply to it.
+2. Commit and push your branch.
+3. Open a pull request against the official repository. Describe the behavior, your change, and the checks you ran. Link an issue when there is one.
+4. Sign the [Contributor License Agreement](https://github.com/theopnv/monfil/blob/main/CLA.md) through the link from CLA Assistant.
 
-    ```sh
-    # For code changes only
-    npm run lint
-    npm run test # Or npm run test:unit && npm run test:integration && npm run test:e2e
+For a code change, run `npm run lint` and the affected tests. `npm test` runs all suites. For a documentation change, run `npm run lint:docs` and `npm --prefix doc run build`.
 
-    # For docs changes only
-    npm run lint:docs
-    npm --prefix doc run build
-    ```
-
-2. Run the lint and tests (depending on your change you might not need all of them).
-3. Commit and push your branch.
-4. Open a pull request against the official repository. Describe the behavior, your change, and the checks you ran. Link the issue when there is one. The maintainer reviews the pull request and may ask for changes.
-5. Sign the agreement linked by the CLA Assistant ([Contributor License Agreement](https://github.com/theopnv/monfil/blob/main/CLA.md)).
-
-If you need debugging, the VS Code `Main + renderer` launch configuration attaches debuggers to both Electron processes.
+:::tip[Debug both processes]
+In VS Code, the `Main + renderer` launch configuration attaches debuggers to both Electron processes.
+:::
 
 ## Recommended setup
 

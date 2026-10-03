@@ -5,9 +5,15 @@ sidebar:
   order: 6
 ---
 
-`src/shared/channels.ts` defines every channel and its argument and return types. Shared data types live in `src/shared/contracts.ts`. The renderer uses the preload bridge at `window.electron.ipcRenderer`.
+The [channel contracts](https://github.com/theopnv/monfil/blob/main/src/shared/channels.ts) define calls and their argument and return types. [Shared data types](https://github.com/theopnv/monfil/blob/main/src/shared/contracts.ts) describe the payloads. The renderer calls main through `window.electron.ipcRenderer`.
 
-The call column uses three terms. `invoke` sends a request from renderer to main and returns a result. `sendMessage` sends a command from renderer to main without a result. `on` receives an event that main sends to the renderer. Events have no replay. For state such as the feed list, the renderer loads the initial value with `invoke`.
+## Read the channel list
+
+The call column uses three terms. `invoke` sends a request to main and returns a result. `sendMessage` sends a command without a result. `on` receives an event from main.
+
+:::note[Events have no replay]
+Load initial state, such as the feed list, with `invoke`. Use `on` for later updates while the view is mounted.
+:::
 
 ## `app:*`
 
@@ -109,8 +115,10 @@ The call column uses three terms. `invoke` sends a request from renderer to main
 | `workspaces:export-requested` | `on` | Handle an export action from the context menu. |
 | `workspaces:delete-requested` | `on` | Handle a delete action from the context menu. |
 
-Expected failures use `Result` from `src/shared/result.ts`. Callers handle tagged errors by `name`. An unexpected throw at the IPC boundary becomes an `UNEXPECTED_ERROR` with an incident ID.
+## Handle errors
+
+Expected failures use the shared [`Result` type](https://github.com/theopnv/monfil/blob/main/src/shared/result.ts). Callers handle tagged errors by `name`. An unexpected throw at the IPC boundary becomes an `UNEXPECTED_ERROR` with an incident ID.
 
 ## Add or change a channel
 
-Define the arguments and result in `src/shared/channels.ts`. Keep shared data shapes in `src/shared/contracts.ts`. Main registers request handlers in `src/main/ipc/registerIpcHandlers.ts` and one-way listeners in `src/main/ipc/registerIpcListeners.ts`. For an event to the renderer, use the typed helpers in `src/main/ipc/sendToRenderer.ts` and attach the renderer listener with cleanup. Add a test at the boundary where behavior changes.
+Define the arguments and result in the channel contracts. Keep shared data shapes in the shared contracts. Main registers calls and listeners in its [IPC folder](https://github.com/theopnv/monfil/tree/main/src/main/ipc). For an event to the renderer, use the typed send helpers and attach a listener with cleanup. Add a test at the boundary where behavior changes.

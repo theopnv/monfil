@@ -5,20 +5,26 @@ sidebar:
   order: 7
 ---
 
-The main process stores feeds, items, workspaces, categories, placements, and settings in SQLite. `better-sqlite3` opens the file; Kysely provides typed queries. The table types live in `src/main/db/types.ts`, and queries live under `src/main/db/`.
+The main process stores feeds, items, workspaces, categories, placements, and settings in SQLite. `better-sqlite3` opens the database; Kysely provides typed queries. Explore the [database code](https://github.com/theopnv/monfil/tree/main/src/main/db) when you change stored data.
 
-## Data ownership
+## Choose where state lives
 
-A feed has one metadata row for its URL. A placement connects that feed to a workspace and category. This lets the same source appear in more than one workspace while sharing its items and read state. A workspace has its own river view.
+Store refresh frequency and item retention in SQLite. They affect work that runs in the main process. Keep UI preferences, such as theme and reading layout, in the renderer's local storage.
 
-Main-process settings, such as refresh frequency and item retention, live in SQLite. Renderer-only preferences, such as theme and reading layout, use local storage. Put a new setting where its reader runs; avoid a new IPC call for state that stays in the renderer.
+A feed has one metadata row for its URL. A placement connects it to a workspace and category, so several workspaces can show the same feed while sharing its items and read state.
 
-## Startup and migrations
+## Change the schema
 
-`initializeDatabase()` opens the database and runs pending migrations. Code that reads it awaits `dbReady`. Add a numbered migration under `src/main/db/migrations/` and register it in `index.ts`. The static migration list works inside the bundled main process. Keep the types in `types.ts` aligned with the schema. `src/main/db/crud/query.ts` uses column handlers that make missing query criteria a type error when a table changes.
+Add a numbered migration in the [migrations folder](https://github.com/theopnv/monfil/tree/main/src/main/db/migrations), then register it in the [migration list](https://github.com/theopnv/monfil/blob/main/src/main/db/migrations/index.ts). Update the [table types](https://github.com/theopnv/monfil/blob/main/src/main/db/types.ts) to match. The static list lets migrations run in the bundled app.
 
-Before each pending migration of an existing database, Monfil makes a consistent copy. It keeps the two newest migration copies. The migration tests run the current migrations against databases starting at earlier versions; update their seed data when a new column needs it.
+At startup, `initializeDatabase()` runs pending migrations. Code that reads the database awaits `dbReady`. For an existing database, Monfil makes a consistent copy before each pending migration and keeps the two newest copies.
 
-## Backups and recovery
+:::tip[Check old databases]
+Migration tests start from earlier schema versions. Update their seed data when a new column requires it, then run the affected tests.
+:::
 
-Settings offers a manual database backup. OPML export saves feed lists and folders; it does not save articles, read state, or settings. `src/main/db/recovery.ts` moves a corrupt database aside and starts with a fresh one. Other I/O failures go through the error path. `app:get-startup-health` tells the renderer whether startup was normal, reset the database, or failed. The database connection is closed on quit after a WAL checkpoint.
+## Back up and recover
+
+Settings offers a manual database backup. OPML export saves feed lists and folders. It leaves out articles, read state, and settings, so use a database backup when you need those.
+
+If SQLite data is corrupt, the [recovery code](https://github.com/theopnv/monfil/blob/main/src/main/db/recovery.ts) moves it aside and starts a fresh database. Other I/O failures follow the error path. The `app:get-startup-health` channel tells the renderer whether startup succeeded, reset the database, or failed. On quit, Monfil checkpoints the WAL and closes the connection.

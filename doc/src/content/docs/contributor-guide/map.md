@@ -1,44 +1,33 @@
 ---
 title: Repository map
-description: Find the process and files that own a change.
+description: Find the process and folders that own a change.
 sidebar:
   order: 3
 ---
 
-Monfil has three application code trees and a separate documentation site. Follow the boundary that owns the behavior before editing a call site.
+Monfil has three application process trees and a separate documentation site. Find the boundary that owns a behavior before you edit its caller.
 
-| Area | Owns | Depends on |
-| --- | --- | --- |
-| `src/main/` | App startup, windows, network, feeds, SQLite, filesystem, IPC handlers | `src/shared/` |
-| `src/preload/` | The restricted bridge exposed as `window.electron` | `src/shared/` |
-| `src/renderer/` | React routes, reader, state, and UI | `src/shared/` and the preload bridge |
-| `src/shared/` | IPC types, data contracts, result and error types | |
-| `feedpacks/` | Curated OPML files and their catalog | Checked by `scripts/check-feedpacks.mjs` |
-| `doc/` | Astro Starlight site | |
+## Follow the process boundary
 
 ```text
 Renderer -> preload bridge -> IPC -> main -> SQLite
                                      |--> feeds and articles
                                      |--> OPML, backups, logs
-                                     |--> ...
-
-Shared contracts define the types on both sides of IPC.
 ```
 
-The main process owns every network, database, and filesystem operation. The renderer asks for work through IPC. The preload script exposes only the methods in `src/shared/channels.ts`.
+The [shared contracts](https://github.com/theopnv/monfil/tree/main/src/shared) define data and IPC types for both sides. The main process owns network, database, and filesystem work. The preload bridge exposes a restricted set of methods to the renderer.
 
-For main:
+## Find the owning folder
 
-- `feed/` for fetch and parsing
-- `db/` for queries and migrations
-- `opml/` for import and export
-- `feedpacks/` for catalog and install
-- `logging/` for diagnostics
-- `ipc/` for requests from the renderer
+| Area | What you will find |
+| --- | --- |
+| [Main](https://github.com/theopnv/monfil/tree/main/src/main) | Startup, windows, network, feeds, SQLite, filesystem, and IPC handlers |
+| [Preload](https://github.com/theopnv/monfil/tree/main/src/preload) | The bridge exposed as `window.electron` |
+| [Renderer](https://github.com/theopnv/monfil/tree/main/src/renderer) | React routes, reader, state, and UI |
+| [Shared](https://github.com/theopnv/monfil/tree/main/src/shared) | Data contracts, channels, results, and errors |
+| [Feedpacks](https://github.com/theopnv/monfil/tree/main/feedpacks) | Curated OPML and catalog metadata |
+| [Documentation](https://github.com/theopnv/monfil/tree/main/doc) | Astro Starlight site |
 
-For the renderer:
+In main, start with [feed work](https://github.com/theopnv/monfil/tree/main/src/main/feed), [database work](https://github.com/theopnv/monfil/tree/main/src/main/db), [OPML](https://github.com/theopnv/monfil/tree/main/src/main/opml), [feedpacks](https://github.com/theopnv/monfil/tree/main/src/main/feedpacks), [logging](https://github.com/theopnv/monfil/tree/main/src/main/logging), or [IPC](https://github.com/theopnv/monfil/tree/main/src/main/ipc). In the renderer, [routes](https://github.com/theopnv/monfil/tree/main/src/renderer/routes) choose views; providers and query hooks hold UI state.
 
-- routes live in `src/renderer/routes/`
-- providers and query hooks hold UI state
-
-`forge.config.ts` and the process Vite configs control the build.
+The [Forge configuration](https://github.com/theopnv/monfil/blob/main/forge.config.ts) and process Vite configs control the build.

@@ -5,29 +5,26 @@ sidebar:
   order: 5
 ---
 
-`src/renderer/` is a React app. Dependencies:
+The [renderer](https://github.com/theopnv/monfil/tree/main/src/renderer) is a React app. It uses TanStack Router for routes, TanStack Query for data loaded from main, UntitledUI for components, and Tailwind CSS for styling.
 
-- [TanStack Router](https://tanstack.com/router/latest) for routing.
-- [TanStack Query](https://tanstack.com/query/latest) for state.
-- [UntitledUI](https://www.untitledui.com/) for components.
-- [TailwindCSS](https://tailwindcss.com/) for styling.
+## Find a route
 
-## Routes
+`AppShell` holds the toolbar and route outlet. The [routes folder](https://github.com/theopnv/monfil/tree/main/src/renderer/routes) defines views. Hash history lets the packaged app load routes from a file. The root route installs app-wide providers, the startup gate, and the error boundary.
 
-`AppShell` holds the toolbar and the route outlet.
+## Choose where state belongs
 
-The router reads files from `src/renderer/routes/`. It uses hash history so routes also work when Electron loads the packaged app from a file. `__root.tsx` installs the app-wide providers, the startup gate, and the error boundary.
+Use the preload bridge for work owned by main. The [channel contracts](https://github.com/theopnv/monfil/blob/main/src/shared/channels.ts) define its names and payloads. TanStack Query holds data such as river pages and the feedpack catalog. [Providers](https://github.com/theopnv/monfil/tree/main/src/renderer/providers) share UI state such as the active workspace, reading preferences, and search text. Check for an existing owner before you add another copy.
 
-## Data and state
+:::note[Events have no replay]
+An IPC push can arrive before a listener attaches. Load initial data with `invoke`, then use pushes to update a mounted view. The [feed provider](https://github.com/theopnv/monfil/blob/main/src/renderer/providers/feeds-provider.tsx) shows this pattern.
+:::
 
-Use the preload bridge for main-process work. The typed channel names and payloads live in `src/shared/channels.ts`. TanStack Query holds server-backed data such as river pages and the feedpack catalog. Providers hold state shared across UI areas, such as the active workspace, reading preferences, and search text. Look at the provider that owns a value before adding another copy of that state.
+## Build a component
 
-An IPC push can arrive before a renderer listener attaches. Load initial data with `invoke`; use a push to update a mounted view. `src/renderer/providers/feeds-provider.tsx` and `src/renderer/lib/ipc-bridge.ts` show the two paths.
+Project components live in the [components folder](https://github.com/theopnv/monfil/tree/main/src/renderer/components); vendored UntitledUI components have their own subtree. The `@/` alias points to the renderer root.
 
-## Components and styles
+The [styles folder](https://github.com/theopnv/monfil/tree/main/src/renderer/styles) loads Tailwind and the themes. Put palette changes in the project theme, which loads after the vendored theme. Use semantic color classes for light and dark modes. `ThemeProvider` follows the system theme by default.
 
-Project components live under `src/renderer/components/`. The `untitled-ui/` subtree holds vendored UI components. The `@/` alias points to `src/renderer/`; its declarations live in the renderer TypeScript and Vite configs and the vendored UI config.
-
-`src/renderer/styles/globals.css` loads Tailwind and the theme files. Put project palette changes in `monfil-theme.css`, which loads after the vendored `theme.css`. Use semantic color classes so the same component works in light and dark modes. `ThemeProvider` applies the `dark-mode` class and follows the system theme by default.
-
-React Aria collections can cache a rendered row by item identity. If a row reads state from outside its `items`, pass that state through the collection's `dependencies` prop. For an editable row, check whether the collection's typeahead handling needs `disallowTypeAhead`. `RiverSidebar` has an example.
+:::tip[React Aria collections]
+A collection can cache a row by item identity. If the row reads external state, pass it through `dependencies`. For an editable row, check whether typeahead needs `disallowTypeAhead`. See the [river components](https://github.com/theopnv/monfil/tree/main/src/renderer/components) for an example.
+:::
