@@ -41,7 +41,7 @@ import type {
   Workspace,
   WorkspaceSummary,
 } from './contracts';
-import type { Result } from './result';
+import type { IpcFailure, Result } from './result';
 import type { LogEventMap, LogEventName, LogLevel } from './logging';
 
 export type OneWayRendererToMainChannelPayloads = {
@@ -114,6 +114,8 @@ export type TwoWayRendererMainChannelPayloads = {
 
 export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
 
+export type IpcInvokeResponse<C extends TwoWayRendererMainChannels> = TwoWayRendererMainChannelPayloads[C] | IpcFailure;
+
 export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:validate-feed-url': { query: string; type?: SourceType };
   'feeds:list-categories': { workspaceId: number };
@@ -164,6 +166,6 @@ export interface ElectronHandler {
     sendMessage<C extends OneWayRendererToMainChannels>(channel: C, payload: OneWayRendererToMainChannelPayloads[C]): void;
     on<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void): () => void;
     once<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void): void;
-    invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<TwoWayRendererMainChannelPayloads[C]>;
+    invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<IpcInvokeResponse<C>>;
   };
 }

@@ -4,8 +4,10 @@
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import Reader from '@/components/Reader/Reader';
+import { parseWorkspaceParams } from '@/lib/route-params';
 
 export const Route = createFileRoute('/workspace/$workspaceId_/reader/$itemId')({
+  params: { parse: (params) => parseWorkspaceParams(params) },
   component: ReaderRoute,
 });
 

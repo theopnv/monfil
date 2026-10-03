@@ -10,7 +10,7 @@ import type {
   OneWayMainToRendererChannels,
   OneWayRendererToMainChannelPayloads,
   OneWayRendererToMainChannels,
-  TwoWayRendererMainChannelPayloads,
+  IpcInvokeResponse,
   TwoWayRendererMainChannels,
   TwoWayRendererMainChannelsInvokeArgs,
 } from "../shared/channels";
@@ -32,7 +32,7 @@ const electronHandler: ElectronHandler = {
     once<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void) {
       ipcRenderer.once(channel, (_event, payload: OneWayMainToRendererChannelPayloads[C]) => func(payload));
     },
-    invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<TwoWayRendererMainChannelPayloads[C]> {
+    invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<IpcInvokeResponse<C>> {
       return ipcRenderer.invoke(channel, arg);
     }
   },

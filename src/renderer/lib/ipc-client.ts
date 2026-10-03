@@ -18,6 +18,9 @@ export const ipc = {
     const response: unknown = await window.electron.ipcRenderer.invoke(channel, arg);
     if (response && typeof response === 'object' && 'success' in response && response.success === false && 'error' in response) {
       const failure = response as { error: { name?: string; message?: string; incidentId?: string } };
+      if (failure.error.name === 'INVALID_PAYLOAD' && failure.error.message) {
+        throw Object.assign(new Error(failure.error.message), failure.error);
+      }
       if (failure.error.name === 'UNEXPECTED_ERROR' && failure.error.message && failure.error.incidentId) {
         throw Object.assign(new Error(`${failure.error.message} Incident ${failure.error.incidentId.slice(0, 8)}.`), failure.error);
       }

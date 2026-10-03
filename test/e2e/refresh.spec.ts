@@ -167,6 +167,9 @@ refreshTest('uses Electron networking and accepts an unchanged feed response', a
 
   // Act
   const summary = await page.evaluate(() => window.electron.ipcRenderer.invoke('feeds:refresh', undefined));
+  if (!('perFeed' in summary)) {
+    throw new Error(summary.error.message);
+  }
 
   // Assert
   const requests = feedServer.requests();

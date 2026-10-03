@@ -13,4 +13,13 @@ export interface UnexpectedError {
   incidentId: string;
 }
 
-export type IpcResult<T, E = never> = Result<T, E | UnexpectedError>;
+export interface InvalidPayloadError {
+  name: 'INVALID_PAYLOAD';
+  message: string;
+}
+
+export type IpcBoundaryError = InvalidPayloadError | UnexpectedError;
+
+export type IpcFailure = Failure<IpcBoundaryError>;
+
+export type IpcResult<T, E = never> = Result<T, E | IpcBoundaryError>;

@@ -4,7 +4,8 @@
 
 import { ipcMain } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
-import type { ChannelPayloads, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../shared/channels";
+import type { ChannelPayloads, IpcInvokeResponse, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../shared/channels";
+import { invokePayloadGuards } from '../../shared/ipc-payloads';
 import { createIncidentId } from '../logging/incident';
 import { logger } from '../logging/logger';
 import {
@@ -97,8 +98,11 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
 
 export function registerIpcHandlers() {
   for (const [channel, handler] of Object.entries(handlers) as [TwoWayRendererMainChannels, Handler<TwoWayRendererMainChannels>][]) {
-    ipcMain.handle(channel, async (event, arg) => {
+    ipcMain.handle(channel, async (event, arg: unknown): Promise<IpcInvokeResponse<TwoWayRendererMainChannels>> => {
       try {
+        if (!invokePayloadGuards[channel](arg)) {
+          return { success: false, error: { name: 'INVALID_PAYLOAD', message: 'Invalid request payload.' } };
+        }
         return await handler(event, arg);
       } catch (error) {
         const incidentId = createIncidentId();

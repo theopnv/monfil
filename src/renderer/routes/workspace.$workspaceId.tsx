@@ -4,7 +4,9 @@
 
 import Home from '@/components/Home/Home';
 import { createFileRoute } from '@tanstack/react-router';
+import { parseWorkspaceParams } from '@/lib/route-params';
 
 export const Route = createFileRoute('/workspace/$workspaceId')({
+  params: { parse: (params) => parseWorkspaceParams(params) },
   component: Home,
 });

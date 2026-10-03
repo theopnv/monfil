@@ -99,6 +99,9 @@ opmlTest('imports an OPML file as a new workspace, then exports it back out with
       dialog.showSaveDialog = (() => Promise.resolve({ canceled: false, filePath })) as typeof dialog.showSaveDialog;
     }, exportPath);
     const workspaces = await page.evaluate(() => window.electron.ipcRenderer.invoke('workspaces:list', undefined));
+    if (!Array.isArray(workspaces)) {
+      throw new Error(workspaces.error.message);
+    }
     const workspace = workspaces.find((candidate) => candidate.name === 'CI/CD watch');
     if (!workspace) {
       throw new Error('expected the imported workspace to exist');
