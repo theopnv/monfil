@@ -4,7 +4,7 @@ Monfil is a source-available desktop feed reader for macOS, Windows, and Linux. 
 
 ## Find the right code
 
-- The `graft/` index covers the application code. Use its `graft` commands to locate code and trace dependencies before searching source files. Read only the files needed for the task.
+- If a local `graft/` index and the `graft` command are available, use them to locate code and trace dependencies before searching source files. Graft is optional and is not included in a fresh clone. Otherwise, use `rg` to find the relevant files. Read only the files needed for the task.
 - `src/main/` owns Electron startup, network access, feed parsing and refresh, SQLite, OPML, feedpacks, settings, logging, and IPC handlers.
 - `src/preload/` exposes the restricted IPC bridge to the renderer.
 - `src/renderer/` owns the React UI. Routes live in `src/renderer/routes/`; providers and query hooks hold UI state.
