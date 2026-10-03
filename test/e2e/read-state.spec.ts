@@ -102,13 +102,16 @@ readStateTest('an opened article is still read after a restart', async ({ feedSe
   // database to confirm it before restarting.
   await expect
     .poll(() => firstRun.evaluate(() => window.electron.ipcRenderer.invoke('items:query', { workspaceId: 1, limit: 100 })
-      .then((page) => page.rows.some((row) => row.title === 'First article' && Boolean(row.readAt)))))
+      .then((page) => 'rows' in page && page.rows.some((row) => row.title === 'First article' && Boolean(row.readAt)))))
     .toBe(true);
 
   const secondRun = await launchApp();
 
   // Assert
   const page = await secondRun.evaluate(() => window.electron.ipcRenderer.invoke('items:query', { workspaceId: 1, limit: 100 }));
+  if (!('rows' in page)) {
+    throw new Error(page.error.message);
+  }
   const item = page.rows.find((candidate) => candidate.title === 'First article');
   expect(item?.readAt).toBeTruthy();
 });

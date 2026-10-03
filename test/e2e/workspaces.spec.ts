@@ -243,6 +243,9 @@ workspacesTest('renaming a folder while on a workspace leaves the same-named Hom
   // Act: rename it from the workspace it belongs to.
   const categoryId = await page.evaluate(async (id) => {
     const categories = await window.electron.ipcRenderer.invoke('feeds:list-categories', { workspaceId: id });
+    if (!Array.isArray(categories)) {
+      throw new Error(categories.error.message);
+    }
     return categories.find((category) => category.name === 'Tech')?.id;
   }, workspaceId);
   if (categoryId === undefined) {

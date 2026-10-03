@@ -12,6 +12,7 @@ import type { MoveFeedError, UpdateWorkspaceError } from "../../shared/contracts
 import type { Result } from "../../shared/result";
 import { queryKeys, workspacesQuery } from "../lib/queries";
 import { HOME_WORKSPACE_ID, type Workspace, type WorkspaceSummary } from "../../shared/contracts";
+import { parseRouteId } from '@/lib/route-params';
 
 const ActiveWorkspaceIdContext = createContext<number>(HOME_WORKSPACE_ID);
 
@@ -26,7 +27,7 @@ export const useActiveWorkspaceId = (): number => useContext(ActiveWorkspaceIdCo
  */
 export const ActiveWorkspaceIdProvider = ({ children }: PropsWithChildren) => {
   const params = useParams({ strict: false });
-  const activeWorkspaceId = params.workspaceId ? Number(params.workspaceId) : HOME_WORKSPACE_ID;
+  const activeWorkspaceId = parseRouteId(params.workspaceId) ?? HOME_WORKSPACE_ID;
 
   return (
     <ActiveWorkspaceIdContext.Provider value={activeWorkspaceId}>

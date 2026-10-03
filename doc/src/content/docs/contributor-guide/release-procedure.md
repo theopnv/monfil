@@ -10,7 +10,7 @@ This procedure is for maintainers who can push tags and publish releases in the 
 ## Prepare the release
 
 1. Set the version in the [package metadata](https://github.com/theopnv/monfil/blob/main/package.json) and commit it.
-2. Create a matching tag, such as `v1.2.3`, and push it. The workflow stops if the tag and package version differ.
+2. Create a matching tag, such as `v1.2.3`, and push it (`git tag v1.2.3 && git push origin v1.2.3`). The workflow stops if the tag and package version differ.
 
 :::caution[Check the version]
 Use the same version in the tag and package metadata before you push. A pushed tag starts the publish workflow.
