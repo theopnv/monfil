@@ -2,6 +2,8 @@
 
 Submit all contributions as pull requests to the [official Monfil repository](https://github.com/theopnv/monfil). Start with an issue before you spend time on a large change. Read the [contributor guide](doc/src/content/docs/contributor-guide/home.md), keep each pull request focused, and run `npm run lint` and the relevant tests before you submit it.
 
+Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for commit messages. CI checks the messages before a PR can merge. After a merge, semantic-release uses all commits since the last version tag to decide whether to release. See the [release procedure](doc/src/content/docs/contributor-guide/release-procedure.md) for the version rules.
+
 You may fork Monfil to develop and test a proposed change. The [BUSL 1.1 license](LICENSE) governs use and distribution of the code. A fork or independent distribution is not an official Monfil release. Théo Penavaire publishes official releases through the official repository.
 
 Every contributor must sign the [Contributor License Agreement](CLA.md) through CLA Assistant before a pull request can be merged.

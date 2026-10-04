@@ -26,8 +26,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: ./.github/actions/setup
+
+      - name: Check PR commits
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npx --no-install commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
 
       # tsc needs routeTree.gen.ts, which the router plugin only writes as a build side effect.
       - run: npx vite build --config src/renderer/vite.config.mts

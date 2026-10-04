@@ -104,7 +104,7 @@ const config: ForgeConfig = {
           name: 'monfil'
         },
         prerelease: false,
-        draft: true
+        draft: false
       }
     }
   ]
