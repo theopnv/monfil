@@ -30,10 +30,10 @@ This token lets semantic-release push the version commit directly to `main`. A t
 
 ## Build and publish
 
-semantic-release updates `package.json` and `package-lock.json`, commits them to `main`, and pushes a matching tag such as `v1.2.3`. The release commit uses the message `chore(release): 1.2.3`. Its resulting workflow run has no new commits to release.
+semantic-release updates `package.json` and `package-lock.json`, commits them to `main`, and pushes a matching tag such as `v1.2.3`. The release commit uses the message `chore(release): 1.2.3`.
 
-The `.github/workflows/publish.yml` workflow checks that the tag matches the package version. It runs the full test matrix and builds installers on Linux, macOS, and Windows. Publication starts after all builds succeed. The GitHub release is public without an operator action.
+The `.github/workflows/publish.yml` workflow checks that the tag matches the package version. It runs the full test matrix and builds installers on Linux, macOS, and Windows. Each successful e2e job uploads the app package that it built. The installer job restores that package and runs Forge with `--skip-package`. Publication starts after all builds succeed. The GitHub release is public without an operator action.
 
-The documentation workflow runs after publication to update the changelog. Cleanup keeps the latest three stable releases and the latest three pre-releases. Git tags stay available.
+The documentation workflow runs after publication to update the changelog. Cleanup runs only after successful publication. It keeps the latest three stable releases and the latest three pre-releases. Git tags stay available.
 
 If a publish run fails, correct the failure and rerun the failed jobs for that tag. Uploads can replace existing assets during a rerun. The version workflow can also be started manually after a credential or infrastructure failure.
