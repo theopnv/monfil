@@ -91,10 +91,12 @@ async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Pro
 // The folder's open state is saved to localStorage, so a relaunch against the same user data
 // dir can start with it already expanded.
 async function ensureFolderOpen(page: Page): Promise<void> {
+  await expect(page.getByRole('row', { name: 'tech', exact: true }).getByTestId('folder-count')).toHaveText('1');
   const row = page.getByRole('button', { name: /^Local feed/ });
   if (!(await row.isVisible())) {
     await page.getByRole('button', { name: 'tech', exact: true }).click();
   }
+  await expect(row).toBeVisible();
 }
 
 feedVisibilityTest('rotating a feed row to hidden removes it from home and survives a relaunch', async ({ feedServer, launchApp }) => {

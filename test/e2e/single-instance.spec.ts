@@ -34,19 +34,29 @@ test('a second launch exits and focuses the existing window', async () => {
     });
 
     // Act
-    const child = spawn(app.process().spawnfile, ['.', `--user-data-dir=${userDataDir}`], {
+    const child = spawn(app.process().spawnfile, [
+      '--no-sandbox',
+      '--disable-features=AutoDeElevate',
+      '.',
+      `--user-data-dir=${userDataDir}`,
+    ], {
       env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
-      stdio: 'ignore',
+      stdio: ['ignore', 'ignore', 'pipe'],
       timeout: 10000,
     });
     secondary = child;
+    let stderr = '';
+    child.stderr?.setEncoding('utf8');
+    child.stderr?.on('data', (data: string) => {
+      stderr += data;
+    });
     const exitCode = await new Promise<number | null>((resolve, reject) => {
       child.once('error', reject);
-      child.once('exit', resolve);
+      child.once('close', resolve);
     });
 
     // Assert
-    expect(exitCode).toBe(0);
+    expect(exitCode, stderr).toBe(0);
     await expect.poll(() => app.evaluate(() => (globalThis as typeof globalThis & { singleInstanceCalls: string[] }).singleInstanceCalls)).toEqual(['show', 'focus']);
     expect(await app.evaluate(({ app }) => app.hasSingleInstanceLock())).toBe(true);
     expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().map((window) => window.id))).toEqual([windowId]);
