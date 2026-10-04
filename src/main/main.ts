@@ -75,7 +75,7 @@ function bootstrap() {
       show: !isE2ETest,
       icon: iconPath,
       webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
+        preload: path.join(__dirname, 'preload.cjs'),
         // Electron's defaults, written out so a future default change cannot widen the renderer's reach unnoticed.
         contextIsolation: true,
         nodeIntegration: false,

@@ -26,7 +26,7 @@ function rejectPending(error: Error): void {
 }
 
 function startExtractionProcess(): UtilityProcess {
-  const child = utilityProcess.fork(path.join(__dirname, 'extractArticleProcess.js'));
+  const child = utilityProcess.fork(path.join(__dirname, 'extractArticleProcess.cjs'));
   extractionProcess = child;
   child.on('message', (message: unknown) => {
     if (isExtractArticleLog(message)) {

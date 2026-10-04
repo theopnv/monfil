@@ -32,7 +32,7 @@ Run commands from the repository root unless a command says otherwise.
 
 Use `npx vitest run path/to/file.test.ts` for one Node test file. Use `npx vitest run --config=vitest.browser.config.mts path/to/file.test.tsx` for one renderer test file. Use `npx playwright test test/e2e/file.spec.ts` for one end-to-end file.
 
-Playwright launches `.vite/build/main.js`. `npm run test:e2e` packages the current code through its `pretest:e2e` script. Run `npm run package` first when you call `npx playwright test` directly. The full `npm test` command runs the Node, renderer, and Electron suites in that order. The pre-commit hook runs `npm run lint` and also runs `npm run lint:docs` when public Markdown docs are staged.
+Playwright launches `.vite/build/main.cjs`. `npm run test:e2e` packages the current code through its `pretest:e2e` script. Run `npm run package` first when you call `npx playwright test` directly. The full `npm test` command runs the Node, renderer, and Electron suites in that order. The pre-commit hook runs `npm run lint` and also runs `npm run lint:docs` when public Markdown docs are staged.
 
 In VS Code, the `Main + renderer` compound launch configuration debugs both Electron processes. Use `.ai/skills/vm-debug/SKILL.md` when reproducing a Windows or Linux issue in a local VM.
 
