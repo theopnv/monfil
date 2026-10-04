@@ -1,0 +1,31 @@
+name: Drop old releases
+
+on:
+  workflow_run:
+    workflows: [Publish]
+    types: [completed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: drop-old-releases
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sgpublic/delete-release-action@0972c6da28d8829cdc95fae0e71afcb9079dadc9
+        with:
+          release-drop: true
+          release-keep-count: 2
+          release-drop-tag: false
+          pre-release-drop: true
+          pre-release-keep-count: 2
+          pre-release-drop-tag: false
+          draft-drop: true
+          draft-drop-count: -1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

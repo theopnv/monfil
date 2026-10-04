@@ -30,14 +30,12 @@ jobs:
     uses: ./.github/workflows/test.yml
     with:
       full_matrix: true
+      upload_package: true
 
-  publish:
+  build:
     needs: test
     strategy:
       fail-fast: false
-      # The publisher looks the release up by tag and creates it only when missing; running the
-      # legs one at a time keeps them from racing to create it and splitting the assets.
-      max-parallel: 1
       matrix:
         # windows-latest's node-gyp can't detect the Visual Studio version on this image yet,
         # which breaks the better-sqlite3 native rebuild. Pinned until @electron/node-gyp catches up.
@@ -48,10 +46,47 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      - run: npx vite build --config src/renderer/vite.config.mts
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: package-${{ matrix.os }}
 
-      - run: npm run lint
+      - name: Restore app package
+        shell: bash
+        run: tar -xf packaged-app.tar
 
-      - run: npm run publish
+      - run: npm run make -- --skip-package
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-${{ matrix.os }}
+          path: out/make/
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 2
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: release-*
+          path: release-artifacts
+
+      - name: Publish installers
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mapfile -d '' installers < <(find release-artifacts -type f -print0)
+          if [ "${#installers[@]}" -eq 0 ]; then
+            echo "::error::No installers were downloaded."
+            exit 1
+          fi
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${installers[@]}" --clobber
+            gh release edit "$GITHUB_REF_NAME" --draft=false
+          else
+            gh release create "$GITHUB_REF_NAME" "${installers[@]}" \
+              --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
+          fi

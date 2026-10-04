@@ -5,19 +5,35 @@ sidebar:
   order: 11
 ---
 
-This procedure is for maintainers who can push tags and publish releases in the official repository. The [publish workflow](https://github.com/theopnv/monfil/blob/main/.github/workflows/publish.yml) runs the release. Electron Forge's makers and GitHub publisher are in the [build configuration](https://github.com/theopnv/monfil/blob/main/forge.config.ts).
+Merging a PR into `main` starts delivery. The `.github/workflows/version.yml` workflow uses semantic-release to read all commits since the last version tag. Electron Forge's makers are configured in `forge.config.ts`.
 
-## Prepare the release
+## Write commit messages
 
-1. Set the version in the [package metadata](https://github.com/theopnv/monfil/blob/main/package.json) and commit it.
-2. Create a matching tag, such as `v1.2.3`, and push it (`git tag v1.2.3 && git push origin v1.2.3`). The workflow stops if the tag and package version differ.
+Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for PR commits. The required `lint` check runs commitlint on those commits.
 
-:::caution[Check the version]
-Use the same version in the tag and package metadata before you push. A pushed tag starts the publish workflow.
-:::
+| Commit | Version increase |
+| --- | --- |
+| `fix: correct feed parsing` | Patch |
+| `perf: reduce refresh work` | Patch |
+| `feat: add a feed source` | Minor |
+| `feat!: change the feed contract` | Major |
+| A commit with a `BREAKING CHANGE:` or `BREAKING-CHANGE:` footer | Major |
+| `docs:`, `test:`, `ci:`, and other types without a breaking change | None |
 
-## Review and publish
+The largest required increase wins. If the commits require no increase, the workflow leaves the version and tags unchanged. Use the same message format for squash commits.
 
-The workflow runs tests on Linux, macOS, and Windows. It then builds the platform artifacts and uploads them to a draft GitHub release.
+## Configure the release credential
 
-Open the draft. Download and test its artifacts, and check that each expected platform file is present. Publish the draft after this review. GitHub changes its visibility at that point; the workflow does not rebuild the files.
+Add a repository secret named `RELEASE_TOKEN` with a fine-grained personal access token from a repository administrator. Limit access to this repository and grant **Contents: Read and write**. The administrator must have permission to bypass the `main` rule that requires a PR. Replace the token before it expires.
+
+This token lets semantic-release push the version commit directly to `main`. A tag pushed with this token starts the publish workflow. The built-in `GITHUB_TOKEN` suppresses workflows triggered by its own pushes.
+
+## Build and publish
+
+semantic-release updates `package.json` and `package-lock.json`, commits them to `main`, and pushes a matching tag such as `v1.2.3`. The release commit uses the message `chore(release): 1.2.3`.
+
+The `.github/workflows/publish.yml` workflow checks that the tag matches the package version. It runs the full test matrix and builds installers on Linux, macOS, and Windows. Each successful e2e job uploads the app package that it built. The installer job restores that package and runs Forge with `--skip-package`. Publication starts after all builds succeed. The GitHub release is public without an operator action.
+
+The documentation workflow runs after publication to update the changelog. Cleanup runs only after successful publication. It keeps the latest three stable releases and the latest three pre-releases. Git tags stay available.
+
+If a publish run fails, correct the failure and rerun the failed jobs for that tag. Uploads can replace existing assets during a rerun. The version workflow can also be started manually after a credential or infrastructure failure.

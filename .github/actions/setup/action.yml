@@ -1,15 +1,20 @@
 name: Setup
 description: >
-  Installs Node, restores the Electron download and (optionally) the Playwright browsers from
-  cache, then runs npm ci. Shared across test.yml and publish.yml so every job pays for these
-  downloads once instead of once per job.
+  Installs Node and project dependencies. Optionally installs Electron, Chromium, and
+  Linux libraries needed to launch them.
 
 inputs:
   node-version:
     description: Node.js version to install
     default: '24'
-  playwright:
-    description: Also cache and install the Playwright browsers
+  electron:
+    description: Cache and install the Electron binary
+    default: 'false'
+  electron-dependencies:
+    description: Install Linux system dependencies for launching Electron
+    default: 'false'
+  chromium:
+    description: Cache and install Chromium for headless browser tests
     default: 'false'
 
 runs:
@@ -32,6 +37,7 @@ runs:
     # @electron/get has no env var to redirect this; it always resolves to env-paths('electron').cache,
     # which differs by OS. Listing all three candidate paths lets one cache step cover every runner.
     - name: Cache Electron download
+      if: inputs.electron == 'true'
       uses: actions/cache@v6
       with:
         path: |
@@ -40,21 +46,32 @@ runs:
           ~/AppData/Local/electron/Cache
         key: electron-${{ runner.os }}-${{ steps.versions.outputs.electron }}
 
-    - name: Cache Playwright browsers
-      if: inputs.playwright == 'true'
+    - name: Cache Chromium headless shell
+      if: inputs.chromium == 'true'
       uses: actions/cache@v6
       with:
         path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-        key: playwright-${{ runner.os }}-${{ steps.versions.outputs.playwright }}
+        key: chromium-headless-${{ runner.os }}-${{ runner.arch }}-${{ steps.versions.outputs.playwright }}
 
     - run: npm ci
       shell: bash
 
+    - name: Install Linux system dependencies
+      if: runner.os == 'Linux' && (inputs.electron-dependencies == 'true' || inputs.chromium == 'true')
+      run: npx playwright install-deps chromium
+      shell: bash
+
+    - name: Install Linux Electron libraries
+      if: runner.os == 'Linux' && inputs.electron-dependencies == 'true'
+      run: sudo apt-get install --yes --no-install-recommends libgtk-3-0t64 libx11-xcb1 libxss1
+      shell: bash
+
     - name: Install Electron binary
+      if: inputs.electron == 'true'
       run: node node_modules/electron/install.js
       shell: bash
 
-    - name: Install Playwright browsers
-      if: inputs.playwright == 'true'
-      run: npx playwright install
+    - name: Install Chromium headless shell
+      if: inputs.chromium == 'true'
+      run: npx playwright install chromium --only-shell
       shell: bash
