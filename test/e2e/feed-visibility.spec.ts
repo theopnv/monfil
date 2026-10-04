@@ -66,15 +66,16 @@ const feedVisibilityTest = base.extend<FeedVisibilityTestFixtures>({
 
   // Every launch reuses the same user data dir, so a test can restart the app against its own database.
   launchApp: async ({ userDataDir }, use) => {
-    const launched: ElectronApplication[] = [];
+    let current: ElectronApplication | undefined;
     try {
       await use(async () => {
+        await current?.close();
         const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-        launched.push(app);
+        current = app;
         return app.firstWindow();
       });
     } finally {
-      await Promise.all(launched.map((app) => app.close()));
+      await current?.close();
     }
   },
 });
