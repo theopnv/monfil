@@ -3,12 +3,13 @@
 // See LICENSE in the repository root for full terms.
 
 import { db, dbReady } from '../database';
+import { collectUnplacedFeeds } from '../saved';
 import { HOME_WORKSPACE_ID, type DeleteCategoryError, type DeleteFeedError, type DeleteWorkspaceError } from '../../../shared/contracts';
 import type { Result } from '../../../shared/result';
 
 /**
  * Removes a feed from `workspaceId`. The underlying feed, and through the `feedItem.feed_id`
- * cascade every one of its items, is only deleted once no workspace places it anymore.
+ * cascade its unsaved items, is deleted once it has neither placements nor saved items.
  * @param feedId the id of the feed to remove
  * @param workspaceId the workspace to remove it from
  */
@@ -22,12 +23,7 @@ export async function deleteFeedFromDatabase(feedId: number, workspaceId: number
         .executeTakeFirst();
 
       if (deleted.numDeletedRows > 0n) {
-        await trx.deleteFrom('feedMetadata')
-          .where('id', '=', feedId)
-          .where((eb) => eb.not(eb.exists(
-            eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id'),
-          )))
-          .execute();
+        await collectUnplacedFeeds(trx);
       }
 
       return deleted;
@@ -91,9 +87,8 @@ export async function deleteCategory(categoryId: number, reassignTo: number, wor
 }
 
 /**
- * Deletes a workspace along with its categories and placements, then collects any feed left with
- * zero placements anywhere (through every other workspace's placements too). Home can never be
- * deleted.
+ * Deletes a workspace with its saved items, categories, and placements. Feeds retained by another
+ * workspace's placements or saved items survive. Home can never be deleted.
  * @param workspaceId the id of the workspace to delete
  */
 export async function deleteWorkspace(workspaceId: number): Promise<Result<void, DeleteWorkspaceError>> {
@@ -104,20 +99,10 @@ export async function deleteWorkspace(workspaceId: number): Promise<Result<void,
   await dbReady;
   try {
     const result = await db.transaction().execute(async (trx) => {
-      const placements = await trx.selectFrom('feedPlacement').select('feed_id').where('workspace_id', '=', workspaceId).execute();
-
+      await trx.deleteFrom('savedItem').where('workspace_id', '=', workspaceId).execute();
       await trx.deleteFrom('feedPlacement').where('workspace_id', '=', workspaceId).execute();
       await trx.deleteFrom('feedCategory').where('workspace_id', '=', workspaceId).execute();
-
-      const feedIds = placements.map((row) => row.feed_id);
-      if (feedIds.length > 0) {
-        await trx.deleteFrom('feedMetadata')
-          .where('id', 'in', feedIds)
-          .where((eb) => eb.not(eb.exists(
-            eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id'),
-          )))
-          .execute();
-      }
+      await collectUnplacedFeeds(trx);
 
       return trx.deleteFrom('workspace').where('id', '=', workspaceId).executeTakeFirst();
     });

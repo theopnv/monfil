@@ -20,3 +20,7 @@ export function parseWorkspaceParams<T extends { workspaceId: string; itemId?: s
   }
   return params;
 }
+
+export function parseCollectionSearch(search: Record<string, unknown>): { view?: 'saved' } {
+  return search['view'] === 'saved' ? { view: 'saved' } : {};
+}

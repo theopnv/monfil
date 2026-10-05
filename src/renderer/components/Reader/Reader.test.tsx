@@ -12,7 +12,7 @@ import { useIpcBridge } from '@/lib/ipc-bridge';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import Reader from './Reader';
 import type { ReaderProps } from './Reader';
-import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary, type ItemBody, type RiverPage, type RiverQuery, type RiverRow } from '../../../shared/contracts';
+import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary, type ItemBody, type RiverPage, type RiverQuery, type RiverRow, type SetSavedItemInput } from '../../../shared/contracts';
 
 let nextFeedId = 1;
 let nextItemId = 1;
@@ -64,9 +64,9 @@ let allFeeds: FeedSummary[];
 let allRows: RiverRow[];
 let itemBodyOverride: ItemBody | undefined | 'pending';
 
-function computeRiverPage(query: RiverQuery): RiverPage {
-  let candidates = allRows;
-  candidates = query.feedIds
+function computeRiverPage(query: RiverQuery, saved = false): RiverPage {
+  let candidates = saved ? allRows.filter((row) => row.savedAt != null) : allRows;
+  candidates = saved ? candidates : query.feedIds
     ? candidates.filter((row) => new Set(query.feedIds).has(row.feedId))
     : candidates.filter((row) => allFeeds.find((feed) => feed.id === row.feedId)?.showInWorkspace !== 0);
   if (query.ids) {
@@ -76,15 +76,17 @@ function computeRiverPage(query: RiverQuery): RiverPage {
   if (query.unreadOnly) {
     candidates = candidates.filter((row) => !row.readAt);
   }
-  const sorted = [...candidates].sort((a, b) => b.publishedAt - a.publishedAt || b.id - a.id);
+  const sorted = [...candidates].sort((a, b) => (saved ? (b.savedAt ?? 0) - (a.savedAt ?? 0) : b.publishedAt - a.publishedAt) || b.id - a.id);
   const cursor = query.cursor;
   const afterCursor = cursor
-    ? sorted.filter((row) => row.publishedAt < cursor.publishedAt || (row.publishedAt === cursor.publishedAt && row.id < cursor.id))
+    ? sorted.filter((row) => saved
+      ? (row.savedAt ?? 0) < (cursor.savedAt ?? 0) || (row.savedAt === cursor.savedAt && row.id < cursor.id)
+      : row.publishedAt < cursor.publishedAt || (row.publishedAt === cursor.publishedAt && row.id < cursor.id))
     : sorted;
   const page = afterCursor.slice(0, query.limit);
   const hasMore = afterCursor.length > query.limit;
   const last = page[page.length - 1];
-  return { rows: page, ...(hasMore && last ? { nextCursor: { publishedAt: last.publishedAt, id: last.id } } : {}) };
+  return { rows: page, ...(hasMore && last ? { nextCursor: { publishedAt: last.publishedAt, id: last.id, ...(saved ? { savedAt: last.savedAt } : {}) } } : {}) };
 }
 
 // Ordered newest to oldest. itemA is in its own feed so navigation tests exercise the full flat river order.
@@ -121,6 +123,56 @@ function renderReader(props: ReaderProps) {
   return renderWithQueryClient(<Session><Reader {...props} /></Session>);
 }
 
+test('Saved reader follows save order through read items after source removal', async () => {
+  // Arrange
+  const { itemA, itemB, itemC } = setUpThreeItemRiver();
+  allRows = [
+    { ...itemA, savedAt: 1 },
+    { ...itemB, savedAt: 3 },
+    { ...itemC, savedAt: 2, readAt: '2026-01-01' },
+  ];
+  allFeeds = [];
+  const onNavigate = vi.fn();
+  const { getByRole } = await renderReader({ itemId: String(itemB.id), savedView: true, onNavigateToItem: onNavigate, onNavigateHome: vi.fn() });
+
+  // Act
+  await getByRole('button', { name: 'Next article', exact: true }).click();
+
+  // Assert
+  expect(onNavigate).toHaveBeenCalledWith(itemC.id);
+  await expect.element(getByRole('button', { name: 'Saved', exact: true })).toBeVisible();
+});
+
+test('removing a save in the Saved reader returns to Saved', async () => {
+  // Arrange
+  const { itemA } = setUpThreeItemRiver();
+  allRows = [{ ...itemA, savedAt: 1 }];
+  const onBack = vi.fn();
+  const { getByRole } = await renderReader({ itemId: String(itemA.id), savedView: true, onNavigateToItem: vi.fn(), onNavigateHome: onBack });
+
+  // Act
+  await getByRole('button', { name: 'Remove from Saved' }).click();
+
+  // Assert
+  await expect.poll(() => onBack.mock.calls.length).toBe(1);
+  expect(invokeMock).toHaveBeenCalledWith('items:set-saved', { workspaceId: HOME_WORKSPACE_ID, itemId: itemA.id, saved: false });
+});
+
+test('saving in the reader keeps the loaded article content', async () => {
+  // Arrange
+  const { itemA } = setUpThreeItemRiver();
+  const { getByRole, getByText } = await renderReader({ itemId: String(itemA.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
+  await expect.element(getByText(`Item ${itemA.id} description`, { exact: true })).toBeVisible();
+  invokeMock.mockClear();
+
+  // Act
+  await getByRole('button', { name: 'Save', exact: true }).click();
+
+  // Assert
+  await expect.element(getByRole('button', { name: 'Remove from Saved' })).toBeVisible();
+  expect(invokeMock.mock.calls.some(([channel]) => channel === 'items:get-content')).toBe(false);
+});
+
 let invokeMock: ReturnType<typeof vi.fn>;
 let renameCategoryRequestedHandler: ((categoryId: number) => void) | undefined;
 
@@ -142,6 +194,13 @@ beforeEach(() => {
         const categories = new Map<number, FeedCategory>();
         allFeeds.forEach((feed) => categories.set(feed.category.id, feed.category));
         return Promise.resolve([...categories.values()]);
+      }
+      case 'saved:query':
+        return Promise.resolve(computeRiverPage(arg as RiverQuery, true));
+      case 'items:set-saved': {
+        const { itemId, saved } = arg as SetSavedItemInput;
+        allRows = allRows.map((row) => row.id === itemId ? { ...row, savedAt: saved ? Date.now() : undefined } : row);
+        return Promise.resolve({ success: true, data: undefined });
       }
       case 'items:query':
         return Promise.resolve(computeRiverPage(arg as RiverQuery));

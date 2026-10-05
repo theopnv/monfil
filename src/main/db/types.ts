@@ -22,7 +22,17 @@ export interface Database {
   undatedItem: UndatedItemTable
   setting: SettingTable
   articleContent: ArticleContentTable
+  savedItem: SavedItemTable
 }
+
+export interface SavedItemTable {
+  workspace_id: number;
+  item_id: number;
+  saved_at: number;
+}
+
+export type SavedItem = Selectable<SavedItemTable>;
+export type NewSavedItem = Insertable<SavedItemTable>;
 
 // =============== Workspace ===============
 // A workspace is a tab in the left rail: Home, or an installed pack / OPML import. See doc/src/content/docs/contributor-guide/feedpacks-and-opml.md.

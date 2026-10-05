@@ -31,6 +31,7 @@ export async function pruneExpiredItems(days: RetentionDays, now = Date.now()): 
   await dbReady;
   const cutoff = retentionCutoff(days, now);
   const result = await db.deleteFrom('feedItem')
+    .where((eb) => eb.not(eb.exists(eb.selectFrom('savedItem').select('item_id').whereRef('savedItem.item_id', '=', 'feedItem.id'))))
     .where('published_at', '<', cutoff)
     .where(sql<boolean>`id NOT IN (
       SELECT id FROM (

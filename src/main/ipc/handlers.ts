@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { querySavedPage, setItemSaved } from '../db/saved';
 import { enrichItems } from "../feed/enrichItems";
 import { logger } from '../logging/logger';
 import { ARTICLE_FETCH_TIMEOUT_MS } from "../constants";
@@ -52,6 +53,9 @@ import type {
   RefreshSummary,
   RiverPage,
   RiverQuery,
+  SavedQuery,
+  SetSavedItemInput,
+  UpdateSavedItemError,
   SourceType,
   UpdateCategoryError,
   UpdateFeedError,
@@ -92,6 +96,14 @@ export function handleFeedsList(_event: IpcMainInvokeEvent, payload: { workspace
 
 export function handleItemsQuery(_event: IpcMainInvokeEvent, payload: RiverQuery): Promise<RiverPage> {
   return queryRiverPage(payload);
+}
+
+export function handleSavedQuery(_event: IpcMainInvokeEvent, payload: SavedQuery): Promise<RiverPage> {
+  return querySavedPage(payload);
+}
+
+export function handleItemsSetSaved(_event: IpcMainInvokeEvent, payload: SetSavedItemInput): Promise<Result<void, UpdateSavedItemError>> {
+  return setItemSaved(payload);
 }
 
 export async function handleFeedsSubmitAddFeed(event: IpcMainInvokeEvent, payload: NewFeedInput): Promise<Result<FeedSummary, AddFeedError>> {

@@ -171,7 +171,7 @@ function renderApp(initialPath: string) {
   );
 }
 
-test('shows a dot only for a workspace with unread items', async () => {
+test('keeps workspace icons free of unread badges', async () => {
   // Arrange
   workspaces = [
     createWorkspace({ id: 1, name: 'Home', hasUnread: false }),
@@ -182,7 +182,8 @@ test('shows a dot only for a workspace with unread items', async () => {
   const { getByRole } = await renderApp('/workspace/1');
 
   // Assert
-  await expect.element(getByRole('link', { name: 'CI/CD watch' }).getByTestId('unread-dot')).toBeInTheDocument();
+  await expect.element(getByRole('link', { name: 'CI/CD watch' })).toBeInTheDocument();
+  await expect.element(getByRole('link', { name: 'CI/CD watch' }).getByTestId('unread-dot')).not.toBeInTheDocument();
   await expect.element(getByRole('link', { name: 'Home' }).getByTestId('unread-dot')).not.toBeInTheDocument();
 });
 

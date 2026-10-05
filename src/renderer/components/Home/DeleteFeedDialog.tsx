@@ -60,7 +60,7 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
                 <span className="font-semibold text-secondary">
                   {feed.itemCount} {feed.itemCount === 1 ? "item" : "items"}
                 </span>
-                . There is no undo.
+                . Saved items remain available. There is no undo.
               </p>
             )}
           </div>

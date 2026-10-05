@@ -104,6 +104,14 @@ export type UpdateWorkspaceError =
 export type UpdateItemError =
   | { name: 'DB_ERROR'; message: string }
   | { name: 'ITEM_NOT_FOUND'; message: string };
+
+export type UpdateSavedItemError = UpdateItemError | { name: 'WORKSPACE_NOT_FOUND'; message: string };
+
+export interface SetSavedItemInput {
+  workspaceId: number;
+  itemId: number;
+  saved: boolean;
+}
 export type UpdateCategoryError =
   | { name: 'DB_ERROR'; message: string }
   | { name: 'CATEGORY_NOT_FOUND'; message: string }
@@ -133,11 +141,13 @@ export interface RiverRow {
   feedIcon: string | undefined;
   categoryName: string;
   type: SourceType;
+  savedAt?: number | undefined;
 }
 
 export interface RiverCursor {
   publishedAt: number;
   id: number;
+  savedAt?: number | undefined;
 }
 
 export interface RiverQuery {
@@ -156,6 +166,12 @@ export interface RiverPage {
   rows: RiverRow[];
   nextCursor?: RiverCursor;
 }
+
+export interface SavedCursor extends RiverCursor {
+  savedAt: number;
+}
+
+export type SavedQuery = Omit<RiverQuery, 'feedIds' | 'cursor'> & { cursor?: SavedCursor };
 
 export interface RefreshSummary {
   perFeed: { feedId: number; inserted: number; updated?: number }[];

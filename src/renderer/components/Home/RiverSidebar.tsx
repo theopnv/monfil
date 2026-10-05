@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import WorkspaceNavigation from "@/components/Workspace/WorkspaceNavigation";
 import { useEffect, useMemo, useState } from "react";
 import { ipc } from '@/lib/ipc-client';
 import { ChevronRight, DotsGrid, FolderPlus, LayersTwo01, Plus } from "@untitledui/icons";
@@ -35,6 +36,7 @@ export interface RiverSidebarProps {
   showOnlyLinks: ReadonlySet<string>;
   onSetVisibility: (feeds: FeedSummary[], target: FeedVisibility) => void;
   onFeedDeleted: (feed: FeedSummary) => void;
+  savedView?: boolean;
 }
 
 interface Folder {
@@ -120,7 +122,7 @@ function dropCategoryId(items: SidebarItem[], key: string): number | null {
   return item?.type === 'feed' ? item.feed.category.id : null;
 }
 
-export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVisibility, onFeedDeleted }: RiverSidebarProps) {
+export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVisibility, onFeedDeleted, savedView = false }: RiverSidebarProps) {
   const activeWorkspaceId = useActiveWorkspaceId();
   const [folders, setFolders] = useState(() => groupByCategory(categories, feeds));
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
@@ -291,6 +293,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
 
   return (
     <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-r border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
+      <WorkspaceNavigation saved={savedView} />
       <div className="flex items-center justify-between px-4.5 pb-2">
         <span className="text-xs font-bold tracking-wide text-tertiary uppercase">Feeds</span>
         <div className="flex items-center gap-1">

@@ -41,7 +41,7 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
         <div className="mt-3.25 flex items-center gap-2">
           {item.excerpt && <span className="text-xs text-tertiary">{estimateReadTime(item.excerpt)}</span>}
           <span className="size-0.75 flex-none rounded-full bg-quaternary" />
-          <span className="rounded-full bg-sage-200 px-2.5 py-0.75 text-xs font-semibold text-sage-800">{item.categoryName}</span>
+          {item.categoryName && <span className="rounded-full bg-sage-200 px-2.5 py-0.75 text-xs font-semibold text-sage-800">{item.categoryName}</span>}
         </div>
       </div>
 

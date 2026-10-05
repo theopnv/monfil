@@ -17,6 +17,39 @@ const feed: NewFeedInput = {
 };
 
 describe('IPC payload guards', () => {
+  test.each([
+    { workspaceId: 1, itemId: 0, saved: true },
+    { workspaceId: 1, itemId: 1, saved: 'true' },
+    { workspaceId: 0, itemId: 1, saved: true },
+    { workspaceId: 1, itemId: 1, saved: true, extra: true },
+  ])('rejects malformed saved state %j', (arg) => {
+    // Act
+    const valid = invokePayloadGuards['items:set-saved'](arg);
+
+    // Assert
+    expect(valid).toBe(false);
+  });
+
+  test.each([
+    { workspaceId: 1, limit: 50, cursor: { id: 1, publishedAt: 0 } },
+    { workspaceId: 1, limit: 50, cursor: { id: 1, publishedAt: 0, savedAt: NaN } },
+    { workspaceId: 1, limit: 50, feedIds: [1] },
+  ])('rejects malformed Saved query %j', (arg) => {
+    // Act
+    const valid = invokePayloadGuards['saved:query'](arg);
+
+    // Assert
+    expect(valid).toBe(false);
+  });
+
+  test('accepts a Saved cursor and saved state', () => {
+    // Act
+    const queryValid = invokePayloadGuards['saved:query']({ workspaceId: 1, limit: 50, cursor: { id: 1, publishedAt: 0, savedAt: 10 } });
+    const stateValid = invokePayloadGuards['items:set-saved']({ workspaceId: 1, itemId: 1, saved: false });
+
+    // Assert
+    expect(queryValid && stateValid).toBe(true);
+  });
   test.each([{}, [], new Date(), new Map(), { workspaceId: 1, extra: true }, { workspaceId: 1, constructor: '' }, { workspaceId: 1, [Symbol('extra')]: true }, Object.create({ workspaceId: 1 }) as unknown])('rejects malformed workspace object %j', (arg) => {
     // Act
     const valid = invokePayloadGuards['feeds:list'](arg);

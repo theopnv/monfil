@@ -73,7 +73,7 @@ export default function DeleteWorkspaceDialog({ workspace, onOpenChange, onDelet
             </Heading>
             {workspace && (
               <p className="text-sm text-tertiary">
-                This deletes the <span className="font-semibold text-secondary">{workspace.name}</span> workspace and its folders.
+                This deletes the <span className="font-semibold text-secondary">{workspace.name}</span> workspace, its folders, and its Saved list.
                 Feeds placed only here are removed too. Export as OPML first to keep a copy you can re-import later.
               </p>
             )}

@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import type { TwoWayRendererMainChannels, TwoWayRendererMainChannelsInvokeArgs } from './channels';
-import type { FeedpackInstallTarget, ImportOpmlTarget, NewFeedInput, RefreshInterval, RetentionDays, RiverCursor, RiverQuery, SourceItem, SourceType } from './contracts';
+import type { FeedpackInstallTarget, ImportOpmlTarget, NewFeedInput, RefreshInterval, RetentionDays, RiverCursor, RiverQuery, SavedCursor, SavedQuery, SourceItem, SourceType } from './contracts';
 import { isPositiveSafeInteger } from './validation';
 
 type Guard<T> = (value: unknown) => value is T;
@@ -79,11 +79,16 @@ const isNewFeedInput = object<NewFeedInput>({
   link: isString, title: isString, type: isSourceType, items: array(isSourceItem), categoryName: isString,
   workspaceId: isPositiveSafeInteger, showInWorkspace: isBoolean, icon: optional(isString),
 });
-const isCursor = object<RiverCursor>({ publishedAt: isFiniteNumber, id: isPositiveSafeInteger });
+const isCursor = object<RiverCursor>({ publishedAt: isFiniteNumber, id: isPositiveSafeInteger, savedAt: optional(isFiniteNumber) });
 const isIds = array(isPositiveSafeInteger);
 const isRiverQuery = object<RiverQuery>({
   workspaceId: isPositiveSafeInteger, feedIds: optional(isIds), ids: optional(isIds), unreadOnly: optional(isBoolean),
   search: optional(isString), cursor: optional(isCursor), limit: isPositiveSafeInteger,
+});
+const isSavedCursor = object<SavedCursor>({ publishedAt: isFiniteNumber, id: isPositiveSafeInteger, savedAt: isFiniteNumber });
+const isSavedQuery = object<SavedQuery>({
+  workspaceId: isPositiveSafeInteger, ids: optional(isIds), unreadOnly: optional(isBoolean),
+  search: optional(isString), cursor: optional(isSavedCursor), limit: isPositiveSafeInteger,
 });
 const isWorkspace = object<{ workspaceId: number }>({ workspaceId: isPositiveSafeInteger });
 const isMergeTarget = object<Extract<ImportOpmlTarget, { kind: 'merge-workspace' }>>({
@@ -110,6 +115,8 @@ export const invokePayloadGuards: { [C in TwoWayRendererMainChannels]: Guard<Two
   'feeds:list-categories': isWorkspace,
   'feeds:list': isWorkspace,
   'items:query': isRiverQuery,
+  'saved:query': isSavedQuery,
+  'items:set-saved': object({ workspaceId: isPositiveSafeInteger, itemId: isPositiveSafeInteger, saved: isBoolean }),
   'feeds:refresh': isUndefined,
   'feeds:submit-add-feed': isNewFeedInput,
   'feeds:delete-feed': object({ feedId: isPositiveSafeInteger, workspaceId: isPositiveSafeInteger }),
