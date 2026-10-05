@@ -75,7 +75,7 @@ export function useReaderContent(item: RiverRow | undefined, refreshVersion = 0)
     return () => {
       cancelled = true;
     };
-  }, [itemId, item, refreshVersion]);
+  }, [itemId, refreshVersion]);
 
   const strategy = item ? STRATEGY_BY_TYPE[item.type] : undefined;
 

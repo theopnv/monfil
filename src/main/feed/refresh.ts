@@ -5,7 +5,7 @@
 import { db, dbReady } from '../db/database';
 import { logger } from '../logging/logger';
 import { syncFeedItemsToDatabase, updateFeedItemImage } from '../db/crud/insert';
-import { queryFeedMetadata, queryFeedMetadataByIds } from '../db/crud/query';
+import { querySubscribedFeedMetadata } from '../db/crud/query';
 import type { FeedItem, FeedMetadataRow } from '../db/types';
 import { broadcastToRenderers } from '../ipc/sendToRenderer';
 import { enrichItems } from './enrichItems';
@@ -20,7 +20,13 @@ import { pruneExpiredItems, retentionCutoff } from '../db/retention';
 const ENRICHMENT_BUDGET = 200;
 
 async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: boolean): Promise<{ items: FeedItem[]; updated: number; failed: boolean }> {
+  if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
+    return { items: [], updated: 0, failed: false };
+  }
   const result = await sourceFor(feed.type).fetch({ link: feed.link, ...(force ? {} : { validators: { etag: feed.etag ?? undefined, last_modified: feed.last_modified ?? undefined } }) });
+  if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
+    return { items: [], updated: 0, failed: false };
+  }
   if (!result.success) {
     logger.warn('feed.refresh', { outcome: 'failed', feedId: feed.id, errorCode: result.error.name }, result.error);
     const updated = await setFeedFetchResult(feed.id, { last_error: result.error.message });
@@ -94,13 +100,13 @@ async function refreshFeedList(feedList: FeedMetadataRow[], retentionDays: Reten
 }
 
 /**
- * Fetches every stored feed and synchronizes publisher changes and retained history.
+ * Fetches every subscribed feed and synchronizes publisher changes and retained history.
  * A feed that fails to fetch is logged and skipped, so the others still get their items.
  * @returns how many items each feed gained, so the renderer can show a pill without receiving the rows themselves
  */
 export async function refreshAllFeeds(force = false): Promise<RefreshSummary> {
   await dbReady;
-  const [feedList, retentionDays] = await Promise.all([queryFeedMetadata({}), getRetentionDays()]);
+  const [feedList, retentionDays] = await Promise.all([querySubscribedFeedMetadata(), getRetentionDays()]);
   return refreshFeedList(feedList, retentionDays, force);
 }
 
@@ -114,7 +120,7 @@ export async function refreshFeeds(feedIds: number[]): Promise<RefreshSummary> {
     return { perFeed: [] };
   }
   await dbReady;
-  const [feedList, retentionDays] = await Promise.all([queryFeedMetadataByIds(feedIds), getRetentionDays()]);
+  const [feedList, retentionDays] = await Promise.all([querySubscribedFeedMetadata(feedIds), getRetentionDays()]);
   return refreshFeedList(feedList, retentionDays);
 }
 

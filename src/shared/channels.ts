@@ -32,6 +32,9 @@ import type {
   RetentionDays,
   RiverPage,
   RiverQuery,
+  SavedQuery,
+  SetSavedItemInput,
+  UpdateSavedItemError,
   SourceType,
   StartupHealth,
   UpdateCategoryError,
@@ -78,6 +81,8 @@ export type TwoWayRendererMainChannelPayloads = {
   'feeds:list-categories': FeedCategory[];
   'feeds:list': FeedSummary[];
   'items:query': RiverPage;
+  'saved:query': RiverPage;
+  'items:set-saved': Result<void, UpdateSavedItemError>;
   'feeds:refresh': RefreshSummary;
   'feeds:submit-add-feed': Result<FeedSummary, AddFeedError>;
   'feeds:delete-feed': Result<void, DeleteFeedError>;
@@ -121,6 +126,8 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:list-categories': { workspaceId: number };
   'feeds:list': { workspaceId: number };
   'items:query': RiverQuery;
+  'saved:query': SavedQuery;
+  'items:set-saved': SetSavedItemInput;
   'feeds:refresh': undefined;
   'feeds:submit-add-feed': NewFeedInput;
   'feeds:delete-feed': { feedId: number; workspaceId: number };

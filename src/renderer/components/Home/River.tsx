@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EmptyRiver from "@/components/Home/EmptyRiver";
 import RiverHeader from "@/components/Home/RiverHeader";
@@ -25,15 +26,16 @@ import type { FeedSummary } from "../../../shared/contracts";
 
 export interface RiverProps {
   onOpenItem: (id: number) => void;
+  savedView?: boolean;
+  onShowFeed?: () => void;
 }
 
-export default function River({ onOpenItem }: RiverProps) {
+export default function River({ onOpenItem, savedView = false, onShowFeed }: RiverProps) {
   const feeds = useFeeds();
   const categories = useCategories();
   const { markRead, markAllRead } = useReadState();
   const setShowInWorkspace = useSetShowInWorkspace();
   const { preferences } = usePreferences();
-  const { query: searchQuery, setQuery: setSearchQuery } = useSearch();
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeWorkspace = useActiveWorkspace();
   const activeWorkspaceId = useActiveWorkspaceId();
@@ -41,7 +43,8 @@ export default function River({ onOpenItem }: RiverProps) {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isFeedpackBrowserOpen, setIsFeedpackBrowserOpen] = useState(false);
 
-  const { scope, visibleFeedIdsSet, showOnlyLinks, setShowOnlyLinks, debouncedSearch } = useRiverScope(feeds);
+  const { scope, visibleFeedIdsSet, showOnlyLinks, setShowOnlyLinks, debouncedSearch } = useRiverScope(feeds, savedView);
+  const { query: searchQuery, setQuery: setSearchQuery } = useSearch(savedView);
 
   // The corpus-wide unread count of the visible feeds. Comes from FeedSummary.
   const unreadCount = useMemo(
@@ -49,8 +52,8 @@ export default function River({ onOpenItem }: RiverProps) {
     [feeds, visibleFeedIdsSet],
   );
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useRiver(scope);
-  const visibleItems = useMemo(() => data?.pages.flatMap((page) => page.rows) ?? [], [data]);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, isError, refetch } = useRiver(scope);
+  const visibleItems = useMemo(() => (data?.pages.flatMap((page) => page.rows) ?? []).filter((item) => !savedView || item.savedAt != null), [data, savedView]);
 
   const loadMore = useCallback(() => {
     void fetchNextPage();
@@ -78,6 +81,9 @@ export default function River({ onOpenItem }: RiverProps) {
   }, [visibleItems, preferences.openLinksExternally, markRead, onOpenItem]);
 
   const applyVisibility = useCallback(async (targets: FeedSummary[], target: FeedVisibility) => {
+    if (savedView) {
+      onShowFeed?.();
+    }
     setShowOnlyLinks((prev) => {
       const next = new Set(prev);
       for (const feed of targets) {
@@ -94,7 +100,7 @@ export default function River({ onOpenItem }: RiverProps) {
     if (needsWrite.length > 0) {
       await setShowInWorkspace(needsWrite.map((feed) => feed.id), target !== "hidden");
     }
-  }, [setShowInWorkspace, setShowOnlyLinks]);
+  }, [setShowInWorkspace, setShowOnlyLinks, savedView, onShowFeed]);
 
   const handleFeedDeleted = useCallback((feed: FeedSummary) => {
     setShowOnlyLinks((prev) => {
@@ -113,6 +119,7 @@ export default function River({ onOpenItem }: RiverProps) {
     <div className="flex h-full w-full overflow-hidden">
       <RiverSidebar
         feeds={feeds}
+        savedView={savedView}
         categories={categories}
         showOnlyLinks={showOnlyLinks}
         onSetVisibility={applyVisibility}
@@ -120,19 +127,32 @@ export default function River({ onOpenItem }: RiverProps) {
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} hasFeeds={hasFeeds} />
+        <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} hasFeeds={hasFeeds} savedView={savedView} />
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">
-            {isFeedpackRefreshing ? (
+            {savedView && isPending ? (
+              <p className="py-20 text-center text-tertiary">Loading saved items…</p>
+            ) : savedView && isError ? (
+              <div className="py-20 text-center">
+                <p className="mb-3 text-tertiary">Saved items could not be loaded.</p>
+                <Button color="secondary" onPress={() => {
+                  void refetch();
+                }}>Try again</Button>
+              </div>
+            ) : savedView && debouncedSearch.length === 0 ? (
+              visibleItems.length === 0
+                ? <p className="py-20 text-center text-md text-tertiary">Save items from your feeds to find them here.</p>
+                : <RiverList items={visibleItems} density={preferences.density} onOpen={handleOpen} />
+            ) : !savedView && isFeedpackRefreshing ? (
               <p className="py-20 text-center text-md font-regular text-tertiary">Fetching sources for this feedpack…</p>
-            ) : !hasFeeds ? (
+            ) : !savedView && !hasFeeds ? (
               <EmptyRiver onImportOpml={() => setIsImportOpen(true)} onImportFeedpack={() => setIsFeedpackBrowserOpen(true)} />
             ) : debouncedSearch.length > 0 ? (
               visibleItems.length === 0
                 ? <p className="py-20 text-center text-md font-regular text-tertiary">No results for &quot;{debouncedSearch}&quot;</p>
                 : <RiverList items={visibleItems} density={preferences.density} onOpen={handleOpen} />
-            ) : unreadCount === 0 ? (
+            ) : !savedView && unreadCount === 0 ? (
               <p className="py-20 text-center text-md font-regular text-tertiary">You&apos;re all caught up</p>
             ) : (
               <RiverList items={visibleItems} density={preferences.density} onOpen={handleOpen} />

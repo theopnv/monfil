@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { ArrowLeft, ChevronDown, ChevronUp, Circle } from "@untitledui/icons";
+import SaveButton from "@/components/common/SaveButton";
 import FeedAvatar from "@/components/Home/FeedAvatar";
 import ArticleSourceLink from "@/components/Reader/ArticleSourceLink";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
@@ -18,19 +19,20 @@ export interface ReaderHeaderProps {
   onNext: () => void;
   hasPrevious: boolean;
   hasNext: boolean;
+  savedView?: boolean;
 }
 
-export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPrevious, onNext, hasPrevious, hasNext }: ReaderHeaderProps) {
+export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPrevious, onNext, hasPrevious, hasNext, savedView }: ReaderHeaderProps) {
   return (
     <header className="flex flex-none items-center gap-3 border-b border-secondary px-6.5 py-3.5">
       <Button color="secondary" size="sm" iconLeading={ArrowLeft} className="flex-none rounded-full" onPress={onNavigateHome}>
-        Home
+        {savedView ? "Saved" : "Home"}
       </Button>
 
       <div className="flex min-w-0 items-center gap-2">
         <FeedAvatar title={item.feedTitle} faviconUrl={resolveFeedIcon(item.feedIcon, item.feedLink)} size="sm" />
         <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-primary">{item.feedTitle}</span>
-        <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-tertiary">{item.categoryName}</span>
+        {item.categoryName && <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-tertiary">{item.categoryName}</span>}
       </div>
 
       <div className="ml-auto flex flex-none items-center gap-1">
@@ -44,6 +46,7 @@ export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPre
         <Tooltip title="Mark unread">
           <Button aria-label="Mark unread" color="tertiary" size="sm" className="rounded-full" iconLeading={Circle} onPress={onToggleRead} />
         </Tooltip>
+        <SaveButton item={item} {...(savedView ? { onRemoved: onNavigateHome } : {})} />
 
         <span className="mx-1.5 h-5.5 flex-none border-l border-secondary" />
 

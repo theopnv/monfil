@@ -25,21 +25,21 @@ export interface RiverScopeResult {
  * solo/hide selection, the hide-read preference and the debounced search query. Sharing this
  * derivation (rather than each screen computing its own) is what makes the two share one cache entry.
  */
-export function useRiverScope(feeds: FeedSummary[]): RiverScopeResult {
+export function useRiverScope(feeds: FeedSummary[], saved = false): RiverScopeResult {
   const { showOnlyLinks, setShowOnlyLinks } = useRiverScopeState();
   const workspaceId = useActiveWorkspaceId();
   const { preferences } = usePreferences();
-  const { query: searchQuery } = useSearch();
+  const { query: searchQuery } = useSearch(saved);
   const debouncedSearch = useDebouncedValue(searchQuery.trim(), 250);
 
   const visibleFeedIdsSet = useMemo(() => visibleFeedIds(feeds, showOnlyLinks), [feeds, showOnlyLinks]);
 
   const scope = useMemo<RiverScope>(() => ({
     workspaceId,
-    feedIds: [...visibleFeedIdsSet],
-    ...(preferences.hideReadItems ? { unreadOnly: true } : {}),
+    ...(saved ? { saved: true } : { feedIds: [...visibleFeedIdsSet] }),
+    ...(!saved && preferences.hideReadItems ? { unreadOnly: true } : {}),
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
-  }), [workspaceId, visibleFeedIdsSet, preferences.hideReadItems, debouncedSearch]);
+  }), [workspaceId, saved, visibleFeedIdsSet, preferences.hideReadItems, debouncedSearch]);
 
   return { scope, visibleFeedIdsSet, showOnlyLinks, setShowOnlyLinks, debouncedSearch };
 }

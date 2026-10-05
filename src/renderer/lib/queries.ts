@@ -4,13 +4,13 @@
 
 import { infiniteQueryOptions, queryOptions, type InfiniteData } from '@tanstack/react-query';
 import { ipc } from '@/lib/ipc-client';
-import type { FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow, WorkspaceSummary } from '../../shared/contracts';
+import type { FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow, SavedCursor, WorkspaceSummary } from '../../shared/contracts';
 
 export const RIVER_PAGE_SIZE = 50;
 export const RIVER_MAX_PAGES = 8;
 
 /** A river query without paging: what the window is scoped to, not where it currently is. */
-export type RiverScope = Omit<RiverQuery, 'cursor' | 'limit'>;
+export type RiverScope = Omit<RiverQuery, 'cursor' | 'limit'> & { saved?: boolean };
 
 // Sorted so `{ feedIds: [1, 2] }` and `{ feedIds: [2, 1] }` share one cache entry.
 function normalizeScope(scope: RiverScope): RiverScope {
@@ -50,15 +50,32 @@ export function workspacesQuery() {
   });
 }
 
+export function queryItemPage(scope: RiverScope, cursor?: RiverCursor, limit = RIVER_PAGE_SIZE, ids?: number[]): Promise<RiverPage> {
+  if (scope.saved) {
+    const savedCursor: SavedCursor | undefined = cursor && typeof cursor.savedAt === 'number'
+      ? { ...cursor, savedAt: cursor.savedAt }
+      : undefined;
+    if (cursor && !savedCursor) {
+      return Promise.reject(new Error('Missing save time for Saved pagination.'));
+    }
+    return ipc.invoke('saved:query', {
+      workspaceId: scope.workspaceId, limit,
+      ...(scope.search ? { search: scope.search } : {}),
+      ...(scope.unreadOnly ? { unreadOnly: true } : {}),
+      ...(ids ? { ids } : {}),
+      ...(savedCursor ? { cursor: savedCursor } : {}),
+    });
+  }
+  const query = { ...scope };
+  delete query.saved;
+  return ipc.invoke('items:query', { ...query, limit, ...(cursor ? { cursor } : {}), ...(ids ? { ids } : {}) });
+}
+
 export function riverQuery(scope: RiverScope) {
   const normalized = normalizeScope(scope);
   return infiniteQueryOptions({
     queryKey: queryKeys.river(scope),
-    queryFn: ({ pageParam }): Promise<RiverPage> => ipc.invoke('items:query', {
-      ...normalized,
-      limit: RIVER_PAGE_SIZE,
-      ...(pageParam ? { cursor: pageParam } : {}),
-    }),
+    queryFn: ({ pageParam }): Promise<RiverPage> => queryItemPage(normalized, pageParam, RIVER_PAGE_SIZE),
     initialPageParam: undefined as RiverCursor | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     maxPages: RIVER_MAX_PAGES,

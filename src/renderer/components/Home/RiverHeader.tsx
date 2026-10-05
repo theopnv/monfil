@@ -37,9 +37,10 @@ export interface RiverHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   hasFeeds: boolean;
+  savedView?: boolean;
 }
 
-export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: RiverHeaderProps) {
+export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, savedView = false }: RiverHeaderProps) {
   const { refreshNow, isRefreshing, refreshFailed } = useFeedsRefresh();
   const { preferences, setPreference } = usePreferences();
   const activeWorkspace = useActiveWorkspace();
@@ -78,15 +79,15 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: R
       <div className="mx-auto flex w-full max-w-[860px] flex-col gap-2">
         <div className="flex items-end gap-5">
           <div className="min-w-0 flex-1">
-            <div className="mb-1 text-xs font-semibold tracking-wide text-brand-secondary uppercase">{getGreeting()}</div>
-            <h1 className="font-display text-display-md leading-none text-primary">{activeWorkspace?.name ?? "Home"}</h1>
+            <div className="mb-1 text-xs font-semibold tracking-wide text-brand-secondary uppercase">{savedView ? activeWorkspace?.name ?? "Home" : getGreeting()}</div>
+            <h1 className="font-display text-display-md leading-none text-primary">{savedView ? "Saved" : activeWorkspace?.name ?? "Home"}</h1>
           </div>
 
-          {hasFeeds && (
+          {(hasFeeds || savedView) && (
             <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
               <div className="relative min-w-30 max-w-75 flex-1">
                 <Input
-                  placeholder="Search everything"
+                  placeholder={savedView ? "Search saved items" : "Search everything"}
                   icon={SearchIcon}
                   wrapperClassName="rounded-full"
                   inputClassName="pr-9"
@@ -106,20 +107,20 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: R
                   </button>
                 )}
               </div>
-              {pendingRefreshCount > 0 && (
+              {!savedView && pendingRefreshCount > 0 && (
                 <Button color="primary" className="flex-none rounded-full" onPress={handlePendingClick}>
                   {pendingRefreshCount} updates
                 </Button>
               )}
-              <Button
+              {!savedView && <Button
                 color="secondary"
                 iconLeading={Eye}
                 className="flex-none rounded-full"
                 onPress={() => setPreference("hideReadItems", !preferences.hideReadItems)}
               >
                 {preferences.hideReadItems ? "Show All" : "Show Unread"}
-              </Button>
-              <Button
+              </Button>}
+              {!savedView && <Button
                 aria-label="Refresh feeds"
                 color="secondary"
                 iconLeading={RefreshCw01}
@@ -127,12 +128,12 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds }: R
                 isLoading={isRefreshing}
                 isDisabled={isRefreshing}
                 onPress={refreshNow}
-              />
+              />}
             </div>
           )}
         </div>
 
-        {hasFeeds && refreshFailed && <p className="text-right text-sm text-error-primary">{REFRESH_FAILED_MESSAGE}</p>}
+        {!savedView && hasFeeds && refreshFailed && <p className="text-right text-sm text-error-primary">{REFRESH_FAILED_MESSAGE}</p>}
       </div>
     </header>
   );

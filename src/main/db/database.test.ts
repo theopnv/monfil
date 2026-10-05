@@ -21,13 +21,13 @@ describe('initializeDatabase', () => {
     await closeDatabase();
   });
 
-  test('creates the workspace, feedCategory, feedMetadata, feedPlacement, feedItem, setting and articleContent tables', async () => {
+  test('creates the current database tables', async () => {
     // Act
     const tables = await db.introspection.getTables();
 
     // Assert
     expect(tables.map((table) => table.name).sort()).toEqual([
-      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'feedPlacement', 'setting', 'undatedItem', 'workspace',
+      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'feedPlacement', 'savedItem', 'setting', 'undatedItem', 'workspace',
     ]);
   });
 
@@ -99,7 +99,7 @@ describe('reopening an already-migrated file', () => {
     await closeDatabase();
     const old = new SQLite(filePath);
     old.pragma('journal_mode = WAL');
-    old.exec("DROP INDEX feedItem_retention; DROP TABLE undatedItem; DELETE FROM kysely_migration WHERE name = '0007_item_retention'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
+    old.exec("DROP TABLE savedItem; DELETE FROM kysely_migration WHERE name = '0008_saved_items'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
 
     // Act
     await initializeDatabase(filePath);
@@ -109,7 +109,7 @@ describe('reopening an already-migrated file', () => {
     // Assert
     expect(backups).toHaveLength(1);
     expect(backup.prepare("SELECT value FROM setting WHERE key = 'wal-row'").get()).toEqual({ value: 'present' });
-    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0007_item_retention'").get()).toBeUndefined();
+    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0008_saved_items'").get()).toBeUndefined();
     backup.close();
     old.close();
   });

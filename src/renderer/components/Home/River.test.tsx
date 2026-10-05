@@ -13,7 +13,7 @@ import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import River from './River';
-import { HOME_WORKSPACE_ID, type FeedSummary, type RiverPage, type RiverQuery, type RiverRow, type WorkspaceSummary } from '../../../shared/contracts';
+import { HOME_WORKSPACE_ID, type FeedSummary, type RiverPage, type RiverQuery, type RiverRow, type SavedQuery, type SetSavedItemInput, type WorkspaceSummary } from '../../../shared/contracts';
 
 let nextFeedId = 1;
 let nextItemId = 1;
@@ -63,6 +63,7 @@ let allRows: RiverRow[];
 let workspaces: WorkspaceSummary[];
 let opmlImportResult: unknown;
 let invokeMock: ReturnType<typeof vi.fn>;
+let failSave: boolean;
 
 function createWorkspace(overrides: Partial<WorkspaceSummary> = {}): WorkspaceSummary {
   return {
@@ -119,6 +120,7 @@ beforeEach(() => {
   allFeeds = [];
   allRows = [];
   workspaces = [];
+  failSave = false;
   opmlImportResult = { success: true, data: { workspaceId: HOME_WORKSPACE_ID, imported: 0, skipped: [], failed: [] } };
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
@@ -128,6 +130,20 @@ beforeEach(() => {
           ...feed,
           unreadCount: allRows.filter((row) => row.feedId === feed.id && !row.readAt).length,
         })));
+      case 'items:set-saved': {
+        if (failSave) {
+          return Promise.resolve({ success: false, error: { name: 'DB_ERROR', message: 'Write failed.' } });
+        }
+        const { itemId, saved } = arg as SetSavedItemInput;
+        allRows = allRows.map((row) => row.id === itemId ? { ...row, savedAt: saved ? Date.now() : undefined } : row);
+        return Promise.resolve({ success: true, data: undefined });
+      }
+      case 'saved:query': {
+        const query = arg as SavedQuery;
+        const rows = computeRiverPage({ workspaceId: query.workspaceId, limit: query.limit, ...(query.search ? { search: query.search } : {}) }).rows.filter((row) => row.savedAt != null)
+          .sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0) || b.id - a.id);
+        return Promise.resolve({ rows });
+      }
       case 'items:query':
         return Promise.resolve(computeRiverPage(arg as RiverQuery));
       case 'workspaces:list':
@@ -173,6 +189,81 @@ beforeEach(() => {
 function Session({ children }: PropsWithChildren) {
   return <SearchProvider><RiverScopeProvider><PreferencesProvider>{children}</PreferencesProvider></RiverScopeProvider></SearchProvider>;
 }
+
+test('saving from the list keeps the item unread and does not open it', async () => {
+  // Arrange
+  const onOpen = vi.fn();
+  const { getByRole } = await renderWithQueryClient(<Session><River onOpenItem={onOpen} /></Session>);
+  const save = getByRole('button', { name: 'Save', exact: true }).first();
+  await expect.element(save).toBeVisible();
+  invokeMock.mockClear();
+
+  // Act
+  save.element().focus();
+  await userEvent.keyboard('{Enter}');
+
+  // Assert
+  await expect.element(getByRole('button', { name: 'Remove from Saved' })).toHaveAttribute('aria-pressed', 'true');
+  expect(onOpen).not.toHaveBeenCalled();
+  expect(invokeMock.mock.calls.some(([channel]) => channel === 'items:set-read' || channel === 'items:get-content')).toBe(false);
+  expect(allRows[0]?.readAt).toBeUndefined();
+});
+
+test('restores the save control when the database write fails', async () => {
+  // Arrange
+  failSave = true;
+  const { getByRole } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+  const save = getByRole('button', { name: 'Save', exact: true }).first();
+
+  // Act
+  await save.click();
+
+  // Assert
+  await expect.element(save).toHaveAttribute('aria-pressed', 'false');
+  await expect.poll(() => invokeMock.mock.calls.some(([channel]) => channel === 'items:set-saved')).toBe(true);
+  expect(allRows.every((row) => row.savedAt === undefined)).toBe(true);
+});
+
+test('Saved shows read and unread items even when their source is removed', async () => {
+  // Arrange
+  allRows = allRows.map((row, index) => ({ ...row, savedAt: index + 1, readAt: index === 0 ? '2026-01-01' : undefined }));
+  allFeeds = [];
+  const { getByRole, getByText } = await renderWithQueryClient(<Session><River savedView onOpenItem={vi.fn()} /></Session>);
+
+  // Assert
+  await expect.element(getByRole('heading', { name: 'Saved', exact: true })).toBeVisible();
+  await expect.element(getByText('Item A1', { exact: true })).toBeVisible();
+  await expect.element(getByText('Item A2', { exact: true })).toBeVisible();
+  expect(invokeMock.mock.calls.filter(([channel]) => channel === 'saved:query').map(([, arg]) => arg)).toEqual([{ workspaceId: HOME_WORKSPACE_ID, limit: 50 }]);
+  await expect.element(getByRole('button', { name: 'Show All' })).not.toBeInTheDocument();
+});
+
+test('Saved searches its own items and removes a save without opening it', async () => {
+  // Arrange
+  allRows = allRows.map((row) => ({ ...row, savedAt: row.id }));
+  const onOpen = vi.fn();
+  const { getByRole, getByText } = await renderWithQueryClient(<Session><River savedView onOpenItem={onOpen} /></Session>);
+
+  // Act
+  await getByRole('textbox').fill('Item A1');
+  await expect.element(getByText('Item A2', { exact: true })).not.toBeInTheDocument();
+  await getByRole('button', { name: 'Remove from Saved' }).click();
+
+  // Assert
+  await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
+  expect(onOpen).not.toHaveBeenCalled();
+});
+
+test('an empty Saved list stays available without sources', async () => {
+  // Arrange
+  allFeeds = [];
+  allRows = [];
+  const { getByRole, getByText } = await renderWithQueryClient(<Session><River savedView onOpenItem={vi.fn()} /></Session>);
+
+  // Assert
+  await expect.element(getByText('Save items from your feeds to find them here.')).toBeVisible();
+  await expect.element(getByRole('link', { name: 'Saved', exact: true })).toHaveAttribute('aria-current', 'page');
+});
 
 test('shows items from every feed by default', async () => {
   // Arrange

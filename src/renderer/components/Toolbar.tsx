@@ -46,9 +46,6 @@ function WorkspaceButton({ workspace, isActive }: { workspace: WorkspaceSummary;
       style={{ backgroundColor: `color-mix(in srgb, ${workspace.color} 18%, transparent)`, color: workspace.color }}
     >
       <Icon aria-hidden className="size-4.5 stroke-[2.25px]" />
-      {workspace.hasUnread && (
-        <span data-testid="unread-dot" aria-hidden className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-brand-solid ring-2 ring-secondary" />
-      )}
     </Link>
   );
 }

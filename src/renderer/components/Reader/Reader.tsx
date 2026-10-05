@@ -3,7 +3,6 @@
 // See LICENSE in the repository root for full terms.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ipc } from '@/lib/ipc-client';
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import RiverSidebar from "@/components/Home/RiverSidebar";
 import ArticleBody from "@/components/Reader/ArticleBody";
@@ -15,7 +14,7 @@ import ReaderHeader from "@/components/Reader/ReaderHeader";
 import ReadingProgressBar from "@/components/common/ReadingProgressBar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { announce } from "@/lib/announcer";
-import { queryKeys, mergeRiverRows } from "@/lib/queries";
+import { queryKeys, mergeRiverRows, queryItemPage } from "@/lib/queries";
 import { getReaderNavigation } from "@/lib/reader/reader";
 import { useReaderContent } from "@/lib/reader/useReaderContent";
 import { isTypingTarget } from "@/lib/river/useRiverKeyboardNav";
@@ -29,9 +28,11 @@ export interface ReaderProps {
   itemId: string;
   onNavigateToItem: (id: number) => void;
   onNavigateHome: () => void;
+  savedView?: boolean;
+  onShowFeed?: () => void;
 }
 
-export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: ReaderProps) {
+export default function Reader({ itemId, onNavigateToItem, onNavigateHome, savedView = false, onShowFeed }: ReaderProps) {
   const id = Number(itemId);
   const feeds = useFeeds();
   const categories = useCategories();
@@ -43,7 +44,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
 
   // Shares Home's window and cache: same scope, same query key, so navigation follows whatever
   // Home is currently scoped to instead of maintaining its own separate view of the river.
-  const { scope } = useRiverScope(feeds);
+  const { scope } = useRiverScope(feeds, savedView);
   const { data } = useRiver(scope);
   const riverItems = useMemo(() => data?.pages.flatMap((page) => page.rows) ?? [], [data]);
   const currentItem = useMemo(() => riverItems.find((item) => item.id === id), [riverItems, id]);
@@ -67,7 +68,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
       return;
     }
     let cancelled = false;
-    ipc.invoke('items:query', { workspaceId: scope.workspaceId, ids: [id], limit: 1 })
+    queryItemPage({ workspaceId: scope.workspaceId, ...(scope.saved ? { saved: true } : {}) }, undefined, 1, [id])
       .then((page) => {
         if (!cancelled) {
           mergeRows(page.rows);
@@ -77,15 +78,15 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
     return () => {
       cancelled = true;
     };
-  }, [currentItem, id, mergeRows, scope.workspaceId]);
+  }, [currentItem, id, mergeRows, scope.workspaceId, scope.saved]);
 
   // `nextUnread` found nothing locally: ask main for the next unread row past this one's cursor.
   useEffect(() => {
-    if (!currentItem || navigation.nextUnread) {
+    if (!currentItem || (scope.saved ? navigation.next : navigation.nextUnread)) {
       return;
     }
     let cancelled = false;
-    ipc.invoke('items:query', { ...scope, unreadOnly: true, cursor: { publishedAt: currentItem.publishedAt, id: currentItem.id }, limit: 1 })
+    queryItemPage({ ...scope, ...(scope.saved ? {} : { unreadOnly: true }) }, { publishedAt: currentItem.publishedAt, id: currentItem.id, ...(scope.saved ? { savedAt: currentItem.savedAt } : {}) }, 1)
       .then((page) => {
         if (!cancelled) {
           mergeRows(page.rows);
@@ -95,7 +96,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
     return () => {
       cancelled = true;
     };
-  }, [currentItem, navigation.nextUnread, scope, mergeRows]);
+  }, [currentItem, navigation.next, navigation.nextUnread, scope, mergeRows]);
 
   useEffect(() => {
     if (currentItemId !== undefined) {
@@ -147,15 +148,15 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
         <div className="text-center">
           <p className="mb-4 text-tertiary">This article could not be found.</p>
           <Button color="secondary" onPress={onNavigateHome}>
-            Back to Home
+            {scope.saved ? "Back to Saved" : "Back to Home"}
           </Button>
         </div>
       </div>
     );
   }
 
-  const nextTarget = navigation.nextUnread;
-  const nextLabel = nextTarget && !nextTarget.readAt ? "Next unread" : "Next article";
+  const nextTarget = scope.saved ? navigation.next : navigation.nextUnread;
+  const nextLabel = !scope.saved && nextTarget && !nextTarget.readAt ? "Next unread" : "Next article";
 
   const handleToggleRead = () => {
     const willBeRead = !currentItem.readAt;
@@ -167,9 +168,10 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
     <div className="flex h-full w-full overflow-hidden">
       <RiverSidebar
         feeds={feeds}
+        savedView={savedView}
         categories={categories}
         showOnlyLinks={readerHighlightedLinks}
-        onSetVisibility={() => onNavigateHome()}
+        onSetVisibility={() => savedView && onShowFeed ? onShowFeed() : onNavigateHome()}
         onFeedDeleted={() => onNavigateHome()}
       />
 
@@ -177,6 +179,7 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome }: Rea
         <ReadingProgressBar progress={progress} />
         <ReaderHeader
           item={currentItem}
+          savedView={!!scope.saved}
           onNavigateHome={onNavigateHome}
           onToggleRead={handleToggleRead}
           onPrevious={() => navigation.previous && onNavigateToItem(navigation.previous.id)}

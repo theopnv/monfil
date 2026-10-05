@@ -4,6 +4,8 @@
 
 import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { db, initializeDatabase } from '../db/database';
+import { setItemSaved } from '../db/saved';
+import { deleteFeedFromDatabase } from '../db/crud/delete';
 import { addFeedToDatabase } from '../db/crud/insert';
 import { fetchText } from '../lib/fetch';
 import { logger } from '../logging/logger';
@@ -81,6 +83,47 @@ afterEach(async () => {
 });
 
 describe('refreshAllFeeds', () => {
+  test('discards a feed response when its source was removed during the fetch', async () => {
+    // Arrange
+    const link = 'https://saved.example/feed';
+    const feedId = await storeFeed(link, [item({ guid: 'saved' })]);
+    const saved = await db.selectFrom('feedItem').select('id').where('feed_id', '=', feedId).executeTakeFirstOrThrow();
+    await setItemSaved({ workspaceId: HOME_WORKSPACE_ID, itemId: saved.id, saved: true });
+    let finish: ((value: Awaited<ReturnType<typeof rssSource.fetch>>) => void) | undefined;
+    mockedFetchFeed.mockImplementation(() => new Promise((resolve) => {
+      finish = resolve;
+    }));
+    const refreshing = refreshAllFeeds();
+    await expect.poll(() => mockedFetchFeed.mock.calls.length).toBe(1);
+
+    // Act
+    await deleteFeedFromDatabase(feedId, HOME_WORKSPACE_ID);
+    if (!finish) {
+      throw new Error('Expected a pending feed fetch.');
+    }
+    finish({ success: true, data: fetched(link, [item({ guid: 'new', title: 'Late item' })]) });
+    await refreshing;
+
+    // Assert
+    expect(await db.selectFrom('feedItem').select('id').execute()).toEqual([{ id: saved.id }]);
+  });
+
+  test('does not fetch a removed source retained by Saved', async () => {
+    // Arrange
+    const feedId = await storeFeed('https://saved.example/feed', [item()]);
+    const saved = await db.selectFrom('feedItem').select('id').where('feed_id', '=', feedId).executeTakeFirstOrThrow();
+    await setItemSaved({ workspaceId: HOME_WORKSPACE_ID, itemId: saved.id, saved: true });
+    await deleteFeedFromDatabase(feedId, HOME_WORKSPACE_ID);
+
+    // Act
+    const summary = await refreshAllFeeds(true);
+
+    // Assert
+    expect(mockedFetchFeed).not.toHaveBeenCalled();
+    expect(summary.perFeed).toEqual([]);
+    expect(await db.selectFrom('feedItem').select('id').execute()).toEqual([{ id: saved.id }]);
+  });
+
   test('reports publisher edits and removes expired unread items', async () => {
     // Arrange
     const link = 'https://a.example/feed';

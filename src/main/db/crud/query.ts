@@ -5,7 +5,7 @@
 import { sql, type SelectQueryBuilder } from 'kysely';
 import { type ArticleContent, type Database, type FeedItem, type FeedMetadataRow, type Setting } from '../types';
 import { db, dbReady } from '../database';
-import type { FeedCategory, FeedSummary, RiverPage, RiverQuery, RiverRow, Workspace, WorkspaceSummary } from '../../../shared/contracts';
+import type { FeedCategory, FeedSummary, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from '../../../shared/contracts';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
 // Adding a new field to a table object and forgetting to add it here will result in a compilation error.
@@ -69,6 +69,16 @@ const feedMetadataHandlers = {
 export async function queryFeedMetadata(criteria: Partial<FeedMetadataRow>): Promise<FeedMetadataRow[]> {
   await dbReady;
   return applyCriteria(db.selectFrom('feedMetadata').selectAll(), criteria, feedMetadataHandlers).execute();
+}
+
+export async function querySubscribedFeedMetadata(ids?: number[]): Promise<FeedMetadataRow[]> {
+  await dbReady;
+  let builder = db.selectFrom('feedMetadata').selectAll()
+    .where((eb) => eb.exists(eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id')));
+  if (ids) {
+    builder = builder.where('id', 'in', ids);
+  }
+  return builder.execute();
 }
 
 /** Every stored feed whose id is in `ids`, in no particular order. Used to refresh a specific batch (e.g. a freshly imported OPML) rather than every feed. */
@@ -255,6 +265,7 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
     .innerJoin('feedMetadata as f', 'f.id', 'i.feed_id')
     .innerJoin('feedPlacement as p', (join) => join.onRef('p.feed_id', '=', 'f.id').on('p.workspace_id', '=', query.workspaceId))
     .innerJoin('feedCategory as c', 'c.id', 'p.category_id')
+    .leftJoin('savedItem as s', (join) => join.onRef('s.item_id', '=', 'i.id').on('s.workspace_id', '=', query.workspaceId))
     .select([
       'i.id as id',
       'i.title as title',
@@ -269,6 +280,7 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
       'f.icon as feedIcon',
       'c.name as categoryName',
       'f.type as type',
+      's.saved_at as savedAt',
     ]);
 
   builder = query.feedIds
@@ -304,7 +316,7 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
     ]));
   }
 
-  const rows: RiverRow[] = await builder
+  const rows = await builder
     .orderBy('i.published_at', 'desc')
     .orderBy('i.id', 'desc')
     .limit(query.limit + 1)
@@ -315,7 +327,7 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
   const last = page[page.length - 1];
 
   return {
-    rows: page,
+    rows: page.map((row) => ({ ...row, savedAt: row.savedAt ?? undefined })),
     ...(hasMore && last ? { nextCursor: { publishedAt: last.publishedAt, id: last.id } } : {}),
   };
 }

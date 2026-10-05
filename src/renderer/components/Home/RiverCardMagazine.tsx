@@ -42,7 +42,7 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
         {item.excerpt && <p className="text-sm leading-snug text-pretty text-tertiary">{item.excerpt}</p>}
 
         <div className="mt-auto flex items-center gap-2 pt-3">
-          <span className="rounded-full bg-sage-200 px-2.25 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>
+          {item.categoryName && <span className="rounded-full bg-sage-200 px-2.25 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>}
           <Badge color="brand" size="sm">
             {SOURCE_TYPE_LABEL[item.type]}
           </Badge>

@@ -9,25 +9,26 @@ interface SearchContextType {
   setQuery: (query: string) => void;
 }
 
-const SearchContext = createContext<SearchContextType | undefined>(undefined);
+const SearchContext = createContext<{ feed: SearchContextType; saved: SearchContextType } | undefined>(undefined);
 
-export const useSearch = (): SearchContextType => {
+export const useSearch = (saved = false): SearchContextType => {
   const context = useContext(SearchContext);
 
   if (context === undefined) {
     throw new Error("useSearch must be used within a SearchProvider");
   }
 
-  return context;
+  return saved ? context.saved : context.feed;
 };
 
 // Mounted above the router outlet so the query survives navigating to the
 // reader and back, while a restart of the app still starts with an empty search.
 export const SearchProvider = ({ children }: PropsWithChildren) => {
   const [query, setQuery] = useState("");
+  const [savedQuery, setSavedQuery] = useState("");
 
   return (
-    <SearchContext.Provider value={{ query, setQuery }}>
+    <SearchContext.Provider value={{ feed: { query, setQuery }, saved: { query: savedQuery, setQuery: setSavedQuery } }}>
       {children}
     </SearchContext.Provider>
   );

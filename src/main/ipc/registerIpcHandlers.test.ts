@@ -11,6 +11,7 @@ import * as insert from '../db/crud/insert';
 import * as update from '../db/crud/update';
 import * as remove from '../db/crud/delete';
 import * as query from '../db/crud/query';
+import * as saved from '../db/saved';
 import * as settings from '../settings';
 import { resolveSource } from '../feed/sources/registry';
 import { refreshAllFeeds } from '../feed/refresh';
@@ -39,6 +40,7 @@ vi.mock(import('../db/crud/query'), () => ({
   queryArticleContent: vi.fn(), queryFeedCategory: vi.fn(), queryFeedItems: vi.fn(), queryFeedMetadata: vi.fn(),
   queryFeedSummaries: vi.fn(), queryRiverPage: vi.fn(), queryWorkspaceSummaries: vi.fn(),
 }));
+vi.mock(import('../db/saved'), () => ({ querySavedPage: vi.fn(), setItemSaved: vi.fn() }));
 vi.mock(import('../db/retention'), () => ({ retentionCutoff: () => 0, retainedFetchedItems: <T>(items: T[]) => items, pruneExpiredItems: async () => 0 }));
 vi.mock(import('../feed/sources/registry'), () => ({ resolveSource: vi.fn(), sourceFor: vi.fn(() => ({ type: 'rss' as const, fetchesFullArticle: false, fetch: vi.fn(), parse: vi.fn() })) }));
 vi.mock(import('../feed/refresh'), () => ({ refreshAllFeeds: vi.fn() }));
@@ -92,6 +94,8 @@ const fixtures: { [C in TwoWayRendererMainChannels]: Fixture<C> } = {
   'feeds:list-categories': { arg: { workspaceId: 1 }, response: [category], handler: handlers.handleFeedsListCategories },
   'feeds:list': { arg: { workspaceId: 1 }, response: [feed], handler: handlers.handleFeedsList },
   'items:query': { arg: { workspaceId: 1, limit: 50, feedIds: [2], ids: [4], cursor: { publishedAt: 0, id: 4 }, unreadOnly: false, search: '' }, response: { rows: [], nextCursor: { publishedAt: 0, id: 4 } }, handler: handlers.handleItemsQuery },
+  'saved:query': { arg: { workspaceId: 1, limit: 50, cursor: { savedAt: 1, publishedAt: 0, id: 4 } }, response: { rows: [] }, handler: handlers.handleSavedQuery },
+  'items:set-saved': { arg: { workspaceId: 1, itemId: 4, saved: true }, response: done, handler: handlers.handleItemsSetSaved },
   'feeds:refresh': { arg: undefined, response: { perFeed: [{ feedId: 2, inserted: 0, updated: 1 }], removed: 0 }, handler: handlers.handleFeedsRefresh },
   'feeds:submit-add-feed': { arg: newFeed, response: { success: true, data: feed }, handler: handlers.handleFeedsSubmitAddFeed },
   'feeds:delete-feed': { arg: { feedId: 2, workspaceId: 1 }, response: done, handler: handlers.handleFeedsDeleteFeed },
@@ -151,6 +155,8 @@ beforeEach(() => {
   vi.mocked(query.queryFeedCategory).mockResolvedValue([category]);
   vi.mocked(query.queryFeedSummaries).mockResolvedValue([feed]);
   vi.mocked(query.queryWorkspaceSummaries).mockResolvedValue([workspace]);
+  vi.mocked(saved.setItemSaved).mockResolvedValue(done);
+  vi.mocked(saved.querySavedPage).mockResolvedValue({ rows: [] });
   vi.mocked(query.queryRiverPage).mockResolvedValue(fixtures['items:query'].response);
   vi.mocked(query.queryFeedItems).mockResolvedValue([]);
   vi.mocked(settings.getRefreshInterval).mockResolvedValue(30);
