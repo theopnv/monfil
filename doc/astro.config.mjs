@@ -9,6 +9,16 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'Monfil',
+			head: [
+				{
+					tag: 'script',
+					attrs: {
+						type: 'module',
+						src: 'https://static.cloudflareinsights.com/beacon.min.js',
+						'data-cf-beacon': JSON.stringify({ token: '3cccf2a0871f4ecd9ee3b231de82bfbd' }),
+					},
+				},
+			],
 			customCss: ['./src/styles/monfil.css'],
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/theopnv/monfil' }],
 			sidebar: [
