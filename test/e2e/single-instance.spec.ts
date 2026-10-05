@@ -17,6 +17,7 @@ test('a second launch exits and focuses the existing window', async () => {
     const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
     primary = app;
     await app.firstWindow();
+    const executablePath = await app.evaluate(() => process.execPath);
     const windowId = await app.evaluate(({ BrowserWindow }) => {
       const window = BrowserWindow.getAllWindows()[0];
       if (!window) {
@@ -34,7 +35,7 @@ test('a second launch exits and focuses the existing window', async () => {
     });
 
     // Act
-    const child = spawn(app.process().spawnfile, [
+    const child = spawn(executablePath, [
       '--no-sandbox',
       '--disable-features=AutoDeElevate',
       '.',
