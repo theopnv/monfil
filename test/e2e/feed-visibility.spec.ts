@@ -66,15 +66,16 @@ const feedVisibilityTest = base.extend<FeedVisibilityTestFixtures>({
 
   // Every launch reuses the same user data dir, so a test can restart the app against its own database.
   launchApp: async ({ userDataDir }, use) => {
-    const launched: ElectronApplication[] = [];
+    let current: ElectronApplication | undefined;
     try {
       await use(async () => {
+        await current?.close();
         const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-        launched.push(app);
+        current = app;
         return app.firstWindow();
       });
     } finally {
-      await Promise.all(launched.map((app) => app.close()));
+      await current?.close();
     }
   },
 });
@@ -90,10 +91,12 @@ async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Pro
 // The folder's open state is saved to localStorage, so a relaunch against the same user data
 // dir can start with it already expanded.
 async function ensureFolderOpen(page: Page): Promise<void> {
+  await expect(page.getByRole('row', { name: 'tech', exact: true }).getByTestId('folder-count')).toHaveText('1');
   const row = page.getByRole('button', { name: /^Local feed/ });
   if (!(await row.isVisible())) {
     await page.getByRole('button', { name: 'tech', exact: true }).click();
   }
+  await expect(row).toBeVisible();
 }
 
 feedVisibilityTest('rotating a feed row to hidden removes it from home and survives a relaunch', async ({ feedServer, launchApp }) => {

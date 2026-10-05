@@ -42,6 +42,11 @@ function bootstrap() {
     app.setPath('userData', devUserDataDir);
   }
 
+  if (!app.requestSingleInstanceLock()) {
+    app.quit();
+    return;
+  }
+
   const logFilePath = path.join(app.getPath('userData'), 'monfil.log');
   setLogFilePath(logFilePath);
   configureLogging(logFilePath, false);
@@ -99,6 +104,15 @@ function bootstrap() {
     }
     return mainWindow;
   };
+
+  app.on('second-instance', () => {
+    const mainWindow = BrowserWindow.getAllWindows()[0] ?? createWindow();
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.show();
+    mainWindow.focus();
+  });
 
   const main = () => {
     denyWebPermissions(session.defaultSession);
