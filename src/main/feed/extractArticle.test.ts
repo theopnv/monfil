@@ -35,6 +35,18 @@ const LONG_ARTICLE_HTML = articlePage(`
 `);
 
 describe('extractArticle', () => {
+  test('keeps footnote links and target IDs in the extracted article', () => {
+    // Arrange
+    const html = articlePage(`<p>${PARAGRAPH}<a href="#footnote-1">Footnote</a></p><p id="footnote-1">${PARAGRAPH}</p>`);
+
+    // Act
+    const result = extractArticle(html, 'https://example.com/story');
+
+    // Assert
+    expect(result?.html).toContain('href="#footnote-1"');
+    expect(result?.html).toContain('id="footnote-1"');
+  });
+
   test('loads lazy article images and removes an app card', () => {
     // Arrange
     const html = articlePage(`<p>${PARAGRAPH}</p>

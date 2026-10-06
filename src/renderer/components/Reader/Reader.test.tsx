@@ -249,6 +249,35 @@ test('renders the matched item title, byline and body', async () => {
   await expect.element(getByTestId('article-body').getByText(`Item ${itemB.id} description`, { exact: true })).toBeInTheDocument();
 });
 
+test('scrolls to a footnote inside the article without opening an external link', async () => {
+  // Arrange
+  const { itemB } = setUpThreeItemRiver();
+  const paragraphs = Array.from({ length: 30 }, (_, index) => `<p>Article paragraph ${index}</p>`).join('');
+  descriptionsById.set(itemB.id, `<p><a href="#footnote-1"><sup>Footnote 1</sup></a></p>${paragraphs}<p id="footnote-1">Footnote text</p>`);
+  const { getByRole, getByText, getByTestId } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
+  await expect.element(getByText('Footnote text', { exact: true })).toBeInTheDocument();
+  const target = getByText('Footnote text', { exact: true }).element();
+  const scrollContainer = getByTestId('article-body').element().parentElement?.parentElement;
+  if (!scrollContainer) {
+    throw new Error('Reader scroll container is missing');
+  }
+  scrollContainer.style.height = '200px';
+  scrollContainer.style.overflowY = 'auto';
+  expect(target.getBoundingClientRect().top).toBeGreaterThan(scrollContainer.getBoundingClientRect().bottom);
+
+  // Act
+  await getByRole('link', { name: 'Footnote 1' }).click();
+
+  // Assert
+  expect(window.electron.ipcRenderer.sendMessage).not.toHaveBeenCalledWith('link:open', expect.anything());
+  await expect.poll(() => {
+    const targetBounds = target.getBoundingClientRect();
+    const containerBounds = scrollContainer.getBoundingClientRect();
+    return targetBounds.top >= containerBounds.top && targetBounds.bottom <= containerBounds.bottom;
+  }).toBe(true);
+  expect(scrollContainer.scrollTop).toBeGreaterThan(0);
+});
+
 test('shows a not-found fallback with a way back home for an unknown id', async () => {
   // Arrange
   setUpThreeItemRiver();
