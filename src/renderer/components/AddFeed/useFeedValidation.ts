@@ -15,14 +15,39 @@ interface FeedValidationState {
   error: FeedFetchError | null;
 }
 
+interface FeedValidation extends FeedValidationState {
+  validate: () => void;
+}
+
 const idleState: FeedValidationState = { status: 'idle', feed: null, error: null };
 
-export function useFeedValidation(query: string, type?: SourceType): FeedValidationState {
-  const debouncedQuery = useDebouncedValue(query.trim(), 450);
+function isUrlReady(query: string): boolean {
+  if (query.startsWith('@')) {
+    return false;
+  }
+  try {
+    const url = new URL(query.includes('://') ? query : `https://${query}`);
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.includes('.');
+  } catch {
+    return false;
+  }
+}
+
+export function useFeedValidation(query: string, type?: SourceType): FeedValidation {
+  const trimmedQuery = query.trim();
+  const debouncedQuery = useDebouncedValue(trimmedQuery, 450);
+  const [committedQuery, setCommittedQuery] = useState<string | null>(null);
   const [state, setState] = useState<FeedValidationState>(idleState);
+  const validationQuery = committedQuery === trimmedQuery
+    ? trimmedQuery
+    : debouncedQuery === trimmedQuery && isUrlReady(debouncedQuery) ? debouncedQuery : '';
 
   useEffect(() => {
-    if (!debouncedQuery) {
+    setCommittedQuery((prev) => prev === trimmedQuery ? prev : null);
+  }, [trimmedQuery]);
+
+  useEffect(() => {
+    if (!validationQuery) {
       setState(idleState);
       return;
     }
@@ -30,7 +55,7 @@ export function useFeedValidation(query: string, type?: SourceType): FeedValidat
     let cancelled = false;
     setState((prev) => ({ ...prev, status: 'loading' }));
 
-    ipc.invoke('feeds:validate-feed-url', { query: debouncedQuery, ...(type !== undefined ? { type } : {}) })
+    ipc.invoke('feeds:validate-feed-url', { query: validationQuery, ...(type !== undefined ? { type } : {}) })
       .then((result) => {
         if (cancelled) {
           return;
@@ -58,7 +83,7 @@ export function useFeedValidation(query: string, type?: SourceType): FeedValidat
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, type]);
+  }, [validationQuery, type]);
 
-  return state;
+  return { ...state, validate: () => setCommittedQuery(trimmedQuery) };
 }

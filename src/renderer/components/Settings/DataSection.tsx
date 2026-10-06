@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from '@tanstack/react-query';
 import { ipc, rendererLogger } from '@/lib/ipc-client';
+import { appInfoQuery } from '@/lib/queries';
 import { Folder, UploadCloud01 } from "@untitledui/icons";
 import ImportOpmlDialog from "@/components/Workspace/ImportOpmlDialog";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
-import type { AppInfo } from "../../../shared/contracts";
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) {
@@ -25,21 +26,9 @@ function formatBytes(bytes: number): string {
 }
 
 export default function DataSection() {
-  const [info, setInfo] = useState<AppInfo | undefined>(undefined);
+  const { data: info } = useQuery(appInfoQuery());
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [backupMessage, setBackupMessage] = useState<string | undefined>();
-
-  useEffect(() => {
-    const load = () => {
-      ipc.invoke("app:get-info", undefined)
-        .then(setInfo)
-        .catch((error: unknown) => {
-          rendererLogger.error('renderer.failure', { message: 'Error loading app info:' }, error);
-        });
-    };
-    load();
-    return ipc.on("feeds:refreshed", load);
-  }, []);
 
   return (
     <SettingsSection id="data" title="Your data">

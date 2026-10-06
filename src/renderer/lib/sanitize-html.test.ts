@@ -17,6 +17,25 @@ describe('sanitizeArticleHtml', () => {
     expect(result).toBe(html);
   });
 
+  test('keeps fragment links and target IDs', () => {
+    // Arrange
+    const html = '<p><a href="#footnote-1">Footnote</a></p><p id="footnote-1">Footnote text</p>';
+
+    // Act
+    const result = sanitizeArticleHtml(html);
+
+    // Assert
+    expect(result).toBe(html);
+  });
+
+  test('strips IDs that shadow document properties', () => {
+    // Act
+    const result = sanitizeArticleHtml('<p id="location">Footnote text</p>');
+
+    // Assert
+    expect(result).toBe('<p>Footnote text</p>');
+  });
+
   test('strips script tags and their content', () => {
     // Act
     const result = sanitizeArticleHtml('<p>Safe</p><script>alert(1)</script>');

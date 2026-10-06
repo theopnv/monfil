@@ -120,7 +120,19 @@ export default function ArticleBody({ html: rawHtml, sourceUrl }: ArticleBodyPro
       return;
     }
     event.preventDefault();
-    openLink(anchor.getAttribute("href") ?? undefined);
+    const href = anchor.getAttribute("href");
+    if (href?.startsWith("#")) {
+      let id: string;
+      try {
+        id = decodeURIComponent(href.slice(1));
+      } catch {
+        return;
+      }
+      const target = event.currentTarget.querySelector<HTMLElement>(`[id="${CSS.escape(id)}"]`);
+      target?.scrollIntoView({ block: "start" });
+      return;
+    }
+    openLink(href ?? undefined);
   };
 
   return (

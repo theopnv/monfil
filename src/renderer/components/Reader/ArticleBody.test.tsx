@@ -49,6 +49,53 @@ test('clicking an internal anchor calls openLink instead of navigating', async (
   expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('link:open', 'https://example.com/article');
 });
 
+test.each([
+  { href: '#footnote:1', id: 'footnote:1' },
+  { href: '#note%20space', id: 'note space' },
+  { href: '#r%C3%A9f%C3%A9rence', id: 'référence' },
+])('scrolls to the target of $href', async ({ href, id }) => {
+  // Arrange
+  const html = `<p><a href="${href}"><sup><strong>Footnote</strong></sup></a></p><p id="${id}">Footnote text</p>`;
+  const { getByText } = await render(<ArticleBody html={html} />);
+  const scroll = vi.spyOn(getByText('Footnote text', { exact: true }).element(), 'scrollIntoView');
+
+  // Act
+  await getByText('Footnote', { exact: true }).click();
+
+  // Assert
+  expect(scroll).toHaveBeenCalledTimes(1);
+  expect(window.electron.ipcRenderer.sendMessage).not.toHaveBeenCalled();
+});
+
+test('finds the target inside the article when an ID also exists outside it', async () => {
+  // Arrange
+  const html = '<p><a href="#footnote-1">Footnote</a></p><p id="footnote-1">Article footnote</p>';
+  const { getByText } = await render(<><p id="footnote-1">Outside target</p><ArticleBody html={html} /></>);
+  const outsideScroll = vi.spyOn(getByText('Outside target', { exact: true }).element(), 'scrollIntoView');
+  const articleScroll = vi.spyOn(getByText('Article footnote', { exact: true }).element(), 'scrollIntoView');
+
+  // Act
+  await getByText('Footnote', { exact: true }).click();
+
+  // Assert
+  expect(articleScroll).toHaveBeenCalledTimes(1);
+  expect(outsideScroll).not.toHaveBeenCalled();
+  expect(window.electron.ipcRenderer.sendMessage).not.toHaveBeenCalled();
+});
+
+test.each(['#outside-target', '#', '#bad%zz'])('keeps %s inside the article when it has no matching target', async (href) => {
+  // Arrange
+  const { getByText } = await render(<><p id="outside-target">Outside target</p><ArticleBody html={`<a href="${href}">Footnote</a>`} /></>);
+  const outsideScroll = vi.spyOn(getByText('Outside target', { exact: true }).element(), 'scrollIntoView');
+
+  // Act
+  await getByText('Footnote', { exact: true }).click();
+
+  // Assert
+  expect(outsideScroll).not.toHaveBeenCalled();
+  expect(window.electron.ipcRenderer.sendMessage).not.toHaveBeenCalled();
+});
+
 test('loads only the clicked embed', async () => {
   // Arrange
   const html = '<figure><a data-monfil-embed="youtube" href="https://www.youtube.com/watch?v=5HcjtbfJfCY">Castlevania video</a></figure><figure><a data-monfil-embed="x" href="https://x.com/levelsio/status/2103855452828147936">X post</a></figure>';

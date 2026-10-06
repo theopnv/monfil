@@ -3,8 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import { infiniteQueryOptions, queryOptions, type InfiniteData } from '@tanstack/react-query';
-import { ipc } from '@/lib/ipc-client';
-import type { FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow, SavedCursor, WorkspaceSummary } from '../../shared/contracts';
+import { ipc, rendererLogger } from '@/lib/ipc-client';
+import type { AppInfo, FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow, SavedCursor, WorkspaceSummary } from '../../shared/contracts';
 
 export const RIVER_PAGE_SIZE = 50;
 export const RIVER_MAX_PAGES = 8;
@@ -21,11 +21,26 @@ function normalizeScope(scope: RiverScope): RiverScope {
 }
 
 export const queryKeys = {
+  appInfo: ['app-info'] as const,
   feeds: (workspaceId: number) => ['feeds', workspaceId] as const,
   categories: (workspaceId: number) => ['categories', workspaceId] as const,
   workspaces: ['workspaces'] as const,
   river: (scope: RiverScope) => ['river', normalizeScope(scope)] as const,
 };
+
+export function appInfoQuery() {
+  return queryOptions({
+    queryKey: queryKeys.appInfo,
+    queryFn: async (): Promise<AppInfo> => {
+      try {
+        return await ipc.invoke('app:get-info', undefined);
+      } catch (error: unknown) {
+        rendererLogger.error('renderer.failure', { message: 'Error loading app info:' }, error);
+        throw error;
+      }
+    },
+  });
+}
 
 export function feedsQuery(workspaceId: number) {
   return queryOptions({

@@ -15,7 +15,7 @@ description: Download Monfil for macOS, Windows, or Linux.
 
 Monfil isn't code-signed. Signing costs money every year ($100/year for an Apple Developer account to sign macOS builds, and a paid certificate for Windows) and this is a free, one-person project, so that cost isn't covered.
 
-That means both macOS and Windows will flag monfil as coming from an "unidentified developer." This is a warning about the *lack of a paid signature*, not a sign that the app is unsafe: every line of monfil's code is public in this repository for anyone to read, and the [release build](../../../../github/workflows/publish.yml) is produced straight from that source, in the open, by GitHub's own servers.
+That means both macOS and Windows will flag monfil as coming from an "unidentified developer." This is a warning about the *lack of a paid signature*, not a sign that the app is unsafe: every line of monfil's code is public in this repository for anyone to read, and the [release build](https://github.com/theopnv/monfil/blob/main/.github/workflows/publish.yml) is produced straight from that source, in the open, by GitHub's own servers.
 
 On macOS, the warning may say that `monfil.app` is damaged. Put the app in your Applications folder. Open Terminal in that folder and run:
 

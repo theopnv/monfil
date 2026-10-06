@@ -9,6 +9,6 @@ export const ALLOWED_TAGS = [
   'table', 'thead', 'tbody', 'tr', 'td', 'th', 'hr', 'sup', 'sub', 'picture', 'source',
 ];
 
-export const ALLOWED_ATTR = ['href', 'src', 'alt', 'title', 'srcset', 'width', 'height', 'data-monfil-embed'];
+export const ALLOWED_ATTR = ['id', 'href', 'src', 'alt', 'title', 'srcset', 'width', 'height', 'data-monfil-embed'];
 
 export const SANITIZE_CONFIG = { ALLOWED_TAGS, ALLOWED_ATTR, ALLOW_DATA_ATTR: false };

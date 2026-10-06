@@ -12,12 +12,13 @@ const validFeed: ParsedSource = { type: 'rss', link: 'https://example.com/feed',
 const notFoundError: FeedFetchError = { name: 'UNSUPPORTED_FORMAT', message: 'nope' };
 
 function Probe({ query, type }: { query: string; type?: SourceType }) {
-  const { status, feed, error } = useFeedValidation(query, type);
+  const { status, feed, error, validate } = useFeedValidation(query, type);
   return (
     <div>
       <span data-testid="status">{status}</span>
       <span data-testid="feed">{feed?.title ?? ''}</span>
       <span data-testid="error">{error?.message ?? ''}</span>
+      <button onClick={validate}>Validate</button>
     </div>
   );
 }
@@ -43,6 +44,31 @@ describe('useFeedValidation', () => {
     const { getByTestId } = await render(<Probe query="   " />);
 
     // Act
+    await vi.advanceTimersByTimeAsync(1000);
+
+    // Assert
+    await expect.element(getByTestId('status')).toHaveTextContent('idle');
+    expect(invokeMock).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    'https://youtu',
+    'youtu',
+    'https://',
+    'https://you tube.com',
+    'https://youtu/feed.xml',
+    'https://youtu?feed=example.com',
+    'ftp://example.com/feed',
+    '@Underscore_',
+    '@example.name',
+    'Underscore_',
+  ])('stays idle while typing %s', async (query) => {
+    // Arrange
+    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
+    const { getByTestId, rerender } = await render(<Probe query="" />);
+
+    // Act
+    await rerender(<Probe query={query} />);
     await vi.advanceTimersByTimeAsync(1000);
 
     // Assert
@@ -77,16 +103,16 @@ describe('useFeedValidation', () => {
   test('sends the type hint, and re-validates unchanged text when the hint changes', async () => {
     // Arrange
     invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
-    const { rerender } = await render(<Probe query="Underscore_" type="youtube" />);
+    const { rerender } = await render(<Probe query="https://youtube.com/@Underscore_" type="youtube" />);
     await vi.advanceTimersByTimeAsync(450);
 
     // Act: the query stays the same, only the hint changes.
-    await rerender(<Probe query="Underscore_" type="rss" />);
+    await rerender(<Probe query="https://youtube.com/@Underscore_" type="rss" />);
     await vi.advanceTimersByTimeAsync(450);
 
     // Assert
-    expect(invokeMock).toHaveBeenNthCalledWith(1, 'feeds:validate-feed-url', { query: 'Underscore_', type: 'youtube' });
-    expect(invokeMock).toHaveBeenNthCalledWith(2, 'feeds:validate-feed-url', { query: 'Underscore_', type: 'rss' });
+    expect(invokeMock).toHaveBeenNthCalledWith(1, 'feeds:validate-feed-url', { query: 'https://youtube.com/@Underscore_', type: 'youtube' });
+    expect(invokeMock).toHaveBeenNthCalledWith(2, 'feeds:validate-feed-url', { query: 'https://youtube.com/@Underscore_', type: 'rss' });
   });
 
   test('maps a successful validation to status "found"', async () => {
@@ -135,5 +161,60 @@ describe('useFeedValidation', () => {
 
     // Assert
     await expect.element(getByTestId('feed')).toHaveTextContent('Second Feed');
+  });
+
+  test('clears a found feed when the input becomes a partial host', async () => {
+    // Arrange
+    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
+    const { getByTestId, rerender } = await render(<Probe query="example.com/feed" />);
+    await vi.advanceTimersByTimeAsync(450);
+    await expect.element(getByTestId('status')).toHaveTextContent('found');
+
+    // Act
+    await rerender(<Probe query="https://youtu" />);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    // Assert
+    await expect.element(getByTestId('status')).toHaveTextContent('idle');
+    await expect.element(getByTestId('feed')).toHaveTextContent('');
+    expect(invokeMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('stays idle when a checked handle is entered again', async () => {
+    // Arrange
+    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
+    const { getByTestId, getByRole, rerender } = await render(<Probe query="@Underscore_" type="youtube" />);
+    await getByRole('button', { name: 'Validate' }).click();
+    await vi.advanceTimersByTimeAsync(450);
+    await expect.element(getByTestId('status')).toHaveTextContent('found');
+
+    // Act
+    await rerender(<Probe query="" type="youtube" />);
+    await vi.advanceTimersByTimeAsync(450);
+    await rerender(<Probe query="@Underscore_" type="youtube" />);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    // Assert
+    await expect.element(getByTestId('status')).toHaveTextContent('idle');
+    expect(invokeMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('ignores a pending response when the input becomes a partial host', async () => {
+    // Arrange
+    let resolveValidation: (value: Result<ParsedSource, FeedFetchError>) => void = () => { };
+    invokeMock.mockReturnValue(new Promise<Result<ParsedSource, FeedFetchError>>((resolve) => {
+      resolveValidation = resolve;
+    }));
+    const { getByTestId, rerender } = await render(<Probe query="example.com/feed" />);
+
+    // Act
+    await rerender(<Probe query="https://youtu" />);
+    resolveValidation({ success: true, data: validFeed });
+    await vi.advanceTimersByTimeAsync(1000);
+
+    // Assert
+    await expect.element(getByTestId('status')).toHaveTextContent('idle');
+    await expect.element(getByTestId('feed')).toHaveTextContent('');
+    expect(invokeMock).toHaveBeenCalledTimes(1);
   });
 });

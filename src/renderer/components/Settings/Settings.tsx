@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { useEffect, useState } from "react";
-import { ipc, rendererLogger } from '@/lib/ipc-client';
+import { useQuery } from '@tanstack/react-query';
+import { appInfoQuery } from '@/lib/queries';
 import DiagnosticsSection from '@/components/Settings/DiagnosticsSection';
 import AboutSection from "@/components/Settings/AboutSection";
 import AppearanceSection from "@/components/Settings/AppearanceSection";
@@ -22,15 +22,8 @@ const SECTIONS = [
 ] as const;
 
 export default function Settings() {
-  const [version, setVersion] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    ipc.invoke("app:get-info", undefined)
-      .then((info) => setVersion(info.version))
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error loading the app version:' }, error);
-      });
-  }, []);
+  const { data: info } = useQuery(appInfoQuery());
+  const version = info?.version;
 
   return (
     <div className="flex h-full w-full overflow-hidden">
