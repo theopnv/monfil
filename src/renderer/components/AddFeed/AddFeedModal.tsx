@@ -123,6 +123,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
             <Step1Find
               query={query}
               onQueryChange={setQuery}
+              onValidate={validation.validate}
               type={type}
               onTypeChange={setType}
               status={validation.status}

@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import AddFeedModal from './AddFeedModal';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import type { Result } from '../../../shared/result';
@@ -93,6 +94,30 @@ beforeEach(() => {
 });
 
 describe('AddFeedModal', () => {
+  test('waits for a complete host before validating a typed URL', async () => {
+    // Arrange
+    const { getByLabelText, getByText } = await renderWithQueryClient(
+      <AddFeedModal isOpen onOpenChange={vi.fn()} />,
+    );
+    const input = getByLabelText('Feed URL');
+
+    // Act
+    await input.fill('https://youtu');
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    // Assert
+    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:validate-feed-url')).toHaveLength(0);
+
+    // Act
+    await input.fill('https://youtube.com/@x');
+    await expect.element(getByText('Feed found', { exact: true })).toBeInTheDocument();
+
+    // Assert
+    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:validate-feed-url')).toEqual([
+      ['feeds:validate-feed-url', { query: 'https://youtube.com/@x', type: undefined }],
+    ]);
+  });
+
   test('finds a feed, configures it, and shows the backfilled result', async () => {
     // Arrange
     const { getByLabelText, getByRole, getByText } = await renderWithQueryClient(
@@ -114,7 +139,7 @@ describe('AddFeedModal', () => {
     await expect.element(getByText('Item 1')).toBeInTheDocument();
   });
 
-  test('selecting YouTube sends the type hint to the validation call', async () => {
+  test.each(['Enter', 'Tab'])('validates a YouTube handle on %s with the selected type', async (key) => {
     // Arrange
     const { getByLabelText, getByRole, getByText } = await renderWithQueryClient(
       <AddFeedModal isOpen onOpenChange={vi.fn()} />,
@@ -123,10 +148,20 @@ describe('AddFeedModal', () => {
     // Act
     await getByRole('button', { name: 'YouTube' }).click();
     await getByLabelText('Feed URL').fill('Underscore_');
-    await expect.element(getByText('Feed found', { exact: true })).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     // Assert
-    expect(invokeMock).toHaveBeenCalledWith('feeds:validate-feed-url', { query: 'Underscore_', type: 'youtube' });
+    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:validate-feed-url')).toHaveLength(0);
+
+    // Act
+    await userEvent.keyboard(`{${key}}`);
+    await expect.element(getByText('Feed found', { exact: true })).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    // Assert
+    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:validate-feed-url')).toEqual([
+      ['feeds:validate-feed-url', { query: 'Underscore_', type: 'youtube' }],
+    ]);
   });
 
   test('switching the type toggle re-validates the same, unchanged text', async () => {

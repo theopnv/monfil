@@ -29,7 +29,7 @@ const COPY: Record<"anything" | SourceType, { placeholder: string; hint: string 
   },
   youtube: {
     placeholder: "Paste a channel, handle, or video link…",
-    hint: "Monfil checks the link for a YouTube channel or video.",
+    hint: "Paste a link, or enter a channel or handle and press Enter.",
   },
 };
 
@@ -43,6 +43,7 @@ function LinkIcon({ className }: { className?: string | undefined }) {
 export interface Step1FindProps {
   query: string;
   onQueryChange: (query: string) => void;
+  onValidate: () => void;
   type: FeedType;
   onTypeChange: (type: FeedType) => void;
   status: FeedValidationStatus;
@@ -50,7 +51,7 @@ export interface Step1FindProps {
   error: FeedFetchError | null;
 }
 
-export default function Step1Find({ query, onQueryChange, type, onTypeChange, status, feed, error }: Step1FindProps) {
+export default function Step1Find({ query, onQueryChange, onValidate, type, onTypeChange, status, feed, error }: Step1FindProps) {
   const copy = COPY[type ?? "anything"];
 
   return (
@@ -62,6 +63,13 @@ export default function Step1Find({ query, onQueryChange, type, onTypeChange, st
         placeholder={copy.placeholder}
         value={query}
         onChange={onQueryChange}
+        onBlur={onValidate}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            onValidate();
+          }
+        }}
         wrapperClassName="rounded-full"
       />
       <p className="mb-4.5 px-1.5 text-xs text-tertiary text-pretty">{copy.hint}</p>
