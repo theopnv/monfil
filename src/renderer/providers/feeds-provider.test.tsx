@@ -3,7 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import { beforeEach, expect, test, vi } from 'vitest';
-import { useReadState, useRiver } from './feeds-provider';
+import { useFeedsRefresh, useReadState, useRiver } from './feeds-provider';
+import { NotificationHost } from '../lib/notifications';
 import { useIpcBridge, usePendingRefreshCount } from '../lib/ipc-bridge';
 import { renderWithQueryClient } from '../lib/test/render-with-query-client';
 import { HOME_WORKSPACE_ID, type RefreshSummary, type RiverPage, type RiverRow } from '../../shared/contracts';
@@ -65,6 +66,11 @@ function IpcBridgeMount() {
   return null;
 }
 
+function RefreshButton() {
+  const { refreshNow, isRefreshing } = useFeedsRefresh();
+  return <button type="button" onClick={refreshNow} disabled={isRefreshing}>Refresh feeds</button>;
+}
+
 let itemImageFetchedHandler: ((payload: { feedId: number; itemId: number; image: string }) => void) | undefined;
 let feedsRefreshedHandler: ((payload: RefreshSummary) => void) | undefined;
 let invokeImpl: (channel: string, arg: unknown) => Promise<unknown>;
@@ -90,6 +96,20 @@ beforeEach(() => {
       once: vi.fn(),
     },
   } as unknown as typeof window.electron;
+});
+
+test('a partial refresh failure lets the user reveal the log file', async () => {
+  // Arrange
+  invokeImpl = () => Promise.resolve({ perFeed: [], failedFeedIds: [1, 2] } satisfies RefreshSummary);
+  const { getByText, getByRole } = await renderWithQueryClient(<><RefreshButton /><NotificationHost /></>);
+
+  // Act
+  await getByRole('button', { name: 'Refresh feeds' }).click();
+  await expect.element(getByText('2 feeds could not be refreshed.', { exact: true })).toBeInTheDocument();
+  await getByRole('button', { name: 'Show log file' }).click();
+
+  // Assert
+  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('app:reveal-log-file', undefined);
 });
 
 test('loads the first page on mount', async () => {

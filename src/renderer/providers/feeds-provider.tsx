@@ -165,7 +165,10 @@ export const useFeedsRefresh = (): FeedsRefresh => {
       queryClient.setQueryData<number>(uiKeys.appliedRefreshVersion, (version) => (version ?? 0) + 1);
       if (summary.failedFeedIds?.length) {
         const count = summary.failedFeedIds.length;
-        notifyWarning(`${count} ${count === 1 ? 'feed' : 'feeds'} could not be refreshed.`, 'manual-refresh-failures');
+        notifyWarning(`${count} ${count === 1 ? 'feed' : 'feeds'} could not be refreshed.`, 'manual-refresh-failures', {
+          label: 'Show log file',
+          onClick: () => ipc.send('app:reveal-log-file', undefined),
+        });
       }
     },
     onError: (error: unknown) => {
