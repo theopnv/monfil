@@ -6,18 +6,26 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { PreferencesProvider } from '@/providers/preferences-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
+import { useIpcBridge } from '@/lib/ipc-bridge';
 import Settings from './Settings';
-import type { AppInfo } from '../../../shared/contracts';
+import type { AppInfo, RefreshSummary } from '../../../shared/contracts';
 import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 
 const appInfo: AppInfo = { version: '1.2.3', feedCount: 2, itemCount: 42, databaseSizeBytes: 2048 };
 
 let invokeImpl: (channel: string) => Promise<unknown>;
+let feedsRefreshedHandlers: Set<(summary: RefreshSummary) => void>;
 
-function renderSettings() {
+function IpcBridgeMount() {
+  useIpcBridge();
+  return null;
+}
+
+function renderSettings(withBridge = false) {
   return renderWithQueryClient(
     <ThemeProvider>
       <PreferencesProvider>
+        {withBridge && <IpcBridgeMount />}
         <Settings />
       </PreferencesProvider>
     </ThemeProvider>,
@@ -26,6 +34,7 @@ function renderSettings() {
 
 beforeEach(() => {
   localStorage.clear();
+  feedsRefreshedHandlers = new Set();
   invokeImpl = (channel) => {
     switch (channel) {
       case 'app:get-info': return Promise.resolve(appInfo);
@@ -43,7 +52,12 @@ beforeEach(() => {
   window.electron = {
     ipcRenderer: {
       invoke: vi.fn((channel: string) => invokeImpl(channel)),
-      on: vi.fn(() => vi.fn()),
+      on: vi.fn((channel: string, handler: (summary: RefreshSummary) => void) => {
+        if (channel === 'feeds:refreshed') {
+          feedsRefreshedHandlers.add(handler);
+        }
+        return vi.fn(() => feedsRefreshedHandlers.delete(handler));
+      }),
       sendMessage: vi.fn(),
       once: vi.fn(),
     },
@@ -171,13 +185,41 @@ test('reveal database file sends app:reveal-database-file', async () => {
   expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('app:reveal-database-file', undefined);
 });
 
-test('shows the your-data stats from app:get-info', async () => {
+test('shares app info between the data stats and version', async () => {
   // Arrange
-  const { getByText } = await renderSettings();
+  const { getByRole, getByText } = await renderSettings();
 
   // Assert
   await expect.element(getByText('2', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('42', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('2.0 KB', { exact: true })).toBeInTheDocument();
+  await expect.element(getByRole('banner').getByText('Monfil 1.2.3', { exact: true })).toBeInTheDocument();
+  expect(vi.mocked(window.electron.ipcRenderer.invoke).mock.calls.filter(([channel]) => channel === 'app:get-info')).toHaveLength(1);
+  expect(window.electron.ipcRenderer.on).not.toHaveBeenCalled();
+});
+
+test.each<RefreshSummary>([
+  { perFeed: [{ feedId: 1, inserted: 1 }] },
+  { perFeed: [], removed: 1, applyImmediately: true },
+  { perFeed: [] },
+])('refreshes data stats through the bridge for %j', async (summary) => {
+  // Arrange
+  const { getByText } = await renderSettings(true);
+  await expect.element(getByText('42', { exact: true })).toBeInTheDocument();
+  const defaultInvoke = invokeImpl;
+  invokeImpl = (channel) => channel === 'app:get-info'
+    ? Promise.resolve({ ...appInfo, feedCount: 3, itemCount: 43, databaseSizeBytes: 4096 })
+    : defaultInvoke(channel);
+
+  // Act
+  feedsRefreshedHandlers.forEach((handler) => handler(summary));
+
+  // Assert
+  await expect.element(getByText('3', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('43', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('4.0 KB', { exact: true })).toBeInTheDocument();
+  expect(vi.mocked(window.electron.ipcRenderer.invoke).mock.calls.filter(([channel]) => channel === 'app:get-info')).toHaveLength(2);
+  expect(feedsRefreshedHandlers.size).toBe(1);
 });
 
 test('importing OPML merged into Home invokes opml:import with that target', async () => {
