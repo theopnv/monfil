@@ -20,7 +20,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v7
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
       with:
         node-version: ${{ inputs.node-version }}
         cache: npm
@@ -38,7 +38,7 @@ runs:
     # which differs by OS. Listing all three candidate paths lets one cache step cover every runner.
     - name: Cache Electron download
       if: inputs.electron == 'true'
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
       with:
         path: |
           ~/.cache/electron
@@ -48,7 +48,7 @@ runs:
 
     - name: Cache Chromium headless shell
       if: inputs.chromium == 'true'
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
       with:
         path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
         key: chromium-headless-${{ runner.os }}-${{ runner.arch }}-${{ steps.versions.outputs.playwright }}
