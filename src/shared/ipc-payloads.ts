@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import type { TwoWayRendererMainChannels, TwoWayRendererMainChannelsInvokeArgs } from './channels';
+import { SOURCE_TYPES } from './contracts';
 import type { FeedpackInstallTarget, ImportOpmlTarget, NewFeedInput, RefreshInterval, RetentionDays, RiverCursor, RiverQuery, SavedCursor, SavedQuery, SourceItem, SourceType } from './contracts';
 import { isPositiveSafeInteger } from './validation';
 
@@ -60,7 +61,7 @@ function object<T extends object>(fields: { [K in keyof T]-?: Guard<T[K]> }): Gu
 }
 
 function isSourceType(value: unknown): value is SourceType {
-  return value === 'rss' || value === 'youtube';
+  return (SOURCE_TYPES as readonly unknown[]).includes(value);
 }
 
 function isRefreshInterval(value: unknown): value is RefreshInterval {

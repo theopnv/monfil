@@ -2,164 +2,95 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { parseFeed } from 'feedsmith';
-import { fetchConditional, fetchText } from '../../lib/fetch';
+import { fetchText } from '../../lib/fetch';
+import type { FeedFetchError, ParsedSource } from '../../../shared/contracts';
 import type { Result } from '../../../shared/result';
-import { extractAtomImageUrl, extractImageUrl, extractJsonImageUrl, extractRdfImageUrl } from '../extractImage';
-import { decodeOptional, decodeText, resolveGuid } from './text';
-import type { FeedFetchError } from '../../../shared/contracts';
-import type { NewSourceItem, SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
+import { findAlternateLinks, probeLinks } from './discovery';
+import { parseFeedContent } from './feedContent';
+import { fetchAndParse, fetchCandidates, mapFetchError, unsupported, withScheme } from './feedSource';
+import { mastodonCandidates, mastodonSource } from './mastodon';
+import type { SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
 
-interface ParsedFeedContent {
-  title: string;
-  description: string;
-  items: NewSourceItem[];
-}
+export { parseFeedContent } from './feedContent';
 
-export function parseFeedContent(content: string): ParsedFeedContent | null {
-  const { format, feed } = parseFeed(content);
-  switch (format) {
-    case 'rss':
-      return {
-        title: decodeText(feed.title ?? ''),
-        description: decodeText(feed.description ?? ''),
-        items: feed.items
-          ? feed.items.map(item => {
-            const title = decodeText(item.title ?? 'No title');
-            const pubDate = item.pubDate ?? 'No publication date';
-            return {
-              title,
-              guid: resolveGuid(item.guid?.value, item.link, title, pubDate),
-              link: item.link,
-              pubDate,
-              description: decodeText(item.description ?? ''),
-              image: extractImageUrl(item),
-              author: decodeOptional(item.authors?.[0]?.name ?? item.dc?.creators?.[0]),
-              extra: undefined,
-              read_at: undefined,
-            };
-          })
-          : [],
-      };
-    case 'atom':
-      return {
-        title: decodeText(feed.title?.value ?? ''),
-        description: decodeText(feed.subtitle?.value ?? ''),
-        items: feed.entries
-          ? feed.entries.map(entry => {
-            const title = decodeText(entry.title?.value ?? 'No title');
-            const pubDate = entry.published ?? entry.updated ?? 'No publication date';
-            const link = entry.links?.find(link => link.rel === 'alternate' || !link.rel)?.href ?? entry.links?.[0]?.href;
-            return {
-              title,
-              guid: resolveGuid(entry.id, link, title, pubDate),
-              link,
-              pubDate,
-              description: decodeText(entry.summary?.value ?? entry.content?.value ?? ''),
-              image: extractAtomImageUrl(entry),
-              author: decodeOptional(entry.authors?.[0]?.name),
-              extra: undefined,
-              read_at: undefined,
-            };
-          })
-          : [],
-      };
-    case 'rdf':
-      return {
-        title: decodeText(feed.title ?? ''),
-        description: decodeText(feed.description ?? ''),
-        items: feed.items
-          ? feed.items.map(item => {
-            const title = decodeText(item.title ?? 'No title');
-            const pubDate = item.dc?.dates?.[0] ?? 'No publication date';
-            return {
-              title,
-              guid: resolveGuid(item.rdf?.about, item.link, title, pubDate),
-              link: item.link,
-              pubDate,
-              description: decodeText(item.description ?? ''),
-              image: extractRdfImageUrl(item),
-              author: decodeOptional(item.dc?.creators?.[0]),
-              extra: undefined,
-              read_at: undefined,
-            };
-          })
-          : [],
-      };
-    case 'json':
-      return {
-        title: decodeText(feed.title ?? ''),
-        description: decodeText(feed.description ?? ''),
-        items: feed.items
-          ? feed.items.map(item => {
-            const title = decodeText(item.title ?? 'No title');
-            const pubDate = item.date_published ?? 'No publication date';
-            return {
-              title,
-              guid: resolveGuid(item.id, item.url, title, pubDate),
-              link: item.url,
-              pubDate,
-              description: decodeText(item.content_html ?? item.content_text ?? item.summary ?? ''),
-              image: extractJsonImageUrl(item),
-              author: decodeOptional(item.authors?.[0]?.name),
-              extra: undefined,
-              read_at: undefined,
-            };
-          })
-          : [],
-      };
-    default: {
-      const exhaustiveCheck: never = format;
-      return exhaustiveCheck;
-    }
+function safeParse(body: string): ReturnType<typeof parseFeedContent> {
+  try {
+    return parseFeedContent(body);
+  } catch {
+    return null;
   }
 }
 
 async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchResult, FeedFetchError>> {
-  const normalizedLink = /^https?:\/\//i.test(input.link) ? input.link : `https://${input.link}`;
-  try {
-    const result = input.validators
-      ? await fetchConditional(normalizedLink, { validators: input.validators })
-      : await fetchText(normalizedLink);
-    if (!result.success) {
-      switch (result.error.name) {
-        case 'GENERIC_FETCH_ERROR':
-        case 'NETWORK_ERROR':
-        case 'NOT_ALLOWED_OR_ABORTED_ERROR':
-        case 'RESPONSE_TOO_LARGE_ERROR':
-        case 'BLOCKED_URL_ERROR':
-          return { success: false, error: result.error };
-        default: {
-          const exhaustiveCheck: never = result.error;
-          return { success: false, error: exhaustiveCheck };
-        }
-      }
-    }
-    if ('notModified' in result.data) {
-      return { success: true, data: result.data };
-    }
-    const parsed = parseFeedContent(result.data.body);
-    if (!parsed) {
-      return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported feed." } };
-    }
-    return {
-      success: true,
-      data: {
-        validators: result.data.validators,
-        parsed: { type: 'rss', link: normalizedLink, title: parsed.title, description: parsed.description, items: parsed.items, icon: undefined },
-      },
-    };
-  } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: { name: 'PARSE_ERROR', message: error.message } };
-    }
-    return { success: false, error: { name: 'UNKNOWN_ERROR', message: 'An unknown error occurred' } };
+  const link = withScheme(input.link);
+  const fetched = await fetchAndParse(link, input.validators, parseFeedContent);
+  if (!fetched.success) {
+    return fetched;
   }
+  if ('notModified' in fetched.data) {
+    return { success: true, data: fetched.data };
+  }
+  const { parsed, validators } = fetched.data;
+  return { success: true, data: { validators, parsed: { type: 'rss', link, title: parsed.title, description: parsed.description, items: parsed.items, icon: undefined } } };
+}
+
+async function probe(pageUrl: string): Promise<ParsedSource | undefined> {
+  for (const link of probeLinks(pageUrl)) {
+    const found = await fetchCandidates('rss', [{ link }], parseFeedContent);
+    if (found.success && found.data[0]) {
+      return found.data[0];
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Finds the feeds behind any link: the link itself when it is a feed, else the feeds the page
+ * advertises, else the common feed paths on its origin. Mastodon profile and tag links on any host
+ * are tried as Mastodon first, because the host alone cannot tell.
+ */
+async function discover(query: string): Promise<Result<ParsedSource[], FeedFetchError>> {
+  const link = withScheme(query.trim());
+  let pageUrl: URL;
+  try {
+    pageUrl = new URL(link);
+  } catch {
+    return unsupported("This doesn't look like a link.");
+  }
+
+  if (mastodonCandidates(link, true)) {
+    const mastodon = await mastodonSource.discover(link);
+    if (mastodon.success) {
+      return mastodon;
+    }
+  }
+
+  const page = await fetchText(link);
+  if (!page.success) {
+    return { success: false, error: mapFetchError(page.error) };
+  }
+  const direct = safeParse(page.data.body);
+  if (direct) {
+    return { success: true, data: [{ type: 'rss', link, title: direct.title, description: direct.description, items: direct.items, icon: undefined }] };
+  }
+
+  const advertised = findAlternateLinks(page.data.body, pageUrl.href);
+  if (advertised.length > 0) {
+    const found = await fetchCandidates('rss', advertised.map((alternate) => ({ link: alternate })), parseFeedContent);
+    if (found.success) {
+      return found;
+    }
+  }
+
+  const probed = await probe(pageUrl.href);
+  return probed ? { success: true, data: [probed] } : unsupported("Couldn't find a feed at that address.");
 }
 
 export const rssSource: SourceAdapter = {
   type: 'rss',
   fetchesFullArticle: true,
+  matches: () => true,
+  discover,
   fetch: fetchFeed,
   parse: parseFeedContent,
 };

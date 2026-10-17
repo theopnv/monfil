@@ -25,6 +25,30 @@ const STRATEGY_BY_TYPE: Record<SourceType, ReaderContentStrategy> = {
     renderDescription: renderPlainTextDescription,
     showStandfirst: false,
   },
+  github: {
+    renderDescription: (raw) => raw,
+    showStandfirst: false,
+  },
+  gitlab: {
+    renderDescription: (raw) => raw,
+    showStandfirst: false,
+  },
+  hackernews: {
+    renderDescription: (raw) => raw,
+    showStandfirst: true,
+  },
+  arxiv: {
+    renderDescription: renderPlainTextDescription,
+    showStandfirst: false,
+  },
+  bluesky: {
+    renderDescription: renderPlainTextDescription,
+    showStandfirst: false,
+  },
+  mastodon: {
+    renderDescription: (raw) => raw,
+    showStandfirst: false,
+  },
 };
 
 export interface ReaderContent {

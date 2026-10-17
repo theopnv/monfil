@@ -13,6 +13,12 @@ export const DENSITIES: readonly Density[] = ["Cards", "Magazine", "Compact"];
 export const SOURCE_TYPE_LABEL: Record<SourceType, string> = {
   rss: 'RSS',
   youtube: 'YOUTUBE',
+  github: 'GITHUB',
+  gitlab: 'GITLAB',
+  hackernews: 'HN',
+  arxiv: 'ARXIV',
+  bluesky: 'BLUESKY',
+  mastodon: 'MASTODON',
 };
 
 export interface RiverCardProps {

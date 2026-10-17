@@ -40,15 +40,34 @@ Monfil combines:
 
 - A distraction-free desktop feed reader
 - Feedpacks: curated source packs for specific technical fields
-- RSS and YouTube support
+- Supported sources: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, and Mastodon (no signup needed!)
 - Workspaces, search and read/unread tracking
 - Keyboard shortcuts
 - OPML import/export support
+
+## Paste a link, Monfil finds the feed
+
+You do not need to find a feed URL. Paste the link of the page that you read, and Monfil finds the feed behind it. When a page has more than one feed, you pick the one you want.
+
+| Source | Paste | You follow |
+| --- | --- | --- |
+| Websites and blogs | Any page on the site | Its posts |
+| Google Alerts | The RSS feed | Its posts |
+| GitHub | A repository, a user, or an organization | Releases, or public activity |
+| GitLab | A project, also on a self-hosted GitLab | Releases |
+| Hacker News | `news.ycombinator.com` | The front page, stories with 100+ or 300+ points, Show HN, or Ask HN |
+| arXiv | A category listing, such as `arxiv.org/list/cs.AI/recent` | New papers in that category |
+| Bluesky | A profile link or a handle | A person's posts |
+| Mastodon | A profile link, a tag link, or `@user@server` | A person's posts, or the posts with a tag |
+| YouTube | A channel, a video, or a playlist | New videos |
+| Substack and Google Alerts | The publication, or the alert feed | New posts, or new alerts |
 
 ## Guides
 
 - [Install Monfil](doc/src/content/docs/user-guide/install.md)
 - [Use Monfil](doc/src/content/docs/user-guide/home.md)
+- [Supported sources](doc/src/content/docs/user-guide/supported-sources.md)
+- [Use cases](doc/src/content/docs/user-guide/use-cases.md)
 - [Contribute to Monfil](doc/src/content/docs/contributor-guide/home.md)
 
 ## FAQ

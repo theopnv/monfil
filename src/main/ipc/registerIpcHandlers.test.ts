@@ -42,7 +42,7 @@ vi.mock(import('../db/crud/query'), () => ({
 }));
 vi.mock(import('../db/saved'), () => ({ querySavedPage: vi.fn(), setItemSaved: vi.fn() }));
 vi.mock(import('../db/retention'), () => ({ retentionCutoff: () => 0, retainedFetchedItems: <T>(items: T[]) => items, pruneExpiredItems: async () => 0 }));
-vi.mock(import('../feed/sources/registry'), () => ({ resolveSource: vi.fn(), sourceFor: vi.fn(() => ({ type: 'rss' as const, fetchesFullArticle: false, fetch: vi.fn(), parse: vi.fn() })) }));
+vi.mock(import('../feed/sources/registry'), () => ({ resolveSource: vi.fn(), sourceFor: vi.fn(() => ({ type: 'rss' as const, fetchesFullArticle: false, matches: vi.fn(), discover: vi.fn(), fetch: vi.fn(), parse: vi.fn() })) }));
 vi.mock(import('../feed/refresh'), () => ({ refreshAllFeeds: vi.fn() }));
 vi.mock(import('../feed/scheduler'), () => ({ rescheduleRefresh: vi.fn() }));
 vi.mock(import('../feed/enrichItems'), () => ({ enrichItems: vi.fn() }));
@@ -90,7 +90,7 @@ type Fixture<C extends TwoWayRendererMainChannels> = {
 };
 
 const fixtures: { [C in TwoWayRendererMainChannels]: Fixture<C> } = {
-  'feeds:validate-feed-url': { arg: { query: feed.link, type: 'rss' }, response: { success: true, data: source }, handler: handlers.handleFeedsValidateFeedUrl },
+  'feeds:validate-feed-url': { arg: { query: feed.link, type: 'rss' }, response: { success: true, data: [source] }, handler: handlers.handleFeedsValidateFeedUrl },
   'feeds:list-categories': { arg: { workspaceId: 1 }, response: [category], handler: handlers.handleFeedsListCategories },
   'feeds:list': { arg: { workspaceId: 1 }, response: [feed], handler: handlers.handleFeedsList },
   'items:query': { arg: { workspaceId: 1, limit: 50, feedIds: [2], ids: [4], cursor: { publishedAt: 0, id: 4 }, unreadOnly: false, search: '' }, response: { rows: [], nextCursor: { publishedAt: 0, id: 4 } }, handler: handlers.handleItemsQuery },
@@ -163,7 +163,7 @@ beforeEach(() => {
   vi.mocked(settings.getRetentionDays).mockResolvedValue(30);
   vi.mocked(settings.getRefreshOnLaunch).mockResolvedValue(false);
   vi.mocked(settings.getDetailedLogging).mockResolvedValue(false);
-  vi.mocked(resolveSource).mockReturnValue({ fetch: vi.fn().mockResolvedValue({ success: true, data: { parsed: source } }) } as unknown as ReturnType<typeof resolveSource>);
+  vi.mocked(resolveSource).mockReturnValue({ discover: vi.fn().mockResolvedValue({ success: true, data: [source] }) } as unknown as ReturnType<typeof resolveSource>);
   vi.mocked(refreshAllFeeds).mockResolvedValue(fixtures['feeds:refresh'].response);
   vi.mocked(openAndImportOpml).mockResolvedValue(imported);
   vi.mocked(exportWorkspaceOpml).mockResolvedValue(done);

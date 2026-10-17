@@ -24,5 +24,16 @@
       <outline text="Sonar Blog" title="Sonar Blog" type="rss" xmlUrl="https://www.sonarsource.com/blog/rss.xml"/>
       <outline text="The CircleCI Blog Feed | CircleCI" title="The CircleCI Blog Feed | CircleCI" type="rss" xmlUrl="https://circleci.com/blog/feed.xml"/>
     </outline>
+    <outline text="Releases">
+      <outline text="Kubernetes releases" title="Kubernetes releases" type="rss" xmlUrl="https://github.com/kubernetes/kubernetes/releases.atom"/>
+      <outline text="OpenTofu releases" title="OpenTofu releases" type="rss" xmlUrl="https://github.com/opentofu/opentofu/releases.atom"/>
+      <outline text="Playwright releases" title="Playwright releases" type="rss" xmlUrl="https://github.com/microsoft/playwright/releases.atom"/>
+      <outline text="Docker Compose releases" title="Docker Compose releases" type="rss" xmlUrl="https://github.com/docker/compose/releases.atom"/>
+      <outline text="Grafana releases" title="Grafana releases" type="rss" xmlUrl="https://github.com/grafana/grafana/releases.atom"/>
+      <outline text="Argo CD releases" title="Argo CD releases" type="rss" xmlUrl="https://github.com/argoproj/argo-cd/releases.atom"/>
+    </outline>
+    <outline text="News">
+      <outline text="Hacker News: 300+ points" title="Hacker News: 300+ points" type="rss" xmlUrl="https://hnrss.org/newest?points=300"/>
+    </outline>
   </body>
 </opml>

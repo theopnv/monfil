@@ -9,7 +9,7 @@ import { rssSource } from '../feed/sources/rss';
 import type { ParsedSource } from '../../shared/contracts';
 import { importOpml, startOpmlImport } from './import';
 
-vi.mock(import('../feed/sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: false, fetch: vi.fn(), parse: vi.fn() } }));
+vi.mock(import('../feed/sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: false, matches: vi.fn(), discover: vi.fn(), fetch: vi.fn(), parse: vi.fn() } }));
 vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedFetchFeed = vi.mocked(rssSource.fetch);

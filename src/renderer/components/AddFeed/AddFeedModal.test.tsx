@@ -56,7 +56,7 @@ const insertedRow: RiverPage['rows'][number] = {
 let invokeMock: ReturnType<typeof vi.fn>;
 
 function stubElectron(overrides: {
-  validateFeedUrl?: Result<ParsedSource, FeedFetchError>;
+  validateFeedUrl?: Result<ParsedSource[], FeedFetchError>;
   submitAddFeed?: Result<FeedSummary, AddFeedError>;
 } = {}) {
   invokeMock = vi.fn(<C extends keyof TwoWayRendererMainChannelsInvokeArgs>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<TwoWayRendererMainChannelPayloads[C]> => {
@@ -71,7 +71,7 @@ function stubElectron(overrides: {
         return Promise.resolve({ rows }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       }
       case 'feeds:validate-feed-url':
-        return Promise.resolve(overrides.validateFeedUrl ?? { success: true, data: parsedFeed }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(overrides.validateFeedUrl ?? { success: true, data: [parsedFeed] }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:submit-add-feed':
         return Promise.resolve(overrides.submitAddFeed ?? { success: true, data: insertedFeed }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       default:
@@ -195,5 +195,42 @@ describe('AddFeedModal', () => {
 
     // Assert
     await expect.element(getByRole('button', { name: 'Continue' })).toBeDisabled();
+  });
+  test('offers every candidate, selects the first, and submits the one the user picks', async () => {
+    // Arrange
+    const candidates: ParsedSource[] = [
+      { ...parsedFeed, type: 'hackernews', link: 'https://news.ycombinator.com/rss', title: 'Hacker News', label: 'Front page' },
+      { ...parsedFeed, type: 'hackernews', link: 'https://hnrss.org/newest?points=300', title: 'Hacker News: 300 points', label: '300+ points' },
+    ];
+    stubElectron({ validateFeedUrl: { success: true, data: candidates } });
+    const { getByLabelText, getByRole, getByText } = await renderWithQueryClient(
+      <AddFeedModal isOpen onOpenChange={vi.fn()} />,
+    );
+    await getByLabelText('Feed URL').fill('news.ycombinator.com');
+    await expect.element(getByRole('radio', { name: /Front page/ })).toBeChecked();
+
+    // Act
+    await getByRole('radio', { name: /300\+ points/ }).click();
+    await getByRole('button', { name: 'Continue' }).click();
+    await getByText('Tech', { exact: true }).click();
+    await getByRole('button', { name: 'Add source' }).click();
+
+    // Assert
+    await vi.waitFor(() => {
+      expect(invokeMock).toHaveBeenCalledWith('feeds:submit-add-feed', expect.objectContaining({ link: 'https://hnrss.org/newest?points=300', type: 'hackernews' }));
+    }, { timeout: 2000 });
+  });
+
+  test('a platform chip shows its own placeholder', async () => {
+    // Arrange
+    const { getByLabelText, getByRole } = await renderWithQueryClient(
+      <AddFeedModal isOpen onOpenChange={vi.fn()} />,
+    );
+
+    // Act
+    await getByRole('button', { name: 'GitHub' }).click();
+
+    // Assert
+    await expect.element(getByLabelText('Feed URL')).toHaveAttribute('placeholder', 'Paste a repository or user link, or owner/repo…');
   });
 });

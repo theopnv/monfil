@@ -39,6 +39,28 @@ Start with curated feed packs for topics such as "General Tech announcements and
   <Image src={home} alt="Monfil home" width={960} format="webp" />
 </div>
 
+## Paste a link, Monfil finds the feed
+
+You do not need to find a feed URL. Paste the link of the page that you read, and Monfil finds the feed behind it. When a page has more than one feed, you pick the one you want.
+
+| Source | Paste | You follow |
+| --- | --- | --- |
+| Websites and blogs | Any page on the site | Its posts |
+| GitHub | A repository, a user, or an organization | Releases, or public activity |
+| GitLab | A project, also on a self-hosted GitLab | Releases |
+| Hacker News | `news.ycombinator.com` | The front page, stories with 100+ or 300+ points, Show HN, or Ask HN |
+| arXiv | A category listing, such as `arxiv.org/list/cs.AI/recent` | New papers in that category |
+| Bluesky | A profile link or a handle | A person's posts |
+| Mastodon | A profile link, a tag link, or `@user@server` | A person's posts, or the posts with a tag |
+| YouTube | A channel, a video, or a playlist | New videos |
+| Substack and Google Alerts | The publication, or the alert feed | New posts, or new alerts |
+
+### Follow people on Bluesky and Mastodon without an account
+
+Bluesky and Mastodon publish a feed for each public profile. Monfil reads these feeds. You can follow people on both networks with no account, no app, and no sign-in. Their posts come into your river next to release notes and papers, with no recommendations and no like counts.
+
+See [Supported sources](./user-guide/supported-sources/) for what to paste for each source. See [Use cases](./user-guide/use-cases/) for three example setups: a DevOps engineer, a founder, and a researcher.
+
 ## Problem
 
 Keeping up with software engineering is increasingly difficult.
@@ -53,7 +75,7 @@ Monfil combines:
 
 - A distraction-free desktop feed reader
 - Feedpacks: curated source packs for specific technical fields
-- RSS and YouTube support
+- Sources beyond RSS: YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, and Mastodon
 - Workspaces, search and read/unread tracking
 - Keyboard shortcuts
 - OPML import/export support
@@ -62,6 +84,8 @@ Monfil combines:
 
 - [Install Monfil](./user-guide/install/)
 - [Use Monfil](./user-guide/home/)
+- [Supported sources](./user-guide/supported-sources/)
+- [Use cases](./user-guide/use-cases/)
 - [Contribute to Monfil](./contributor-guide/home/)
 
 ## FAQ
