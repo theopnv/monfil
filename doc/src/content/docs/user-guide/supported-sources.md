@@ -67,4 +67,4 @@ Paste the publication address, such as `name.substack.com` or its custom domain.
 
 ## Sources that do not work
 
-X and Reddit do not publish feeds that Monfil can read.
+X does not publish feeds. Reddit is ending its RSS feeds, so Monfil does not support it.

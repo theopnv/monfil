@@ -10,6 +10,18 @@ import type { FeedCandidate } from './types';
 const HOSTS = new Set(['bsky.app', 'www.bsky.app']);
 const HANDLE_REGEX = /^@?([a-z0-9-]+(?:\.[a-z0-9-]+)+)$/i;
 const PROFILE_REGEX = /^\/profile\/([^/]+)/;
+const DID_REGEX = /^did:[a-z]+:[\w.:-]+$/i;
+
+/** The profile's handle or DID, or undefined when the path segment is neither, e.g. a malformed percent-encoding. */
+function decodeActor(actor: string): string | undefined {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(actor);
+  } catch {
+    return undefined;
+  }
+  return (HANDLE_REGEX.test(decoded) && !decoded.startsWith('@')) || DID_REGEX.test(decoded) ? decoded : undefined;
+}
 
 function profileCandidate(actor: string): FeedCandidate {
   return { link: `https://bsky.app/profile/${actor}/rss` };
@@ -29,8 +41,9 @@ export function blueskyCandidates(raw: string, lenient: boolean): FeedCandidate[
   if (!url || !HOSTS.has(url.hostname.toLowerCase())) {
     return null;
   }
-  const actor = PROFILE_REGEX.exec(url.pathname)?.[1];
-  return actor ? [profileCandidate(decodeURIComponent(actor))] : null;
+  const rawActor = PROFILE_REGEX.exec(url.pathname)?.[1];
+  const actor = rawActor === undefined ? undefined : decodeActor(rawActor);
+  return actor ? [profileCandidate(actor)] : null;
 }
 
 export function isBlueskyLink(raw: string): boolean {
@@ -38,11 +51,12 @@ export function isBlueskyLink(raw: string): boolean {
 }
 
 async function profileAvatar(candidate: FeedCandidate): Promise<string | undefined> {
-  const actor = PROFILE_REGEX.exec(new URL(candidate.link).pathname)?.[1];
+  const rawActor = PROFILE_REGEX.exec(new URL(candidate.link).pathname)?.[1];
+  const actor = rawActor === undefined ? undefined : decodeActor(rawActor);
   if (!actor) {
     return undefined;
   }
-  const result = await fetchText(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(decodeURIComponent(actor))}`);
+  const result = await fetchText(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(actor)}`);
   if (!result.success) {
     return undefined;
   }

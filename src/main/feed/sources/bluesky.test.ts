@@ -24,6 +24,18 @@ describe('blueskyCandidates', () => {
     expect(blueskyCandidates('example.com', false)).toBeNull();
   });
 
+  test('a profile URL with a malformed percent-encoding is rejected, not thrown', () => {
+    // Act / Assert
+    expect(blueskyCandidates('https://bsky.app/profile/%E0%A4%A', false)).toBeNull();
+    expect(isBlueskyLink('https://bsky.app/profile/%E0%A4%A/rss')).toBe(false);
+  });
+
+  test('a profile URL whose actor is not a handle or a DID is rejected', () => {
+    // Act / Assert
+    expect(blueskyCandidates('https://bsky.app/profile/a%2Fb', false)).toBeNull();
+    expect(blueskyCandidates('https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur', false)?.[0]?.link).toBe('https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/rss');
+  });
+
   test('a Mastodon handle is not a Bluesky handle', () => {
     // Act / Assert
     expect(blueskyCandidates('@user@hachyderm.io', false)).toBeNull();

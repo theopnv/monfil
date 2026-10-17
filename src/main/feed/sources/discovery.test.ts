@@ -42,6 +42,29 @@ describe('findAlternateLinks', () => {
     expect(links).toEqual(['https://blog.test/feed']);
   });
 
+  test('ignores feed links outside the head, where page content could inject them', () => {
+    // Arrange
+    const html = `<html><head><link rel="alternate" type="application/rss+xml" href="/feed.xml"></head>
+      <body><div class="comment"><link rel="alternate" type="application/rss+xml" href="https://attacker.test/feed.xml"></div></body></html>`;
+
+    // Act
+    const links = findAlternateLinks(html, 'https://blog.test/');
+
+    // Assert
+    expect(links).toEqual(['https://blog.test/feed.xml']);
+  });
+
+  test('stops at the body when the page leaves out its closing head tag', () => {
+    // Arrange
+    const html = '<link rel="alternate" type="application/rss+xml" href="/feed.xml"><body><link rel="alternate" type="application/rss+xml" href="/injected.xml">';
+
+    // Act
+    const links = findAlternateLinks(html, 'https://blog.test/');
+
+    // Assert
+    expect(links).toEqual(['https://blog.test/feed.xml']);
+  });
+
   test('returns nothing for a page without feed links', () => {
     // Act / Assert
     expect(findAlternateLinks('<html><head><title>x</title></head></html>', 'https://blog.test/')).toEqual([]);
