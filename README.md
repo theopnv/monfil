@@ -4,14 +4,16 @@
 
 <h1 align="center">Monfil</h1>
 
-<p align="center">What if you could reclaim control over the algorithm and create your own news feed?</p>
+<p align="center">Keep track of what matters to you and stay ahead of the race.</p>
 <p align="center"><a href="doc/src/content/docs/user-guide/install.md">Install Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="doc/src/content/docs/contributor-guide/home.md">Contribute</a></p>
 
-Monfil is a source-available, cross-platform desktop feed reader for engineers who want to follow the sources they choose—not whatever social-media algorithms decide to show them.
+Monfil is a source-available, cross-platform desktop feed reader for anyone who wants to stay ahead of the race. Keep track of what's happening in your field across 10 kinds of sources, with more to come: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, and Mastodon.
+
+Stay ahead of your competitors, new trends, and new technology without spending hours browsing, all in one unified interface.
 
 Start with curated feed packs for topics such as "General Tech announcements and trends". Or "DevSecOps", for info about CI/CD, test automation, testing frameworks and software-supply-chain security. Or submit your own!
 
-"Mon fil" means "My feed" in french.
+"Mon fil" means "My feed" in French.
 
 ➡️ ["We should bring back RSS" - Andrej Karpathy](https://x.com/karpathy/status/2018043254986703167?s=20)
 
@@ -28,9 +30,9 @@ Start with curated feed packs for topics such as "General Tech announcements and
 
 ## Problem
 
-Keeping up with software engineering is increasingly difficult.
+Keeping up with everything that's happening around us is increasingly difficult.
 
-Important information is scattered across blogs, release notes, changelogs, YouTube channels, GitHub repositories, and security advisories. Social networks make discovery easier, but their algorithms can narrow what you see.
+Important information is scattered across blogs, social networks, release notes, changelogs, YouTube channels, GitHub repositories, and security advisories. Social networks make discovery easier, but their algorithms can narrow what you see.
 
 Monfil gives you a transparent alternative: choose your sources, organize them into workspaces, and read them in one focused place.
 
@@ -39,8 +41,8 @@ Monfil gives you a transparent alternative: choose your sources, organize them i
 Monfil combines:
 
 - A distraction-free desktop feed reader
-- Feedpacks: curated source packs for specific technical fields
 - Supported sources: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, and Mastodon (no signup needed!)
+- Feedpacks: curated source packs for specific technical fields
 - Workspaces, search and read/unread tracking
 - Keyboard shortcuts
 - OPML import/export support
@@ -75,7 +77,7 @@ You do not need to find a feed URL. Paste the link of the page that you read, an
 
 - You choose the sources: No opaque recommendation algorithm decides what deserves your attention.
 - Start with a pack: You do not need to spend hours discovering and configuring sources. Begin with a curated pack, then customize it.
-- Focus on technical signals: Monfil is designed for following projects, tools, releases, changelogs, and security information, not general social content.
+- Monfil supports many sources other than RSS.
 - Own your information diet: Monfil's source is available for review and built around transparency, portability, and control.
 
 **Is my data private?**
@@ -84,7 +86,7 @@ Monfil has no account, Monfil server, or usage analytics. Your feeds, read state
 **Is there a mobile app?**
 Not currently. Monfil is a desktop app (macOS, Windows, Linux) built with Electron. There's no mobile version planned right now.
 
-**Is monfil free?**
+**Is Monfil free?**
 Yes. Monfil has no ads. See the [license terms](LICENSE) for permitted uses.
 
 **How do I report a bug or request a feature?**

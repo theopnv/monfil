@@ -1,9 +1,9 @@
 ---
 title: Use cases
-description: Three example setups, from a DevOps engineer, a founder, and a researcher.
+description: Three example setups to stay ahead in your field, from a DevOps engineer, a founder, and a researcher.
 ---
 
-These three people use Monfil in different ways. Each one makes a workspace, pastes a few links in **Add Feed**, and reads everything in one river. Copy a setup, then change it to fit your field.
+These three people must stay ahead in their field. A DevOps engineer must know first when a tool in the stack changes. A founder must see what competitors ship and which trends grow. A researcher must read the new papers before everyone cites them. Each one makes a workspace, pastes a few links in **Add Feed**, and reads everything in one river. Copy a setup, then change it to fit your field.
 
 To add a source, select **+** at the top of the feed sidebar and paste the link. Monfil finds the feed. The [supported sources](../supported-sources/) page lists what you can paste for each source.
 
