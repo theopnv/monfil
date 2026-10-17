@@ -10,11 +10,11 @@ description: Add feeds, organize sources, and read articles in Monfil.
 ## Add a feed
 
 1. Select **+** at the top of the feed sidebar. On an empty Home, you can select **Add your first feed** instead.
-2. Paste a link to an RSS feed or a YouTube channel. A YouTube handle or video link also works. Monfil checks the link and shows the feed it finds.
+2. Paste a link: a website, a feed, a GitHub repository, Hacker News, an arXiv listing, a YouTube channel, or a Bluesky or Mastodon profile. For a handle, press Enter. Monfil checks the link and shows the feed it finds. If the link leads to more than one feed, select the one you want. See [Supported sources](../supported-sources/) for each source.
 3. Select **Continue**. Choose a folder under **Put it in**, or select **+ New category** to make one. The folder will appear in the feed sidebar.
 4. Select **Add source**. Monfil adds recent items from that feed. Select **Go to feed** to finish, or **Add another** to keep going.
 
-If Monfil finds the wrong source, go back and try a more direct feed or channel link. You can select **RSS** or **YouTube** above the result to narrow the search.
+If Monfil finds the wrong source, go back and try a more direct feed or channel link. You can select a source type, such as **RSS**, **YouTube**, or **GitHub**, above the result to narrow the search.
 
 ![The Add a feed window showing a found RSS feed and the Continue button.](../../../assets/user-guide/add-feed.png)
 

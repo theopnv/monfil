@@ -23,5 +23,17 @@
       <outline text="Sam Altman" title="Sam Altman" type="rss" xmlUrl="http://blog.samaltman.com/posts.atom"/>
       <outline text="Sebastian Raschka" title="Sebastian Raschka" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC_CzsS7UTjcxJ-xXp1ftxtA"/>
     </outline>
+    <outline text="Research">
+      <outline text="cs.AI updates on arXiv.org" title="cs.AI updates on arXiv.org" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.AI"/>
+      <outline text="cs.LG updates on arXiv.org" title="cs.LG updates on arXiv.org" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.LG"/>
+      <outline text="cs.CL updates on arXiv.org" title="cs.CL updates on arXiv.org" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.CL"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="Transformers releases" title="Transformers releases" type="rss" xmlUrl="https://github.com/huggingface/transformers/releases.atom"/>
+      <outline text="vLLM releases" title="vLLM releases" type="rss" xmlUrl="https://github.com/vllm-project/vllm/releases.atom"/>
+      <outline text="Ollama releases" title="Ollama releases" type="rss" xmlUrl="https://github.com/ollama/ollama/releases.atom"/>
+      <outline text="PyTorch releases" title="PyTorch releases" type="rss" xmlUrl="https://github.com/pytorch/pytorch/releases.atom"/>
+      <outline text="LangChain releases" title="LangChain releases" type="rss" xmlUrl="https://github.com/langchain-ai/langchain/releases.atom"/>
+    </outline>
   </body>
 </opml>

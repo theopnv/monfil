@@ -6,7 +6,7 @@ import { parseFeed } from 'feedsmith';
 import { fetchConditional, fetchText, type FetchedText } from '../../lib/fetch';
 import type { Result } from '../../../shared/result';
 import { decodeOptional, decodeText, resolveGuid } from './text';
-import type { FeedFetchError, FetchUrlError } from '../../../shared/contracts';
+import type { FeedFetchError, FetchUrlError, ParsedSource } from '../../../shared/contracts';
 import type { NewSourceItem, SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
 
 export type YoutubeTarget =
@@ -346,9 +346,22 @@ async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchRes
   }
 }
 
+async function discover(query: string): Promise<Result<ParsedSource[], FeedFetchError>> {
+  const result = await fetchFeed({ link: query });
+  if (!result.success) {
+    return result;
+  }
+  if ('notModified' in result.data) {
+    return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: 'The feed did not change since it was last fetched.' } };
+  }
+  return { success: true, data: [result.data.parsed] };
+}
+
 export const youtubeSource: SourceAdapter = {
   type: 'youtube',
   fetchesFullArticle: false,
+  matches: isYoutubeLink,
+  discover,
   fetch: fetchFeed,
   parse: parseFeedContent,
 };

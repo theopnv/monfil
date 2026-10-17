@@ -75,15 +75,8 @@ import { backUpDatabase } from '../db/database';
 import { dialog } from 'electron';
 import type { RetentionDays } from '../../shared/contracts';
 
-export async function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource, FeedFetchError>> {
-  const result = await resolveSource(payload.query, payload.type).fetch({ link: payload.query });
-  if (!result.success) {
-    return result;
-  }
-  if ('notModified' in result.data) {
-    return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: 'The feed did not change since it was last fetched.' } };
-  }
-  return { success: true, data: result.data.parsed };
+export function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource[], FeedFetchError>> {
+  return resolveSource(payload.query, payload.type).discover(payload.query);
 }
 
 export function handleFeedsListCategories(_event: IpcMainInvokeEvent, payload: { workspaceId: number }): Promise<FeedCategory[]> {

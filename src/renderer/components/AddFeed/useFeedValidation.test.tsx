@@ -64,7 +64,7 @@ describe('useFeedValidation', () => {
     'Underscore_',
   ])('stays idle while typing %s', async (query) => {
     // Arrange
-    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
+    invokeMock.mockResolvedValue({ success: true, data: [validFeed] } satisfies Result<ParsedSource[], FeedFetchError>);
     const { getByTestId, rerender } = await render(<Probe query="" />);
 
     // Act
@@ -85,7 +85,7 @@ describe('useFeedValidation', () => {
     // value with no delay, so mounting directly at "e" would fire once immediately and
     // once again after the debounce window.
     vi.useRealTimers();
-    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
+    invokeMock.mockResolvedValue({ success: true, data: [validFeed] } satisfies Result<ParsedSource[], FeedFetchError>);
     const { rerender } = await render(<Probe query="" />);
 
     // Act
@@ -102,7 +102,7 @@ describe('useFeedValidation', () => {
 
   test('sends the type hint, and re-validates unchanged text when the hint changes', async () => {
     // Arrange
-    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
+    invokeMock.mockResolvedValue({ success: true, data: [validFeed] } satisfies Result<ParsedSource[], FeedFetchError>);
     const { rerender } = await render(<Probe query="https://youtube.com/@Underscore_" type="youtube" />);
     await vi.advanceTimersByTimeAsync(450);
 
@@ -117,7 +117,7 @@ describe('useFeedValidation', () => {
 
   test('maps a successful validation to status "found"', async () => {
     // Arrange
-    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
+    invokeMock.mockResolvedValue({ success: true, data: [validFeed] } satisfies Result<ParsedSource[], FeedFetchError>);
     const { getByTestId } = await render(<Probe query="example.com/feed" />);
 
     // Act
@@ -130,7 +130,7 @@ describe('useFeedValidation', () => {
 
   test('maps a failed validation to status "not-found"', async () => {
     // Arrange
-    invokeMock.mockResolvedValue({ success: false, error: notFoundError } satisfies Result<ParsedSource, FeedFetchError>);
+    invokeMock.mockResolvedValue({ success: false, error: notFoundError } satisfies Result<ParsedSource[], FeedFetchError>);
     const { getByTestId } = await render(<Probe query="not-a-feed.com" />);
 
     // Act
@@ -143,12 +143,12 @@ describe('useFeedValidation', () => {
 
   test('ignores a stale response for an earlier query', async () => {
     // Arrange: the first call resolves slowly, the second resolves fast.
-    let resolveFirst: (value: Result<ParsedSource, FeedFetchError>) => void = () => { };
-    const firstCall = new Promise<Result<ParsedSource, FeedFetchError>>((resolve) => {
+    let resolveFirst: (value: Result<ParsedSource[], FeedFetchError>) => void = () => { };
+    const firstCall = new Promise<Result<ParsedSource[], FeedFetchError>>((resolve) => {
       resolveFirst = resolve;
     });
     invokeMock.mockReturnValueOnce(firstCall);
-    invokeMock.mockResolvedValueOnce({ success: true, data: { ...validFeed, title: 'Second Feed' } });
+    invokeMock.mockResolvedValueOnce({ success: true, data: [{ ...validFeed, title: 'Second Feed' }] });
 
     const { getByTestId, rerender } = await render(<Probe query="first.com" />);
     await vi.advanceTimersByTimeAsync(450);
@@ -156,7 +156,7 @@ describe('useFeedValidation', () => {
     // Act: a new query fires and resolves before the first one does.
     await rerender(<Probe query="second.com" />);
     await vi.advanceTimersByTimeAsync(450);
-    resolveFirst({ success: true, data: { ...validFeed, title: 'First Feed' } });
+    resolveFirst({ success: true, data: [{ ...validFeed, title: 'First Feed' }] });
     await Promise.resolve();
 
     // Assert
@@ -165,7 +165,7 @@ describe('useFeedValidation', () => {
 
   test('clears a found feed when the input becomes a partial host', async () => {
     // Arrange
-    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
+    invokeMock.mockResolvedValue({ success: true, data: [validFeed] } satisfies Result<ParsedSource[], FeedFetchError>);
     const { getByTestId, rerender } = await render(<Probe query="example.com/feed" />);
     await vi.advanceTimersByTimeAsync(450);
     await expect.element(getByTestId('status')).toHaveTextContent('found');
@@ -182,7 +182,7 @@ describe('useFeedValidation', () => {
 
   test('stays idle when a checked handle is entered again', async () => {
     // Arrange
-    invokeMock.mockResolvedValue({ success: true, data: validFeed } satisfies Result<ParsedSource, FeedFetchError>);
+    invokeMock.mockResolvedValue({ success: true, data: [validFeed] } satisfies Result<ParsedSource[], FeedFetchError>);
     const { getByTestId, getByRole, rerender } = await render(<Probe query="@Underscore_" type="youtube" />);
     await getByRole('button', { name: 'Validate' }).click();
     await vi.advanceTimersByTimeAsync(450);
@@ -201,15 +201,15 @@ describe('useFeedValidation', () => {
 
   test('ignores a pending response when the input becomes a partial host', async () => {
     // Arrange
-    let resolveValidation: (value: Result<ParsedSource, FeedFetchError>) => void = () => { };
-    invokeMock.mockReturnValue(new Promise<Result<ParsedSource, FeedFetchError>>((resolve) => {
+    let resolveValidation: (value: Result<ParsedSource[], FeedFetchError>) => void = () => { };
+    invokeMock.mockReturnValue(new Promise<Result<ParsedSource[], FeedFetchError>>((resolve) => {
       resolveValidation = resolve;
     }));
     const { getByTestId, rerender } = await render(<Probe query="example.com/feed" />);
 
     // Act
     await rerender(<Probe query="https://youtu" />);
-    resolveValidation({ success: true, data: validFeed });
+    resolveValidation({ success: true, data: [validFeed] });
     await vi.advanceTimersByTimeAsync(1000);
 
     // Assert

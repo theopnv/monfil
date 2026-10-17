@@ -28,11 +28,12 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
       )}
     >
       <div className="min-w-0 flex-1">
-        <div className="mb-2.25 flex items-center gap-2">
+        {/* Keeps the time clear of the save button RiverList overlays on the card's top-right corner. */}
+        <div className="mb-2.25 flex items-center gap-2 pr-7">
           <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
           <FeedAvatar title={item.feedTitle} faviconUrl={resolveFeedIcon(item.feedIcon, item.feedLink)} size="md" />
-          <span className="text-sm font-bold text-primary">{item.feedTitle}</span>
-          <span className="text-sm text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
+          <span className="min-w-0 truncate text-sm font-bold text-primary">{item.feedTitle}</span>
+          <span className="flex-none text-sm text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
         </div>
 
         <h4 className="mb-1.75 text-lg leading-tight font-bold text-pretty text-primary">{item.title}</h4>

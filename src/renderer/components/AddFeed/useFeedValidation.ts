@@ -11,15 +11,19 @@ export type FeedValidationStatus = 'idle' | 'loading' | 'found' | 'not-found';
 
 interface FeedValidationState {
   status: FeedValidationStatus;
-  feed: ParsedSource | null;
+  candidates: ParsedSource[];
   error: FeedFetchError | null;
 }
 
 interface FeedValidation extends FeedValidationState {
+  /** The candidate the user picked, the first one until they pick another. */
+  feed: ParsedSource | null;
+  selectedIndex: number;
+  select: (index: number) => void;
   validate: () => void;
 }
 
-const idleState: FeedValidationState = { status: 'idle', feed: null, error: null };
+const idleState: FeedValidationState = { status: 'idle', candidates: [], error: null };
 
 function isUrlReady(query: string): boolean {
   if (query.startsWith('@')) {
@@ -38,6 +42,7 @@ export function useFeedValidation(query: string, type?: SourceType): FeedValidat
   const debouncedQuery = useDebouncedValue(trimmedQuery, 450);
   const [committedQuery, setCommittedQuery] = useState<string | null>(null);
   const [state, setState] = useState<FeedValidationState>(idleState);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const validationQuery = committedQuery === trimmedQuery
     ? trimmedQuery
     : debouncedQuery === trimmedQuery && isUrlReady(debouncedQuery) ? debouncedQuery : '';
@@ -62,9 +67,10 @@ export function useFeedValidation(query: string, type?: SourceType): FeedValidat
         }
         setState(
           result.success
-            ? { status: 'found', feed: result.data, error: null }
-            : { status: 'not-found', feed: null, error: result.error },
+            ? { status: 'found', candidates: result.data, error: null }
+            : { status: 'not-found', candidates: [], error: result.error },
         );
+        setSelectedIndex(0);
       })
       .catch((error) => {
         if (cancelled) {
@@ -72,7 +78,7 @@ export function useFeedValidation(query: string, type?: SourceType): FeedValidat
         }
         setState({
           status: 'not-found',
-          feed: null,
+          candidates: [],
           error: {
             name: 'UNKNOWN_ERROR',
             message: error instanceof Error ? error.message : 'An unknown error occurred',
@@ -85,5 +91,11 @@ export function useFeedValidation(query: string, type?: SourceType): FeedValidat
     };
   }, [validationQuery, type]);
 
-  return { ...state, validate: () => setCommittedQuery(trimmedQuery) };
+  return {
+    ...state,
+    feed: state.candidates[selectedIndex] ?? null,
+    selectedIndex,
+    select: setSelectedIndex,
+    validate: () => setCommittedQuery(trimmedQuery),
+  };
 }

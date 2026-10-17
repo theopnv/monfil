@@ -29,6 +29,8 @@ export default defineConfig({
 						// Each item here is one entry in the navigation menu.
 						{ label: 'Install Monfil', slug: 'user-guide/install' },
 						{ label: 'Use Monfil', slug: 'user-guide/home' },
+						{ label: 'Supported sources', slug: 'user-guide/supported-sources' },
+						{ label: 'Use cases', slug: 'user-guide/use-cases' },
 						{ label: 'Submit a feedpack', slug: 'user-guide/submit-a-feedpack' },
 						{ label: 'Privacy notice', slug: 'user-guide/privacy' },
 					],

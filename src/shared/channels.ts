@@ -77,7 +77,7 @@ export type OneWayMainToRendererChannelPayloads = {
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
 
 export type TwoWayRendererMainChannelPayloads = {
-  'feeds:validate-feed-url': Result<ParsedSource, FeedFetchError>;
+  'feeds:validate-feed-url': Result<ParsedSource[], FeedFetchError>;
   'feeds:list-categories': FeedCategory[];
   'feeds:list': FeedSummary[];
   'items:query': RiverPage;

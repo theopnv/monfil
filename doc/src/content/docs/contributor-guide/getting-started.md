@@ -40,4 +40,4 @@ In VS Code, the `Main + renderer` launch configuration attaches debuggers to bot
 
 - Claude or Codex can help understanding the codebase and write new features and fixes.
 - [Graft](https://github.com/trailhq/Graft) can help navigating the codebase.
-- Install [Husky](https://typicode.github.io/husky/get-started.html) to get pre-commit hooks support (lint).
+- Install [Husky](https://typicode.github.io/husky/get-started.html) to get the Git hooks: the pre-commit hook runs lint, and the commit-msg hook checks the message with commitlint.

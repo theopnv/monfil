@@ -26,3 +26,17 @@ export function resolveGuid(guid: string | undefined, link: string | undefined, 
   }
   return `monfil:hash:${createHash('sha1').update(`${title} ${pubDate}`).digest('hex')}`;
 }
+
+/**
+ * Applies `pattern` until the text stops changing, so a removal cannot splice a new match together.
+ * @param pattern must be global
+ */
+export function removeAll(text: string, pattern: RegExp, replacement = ''): string {
+  let previous: string;
+  let current = text;
+  do {
+    previous = current;
+    current = current.replace(pattern, replacement);
+  } while (current !== previous);
+  return current;
+}

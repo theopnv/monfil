@@ -6,7 +6,8 @@
 // deleted, so its id is permanently 1.
 export const HOME_WORKSPACE_ID = 1;
 
-export type SourceType = 'rss' | 'youtube';
+export const SOURCE_TYPES = ['rss', 'youtube', 'github', 'gitlab', 'hackernews', 'arxiv', 'bluesky', 'mastodon'] as const;
+export type SourceType = typeof SOURCE_TYPES[number];
 export type RefreshInterval = 15 | 30 | 60 | 360 | 'manual';
 export type RetentionDays = 15 | 30 | 60 | 90 | 180;
 
@@ -57,6 +58,8 @@ export interface SourceItem {
 export type ParsedSource = Omit<FeedMetadata, 'id' | 'last_fetched_at' | 'last_error'> & {
   description: string;
   items: SourceItem[];
+  /** Names this feed among the candidates one link offers, e.g. "Releases" or "100+ points". */
+  label?: string;
 };
 
 export type FetchUrlError =

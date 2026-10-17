@@ -15,6 +15,6 @@ A user can create a workspace for the pack or merge it into one. After installat
 
 ## Import and export
 
-The [OPML code](https://github.com/theopnv/monfil/tree/main/src/main/opml) parses the file, imports feeds into a new or existing workspace, and refreshes them. A feed has one database row per URL. Importing it again can add a placement without copying its articles.
+The [OPML code](https://github.com/theopnv/monfil/tree/main/src/main/opml) parses the file, imports feeds into a new or existing workspace, and refreshes them. A feed has one database row per URL. Importing it again can add a placement without copying its articles. The parser sets each feed's source type from its `xmlUrl` with the registry's `detectType`, so a feedpack entry needs only the final feed URL. Mastodon feeds import as RSS because their host does not identify them.
 
 Export writes one workspace as OPML. It includes the feed list and folders.

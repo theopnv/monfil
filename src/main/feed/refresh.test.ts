@@ -15,7 +15,7 @@ import { refreshAllFeeds } from './refresh';
 import type { FeedItem } from '../db/types';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 
-vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: true, fetch: vi.fn(), parse: vi.fn() } }));
+vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: true, matches: vi.fn(), discover: vi.fn(), fetch: vi.fn(), parse: vi.fn() } }));
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
 vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 

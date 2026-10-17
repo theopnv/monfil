@@ -5,7 +5,7 @@
 import { parseOpml, type Opml } from 'feedsmith';
 import type { ParsedOpml, ParsedOpmlCategory, ParsedOpmlFeed, ParseOpmlError } from '../../shared/contracts';
 import type { Result } from '../../shared/result';
-import { isYoutubeLink } from '../feed/sources/youtube';
+import { detectType } from '../feed/sources/registry';
 
 const DEFAULT_TITLE = 'Imported';
 
@@ -17,7 +17,7 @@ function toFeed(outline: Opml.Outline<string>): ParsedOpmlFeed | undefined {
     title: outline.title ?? outline.text ?? outline.xmlUrl,
     xmlUrl: outline.xmlUrl,
     ...(outline.htmlUrl ? { htmlUrl: outline.htmlUrl } : {}),
-    type: isYoutubeLink(outline.xmlUrl) ? 'youtube' : 'rss',
+    type: detectType(outline.xmlUrl),
   };
 }
 

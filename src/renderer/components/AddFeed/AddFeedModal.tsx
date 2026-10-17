@@ -127,7 +127,9 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
               type={type}
               onTypeChange={setType}
               status={validation.status}
-              feed={validation.feed}
+              candidates={validation.candidates}
+              selectedIndex={validation.selectedIndex}
+              onSelect={validation.select}
               error={validation.error}
             />
           )}

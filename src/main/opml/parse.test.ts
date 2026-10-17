@@ -88,6 +88,40 @@ describe('parseOpmlDocument', () => {
     expect(result.data.categories[0]?.feeds[0]?.type).toBe('youtube');
   });
 
+  test('detects platform feeds from their URLs and leaves other feeds as rss', () => {
+    // Arrange
+    const xml = opml(`
+      <outline type="rss" text="Playwright" xmlUrl="https://github.com/microsoft/playwright/releases.atom"/>
+      <outline type="rss" text="cs.AI" xmlUrl="https://rss.arxiv.org/rss/cs.AI"/>
+      <outline type="rss" text="HN" xmlUrl="https://hnrss.org/newest?points=300"/>
+      <outline type="rss" text="Blog" xmlUrl="https://example.com/feed.xml"/>`);
+
+    // Act
+    const result = parseOpmlDocument(xml);
+
+    // Assert
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
+    expect(result.data.categories[0]?.feeds.map((feed) => feed.type)).toEqual(['github', 'arxiv', 'hackernews', 'rss']);
+  });
+
+  test('imports a document that holds a feed URL with a malformed percent-encoding', () => {
+    // Arrange
+    const xml = opml('<outline type="rss" text="Broken" xmlUrl="https://bsky.app/profile/%E0%A4%A/rss"/><outline type="rss" text="Blog" xmlUrl="https://example.com/feed.xml"/>');
+
+    // Act
+    const result = parseOpmlDocument(xml);
+
+    // Assert
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
+    expect(result.data.categories[0]?.feeds.map((feed) => feed.type)).toEqual(['rss', 'rss']);
+  });
+
   test('fails with MALFORMED_XML on unparsable input', () => {
     // Act
     const result = parseOpmlDocument('not xml at all <<<');

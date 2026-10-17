@@ -12,6 +12,8 @@ export interface FeedMatchCardProps {
   title: string;
   detail: string;
   status: FeedMatchStatus;
+  /** In a list of candidates, whether this one is the picked one. Leave unset for a single match. */
+  selected?: boolean;
   faviconUrl?: string | undefined;
 }
 
@@ -20,12 +22,14 @@ const badgeLabel: Record<Exclude<FeedMatchStatus, "loading">, string> = {
   "not-found": "Not found",
 };
 
-export default function FeedMatchCard({ title, detail, status, faviconUrl }: FeedMatchCardProps) {
+export default function FeedMatchCard({ title, detail, status, selected, faviconUrl }: FeedMatchCardProps) {
+  const highlighted = status === "found" && selected !== false;
   return (
     <div
       className={cx(
         "flex items-center gap-3 rounded-xl border px-4 py-3.5 transition-colors",
-        status === "found" && "border-brand bg-brand-primary_alt",
+        highlighted && "border-brand bg-brand-primary_alt",
+        status === "found" && !highlighted && "border-secondary hover:bg-primary_hover",
         status === "not-found" && "border-error_subtle bg-error-primary",
         status === "loading" && "border-secondary opacity-60",
       )}
@@ -36,7 +40,7 @@ export default function FeedMatchCard({ title, detail, status, faviconUrl }: Fee
         <p className="truncate text-xs text-tertiary">{detail}</p>
       </div>
       {status === "loading" && <span className="text-xs text-tertiary">Checking…</span>}
-      {status !== "loading" && (
+      {status !== "loading" && selected !== false && (
         <Badge color={status === "found" ? "success" : "error"} size="sm" className="tracking-wide uppercase">
           {badgeLabel[status]}
         </Badge>
