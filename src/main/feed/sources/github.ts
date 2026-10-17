@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { createFeedSource, toUrl } from './feedSource';
+import { removeAll } from './text';
 import type { FeedCandidate, NewSourceItem, ParsedFeedContent } from './types';
 
 const HOSTS = new Set(['github.com', 'www.github.com']);
@@ -73,33 +74,51 @@ const ACTIVITY_MARKER = 'js-feed-item-view';
 const TAG_REGEX = /<\/?([a-z][\w-]*)([^>]*)>/gi;
 const HREF_REGEX = /\bhref\s*=\s*"([^"]*)"/i;
 
-function absolute(href: string): string {
+/** The absolute form of a link, or undefined for anything but http(s), such as `javascript:`. */
+function absolute(href: string): string | undefined {
   try {
-    return new URL(href, ORIGIN).href;
+    const url = new URL(href, ORIGIN);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
   } catch {
-    return href;
+    return undefined;
   }
+}
+
+// Stand-ins for the brackets of the tags this module emits, so every other `<` and `>` can be escaped as text.
+const OPEN = '\uE000';
+const CLOSE = '\uE001';
+
+function escapeText(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function absolutizeLinks(html: string): string {
   return html.replace(/\b(href|src)="\/(?!\/)/g, `$1="${ORIGIN}/`);
 }
 
-/** Keeps only `allowed` tags, without their attributes except an absolute `href` on links, and collapses whitespace. */
+/**
+ * Keeps only `allowed` tags, without their attributes except an absolute http(s) `href` on links,
+ * escapes everything else as text, and collapses whitespace.
+ */
 function keepTags(html: string, allowed: ReadonlySet<string>): string {
-  return html
+  const marked = html
+    .replace(/[\uE000\uE001]/g, '')
     .replace(TAG_REGEX, (tag: string, name: string, attributes: string) => {
       const tagName = name.toLowerCase();
       if (!allowed.has(tagName)) {
         return ' ';
       }
       if (tag.startsWith('</')) {
-        return `</${tagName}>`;
+        return `${OPEN}/${tagName}${CLOSE}`;
       }
-      const href = tagName === 'a' ? HREF_REGEX.exec(attributes)?.[1] : undefined;
-      return href ? `<a href="${absolute(href)}">` : `<${tagName}>`;
-    })
-    .replace(/<a href="[^"]*">\s*<\/a>/g, '')
+      const rawHref = tagName === 'a' ? HREF_REGEX.exec(attributes)?.[1] : undefined;
+      const href = rawHref === undefined ? undefined : absolute(rawHref);
+      return href ? `${OPEN}a href="${href}"${CLOSE}` : `${OPEN}${tagName}${CLOSE}`;
+    });
+  return escapeText(marked)
+    .replace(/\uE000/g, '<')
+    .replace(/\uE001/g, '>')
+    .replace(/<a(?: href="[^"]*")?>\s*<\/a>/g, '')
     .replace(/\s+/g, ' ')
     .replace(/\s*(<\/?(?:p|ul|li)>)\s*/g, '$1')
     .trim();
@@ -113,10 +132,8 @@ const BODY_TAGS = new Set(['a', 'code', 'p', 'ul', 'li']);
  * sentence and the event's details, e.g. the pushed commits.
  */
 function simplifyActivity(html: string): string {
-  const stripped = html
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<svg\b[\s\S]*?<\/svg>/gi, '')
-    .replace(/·?\s*<relative-time\b[\s\S]*?<\/relative-time>/gi, '');
+  const stripped = [/<!--[\s\S]*?-->/g, /<svg\b[\s\S]*?<\/svg>/gi, /·?\s*<relative-time\b[\s\S]*?<\/relative-time>/gi]
+    .reduce((text, pattern) => removeAll(text, pattern), html);
   const boxStart = stripped.search(/<div class="Box\b/);
   const header = keepTags(boxStart === -1 ? stripped : stripped.slice(0, boxStart), INLINE_TAGS);
   const body = boxStart === -1 ? '' : keepTags(stripped.slice(boxStart), BODY_TAGS)

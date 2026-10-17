@@ -43,4 +43,9 @@ describe('postTitle', () => {
     // Act / Assert
     expect(postTitle('<p><img src="x.png"></p>')).toBe('Post');
   });
+
+  test('leaves no tag behind when tags are nested to survive one pass', () => {
+    // Act / Assert
+    expect(postTitle('<scr<script>ipt>alert(1)</scr</script>ipt> hello')).not.toMatch(/<\/?scr/i);
+  });
 });

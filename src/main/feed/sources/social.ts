@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { decodeText } from './text';
+import { decodeText, removeAll } from './text';
 import type { ParsedFeedContent } from './types';
 
 const MAX_TITLE_LENGTH = 100;
@@ -14,7 +14,7 @@ const TAG_REGEX = /<[^>]*>/g;
  * @param description the post body, as HTML or plain text
  */
 export function postTitle(description: string): string {
-  const text = decodeText(description.replace(BLOCK_BREAK_REGEX, '\n').replace(TAG_REGEX, ''));
+  const text = decodeText(removeAll(description.replace(BLOCK_BREAK_REGEX, '\n'), TAG_REGEX));
   const firstLine = text.split('\n').map((line) => line.replace(/\s+/g, ' ').trim()).find((line) => line.length > 0);
   if (!firstLine) {
     return 'Post';

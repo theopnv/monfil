@@ -695,3 +695,37 @@ describe('rssSource.discover', () => {
     expect(result).toEqual({ success: true, data: [expect.objectContaining({ type: 'rss', link: 'https://medium.test/@writer/feed' })] });
   });
 });
+
+describe('rssSource.discover private hosts', () => {
+  const FEED = '<rss version="2.0"><channel><title>Feed</title><item><title>Item</title><link>https://blog.test/1</link><pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate></item></channel></rss>';
+  const ok = (body: string) => ({ success: true as const, data: { body, validators: { etag: undefined, last_modified: undefined } } });
+
+  afterEach(() => {
+    mockedFetchText.mockReset();
+  });
+
+  test('blocks private hosts for a feed link that a page advertises on another host', async () => {
+    // Arrange
+    const page = '<link rel="alternate" type="application/rss+xml" href="http://127.0.0.1:8080/feed.xml">';
+    mockedFetchText.mockImplementation((url) => Promise.resolve(url === 'https://blog.test/' ? ok(page) : ok(FEED)));
+
+    // Act
+    await rssSource.discover('https://blog.test/');
+
+    // Assert
+    expect(mockedFetchText).toHaveBeenCalledWith('http://127.0.0.1:8080/feed.xml', { blockPrivateHosts: true });
+  });
+
+  test('keeps the trust of the typed link for a feed link on the same host', async () => {
+    // Arrange
+    const page = '<link rel="alternate" type="application/rss+xml" href="/feed.xml">';
+    mockedFetchText.mockImplementation((url) => Promise.resolve(url === 'http://127.0.0.1:8080/' ? ok(page) : ok(FEED)));
+
+    // Act
+    const result = await rssSource.discover('http://127.0.0.1:8080/');
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(mockedFetchText).toHaveBeenCalledWith('http://127.0.0.1:8080/feed.xml');
+  });
+});

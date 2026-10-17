@@ -76,7 +76,7 @@ async function discover(query: string): Promise<Result<ParsedSource[], FeedFetch
 
   const advertised = findAlternateLinks(page.data.body, pageUrl.href);
   if (advertised.length > 0) {
-    const found = await fetchCandidates('rss', advertised.map((alternate) => ({ link: alternate })), parseFeedContent);
+    const found = await fetchCandidates('rss', advertised.map((alternate) => ({ link: alternate, blockPrivateHosts: new URL(alternate).host !== pageUrl.host })), parseFeedContent);
     if (found.success) {
       return found;
     }

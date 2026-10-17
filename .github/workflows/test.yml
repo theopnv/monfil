@@ -128,8 +128,9 @@ jobs:
           electron: 'true'
           electron-dependencies: 'true'
 
+      # xvfb-run defaults to a 640x480 screen, and the maximized app window would follow it.
       - if: runner.os == 'Linux'
-        run: xvfb-run -a npm run test:e2e
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:e2e
 
       - if: runner.os != 'Linux'
         run: npm run test:e2e

@@ -10,6 +10,10 @@ import type { ParsedSource } from '../../shared/contracts';
 import { importOpml, startOpmlImport } from './import';
 
 vi.mock(import('../feed/sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: false, matches: vi.fn(), discover: vi.fn(), fetch: vi.fn(), parse: vi.fn() } }));
+vi.mock(import('../lib/fetch'), () => ({
+  fetchText: vi.fn(() => Promise.resolve({ success: false as const, error: { name: 'NETWORK_ERROR' as const, message: 'offline' } })),
+  fetchConditional: vi.fn(() => Promise.resolve({ success: false as const, error: { name: 'NETWORK_ERROR' as const, message: 'offline' } })),
+}));
 vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedFetchFeed = vi.mocked(rssSource.fetch);
@@ -155,6 +159,27 @@ describe('importOpml', () => {
     }
     expect(result.data.imported).toBe(1);
     expect(result.data.skipped).toEqual([]);
+  });
+
+  test('upgrades a stored rss feed to the platform type its URL shows, and never downgrades a platform type', async () => {
+    // Arrange: both feeds were stored before, one as plain rss and one as Mastodon from the Add Feed wizard.
+    const otherWorkspace = await db.insertInto('workspace').values({ name: 'Releases', icon: 'Code01', color: '#3b82f6', position: 1 }).returningAll().executeTakeFirstOrThrow();
+    await db.insertInto('feedMetadata').values({ link: 'https://github.com/vitest-dev/vitest/releases.atom', title: 'Vitest', type: 'rss' }).execute();
+    await db.insertInto('feedMetadata').values({ link: 'https://hachyderm.io/@nova.rss', title: 'Nova', type: 'mastodon' }).execute();
+    const xml = opml(`<outline text="Tech">
+      <outline type="rss" text="Vitest" xmlUrl="https://github.com/vitest-dev/vitest/releases.atom"/>
+      <outline type="rss" text="Nova" xmlUrl="https://hachyderm.io/@nova.rss"/>
+    </outline>`);
+
+    // Act
+    await importOpml(xml, { kind: 'merge-workspace', workspaceId: otherWorkspace.id });
+
+    // Assert
+    const types = await db.selectFrom('feedMetadata').select(['link', 'type']).orderBy('link').execute();
+    expect(types).toEqual([
+      { link: 'https://github.com/vitest-dev/vitest/releases.atom', type: 'github' },
+      { link: 'https://hachyderm.io/@nova.rss', type: 'mastodon' },
+    ]);
   });
 
   test('records a feed that fails its post-import refresh as failed', async () => {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type Locator, type Page } from '@playwright/test';
+import { test as base, expect, _electron as electron, type ElectronApplication, type Locator, type Page } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -10,6 +10,7 @@ import { HOME_WORKSPACE_ID, type NewFeedInput } from '../../src/shared/contracts
 
 type RiverLayoutFixtures = {
   userDataDir: string;
+  app: ElectronApplication;
   page: Page;
 };
 
@@ -23,15 +24,19 @@ const riverTest = base.extend<RiverLayoutFixtures>({
     }
   },
 
-  page: async ({ userDataDir }, use) => {
+  app: async ({ userDataDir }, use) => {
     const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
     try {
-      const page = await app.firstWindow();
-      await expect(page.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
-      await use(page);
+      await use(app);
     } finally {
       await app.close();
     }
+  },
+
+  page: async ({ app }, use) => {
+    const page = await app.firstWindow();
+    await expect(page.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
+    await use(page);
   },
 });
 
@@ -66,21 +71,33 @@ async function boxOf(locator: Locator): Promise<{ x: number; y: number; width: n
   return box;
 }
 
-for (const density of ['Cards', 'Magazine', 'Compact'] as const) {
-  riverTest(`in ${density} density, the save button does not cover the post time on a card without an image`, async ({ page }) => {
+// The window opens maximized, so without this its width would follow whatever screen the run has.
+async function resizeWindow(app: ElectronApplication, width: number): Promise<void> {
+  await app.evaluate(({ BrowserWindow }, size) => {
+    const window = BrowserWindow.getAllWindows()[0];
+    window?.unmaximize();
+    window?.setSize(size, 900);
+  }, width);
+}
+
+for (const width of [1024, 1440]) {
+  for (const density of ['Cards', 'Magazine', 'Compact'] as const) {
+    riverTest(`in ${density} density at ${width}px, the save button does not cover the post time on a card without an image`, async ({ app, page }) => {
     // Arrange
-    await subscribeImagelessPost(page);
-    await page.evaluate((value) => localStorage.setItem('preferences-density', JSON.stringify(value)), density);
+      await resizeWindow(app, width);
+      await subscribeImagelessPost(page);
+      await page.evaluate((value) => localStorage.setItem('preferences-density', JSON.stringify(value)), density);
 
-    // Act
-    await page.reload();
-    await expect(page.getByText('49m', { exact: true })).toBeVisible();
+      // Act
+      await page.reload();
+      await expect(page.getByText('49m', { exact: true })).toBeVisible();
 
-    // Assert
-    const save = await boxOf(page.getByRole('button', { name: 'Save', exact: true }));
-    const time = await boxOf(page.getByText('49m', { exact: true }));
-    const overlaps = save.x < time.x + time.width && time.x < save.x + save.width
+      // Assert
+      const save = await boxOf(page.getByRole('button', { name: 'Save', exact: true }));
+      const time = await boxOf(page.getByText('49m', { exact: true }));
+      const overlaps = save.x < time.x + time.width && time.x < save.x + save.width
       && save.y < time.y + time.height && time.y < save.y + save.height;
-    expect(overlaps).toBe(false);
-  });
+      expect(overlaps).toBe(false);
+    });
+  }
 }

@@ -168,4 +168,15 @@ describe('githubSource.parse', () => {
     // Assert
     expect(parsed?.items[0]?.description).toContain('<a href="https://github.com/smol-ai/skit/stargazers">15 stars</a>');
   });
+  test('leaves no markup of its own making from crafted comments or tags, and drops unsafe links', () => {
+    // Arrange
+    const crafted = '<div class="push js-feed-item-view"><div class="color-fg-muted"><!-<!---->- hidden --> <scr<script>ipt>alert(1)</script> <a href="javascript:alert(1)">bad</a> <a href="/ok">ok</a></div></div>';
+
+    // Act
+    const description = githubSource.parse(feed(entry('tag:github.com,2008:push/2', crafted)))?.items[0]?.description ?? '';
+
+    // Assert
+    expect(description).not.toMatch(/<!--|<script|<scr|javascript:/i);
+    expect(description).toContain('<a href="https://github.com/ok">ok</a>');
+  });
 });

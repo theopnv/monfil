@@ -30,6 +30,8 @@ export interface FeedCandidate {
   label?: string;
   /** An icon known without a request, e.g. a GitHub owner's avatar URL. */
   icon?: string;
+  /** Set when the link came from fetched content rather than the user, so it must not reach the private network. */
+  blockPrivateHosts?: boolean;
 }
 
 /**

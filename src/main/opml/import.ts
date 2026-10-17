@@ -83,7 +83,11 @@ export async function startOpmlImport(
 
           const metadata = await trx.insertInto('feedMetadata')
             .values({ link: feed.xmlUrl, title: feed.title, type: feed.type })
-            .onConflict((oc) => oc.column('link').doUpdateSet((eb) => ({ title: eb.ref('excluded.title') })))
+            // Only plain rss upgrades: a type set by the Add Feed wizard, such as mastodon, is more specific than URL detection.
+            .onConflict((oc) => oc.column('link').doUpdateSet((eb) => ({
+              title: eb.ref('excluded.title'),
+              type: eb.case().when('feedMetadata.type', '=', 'rss').then(eb.ref('excluded.type')).else(eb.ref('feedMetadata.type')).end(),
+            })))
             .returningAll()
             .executeTakeFirstOrThrow();
 

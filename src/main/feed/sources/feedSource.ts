@@ -49,10 +49,14 @@ export type FetchedFeed = { parsed: ParsedFeedContent; body: string; validators:
 /**
  * Fetches `link` and parses it as a feed.
  * @param validators replayed as conditional GET headers when present
+ * @param blockPrivateHosts refuse loopback, link-local and private hosts, for links the user did not type
  */
-export async function fetchAndParse(link: string, validators: FetchValidators | undefined, parse: ContentParser): Promise<Result<FetchedFeed, FeedFetchError>> {
+export async function fetchAndParse(link: string, validators: FetchValidators | undefined, parse: ContentParser, blockPrivateHosts = false): Promise<Result<FetchedFeed, FeedFetchError>> {
   try {
-    const result = validators ? await fetchConditional(link, { validators }) : await fetchText(link);
+    const options = blockPrivateHosts ? { blockPrivateHosts } : {};
+    const result = validators
+      ? await fetchConditional(link, { validators, ...options })
+      : blockPrivateHosts ? await fetchText(link, options) : await fetchText(link);
     if (!result.success) {
       return { success: false, error: mapFetchError(result.error) };
     }
@@ -85,7 +89,7 @@ export async function fetchCandidates(
   resolveIcon?: IconResolver,
 ): Promise<Result<ParsedSource[], FeedFetchError>> {
   const results = await Promise.all(candidates.slice(0, MAX_CANDIDATES).map(async (candidate): Promise<Result<ParsedSource, FeedFetchError>> => {
-    const fetched = await fetchAndParse(candidate.link, undefined, parse);
+    const fetched = await fetchAndParse(candidate.link, undefined, parse, candidate.blockPrivateHosts);
     if (!fetched.success) {
       return fetched;
     }
