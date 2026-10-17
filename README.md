@@ -52,7 +52,6 @@ You do not need to find a feed URL. Paste the link of the page that you read, an
 | Source | Paste | You follow |
 | --- | --- | --- |
 | Websites and blogs | Any page on the site | Its posts |
-| Google Alerts | The RSS feed | Its posts |
 | GitHub | A repository, a user, or an organization | Releases, or public activity |
 | GitLab | A project, also on a self-hosted GitLab | Releases |
 | Hacker News | `news.ycombinator.com` | The front page, stories with 100+ or 300+ points, Show HN, or Ask HN |
