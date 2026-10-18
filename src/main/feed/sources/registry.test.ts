@@ -15,6 +15,7 @@ describe('resolveSource', () => {
     ['https://bsky.app/profile/bsky.app', 'bluesky'],
     ['@jay.bsky.team', 'bluesky'],
     ['@nova@hachyderm.io', 'mastodon'],
+    ['https://developers.events/all-events.json?topics=devops', 'conference'],
     ['https://hachyderm.io/@nova', 'rss'],
     ['https://example.com/blog', 'rss'],
   ] as const)('picks the adapter for %s without a chip', (link, type) => {
@@ -38,6 +39,7 @@ describe('detectType', () => {
     ['https://hnrss.org/newest?points=300', 'hackernews'],
     ['https://rss.arxiv.org/rss/cs.AI', 'arxiv'],
     ['https://bsky.app/profile/bsky.app/rss', 'bluesky'],
+    ['https://developers.events/all-events.json?topics=devops&places=France', 'conference'],
     ['https://mastodon.social/@Mastodon.rss', 'rss'],
     ['https://example.com/feed.xml', 'rss'],
     ['not a url', 'rss'],

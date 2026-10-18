@@ -5,6 +5,7 @@
 import type { SourceType } from '../../../shared/contracts';
 import { arxivSource, isArxivLink } from './arxiv';
 import { blueskySource, isBlueskyLink } from './bluesky';
+import { conferenceSource, isConferenceLink } from './conference';
 import { githubSource, isGithubLink } from './github';
 import { gitlabSource, isGitlabLink } from './gitlab';
 import { hackernewsSource, isHackernewsLink } from './hackernews';
@@ -23,10 +24,11 @@ const sources = {
   arxiv: arxivSource,
   bluesky: blueskySource,
   mastodon: mastodonSource,
+  conference: conferenceSource,
 } satisfies Record<SourceType, SourceAdapter>;
 
 // Checked in order, so a more specific source must come before a broader one. RSS takes the rest.
-const DETECTION_ORDER: SourceAdapter[] = [youtubeSource, githubSource, gitlabSource, hackernewsSource, arxivSource, blueskySource, mastodonSource];
+const DETECTION_ORDER: SourceAdapter[] = [youtubeSource, githubSource, gitlabSource, hackernewsSource, arxivSource, blueskySource, mastodonSource, conferenceSource];
 
 /**
  * The adapter that owns a stored feed.
@@ -67,6 +69,9 @@ export function detectType(feedUrl: string): SourceType {
   }
   if (isArxivLink(feedUrl)) {
     return 'arxiv';
+  }
+  if (isConferenceLink(feedUrl)) {
+    return 'conference';
   }
   return /^https?:\/\//i.test(feedUrl) && isBlueskyLink(feedUrl) ? 'bluesky' : 'rss';
 }

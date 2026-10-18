@@ -3,7 +3,7 @@ title: Privacy notice
 description: How the Monfil website and desktop app handle data.
 ---
 
-Last updated: 5 October 2026.
+Last updated: 18 October 2026.
 
 ## Documentation website
 
@@ -37,7 +37,7 @@ Monfil is a desktop feed reader. It has no account, Monfil server, or usage anal
 
 Monfil requests feeds from their publishers when it refreshes them. Opening an article can make Monfil request the publisher's page to get its full text. Images and feed icons can load from remote sites when they appear on screen. Those sites receive the request and can see information such as your IP address and app or browser details.
 
-When you add a feed, Monfil can request the page you pasted and common feed addresses on the same site. For a Hacker News link, it checks feeds on [hnrss.org](https://hnrss.org). To show an icon for a GitLab project or a Bluesky profile, it asks the GitLab API or the Bluesky public API for the avatar.
+When you add a feed, Monfil can request the page you pasted and common feed addresses on the same site. For a Hacker News link, it checks feeds on [hnrss.org](https://hnrss.org). To show an icon for a GitLab project or a Bluesky profile, it asks the GitLab API or the Bluesky public API for the avatar. A conference feed requests the event list from [developers.events](https://developers.events) when you add it and at each refresh. GitHub Pages hosts that list.
 
 Opening an article or other link in your browser also connects to the linked site. That browser uses its own privacy settings.
 

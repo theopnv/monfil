@@ -6,7 +6,7 @@
 // deleted, so its id is permanently 1.
 export const HOME_WORKSPACE_ID = 1;
 
-export const SOURCE_TYPES = ['rss', 'youtube', 'github', 'gitlab', 'hackernews', 'arxiv', 'bluesky', 'mastodon'] as const;
+export const SOURCE_TYPES = ['rss', 'youtube', 'github', 'gitlab', 'hackernews', 'arxiv', 'bluesky', 'mastodon', 'conference'] as const;
 export type SourceType = typeof SOURCE_TYPES[number];
 export type RefreshInterval = 15 | 30 | 60 | 360 | 'manual';
 export type RetentionDays = 15 | 30 | 60 | 90 | 180;

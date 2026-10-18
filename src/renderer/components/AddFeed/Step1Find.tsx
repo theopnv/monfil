@@ -22,6 +22,7 @@ const KINDS: { id: FeedType; label: string }[] = [
   { id: "arxiv", label: "arXiv" },
   { id: "bluesky", label: "Bluesky" },
   { id: "mastodon", label: "Mastodon" },
+  { id: "conference", label: "Conferences" },
 ];
 
 const COPY: Record<"anything" | SourceType, { placeholder: string; hint: string }> = {
@@ -61,6 +62,10 @@ const COPY: Record<"anything" | SourceType, { placeholder: string; hint: string 
     placeholder: "Paste a profile or tag link, or @user@host…",
     hint: "Enter a handle such as @user@mastodon.social and press Enter.",
   },
+  conference: {
+    placeholder: "Type topics, then \"in\" and places…",
+    hint: "Format: topics in places, then press Enter. Separate items with commas. Places are optional, and online counts as a place. Examples: devops · kubernetes, cloud in France · java in Belgium, online. A developers.events link also works.",
+  },
 };
 
 // Input's `icon` prop is typed as ComponentType<HTMLAttributes<HTMLOrSVGElement>>,
@@ -84,6 +89,9 @@ export interface Step1FindProps {
 }
 
 function candidateDetail(feed: ParsedSource): string {
+  if (feed.type === "conference" && feed.items.length === 0) {
+    return "No conference matches now. Monfil adds a card when a matching conference is announced.";
+  }
   return `${feed.link} — ${feed.items.length} items`;
 }
 

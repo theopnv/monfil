@@ -19,6 +19,7 @@ export const SOURCE_TYPE_LABEL: Record<SourceType, string> = {
   arxiv: 'ARXIV',
   bluesky: 'BLUESKY',
   mastodon: 'MASTODON',
+  conference: 'CONF',
 };
 
 export interface RiverCardProps {

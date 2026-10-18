@@ -49,6 +49,10 @@ const STRATEGY_BY_TYPE: Record<SourceType, ReaderContentStrategy> = {
     renderDescription: (raw) => raw,
     showStandfirst: false,
   },
+  conference: {
+    renderDescription: (raw) => raw,
+    showStandfirst: false,
+  },
 };
 
 export interface ReaderContent {

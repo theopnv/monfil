@@ -5,7 +5,7 @@ sidebar:
   order: 8
 ---
 
-Monfil uses a `SourceAdapter` for each source type. The [source adapters](https://github.com/theopnv/monfil/tree/main/src/main/feed/sources) cover RSS, Atom, RDF, JSON Feed, YouTube, GitHub, GitLab, Hacker News, arXiv, Bluesky, and Mastodon.
+Monfil uses a `SourceAdapter` for each source type. The [source adapters](https://github.com/theopnv/monfil/tree/main/src/main/feed/sources) cover RSS, Atom, RDF, JSON Feed, YouTube, GitHub, GitLab, Hacker News, arXiv, Bluesky, Mastodon, and conference milestones from developers.events.
 
 ## Follow an item
 
