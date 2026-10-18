@@ -55,6 +55,32 @@ Paste a handle, such as `@user@mastodon.social`. You can also paste a profile li
 
 Paste a channel, a handle, a video, or a playlist link. A video link follows the channel that posted it.
 
+## Developer Conferences
+
+Pick the **Conferences** chip. Type topics, then `in`, then places, and press Enter. Separate the items in each list with commas. Places are optional. Use `online` for online events.
+
+| Type | Monfil follows |
+| --- | --- |
+| `devops` | DevOps conferences in all places |
+| `kubernetes, cloud in France` | Kubernetes or cloud conferences in France |
+| `java in Belgium, online` | Java conferences in Belgium or online |
+
+A topic matches a conference tag, such as `java` or `devops`. Monfil changes spaces in a topic to hyphens, so `software testing` finds the `software-testing` tag. A place matches a city or a country.
+
+You can also paste a [developers.events](https://developers.events) link without the chip. Set the filters on the site first, then copy the address. Monfil uses the country, topic, tech, and language filters. It ignores the year in the address and shows conferences in all years. If the link has another filter, such as region, Monfil tells you to remove it.
+
+If no conference uses a topic or a place, Monfil tells you and suggests close matches. For example, `test automation` suggests `testing`. If the topic and the place are correct but no conference matches now, Monfil tells you so. You can still add the feed. It shows a card when a matching conference is announced.
+
+Monfil adds a card to the river when one of these events occurs:
+
+- A conference starts in the next 12 months.
+- Its call for papers (CFP) opens.
+- Its CFP closes in 14 days.
+- It starts in 30 days.
+- It starts today.
+
+When you add the feed, you get a card for each event that has already occurred. Monfil reads the data from developers.events each time it refreshes. It does not keep a copy of the full list. The data has the [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) licence, and each card names its source.
+
 ## Substack
 
 Paste the publication address, such as `name.substack.com` or its custom domain. Monfil finds the feed. You can also add `/feed` at the end of the address yourself.

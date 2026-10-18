@@ -27,6 +27,10 @@ export function resolveGuid(guid: string | undefined, link: string | undefined, 
   return `monfil:hash:${createHash('sha1').update(`${title} ${pubDate}`).digest('hex')}`;
 }
 
+export function escapeText(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 /**
  * Applies `pattern` until the text stops changing, so a removal cannot splice a new match together.
  * @param pattern must be global

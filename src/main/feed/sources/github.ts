@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { createFeedSource, toUrl } from './feedSource';
-import { removeAll } from './text';
+import { escapeText, removeAll } from './text';
 import type { FeedCandidate, NewSourceItem, ParsedFeedContent } from './types';
 
 const HOSTS = new Set(['github.com', 'www.github.com']);
@@ -87,10 +87,6 @@ function absolute(href: string): string | undefined {
 // Stand-ins for the brackets of the tags this module emits, so every other `<` and `>` can be escaped as text.
 const OPEN = '\uE000';
 const CLOSE = '\uE001';
-
-function escapeText(text: string): string {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
 
 function absolutizeLinks(html: string): string {
   return html.replace(/\b(href|src)="\/(?!\/)/g, `$1="${ORIGIN}/`);

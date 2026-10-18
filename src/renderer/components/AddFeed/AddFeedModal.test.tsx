@@ -233,4 +233,37 @@ describe('AddFeedModal', () => {
     // Assert
     await expect.element(getByLabelText('Feed URL')).toHaveAttribute('placeholder', 'Paste a repository or user link, or owner/repo…');
   });
+
+  test('a conference query with no card yet says that nothing matches now', async () => {
+    // Arrange
+    stubElectron({ validateFeedUrl: { success: true, data: [{ ...parsedFeed, type: 'conference', link: 'https://developers.events/all-events.json?topics=devops&places=Stavanger', title: 'Conferences · devops · Stavanger', items: [] }] } });
+    const { getByLabelText, getByRole, getByText } = await renderWithQueryClient(
+      <AddFeedModal isOpen onOpenChange={vi.fn()} />,
+    );
+
+    // Act
+    await getByRole('button', { name: 'Conferences' }).click();
+    await getByLabelText('Feed URL').fill('devops in Stavanger');
+    await userEvent.keyboard('{Enter}');
+
+    // Assert
+    await expect.element(getByText('No conference matches now. Monfil adds a card when a matching conference is announced.', { exact: true })).toBeInTheDocument();
+  });
+
+  test('the Conferences chip explains the topics-in-places format with examples', async () => {
+    // Arrange
+    const { getByLabelText, getByRole, getByText } = await renderWithQueryClient(
+      <AddFeedModal isOpen onOpenChange={vi.fn()} />,
+    );
+
+    // Act
+    await getByRole('button', { name: 'Conferences' }).click();
+
+    // Assert
+    await expect.element(getByLabelText('Feed URL')).toHaveAttribute('placeholder', 'Type topics, then "in" and places…');
+    await expect.element(getByText(/^Format: topics in places/)).toHaveTextContent(
+      'Format: topics in places, then press Enter. Separate items with commas. Places are optional, and online counts as a place. '
+      + 'Examples: devops · kubernetes, cloud in France · java in Belgium, online. A developers.events link also works.',
+    );
+  });
 });

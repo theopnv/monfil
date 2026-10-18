@@ -35,5 +35,8 @@
     <outline text="News">
       <outline text="Hacker News: 300+ points" title="Hacker News: 300+ points" type="rss" xmlUrl="https://hnrss.org/newest?points=300"/>
     </outline>
+    <outline text="Events">
+      <outline text="Conferences · devops" title="Conferences · devops" type="rss" xmlUrl="https://developers.events/all-events.json?topics=devops"/>
+    </outline>
   </body>
 </opml>
