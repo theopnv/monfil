@@ -3,12 +3,11 @@
 // See LICENSE in the repository root for full terms.
 
 import { useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Eye, RefreshCw01, SearchLg, XClose } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
 import { announce } from "@/lib/announcer";
-import { useClearPendingRefreshCount, usePendingRefreshCount } from "@/lib/ipc-bridge";
+import { useApplyPendingRefresh, useHasPendingRefresh } from "@/lib/ipc-bridge";
 import { useFeedsRefresh } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import { useActiveWorkspace } from "@/providers/workspace-provider";
@@ -37,21 +36,32 @@ export interface RiverHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   hasFeeds: boolean;
+  /** The feeds the river shows, so the Refresh pill only appears for items that will land in it. */
+  visibleFeedIds: ReadonlySet<number>;
+  /** Called after the Refresh pill loads the new items into the river. */
+  onPendingApplied?: () => void;
   savedView?: boolean;
 }
 
-export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, savedView = false }: RiverHeaderProps) {
+export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, visibleFeedIds, onPendingApplied, savedView = false }: RiverHeaderProps) {
   const { refreshNow, isRefreshing, refreshFailed } = useFeedsRefresh();
   const { preferences, setPreference } = usePreferences();
   const activeWorkspace = useActiveWorkspace();
-  const pendingRefreshCount = usePendingRefreshCount();
-  const clearPendingRefreshCount = useClearPendingRefreshCount();
-  const queryClient = useQueryClient();
+  const hasPendingRefresh = useHasPendingRefresh(visibleFeedIds) && !savedView && !isRefreshing;
+  const applyPendingRefresh = useApplyPendingRefresh();
 
   const handlePendingClick = () => {
-    clearPendingRefreshCount();
-    void queryClient.invalidateQueries({ queryKey: ['river'] });
+    applyPendingRefresh();
+    onPendingApplied?.();
   };
+
+  const hadPendingRefresh = useRef(false);
+  useEffect(() => {
+    if (hasPendingRefresh && !hadPendingRefresh.current) {
+      announce("New articles available.");
+    }
+    hadPendingRefresh.current = hasPendingRefresh;
+  }, [hasPendingRefresh]);
 
   const wasRefreshing = useRef(false);
   useEffect(() => {
@@ -107,11 +117,6 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, sav
                   </button>
                 )}
               </div>
-              {!savedView && pendingRefreshCount > 0 && (
-                <Button color="primary" className="flex-none rounded-full" onPress={handlePendingClick}>
-                  {pendingRefreshCount} updates
-                </Button>
-              )}
               {!savedView && <Button
                 color="secondary"
                 iconLeading={Eye}
@@ -120,7 +125,16 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, sav
               >
                 {preferences.hideReadItems ? "Show All" : "Show Unread"}
               </Button>}
-              {!savedView && <Button
+              {hasPendingRefresh && <Button
+                aria-label="Refresh, new articles available"
+                color="primary"
+                iconLeading={RefreshCw01}
+                className="flex-none rounded-full"
+                onPress={handlePendingClick}
+              >
+                Refresh
+              </Button>}
+              {!savedView && !hasPendingRefresh && <Button
                 aria-label="Refresh feeds"
                 color="secondary"
                 iconLeading={RefreshCw01}

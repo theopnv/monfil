@@ -162,6 +162,7 @@ export const useFeedsRefresh = (): FeedsRefresh => {
       // push only raises the pill (see `useIpcBridge`), so it never moves the river under the user.
       void queryClient.invalidateQueries({ queryKey: ['feeds'] });
       void queryClient.invalidateQueries({ queryKey: ['river'] });
+      queryClient.setQueryData<number[]>(uiKeys.pendingRefreshFeedIds, []);
       queryClient.setQueryData<number>(uiKeys.appliedRefreshVersion, (version) => (version ?? 0) + 1);
       if (summary.failedFeedIds?.length) {
         const count = summary.failedFeedIds.length;
