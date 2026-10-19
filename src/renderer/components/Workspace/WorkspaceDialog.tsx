@@ -107,7 +107,7 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
 
             <div className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-secondary">Icon</span>
-              <div className="grid grid-cols-6 gap-1.5">
+              <div className="grid grid-cols-8 gap-1.5">
                 {WORKSPACE_ICONS.map((candidate) => {
                   const Icon = workspaceIconComponent(candidate);
                   const isSelected = icon === candidate;
@@ -132,7 +132,7 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
 
             <div className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-secondary">Colour</span>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-8 gap-2">
                 {WORKSPACE_COLORS.map((candidate) => (
                   <button
                     key={candidate}
