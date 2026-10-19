@@ -7,6 +7,7 @@ import type { Result } from '../../shared/result.ts';
 import type { FetchUrlError } from '../../shared/contracts.ts';
 import { FETCH_TIMEOUT_MS, MAX_FETCH_BYTES, MAX_REDIRECTS } from '../constants.ts';
 import { classifyHost } from './private-network.ts';
+import { decodeBody } from './decode-body.ts';
 
 export interface FetchValidators {
   etag: string | undefined;
@@ -121,7 +122,7 @@ interface ResponseHop {
   status: number;
   statusMessage: string;
   headers: Record<string, string | string[]>;
-  /** Reads the body as UTF-8, capped at MAX_FETCH_BYTES. */
+  /** Reads the body in its declared charset, capped at MAX_FETCH_BYTES. */
   readBody: () => Promise<Result<string, FetchUrlError>>;
   /** Cancels the request, releasing its connection. Safe to call once the hop has settled. */
   abort: () => void;
@@ -241,8 +242,7 @@ function raceAbort<T>(promise: Promise<T>, signal: AbortSignal, abort?: () => vo
   });
 }
 
-// Mirrors what `Response.text()` does (UTF-8, BOM-stripped), but as a stream so a cap can be
-// enforced without holding the whole body in memory first.
+// Streams the body so the cap is enforced before more than MAX_FETCH_BYTES is held in memory.
 function readCappedText(
   response: Electron.IncomingMessage,
   request: Electron.ClientRequest,
@@ -253,9 +253,10 @@ function readCappedText(
     return Promise.resolve(tooLarge());
   }
 
+  const contentType = headerValue(response.headers as Record<string, string | string[]>, 'Content-Type');
+
   return new Promise((resolve) => {
-    const decoder = new TextDecoder();
-    let text = '';
+    const chunks: Buffer[] = [];
     let bytesRead = 0;
     let done = false;
 
@@ -275,9 +276,9 @@ function readCappedText(
         finish(tooLarge());
         return;
       }
-      text += decoder.decode(chunk, { stream: true });
+      chunks.push(chunk);
     });
-    response.on('end', () => finish({ success: true, data: text + decoder.decode() }));
+    response.on('end', () => finish({ success: true, data: decodeBody(Buffer.concat(chunks), contentType) }));
     response.on('error', () => {
       request.abort();
       finish({ success: false, error: { name: 'NETWORK_ERROR', message: 'The connection dropped while reading the response.' } });
