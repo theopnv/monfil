@@ -286,8 +286,9 @@ workspacesTest('deleting a feed from one workspace leaves it in place in another
   await app.evaluate(({ BrowserWindow }, id) => {
     BrowserWindow.getAllWindows()[0]?.webContents.send('feeds:delete-feed-requested', id);
   }, feedId);
-  await expect(page.getByRole('heading', { name: 'Delete feed' })).toBeVisible();
-  await page.getByRole('button', { name: 'Delete feed' }).click();
+  await expect(page.getByRole('heading', { name: 'Remove feed' })).toBeVisible();
+  await expect(page.getByText(/stays in 1 other workspace with its items/)).toBeVisible();
+  await page.getByRole('button', { name: 'Remove from CI/CD watch' }).click();
 
   // Assert: gone from the workspace it was deleted from.
   await expect(page.getByRole('button', { name: /^Feed A/ })).not.toBeVisible();

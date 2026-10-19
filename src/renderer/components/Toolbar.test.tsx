@@ -47,6 +47,7 @@ function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
     category: { id: 1, name: 'Tech', workspace_id: 1 },
     itemCount: 0,
     unreadCount: 0,
+    otherWorkspaceCount: 0,
     ...overrides,
   };
 }

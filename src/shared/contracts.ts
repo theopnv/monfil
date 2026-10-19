@@ -126,6 +126,8 @@ export type FeedSummary = FeedMetadata & {
   category: FeedCategory;
   itemCount: number;
   unreadCount: number;
+  /** How many other workspaces also hold this feed. Above zero, deleting it here keeps its items. */
+  otherWorkspaceCount: number;
 };
 
 export type WorkspaceSummary = Workspace & { hasUnread: boolean };
