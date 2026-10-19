@@ -12,8 +12,9 @@ import { SearchProvider } from '@/providers/search-provider';
 import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
+import { useIpcBridge } from '@/lib/ipc-bridge';
 import River from './River';
-import { HOME_WORKSPACE_ID, type FeedSummary, type RiverPage, type RiverQuery, type RiverRow, type SavedQuery, type SetSavedItemInput, type WorkspaceSummary } from '../../../shared/contracts';
+import { HOME_WORKSPACE_ID, type FeedSummary, type RefreshSummary, type RiverPage, type RiverQuery, type RiverRow, type SavedQuery, type SetSavedItemInput, type WorkspaceSummary } from '../../../shared/contracts';
 
 let nextFeedId = 1;
 let nextItemId = 1;
@@ -64,6 +65,8 @@ let workspaces: WorkspaceSummary[];
 let opmlImportResult: unknown;
 let invokeMock: ReturnType<typeof vi.fn>;
 let failSave: boolean;
+let feedA: FeedSummary;
+let feedsRefreshedHandler: ((payload: RefreshSummary) => void) | undefined;
 
 function createWorkspace(overrides: Partial<WorkspaceSummary> = {}): WorkspaceSummary {
   return {
@@ -121,6 +124,7 @@ beforeEach(() => {
   allRows = [];
   workspaces = [];
   failSave = false;
+  feedsRefreshedHandler = undefined;
   opmlImportResult = { success: true, data: { workspaceId: HOME_WORKSPACE_ID, imported: 0, skipped: [], failed: [] } };
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
@@ -170,13 +174,18 @@ beforeEach(() => {
   window.electron = {
     ipcRenderer: {
       invoke: invokeMock,
-      on: vi.fn(() => vi.fn()),
+      on: vi.fn((channel: string, handler: (payload: never) => void) => {
+        if (channel === 'feeds:refreshed') {
+          feedsRefreshedHandler = handler as typeof feedsRefreshedHandler;
+        }
+        return vi.fn();
+      }),
       sendMessage: vi.fn(),
       once: vi.fn(),
     },
   } as unknown as typeof window.electron;
 
-  const feedA = createFeed({ title: 'Feed A', link: 'https://a.example/feed' });
+  feedA = createFeed({ title: 'Feed A', link: 'https://a.example/feed' });
   const feedB = createFeed({ title: 'Feed B', link: 'https://b.example/feed' });
   allFeeds = [feedA, feedB];
   allRows = [
@@ -186,8 +195,13 @@ beforeEach(() => {
   ];
 });
 
+function IpcBridgeMount() {
+  useIpcBridge();
+  return null;
+}
+
 function Session({ children }: PropsWithChildren) {
-  return <SearchProvider><RiverScopeProvider><PreferencesProvider>{children}</PreferencesProvider></RiverScopeProvider></SearchProvider>;
+  return <SearchProvider><IpcBridgeMount /><RiverScopeProvider><PreferencesProvider>{children}</PreferencesProvider></RiverScopeProvider></SearchProvider>;
 }
 
 test('saving from the list keeps the item unread and does not open it', async () => {
@@ -697,4 +711,72 @@ test('search query survives unmounting and remounting River', async () => {
   // Assert
   await expect.element(screen.getByText('Item B1', { exact: true })).toBeInTheDocument();
   await expect.element(screen.getByText('Item A1', { exact: true })).not.toBeInTheDocument();
+});
+
+describe('refresh button', () => {
+  test('new items in a visible feed turn the button into a Refresh pill that loads them without a fetch', async () => {
+    // Arrange
+    const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    await expect.element(getByText('Item A1', { exact: true })).toBeVisible();
+    allRows = [createRow(feedA, { title: 'Fresh A', publishedAt: 2_000_000 }), ...allRows];
+    feedsRefreshedHandler?.({ perFeed: [{ feedId: feedA.id, inserted: 1 }] });
+    const pill = getByRole('button', { name: 'Refresh, new articles available' });
+    await expect.element(pill).toHaveTextContent('Refresh');
+    await expect.element(getByText('Fresh A', { exact: true })).not.toBeInTheDocument();
+    invokeMock.mockClear();
+
+    // Act
+    await pill.click();
+
+    // Assert
+    await expect.element(getByText('Fresh A', { exact: true })).toBeVisible();
+    await expect.element(getByRole('button', { name: 'Refresh feeds' })).toBeVisible();
+    expect(invokeMock.mock.calls.some(([channel]) => channel === 'feeds:refresh')).toBe(false);
+  });
+
+  test('new items only in a hidden feed keep the plain refresh button', async () => {
+    // Arrange
+    const feedC = createFeed({ title: 'Feed C', link: 'https://c.example/feed', showInWorkspace: 0 });
+    allFeeds = [...allFeeds, feedC];
+    const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    await expect.element(getByText('Item A1', { exact: true })).toBeVisible();
+
+    // Act
+    feedsRefreshedHandler?.({ perFeed: [{ feedId: feedC.id, inserted: 2 }] });
+
+    // Assert
+    await expect.element(getByRole('button', { name: 'Refresh feeds' })).toBeVisible();
+    await expect.element(getByRole('button', { name: 'Refresh, new articles available' })).not.toBeInTheDocument();
+  });
+
+  test('loading new items scrolls the river back to the top', async () => {
+    // Arrange
+    const { getByRole, getByText, container } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    await expect.element(getByText('Item A1', { exact: true })).toBeVisible();
+    const scroller = container.querySelector<HTMLElement>('.overflow-y-auto.pb-20');
+    if (!scroller) {
+      throw new Error('The river scroll container did not render.');
+    }
+    const scrollTo = vi.spyOn(scroller, 'scrollTo');
+    feedsRefreshedHandler?.({ perFeed: [{ feedId: feedA.id, inserted: 1 }] });
+
+    // Act
+    await getByRole('button', { name: 'Refresh, new articles available' }).click();
+
+    // Assert
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
+  });
+
+  test('the Saved view never shows the Refresh pill', async () => {
+    // Arrange
+    allRows = allRows.map((row) => ({ ...row, savedAt: row.id }));
+    const { getByRole, getByText } = await renderWithQueryClient(<Session><River savedView onOpenItem={vi.fn()} /></Session>);
+    await expect.element(getByText('Item A1', { exact: true })).toBeVisible();
+
+    // Act
+    feedsRefreshedHandler?.({ perFeed: [{ feedId: feedA.id, inserted: 1 }] });
+
+    // Assert
+    await expect.element(getByRole('button', { name: 'Refresh, new articles available' })).not.toBeInTheDocument();
+  });
 });

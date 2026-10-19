@@ -5,7 +5,7 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 import { useFeedsRefresh, useReadState, useRiver } from './feeds-provider';
 import { NotificationHost } from '../lib/notifications';
-import { useIpcBridge, usePendingRefreshCount } from '../lib/ipc-bridge';
+import { useHasPendingRefresh, useIpcBridge } from '../lib/ipc-bridge';
 import { renderWithQueryClient } from '../lib/test/render-with-query-client';
 import { HOME_WORKSPACE_ID, type RefreshSummary, type RiverPage, type RiverRow } from '../../shared/contracts';
 
@@ -56,9 +56,9 @@ function ReadStateButtons({ id, currentlyRead }: { id: number; currentlyRead: bo
   );
 }
 
-function PendingPill() {
-  const count = usePendingRefreshCount();
-  return <span>{count} new</span>;
+function PendingState({ feedIds = [1] }: { feedIds?: number[] }) {
+  const hasPending = useHasPendingRefresh(new Set(feedIds));
+  return <span>{hasPending ? 'pending' : 'idle'}</span>;
 }
 
 function IpcBridgeMount() {
@@ -150,14 +150,14 @@ test('fetchNextPage appends the second page without dropping the first', async (
   await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 });
 
-test('a feeds:refreshed push raises the pending count without moving the river window', async () => {
+test('a feeds:refreshed push with new items marks the refresh pending without moving the river window', async () => {
   // Arrange
   const rowA = createRow({ title: 'Row A' });
   invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [rowA] } satisfies RiverPage : []);
   const { getByText } = await renderWithQueryClient(
     <>
       <IpcBridgeMount />
-      <PendingPill />
+      <PendingState />
       <RiverRows />
     </>,
   );
@@ -167,33 +167,79 @@ test('a feeds:refreshed push raises the pending count without moving the river w
   feedsRefreshedHandler?.({ perFeed: [{ feedId: 1, inserted: 3 }] });
 
   // Assert
-  await expect.element(getByText('3 new', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('pending', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 });
 
-test('publisher edits and removals raise the pending count', async () => {
+test('publisher edits and removals leave the refresh idle', async () => {
   // Arrange
   const row = createRow({ title: 'Row A' });
   invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [row] } satisfies RiverPage : []);
-  const { getByText } = await renderWithQueryClient(<><IpcBridgeMount /><PendingPill /><RiverRows /></>);
+  const { getByText } = await renderWithQueryClient(<><IpcBridgeMount /><PendingState /><RiverRows /></>);
   await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 
   // Act
   feedsRefreshedHandler?.({ perFeed: [{ feedId: 1, inserted: 0, updated: 2 }], removed: 1 });
 
   // Assert
-  await expect.element(getByText('3 new', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('idle', { exact: true })).toBeInTheDocument();
 });
 
-test('a feeds:refreshed push before the river has ever rendered raises no pill', async () => {
+test('new items in a feed outside the given scope leave the refresh idle', async () => {
+  // Arrange
+  const row = createRow({ title: 'Row A' });
+  invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [row] } satisfies RiverPage : []);
+  const { getByText } = await renderWithQueryClient(<><IpcBridgeMount /><PendingState feedIds={[1]} /><RiverRows /></>);
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
+
+  // Act
+  feedsRefreshedHandler?.({ perFeed: [{ feedId: 2, inserted: 4 }] });
+
+  // Assert
+  await expect.element(getByText('idle', { exact: true })).toBeInTheDocument();
+});
+
+test('a manual refresh clears the pending state', async () => {
+  // Arrange
+  const row = createRow({ title: 'Row A' });
+  invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [row] } satisfies RiverPage : { perFeed: [] } satisfies RefreshSummary);
+  const { getByText, getByRole } = await renderWithQueryClient(<><IpcBridgeMount /><PendingState /><RiverRows /><RefreshButton /></>);
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
+  feedsRefreshedHandler?.({ perFeed: [{ feedId: 1, inserted: 3 }] });
+  await expect.element(getByText('pending', { exact: true })).toBeInTheDocument();
+
+  // Act
+  await getByRole('button', { name: 'Refresh feeds' }).click();
+
+  // Assert
+  await expect.element(getByText('idle', { exact: true })).toBeInTheDocument();
+});
+
+test('a refresh applied immediately clears the pending state', async () => {
+  // Arrange
+  const row = createRow({ title: 'Row A' });
+  invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [row] } satisfies RiverPage : []);
+  const { getByText } = await renderWithQueryClient(<><IpcBridgeMount /><PendingState /><RiverRows /></>);
+  await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
+  feedsRefreshedHandler?.({ perFeed: [{ feedId: 1, inserted: 3 }] });
+  await expect.element(getByText('pending', { exact: true })).toBeInTheDocument();
+
+  // Act
+  feedsRefreshedHandler?.({ perFeed: [], removed: 2, applyImmediately: true });
+
+  // Assert
+  await expect.element(getByText('idle', { exact: true })).toBeInTheDocument();
+});
+
+test('a feeds:refreshed push before the river has ever rendered leaves the refresh idle', async () => {
   // Arrange: the river's first fetch never resolves, so the window has nothing loaded yet —
-  // exactly the launch race, where a pill here would have nothing left to load once that fetch
-  // eventually lands on its own.
+  // exactly the launch race, where a pending state here would have nothing left to load once that
+  // fetch eventually lands on its own.
   invokeImpl = (channel) => (channel === 'items:query' ? new Promise(() => { }) : Promise.resolve([]));
   const { getByText } = await renderWithQueryClient(
     <>
       <IpcBridgeMount />
-      <PendingPill />
+      <PendingState />
       <RiverRows />
     </>,
   );
@@ -202,7 +248,7 @@ test('a feeds:refreshed push before the river has ever rendered raises no pill',
   feedsRefreshedHandler?.({ perFeed: [{ feedId: 1, inserted: 3 }] });
 
   // Assert
-  await expect.element(getByText('0 new', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('idle', { exact: true })).toBeInTheDocument();
 });
 
 test('a feeds:item-image-fetched push patches exactly one row', async () => {

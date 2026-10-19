@@ -15,7 +15,7 @@ export const uiKeys = {
   editWorkspaceRequestedId: ['ui', 'edit-workspace-requested'] as const,
   exportWorkspaceRequestedId: ['ui', 'export-workspace-requested'] as const,
   deleteWorkspaceRequestedId: ['ui', 'delete-workspace-requested'] as const,
-  pendingRefreshCount: ['ui', 'pending-refresh-count'] as const,
+  pendingRefreshFeedIds: ['ui', 'pending-refresh-feed-ids'] as const,
   appliedRefreshVersion: ['ui', 'applied-refresh-version'] as const,
   feedpackRefreshing: (workspaceId: number) => ['ui', 'feedpack-refreshing', workspaceId] as const,
 };
@@ -29,8 +29,9 @@ export function useIpcBridge(): void {
 
   useEffect(() => {
     const unsubscribers = [
-      // Insert counts only, never the rows themselves: content must not move under a user who is
-      // mid-scroll. The pill (`usePendingRefreshCount`) is how the user opts into loading them.
+      // Record which feeds gained items, never the rows themselves: content must not move under a
+      // user who is mid-scroll. The Refresh pill (`useHasPendingRefresh`) is how the user opts into
+      // loading them. Edits and removals alone do not raise it, since they add no card at the top.
       //
       // Only raise it when a river is already rendered to protect. At launch, the very first
       // `items:query` fetch can still be in flight when this push lands; that fetch has nothing
@@ -38,14 +39,15 @@ export function useIpcBridge(): void {
       // pill anyway would leave it stuck on screen after that fetch already caught up on its own,
       // since the click has nothing left to do.
       ipc.on('feeds:refreshed', (summary) => {
-        const inserted = summary.perFeed.reduce((total, feed) => total + feed.inserted + (feed.updated ?? 0), summary.removed ?? 0);
+        const feedIdsWithNewItems = summary.perFeed.filter((feed) => feed.inserted > 0).map((feed) => feed.feedId);
         const hasRenderedRiver = queryClient.getQueriesData<InfiniteData<RiverPage>>({ queryKey: ['river'] })
           .some(([, data]) => data !== undefined);
         if (summary.applyImmediately) {
+          queryClient.setQueryData<number[]>(uiKeys.pendingRefreshFeedIds, []);
           queryClient.setQueryData<number>(uiKeys.appliedRefreshVersion, (version) => (version ?? 0) + 1);
           void queryClient.invalidateQueries({ queryKey: ['river'] });
-        } else if (inserted > 0 && hasRenderedRiver) {
-          queryClient.setQueryData<number>(uiKeys.pendingRefreshCount, (prev) => (prev ?? 0) + inserted);
+        } else if (feedIdsWithNewItems.length > 0 && hasRenderedRiver) {
+          queryClient.setQueryData<number[]>(uiKeys.pendingRefreshFeedIds, (prev = []) => [...new Set([...prev, ...feedIdsWithNewItems])]);
         }
         void queryClient.invalidateQueries({ queryKey: queryKeys.appInfo });
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });
@@ -95,23 +97,28 @@ export function useIpcBridge(): void {
   }, [queryClient]);
 }
 
-/** How many items a background refresh has inserted since the pill was last cleared. */
-export function usePendingRefreshCount(): number {
-  const { data } = useQuery({
-    queryKey: uiKeys.pendingRefreshCount,
-    queryFn: () => 0,
-    initialData: 0,
+/**
+ * Whether a background refresh stored new items in any of the given feeds since the river last loaded them.
+ * @param feedIds the feeds the current river shows
+ */
+export function useHasPendingRefresh(feedIds: ReadonlySet<number>): boolean {
+  const { data } = useQuery<number[]>({
+    queryKey: uiKeys.pendingRefreshFeedIds,
+    queryFn: () => [],
+    initialData: [],
     staleTime: Infinity,
     gcTime: Infinity,
   });
-  return data;
+  return data.some((feedId) => feedIds.has(feedId));
 }
 
-export function useClearPendingRefreshCount(): () => void {
+/** Loads the new items a background refresh stored into every river, without fetching the feeds again. */
+export function useApplyPendingRefresh(): () => void {
   const queryClient = useQueryClient();
   return useCallback(() => {
-    queryClient.setQueryData(uiKeys.pendingRefreshCount, 0);
+    queryClient.setQueryData<number[]>(uiKeys.pendingRefreshFeedIds, []);
     queryClient.setQueryData<number>(uiKeys.appliedRefreshVersion, (version) => (version ?? 0) + 1);
+    void queryClient.invalidateQueries({ queryKey: ['river'] });
   }, [queryClient]);
 }
 

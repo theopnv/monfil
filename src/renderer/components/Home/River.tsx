@@ -113,6 +113,10 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
     });
   }, [setShowOnlyLinks]);
 
+  const scrollToTop = useCallback(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, []);
+
   const hasFeeds = feeds.length > 0;
 
   return (
@@ -127,7 +131,7 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} hasFeeds={hasFeeds} savedView={savedView} />
+        <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} hasFeeds={hasFeeds} visibleFeedIds={visibleFeedIdsSet} onPendingApplied={scrollToTop} savedView={savedView} />
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">

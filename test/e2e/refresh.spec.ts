@@ -132,7 +132,7 @@ refreshTest('picks up the items published between two launches', async ({ feedSe
   // `useIpcBridge`) — never a pill left on screen with nothing left for it to load.
   await expect(secondRun.getByText('First article', { exact: true })).toBeVisible();
   await expect(async () => {
-    const pill = secondRun.getByRole('button', { name: /new$/ });
+    const pill = secondRun.getByRole('button', { name: 'Refresh, new articles available' });
     if (await pill.isVisible()) {
       await pill.click();
     }
