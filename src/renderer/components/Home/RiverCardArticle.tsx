@@ -46,7 +46,8 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
         </div>
       </div>
 
-      <RiverCardImage src={item.image} className="h-28 w-37.5 flex-none rounded-lg" />
+      {/* The right margin keeps the image clear of the save button RiverList overlays on the card's top-right corner. */}
+      <RiverCardImage src={item.image} className="mr-7 h-28 w-37.5 flex-none rounded-lg" />
     </article>
   );
 }
