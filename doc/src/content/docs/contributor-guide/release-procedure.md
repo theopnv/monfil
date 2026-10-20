@@ -42,14 +42,13 @@ If a publish run fails, correct the failure and rerun the failed jobs for that t
 
 ## Configure the Microsoft Store submission
 
-The `store` job runs only when the repository variable `MSSTORE_PRODUCT_ID` exists. Do the first submission by hand in Partner Center. Then configure the job:
+The `store` job runs only when the repository variable `MSSTORE_PRODUCT_ID` exists and the tag is a minor or major release, such as `v1.3.0`. Patch releases go to GitHub only. Each Store submission needs a new certification, so this rule keeps the number of reviews low.
 
-1. In Partner Center, open **Product identity** and copy the package identity name, the publisher, and the publisher display name into the `MakerMSIX` options in `forge.config.ts`.
-2. In Partner Center, open **Account settings** > **User management** > **Microsoft Entra applications**. Add an application with the **Manager** role and create a key for it.
-3. Add these repository secrets: `PARTNER_CENTER_TENANT_ID`, `PARTNER_CENTER_SELLER_ID`, `PARTNER_CENTER_CLIENT_ID`, and `PARTNER_CENTER_CLIENT_SECRET`.
-4. Add the repository variable `MSSTORE_PRODUCT_ID` with the Store ID of the app, for example `9NXXXXXXXXXX`.
+The job signs in to Partner Center with the repository secrets `PARTNER_CENTER_TENANT_ID`, `PARTNER_CENTER_SELLER_ID`, `PARTNER_CENTER_CLIENT_ID`, and `PARTNER_CENTER_CLIENT_SECRET`. The tenant, seller, and client values are GUIDs. Replace the client secret before it expires.
 
-Partner Center accepts one pending submission at a time. If the `store` job fails because a submission is still in certification, wait for certification to finish and rerun the job. Replace the client secret before it expires.
+Partner Center accepts one pending submission at a time. If a submission is still in review, the `store` job skips and shows a notice. The next minor or major release sends the newest version. To send a version sooner, wait for the review to finish and rerun the `store` job.
+
+The Store CLI cannot replace a draft submission that was started in the Partner Center website. If such a draft exists, the `store` job fails and asks you to delete it. Delete the draft in Partner Center and rerun the job.
 
 ## Application updates
 

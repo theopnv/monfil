@@ -3,6 +3,10 @@ title: Install Monfil
 description: Download Monfil for macOS, Windows, or Linux.
 ---
 
+On Windows, get Monfil from the [Microsoft Store](https://apps.microsoft.com/detail/9P4FZNFBR29Q). The Store installs Monfil with no security warning and keeps it up to date.
+
+For macOS, Linux, or the Windows setup file:
+
 1. Open the [Monfil releases](https://github.com/theopnv/monfil/releases) and select the latest release.
 2. Download the file for your system:
     - Choose the ZIP for macOS
@@ -11,7 +15,7 @@ description: Download Monfil for macOS, Windows, or Linux.
     - Choose the RPM package for Fedora or RHEL
 3. Install it with your system's usual installer.
 
-On Windows, Monfil updates itself. When an update is ready, Monfil shows a message with a **Restart** button.
+The Windows setup file installs a copy of Monfil that updates itself. When an update is ready, Monfil shows a message with a **Restart** button.
 
 ## System warnings
 
@@ -27,7 +31,7 @@ xattr -cr monfil.app
 
 Then open the app again.
 
-On Windows, SmartScreen may show **Windows protected your PC**. Select **More info**, then **Run anyway**.
+The Microsoft Store version does not show these warnings. If you use the Windows setup file, SmartScreen may show **Windows protected your PC**. Select **More info**, then **Run anyway**.
 
 On Linux, install the package with your package manager. From the folder that holds one Monfil DEB file, run this command on Debian or Ubuntu:
 

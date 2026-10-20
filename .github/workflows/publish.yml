@@ -101,9 +101,10 @@ jobs:
               --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
           fi
 
+  # Every Store submission goes through certification, so only minor and major releases go to the Store.
   store:
     needs: publish
-    if: vars.MSSTORE_PRODUCT_ID != ''
+    if: vars.MSSTORE_PRODUCT_ID != '' && endsWith(github.ref_name, '.0')
     runs-on: windows-latest
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
@@ -130,4 +131,15 @@ jobs:
             exit 1
           }
           msstore reconfigure --tenantId $env:TENANT_ID --sellerId $env:SELLER_ID --clientId $env:CLIENT_ID --clientSecret $env:CLIENT_SECRET
+          # Partner Center keeps one submission at a time, and publish cannot replace one that is already in review.
+          $current = msstore submission get $env:PRODUCT_ID | Out-String | ConvertFrom-Json
+          $inReview = @('CommitStarted', 'PreProcessing', 'Certification', 'Release', 'PendingPublication', 'Publishing')
+          if ($inReview -contains $current.status) {
+            Write-Output "::notice::Skipped the Store submission because submission $($current.id) is in status $($current.status). The next minor release will carry this version."
+            exit 0
+          }
+          if ($current.status -eq 'PendingCommit' -and -not $current.fileUploadUrl) {
+            Write-Output "::error::Submission $($current.id) is a draft that was started in Partner Center. The Store CLI cannot replace it. Delete the draft in Partner Center, then rerun this job."
+            exit 1
+          }
           msstore publish $packages[0].FullName --appId $env:PRODUCT_ID
