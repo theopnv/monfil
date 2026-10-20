@@ -73,3 +73,45 @@ describe('error framework boundaries', () => {
     expect(count).toBe(1);
   });
 });
+
+describe('complexity limits', () => {
+  const nestedConditions = `export function nested(a: boolean, b: boolean): number {
+  if (a && b) {
+    if (a && b) {
+      if (a && b) {
+        if (a && b) {
+          if (a && b) {
+            if (a && b) {
+              return 1;
+            }
+          }
+        }
+      }
+    }
+  }
+  return 0;
+}
+`;
+
+  test.each(['@sonarjs/cognitive-complexity', '@sonarjs/cyclomatic-complexity'])('rejects %s above the limit in app code', async (ruleId) => {
+    // Act
+    const count = await ruleErrors(nestedConditions, 'src/main/example.ts', ruleId);
+
+    // Assert
+    expect(count).toBe(1);
+  });
+
+  test.each([
+    ['src/renderer/components/untitled-ui/base/buttons/button.tsx', '@sonarjs/cognitive-complexity'],
+    ['src/renderer/components/untitled-ui/base/buttons/button.tsx', '@sonarjs/cyclomatic-complexity'],
+    ['src/main/settings.test.ts', '@sonarjs/cognitive-complexity'],
+    ['src/main/settings.test.ts', '@sonarjs/cyclomatic-complexity'],
+  ])('allows complex code in %s for %s', async (filePath, ruleId) => {
+    // Act
+    const [result] = await eslint.lintText(nestedConditions, { filePath });
+
+    // Assert
+    expect(result?.fatalErrorCount).toBe(0);
+    expect(result?.messages.filter((message) => message.ruleId === ruleId)).toHaveLength(0);
+  });
+});

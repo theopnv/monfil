@@ -52,6 +52,7 @@ In VS Code, the `Main + renderer` compound launch configuration debugs both Elec
 - For a bug fix, first add a test that fails for the reported behavior. Then fix the code and run the affected test again.
 - Keep unit tests next to source as `*.test.ts` or `*.test.tsx`. Put Electron end-to-end tests in `test/e2e/*.spec.ts`. Renderer component tests run in Vitest Browser Mode, not the Node suite.
 - Test observable behavior. Use fixtures and setup or teardown hooks when they help. Mark test phases with `// Arrange`, `// Act`, and `// Assert`. Use `vi.mock(import('./module.ts'))` for Vitest module mocks.
+- Functions in `src/` must stay at or below cognitive complexity 15 and cyclomatic complexity 10. Test files and `src/renderer/components/untitled-ui/` have no limit. Split a function that goes above a limit. Do not add a suppression. `eslint-suppressions.json` holds the old violations. When you bring old code below a limit, run `npx eslint --prune-suppressions .` and commit the smaller file.
 - Run focused checks for the area you changed. Run `npm run lint` for TypeScript changes. Run broader suites when a change crosses process boundaries or affects packaging, migrations, or security.
 - Keep repository paths relative to its root in code, comments, docs, tests, and CI. Do not add machine-specific paths or identifiers.
 - Add a code comment only when it explains a lasting constraint that the code cannot show. Keep existing comments unless the constraint has changed. Use JSDoc for important external APIs and helpers.
