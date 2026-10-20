@@ -11,6 +11,7 @@ import { openExternalLink } from "../window-security";
 import { logFilePath } from '../main-state';
 import { logger } from '../logging/logger';
 import { titleBarOverlayForTheme } from '../window-chrome';
+import { installUpdate } from '../updates/auto-updater';
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {
   openExternalLink(url);
@@ -33,6 +34,10 @@ export function listenToRevealDatabaseBackup() {
 export function listenToRestart() {
   app.relaunch();
   app.exit(0);
+}
+
+export function listenToInstallUpdate() {
+  installUpdate();
 }
 
 export function listenToSetWindowTheme(event: IpcMainEvent, theme: OneWayRendererToMainChannelPayloads['app:set-window-theme']) {

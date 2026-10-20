@@ -20,6 +20,7 @@ import { installFatalHandlers } from './logging/fatal';
 import { setLogFilePath } from './main-state';
 import { getDetailedLogging } from './settings';
 import { titleBarOverlayForTheme } from './window-chrome';
+import { startAutoUpdates, stopAutoUpdates } from './updates/auto-updater';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // app.quit() only schedules an exit, so without this return the rest of the module (and its app.on(...) wiring)
@@ -123,6 +124,7 @@ function bootstrap() {
     startRefreshScheduler().catch((error: unknown) => {
       logger.error('feed.refresh', { outcome: 'failed' }, error);
     });
+    startAutoUpdates();
   }
 
   // This method will be called when Electron has finished initialization and is ready to create browser windows.
@@ -153,6 +155,7 @@ function bootstrap() {
 
   app.on('before-quit', () => {
     stopRefreshScheduler();
+    stopAutoUpdates();
     stopArticleExtractionProcess();
     closeDatabase().catch((error) => {
       logger.error('database.recovery', { outcome: 'failed' }, error);

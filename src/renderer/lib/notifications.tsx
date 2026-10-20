@@ -22,6 +22,15 @@ export function notifyWarning(message: string, key = message, action?: { label: 
   toast.warning(message, { id: key, action, duration: Infinity, onDismiss: () => activeKeys.delete(key), onAutoClose: () => activeKeys.delete(key) });
 }
 
+/** Shows a message that stays until the user acts on it or closes it. */
+export function notifyAction(message: string, key: string, action: { label: string; onClick: () => void }): void {
+  toast(message, { id: key, action, duration: Infinity });
+}
+
+export function dismissAllNotifications(): void {
+  toast.dismiss();
+}
+
 export function NotificationHost() {
   return <Toaster richColors position="bottom-right" />;
 }

@@ -60,6 +60,7 @@ vi.mock(import('../opml/export'), () => ({ exportWorkspaceOpml: vi.fn() }));
 vi.mock(import('../feedpacks/catalog'), () => ({ getFeedpackCatalog: vi.fn() }));
 vi.mock(import('../feedpacks/install'), () => ({ installFeedpack: vi.fn(), previewFeedpack: vi.fn() }));
 vi.mock(import('../app-info'), () => ({ getAppInfo: vi.fn() }));
+vi.mock(import('../updates/auto-updater'), () => ({ getUpdateState: () => ({ name: 'NONE' as const }) }));
 
 const category: FeedCategory = { id: 3, name: 'Tech', workspace_id: 1 };
 const feed: FeedSummary = {
@@ -121,6 +122,7 @@ const fixtures: { [C in TwoWayRendererMainChannels]: Fixture<C> } = {
   'app:back-up-database': { arg: undefined, response: { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } }, handler: handlers.handleAppBackUpDatabase },
   'app:get-info': { arg: undefined, response: { version: '1', feedCount: 1, itemCount: 0, databaseSizeBytes: 0 }, handler: handlers.handleAppGetInfo },
   'app:get-startup-health': { arg: undefined, response: { name: 'OK' }, handler: handlers.handleAppGetStartupHealth },
+  'app:get-update-state': { arg: undefined, response: { name: 'NONE' }, handler: handlers.handleAppGetUpdateState },
   'settings:get-detailed-logging': { arg: undefined, response: false, handler: handlers.handleSettingsGetDetailedLogging },
   'settings:set-detailed-logging': { arg: false, response: false, handler: handlers.handleSettingsSetDetailedLogging },
   'opml:import': { arg: { target: { kind: 'new-workspace', name: 'Tech', icon: 'Home01', color: 'blue', sourceSlug: 'tech', sourceVersion: '1' } }, response: imported, handler: handlers.handleOpmlImport },

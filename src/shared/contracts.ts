@@ -198,6 +198,11 @@ export interface AppInfo {
   databaseSizeBytes: number;
 }
 
+/** `READY_TO_INSTALL`: an update finished downloading and applies when the app restarts. */
+export type AppUpdateState =
+  | { name: 'NONE' }
+  | { name: 'READY_TO_INSTALL' };
+
 export interface ParsedOpmlFeed {
   title: string;
   xmlUrl: string;

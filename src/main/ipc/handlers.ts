@@ -18,6 +18,7 @@ import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorksp
 import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from "../db/crud/query";
 import { getDetailedLogging, getRefreshInterval, getRefreshOnLaunch, setDetailedLogging, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval } from "../settings";
 import { getAppInfo } from "../app-info";
+import { getUpdateState } from "../updates/auto-updater";
 import { sendToRenderer } from "./sendToRenderer";
 import { openAndImportOpml } from "../opml/import";
 import { exportWorkspaceOpml } from "../opml/export";
@@ -27,6 +28,7 @@ import type { IpcMainInvokeEvent } from "electron";
 import type {
   AddFeedError,
   AppInfo,
+  AppUpdateState,
   CatalogError,
   CreateCategoryError,
   CreateWorkspaceError,
@@ -252,6 +254,10 @@ export async function handleSettingsSetRefreshOnLaunch(_event: IpcMainInvokeEven
 
 export function handleAppGetInfo(): Promise<AppInfo> {
   return getAppInfo();
+}
+
+export function handleAppGetUpdateState(): AppUpdateState {
+  return getUpdateState();
 }
 
 export function handleSettingsGetRetentionDays(): Promise<RetentionDays> {

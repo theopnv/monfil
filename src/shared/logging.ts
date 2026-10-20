@@ -6,6 +6,7 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 export interface LogEventMap {
   'app.lifecycle': { action: string };
+  'app.update': { outcome: 'ready' | 'failed' };
   'database.recovery': { outcome: 'reset' | 'failed'; incidentId?: string };
   'feed.refresh': { outcome: 'failed'; feedId?: number; errorCode?: string };
   'ipc.failure': { channel: string; incidentId: string };

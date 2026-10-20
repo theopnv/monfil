@@ -22,6 +22,7 @@ function normalizeScope(scope: RiverScope): RiverScope {
 
 export const queryKeys = {
   appInfo: ['app-info'] as const,
+  updateState: ['app-update-state'] as const,
   feeds: (workspaceId: number) => ['feeds', workspaceId] as const,
   categories: (workspaceId: number) => ['categories', workspaceId] as const,
   workspaces: ['workspaces'] as const,

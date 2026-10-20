@@ -143,6 +143,7 @@ export const invokePayloadGuards: { [C in TwoWayRendererMainChannels]: Guard<Two
   'app:back-up-database': isUndefined,
   'app:get-info': isUndefined,
   'app:get-startup-health': isUndefined,
+  'app:get-update-state': isUndefined,
   'settings:get-detailed-logging': isUndefined,
   'settings:set-detailed-logging': isBoolean,
   'opml:import': object({ target: isImportTarget }),
