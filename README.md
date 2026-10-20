@@ -8,6 +8,10 @@
 <p align="center">
   <a href="https://apps.microsoft.com/detail/9P4FZNFBR29Q?mode=direct"><img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" alt="Get Monfil from the Microsoft Store"></a>
 </p>
+<p align="center">
+  <a href="https://github.com/theopnv/monfil/releases/latest"><img src="https://img.shields.io/github/v/release/theopnv/monfil" alt="Latest release"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-BUSL--1.1-blue" alt="License: BUSL-1.1"></a>
+</p>
 <p align="center"><a href="doc/src/content/docs/user-guide/install.md">Install Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="doc/src/content/docs/contributor-guide/home.md">Contribute</a></p>
 
 Monfil is a source-available, cross-platform desktop feed reader for anyone who wants to stay ahead of the race. Keep track of what's happening in your field across 10 kinds of sources, with more to come: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, and Mastodon.
