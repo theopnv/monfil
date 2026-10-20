@@ -11,6 +11,8 @@ description: Download Monfil for macOS, Windows, or Linux.
     - Choose the RPM package for Fedora or RHEL
 3. Install it with your system's usual installer.
 
+On Windows, Monfil updates itself. When an update is ready, Monfil shows a message with a **Restart** button.
+
 ## System warnings
 
 Monfil isn't code-signed. Signing costs money every year ($100/year for an Apple Developer account to sign macOS builds, and a paid certificate for Windows) and this is a free, one-person project, so that cost isn't covered.

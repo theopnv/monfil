@@ -84,6 +84,10 @@ export function useIpcBridge(): void {
         queryClient.setQueryData(uiKeys.deleteWorkspaceRequestedId, workspaceId);
       }),
 
+      ipc.on('app:update-state-changed', (state) => {
+        queryClient.setQueryData(queryKeys.updateState, state);
+      }),
+
       ipc.on('feedpacks:install-finished', ({ workspaceId }) => {
         queryClient.setQueryData(uiKeys.feedpackRefreshing(workspaceId), false);
         void queryClient.invalidateQueries({ queryKey: ['feeds', workspaceId] });

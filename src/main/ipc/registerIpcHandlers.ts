@@ -11,6 +11,7 @@ import { logger } from '../logging/logger';
 import {
   handleAppGetInfo,
   handleAppGetStartupHealth,
+  handleAppGetUpdateState,
   handleFeedpacksInstall,
   handleFeedpacksList,
   handleFeedpacksPreview,
@@ -96,6 +97,7 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "app:back-up-database": handleAppBackUpDatabase,
   "app:get-info": handleAppGetInfo,
   "app:get-startup-health": handleAppGetStartupHealth,
+  "app:get-update-state": handleAppGetUpdateState,
   "settings:get-detailed-logging": handleSettingsGetDetailedLogging,
   "settings:set-detailed-logging": handleSettingsSetDetailedLogging,
 };

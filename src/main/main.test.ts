@@ -103,6 +103,13 @@ vi.mock(import('./feed/scheduler'), () => ({
   stopRefreshScheduler: vi.fn(),
 }));
 
+vi.mock(import('./updates/auto-updater'), () => ({
+  getUpdateState: vi.fn(() => ({ name: 'NONE' as const })),
+  installUpdate: vi.fn(),
+  startAutoUpdates: vi.fn(),
+  stopAutoUpdates: vi.fn(),
+}));
+
 describe('main', () => {
   beforeEach(() => {
     vi.resetModules();

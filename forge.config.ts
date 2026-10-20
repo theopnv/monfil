@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
+import { MakerMSIX } from '@electron-forge/maker-msix';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
@@ -42,6 +43,22 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({ setupIcon: 'assets/icons/icon.ico' }),
+    new MakerMSIX({
+      manifestVariables: {
+        // Partner Center > Product identity. The Store rejects a package whose identity differs.
+        packageIdentity: 'ThoPenavaire.Monfil',
+        publisher: 'CN=287CB84C-4E47-4EF6-8FAC-A9E1789AE2F1',
+        publisherDisplayName: 'Théo Penavaire',
+        packageDisplayName: 'Monfil',
+        appDisplayName: 'Monfil',
+        packageMinOSVersion: '10.0.17763.0',
+        packageMaxOSVersionTested: '10.0.26100.0',
+      },
+      packageAssets: 'assets/msix',
+      windowsKitVersion: '10.0.26100.0',
+      // The Store signs the package when it accepts a submission.
+      sign: false,
+    }),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({ options: { icon: 'assets/icons/icon.png' } }),
     new MakerDeb({ options: { icon: 'assets/icons/icon.png' } }),

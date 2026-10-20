@@ -5,6 +5,7 @@
 import type {
   AddFeedError,
   AppInfo,
+  AppUpdateState,
   CatalogError,
   CreateCategoryError,
   CreateWorkspaceError,
@@ -56,6 +57,7 @@ export type OneWayRendererToMainChannelPayloads = {
   'app:reveal-log-file': undefined;
   'app:reveal-database-backup': undefined;
   'app:restart': undefined;
+  'app:install-update': undefined;
   'app:set-window-theme': 'light' | 'dark';
   'log:write': { level: LogLevel; event: LogEventName; data: LogEventMap[LogEventName]; error?: string };
 };
@@ -72,6 +74,7 @@ export type OneWayMainToRendererChannelPayloads = {
   'workspaces:export-requested': number;
   'workspaces:delete-requested': number;
   'feedpacks:install-finished': { workspaceId: number; imported: number; failed: { title: string; message: string }[] };
+  'app:update-state-changed': AppUpdateState;
 };
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
@@ -108,6 +111,7 @@ export type TwoWayRendererMainChannelPayloads = {
   'app:back-up-database': Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string }>;
   'app:get-info': AppInfo;
   'app:get-startup-health': StartupHealth;
+  'app:get-update-state': AppUpdateState;
   'settings:get-detailed-logging': boolean;
   'settings:set-detailed-logging': boolean;
   'opml:import': Result<ImportSummary, ImportOpmlError>;
@@ -153,6 +157,7 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'app:back-up-database': undefined;
   'app:get-info': undefined;
   'app:get-startup-health': undefined;
+  'app:get-update-state': undefined;
   'settings:get-detailed-logging': undefined;
   'settings:set-detailed-logging': boolean;
   'opml:import': { target: ImportOpmlTarget };
