@@ -138,4 +138,8 @@ jobs:
             Write-Output "::notice::Skipped the Store submission because submission $($current.id) is in status $($current.status). The next minor release will carry this version."
             exit 0
           }
+          if ($current.status -eq 'PendingCommit' -and -not $current.fileUploadUrl) {
+            Write-Output "::error::Submission $($current.id) is a draft that was started in Partner Center. The Store CLI cannot replace it. Delete the draft in Partner Center, then rerun this job."
+            exit 1
+          }
           msstore publish $packages[0].FullName --appId $env:PRODUCT_ID
