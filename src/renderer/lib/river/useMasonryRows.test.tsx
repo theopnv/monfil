@@ -29,9 +29,9 @@ test('moves a card up into the gap under a shorter card', async () => {
 
   // Assert
   const rect = (index: number) => getByTestId(`card-${index}`).element().getBoundingClientRect();
-  await expect.poll(() => rect(2).top).toBeLessThan(rect(1).bottom);
+  await expect.poll(() => rect(2).top - rect(0).bottom).toBe(10);
   expect(rect(2).left).toBe(rect(0).left);
-  expect(rect(2).top - rect(0).bottom).toBe(10);
+  expect(rect(2).top).toBeLessThan(rect(1).bottom);
 });
 
 test('places cards that render later', async () => {
@@ -43,7 +43,7 @@ test('places cards that render later', async () => {
 
   // Assert
   const rect = (index: number) => getByTestId(`card-${index}`).element().getBoundingClientRect();
-  await expect.poll(() => rect(2).top).toBeLessThan(rect(1).bottom);
+  await expect.poll(() => rect(2).top - rect(0).bottom).toBe(10);
 });
 
 test('clears row spans when disabled', async () => {
