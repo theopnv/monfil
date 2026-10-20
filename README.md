@@ -4,7 +4,7 @@
 
 <h1 align="center">Monfil</h1>
 
-<p align="center">Keep track of what matters to you and stay ahead of the race.</p>
+<p align="center">Keep track of what matters to you and stay ahead.</p>
 <p align="center">
   <a href="https://apps.microsoft.com/detail/9P4FZNFBR29Q?mode=direct"><img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" alt="Get Monfil from the Microsoft Store"></a>
 </p>
@@ -14,7 +14,7 @@
 </p>
 <p align="center"><a href="doc/src/content/docs/user-guide/install.md">Install Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="doc/src/content/docs/contributor-guide/home.md">Contribute</a></p>
 
-Monfil is a source-available, cross-platform desktop feed reader for anyone who wants to stay ahead of the race. Keep track of what's happening in your field across 10 kinds of sources, with more to come: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, and Mastodon.
+Monfil is a source-available, cross-platform desktop feed reader for anyone who wants to stay ahead. Keep track of what's happening in your field across 10 kinds of sources, with more to come: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, and Mastodon.
 
 Stay ahead of your competitors, new trends, and new technology without spending hours browsing, all in one unified interface.
 
