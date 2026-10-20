@@ -64,7 +64,7 @@ vi.mock(import('../app-info'), () => ({ getAppInfo: vi.fn() }));
 const category: FeedCategory = { id: 3, name: 'Tech', workspace_id: 1 };
 const feed: FeedSummary = {
   id: 2, link: 'https://example.com/feed', title: 'Feed', type: 'rss', icon: undefined,
-  last_fetched_at: undefined, last_error: null, category, workspaceId: 1, showInWorkspace: 1, itemCount: 0, unreadCount: 0,
+  last_fetched_at: undefined, last_error: null, category, workspaceId: 1, showInWorkspace: 1, itemCount: 0, unreadCount: 0, otherWorkspaceCount: 0,
 };
 const workspace: WorkspaceSummary = {
   id: 1, name: 'Home', icon: 'Home01', color: 'blue', position: 0,

@@ -215,7 +215,7 @@ export async function syncFeedItemsToDatabase(executor: Kysely<Database>, feedId
 }
 
 /** The full row set a freshly added feed needs internally (e.g. to enrich its items). Never sent over IPC as-is. */
-export type AddedFeed = FeedMetadata & { items: FeedItem[]; category: FeedCategory; showInWorkspace: number; workspaceId: number };
+export type AddedFeed = FeedMetadata & { items: FeedItem[]; category: FeedCategory; showInWorkspace: number; workspaceId: number; otherWorkspaceCount: number };
 
 export async function updateFeedItemImage(itemId: number, image: string): Promise<void> {
   await dbReady;
@@ -251,12 +251,17 @@ export async function upsertArticleContent(content: NewArticleContent): Promise<
 export async function addFeedToDatabase(input: NewFeedInput, cutoff = Number.NEGATIVE_INFINITY): Promise<Result<AddedFeed, AddFeedError>> {
   await dbReady;
   try {
-    const { category, metadata, placement } = await db.transaction().execute(async (trx) => {
+    const { category, metadata, placement, otherWorkspaceCount } = await db.transaction().execute(async (trx) => {
       const category = await addFeedCategoryToDatabase(trx, input.categoryName, input.workspaceId);
       const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, input.type, input.icon);
       const placement = await addFeedPlacementToDatabase(trx, metadata.id, category.id, input.workspaceId, input.showInWorkspace);
       await syncFeedItemsInTransaction(trx, metadata.id, input.items, cutoff);
-      return { category, metadata, placement };
+      const { count: otherWorkspaceCount } = await trx.selectFrom('feedPlacement')
+        .select((eb) => eb.fn.countAll<number>().as('count'))
+        .where('feed_id', '=', metadata.id)
+        .where('workspace_id', '!=', input.workspaceId)
+        .executeTakeFirstOrThrow();
+      return { category, metadata, placement, otherWorkspaceCount };
     });
 
     const items = await queryFeedItems({ feed_id: metadata.id });
@@ -274,6 +279,7 @@ export async function addFeedToDatabase(input: NewFeedInput, cutoff = Number.NEG
         category,
         showInWorkspace: placement.showInWorkspace,
         workspaceId: placement.workspace_id,
+        otherWorkspaceCount,
       },
     };
   } catch (error) {

@@ -377,6 +377,42 @@ describe('queryFeedSummaries', () => {
     expect(homeSummaries.map((summary) => summary.title)).toEqual(['Home feed']);
     expect(otherSummaries.map((summary) => summary.title)).toEqual(['Pack feed']);
   });
+
+  test('reports zero other workspaces for a feed placed only here', async () => {
+    // Arrange
+    await seedFeed();
+
+    // Act
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(summary?.otherWorkspaceCount).toBe(0);
+  });
+
+  test('counts the other workspaces that also hold the feed', async () => {
+    // Arrange
+    const feedId = await seedFeed();
+    for (const position of [1, 2]) {
+      const workspace = await db.insertInto('workspace')
+        .values({ name: `Pack ${position}`, icon: 'Stars01', color: '#000000', position })
+        .returning(['id'])
+        .executeTakeFirstOrThrow();
+      const category = await db.insertInto('feedCategory')
+        .values({ name: 'tech', workspace_id: workspace.id })
+        .returning(['id'])
+        .executeTakeFirstOrThrow();
+      await db.insertInto('feedPlacement')
+        .values({ feed_id: feedId, category_id: category.id, workspace_id: workspace.id, showInWorkspace: 1 })
+        .execute();
+    }
+
+    // Act
+    const summaries = await queryFeedSummaries(HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(summaries).toHaveLength(1);
+    expect(summaries[0]?.otherWorkspaceCount).toBe(2);
+  });
 });
 
 describe('queryWorkspaceSummaries', () => {

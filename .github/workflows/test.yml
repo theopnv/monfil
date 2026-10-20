@@ -59,10 +59,6 @@ jobs:
     outputs:
       os: ${{ steps.compute.outputs.os }}
     steps:
-      # windows-latest ships Visual Studio 2026, which the @electron/node-gyp version bundled by
-      # our pinned Electron Forge release can't detect, so better-sqlite3 fails to build.
-      # Pin to windows-2022 until theopnv/monfil#41 is resolved.
-      #
       # A plain pull_request run only ever gets ubuntu-latest, to keep the expensive macOS/Windows
       # legs off every commit. The "full-ci" label opts a PR in: labeling triggers a pull_request
       # event, so the resulting checks are tied to the PR's own check suite and can actually satisfy
@@ -73,7 +69,7 @@ jobs:
       # on every platform it ships to.
       - id: compute
         run: |
-          full='["ubuntu-latest", "macos-latest", "windows-2022"]'
+          full='["ubuntu-latest", "macos-latest", "windows-latest"]'
           if [ "${{ inputs.full_matrix }}" = "true" ]; then
             echo "os=$full" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ contains(github.event.pull_request.labels.*.name, 'full-ci') }}" = "true" ]; then

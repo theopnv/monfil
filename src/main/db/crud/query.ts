@@ -164,6 +164,11 @@ export async function queryFeedSummaries(workspaceId: number): Promise<FeedSumma
         .as('stats'),
       (join) => join.onRef('stats.feed_id', '=', 'f.id'),
     )
+    .select((eb) => eb.selectFrom('feedPlacement as other')
+      .select((eb2) => eb2.fn.countAll<number>().as('count'))
+      .whereRef('other.feed_id', '=', 'f.id')
+      .where('other.workspace_id', '!=', workspaceId)
+      .as('otherWorkspaceCount'))
     .select([
       'f.id as id',
       'f.link as link',
@@ -195,6 +200,7 @@ export async function queryFeedSummaries(workspaceId: number): Promise<FeedSumma
     category: { id: row.categoryId, name: row.categoryName, workspace_id: row.categoryWorkspaceId },
     itemCount: row.itemCount ?? 0,
     unreadCount: row.unreadCount ?? 0,
+    otherWorkspaceCount: row.otherWorkspaceCount ?? 0,
   }));
 }
 

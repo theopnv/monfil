@@ -12,7 +12,7 @@ import type { DeleteCategoryError } from '../../../shared/contracts';
 import type { DeleteFeedError } from '../../../shared/contracts';
 import type { CreateCategoryError } from '../../../shared/contracts';
 import type { UpdateCategoryError } from '../../../shared/contracts';
-import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary } from '../../../shared/contracts';
+import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary, type WorkspaceSummary } from '../../../shared/contracts';
 import type { Result } from '../../../shared/result';
 import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../shared/channels';
 
@@ -29,6 +29,7 @@ const feedA: FeedSummary = {
   category: { id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID },
   itemCount: 1,
   unreadCount: 1,
+  otherWorkspaceCount: 0,
 };
 
 const feedB: FeedSummary = {
@@ -44,6 +45,7 @@ const feedB: FeedSummary = {
   category: { id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID },
   itemCount: 0,
   unreadCount: 0,
+  otherWorkspaceCount: 0,
 };
 
 const feedC: FeedSummary = {
@@ -59,10 +61,23 @@ const feedC: FeedSummary = {
   category: { id: 2, name: 'News', workspace_id: HOME_WORKSPACE_ID },
   itemCount: 0,
   unreadCount: 0,
+  otherWorkspaceCount: 0,
 };
 
 // The category every feed in `feeds` belongs to — mirrors what `feeds:list-categories` would
 // return for a database that never got an empty category created ahead of any feed.
+const homeWorkspace: WorkspaceSummary = {
+  id: HOME_WORKSPACE_ID,
+  name: 'Home',
+  icon: 'Home01',
+  color: '#000000',
+  position: 0,
+  source_slug: undefined,
+  source_version: undefined,
+  installed_at: undefined,
+  hasUnread: false,
+};
+
 function categoriesFrom(feeds: FeedSummary[]): FeedCategory[] {
   const seen = new Map<number, FeedCategory>();
   for (const feed of feeds) {
@@ -123,6 +138,8 @@ function stubElectron(overrides: {
         }
         return Promise.resolve(result) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       }
+      case 'workspaces:list':
+        return Promise.resolve([homeWorkspace]) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       case 'feeds:move-feeds-to-category':
         return Promise.resolve(overrides.moveFeedsToCategory ?? { success: true, data: undefined }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
       default:
@@ -375,6 +392,53 @@ describe('feed row context menu and delete', () => {
     await expect.element(getByRole('heading', { name: 'Delete feed' })).toBeInTheDocument();
     await expect.element(getByText('Feed A', { exact: true })).toBeInTheDocument();
     await expect.element(getByText('1 item', { exact: true })).toBeInTheDocument();
+  });
+
+  test('a feed placed only here warns that its items are deleted for good', async () => {
+    // Arrange
+    stubElectron({ feeds: [feedA] });
+    const { getByText, getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
+
+    // Act
+    deleteFeedRequestedHandler?.(feedA.id);
+
+    // Assert
+    await expect.element(getByRole('heading', { name: 'Delete feed' })).toBeInTheDocument();
+    await expect.element(getByText(/There is no undo\./)).toBeInTheDocument();
+    await expect.element(getByRole('button', { name: 'Delete feed' })).toBeInTheDocument();
+  });
+
+  test('a feed also placed in other workspaces offers to remove it from this one only', async () => {
+    // Arrange
+    const sharedFeed: FeedSummary = { ...feedA, otherWorkspaceCount: 2 };
+    stubElectron({ feeds: [sharedFeed] });
+    const { getByText, getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
+
+    // Act
+    deleteFeedRequestedHandler?.(sharedFeed.id);
+
+    // Assert
+    await expect.element(getByRole('heading', { name: 'Remove feed' })).toBeInTheDocument();
+    await expect.element(getByText(/stays in 2 other workspaces with its items/)).toBeInTheDocument();
+    await expect.element(getByText(/no undo/)).not.toBeInTheDocument();
+    await expect.element(getByRole('button', { name: 'Remove from Home' })).toBeInTheDocument();
+  });
+
+  test('confirming the removal from one workspace invokes feeds:delete-feed for that workspace', async () => {
+    // Arrange
+    const sharedFeed: FeedSummary = { ...feedA, otherWorkspaceCount: 1 };
+    stubElectron({ feeds: [sharedFeed] });
+    const onFeedDeleted = vi.fn();
+    const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={onFeedDeleted} />);
+    deleteFeedRequestedHandler?.(sharedFeed.id);
+
+    // Act
+    await getByRole('button', { name: 'Remove from Home' }).click();
+
+    // Assert
+    expect(invokeMock).toHaveBeenCalledWith('feeds:delete-feed', { feedId: sharedFeed.id, workspaceId: HOME_WORKSPACE_ID });
+    await expect.element(getByRole('heading', { name: 'Remove feed' })).not.toBeInTheDocument();
+    expect(onFeedDeleted).toHaveBeenCalledWith(sharedFeed);
   });
 
   test('cancel closes the dialog and invokes nothing', async () => {

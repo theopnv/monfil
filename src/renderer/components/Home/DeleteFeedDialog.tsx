@@ -7,6 +7,7 @@ import { Heading } from "react-aria-components";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useDeleteFeed } from "@/providers/feeds-provider";
+import { useActiveWorkspace } from "@/providers/workspace-provider";
 import type { DeleteFeedError } from "../../../shared/contracts";
 import type { FeedSummary } from "../../../shared/contracts";
 
@@ -20,6 +21,9 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
   const deleteFeed = useDeleteFeed();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<DeleteFeedError | null>(null);
+  const workspaceName = useActiveWorkspace()?.name ?? "this workspace";
+  const keepsItems = (feed?.otherWorkspaceCount ?? 0) > 0;
+  const confirmLabel = keepsItems ? `Remove from ${workspaceName}` : "Delete feed";
 
   async function handleConfirm() {
     if (!feed) {
@@ -52,9 +56,15 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
         <Dialog>
           <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
             <Heading slot="title" className="font-display text-lg font-semibold text-primary">
-              Delete feed
+              {keepsItems ? "Remove feed" : "Delete feed"}
             </Heading>
-            {feed && (
+            {feed && keepsItems && (
+              <p className="text-sm text-tertiary">
+                This removes <span className="font-semibold text-secondary">{feed.title}</span> from {workspaceName}. It stays in{" "}
+                {feed.otherWorkspaceCount} other {feed.otherWorkspaceCount === 1 ? "workspace" : "workspaces"} with its items.
+              </p>
+            )}
+            {feed && !keepsItems && (
               <p className="text-sm text-tertiary">
                 This removes <span className="font-semibold text-secondary">{feed.title}</span> and its{" "}
                 <span className="font-semibold text-secondary">
@@ -72,7 +82,7 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
               Cancel
             </Button>
             <Button color="primary-destructive" size="md" className="rounded-full" isLoading={isLoading} onPress={handleConfirm}>
-              Delete feed
+              {confirmLabel}
             </Button>
           </div>
         </Dialog>

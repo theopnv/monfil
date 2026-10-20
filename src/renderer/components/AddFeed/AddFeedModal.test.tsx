@@ -35,6 +35,7 @@ const insertedFeed: FeedSummary = {
   category: { id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID },
   itemCount: 1,
   unreadCount: 1,
+  otherWorkspaceCount: 0,
 };
 
 const insertedRow: RiverPage['rows'][number] = {

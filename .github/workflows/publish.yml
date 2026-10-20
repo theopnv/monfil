@@ -37,9 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # windows-latest's node-gyp can't detect the Visual Studio version on this image yet,
-        # which breaks the better-sqlite3 native rebuild. Pinned until @electron/node-gyp catches up.
-        os: [ubuntu-latest, macos-latest, windows-2022]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
