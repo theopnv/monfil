@@ -1,6 +1,6 @@
 # Complexity Worker
 
-A Cloudflare Worker that stores complexity snapshots from `scripts/complexity/` in D1.
+A Cloudflare Worker that stores complexity snapshots from `scripts/complexity/` in D1. The contributor guide page [Code complexity](../../doc/src/content/docs/contributor-guide/complexity.md) explains the whole setup, from the lint limits to the Grafana dashboard.
 
 - `POST /ingest` takes a snapshot from `npm run complexity` and replaces every row of its sha in one batch. It needs `Authorization: Bearer <INGEST_TOKEN>`.
 - `POST /query` takes `{ "sql": "SELECT …", "params": [] }`, runs one `SELECT` or `WITH` statement, and returns at most 10,000 rows with D1's `meta`. It needs `Authorization: Bearer <QUERY_TOKEN>`.

@@ -30,7 +30,7 @@ For a first pull request, choose an issue or a documentation error that you can 
 3. Open a pull request against the official repository. Describe the behavior, your change, and the checks you ran. Link an issue when there is one.
 4. Sign the [Contributor License Agreement](https://github.com/theopnv/monfil/blob/main/CLA.md) through the link from CLA Assistant.
 
-For a code change, run `npm run lint` and the affected tests. `npm test` runs all suites. For a documentation change, run `npm run lint:docs` and `npm --prefix doc run build`.
+For a code change, run `npm run lint` and the affected tests. Lint also enforces the [complexity limits](../complexity/). `npm test` runs all suites. For a documentation change, run `npm run lint:docs` and `npm --prefix doc run build`.
 
 :::tip[Debug both processes]
 In VS Code, the `Main + renderer` launch configuration attaches debuggers to both Electron processes.

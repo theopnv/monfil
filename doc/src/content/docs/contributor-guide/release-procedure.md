@@ -2,7 +2,7 @@
 title: Release procedure
 description: Build and publish a Monfil release.
 sidebar:
-  order: 11
+  order: 12
 ---
 
 Merging a PR into `main` starts delivery. The `.github/workflows/version.yml` workflow uses semantic-release to read all commits since the last version tag. Electron Forge's makers are configured in `forge.config.ts`.
