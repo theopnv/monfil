@@ -6,6 +6,7 @@ export default defineConfig({
       '**/test/e2e/**',
       '**/node_modules/**',
       '**/.claude/worktrees/**',
+      '**/infra/**', // Each Worker runs its own tests in workerd
       '**/src/renderer/**', // Exclude renderer tests (integration), covered by Browser Mode
       // Each test opens a real file-backed SQLite connection and runs a migration step; on
       // Windows CI the per-step time swings from ~1s to over 20s run to run, too wide to cover

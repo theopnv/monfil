@@ -1,0 +1,57 @@
+name: Complexity
+
+# Runs the PR's code with a read-only token. complexity-comment.yml posts the result.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'scripts/complexity/**'
+      - '.github/workflows/complexity.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: complexity-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Check out the merge base
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          merge_base="$(git merge-base "origin/$BASE_REF" HEAD)"
+          git worktree add --detach "$RUNNER_TEMP/base" "$merge_base"
+
+      - name: Measure both sides
+        run: |
+          npm run complexity -- --root "$RUNNER_TEMP/base" --out "$RUNNER_TEMP/base.json"
+          npm run complexity -- --out "$RUNNER_TEMP/head.json"
+
+      - name: Compare
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/report"
+          npm run complexity:report -- compare "$RUNNER_TEMP/base.json" "$RUNNER_TEMP/head.json" --json --out "$RUNNER_TEMP/report/diff.json"
+          echo "$PR_NUMBER" > "$RUNNER_TEMP/report/pr-number"
+          npm run --silent complexity:report -- render "$RUNNER_TEMP/report/diff.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: complexity-report
+          path: ${{ runner.temp }}/report/
+          if-no-files-found: error
+          retention-days: 2

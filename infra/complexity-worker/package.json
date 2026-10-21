@@ -1,0 +1,20 @@
+{
+  "name": "monfil-complexity-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "migrate:local": "wrangler d1 migrations apply monfil-complexity --local",
+    "migrate:remote": "wrangler d1 migrations apply monfil-complexity --remote",
+    "types": "wrangler types",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.4.6",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.151.3"
+  }
+}

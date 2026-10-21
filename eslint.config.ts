@@ -5,16 +5,17 @@ import type { Linter } from 'eslint';
 import { defineConfig } from 'eslint/config';
 import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
-import stylistic from '@stylistic/eslint-plugin'
+import stylistic from '@stylistic/eslint-plugin';
+import sonarjs from 'eslint-plugin-sonarjs';
 
 type ESLintPlugin = NonNullable<Linter.Config['plugins']>[string];
 
 export default defineConfig([
   {
-    ignores: ['dist/**', '.vite/**', 'out/**', '.claude/**', 'doc/**'],
+    ignores: ['dist/**', '.vite/**', 'out/**', '.claude/**', 'doc/**', 'infra/**'],
   },
   {
-    files: ['**/*.{js,ts,jsx,tsx}'],
+    files: ['**/*.{js,ts,jsx,tsx}', 'scripts/**/*.mts'],
     extends: [js.configs.recommended, tseslint.configs.strict],
     languageOptions: {
       parserOptions: {
@@ -26,7 +27,8 @@ export default defineConfig([
       },
     },
     plugins: {
-      '@stylistic': stylistic
+      '@stylistic': stylistic,
+      '@sonarjs': sonarjs
     },
     rules: {
       'curly': ['error', 'all'],
@@ -38,6 +40,20 @@ export default defineConfig([
       '@stylistic/indent': ['error', 2],
       'no-console': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      '@sonarjs/cognitive-complexity': ['error', 15],
+      '@sonarjs/cyclomatic-complexity': ['error', { threshold: 10 }]
+    }
+  },
+  {
+    files: ['src/renderer/components/untitled-ui/**', 'src/**/*.test.{ts,tsx}'],
+    rules: {
+      '@sonarjs/cognitive-complexity': 'off',
+      '@sonarjs/cyclomatic-complexity': 'off'
     },
   },
   {
@@ -116,5 +132,5 @@ export default defineConfig([
         patterns: [{ group: ['**/main/**', '**/preload/**', '**/renderer/**'], message: 'Shared code must stay process-neutral.' }],
       }],
     },
-  },
+  }
 ]);

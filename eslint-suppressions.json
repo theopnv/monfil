@@ -1,0 +1,166 @@
+{
+  "src/main/db/crud/insert.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/main/db/database.ts": {
+    "@sonarjs/cognitive-complexity": {
+      "count": 1
+    },
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/main/feed/extractArticle.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 2
+    }
+  },
+  "src/main/feed/refresh.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/main/feed/sources/conference.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/main/feed/sources/discovery.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/main/feed/sources/feedContent.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/main/feed/sources/github.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/main/feed/sources/youtube.ts": {
+    "@sonarjs/cognitive-complexity": {
+      "count": 2
+    },
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 2
+    }
+  },
+  "src/main/feedpacks/catalog.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/main/ipc/handlers.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/main/lib/fetch.ts": {
+    "@sonarjs/cognitive-complexity": {
+      "count": 1
+    },
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/main/opml/parse.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/components/AddFeed/FeedMatchCard.tsx": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/components/AddFeed/Step1Find.tsx": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/components/Feedpacks/FeedpackBrowser.tsx": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/components/Home/DeleteFeedDialog.tsx": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/components/Home/River.tsx": {
+    "@sonarjs/cognitive-complexity": {
+      "count": 1
+    },
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/components/Home/RiverHeader.tsx": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/components/Home/RiverSidebar.tsx": {
+    "@sonarjs/cognitive-complexity": {
+      "count": 1
+    },
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/components/Reader/ArticleBody.tsx": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/components/Reader/Reader.tsx": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 2
+    }
+  },
+  "src/renderer/components/Workspace/ImportOpmlDialog.tsx": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/lib/ipc-client.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/lib/queries.ts": {
+    "@sonarjs/cognitive-complexity": {
+      "count": 1
+    },
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/lib/reader/prepareReaderHtml.ts": {
+    "@sonarjs/cognitive-complexity": {
+      "count": 1
+    },
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/renderer/lib/river/useRiverKeyboardNav.ts": {
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  },
+  "src/shared/embeds.ts": {
+    "@sonarjs/cognitive-complexity": {
+      "count": 1
+    },
+    "@sonarjs/cyclomatic-complexity": {
+      "count": 1
+    }
+  }
+}
