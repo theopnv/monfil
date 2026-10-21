@@ -102,7 +102,7 @@ The script in `scripts/complexity/` runs the two rules with their limits at 0, w
 
 ## Store the history
 
-A Cloudflare Worker in `infra/devanalytics-worker/` stores snapshots in a D1 database. The same Worker also stores [code coverage](/contributor-guide/coverage/), under `/coverage/…` routes. It has its own `package.json`, tests, and [README](https://github.com/theopnv/monfil/tree/main/infra/devanalytics-worker) with the deploy steps. The root ESLint and Vitest configs skip the folder, and Electron Forge does not package it.
+A Cloudflare Worker in `infra/devanalytics-worker/` stores snapshots in a D1 database. The same Worker also stores [code coverage](../coverage/), under `/coverage/…` routes. It has its own `package.json`, tests, and [README](https://github.com/theopnv/monfil/tree/main/infra/devanalytics-worker) with the deploy steps. The root ESLint and Vitest configs skip the folder, and Electron Forge does not package it.
 
 | Endpoint | Token | What it does |
 | --- | --- | --- |

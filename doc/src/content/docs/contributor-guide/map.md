@@ -27,6 +27,7 @@ The [shared contracts](https://github.com/theopnv/monfil/tree/main/src/shared) d
 | [Shared](https://github.com/theopnv/monfil/tree/main/src/shared) | Data contracts, channels, results, and errors |
 | [Feedpacks](https://github.com/theopnv/monfil/tree/main/feedpacks) | Curated OPML and catalog metadata |
 | [Documentation](https://github.com/theopnv/monfil/tree/main/doc) | Astro Starlight site |
+| [Coverage scripts](https://github.com/theopnv/monfil/tree/main/scripts/coverage) | Instrumentation for the e2e build, the merge, the pull request report, and the tag backfill described in [Code coverage](../coverage/) |
 | [Complexity scripts](https://github.com/theopnv/monfil/tree/main/scripts/complexity) | Function metrics, the pull request report, and the uploads described in [Code complexity](../complexity/) |
 | [Devanalytics Worker](https://github.com/theopnv/monfil/tree/main/infra/devanalytics-worker) | Cloudflare Worker and D1 database that store the complexity and coverage metrics |
 
