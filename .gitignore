@@ -20,7 +20,7 @@ pids
 lib-cov
 
 # Coverage directory used by tools like istanbul
-coverage
+/coverage
 *.lcov
 
 # nyc test coverage
@@ -93,6 +93,7 @@ out/
 dist/
 
 # Vitest
+.vitest/
 **.vitest-attachments/*
 **/__screenshots__/*
 **/__screenshots__/*

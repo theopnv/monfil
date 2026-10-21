@@ -20,6 +20,7 @@ export default defineConfig({
       'react-dom/client'],
   },
   test: {
+    name: 'browser',
     include: [
       'src/renderer/**/*.{test,spec}.?(c|m)[jt]s?(x)',
     ],
