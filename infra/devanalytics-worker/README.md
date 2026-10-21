@@ -1,6 +1,6 @@
 # Devanalytics Worker
 
-A Cloudflare Worker that stores development metrics in D1. It started with the complexity snapshots from `scripts/complexity/`. The contributor guide page [Code complexity](../../doc/src/content/docs/contributor-guide/complexity.md) explains the whole setup, from the lint limits to the Grafana dashboard.
+A Cloudflare Worker that stores development metrics in D1: the complexity snapshots from `scripts/complexity/` and the coverage snapshots from `scripts/coverage/`. The contributor guide page [Code complexity](../../doc/src/content/docs/contributor-guide/complexity.md) explains the whole setup, from the lint limits to the Grafana dashboard.
 
 ## Complexity
 
@@ -15,6 +15,18 @@ Tables:
 To filter `complexity_functions` by folder, use `file GLOB 'src/main/*'`. D1 limits a `LIKE` or `GLOB` pattern to 50 bytes.
 
 A query route refuses SQL that names a table of another domain, or any `sqlite_` name. The old `/ingest` and `/query` routes return 404.
+
+## Coverage
+
+- `POST /coverage/ingest` takes a snapshot from `npm run coverage:merge` and replaces every row of its sha in one batch. It needs `Authorization: Bearer <INGEST_TOKEN>`.
+- `POST /coverage/query` works like `/complexity/query`, on the coverage tables. It needs `Authorization: Bearer <QUERY_TOKEN>`.
+
+Tables:
+
+- `coverage_files`: one row for each source file, suite (`vitest`, `e2e` or `merged`) and commit, with covered and total counts for lines, statements, functions and branches.
+- `coverage_folder_summary`: the same sums for each folder in the subtree of each file, with `file_count`. `src` includes `src/main`, so filter on one folder and never add up all rows.
+
+The tables store counts and never percents, so a sum of counts gives a correct percent. One ingest writes about 730 rows, and a second ingest of the same sha writes about twice that, because deletes count as writes.
 
 ## Local development
 
@@ -72,4 +84,4 @@ npx wrangler secret put INGEST_TOKEN
 npx wrangler secret put QUERY_TOKEN
 ```
 
-One ingest writes about 3,400 rows, and a second ingest of the same sha writes about twice that, because deletes count as writes. The free plan allows 100,000 rows written per day.
+One complexity ingest writes about 3,400 rows, and one coverage ingest about 730. A second ingest of the same sha writes about twice that, because deletes count as writes. The free plan allows 100,000 rows written per day.

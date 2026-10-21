@@ -1,9 +1,11 @@
 import { ingestComplexity } from './complexity/db.ts';
 import { parseSnapshot } from './complexity/snapshot.ts';
+import { ingestCoverage } from './coverage/db.ts';
+import { parseCoverageSnapshot } from './coverage/snapshot.ts';
 import { hasToken } from './shared/auth.ts';
 import { ValidationError } from './shared/expect.ts';
 import { parseQuery, QueryError, runQuery } from './shared/query.ts';
-import { COMPLEXITY_TABLES } from './shared/tables.ts';
+import { COMPLEXITY_TABLES, COVERAGE_TABLES } from './shared/tables.ts';
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
@@ -42,6 +44,8 @@ function queryRoute(allowedTables: readonly string[]): Handler {
 const ROUTES: Record<string, Handler> = {
   '/complexity/ingest': ingestRoute(parseSnapshot, ingestComplexity),
   '/complexity/query': queryRoute(COMPLEXITY_TABLES),
+  '/coverage/ingest': ingestRoute(parseCoverageSnapshot, ingestCoverage),
+  '/coverage/query': queryRoute(COVERAGE_TABLES),
 };
 
 function errorResponse(error: unknown): Response {

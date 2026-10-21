@@ -2,6 +2,7 @@ import { env } from 'cloudflare:test';
 import { exports } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { FunctionRow } from '../src/complexity/snapshot.ts';
+import type { CoverageSnapshot, FileCoverage } from '../src/coverage/snapshot.ts';
 import { CHUNK_SIZE } from '../src/shared/chunks.ts';
 import { MAX_QUERY_ROWS } from '../src/shared/query.ts';
 
@@ -33,8 +34,27 @@ async function count(table: string): Promise<number> {
   return row?.n ?? 0;
 }
 
+function coverageFiles(count: number): FileCoverage[] {
+  return Array.from({ length: count }, (_, index) => ({
+    file: `src/main/dir${index % 4}/file${index}.ts`,
+    lines: [index % 5, 5],
+    statements: [index % 6, 6],
+    functions: [index % 2, 2],
+    branches: [0, 0],
+  }));
+}
+
+function coverageSnapshot(files: FileCoverage[], sha = SHA): CoverageSnapshot {
+  return { sha, date: '2026-10-20T17:56:56+02:00', suites: { vitest: files, e2e: files.slice(0, 3), merged: files } };
+}
+
 beforeEach(async () => {
-  await env.DB.batch([env.DB.prepare('DELETE FROM complexity_functions'), env.DB.prepare('DELETE FROM complexity_folder_summary')]);
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM complexity_functions'),
+    env.DB.prepare('DELETE FROM complexity_folder_summary'),
+    env.DB.prepare('DELETE FROM coverage_files'),
+    env.DB.prepare('DELETE FROM coverage_folder_summary'),
+  ]);
 });
 
 describe('POST /complexity/ingest', () => {
@@ -212,5 +232,130 @@ describe('POST /complexity/query tables', () => {
 
     // Assert
     expect(response.status).toBe(400);
+  });
+});
+
+describe('POST /coverage/ingest', () => {
+  it('stores the files of each suite in more than one chunk, with one summary row for each folder and suite', async () => {
+    // Arrange
+    const snapshot = coverageSnapshot(coverageFiles(CHUNK_SIZE + 20));
+
+    // Act
+    const response = await post('/coverage/ingest', INGEST, snapshot);
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(await count('coverage_files')).toBe(CHUNK_SIZE + 20 + 3 + CHUNK_SIZE + 20);
+    // src, src/main and the dirN folders: 6 for vitest and merged, 5 for the three files of e2e.
+    expect(await count('coverage_folder_summary')).toBe(6 + 5 + 6);
+    const src = await env.DB.prepare("SELECT file_count, date FROM coverage_folder_summary WHERE folder = 'src' AND suite = 'e2e'").first();
+    expect(src).toEqual({ file_count: 3, date: '2026-10-20T15:56:56.000Z' });
+  });
+
+  it('replaces the rows of a sha that it already has', async () => {
+    // Arrange
+    await post('/coverage/ingest', INGEST, coverageSnapshot(coverageFiles(40)));
+
+    // Act
+    const response = await post('/coverage/ingest', INGEST, coverageSnapshot(coverageFiles(10)));
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(await count('coverage_files')).toBe(10 + 3 + 10);
+  });
+
+  it('keeps the other shas', async () => {
+    // Arrange
+    await post('/coverage/ingest', INGEST, coverageSnapshot(coverageFiles(5), 'b'.repeat(40)));
+
+    // Act
+    await post('/coverage/ingest', INGEST, coverageSnapshot(coverageFiles(5)));
+
+    // Assert
+    expect(await count('coverage_files')).toBe(2 * (5 + 3 + 5));
+  });
+
+  it('lets a table constraint fail the whole batch and keeps the old rows', async () => {
+    // Arrange
+    await post('/coverage/ingest', INGEST, coverageSnapshot(coverageFiles(5)));
+    const broken = coverageFiles(5);
+    broken[4] = { ...broken[4]!, lines: [9, 5] };
+
+    // Act
+    const response = await post('/coverage/ingest', INGEST, coverageSnapshot(broken));
+
+    // Assert
+    expect(response.status).toBe(422);
+    expect(await count('coverage_files')).toBe(5 + 3 + 5);
+  });
+
+  it.each([
+    ['no token', null],
+    ['the query token', QUERY],
+  ])('refuses %s', async (_label, token) => {
+    // Act
+    const response = await post('/coverage/ingest', token, coverageSnapshot(coverageFiles(1)));
+
+    // Assert
+    expect(response.status).toBe(401);
+    expect(await count('coverage_files')).toBe(0);
+  });
+
+  it('refuses a snapshot with a bad shape', async () => {
+    // Act
+    const response = await post('/coverage/ingest', INGEST, { sha: SHA, date: '2026-10-21', suites: {} });
+
+    // Assert
+    expect(response.status).toBe(400);
+  });
+
+  it('refuses a complexity snapshot', async () => {
+    // Act
+    const response = await post('/coverage/ingest', INGEST, { sha: SHA, date: '2026-10-20T00:00:00Z', functions: [] });
+
+    // Assert
+    expect(response.status).toBe(400);
+  });
+});
+
+describe('POST /coverage/query', () => {
+  beforeEach(async () => {
+    await post('/coverage/ingest', INGEST, coverageSnapshot(coverageFiles(20)));
+    await post('/complexity/ingest', INGEST, { sha: SHA, date: '2026-10-20T00:00:00Z', functions: functions(5) });
+  });
+
+  it('runs a SELECT on the coverage tables', async () => {
+    // Act
+    const response = await post('/coverage/query', QUERY, {
+      sql: "SELECT lines_covered, lines_total, file_count FROM coverage_folder_summary WHERE folder = ?1 AND suite = 'merged'",
+      params: ['src'],
+    });
+
+    // Assert
+    expect(response.status).toBe(200);
+    const body = await response.json<{ rows: unknown[] }>();
+    expect(body.rows).toHaveLength(1);
+    expect(body.rows[0]).toMatchObject({ lines_total: 100, file_count: 20 });
+  });
+
+  it.each([
+    ['a complexity table', 'SELECT * FROM complexity_functions'],
+    ['a quoted complexity table', 'SELECT * FROM "Complexity_Folder_Summary"'],
+    ['a CTE that has the name of a complexity table', 'WITH complexity_functions AS (SELECT 1) SELECT * FROM complexity_functions'],
+    ['the schema table', 'SELECT name FROM sqlite_master'],
+  ])('refuses %s', async (_label, sql) => {
+    // Act
+    const response = await post('/coverage/query', QUERY, { sql });
+
+    // Assert
+    expect(response.status).toBe(400);
+  });
+
+  it('refuses the ingest token', async () => {
+    // Act
+    const response = await post('/coverage/query', INGEST, { sql: 'SELECT 1' });
+
+    // Assert
+    expect(response.status).toBe(401);
   });
 });
