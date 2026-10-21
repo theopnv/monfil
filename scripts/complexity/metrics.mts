@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from '@typescript-eslint/typescript-estree';
@@ -18,6 +19,12 @@ export interface FunctionRecord {
 export interface CollectResult {
   records: FunctionRecord[];
   warnings: string[];
+}
+
+export interface Snapshot {
+  sha: string;
+  date: string;
+  functions: FunctionRecord[];
 }
 
 const COGNITIVE = '@sonarjs/cognitive-complexity';
@@ -118,4 +125,17 @@ export async function collect(root: string): Promise<CollectResult> {
   const records = perFile.flat().sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line
     || a.qualified_name.localeCompare(b.qualified_name));
   return { records, warnings };
+}
+
+function headCommit(root: string): { sha: string; date: string } {
+  const [sha = '', date = ''] = execFileSync('git', ['-C', root, 'show', '-s', '--format=%H%n%cI', 'HEAD'], { encoding: 'utf8' })
+    .trim()
+    .split('\n');
+  return { sha, date };
+}
+
+/** Measures the checkout at `root` and adds the sha and commit date of its HEAD. */
+export async function snapshot(root: string): Promise<{ snapshot: Snapshot; warnings: string[] }> {
+  const { records, warnings } = await collect(root);
+  return { snapshot: { ...headCommit(root), functions: records }, warnings };
 }

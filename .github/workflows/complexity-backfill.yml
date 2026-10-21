@@ -1,0 +1,54 @@
+name: Complexity backfill
+
+# Run by hand. Each tag writes about 2,600 rows to D1, and the free plan allows 100,000 a day.
+on:
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: Tags to measure and upload, separated by spaces. Leave empty for every v* tag.
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: complexity-backfill
+  cancel-in-progress: false
+
+env:
+  COMPLEXITY_WORKER_URL: https://monfil-complexity.tpenavaire.workers.dev
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check ingest credential
+        env:
+          COMPLEXITY_INGEST_TOKEN: ${{ secrets.COMPLEXITY_INGEST_TOKEN }}
+        run: |
+          if [ -z "$COMPLEXITY_INGEST_TOKEN" ]; then
+            echo "::error::Set the COMPLEXITY_INGEST_TOKEN secret to the Worker's INGEST_TOKEN."
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Measure and upload the tags
+        env:
+          COMPLEXITY_INGEST_TOKEN: ${{ secrets.COMPLEXITY_INGEST_TOKEN }}
+          TAGS: ${{ inputs.tags }}
+        run: |
+          read -ra tags <<< "$TAGS"
+          for tag in "${tags[@]}"; do
+            if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "::error::$tag is not a release tag such as v0.5.1."
+              exit 1
+            fi
+          done
+          npm run complexity:backfill -- "${tags[@]}"

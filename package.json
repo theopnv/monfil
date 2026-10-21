@@ -16,6 +16,8 @@
     "check:feedpacks": "node scripts/check-feedpacks.mjs",
     "complexity": "node scripts/complexity/index.mts",
     "complexity:report": "node scripts/complexity/report.mts",
+    "complexity:ingest": "node scripts/complexity/ingest.mts",
+    "complexity:backfill": "node scripts/complexity/backfill.mts",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
