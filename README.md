@@ -11,6 +11,7 @@
 <p align="center">
   <a href="https://github.com/theopnv/monfil/releases/latest"><img src="https://img.shields.io/github/v/release/theopnv/monfil" alt="Latest release"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-BUSL--1.1-blue" alt="License: BUSL-1.1"></a>
+  <a href="https://lavendercauliflower2001.grafana.net/public-dashboards/9bfc15b30c3e45be9ac40bcb3419c01b"><img src="https://img.shields.io/badge/complexity-dashboard-F46800?logo=grafana&amp;logoColor=white" alt="Code complexity dashboard"></a>
 </p>
 <p align="center"><a href="doc/src/content/docs/user-guide/install.md">Install Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="doc/src/content/docs/contributor-guide/home.md">Contribute</a></p>
 
