@@ -108,6 +108,7 @@ src/renderer/routeTree.gen.ts
 # regenerated locally by its own Claude Code setup for anyone who opts in.
 /graft/
 .claude/settings.json
+.claude/helpers/complexity-hook.mjs
 .claude/helpers/graft-hooks.cjs
 .claude/helpers/graft-statusline.cjs
 .ai/skills/graft/

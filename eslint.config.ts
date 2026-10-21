@@ -15,7 +15,7 @@ export default defineConfig([
     ignores: ['dist/**', '.vite/**', 'out/**', '.claude/**', 'doc/**'],
   },
   {
-    files: ['**/*.{js,ts,jsx,tsx}'],
+    files: ['**/*.{js,ts,jsx,tsx}', 'scripts/**/*.mts'],
     extends: [js.configs.recommended, tseslint.configs.strict],
     languageOptions: {
       parserOptions: {
