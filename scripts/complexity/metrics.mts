@@ -127,7 +127,7 @@ export async function collect(root: string): Promise<CollectResult> {
   return { records, warnings };
 }
 
-function headCommit(root: string): { sha: string; date: string } {
+export function headCommit(root: string): { sha: string; date: string } {
   const [sha = '', date = ''] = execFileSync('git', ['-C', root, 'show', '-s', '--format=%H%n%cI', 'HEAD'], { encoding: 'utf8' })
     .trim()
     .split('\n');

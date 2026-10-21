@@ -1,3 +1,6 @@
+import { expectDate, expectInteger, expectObject, expectSha, expectText, ValidationError } from '../shared/expect.ts';
+import { folderPrefixes } from '../shared/folders.ts';
+
 export const LIMITS = { cognitive: 15, cyclomatic: 10 } as const;
 export const MAX_FUNCTIONS = 50_000;
 
@@ -30,30 +33,8 @@ export interface FolderSummary {
   above_limits: number;
 }
 
-export class SnapshotError extends Error {
+export class SnapshotError extends ValidationError {
   override name = 'SnapshotError';
-}
-
-function expectObject(value: unknown, field: string): Record<string, unknown> {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    throw new SnapshotError(`${field} must be an object`);
-  }
-  return value as Record<string, unknown>;
-}
-
-function expectText(value: unknown, field: string): string {
-  if (typeof value !== 'string' || value.length === 0 || value.length > 1000) {
-    throw new SnapshotError(`${field} must be a string of 1 to 1000 characters`);
-  }
-  return value;
-}
-
-// Range checks belong to the table constraints, so a bad value fails the whole batch.
-function expectInteger(value: unknown, field: string): number {
-  if (!Number.isSafeInteger(value) || (value as number) < 0) {
-    throw new SnapshotError(`${field} must be a non-negative integer`);
-  }
-  return value as number;
 }
 
 function parseFunction(value: unknown, index: number): FunctionRow {
@@ -72,33 +53,14 @@ function parseFunction(value: unknown, index: number): FunctionRow {
   };
 }
 
-function parseDate(value: unknown): string {
-  const text = expectText(value, 'date');
-  const time = Date.parse(text);
-  if (Number.isNaN(time)) {
-    throw new SnapshotError('date must be an ISO 8601 date');
-  }
-  return new Date(time).toISOString();
-}
-
 /** Checks a snapshot written by `scripts/complexity/index.mts`. */
 export function parseSnapshot(value: unknown): Snapshot {
   const snapshot = expectObject(value, 'snapshot');
-  const sha = snapshot['sha'];
-  if (typeof sha !== 'string' || !/^[0-9a-f]{40}$/.test(sha)) {
-    throw new SnapshotError('sha must be a 40-character commit sha');
-  }
   const functions = snapshot['functions'];
   if (!Array.isArray(functions) || functions.length > MAX_FUNCTIONS) {
     throw new SnapshotError(`functions must be an array of at most ${MAX_FUNCTIONS} items`);
   }
-  return { sha, date: parseDate(snapshot['date']), functions: functions.map(parseFunction) };
-}
-
-/** Lists the folders that contain a file, from the top: `src/main/a.ts` gives `src` and `src/main`. */
-export function folderPrefixes(file: string): string[] {
-  const parts = file.split('/').slice(0, -1);
-  return parts.map((_, index) => parts.slice(0, index + 1).join('/'));
+  return { sha: expectSha(snapshot['sha']), date: expectDate(snapshot['date']), functions: functions.map(parseFunction) };
 }
 
 function emptySummary(folder: string, isTest: boolean): FolderSummary {

@@ -1,0 +1,146 @@
+name: Coverage
+
+# Runs the PR's code with a read-only token. coverage-comment.yml posts the result, and the ingest job
+# stores a run of main in D1. Only this workflow builds instrumented code: test.yml and the releases do not.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'scripts/coverage/**'
+      - 'vitest.config.mts'
+      - 'vitest.browser.config.mts'
+      - 'playwright.config.ts'
+      - '.github/workflows/coverage.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'scripts/coverage/**'
+      - 'vitest.config.mts'
+      - 'vitest.browser.config.mts'
+      - 'playwright.config.ts'
+      - '.github/workflows/coverage.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: coverage-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DEVANALYTICS_WORKER_URL: https://monfil-devanalytics.tpenavaire.workers.dev
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          electron: 'true'
+          electron-dependencies: 'true'
+          chromium: 'true'
+
+      # Vitest transforms every renderer file for the report, and routeTree.gen.ts only exists after a build.
+      - run: npx vite build --config src/renderer/vite.config.mts
+
+      - run: npm run coverage:vitest
+
+      # xvfb-run defaults to a 640x480 screen, and the maximized app window would follow it.
+      - name: Run the e2e suite on an instrumented build
+        env:
+          COVERAGE: '1'
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:e2e
+
+      - run: npm run coverage:merge
+
+      - id: vitest-report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: vitest-report
+          path: .vitest/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - if: ${{ !cancelled() && steps.vitest-report.outputs.artifact-url }}
+        env:
+          ARTIFACT_URL: ${{ steps.vitest-report.outputs.artifact-url }}
+        run: echo "::notice title=Vitest report::https://viewer.vitest.dev/?url=$ARTIFACT_URL"
+
+      - id: coverage-report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage-report
+          path: coverage/merged/
+          if-no-files-found: error
+          retention-days: 7
+
+      - if: ${{ !cancelled() && steps.coverage-report.outputs.artifact-url }}
+        env:
+          ARTIFACT_URL: ${{ steps.coverage-report.outputs.artifact-url }}
+        run: echo "::notice title=Coverage report::Download the merged HTML report from $ARTIFACT_URL"
+
+      - name: Collect the data for the next jobs
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/coverage-data"
+          cp coverage/snapshot.json "$RUNNER_TEMP/coverage-data/snapshot.json"
+          if [ -n "$PR_NUMBER" ]; then
+            echo "$PR_NUMBER" > "$RUNNER_TEMP/coverage-data/pr-number"
+          fi
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: coverage-data
+          path: ${{ runner.temp }}/coverage-data/
+          if-no-files-found: error
+          retention-days: 2
+
+  ingest:
+    if: github.event_name == 'push'
+    needs: coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check ingest credential
+        env:
+          DEVANALYTICS_INGEST_TOKEN: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
+        run: |
+          if [ -z "$DEVANALYTICS_INGEST_TOKEN" ]; then
+            echo "::error::Set the DEVANALYTICS_INGEST_TOKEN secret to the Worker's INGEST_TOKEN."
+            exit 1
+          fi
+
+      # The token never reaches the job that runs the tests. This job runs main's own scripts, which need no install.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          sparse-checkout: |
+            scripts/coverage
+            scripts/devanalytics
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: coverage-data
+          path: ${{ runner.temp }}/coverage-data
+
+      - env:
+          DEVANALYTICS_INGEST_TOKEN: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
+        run: node scripts/coverage/ingest.mts "$RUNNER_TEMP/coverage-data/snapshot.json"

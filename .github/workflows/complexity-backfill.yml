@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  COMPLEXITY_WORKER_URL: https://monfil-complexity.tpenavaire.workers.dev
+  DEVANALYTICS_WORKER_URL: https://monfil-devanalytics.tpenavaire.workers.dev
 
 jobs:
   backfill:
@@ -25,10 +25,10 @@ jobs:
     steps:
       - name: Check ingest credential
         env:
-          COMPLEXITY_INGEST_TOKEN: ${{ secrets.COMPLEXITY_INGEST_TOKEN }}
+          DEVANALYTICS_INGEST_TOKEN: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
         run: |
-          if [ -z "$COMPLEXITY_INGEST_TOKEN" ]; then
-            echo "::error::Set the COMPLEXITY_INGEST_TOKEN secret to the Worker's INGEST_TOKEN."
+          if [ -z "$DEVANALYTICS_INGEST_TOKEN" ]; then
+            echo "::error::Set the DEVANALYTICS_INGEST_TOKEN secret to the Worker's INGEST_TOKEN."
             exit 1
           fi
 
@@ -41,7 +41,7 @@ jobs:
 
       - name: Measure and upload the tags
         env:
-          COMPLEXITY_INGEST_TOKEN: ${{ secrets.COMPLEXITY_INGEST_TOKEN }}
+          DEVANALYTICS_INGEST_TOKEN: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
           TAGS: ${{ inputs.tags }}
         run: |
           read -ra tags <<< "$TAGS"

@@ -2,6 +2,7 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
+import { coveragePlugins } from '../../scripts/coverage/vite-plugins.mts';
 
 // Delivered as a <meta> tag: the packaged app loads index.html from file://, where there are no response headers.
 // Styles allow 'unsafe-inline' because Tailwind and React Aria set inline style attributes; fonts come from
@@ -56,6 +57,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     contentSecurityPolicy(),
+    ...coveragePlugins('renderer'),
   ],
   resolve: {
     alias: {

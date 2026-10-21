@@ -1,0 +1,141 @@
+name: Coverage comment
+
+# Runs from the default branch with a write token. It must never check out or run code from the PR:
+# the artifact comes from coverage.yml, which ran the PR's code, so all of it is untrusted input.
+on:
+  workflow_run:
+    workflows: [Coverage]
+    types: [completed]
+
+permissions: {}
+
+env:
+  DEVANALYTICS_WORKER_URL: https://monfil-devanalytics.tpenavaire.workers.dev
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      # Downloading an artifact from another run needs actions: read.
+      actions: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          sparse-checkout: |
+            scripts/coverage
+            scripts/complexity
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: coverage-data
+          path: ${{ runner.temp }}/data
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Check the PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          pr_number="$(head -c 16 "$RUNNER_TEMP/data/pr-number" | tr -d '[:space:]')"
+          if ! [[ "$pr_number" =~ ^[1-9][0-9]{0,9}$ ]]; then
+            echo "::error::The artifact has no valid PR number."
+            exit 1
+          fi
+          # workflow_run.pull_requests is empty for fork PRs, so ask the API which commit the PR is at.
+          pr_head_sha="$(gh api "repos/$REPO/pulls/$pr_number" --jq .head.sha)"
+          if [ "$pr_head_sha" != "$RUN_HEAD_SHA" ]; then
+            echo "::error::PR #$pr_number is at $pr_head_sha, but the run measured $RUN_HEAD_SHA."
+            exit 1
+          fi
+          snapshot_sha="$(jq -r .sha "$RUNNER_TEMP/data/snapshot.json")"
+          if [ "$snapshot_sha" != "$RUN_HEAD_SHA" ]; then
+            echo "::error::The snapshot is for $snapshot_sha, but the run measured $RUN_HEAD_SHA."
+            exit 1
+          fi
+          echo "number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "base=$(gh api "repos/$REPO/pulls/$pr_number" --jq .base.ref)" >> "$GITHUB_OUTPUT"
+
+      - name: Find the merge base
+        id: base
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BASE_REF: ${{ steps.pr.outputs.base }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          merge_base="$(gh api "repos/$REPO/compare/$BASE_REF...$RUN_HEAD_SHA" --jq .merge_base_commit.sha)"
+          merge_base_date="$(gh api "repos/$REPO/commits/$merge_base" --jq .commit.committer.date)"
+          echo "sha=$merge_base" >> "$GITHUB_OUTPUT"
+          echo "date=$merge_base_date" >> "$GITHUB_OUTPUT"
+
+      - name: Read the stored coverage of the base
+        env:
+          QUERY_TOKEN: ${{ secrets.DEVANALYTICS_QUERY_TOKEN }}
+          MERGE_BASE: ${{ steps.base.outputs.sha }}
+          MERGE_BASE_DATE: ${{ steps.base.outputs.date }}
+        run: |
+          echo '{"rows":[]}' > "$RUNNER_TEMP/base-rows.json"
+          if [ -z "$QUERY_TOKEN" ]; then
+            echo "::warning::Set the DEVANALYTICS_QUERY_TOKEN secret to compare with the base."
+            exit 0
+          fi
+          query() {
+            curl --silent --show-error --fail-with-body --max-time 60 -X POST "$DEVANALYTICS_WORKER_URL/coverage/query" \
+              -H "Authorization: Bearer $QUERY_TOKEN" -H 'Content-Type: application/json' --data "$1"
+          }
+          rows_for() {
+            query "$(jq -nc --arg sha "$1" '{sql: "SELECT sha, date, suite, file, lines_covered, lines_total, statements_covered, statements_total, functions_covered, functions_total, branches_covered, branches_total FROM coverage_files WHERE sha = ?1", params: [$sha]}')"
+          }
+          if ! rows_for "$MERGE_BASE" > "$RUNNER_TEMP/exact.json"; then
+            echo "::warning::The coverage query failed. The comment shows no comparison."
+            exit 0
+          fi
+          if [ "$(jq '.rows | length' "$RUNNER_TEMP/exact.json")" -gt 0 ]; then
+            mv "$RUNNER_TEMP/exact.json" "$RUNNER_TEMP/base-rows.json"
+            exit 0
+          fi
+          # The merge base has no row, so use the latest run on main before it.
+          earlier="$(query "$(jq -nc --arg date "$MERGE_BASE_DATE" '{sql: "SELECT sha FROM coverage_folder_summary WHERE folder = \u0027src\u0027 AND suite = \u0027merged\u0027 AND date < ?1 ORDER BY date DESC LIMIT 1", params: [$date]}')" | jq -r '.rows[0].sha // empty')" || earlier=''
+          if [[ "$earlier" =~ ^[0-9a-f]{40}$ ]]; then
+            rows_for "$earlier" > "$RUNNER_TEMP/base-rows.json" || echo '{"rows":[]}' > "$RUNNER_TEMP/base-rows.json"
+          fi
+
+      - name: Get the changed files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[].filename' > "$RUNNER_TEMP/changed.txt"
+
+      - name: Render the comment
+        env:
+          MERGE_BASE: ${{ steps.base.outputs.sha }}
+        run: |
+          node scripts/coverage/report.mts compare "$RUNNER_TEMP/base-rows.json" "$RUNNER_TEMP/data/snapshot.json" \
+            --merge-base "$MERGE_BASE" --changed "$RUNNER_TEMP/changed.txt" --out "$RUNNER_TEMP/comment.md"
+
+      - name: Post or update the comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          marker='<!-- coverage-report -->'
+          comment_id="$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id" | head -n 1)"
+          if [ -n "$comment_id" ]; then
+            gh api --method PATCH "repos/$REPO/issues/comments/$comment_id" -F "body=@$RUNNER_TEMP/comment.md" > /dev/null
+          else
+            gh api --method POST "repos/$REPO/issues/$PR_NUMBER/comments" -F "body=@$RUNNER_TEMP/comment.md" > /dev/null
+          fi
