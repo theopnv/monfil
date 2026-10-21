@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { feedVisibility, folderVisibility, nextVisibility, visibleFeedIds } from './feed-visibility';
+import { feedVisibility, folderVisibility, toggleFocus, toggleFolderFocus, toggleFolderHidden, toggleHidden, visibleFeedIds } from './feed-visibility';
 import { HOME_WORKSPACE_ID, type FeedSummary } from '../../../shared/contracts';
 
 function createFeed(overrides: Partial<FeedSummary> = {}): FeedSummary {
@@ -59,21 +59,66 @@ describe('feedVisibility', () => {
   });
 });
 
-describe('nextVisibility', () => {
-  test('home rotates to only', () => {
-    expect(nextVisibility('home')).toBe('only');
+describe('toggleFocus', () => {
+  test('a home feed is focused', () => {
+    expect(toggleFocus('home')).toBe('only');
   });
 
-  test('only rotates to hidden', () => {
-    expect(nextVisibility('only')).toBe('hidden');
+  test('a focused feed returns to home', () => {
+    expect(toggleFocus('only')).toBe('home');
   });
 
-  test('hidden rotates to home', () => {
-    expect(nextVisibility('hidden')).toBe('home');
+  test('a hidden feed is focused', () => {
+    expect(toggleFocus('hidden')).toBe('only');
   });
 
-  test('mixed resets to home', () => {
-    expect(nextVisibility('mixed')).toBe('home');
+  test('a mixed folder is focused', () => {
+    expect(toggleFocus('mixed')).toBe('only');
+  });
+});
+
+describe('toggleHidden', () => {
+  test('a home feed is hidden', () => {
+    expect(toggleHidden('home')).toBe('hidden');
+  });
+
+  test('a focused feed is hidden', () => {
+    expect(toggleHidden('only')).toBe('hidden');
+  });
+
+  test('a hidden feed returns to home', () => {
+    expect(toggleHidden('hidden')).toBe('home');
+  });
+
+  test('a mixed folder is hidden', () => {
+    expect(toggleHidden('mixed')).toBe('hidden');
+  });
+});
+
+describe('folder toggles', () => {
+  const feeds = [createFeed(), createFeed({ id: 2, link: 'https://b.example/feed' })];
+  const links = (...values: string[]) => new Set(values);
+
+  test('focus sets every feed when none is focused', () => {
+    expect(toggleFolderFocus(feeds, links())).toBe('only');
+  });
+
+  test('focus sets every feed when only some are focused', () => {
+    expect(toggleFolderFocus(feeds, links('https://example.com/feed'))).toBe('only');
+  });
+
+  test('focus clears when every feed is focused', () => {
+    expect(toggleFolderFocus(feeds, links('https://example.com/feed', 'https://b.example/feed'))).toBe('home');
+  });
+
+  test('hide sets every feed when only some are hidden', () => {
+    const partlyHidden = [createFeed({ showInWorkspace: 0 }), createFeed({ id: 2, link: 'https://b.example/feed' })];
+    expect(toggleFolderHidden(partlyHidden, links())).toBe('hidden');
+  });
+
+  test('hide clears when every feed is hidden', () => {
+    const allHidden = feeds.map((feed) => ({ ...feed, showInWorkspace: 0 }));
+    expect(toggleFolderHidden(allHidden, links())).toBe('home');
   });
 });
 

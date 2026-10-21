@@ -3,19 +3,20 @@
 // See LICENSE in the repository root for full terms.
 
 import WorkspaceNavigation from "@/components/Workspace/WorkspaceNavigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ipc } from '@/lib/ipc-client';
-import { ChevronRight, DotsGrid, FolderPlus, LayersTwo01, Plus } from "@untitledui/icons";
+import { ChevronRight, FolderPlus, LayersTwo01, Plus } from "@untitledui/icons";
 import { Button as DragHandleButton, GridList, GridListItem, useDragAndDrop } from "react-aria-components";
 import AddFeedModal from "@/components/AddFeed/AddFeedModal";
 import DeleteCategoryDialog from "@/components/Home/DeleteCategoryDialog";
 import DeleteFeedDialog from "@/components/Home/DeleteFeedDialog";
-import FeedAvatar from "@/components/Home/FeedAvatar";
 import FeedpackInstallDialog from '@/components/Feedpacks/FeedpackInstallDialog';
+import Hint from "@/components/common/Hint";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { categoryErrorMessage } from "@/lib/river/category-errors";
-import { feedVisibility, folderVisibility, nextVisibility, VISIBILITY_ICON, VISIBILITY_LABEL, VISIBILITY_STATE_LABEL, type FeedVisibility } from "@/lib/river/feed-visibility";
+import { COUNT_CLASSES, EYE_SLOT_MARGIN_CLASSES, FeedRow, FolderVisibilityControls } from "@/components/Home/SidebarRows";
+import { folderVisibility, type FeedVisibility } from "@/lib/river/feed-visibility";
 import {
   useClearDeleteCategoryRequest,
   useClearDeleteFeedRequest,
@@ -24,9 +25,9 @@ import {
   useDeleteFeedRequestedId,
   useRenameCategoryRequestedId,
 } from "@/lib/ipc-bridge";
-import { resolveFeedIcon } from "@/lib/favicon";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import { useCreateCategory, useMoveFeeds, useRenameCategory } from "@/providers/feeds-provider";
+import { useHint } from "@/providers/hints-provider";
 import { useActiveWorkspaceId } from '@/providers/workspace-provider';
 import type { FeedCategory, FeedSummary } from "../../../shared/contracts";
 
@@ -52,8 +53,6 @@ const OPEN_FOLDERS_STORAGE_KEY = 'sidebar-open-folders';
 const FEED_DRAG_TYPE = 'application/x-monfil-feed';
 const FOLDER_KEY_PREFIX = 'folder:';
 const FEED_KEY_PREFIX = 'feed:';
-// Folder and feed counts share a right edge, so a column of them reads as one vertical line.
-const COUNT_CLASSES = 'w-6 flex-none text-right text-xs text-tertiary tabular-nums';
 
 function loadOpenFolderIds(): Set<number> {
   const parsed = readLocalStorageJSON(OPEN_FOLDERS_STORAGE_KEY);
@@ -143,6 +142,12 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
   const clearRenameCategoryRequest = useClearRenameCategoryRequest();
   const deleteCategoryRequestedId = useDeleteCategoryRequestedId();
   const clearDeleteCategoryRequest = useClearDeleteCategoryRequest();
+
+  const addFeedAnchorRef = useRef<HTMLDivElement>(null);
+  const feedListRef = useRef<HTMLDivElement>(null);
+  const hasFeeds = feeds.length > 0;
+  const addFeedHint = useHint('add-feed', { ready: true });
+  const filterHint = useHint('filter', { ready: hasFeeds });
 
   const createCategory = useCreateCategory();
   const renameCategory = useRenameCategory();
@@ -293,12 +298,17 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
 
   return (
     <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-r border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
-      <WorkspaceNavigation saved={savedView} />
+      <WorkspaceNavigation saved={savedView} hasFeeds={hasFeeds} />
       <div className="flex items-center justify-between px-4.5 pb-2">
         <span className="text-xs font-bold tracking-wide text-tertiary uppercase">Feeds</span>
         <div className="flex items-center gap-1">
           <Button aria-label="New folder" size="xs" color="tertiary" iconLeading={FolderPlus} onPress={startCreatingFolder} />
-          <Button aria-label="Add feed" size="xs" color="tertiary" iconLeading={Plus} onPress={() => setIsAddFeedOpen(true)} />
+          <div ref={addFeedAnchorRef} className="flex">
+            <Button aria-label="Add feed" size="xs" color="tertiary" iconLeading={Plus} onPress={() => setIsAddFeedOpen(true)} />
+          </div>
+          <Hint triggerRef={addFeedAnchorRef} isOpen={addFeedHint.isOpen} onDismiss={addFeedHint.dismiss} placement="bottom end">
+            Add a feed here. To delete a feed, right-click it.
+          </Hint>
           <Button aria-label="Add feedpack" size="xs" color="tertiary" iconLeading={LayersTwo01} onPress={() => setIsFeedpackBrowserOpen(true)} />
         </div>
       </div>
@@ -348,6 +358,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
         onDeleted={() => setCategoryPendingDelete(null)}
       />
       <GridList
+        ref={feedListRef}
         aria-label="Feeds"
         items={items}
         selectionMode="none"
@@ -365,8 +376,6 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
           if (item.type === 'folder') {
             const { folder } = item;
             const folderState = folderVisibility(folder.feeds, showOnlyLinks);
-            const folderNext = nextVisibility(folderState);
-            const FolderNextIcon = VISIBILITY_ICON[folderNext];
             const isEditing = editingCategoryId === folder.id;
             const isDropTarget = dropCategoryTarget === folder.id;
 
@@ -421,19 +430,12 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                     </button>
                   )}
                   {!isEditing && (
-                    <button
-                      type="button"
-                      aria-label={`${VISIBILITY_LABEL[folderNext]}: ${folder.name}`}
-                      onClick={() => onSetVisibility(folder.feeds, folderNext)}
-                      className="flex-none opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-                    >
-                      <FolderNextIcon aria-hidden className="size-3.5 text-quaternary" />
-                    </button>
+                    <FolderVisibilityControls folderName={folder.name} feeds={folder.feeds} showOnlyLinks={showOnlyLinks} onSetVisibility={onSetVisibility} />
                   )}
                   {isEditing && renameError ? (
                     <span className="text-xs text-error-primary">{renameError}</span>
                   ) : (
-                    <span data-testid="folder-count" className={cx(COUNT_CLASSES, "font-bold")}>{folder.count > 0 ? folder.count : ''}</span>
+                    <span data-testid="folder-count" className={cx(COUNT_CLASSES, EYE_SLOT_MARGIN_CLASSES, "font-bold")}>{folder.count > 0 ? folder.count : ''}</span>
                   )}
                 </div>
               </GridListItem>
@@ -441,48 +443,17 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
           }
 
           const { feed } = item;
-          const state = feedVisibility(feed, showOnlyLinks);
-          const next = nextVisibility(state);
-          const NextIcon = VISIBILITY_ICON[next];
 
           return (
             <GridListItem key={item.key} id={item.key} textValue={feed.title} className="min-w-0 outline-none">
-              <div className={cx("group/row flex min-w-0 items-center rounded-xl pl-2", dropCategoryTarget === feed.category.id && "bg-primary_hover")}>
-                <DragHandleButton
-                  slot="drag"
-                  aria-label="Drag to a folder"
-                  className="flex-none cursor-grab px-0.5 text-quaternary opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
-                >
-                  <DotsGrid aria-hidden className="size-3.5" />
-                </DragHandleButton>
-                <button
-                  type="button"
-                  title={`${feed.title} — ${VISIBILITY_STATE_LABEL[state]}`}
-                  aria-label={`${feed.title}, ${VISIBILITY_STATE_LABEL[state]}${feed.unreadCount > 0 ? `, ${feed.unreadCount} unread` : ''}`}
-                  data-visibility={state}
-                  onClick={() => onSetVisibility([feed], next)}
-                  onContextMenu={(event) => {
-                    event.preventDefault();
-                    ipc.send('feeds:show-feed-context-menu', feed.id);
-                  }}
-                  className={cx(
-                    "group flex min-w-0 flex-1 items-center gap-2.25 rounded-xl px-2.25 py-1.5 text-left text-sm hover:bg-primary_hover",
-                    state === "only" && "bg-primary_hover font-semibold text-primary",
-                    state === "hidden" && "text-quaternary opacity-60",
-                    state === "home" && "text-secondary",
-                  )}
-                >
-                  <FeedAvatar title={feed.title} faviconUrl={resolveFeedIcon(feed.icon, feed.link)} size="sm" />
-                  <span className="min-w-0 flex-1 truncate">{feed.title}</span>
-                  {feed.last_error && <span role="img" aria-label={`${feed.title} refresh failed`} title="The last refresh failed" className="text-warning-primary">!</span>}
-                  <NextIcon aria-hidden className="size-3.5 flex-none text-quaternary opacity-0 group-hover:opacity-100" />
-                  <span data-testid="feed-count" className={COUNT_CLASSES}>{feed.unreadCount > 0 ? feed.unreadCount : ''}</span>
-                </button>
-              </div>
+              <FeedRow feed={feed} showOnlyLinks={showOnlyLinks} isDropTarget={dropCategoryTarget === feed.category.id} onSetVisibility={onSetVisibility} />
             </GridListItem>
           );
         }}
       </GridList>
+      <Hint triggerRef={feedListRef} isOpen={filterHint.isOpen} onDismiss={filterHint.dismiss} placement="right top">
+        Click a feed to show only its articles. Click the eye to hide a feed.
+      </Hint>
     </div>
   );
 }

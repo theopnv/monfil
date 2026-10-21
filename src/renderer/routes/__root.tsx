@@ -9,6 +9,7 @@ import { RouteProvider } from '@/providers/route-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { PreferencesProvider } from '@/providers/preferences-provider';
 import { SearchProvider } from '@/providers/search-provider';
+import { HintsProvider } from '@/providers/hints-provider';
 import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
@@ -46,7 +47,9 @@ function RootComponent() {
               <ActiveWorkspaceIdProvider>
                 <QueryClientProvider client={queryClient}>
                   <StartupGate>
-                    <IpcBridgedAppShell />
+                    <HintsProvider>
+                      <IpcBridgedAppShell />
+                    </HintsProvider>
                   </StartupGate>
                   <NotificationHost />
                 </QueryClientProvider>

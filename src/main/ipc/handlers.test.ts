@@ -7,7 +7,7 @@ import { db, initializeDatabase } from '../db/database';
 import { addFeedToDatabase, upsertArticleContent } from '../db/crud/insert';
 import { fetchText } from '../lib/fetch';
 import { extractArticleInUtilityProcess } from '../feed/extractArticleUtility';
-import { handleItemsGetContent } from './handlers';
+import { handleAppHintsEnabled, handleItemsGetContent } from './handlers';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
 import type { IpcMainInvokeEvent } from 'electron';
 import { HOME_WORKSPACE_ID, type SourceType } from '../../shared/contracts';
@@ -164,5 +164,35 @@ describe('handleItemsGetContent', () => {
     // Assert
     expect(result).toEqual({ description: 'Video description', article: undefined });
     expect(mockedFetchText).not.toHaveBeenCalled();
+  });
+});
+
+describe('handleAppHintsEnabled', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test('is on by default', () => {
+    // Arrange
+    vi.stubEnv('MONFIL_HINTS', undefined);
+
+    // Act & Assert
+    expect(handleAppHintsEnabled()).toBe(true);
+  });
+
+  test('is on when MONFIL_HINTS is on', () => {
+    // Arrange
+    vi.stubEnv('MONFIL_HINTS', 'on');
+
+    // Act & Assert
+    expect(handleAppHintsEnabled()).toBe(true);
+  });
+
+  test('is off when MONFIL_HINTS is off', () => {
+    // Arrange
+    vi.stubEnv('MONFIL_HINTS', 'off');
+
+    // Act & Assert
+    expect(handleAppHintsEnabled()).toBe(false);
   });
 });

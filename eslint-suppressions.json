@@ -107,9 +107,6 @@
     }
   },
   "src/renderer/components/Home/RiverSidebar.tsx": {
-    "@sonarjs/cognitive-complexity": {
-      "count": 1
-    },
     "@sonarjs/cyclomatic-complexity": {
       "count": 1
     }

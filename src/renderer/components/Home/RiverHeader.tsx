@@ -5,12 +5,14 @@
 import { useEffect, useRef } from "react";
 import { Eye, RefreshCw01, SearchLg, XClose } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
+import RiverFilterStrip from "@/components/Home/RiverFilterStrip";
 import { Input } from "@/components/untitled-ui/base/input/input";
 import { announce } from "@/lib/announcer";
 import { useApplyPendingRefresh, useHasPendingRefresh } from "@/lib/ipc-bridge";
 import { useFeedsRefresh } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import { useActiveWorkspace } from "@/providers/workspace-provider";
+import type { FeedSummary } from "../../../shared/contracts";
 
 const REFRESH_FAILED_MESSAGE = "Couldn't refresh feeds. Check your connection and try again.";
 
@@ -41,9 +43,14 @@ export interface RiverHeaderProps {
   /** Called after the Refresh pill loads the new items into the river. */
   onPendingApplied?: () => void;
   savedView?: boolean;
+  /** The active workspace's feeds, for the strip that explains an active filter. */
+  feeds: FeedSummary[];
+  showOnlyLinks: ReadonlySet<string>;
+  onClearFocus: () => void;
+  onShowHidden: (feedIds: number[]) => void;
 }
 
-export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, visibleFeedIds, onPendingApplied, savedView = false }: RiverHeaderProps) {
+export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, visibleFeedIds, onPendingApplied, savedView = false, feeds, showOnlyLinks, onClearFocus, onShowHidden }: RiverHeaderProps) {
   const { refreshNow, isRefreshing, refreshFailed } = useFeedsRefresh();
   const { preferences, setPreference } = usePreferences();
   const activeWorkspace = useActiveWorkspace();
@@ -146,6 +153,8 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, vis
             </div>
           )}
         </div>
+
+        {!savedView && <RiverFilterStrip feeds={feeds} showOnlyLinks={showOnlyLinks} onClearFocus={onClearFocus} onShowHidden={onShowHidden} />}
 
         {!savedView && hasFeeds && refreshFailed && <p className="text-right text-sm text-error-primary">{REFRESH_FAILED_MESSAGE}</p>}
       </div>

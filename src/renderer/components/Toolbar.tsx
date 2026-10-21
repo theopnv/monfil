@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ipc } from '@/lib/ipc-client';
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Link } from "react-aria-components";
 import { Plus, Sliders01 } from "@untitledui/icons";
 import { Button } from "./untitled-ui/base/buttons/button";
 import { cx } from "./untitled-ui/utils/cx";
+import Hint from "@/components/common/Hint";
 import MonfilLogo from "@/components/common/MonfilLogo";
 import DeleteWorkspaceDialog from "@/components/Workspace/DeleteWorkspaceDialog";
 import WorkspaceDialog from "@/components/Workspace/WorkspaceDialog";
@@ -22,6 +23,7 @@ import {
   useExportWorkspaceRequestedId,
 } from "@/lib/ipc-bridge";
 import { workspaceIconComponent } from "@/lib/workspace-icons";
+import { useHint } from "@/providers/hints-provider";
 import { useExportOpml } from "@/providers/opml-provider";
 import { useActiveWorkspaceId, useWorkspaces } from "@/providers/workspace-provider";
 import { HOME_WORKSPACE_ID, type WorkspaceSummary } from "../../shared/contracts";
@@ -67,6 +69,8 @@ export default function Toolbar() {
   const deleteWorkspaceRequestedId = useDeleteWorkspaceRequestedId();
   const clearDeleteWorkspaceRequest = useClearDeleteWorkspaceRequest();
   const exportOpml = useExportOpml();
+  const newWorkspaceAnchorRef = useRef<HTMLDivElement>(null);
+  const workspaceHint = useHint('workspace', { ready: true });
 
   useEffect(() => {
     if (editWorkspaceRequestedId === null) {
@@ -123,9 +127,14 @@ export default function Toolbar() {
         ))}
       </div>
 
-      <Button aria-label="New workspace" size="md" color="tertiary" className="rounded-xl" iconLeading={<Plus />} onPress={() => {
-        setIsCreateOpen(true);
-      }} />
+      <div ref={newWorkspaceAnchorRef} className="flex">
+        <Button aria-label="New workspace" size="md" color="tertiary" className="rounded-xl" iconLeading={<Plus />} onPress={() => {
+          setIsCreateOpen(true);
+        }} />
+      </div>
+      <Hint triggerRef={newWorkspaceAnchorRef} isOpen={workspaceHint.isOpen} onDismiss={workspaceHint.dismiss} placement="right">
+        Create a workspace to group feeds. Right-click a workspace to edit or delete it.
+      </Hint>
 
       <div className="mt-auto" />
 

@@ -22,6 +22,14 @@ If Monfil finds the wrong source, go back and try a more direct feed or channel 
 
 Select the folder icon beside **+** in the feed sidebar to make a folder. Type its name and press **Enter**. Drag a feed onto a folder to move it. To rename or delete a folder, right-click it. If the folder has feeds, Monfil asks where to move them before it deletes the folder. Right-click a feed to remove it.
 
+## Focus on or hide feeds
+
+Click a feed in the sidebar to show only its articles. Click another feed to add it to the focus. Click a focused feed again to remove it. A folder has the same two controls: select the focus button beside its name to focus every feed in it.
+
+To hide a feed, select the eye beside it. The eye appears when you point at the row, and it stays in view for a hidden feed. Select it again to show the feed. A hidden feed stays hidden after you restart Monfil.
+
+A strip appears under the title when a filter is on. **Showing 2 of 5 feeds** means a focus is active, and **Show all** clears it. **3 hidden feeds** means some feeds are hidden, and **Show** brings them back. Each workspace keeps its own focus. Monfil clears the focus when you restart it.
+
 ## Workspaces
 
 A workspace groups feeds and folders around a subject, such as work or hobbies. Each workspace has its own feed list and article list. Monfil opens in **Home**. Select a workspace icon in the narrow left rail to switch to it.

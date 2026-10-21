@@ -203,92 +203,148 @@ test('clicking "Add feed" opens the add-feed modal', async () => {
   await expect.element(getByRole('heading', { name: 'Add a feed' })).toBeInTheDocument();
 });
 
-describe('feed row visibility rotation', () => {
-  test('clicking a home feed row asks to show it only', async () => {
+const hiddenFeedA: FeedSummary = { ...feedA, showInWorkspace: 0 };
+
+async function renderOpenSidebar(feeds: FeedSummary[], showOnlyLinks: ReadonlySet<string>, onSetVisibility = vi.fn()) {
+  const view = await renderWithQueryClient(
+    <RiverSidebar feeds={feeds} categories={categoriesFrom(feeds)} showOnlyLinks={showOnlyLinks} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
+  );
+  await view.getByRole('button', { name: 'Tech', exact: true }).click();
+  return view;
+}
+
+describe('feed row focus and hide controls', () => {
+  test('clicking a home feed row focuses it', async () => {
     // Arrange
     const onSetVisibility = vi.fn();
-    const { getByRole } = await renderWithQueryClient(
-      <RiverSidebar feeds={[feedA]} categories={categoriesFrom([feedA])} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
-    );
-    await getByRole('button', { name: 'Tech', exact: true }).click();
+    const { getByRole } = await renderOpenSidebar([feedA], new Set(), onSetVisibility);
 
     // Act
-    await getByRole('button', { name: /Feed A/ }).click();
+    await getByRole('button', { name: /^Feed A/ }).click();
 
     // Assert
     expect(onSetVisibility).toHaveBeenCalledWith([feedA], 'only');
   });
 
-  test('clicking an only feed row asks to hide it', async () => {
+  test('clicking a focused feed row unfocuses it', async () => {
     // Arrange
     const onSetVisibility = vi.fn();
-    const { getByRole } = await renderWithQueryClient(
-      <RiverSidebar feeds={[feedA]} categories={categoriesFrom([feedA])} showOnlyLinks={new Set([feedA.link])} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
-    );
-    await getByRole('button', { name: 'Tech', exact: true }).click();
+    const { getByRole } = await renderOpenSidebar([feedA], new Set([feedA.link]), onSetVisibility);
 
     // Act
-    await getByRole('button', { name: /Feed A/ }).click();
+    await getByRole('button', { name: /^Feed A/ }).click();
+
+    // Assert
+    expect(onSetVisibility).toHaveBeenCalledWith([feedA], 'home');
+  });
+
+  test('clicking a hidden feed row focuses it', async () => {
+    // Arrange
+    const onSetVisibility = vi.fn();
+    const { getByRole } = await renderOpenSidebar([hiddenFeedA], new Set(), onSetVisibility);
+
+    // Act
+    await getByRole('button', { name: /^Feed A/ }).click();
+
+    // Assert
+    expect(onSetVisibility).toHaveBeenCalledWith([hiddenFeedA], 'only');
+  });
+
+  test('clicking a row never hides a feed', async () => {
+    // Arrange
+    const onSetVisibility = vi.fn();
+    const { getByRole } = await renderOpenSidebar([feedA], new Set(), onSetVisibility);
+
+    // Act
+    await getByRole('button', { name: /^Feed A/ }).click();
+    await getByRole('button', { name: /^Feed A/ }).click();
+
+    // Assert
+    expect(onSetVisibility).not.toHaveBeenCalledWith(expect.anything(), 'hidden');
+  });
+
+  test('clicking the eye hides a shown feed', async () => {
+    // Arrange
+    const onSetVisibility = vi.fn();
+    const { getByRole } = await renderOpenSidebar([feedA], new Set(), onSetVisibility);
+
+    // Act
+    await getByRole('button', { name: 'Hide Feed A' }).click();
 
     // Assert
     expect(onSetVisibility).toHaveBeenCalledWith([feedA], 'hidden');
   });
 
-  test('clicking a hidden feed row asks to show it with the others', async () => {
+  test('clicking the eye on a focused feed hides it', async () => {
     // Arrange
-    const hiddenFeedA: FeedSummary = { ...feedA, showInWorkspace: 0 };
     const onSetVisibility = vi.fn();
-    const { getByRole } = await renderWithQueryClient(
-      <RiverSidebar feeds={[hiddenFeedA]} categories={categoriesFrom([hiddenFeedA])} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
-    );
-    await getByRole('button', { name: 'Tech', exact: true }).click();
+    const { getByRole } = await renderOpenSidebar([feedA], new Set([feedA.link]), onSetVisibility);
 
     // Act
-    await getByRole('button', { name: /Feed A/ }).click();
+    await getByRole('button', { name: 'Hide Feed A' }).click();
+
+    // Assert
+    expect(onSetVisibility).toHaveBeenCalledWith([feedA], 'hidden');
+  });
+
+  test('clicking the eye on a hidden feed shows it again', async () => {
+    // Arrange
+    const onSetVisibility = vi.fn();
+    const { getByRole } = await renderOpenSidebar([hiddenFeedA], new Set(), onSetVisibility);
+
+    // Act
+    await getByRole('button', { name: 'Show Feed A' }).click();
 
     // Assert
     expect(onSetVisibility).toHaveBeenCalledWith([hiddenFeedA], 'home');
   });
+
+  test('the eye is a sibling of the row button, not nested in it', async () => {
+    // Arrange
+    const { getByRole } = await renderOpenSidebar([feedA], new Set());
+
+    // Assert
+    const rowButton = getByRole('button', { name: /^Feed A/ }).element();
+    expect(rowButton.querySelector('button')).toBeNull();
+  });
 });
 
 describe('feed row current-state label', () => {
-  test('a home feed is titled by what it is now, not the "only" state a click moves it to', async () => {
+  test('a home feed says what it is now and that a click focuses it', async () => {
     // Arrange
-    const { getByRole } = await renderWithQueryClient(
-      <RiverSidebar feeds={[feedA]} categories={categoriesFrom([feedA])} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
-    );
-    await getByRole('button', { name: 'Tech', exact: true }).click();
+    const { getByRole } = await renderOpenSidebar([feedA], new Set());
 
     // Assert
-    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Shown with others');
+    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Shown with others. Click to focus.');
   });
 
-  test('a soloed feed is titled "Shown only", not the "hidden" state it moves to next', async () => {
+  test('a focused feed says that a click unfocuses it', async () => {
     // Arrange
-    const { getByRole } = await renderWithQueryClient(
-      <RiverSidebar feeds={[feedA]} categories={categoriesFrom([feedA])} showOnlyLinks={new Set([feedA.link])} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
-    );
-    await getByRole('button', { name: 'Tech', exact: true }).click();
+    const { getByRole } = await renderOpenSidebar([feedA], new Set([feedA.link]));
 
     // Assert
-    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Shown only');
+    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Shown only. Click to unfocus.');
   });
 
-  test('a hidden feed is titled "Hidden", not the "home" state it moves to next', async () => {
+  test('a hidden feed is titled "Hidden"', async () => {
     // Arrange
-    const hiddenFeedA: FeedSummary = { ...feedA, showInWorkspace: 0 };
-    const { getByRole } = await renderWithQueryClient(
-      <RiverSidebar feeds={[hiddenFeedA]} categories={categoriesFrom([hiddenFeedA])} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
-    );
-    await getByRole('button', { name: 'Tech', exact: true }).click();
+    const { getByRole } = await renderOpenSidebar([hiddenFeedA], new Set());
 
     // Assert
-    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Hidden');
+    await expect.element(getByRole('button', { name: /^Feed A/ })).toHaveAttribute('title', 'Feed A — Hidden. Click to focus.');
+  });
+
+  test('the accessible name says that a click focuses the feed', async () => {
+    // Arrange
+    const { getByRole } = await renderOpenSidebar([feedA], new Set());
+
+    // Assert
+    await expect.element(getByRole('button', { name: 'Feed A, Shown with others, 1 unread. Click to focus.' })).toBeInTheDocument();
   });
 });
 
-describe('folder visibility rotation', () => {
-  test('the rotate button applies the next state to every feed in the folder', async () => {
+describe('folder focus and hide controls', () => {
+  test('the focus button focuses every feed in the folder', async () => {
     // Arrange
     const onSetVisibility = vi.fn();
     const { getByRole } = await renderWithQueryClient(
@@ -296,13 +352,27 @@ describe('folder visibility rotation', () => {
     );
 
     // Act
-    await getByRole('button', { name: 'Show only: Tech' }).click();
+    await getByRole('button', { name: 'Focus Tech' }).click();
 
     // Assert
     expect(onSetVisibility).toHaveBeenCalledWith([feedA, feedB], 'only');
   });
 
-  test('a mixed folder resets to home on the first click', async () => {
+  test('the focus button clears focus when every feed in the folder is focused', async () => {
+    // Arrange
+    const onSetVisibility = vi.fn();
+    const { getByRole } = await renderWithQueryClient(
+      <RiverSidebar feeds={[feedA, feedB]} categories={categoriesFrom([feedA, feedB])} showOnlyLinks={new Set([feedA.link, feedB.link])} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
+    );
+
+    // Act
+    await getByRole('button', { name: 'Unfocus Tech' }).click();
+
+    // Assert
+    expect(onSetVisibility).toHaveBeenCalledWith([feedA, feedB], 'home');
+  });
+
+  test('the hide button hides every feed in a mixed folder', async () => {
     // Arrange
     const hiddenFeedB: FeedSummary = { ...feedB, showInWorkspace: 0 };
     const onSetVisibility = vi.fn();
@@ -311,10 +381,25 @@ describe('folder visibility rotation', () => {
     );
 
     // Act
-    await getByRole('button', { name: 'Show with others: Tech' }).click();
+    await getByRole('button', { name: 'Hide Tech' }).click();
 
     // Assert
-    expect(onSetVisibility).toHaveBeenCalledWith([feedA, hiddenFeedB], 'home');
+    expect(onSetVisibility).toHaveBeenCalledWith([feedA, hiddenFeedB], 'hidden');
+  });
+
+  test('the show button clears the hide when every feed in the folder is hidden', async () => {
+    // Arrange
+    const hiddenFeedB: FeedSummary = { ...feedB, showInWorkspace: 0 };
+    const onSetVisibility = vi.fn();
+    const { getByRole } = await renderWithQueryClient(
+      <RiverSidebar feeds={[hiddenFeedA, hiddenFeedB]} categories={categoriesFrom([hiddenFeedA, hiddenFeedB])} showOnlyLinks={new Set()} onSetVisibility={onSetVisibility} onFeedDeleted={vi.fn()} />,
+    );
+
+    // Act
+    await getByRole('button', { name: 'Show Tech' }).click();
+
+    // Assert
+    expect(onSetVisibility).toHaveBeenCalledWith([hiddenFeedA, hiddenFeedB], 'home');
   });
 
   test('the expand button still toggles the folder open and closed', async () => {

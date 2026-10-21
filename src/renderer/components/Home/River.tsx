@@ -102,6 +102,14 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
     }
   }, [setShowInWorkspace, setShowOnlyLinks, savedView, onShowFeed]);
 
+  const clearFocus = useCallback(() => {
+    setShowOnlyLinks(() => new Set());
+  }, [setShowOnlyLinks]);
+
+  const showHiddenFeeds = useCallback((feedIds: number[]) => {
+    void setShowInWorkspace(feedIds, true);
+  }, [setShowInWorkspace]);
+
   const handleFeedDeleted = useCallback((feed: FeedSummary) => {
     setShowOnlyLinks((prev) => {
       if (!prev.has(feed.link)) {
@@ -131,7 +139,18 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <RiverHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} hasFeeds={hasFeeds} visibleFeedIds={visibleFeedIdsSet} onPendingApplied={scrollToTop} savedView={savedView} />
+        <RiverHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          hasFeeds={hasFeeds}
+          visibleFeedIds={visibleFeedIdsSet}
+          onPendingApplied={scrollToTop}
+          savedView={savedView}
+          feeds={feeds}
+          showOnlyLinks={showOnlyLinks}
+          onClearFocus={clearFocus}
+          onShowHidden={showHiddenFeeds}
+        />
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">
