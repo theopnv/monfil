@@ -1,0 +1,82 @@
+name: Complexity comment
+
+# Runs from the default branch with a write token. It must never check out or run code from the PR:
+# the artifact comes from complexity.yml, which ran the PR's code, so all of it is untrusted input.
+on:
+  workflow_run:
+    workflows: [Complexity]
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      # Downloading an artifact from another run needs actions: read.
+      actions: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          sparse-checkout: scripts/complexity
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: complexity-report
+          path: ${{ runner.temp }}/report
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Check the PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          pr_number="$(head -c 16 "$RUNNER_TEMP/report/pr-number" | tr -d '[:space:]')"
+          if ! [[ "$pr_number" =~ ^[1-9][0-9]{0,9}$ ]]; then
+            echo "::error::The artifact has no valid PR number."
+            exit 1
+          fi
+          # workflow_run.pull_requests is empty for fork PRs, so ask the API which commit the PR is at.
+          pr_head_sha="$(gh api "repos/$REPO/pulls/$pr_number" --jq .head.sha)"
+          if [ "$pr_head_sha" != "$RUN_HEAD_SHA" ]; then
+            echo "::error::PR #$pr_number is at $pr_head_sha, but the run measured $RUN_HEAD_SHA."
+            exit 1
+          fi
+          echo "number=$pr_number" >> "$GITHUB_OUTPUT"
+
+      - name: Render the comment
+        env:
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          diff_head_sha="$(jq -r .head_sha "$RUNNER_TEMP/report/diff.json")"
+          if [ "$diff_head_sha" != "$RUN_HEAD_SHA" ]; then
+            echo "::error::The diff is for $diff_head_sha, but the run measured $RUN_HEAD_SHA."
+            exit 1
+          fi
+          node scripts/complexity/report.mts render "$RUNNER_TEMP/report/diff.json" --out "$RUNNER_TEMP/comment.md"
+
+      - name: Post or update the comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          marker='<!-- complexity-report -->'
+          comment_id="$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id" | head -n 1)"
+          if [ -n "$comment_id" ]; then
+            gh api --method PATCH "repos/$REPO/issues/comments/$comment_id" -F "body=@$RUNNER_TEMP/comment.md" > /dev/null
+          else
+            gh api --method POST "repos/$REPO/issues/$PR_NUMBER/comments" -F "body=@$RUNNER_TEMP/comment.md" > /dev/null
+          fi
