@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { EyeOff, LayersThree01, LayerSingle } from "@untitledui/icons";
-import type { FC } from "react";
 import type { FeedSummary } from "../../../shared/contracts";
 
 export type FeedVisibility = "home" | "only" | "hidden";
@@ -19,18 +17,14 @@ export function feedVisibility(feed: FeedSummary, showOnlyLinks: ReadonlySet<str
   return "home";
 }
 
-/** home -> only -> hidden -> home. A `mixed` folder resets to `home`. */
-export function nextVisibility(current: FeedVisibility | "mixed"): FeedVisibility {
-  switch (current) {
-    case "home":
-      return "only";
-    case "only":
-      return "hidden";
-    case "hidden":
-      return "home";
-    case "mixed":
-      return "home";
-  }
+/** A click on a feed row. `only` returns to `home`; any other state, including `hidden`, becomes `only`. */
+export function toggleFocus(current: FeedVisibility | "mixed"): FeedVisibility {
+  return current === "only" ? "home" : "only";
+}
+
+/** A click on a feed's eye. `hidden` returns to `home`; any other state becomes `hidden`. */
+export function toggleHidden(current: FeedVisibility | "mixed"): FeedVisibility {
+  return current === "hidden" ? "home" : "hidden";
 }
 
 /** The shared state of a folder's feeds, or `mixed`. An empty folder is `home`. */
@@ -55,21 +49,29 @@ export function visibleFeedIds(feeds: FeedSummary[], showOnlyLinks: ReadonlySet<
   return new Set(feeds.filter((feed) => feed.showInWorkspace !== 0).map((feed) => feed.id));
 }
 
-export const VISIBILITY_LABEL: Record<FeedVisibility, string> = {
-  home: "Show with others",
-  only: "Show only",
-  hidden: "Hide",
-};
+/** The focus state a folder's focus button moves every feed to: cleared when all of them are focused already. */
+export function toggleFolderFocus(feeds: FeedSummary[], showOnlyLinks: ReadonlySet<string>): FeedVisibility {
+  return toggleFocus(folderVisibility(feeds, showOnlyLinks));
+}
 
-/** Describes the current state, unlike `VISIBILITY_LABEL`, which names the action a control performs next. */
+/** The state a folder's eye moves every feed to: cleared when all of them are hidden already. */
+export function toggleFolderHidden(feeds: FeedSummary[], showOnlyLinks: ReadonlySet<string>): FeedVisibility {
+  return toggleHidden(folderVisibility(feeds, showOnlyLinks));
+}
+
+/** Names the action of the focus control, which flips with the state it would clear. */
+export function focusActionLabel(current: FeedVisibility | "mixed"): "Focus" | "Unfocus" {
+  return current === "only" ? "Unfocus" : "Focus";
+}
+
+/** Names the action of the eye control. */
+export function hideActionLabel(current: FeedVisibility | "mixed"): "Hide" | "Show" {
+  return current === "hidden" ? "Show" : "Hide";
+}
+
+/** Describes the current state, unlike the action labels, which name what a control does next. */
 export const VISIBILITY_STATE_LABEL: Record<FeedVisibility, string> = {
   home: "Shown with others",
   only: "Shown only",
   hidden: "Hidden",
-};
-
-export const VISIBILITY_ICON: Record<FeedVisibility, FC<{ className?: string; "aria-hidden"?: boolean }>> = {
-  home: LayersThree01,
-  only: LayerSingle,
-  hidden: EyeOff,
 };

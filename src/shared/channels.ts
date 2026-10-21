@@ -110,6 +110,7 @@ export type TwoWayRendererMainChannelPayloads = {
   'settings:set-retention-days': RetentionDays;
   'app:back-up-database': Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string }>;
   'app:get-info': AppInfo;
+  'app:hints-enabled': boolean;
   'app:get-startup-health': StartupHealth;
   'app:get-update-state': AppUpdateState;
   'settings:get-detailed-logging': boolean;
@@ -156,6 +157,7 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'settings:set-retention-days': RetentionDays;
   'app:back-up-database': undefined;
   'app:get-info': undefined;
+  'app:hints-enabled': undefined;
   'app:get-startup-health': undefined;
   'app:get-update-state': undefined;
   'settings:get-detailed-logging': undefined;

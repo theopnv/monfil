@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { visibleFeedIds } from './feed-visibility';
 import { useDebouncedValue } from '../useDebouncedValue';
 import { useRiverScopeState } from '../../providers/river-scope-provider';
@@ -22,12 +22,17 @@ export interface RiverScopeResult {
 
 /**
  * Builds the `RiverScope` Home's river and the reader's navigation both query with, from the
- * solo/hide selection, the hide-read preference and the debounced search query. Sharing this
+ * focus selection of the active workspace, the hide-read preference and the debounced search query. Sharing this
  * derivation (rather than each screen computing its own) is what makes the two share one cache entry.
  */
 export function useRiverScope(feeds: FeedSummary[], saved = false): RiverScopeResult {
-  const { showOnlyLinks, setShowOnlyLinks } = useRiverScopeState();
+  const { getShowOnlyLinks, setShowOnlyLinks: setShowOnlyLinksFor } = useRiverScopeState();
   const workspaceId = useActiveWorkspaceId();
+  const showOnlyLinks = getShowOnlyLinks(workspaceId);
+  const setShowOnlyLinks = useCallback(
+    (updater: (prev: ReadonlySet<string>) => ReadonlySet<string>) => setShowOnlyLinksFor(workspaceId, updater),
+    [setShowOnlyLinksFor, workspaceId],
+  );
   const { preferences } = usePreferences();
   const { query: searchQuery } = useSearch(saved);
   const debouncedSearch = useDebouncedValue(searchQuery.trim(), 250);

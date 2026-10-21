@@ -256,6 +256,10 @@ export function handleAppGetInfo(): Promise<AppInfo> {
   return getAppInfo();
 }
 
+export function handleAppHintsEnabled(): boolean {
+  return process.env['MONFIL_HINTS'] !== 'off';
+}
+
 export function handleAppGetUpdateState(): AppUpdateState {
   return getUpdateState();
 }

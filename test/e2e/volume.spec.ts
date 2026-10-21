@@ -89,12 +89,10 @@ test('the river stays bounded against a large corpus', async () => {
       await expect.poll(() => cards.count()).toBeLessThanOrEqual(RIVER_MAX_PAGES * RIVER_PAGE_SIZE);
       const scrolledCount = await cards.count();
 
-      // Act: hide one feed from the sidebar. A row rotates home -> only -> hidden, so this takes two clicks.
+      // Act: hide one feed from the sidebar with its eye.
       await page.getByRole('button', { name: 'volume', exact: true }).click();
       const feedRow = page.getByRole('button', { name: /^Feed 0,/ });
-      await feedRow.click();
-      await expect(feedRow).toHaveAttribute('data-visibility', 'only');
-      await feedRow.click();
+      await page.getByRole('button', { name: 'Hide Feed 0', exact: true }).click();
       await expect(feedRow).toHaveAttribute('data-visibility', 'hidden');
 
       // Assert: the river rescopes instead of transferring the whole corpus (no spike upward).

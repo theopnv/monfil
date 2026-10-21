@@ -121,6 +121,7 @@ const fixtures: { [C in TwoWayRendererMainChannels]: Fixture<C> } = {
   'settings:set-retention-days': { arg: 30, response: 30, handler: handlers.handleSettingsSetRetentionDays },
   'app:back-up-database': { arg: undefined, response: { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } }, handler: handlers.handleAppBackUpDatabase },
   'app:get-info': { arg: undefined, response: { version: '1', feedCount: 1, itemCount: 0, databaseSizeBytes: 0 }, handler: handlers.handleAppGetInfo },
+  'app:hints-enabled': { arg: undefined, response: true, handler: handlers.handleAppHintsEnabled },
   'app:get-startup-health': { arg: undefined, response: { name: 'OK' }, handler: handlers.handleAppGetStartupHealth },
   'app:get-update-state': { arg: undefined, response: { name: 'NONE' }, handler: handlers.handleAppGetUpdateState },
   'settings:get-detailed-logging': { arg: undefined, response: false, handler: handlers.handleSettingsGetDetailedLogging },

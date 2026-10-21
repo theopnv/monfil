@@ -142,6 +142,7 @@ export const invokePayloadGuards: { [C in TwoWayRendererMainChannels]: Guard<Two
   'settings:set-retention-days': isRetentionDays,
   'app:back-up-database': isUndefined,
   'app:get-info': isUndefined,
+  'app:hints-enabled': isUndefined,
   'app:get-startup-health': isUndefined,
   'app:get-update-state': isUndefined,
   'settings:get-detailed-logging': isUndefined,
