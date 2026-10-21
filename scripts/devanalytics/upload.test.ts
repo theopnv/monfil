@@ -10,7 +10,7 @@ afterEach(() => {
 describe('uploadTarget', () => {
   it('drops a trailing slash from the URL', () => {
     // Act
-    const result = uploadTarget({ COMPLEXITY_WORKER_URL: 'https://worker.test/', COMPLEXITY_INGEST_TOKEN: 't' });
+    const result = uploadTarget({ DEVANALYTICS_WORKER_URL: 'https://worker.test/', DEVANALYTICS_INGEST_TOKEN: 't' });
 
     // Assert
     expect(result).toEqual({ url: 'https://worker.test', token: 't' });
@@ -18,25 +18,25 @@ describe('uploadTarget', () => {
 
   it('fails when the token is missing', () => {
     // Act
-    const read = () => uploadTarget({ COMPLEXITY_WORKER_URL: 'https://worker.test' });
+    const read = () => uploadTarget({ DEVANALYTICS_WORKER_URL: 'https://worker.test' });
 
     // Assert
-    expect(read).toThrow('COMPLEXITY_INGEST_TOKEN');
+    expect(read).toThrow('DEVANALYTICS_INGEST_TOKEN');
   });
 });
 
 describe('upload', () => {
-  it('posts the snapshot to /ingest with the bearer token', async () => {
+  it('posts the snapshot to the route with the bearer token', async () => {
     // Arrange
     const fetchMock = vi.fn(async () => new Response('{"functions":0}', { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
 
     // Act
-    const result = await upload({ url: 'https://worker.test', token: 'secret' }, SNAPSHOT);
+    const result = await upload({ url: 'https://worker.test', token: 'secret' }, '/complexity/ingest', SNAPSHOT);
 
     // Assert
     expect(result).toEqual({ functions: 0 });
-    expect(fetchMock).toHaveBeenCalledWith('https://worker.test/ingest', expect.objectContaining({
+    expect(fetchMock).toHaveBeenCalledWith('https://worker.test/complexity/ingest', expect.objectContaining({
       method: 'POST',
       headers: expect.objectContaining({ Authorization: 'Bearer secret' }),
       body: JSON.stringify(SNAPSHOT),
@@ -48,9 +48,9 @@ describe('upload', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":"unauthorized"}', { status: 401 })));
 
     // Act
-    const send = upload({ url: 'https://worker.test', token: 'wrong' }, SNAPSHOT);
+    const send = upload({ url: 'https://worker.test', token: 'wrong' }, '/complexity/ingest', SNAPSHOT);
 
     // Assert
-    await expect(send).rejects.toThrow('failed with 401: {"error":"unauthorized"}');
+    await expect(send).rejects.toThrow('on /complexity/ingest failed with 401: {"error":"unauthorized"}');
   });
 });

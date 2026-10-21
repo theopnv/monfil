@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { folderPrefixes, parseSnapshot, SnapshotError, summarize, type FunctionRow } from '../src/snapshot.ts';
+import { parseSnapshot, summarize, type FunctionRow } from '../src/complexity/snapshot.ts';
+import { ValidationError } from '../src/shared/expect.ts';
+import { folderPrefixes } from '../src/shared/folders.ts';
 
 const SHA = 'a'.repeat(40);
 
@@ -57,6 +59,6 @@ describe('parseSnapshot', () => {
     const parse = () => parseSnapshot(body);
 
     // Assert
-    expect(parse).toThrow(SnapshotError);
+    expect(parse).toThrow(ValidationError);
   });
 });

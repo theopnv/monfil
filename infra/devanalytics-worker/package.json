@@ -1,5 +1,5 @@
 {
-  "name": "monfil-complexity-worker",
+  "name": "monfil-devanalytics-worker",
   "private": true,
   "type": "module",
   "scripts": {

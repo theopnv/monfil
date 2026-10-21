@@ -28,7 +28,7 @@ The [shared contracts](https://github.com/theopnv/monfil/tree/main/src/shared) d
 | [Feedpacks](https://github.com/theopnv/monfil/tree/main/feedpacks) | Curated OPML and catalog metadata |
 | [Documentation](https://github.com/theopnv/monfil/tree/main/doc) | Astro Starlight site |
 | [Complexity scripts](https://github.com/theopnv/monfil/tree/main/scripts/complexity) | Function metrics, the pull request report, and the uploads described in [Code complexity](../complexity/) |
-| [Complexity Worker](https://github.com/theopnv/monfil/tree/main/infra/complexity-worker) | Cloudflare Worker and D1 database that store the metrics |
+| [Devanalytics Worker](https://github.com/theopnv/monfil/tree/main/infra/devanalytics-worker) | Cloudflare Worker and D1 database that store the complexity and coverage metrics |
 
 In main, start with [feed work](https://github.com/theopnv/monfil/tree/main/src/main/feed), [database work](https://github.com/theopnv/monfil/tree/main/src/main/db), [OPML](https://github.com/theopnv/monfil/tree/main/src/main/opml), [feedpacks](https://github.com/theopnv/monfil/tree/main/src/main/feedpacks), [logging](https://github.com/theopnv/monfil/tree/main/src/main/logging), or [IPC](https://github.com/theopnv/monfil/tree/main/src/main/ipc). In the renderer, [routes](https://github.com/theopnv/monfil/tree/main/src/renderer/routes) choose views; providers and query hooks hold UI state.
 

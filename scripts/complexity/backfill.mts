@@ -5,7 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
 import { snapshot } from './metrics.mts';
-import { upload, uploadTarget, type UploadTarget } from './upload.mts';
+import { upload, uploadTarget, type UploadTarget } from '../devanalytics/upload.mts';
 
 const USAGE = 'Usage: npm run complexity:backfill -- [--dry-run --out-dir <dir>] [<tag> ...]';
 
@@ -33,7 +33,7 @@ async function handleTag(tag: string, parent: string, target: UploadTarget | nul
     await writeFile(path.join(outDir, `${tag}.json`), `${JSON.stringify(result)}\n`);
   }
   if (target) {
-    process.stdout.write(`${summary}, ingest ${JSON.stringify(await upload(target, result))}\n`);
+    process.stdout.write(`${summary}, ingest ${JSON.stringify(await upload(target, '/complexity/ingest', result))}\n`);
   } else {
     process.stdout.write(`${summary}, not uploaded\n`);
   }
