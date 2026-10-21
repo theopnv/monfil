@@ -12,7 +12,7 @@ type ESLintPlugin = NonNullable<Linter.Config['plugins']>[string];
 
 export default defineConfig([
   {
-    ignores: ['dist/**', '.vite/**', 'out/**', '.claude/**', 'doc/**'],
+    ignores: ['dist/**', '.vite/**', 'out/**', '.claude/**', 'doc/**', 'infra/**'],
   },
   {
     files: ['**/*.{js,ts,jsx,tsx}', 'scripts/**/*.mts'],

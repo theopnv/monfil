@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "monfil-complexity",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-15",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "monfil-complexity",
+      "database_id": "f9065e73-e7c5-4709-98bc-e4ad027537a6",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
