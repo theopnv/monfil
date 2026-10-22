@@ -8,7 +8,6 @@ import FeedAvatar from "@/components/common/FeedAvatar";
 import ArticleSourceLink from "@/components/Reader/ArticleSourceLink";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Tooltip } from "@/components/untitled-ui/base/tooltip/tooltip";
-import { resolveFeedIcon } from "@/lib/favicon";
 import type { RiverRow } from "../../../shared/contracts";
 
 export interface ReaderHeaderProps {
@@ -30,7 +29,7 @@ export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPre
       </Button>
 
       <div className="flex min-w-0 items-center gap-2">
-        <FeedAvatar title={item.feedTitle} faviconUrl={resolveFeedIcon(item.feedIcon, item.feedLink)} size="sm" />
+        <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="sm" />
         <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-primary">{item.feedTitle}</span>
         {item.categoryName && <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-tertiary">{item.categoryName}</span>}
       </div>

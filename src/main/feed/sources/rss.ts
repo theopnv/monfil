@@ -7,6 +7,7 @@ import type { FeedFetchError, ParsedSource } from '../../../shared/contracts';
 import type { Result } from '../../../shared/result';
 import { findAlternateLinks, probeLinks } from './discovery';
 import { parseFeedContent } from './feedContent';
+import { resolveSiteIcon } from './siteIcon';
 import { fetchAndParse, fetchCandidates, mapFetchError, unsupported, withScheme } from './feedSource';
 import { mastodonCandidates, mastodonSource } from './mastodon';
 import type { SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
@@ -71,7 +72,8 @@ async function discover(query: string): Promise<Result<ParsedSource[], FeedFetch
   }
   const direct = safeParse(page.data.body);
   if (direct) {
-    return { success: true, data: [{ type: 'rss', link, title: direct.title, description: direct.description, items: direct.items, icon: undefined }] };
+    const icon = await resolveSiteIcon(direct.siteLink ?? link);
+    return { success: true, data: [{ type: 'rss', link, title: direct.title, description: direct.description, items: direct.items, icon }] };
   }
 
   const advertised = findAlternateLinks(page.data.body, pageUrl.href);

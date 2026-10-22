@@ -5,7 +5,6 @@
 import { Link02 } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
-import { resolveFeedIcon } from "@/lib/favicon";
 import FeedMatchCard from "./FeedMatchCard";
 import type { FeedValidationStatus } from "./useFeedValidation";
 import type { ParsedSource, FeedFetchError, SourceType } from "../../../shared/contracts";
@@ -139,7 +138,7 @@ export default function Step1Find({ query, onQueryChange, onValidate, type, onTy
           title={feed.title || feed.link}
           detail={candidateDetail(feed)}
           status="found"
-          faviconUrl={resolveFeedIcon(feed.icon, feed.link)}
+          faviconUrl={feed.icon}
         />
       )}
       {status === "found" && candidates.length > 1 && (
@@ -159,7 +158,7 @@ export default function Step1Find({ query, onQueryChange, onValidate, type, onTy
                 detail={candidateDetail(candidate)}
                 status="found"
                 selected={index === selectedIndex}
-                faviconUrl={resolveFeedIcon(candidate.icon, candidate.link)}
+                faviconUrl={candidate.icon}
               />
             </label>
           ))}
