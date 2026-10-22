@@ -118,6 +118,22 @@ describe('refreshAllFeeds', () => {
     expect(mockedResolveSiteIcon).toHaveBeenCalledWith(link);
   });
 
+  test('fetches a feed in full once when its icon is missing, so a 304 cannot skip the lookup', async () => {
+    // Arrange
+    const link = 'https://cached.example/feed.xml';
+    const feedId = await storeFeed(link);
+    await db.updateTable('feedMetadata').set({ etag: '"old"' }).where('id', '=', feedId).execute();
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, [], '"old"') });
+    mockedResolveSiteIcon.mockResolvedValue('https://cached.example/favicon.ico');
+
+    // Act
+    await refreshAllFeeds();
+
+    // Assert
+    expect(mockedFetchFeed).toHaveBeenCalledWith({ link });
+    expect(await db.selectFrom('feedMetadata').select('icon').where('id', '=', feedId).executeTakeFirstOrThrow()).toEqual({ icon: 'https://cached.example/favicon.ico' });
+  });
+
   test('keeps the icon a feed already has', async () => {
     // Arrange
     const link = 'https://avatar.example/feed.xml';
@@ -302,7 +318,7 @@ describe('refreshAllFeeds', () => {
     // Arrange
     const link = 'https://a.example/feed';
     const feedId = await storeFeed(link);
-    await db.updateTable('feedMetadata').set({ etag: '"old"', last_modified: 'Mon, 01 Jan 2024 00:00:00 GMT' }).where('id', '=', feedId).execute();
+    await db.updateTable('feedMetadata').set({ etag: '"old"', last_modified: 'Mon, 01 Jan 2024 00:00:00 GMT', icon: 'https://a.example/icon.png' }).where('id', '=', feedId).execute();
     mockedFetchFeed.mockResolvedValue({
       success: true,
       data: fetched(link, [], '"new"'),
@@ -337,7 +353,7 @@ describe('refreshAllFeeds', () => {
     // Arrange
     const link = 'https://a.example/feed';
     const feedId = await storeFeed(link);
-    await db.updateTable('feedMetadata').set({ etag: '"old"' }).where('id', '=', feedId).execute();
+    await db.updateTable('feedMetadata').set({ etag: '"old"', icon: 'https://a.example/icon.png' }).where('id', '=', feedId).execute();
     const invalidItem = item({ title: null as unknown as string });
     mockedFetchFeed.mockResolvedValue({
       success: true,
@@ -357,7 +373,7 @@ describe('refreshAllFeeds', () => {
     // Arrange
     const link = 'https://a.example/feed';
     const feedId = await storeFeed(link);
-    await db.updateTable('feedMetadata').set({ etag: '"old"' }).where('id', '=', feedId).execute();
+    await db.updateTable('feedMetadata').set({ etag: '"old"', icon: 'https://a.example/icon.png' }).where('id', '=', feedId).execute();
     mockedFetchFeed.mockResolvedValue({ success: true, data: { notModified: true } });
 
     // Act

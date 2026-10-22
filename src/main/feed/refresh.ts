@@ -22,9 +22,13 @@ const ENRICHMENT_BUDGET = 200;
 
 const iconLookups = new Set<string>();
 
+function needsIconLookup(feed: FeedMetadataRow): boolean {
+  return !feed.icon && !iconLookups.has(feed.link);
+}
+
 /** Looks up the site icon of a feed stored without one, at most once per feed link per session. */
 async function fillMissingIcon(feed: FeedMetadataRow, siteLink: string | undefined): Promise<void> {
-  if (feed.icon || iconLookups.has(feed.link)) {
+  if (!needsIconLookup(feed)) {
     return;
   }
   iconLookups.add(feed.link);
@@ -42,7 +46,9 @@ async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: bool
   if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
     return { items: [], updated: 0, failed: false };
   }
-  const result = await sourceFor(feed.type).fetch({ link: feed.link, ...(force ? {} : { validators: { etag: feed.etag ?? undefined, last_modified: feed.last_modified ?? undefined } }) });
+  // A 304 carries no site link, so a feed still owed its icon lookup is fetched in full once.
+  const conditional = !force && !needsIconLookup(feed);
+  const result = await sourceFor(feed.type).fetch({ link: feed.link, ...(conditional ? { validators: { etag: feed.etag ?? undefined, last_modified: feed.last_modified ?? undefined } } : {}) });
   if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
     return { items: [], updated: 0, failed: false };
   }
