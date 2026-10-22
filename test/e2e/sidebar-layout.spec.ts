@@ -86,18 +86,15 @@ sidebarTest('a long folder name is truncated to one line', async ({ page }) => {
   expect(longRow.height).toBe(shortRow.height);
 });
 
-sidebarTest('folder and feed counts share a right edge', async ({ page }) => {
+sidebarTest('a folder name that fits is shown in full until the row is hovered', async ({ page }) => {
   // Arrange
-  await subscribe(page, 'http://127.0.0.1/feed-a', LONG_FEED_TITLE, 'Tech');
-  await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
-
-  // Act
-  await page.getByRole('button', { name: 'Tech', exact: true }).click();
+  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Media & Podcasts');
+  const label = page.getByRole('button', { name: 'Media & Podcasts', exact: true }).locator('span');
+  await expect(label).toBeVisible();
+  await page.mouse.move(0, 0);
 
   // Assert
-  const folderCount = await boxOf(page.getByTestId('folder-count'));
-  const feedCount = await boxOf(page.getByTestId('feed-count'));
-  expect(Math.abs((folderCount.x + folderCount.width) - (feedCount.x + feedCount.width))).toBeLessThan(1);
+  expect(await label.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
 });
 
 sidebarTest('window controls reserve title bar space', async ({ userDataDir }) => {

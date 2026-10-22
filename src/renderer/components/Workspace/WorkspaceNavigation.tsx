@@ -16,7 +16,7 @@ export default function WorkspaceNavigation({ saved = false, hasFeeds = false }:
   const saveHint = useHint('save', { ready: hasFeeds });
   return (
     <nav aria-label="Workspace views" className="flex flex-col gap-1 px-2.5 pb-3">
-      {[{ label: 'Feed', icon: Rss01, active: !saved, href: `/workspace/${workspaceId}` },
+      {[{ label: 'All items', icon: Rss01, active: !saved, href: `/workspace/${workspaceId}` },
         { label: 'Saved', icon: Bookmark, active: saved, href: `/workspace/${workspaceId}?view=saved` }].map(({ label, icon: Icon, active, href }) => (
         <Link key={label} ref={label === 'Saved' ? savedLinkRef : undefined} href={href} aria-current={active ? 'page' : undefined} className={cx(
           'flex items-center gap-2 rounded-xl px-2.25 py-2 text-sm font-semibold outline-brand focus-visible:outline-2',

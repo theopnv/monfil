@@ -6,6 +6,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { createRootRoute, createRoute, createRouter, createMemoryHistory, Outlet, RouterProvider } from '@tanstack/react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
+import { userEvent } from 'vitest/browser';
 import { RouteProvider } from '@/providers/route-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useFeeds } from '@/providers/feeds-provider';
@@ -261,6 +262,55 @@ test('switching tabs swaps the river to the other workspace\'s feeds', async () 
   // Assert
   await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Home feed', { exact: true })).not.toBeInTheDocument();
+});
+
+const MOD = navigator.userAgent.includes('Mac') ? 'Meta' : 'Control';
+
+test('hovering a workspace icon shows its name and shortcut', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  const { getByRole } = await renderApp('/workspace/1');
+  // React Aria opens hover tooltips only once it has seen a pointer interaction.
+  await getByRole('img', { name: 'Monfil' }).click();
+
+  // Act
+  await getByRole('link', { name: 'CI/CD watch' }).hover();
+
+  // Assert
+  await expect.element(getByRole('tooltip')).toBeInTheDocument();
+  expect(getByRole('tooltip').element().textContent).toMatch(/^CI\/CD watch (⌘|Ctrl\+)2$/);
+});
+
+test('the modifier and a digit open the workspace at that position', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  feedsByWorkspace = { 2: [createFeed({ id: 2, title: 'Pack feed', workspaceId: 2 })] };
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'CI/CD watch' })).toBeInTheDocument();
+
+  // Act
+  await userEvent.keyboard(`{${MOD}>}2{/${MOD}}`);
+
+  // Assert
+  await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
+});
+
+test('the quick switcher filters workspaces by name and opens the chosen one', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' }), createWorkspace({ id: 3, name: 'Security' })];
+  feedsByWorkspace = { 3: [createFeed({ id: 3, title: 'Security feed', workspaceId: 3 })] };
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'Security' })).toBeInTheDocument();
+
+  // Act
+  await userEvent.keyboard(`{${MOD}>}k{/${MOD}}`);
+  await userEvent.keyboard('secu');
+  await expect.element(getByRole('option', { name: /CI\/CD watch/ })).not.toBeInTheDocument();
+  await userEvent.keyboard('{Enter}');
+
+  // Assert
+  await expect.element(getByText('Security feed', { exact: true })).toBeInTheDocument();
+  await expect.element(getByRole('dialog', { name: 'Switch workspace' })).not.toBeInTheDocument();
 });
 
 test('right-clicking a workspace sends workspaces:show-context-menu with its id', async () => {

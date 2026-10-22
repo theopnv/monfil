@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { useCategories, useFeeds } from '@/providers/feeds-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
@@ -339,7 +339,7 @@ describe('feed row current-state label', () => {
     const { getByRole } = await renderOpenSidebar([feedA], new Set());
 
     // Assert
-    await expect.element(getByRole('button', { name: 'Feed A, Shown with others, 1 unread. Click to focus.' })).toBeInTheDocument();
+    await expect.element(getByRole('button', { name: 'Feed A, Shown with others. Click to focus.' })).toBeInTheDocument();
   });
 });
 
@@ -417,11 +417,29 @@ describe('folder focus and hide controls', () => {
   });
 });
 
+test('hovering a feeds header icon names its action', async () => {
+  // Arrange
+  const { getByRole, getByText } = await renderWithQueryClient(
+    <RiverSidebar feeds={[feedA]} categories={categoriesFrom([feedA])} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
+  );
+  // React Aria opens hover tooltips only once it has seen a pointer interaction.
+  await getByText('Feeds', { exact: true }).click();
+
+  onTestFinished(() => getByRole('button', { name: 'Add feedpack' }).unhover());
+
+  // Act
+  await getByRole('button', { name: 'Add feedpack' }).hover();
+
+  // Assert
+  await expect.element(getByRole('tooltip')).toBeInTheDocument();
+  expect(getByRole('tooltip').element().textContent).toBe('Add feedpack');
+});
+
 describe('unread counts', () => {
-  test('feed and folder counts reflect FeedSummary.unreadCount', async () => {
+  test('folder and feed rows show no unread counts', async () => {
     // Arrange
-    const feedWithUnread: FeedSummary = { ...feedA, itemCount: 2, unreadCount: 1 };
-    const { getByRole, getByTestId } = await renderWithQueryClient(
+    const feedWithUnread: FeedSummary = { ...feedA, itemCount: 40, unreadCount: 37 };
+    const { getByRole, getByText } = await renderWithQueryClient(
       <RiverSidebar feeds={[feedWithUnread]} categories={categoriesFrom([feedWithUnread])} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
     );
 
@@ -429,25 +447,11 @@ describe('unread counts', () => {
     await getByRole('button', { name: 'Tech', exact: true }).click();
 
     // Assert
-    await expect.element(getByTestId('folder-count')).toHaveTextContent('1');
-    await expect.element(getByTestId('feed-count')).toHaveTextContent('1');
-  });
-
-  test('a fully-read feed and folder show a blank count instead of 0', async () => {
-    // Arrange
-    const fullyReadFeed: FeedSummary = { ...feedA, itemCount: 1, unreadCount: 0 };
-    const { getByRole, getByTestId } = await renderWithQueryClient(
-      <RiverSidebar feeds={[fullyReadFeed]} categories={categoriesFrom([fullyReadFeed])} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={vi.fn()} />,
-    );
-
-    // Act
-    await getByRole('button', { name: 'Tech', exact: true }).click();
-
-    // Assert
-    await expect.element(getByTestId('folder-count')).toHaveTextContent('');
-    await expect.element(getByTestId('feed-count')).toHaveTextContent('');
+    await expect.element(getByRole('button', { name: /^Feed A/ })).toBeInTheDocument();
+    await expect.element(getByText('37')).not.toBeInTheDocument();
   });
 });
+
 
 describe('feed row context menu and delete', () => {
   test('right-clicking a feed row sends feeds:show-feed-context-menu with the feed id', async () => {
@@ -789,8 +793,6 @@ describe('folder create', () => {
 
     // Assert
     await expect.element(getByRole('button', { name: 'Recipes', exact: true })).toBeInTheDocument();
-    await getByRole('button', { name: 'Recipes', exact: true }).click();
-    await expect.element(getByRole('row', { name: 'Recipes' }).getByTestId('folder-count')).toHaveTextContent('');
   });
 
   test('pressing Escape cancels without invoking anything', async () => {

@@ -32,7 +32,7 @@ A strip appears under the title when a filter is on. **Showing 2 of 5 feeds** me
 
 ## Workspaces
 
-A workspace groups feeds and folders around a subject, such as work or hobbies. Each workspace has its own feed list and article list. Monfil opens in **Home**. Select a workspace icon in the narrow left rail to switch to it.
+A workspace groups feeds and folders around a subject, such as work or hobbies. Each workspace has its own feed list and article list. Monfil opens in **Home**. Select a workspace icon in the narrow left rail to switch to it. Hold the pointer on an icon to see the workspace name. Press `Cmd+1` to `Cmd+9` (`Ctrl+1` to `Ctrl+9` on Windows and Linux) to open the first nine workspaces. Press `Cmd+K` (`Ctrl+K`) to find a workspace by name.
 
 ### Add a workspace
 
@@ -70,7 +70,7 @@ To save a workspace as an OPML file, right-click its icon in the left rail and s
 
 ## Read and find articles
 
-Select an article in the main list to open it in Monfil's reader. Use **Search everything** above the list to find articles in the current workspace. Select **Show Unread** to hide read items, and select **Show All** to bring them back. The refresh button beside it checks your feeds for new items.
+Select an article in the main list to open it in Monfil's reader. Use **Search everything** above the list to find articles in the current workspace. Select **Unread** to hide read items, and select **All** to bring them back. The refresh button beside it checks your feeds for new items.
 
 For keyboard controls, open **Settings** and turn on **Keyboard navigation** under **Reading**. Then use `j` and `k` to move between articles. Press `Esc` to leave the reader.
 

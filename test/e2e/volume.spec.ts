@@ -92,6 +92,7 @@ test('the river stays bounded against a large corpus', async () => {
       // Act: hide one feed from the sidebar with its eye.
       await page.getByRole('button', { name: 'volume', exact: true }).click();
       const feedRow = page.getByRole('button', { name: /^Feed 0,/ });
+      await feedRow.hover();
       await page.getByRole('button', { name: 'Hide Feed 0', exact: true }).click();
       await expect(feedRow).toHaveAttribute('data-visibility', 'hidden');
 
