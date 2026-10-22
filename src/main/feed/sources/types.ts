@@ -12,6 +12,8 @@ export type NewSourceItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | '
 export interface ParsedFeedContent {
   title: string;
   description: string;
+  /** The website the feed belongs to, where its icon is looked up. */
+  siteLink?: string | undefined;
   items: NewSourceItem[];
 }
 

@@ -28,7 +28,7 @@ Sam has no Mastodon account. Monfil reads the public feeds of the tags and the p
 
 Release notes come in as full items, so Sam reads what changed without opening GitHub. When a minor release has a breaking change, Sam saves the item and links it in the upgrade ticket.
 
-**Tip:** the DevSecOps feedpack already has releases for Kubernetes, OpenTofu, Playwright, and other tools. Install it, then add your own tools.
+**Tip:** the Platform Engineering feedpack already has releases for Kubernetes, OpenTofu, Helm, and other tools. Install it, then add your own tools.
 
 ## A founder
 
@@ -49,6 +49,8 @@ Alex makes a workspace named **Market** with these sources:
 Hacker News gives a choice of feeds. Alex picks a points threshold, so the river shows the stories that most people discussed and not the full stream. For Google Alerts, the [supported sources](../supported-sources/#google-alerts) page shows how to get the feed.
 
 A competitor release that ships a feature from Alex's roadmap comes in the same day. He does not need a Bluesky account to follow the founders.
+
+**Tip:** the Founders & Solopreneurs feedpack already has the **Show HN** and **300+ points** feeds. Install it, then add your competitors.
 
 ## A researcher
 

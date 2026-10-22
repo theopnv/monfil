@@ -60,6 +60,8 @@ export type ParsedSource = Omit<FeedMetadata, 'id' | 'last_fetched_at' | 'last_e
   items: SourceItem[];
   /** Names this feed among the candidates one link offers, e.g. "Releases" or "100+ points". */
   label?: string;
+  /** The website the feed belongs to, where a missing icon is looked up. */
+  siteLink?: string | undefined;
 };
 
 export type FetchUrlError =

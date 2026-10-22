@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Climate &amp; Energy</title></head>
+  <body>
+    <outline text="News">
+      <outline text="Canary Media" title="Canary Media" type="rss" xmlUrl="https://www.canarymedia.com/rss.rss"/>
+      <outline text="Heatmap" title="Heatmap" type="rss" xmlUrl="https://heatmap.news/feeds/feed.rss"/>
+      <outline text="Inside Climate News" title="Inside Climate News" type="rss" xmlUrl="https://insideclimatenews.org/feed/"/>
+      <outline text="Grist" title="Grist" type="rss" xmlUrl="https://grist.org/feed/"/>
+      <outline text="Climate Home News" title="Climate Home News" type="rss" xmlUrl="https://www.climatechangenews.com/feed/"/>
+      <outline text="The Guardian: Environment" title="The Guardian: Environment" type="rss" xmlUrl="https://www.theguardian.com/environment/rss"/>
+      <outline text="Yale Climate Connections" title="Yale Climate Connections" type="rss" xmlUrl="https://yaleclimateconnections.org/feed/"/>
+    </outline>
+    <outline text="Analysis">
+      <outline text="Carbon Brief" title="Carbon Brief" type="rss" xmlUrl="https://www.carbonbrief.org/feed/"/>
+      <outline text="Volts (David Roberts)" title="Volts (David Roberts)" type="rss" xmlUrl="https://www.volts.wtf/feed"/>
+      <outline text="Sustainability by Numbers (Hannah Ritchie)" title="Sustainability by Numbers (Hannah Ritchie)" type="rss" xmlUrl="https://www.sustainabilitybynumbers.com/feed"/>
+      <outline text="The Climate Brink (Zeke Hausfather)" title="The Climate Brink (Zeke Hausfather)" type="rss" xmlUrl="https://www.theclimatebrink.com/feed"/>
+    </outline>
+    <outline text="Energy &amp; EVs">
+      <outline text="Electrek" title="Electrek" type="rss" xmlUrl="https://electrek.co/feed/"/>
+      <outline text="CleanTechnica" title="CleanTechnica" type="rss" xmlUrl="https://cleantechnica.com/feed/"/>
+      <outline text="InsideEVs" title="InsideEVs" type="rss" xmlUrl="https://insideevs.com/rss/news/all/"/>
+      <outline text="pv magazine" title="pv magazine" type="rss" xmlUrl="https://www.pv-magazine.com/feed/"/>
+      <outline text="Energy-Storage.news" title="Energy-Storage.news" type="rss" xmlUrl="https://www.energy-storage.news/feed/"/>
+    </outline>
+    <outline text="Climate Tech">
+      <outline text="CTVC" title="CTVC" type="rss" xmlUrl="https://www.ctvc.co/rss/"/>
+      <outline text="Latitude Media" title="Latitude Media" type="rss" xmlUrl="https://www.latitudemedia.com/feed"/>
+      <outline text="Catalyst with Shayle Kann" title="Catalyst with Shayle Kann" type="rss" xmlUrl="https://feeds.megaphone.fm/catalyst"/>
+    </outline>
+    <outline text="Science &amp; Data">
+      <outline text="RealClimate" title="RealClimate" type="rss" xmlUrl="https://www.realclimate.org/index.php/feed/"/>
+      <outline text="Copernicus Climate Change Service" title="Copernicus Climate Change Service" type="rss" xmlUrl="https://climate.copernicus.eu/rss.xml"/>
+      <outline text="Climate.gov News" title="Climate.gov News" type="rss" xmlUrl="https://www.climate.gov/feeds/news-features/highlights.rss"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Katharine Hayhoe (Bluesky)" title="Katharine Hayhoe (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/katharinehayhoe.com/rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="Just Have a Think" title="Just Have a Think" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCRBwLPbXGsI2cJe9W1zfSjQ"/>
+      <outline text="Climate Town" title="Climate Town" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCuVLG9pThvBABcYCm7pkNkA"/>
+      <outline text="Engineering with Rosie" title="Engineering with Rosie" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UClu8Q445-ZAG1dzzP1mHiAw"/>
+    </outline>
+  </body>
+</opml>

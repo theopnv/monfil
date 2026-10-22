@@ -211,5 +211,5 @@ categoriesTest('dragging a feed onto a feed row moves it into that row\'s folder
   // Assert: both feeds now sit under News, and Tech still shows with nothing under it. Both folders
   // stay expanded, so the feeds never leave the screen — row order is the only thing that says which
   // folder holds them.
-  await expect(page.getByRole('grid', { name: 'Feeds' }).getByRole('row')).toHaveText([/^Tech$/, /^News$/, /^Feed A/, /^Feed B/]);
+  await expect(page.getByRole('grid', { name: 'Feeds' }).getByRole('row')).toHaveText([/^Tech$/, /^News$/, /Feed A/, /Feed B/]);
 });

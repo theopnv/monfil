@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Quality Engineering</title></head>
+  <body>
+    <outline text="Practitioners">
+      <outline text="A Seasoned Tester's Crystal Ball (Maaret Pyhäjärvi)" title="A Seasoned Tester's Crystal Ball (Maaret Pyhäjärvi)" type="rss" xmlUrl="https://visible-quality.blogspot.com/feeds/posts/default"/>
+      <outline text="Holistic Testing (Lisa Crispin)" title="Holistic Testing (Lisa Crispin)" type="rss" xmlUrl="https://lisacrispin.com/feed/"/>
+      <outline text="The Weasel Speaks (Alan Page)" title="The Weasel Speaks (Alan Page)" type="rss" xmlUrl="https://angryweasel.substack.com/feed"/>
+      <outline text="On Test Automation (Bas Dijkstra)" title="On Test Automation (Bas Dijkstra)" type="rss" xmlUrl="https://www.ontestautomation.com/feed.xml"/>
+      <outline text="Nicola Lindgren" title="Nicola Lindgren" type="rss" xmlUrl="https://nicolalindgren.com/index.xml"/>
+      <outline text="Thoughts from The Test Eye" title="Thoughts from The Test Eye" type="rss" xmlUrl="https://thetesteye.com/blog/feed/"/>
+      <outline text="DevelopSense (Michael Bolton)" title="DevelopSense (Michael Bolton)" type="rss" xmlUrl="https://developsense.com/feed"/>
+      <outline text="Satisfice (James Bach)" title="Satisfice (James Bach)" type="rss" xmlUrl="https://www.satisfice.com/feed"/>
+      <outline text="EvilTester (Alan Richardson)" title="EvilTester (Alan Richardson)" type="rss" xmlUrl="https://www.eviltester.com/index.xml"/>
+      <outline text="Hiccupps (James Thomas)" title="Hiccupps (James Thomas)" type="rss" xmlUrl="https://qahiccupps.blogspot.com/feeds/posts/default"/>
+      <outline text="Angie Jones" title="Angie Jones" type="rss" xmlUrl="https://angiejones.tech/feed/"/>
+      <outline text="The Green Report" title="The Green Report" type="rss" xmlUrl="https://www.thegreenreport.blog/resources/xml/feeds.xml"/>
+      <outline text="Niko Heikkilä" title="Niko Heikkilä" type="rss" xmlUrl="https://nikoheikkila.fi/feed/"/>
+    </outline>
+    <outline text="Engineering Blogs">
+      <outline text="Google Testing Blog" title="Google Testing Blog" type="rss" xmlUrl="https://testing.googleblog.com/feeds/posts/default"/>
+      <outline text="Ministry of Testing" title="Ministry of Testing" type="rss" xmlUrl="https://www.ministryoftesting.com/contents/rss"/>
+      <outline text="Software Testing Magazine" title="Software Testing Magazine" type="rss" xmlUrl="https://www.softwaretestingmagazine.com/feed/"/>
+      <outline text="Sonar Blog" title="Sonar Blog" type="rss" xmlUrl="https://www.sonarsource.com/blog/rss.xml"/>
+      <outline text="Applitools Blog" title="Applitools Blog" type="rss" xmlUrl="https://applitools.com/blog/feed/"/>
+    </outline>
+    <outline text="Podcasts &amp; Video">
+      <outline text="Test &amp; Code" title="Test &amp; Code" type="rss" xmlUrl="https://testandcode.org/index.xml"/>
+      <outline text="AB Testing Podcast" title="AB Testing Podcast" type="rss" xmlUrl="https://www.angryweasel.com/ABTesting/feed/podcast/"/>
+      <outline text="Playwright (YouTube)" title="Playwright (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC46Zj8pDH5tDosqm1gd7WTg"/>
+    </outline>
+    <outline text="Tool Releases">
+      <outline text="Playwright releases" title="Playwright releases" type="rss" xmlUrl="https://github.com/microsoft/playwright/releases.atom"/>
+      <outline text="Vitest releases" title="Vitest releases" type="rss" xmlUrl="https://github.com/vitest-dev/vitest/releases.atom"/>
+      <outline text="Cypress releases" title="Cypress releases" type="rss" xmlUrl="https://github.com/cypress-io/cypress/releases.atom"/>
+      <outline text="Jest releases" title="Jest releases" type="rss" xmlUrl="https://github.com/jestjs/jest/releases.atom"/>
+      <outline text="pytest releases" title="pytest releases" type="rss" xmlUrl="https://github.com/pytest-dev/pytest/releases.atom"/>
+      <outline text="JUnit releases" title="JUnit releases" type="rss" xmlUrl="https://github.com/junit-team/junit-framework/releases.atom"/>
+      <outline text="Selenium releases" title="Selenium releases" type="rss" xmlUrl="https://github.com/SeleniumHQ/selenium/releases.atom"/>
+      <outline text="k6 releases" title="k6 releases" type="rss" xmlUrl="https://github.com/grafana/k6/releases.atom"/>
+      <outline text="Appium releases" title="Appium releases" type="rss" xmlUrl="https://github.com/appium/appium/releases.atom"/>
+      <outline text="Stryker mutation testing releases" title="Stryker mutation testing releases" type="rss" xmlUrl="https://github.com/stryker-mutator/stryker-js/releases.atom"/>
+      <outline text="Mock Service Worker releases" title="Mock Service Worker releases" type="rss" xmlUrl="https://github.com/mswjs/msw/releases.atom"/>
+      <outline text="WireMock releases" title="WireMock releases" type="rss" xmlUrl="https://github.com/wiremock/wiremock/releases.atom"/>
+    </outline>
+    <outline text="Community">
+      <outline text="#softwaretesting on Mastodon" title="#softwaretesting on Mastodon" type="rss" xmlUrl="https://mastodon.social/tags/softwaretesting.rss"/>
+      <outline text="#testautomation on Mastodon" title="#testautomation on Mastodon" type="rss" xmlUrl="https://mastodon.social/tags/testautomation.rss"/>
+      <outline text="Maaret Pyhäjärvi (Mastodon)" title="Maaret Pyhäjärvi (Mastodon)" type="rss" xmlUrl="https://mas.to/@maaretp.rss"/>
+      <outline text="Lisa Crispin (Bluesky)" title="Lisa Crispin (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/lisacrispin.bsky.social/rss"/>
+    </outline>
+    <outline text="Events">
+      <outline text="Testing conferences" title="Testing conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=testing,quality-assurance"/>
+    </outline>
+  </body>
+</opml>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Frontend Engineering</title></head>
+  <body>
+    <outline text="Web Platform &amp; Browsers">
+      <outline text="web.dev" title="web.dev" type="rss" xmlUrl="https://web.dev/static/blog/feed.xml"/>
+      <outline text="Chrome for Developers" title="Chrome for Developers" type="rss" xmlUrl="https://developer.chrome.com/static/blog/feed.xml"/>
+      <outline text="WebKit Blog" title="WebKit Blog" type="rss" xmlUrl="https://webkit.org/feed/"/>
+      <outline text="Mozilla Hacks" title="Mozilla Hacks" type="rss" xmlUrl="https://hacks.mozilla.org/feed/"/>
+      <outline text="MDN Blog" title="MDN Blog" type="rss" xmlUrl="https://developer.mozilla.org/en-US/blog/rss.xml"/>
+    </outline>
+    <outline text="Frameworks &amp; Tools">
+      <outline text="React Blog" title="React Blog" type="rss" xmlUrl="https://react.dev/rss.xml"/>
+      <outline text="Next.js Blog" title="Next.js Blog" type="rss" xmlUrl="https://nextjs.org/feed.xml"/>
+      <outline text="Vue.js releases" title="Vue.js releases" type="rss" xmlUrl="https://github.com/vuejs/core/releases.atom"/>
+      <outline text="Svelte Blog" title="Svelte Blog" type="rss" xmlUrl="https://svelte.dev/blog/rss.xml"/>
+      <outline text="Angular Blog" title="Angular Blog" type="rss" xmlUrl="https://blog.angular.dev/feed"/>
+      <outline text="Astro Blog" title="Astro Blog" type="rss" xmlUrl="https://astro.build/rss.xml"/>
+      <outline text="TypeScript Blog" title="TypeScript Blog" type="rss" xmlUrl="https://devblogs.microsoft.com/typescript/feed/"/>
+      <outline text="Tailwind CSS Blog" title="Tailwind CSS Blog" type="rss" xmlUrl="https://tailwindcss.com/feeds/feed.xml"/>
+      <outline text="Vite Blog" title="Vite Blog" type="rss" xmlUrl="https://vite.dev/blog.rss"/>
+    </outline>
+    <outline text="Newsletters">
+      <outline text="JavaScript Weekly" title="JavaScript Weekly" type="rss" xmlUrl="https://cprss.s3.amazonaws.com/javascriptweekly.com.xml"/>
+      <outline text="Frontend Focus" title="Frontend Focus" type="rss" xmlUrl="https://cprss.s3.amazonaws.com/frontendfoc.us.xml"/>
+      <outline text="React Status" title="React Status" type="rss" xmlUrl="https://cprss.s3.amazonaws.com/react.statuscode.com.xml"/>
+      <outline text="This Week in React" title="This Week in React" type="rss" xmlUrl="https://thisweekinreact.com/newsletter/rss.xml"/>
+    </outline>
+    <outline text="Publications">
+      <outline text="Smashing Magazine" title="Smashing Magazine" type="rss" xmlUrl="https://www.smashingmagazine.com/feed/"/>
+      <outline text="CSS-Tricks" title="CSS-Tricks" type="rss" xmlUrl="https://css-tricks.com/feed/"/>
+      <outline text="Frontend Masters Blog" title="Frontend Masters Blog" type="rss" xmlUrl="https://frontendmasters.com/blog/feed/"/>
+      <outline text="Piccalilli" title="Piccalilli" type="rss" xmlUrl="https://piccalil.li/feed.xml"/>
+    </outline>
+    <outline text="People">
+      <outline text="overreacted (Dan Abramov)" title="overreacted (Dan Abramov)" type="rss" xmlUrl="https://overreacted.io/rss.xml"/>
+      <outline text="Josh W. Comeau" title="Josh W. Comeau" type="rss" xmlUrl="https://www.joshwcomeau.com/rss.xml"/>
+      <outline text="Kent C. Dodds" title="Kent C. Dodds" type="rss" xmlUrl="https://kentcdodds.com/blog/rss.xml"/>
+      <outline text="Jake Archibald" title="Jake Archibald" type="rss" xmlUrl="https://jakearchibald.com/posts.rss"/>
+      <outline text="Bramus" title="Bramus" type="rss" xmlUrl="https://www.bram.us/feed/"/>
+      <outline text="Chris Coyier" title="Chris Coyier" type="rss" xmlUrl="https://chriscoyier.net/feed/"/>
+      <outline text="Jim Nielsen" title="Jim Nielsen" type="rss" xmlUrl="https://blog.jim-nielsen.com/feed.xml"/>
+      <outline text="Adam Argyle" title="Adam Argyle" type="rss" xmlUrl="https://nerdy.dev/rss.xml"/>
+    </outline>
+    <outline text="Video &amp; Podcasts">
+      <outline text="Syntax" title="Syntax" type="rss" xmlUrl="https://feed.syntax.fm/rss"/>
+      <outline text="Kevin Powell" title="Kevin Powell" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCJZv4d5rbIKd4QHMPkcABCw"/>
+      <outline text="Fireship" title="Fireship" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCsBjURrPoezykLs9EqgamOA"/>
+      <outline text="Theo (t3.gg)" title="Theo (t3.gg)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCbRP3c757lWg9M-U7TyEkXA"/>
+      <outline text="Web Dev Simplified" title="Web Dev Simplified" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCFbNIlppjAuEX4znoulh0Cw"/>
+      <outline text="Chrome for Developers" title="Chrome for Developers" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCnUYZLuoy1rq1aVMwx4aTzw"/>
+    </outline>
+    <outline text="Community">
+      <outline text="#css on front-end.social" title="#css on front-end.social" type="rss" xmlUrl="https://front-end.social/tags/css.rss"/>
+      <outline text="Dan Abramov (Bluesky)" title="Dan Abramov (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/danabra.mov/rss"/>
+      <outline text="Josh W. Comeau (Bluesky)" title="Josh W. Comeau (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/joshwcomeau.com/rss"/>
+      <outline text="Kent C. Dodds (Bluesky)" title="Kent C. Dodds (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/kentcdodds.com/rss"/>
+      <outline text="Jake Archibald (Bluesky)" title="Jake Archibald (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/jakearchibald.com/rss"/>
+      <outline text="Rich Harris (Bluesky)" title="Rich Harris (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/rich-harris.dev/rss"/>
+      <outline text="Lea Verou (Bluesky)" title="Lea Verou (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/lea.verou.me/rss"/>
+      <outline text="Adam Argyle (Bluesky)" title="Adam Argyle (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/nerdy.dev/rss"/>
+      <outline text="Ryan Carniato (Bluesky)" title="Ryan Carniato (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/ryansolid.bsky.social/rss"/>
+      <outline text="Jen Simmons (Mastodon)" title="Jen Simmons (Mastodon)" type="rss" xmlUrl="https://front-end.social/@jensimmons.rss"/>
+      <outline text="Miriam Suzanne (Mastodon)" title="Miriam Suzanne (Mastodon)" type="rss" xmlUrl="https://front-end.social/@mia.rss"/>
+      <outline text="Zach Leatherman (Mastodon)" title="Zach Leatherman (Mastodon)" type="rss" xmlUrl="https://fediverse.zachleat.com/@zachleat.rss"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="React releases" title="React releases" type="rss" xmlUrl="https://github.com/facebook/react/releases.atom"/>
+      <outline text="TypeScript releases" title="TypeScript releases" type="rss" xmlUrl="https://github.com/microsoft/TypeScript/releases.atom"/>
+      <outline text="Biome releases" title="Biome releases" type="rss" xmlUrl="https://github.com/biomejs/biome/releases.atom"/>
+      <outline text="Node.js releases" title="Node.js releases" type="rss" xmlUrl="https://github.com/nodejs/node/releases.atom"/>
+    </outline>
+    <outline text="Events">
+      <outline text="Frontend and JavaScript conferences" title="Frontend and JavaScript conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=frontend,javascript,react,web-development"/>
+    </outline>
+  </body>
+</opml>

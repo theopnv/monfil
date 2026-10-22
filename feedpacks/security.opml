@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Cybersecurity</title></head>
+  <body>
+    <outline text="News">
+      <outline text="Krebs on Security" title="Krebs on Security" type="rss" xmlUrl="https://krebsonsecurity.com/feed/"/>
+      <outline text="BleepingComputer" title="BleepingComputer" type="rss" xmlUrl="https://www.bleepingcomputer.com/feed/"/>
+      <outline text="The Record" title="The Record" type="rss" xmlUrl="https://therecord.media/feed/"/>
+      <outline text="The Hacker News" title="The Hacker News" type="rss" xmlUrl="https://feeds.feedburner.com/TheHackersNews"/>
+      <outline text="SecurityWeek" title="SecurityWeek" type="rss" xmlUrl="https://www.securityweek.com/feed/"/>
+      <outline text="Dark Reading" title="Dark Reading" type="rss" xmlUrl="https://www.darkreading.com/rss.xml"/>
+    </outline>
+    <outline text="Analysis">
+      <outline text="Schneier on Security" title="Schneier on Security" type="rss" xmlUrl="https://www.schneier.com/feed/atom/"/>
+      <outline text="Troy Hunt" title="Troy Hunt" type="rss" xmlUrl="https://www.troyhunt.com/rss/"/>
+      <outline text="tl;dr sec" title="tl;dr sec" type="rss" xmlUrl="https://tldrsec.com/feed.xml"/>
+      <outline text="Risky Bulletin" title="Risky Bulletin" type="rss" xmlUrl="https://news.risky.biz/rss/"/>
+    </outline>
+    <outline text="Research">
+      <outline text="Google Project Zero" title="Google Project Zero" type="rss" xmlUrl="https://googleprojectzero.blogspot.com/feeds/posts/default"/>
+      <outline text="Trail of Bits" title="Trail of Bits" type="rss" xmlUrl="https://blog.trailofbits.com/feed/"/>
+      <outline text="PortSwigger Research" title="PortSwigger Research" type="rss" xmlUrl="https://portswigger.net/research/rss"/>
+      <outline text="GitHub Security Lab" title="GitHub Security Lab" type="rss" xmlUrl="https://github.blog/tag/github-security-lab/feed/"/>
+      <outline text="Google Online Security Blog" title="Google Online Security Blog" type="rss" xmlUrl="https://security.googleblog.com/feeds/posts/default"/>
+    </outline>
+    <outline text="Threat Intelligence">
+      <outline text="Cisco Talos" title="Cisco Talos" type="rss" xmlUrl="https://blog.talosintelligence.com/rss/"/>
+      <outline text="Unit 42" title="Unit 42" type="rss" xmlUrl="https://unit42.paloaltonetworks.com/feed/"/>
+      <outline text="Microsoft Security Blog" title="Microsoft Security Blog" type="rss" xmlUrl="https://www.microsoft.com/en-us/security/blog/feed/"/>
+      <outline text="The DFIR Report" title="The DFIR Report" type="rss" xmlUrl="https://thedfirreport.com/feed/"/>
+      <outline text="Google Threat Intelligence" title="Google Threat Intelligence" type="rss" xmlUrl="https://feeds.feedburner.com/threatintelligence/pvexyqv7v0v"/>
+    </outline>
+    <outline text="AppSec &amp; Supply Chain">
+      <outline text="OpenSSF Blog" title="OpenSSF Blog" type="rss" xmlUrl="https://openssf.org/feed/"/>
+      <outline text="Snyk Blog" title="Snyk Blog" type="rss" xmlUrl="https://snyk.io/blog/feed/"/>
+      <outline text="Socket Blog" title="Socket Blog" type="rss" xmlUrl="https://socket.dev/api/blog/feed.atom"/>
+    </outline>
+    <outline text="Advisories">
+      <outline text="CISA Cybersecurity Advisories" title="CISA Cybersecurity Advisories" type="rss" xmlUrl="https://www.cisa.gov/cybersecurity-advisories/all.xml"/>
+      <outline text="oss-security mailing list" title="oss-security mailing list" type="rss" xmlUrl="https://seclists.org/rss/oss-sec.rss"/>
+    </outline>
+    <outline text="Podcasts">
+      <outline text="Risky Business" title="Risky Business" type="rss" xmlUrl="https://risky.biz/feeds/risky-business/"/>
+      <outline text="Darknet Diaries" title="Darknet Diaries" type="rss" xmlUrl="https://feeds.megaphone.fm/darknetdiaries"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Troy Hunt (Bluesky)" title="Troy Hunt (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/troyhunt.com/rss"/>
+      <outline text="Kevin Beaumont (Bluesky)" title="Kevin Beaumont (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/doublepulsar.com/rss"/>
+      <outline text="Matthew Green (Bluesky)" title="Matthew Green (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/matthewdgreen.bsky.social/rss"/>
+      <outline text="Catalin Cimpanu (Bluesky)" title="Catalin Cimpanu (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/campuscodi.risky.biz/rss"/>
+      <outline text="Kim Zetter (Bluesky)" title="Kim Zetter (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/kimzetter.bsky.social/rss"/>
+      <outline text="Brian Krebs (Mastodon)" title="Brian Krebs (Mastodon)" type="rss" xmlUrl="https://infosec.exchange/@briankrebs.rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="LiveOverflow" title="LiveOverflow" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UClcE-kVhqyiHCcjYwcpfj9w"/>
+      <outline text="John Hammond" title="John Hammond" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCVeW9qkBjo3zosnqUbG7CFw"/>
+      <outline text="IppSec" title="IppSec" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCa6eh7gCkpPo5XXUDfygQQA"/>
+      <outline text="NetworkChuck" title="NetworkChuck" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC9x0AN7BWHpCDHSm9NiJFJQ"/>
+      <outline text="Black Hat" title="Black Hat" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCJ6q9Ie29ajGqKApbLqfBOg"/>
+      <outline text="DEF CON" title="DEF CON" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC6Om9kAkl32dWlDSNlDS9Iw"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="Trivy releases" title="Trivy releases" type="rss" xmlUrl="https://github.com/aquasecurity/trivy/releases.atom"/>
+      <outline text="Grype releases" title="Grype releases" type="rss" xmlUrl="https://github.com/anchore/grype/releases.atom"/>
+      <outline text="Cosign releases" title="Cosign releases" type="rss" xmlUrl="https://github.com/sigstore/cosign/releases.atom"/>
+      <outline text="Semgrep releases" title="Semgrep releases" type="rss" xmlUrl="https://github.com/semgrep/semgrep/releases.atom"/>
+      <outline text="OpenSSL releases" title="OpenSSL releases" type="rss" xmlUrl="https://github.com/openssl/openssl/releases.atom"/>
+    </outline>
+    <outline text="Events">
+      <outline text="Security conferences" title="Security conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=security,cybersecurity,infosec"/>
+    </outline>
+  </body>
+</opml>

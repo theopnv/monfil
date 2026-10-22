@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>World News</title></head>
+  <body>
+    <outline text="Global">
+      <outline text="BBC News: World" title="BBC News: World" type="rss" xmlUrl="https://feeds.bbci.co.uk/news/world/rss.xml"/>
+      <outline text="BBC News: Top Stories" title="BBC News: Top Stories" type="rss" xmlUrl="https://feeds.bbci.co.uk/news/rss.xml"/>
+      <outline text="The Guardian: World" title="The Guardian: World" type="rss" xmlUrl="https://www.theguardian.com/world/rss"/>
+      <outline text="The New York Times: World" title="The New York Times: World" type="rss" xmlUrl="https://rss.nytimes.com/services/xml/rss/nyt/World.xml"/>
+      <outline text="Al Jazeera" title="Al Jazeera" type="rss" xmlUrl="https://www.aljazeera.com/xml/rss/all.xml"/>
+      <outline text="Sky News: World" title="Sky News: World" type="rss" xmlUrl="https://feeds.skynews.com/feeds/rss/world.xml"/>
+      <outline text="The Independent: World" title="The Independent: World" type="rss" xmlUrl="https://www.independent.co.uk/news/world/rss"/>
+      <outline text="UN News" title="UN News" type="rss" xmlUrl="https://news.un.org/feed/subscribe/en/news/all/rss.xml"/>
+    </outline>
+    <outline text="Americas">
+      <outline text="NPR News" title="NPR News" type="rss" xmlUrl="https://feeds.npr.org/1001/rss.xml"/>
+      <outline text="PBS NewsHour: World" title="PBS NewsHour: World" type="rss" xmlUrl="https://www.pbs.org/newshour/feeds/rss/world"/>
+      <outline text="Axios" title="Axios" type="rss" xmlUrl="https://api.axios.com/feed/"/>
+    </outline>
+    <outline text="Europe">
+      <outline text="DW" title="DW" type="rss" xmlUrl="https://rss.dw.com/rdf/rss-en-all"/>
+      <outline text="France 24" title="France 24" type="rss" xmlUrl="https://www.france24.com/en/rss"/>
+      <outline text="Le Monde in English" title="Le Monde in English" type="rss" xmlUrl="https://www.lemonde.fr/en/rss/une.xml"/>
+      <outline text="Politico Europe" title="Politico Europe" type="rss" xmlUrl="https://www.politico.eu/feed/"/>
+      <outline text="Euronews" title="Euronews" type="rss" xmlUrl="https://www.euronews.com/rss"/>
+    </outline>
+    <outline text="Asia, Africa &amp; Pacific">
+      <outline text="South China Morning Post" title="South China Morning Post" type="rss" xmlUrl="https://www.scmp.com/rss/91/feed"/>
+      <outline text="Nikkei Asia" title="Nikkei Asia" type="rss" xmlUrl="https://asia.nikkei.com/rss/feed/nar"/>
+      <outline text="The Japan Times" title="The Japan Times" type="rss" xmlUrl="https://www.japantimes.co.jp/feed/"/>
+      <outline text="The Hindu: International" title="The Hindu: International" type="rss" xmlUrl="https://www.thehindu.com/news/international/feeder/default.rss"/>
+      <outline text="ABC News (Australia)" title="ABC News (Australia)" type="rss" xmlUrl="https://www.abc.net.au/news/feed/51120/rss.xml"/>
+      <outline text="Africanews" title="Africanews" type="rss" xmlUrl="https://www.africanews.com/feed/rss"/>
+    </outline>
+    <outline text="Analysis &amp; Investigations">
+      <outline text="The Economist" title="The Economist" type="rss" xmlUrl="https://www.economist.com/international/rss.xml"/>
+      <outline text="Foreign Policy" title="Foreign Policy" type="rss" xmlUrl="https://foreignpolicy.com/feed/"/>
+      <outline text="The Diplomat" title="The Diplomat" type="rss" xmlUrl="https://thediplomat.com/feed/"/>
+      <outline text="The Atlantic" title="The Atlantic" type="rss" xmlUrl="https://www.theatlantic.com/feed/all/"/>
+      <outline text="The Conversation" title="The Conversation" type="rss" xmlUrl="https://theconversation.com/global/articles.atom"/>
+      <outline text="Semafor" title="Semafor" type="rss" xmlUrl="https://www.semafor.com/rss.xml"/>
+      <outline text="ProPublica" title="ProPublica" type="rss" xmlUrl="https://www.propublica.org/feeds/propublica/main"/>
+      <outline text="Bellingcat" title="Bellingcat" type="rss" xmlUrl="https://www.bellingcat.com/feed/"/>
+    </outline>
+    <outline text="Podcasts">
+      <outline text="Global News Podcast (BBC)" title="Global News Podcast (BBC)" type="rss" xmlUrl="https://podcasts.files.bbci.co.uk/p02nq0gn.rss"/>
+      <outline text="The Daily (NYT)" title="The Daily (NYT)" type="rss" xmlUrl="https://feeds.simplecast.com/54nAGcIl"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Reuters (Bluesky)" title="Reuters (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/reuters.com/rss"/>
+      <outline text="Associated Press (Bluesky)" title="Associated Press (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/apnews.com/rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="Vox" title="Vox" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCLXo7UDZvByw2ixzpQCufnA"/>
+      <outline text="Johnny Harris" title="Johnny Harris" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCmGSJVG3mCRXVOP4yZrU1Dw"/>
+    </outline>
+  </body>
+</opml>

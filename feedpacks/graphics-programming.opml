@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Graphics Programming</title></head>
+  <body>
+    <outline text="Blogs">
+      <outline text="Graphics Programming weekly" title="Graphics Programming weekly" type="rss" xmlUrl="https://www.jendrikillner.com/tags/weekly/index.xml"/>
+      <outline text="Aras Pranckevičius" title="Aras Pranckevičius" type="rss" xmlUrl="https://aras-p.info/atom.xml"/>
+      <outline text="The ryg blog (Fabian Giesen)" title="The ryg blog (Fabian Giesen)" type="rss" xmlUrl="https://fgiesen.wordpress.com/feed/"/>
+      <outline text="Arseny Kapoulkine" title="Arseny Kapoulkine" type="rss" xmlUrl="https://zeux.io/feed/"/>
+      <outline text="Self Shadow" title="Self Shadow" type="rss" xmlUrl="https://blog.selfshadow.com/feed/"/>
+      <outline text="Interplay of Light" title="Interplay of Light" type="rss" xmlUrl="https://interplayoflight.wordpress.com/feed/"/>
+      <outline text="Filmic Worlds (John Hable)" title="Filmic Worlds (John Hable)" type="rss" xmlUrl="http://filmicworlds.com/feed.xml"/>
+      <outline text="Maxime Heckel" title="Maxime Heckel" type="rss" xmlUrl="https://blog.maximeheckel.com/rss.xml"/>
+    </outline>
+    <outline text="Vendors &amp; APIs">
+      <outline text="NVIDIA Technical Blog" title="NVIDIA Technical Blog" type="rss" xmlUrl="https://developer.nvidia.com/blog/feed"/>
+      <outline text="AMD GPUOpen" title="AMD GPUOpen" type="rss" xmlUrl="https://gpuopen.com/feed/"/>
+      <outline text="Khronos News" title="Khronos News" type="rss" xmlUrl="https://www.khronos.org/feeds/news_feed"/>
+      <outline text="Vulkan spec releases" title="Vulkan spec releases" type="rss" xmlUrl="https://github.com/KhronosGroup/Vulkan-Docs/releases.atom"/>
+    </outline>
+    <outline text="Engines &amp; Tools">
+      <outline text="Unreal Engine" title="Unreal Engine" type="rss" xmlUrl="https://www.unrealengine.com/en-US/rss"/>
+      <outline text="Godot Engine News" title="Godot Engine News" type="rss" xmlUrl="https://godotengine.org/rss.xml"/>
+      <outline text="Blender Developers Blog" title="Blender Developers Blog" type="rss" xmlUrl="https://code.blender.org/feed/"/>
+      <outline text="three.js releases" title="three.js releases" type="rss" xmlUrl="https://github.com/mrdoob/three.js/releases.atom"/>
+      <outline text="wgpu releases" title="wgpu releases" type="rss" xmlUrl="https://github.com/gfx-rs/wgpu/releases.atom"/>
+    </outline>
+    <outline text="Research">
+      <outline text="arXiv cs.GR" title="arXiv cs.GR" type="rss" xmlUrl="https://rss.arxiv.org/rss/cs.GR"/>
+    </outline>
+    <outline text="Video">
+      <outline text="Sebastian Lague" title="Sebastian Lague" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCmtyQOKKmrMVaKuRXz02jbQ"/>
+      <outline text="Inigo Quilez" title="Inigo Quilez" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCdmAhiG8HQDlz8uyekw4ENw"/>
+      <outline text="The Cherno" title="The Cherno" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCQ-W1KE9EYfdxhL6S4twUNw"/>
+      <outline text="Two Minute Papers" title="Two Minute Papers" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYPyITQ-7l4upoX8nvctg"/>
+      <outline text="Acerola" title="Acerola" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCQG40havu4kNpB4pxUDQhYQ"/>
+      <outline text="Freya Holmér" title="Freya Holmér" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC7M-Wz4zK8oikt6ATcoTwBA"/>
+    </outline>
+    <outline text="Community">
+      <outline text="#graphicsprogramming on gamedev.place" title="#graphicsprogramming on gamedev.place" type="rss" xmlUrl="https://mastodon.gamedev.place/tags/graphicsprogramming.rss"/>
+      <outline text="#rendering on gamedev.place" title="#rendering on gamedev.place" type="rss" xmlUrl="https://mastodon.gamedev.place/tags/rendering.rss"/>
+      <outline text="Aras Pranckevičius (Mastodon)" title="Aras Pranckevičius (Mastodon)" type="rss" xmlUrl="https://mastodon.gamedev.place/@aras.rss"/>
+      <outline text="Jendrik Illner (Mastodon)" title="Jendrik Illner (Mastodon)" type="rss" xmlUrl="https://mastodon.gamedev.place/@jendrikillner.rss"/>
+      <outline text="Arseny Kapoulkine (Bluesky)" title="Arseny Kapoulkine (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/zeux.io/rss"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="Bevy releases" title="Bevy releases" type="rss" xmlUrl="https://github.com/bevyengine/bevy/releases.atom"/>
+      <outline text="Godot releases" title="Godot releases" type="rss" xmlUrl="https://github.com/godotengine/godot/releases.atom"/>
+      <outline text="Filament releases" title="Filament releases" type="rss" xmlUrl="https://github.com/google/filament/releases.atom"/>
+      <outline text="Slang releases" title="Slang releases" type="rss" xmlUrl="https://github.com/shader-slang/slang/releases.atom"/>
+    </outline>
+  </body>
+</opml>

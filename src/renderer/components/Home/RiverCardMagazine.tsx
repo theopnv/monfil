@@ -6,7 +6,6 @@ import FeedAvatar from "@/components/common/FeedAvatar";
 import RiverCardImage from "@/components/Home/RiverCardImage";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx } from "@/components/untitled-ui/utils/cx";
-import { resolveFeedIcon } from "@/lib/favicon";
 import { describeRiverCard, formatRelativeTime, SOURCE_TYPE_LABEL, type RiverCardProps } from "@/lib/river/utils";
 
 export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps) {
@@ -34,7 +33,7 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
         {/* Keeps the time clear of the save button RiverList overlays, which an absent or failed image leaves over this row. */}
         <div className="mb-2 flex items-center gap-1.75 pr-7">
           <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
-          <FeedAvatar title={item.feedTitle} faviconUrl={resolveFeedIcon(item.feedIcon, item.feedLink)} size="sm" />
+          <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="sm" />
           <span className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
           <span className="ml-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
         </div>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Video Games</title></head>
+  <body>
+    <outline text="News &amp; Reviews">
+      <outline text="Polygon" title="Polygon" type="rss" xmlUrl="https://www.polygon.com/rss/index.xml"/>
+      <outline text="Kotaku" title="Kotaku" type="rss" xmlUrl="https://kotaku.com/rss"/>
+      <outline text="IGN" title="IGN" type="rss" xmlUrl="https://feeds.feedburner.com/ign/all"/>
+      <outline text="GameSpot" title="GameSpot" type="rss" xmlUrl="https://www.gamespot.com/feeds/mashup/"/>
+      <outline text="Eurogamer" title="Eurogamer" type="rss" xmlUrl="https://www.eurogamer.net/feed"/>
+      <outline text="Rock Paper Shotgun" title="Rock Paper Shotgun" type="rss" xmlUrl="https://www.rockpapershotgun.com/feed"/>
+      <outline text="PC Gamer" title="PC Gamer" type="rss" xmlUrl="https://www.pcgamer.com/rss/"/>
+      <outline text="Video Games Chronicle" title="Video Games Chronicle" type="rss" xmlUrl="https://www.videogameschronicle.com/feed/"/>
+      <outline text="Aftermath" title="Aftermath" type="rss" xmlUrl="https://aftermath.site/feed"/>
+      <outline text="The Verge: Gaming" title="The Verge: Gaming" type="rss" xmlUrl="https://www.theverge.com/rss/games/index.xml"/>
+    </outline>
+    <outline text="Industry">
+      <outline text="Game Developer" title="Game Developer" type="rss" xmlUrl="https://www.gamedeveloper.com/rss.xml"/>
+      <outline text="GamesIndustry.biz" title="GamesIndustry.biz" type="rss" xmlUrl="https://www.gamesindustry.biz/feed"/>
+      <outline text="Game File" title="Game File" type="rss" xmlUrl="https://www.gamefile.news/feed"/>
+    </outline>
+    <outline text="Platforms">
+      <outline text="PlayStation Blog" title="PlayStation Blog" type="rss" xmlUrl="https://blog.playstation.com/feed/"/>
+      <outline text="Xbox Wire" title="Xbox Wire" type="rss" xmlUrl="https://news.xbox.com/en-us/feed/"/>
+      <outline text="Nintendo Life" title="Nintendo Life" type="rss" xmlUrl="https://www.nintendolife.com/feeds/latest"/>
+      <outline text="Steam News" title="Steam News" type="rss" xmlUrl="https://store.steampowered.com/feeds/news/"/>
+    </outline>
+    <outline text="Indie &amp; Game Dev">
+      <outline text="How To Market A Game" title="How To Market A Game" type="rss" xmlUrl="https://howtomarketagame.com/feed/"/>
+      <outline text="Godot Engine News" title="Godot Engine News" type="rss" xmlUrl="https://godotengine.org/rss.xml"/>
+      <outline text="Bevy Engine" title="Bevy Engine" type="rss" xmlUrl="https://bevyengine.org/atom.xml"/>
+      <outline text="itch.io Featured" title="itch.io Featured" type="rss" xmlUrl="https://itch.io/feed/featured.xml"/>
+    </outline>
+    <outline text="Video">
+      <outline text="GDC" title="GDC" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC0JB7TSe49lg56u6qH8y_MQ"/>
+      <outline text="Digital Foundry" title="Digital Foundry" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC9PBzalIcEQCsiIkq36PyUA"/>
+      <outline text="Game Maker's Toolkit" title="Game Maker's Toolkit" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCqJ-Xo29CKyLTjn6z2XwYAw"/>
+      <outline text="Noclip" title="Noclip" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC0fDG3byEcMtbOqPMymDNbw"/>
+      <outline text="Nintendo of America" title="Nintendo of America" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCGIY_O-8vW4rfX98KlMkvRg"/>
+      <outline text="People Make Games" title="People Make Games" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZB6V9fUov0Mx_us3MWWILg"/>
+      <outline text="Jacob Geller" title="Jacob Geller" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCeTfBygNb1TahcNpZyELO8g"/>
+      <outline text="Summoning Salt" title="Summoning Salt" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCtUbO6rBht0daVIOGML3c8w"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Jason Schreier (Bluesky)" title="Jason Schreier (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/jasonschreier.bsky.social/rss"/>
+      <outline text="Stephen Totilo (Bluesky)" title="Stephen Totilo (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/stephentotilo.bsky.social/rss"/>
+    </outline>
+  </body>
+</opml>

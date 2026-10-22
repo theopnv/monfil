@@ -20,7 +20,7 @@ interface Article {
 interface FeedServer {
   url: string;
   publish: (articles: Article[]) => void;
-  requests: () => { userAgent: string | undefined; ifNoneMatch: string | undefined }[];
+  requests: () => { path: string | undefined; userAgent: string | undefined; ifNoneMatch: string | undefined }[];
 }
 
 type RefreshTestFixtures = {
@@ -41,12 +41,13 @@ const refreshTest = base.extend<RefreshTestFixtures>({
     let body = rss([]);
     let version = 0;
     let etag = '"v0"';
-    const requests: { userAgent: string | undefined; ifNoneMatch: string | undefined }[] = [];
+    const requests: { path: string | undefined; userAgent: string | undefined; ifNoneMatch: string | undefined }[] = [];
     const server = createServer((request, response) => {
       const userAgent = request.headers['user-agent'];
       const ifNoneMatchHeader = request.headers['if-none-match'];
       const ifNoneMatch = Array.isArray(ifNoneMatchHeader) ? ifNoneMatchHeader[0] : ifNoneMatchHeader;
       requests.push({
+        path: request.url,
         userAgent: Array.isArray(userAgent) ? userAgent[0] : userAgent,
         ifNoneMatch,
       });
@@ -172,7 +173,8 @@ refreshTest('uses Electron networking and accepts an unchanged feed response', a
   }
 
   // Assert
-  const requests = feedServer.requests();
+  // The renderer also loads the feed icon from this server, with Chromium's own user agent.
+  const requests = feedServer.requests().filter((request) => request.path === '/feed.xml');
   expect(requests.every((request) => request.userAgent?.startsWith('monfil/'))).toBe(true);
   expect(requests.some((request) => request.ifNoneMatch === undefined)).toBe(true);
   expect(requests.some((request) => request.ifNoneMatch === '"v1"')).toBe(true);

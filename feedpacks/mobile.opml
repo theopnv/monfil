@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Mobile Development</title></head>
+  <body>
+    <outline text="iOS">
+      <outline text="Apple Developer News" title="Apple Developer News" type="rss" xmlUrl="https://developer.apple.com/news/rss/news.rss"/>
+      <outline text="Swift.org Blog" title="Swift.org Blog" type="rss" xmlUrl="https://www.swift.org/atom.xml"/>
+      <outline text="iOS Dev Weekly" title="iOS Dev Weekly" type="rss" xmlUrl="https://iosdevweekly.com/issues.rss"/>
+      <outline text="SwiftLee" title="SwiftLee" type="rss" xmlUrl="https://www.avanderlee.com/feed/"/>
+      <outline text="Hacking with Swift" title="Hacking with Swift" type="rss" xmlUrl="https://www.hackingwithswift.com/articles/rss"/>
+      <outline text="Swift by Sundell" title="Swift by Sundell" type="rss" xmlUrl="https://www.swiftbysundell.com/rss"/>
+      <outline text="Point-Free" title="Point-Free" type="rss" xmlUrl="https://www.pointfree.co/blog/feed/atom.xml"/>
+      <outline text="Michael Tsai" title="Michael Tsai" type="rss" xmlUrl="https://mjtsai.com/blog/feed/"/>
+    </outline>
+    <outline text="Android">
+      <outline text="Android Developers Blog" title="Android Developers Blog" type="rss" xmlUrl="https://android-developers.googleblog.com/atom.xml"/>
+      <outline text="Android Weekly" title="Android Weekly" type="rss" xmlUrl="https://androidweekly.net/rss.xml"/>
+      <outline text="Kotlin Blog" title="Kotlin Blog" type="rss" xmlUrl="https://blog.jetbrains.com/kotlin/feed/"/>
+      <outline text="ProAndroidDev" title="ProAndroidDev" type="rss" xmlUrl="https://proandroiddev.com/feed"/>
+      <outline text="Jake Wharton" title="Jake Wharton" type="rss" xmlUrl="https://jakewharton.com/atom.xml"/>
+    </outline>
+    <outline text="Cross-platform">
+      <outline text="Flutter Blog" title="Flutter Blog" type="rss" xmlUrl="https://medium.com/feed/flutter"/>
+      <outline text="React Native Blog" title="React Native Blog" type="rss" xmlUrl="https://reactnative.dev/blog/rss.xml"/>
+      <outline text="Expo Blog" title="Expo Blog" type="rss" xmlUrl="https://expo.dev/blog/rss.xml"/>
+    </outline>
+    <outline text="App Business">
+      <outline text="RevenueCat Blog" title="RevenueCat Blog" type="rss" xmlUrl="https://www.revenuecat.com/blog/rss.xml"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="Flutter releases" title="Flutter releases" type="rss" xmlUrl="https://github.com/flutter/flutter/releases.atom"/>
+      <outline text="React Native releases" title="React Native releases" type="rss" xmlUrl="https://github.com/facebook/react-native/releases.atom"/>
+      <outline text="Fastlane releases" title="Fastlane releases" type="rss" xmlUrl="https://github.com/fastlane/fastlane/releases.atom"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Paul Hudson (Bluesky)" title="Paul Hudson (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/twostraws.bsky.social/rss"/>
+      <outline text="Antoine van der Lee (Bluesky)" title="Antoine van der Lee (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/avanderlee.com/rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="Philipp Lackner" title="Philipp Lackner" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCKNTZMRHPLXfqlbdOI7mCkg"/>
+      <outline text="Sean Allen" title="Sean Allen" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCbTw29mcP12YlTt1EpUaVJw"/>
+      <outline text="Android Developers (YouTube)" title="Android Developers (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCVHFbqXqoYvEWM1Ddxl0QDg"/>
+      <outline text="Flutter (YouTube)" title="Flutter (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCwXdFgeE9KYzlDdR7TG9cMw"/>
+    </outline>
+    <outline text="Events">
+      <outline text="Mobile conferences" title="Mobile conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=mobile,android,flutter,mobile-development,ios"/>
+    </outline>
+  </body>
+</opml>

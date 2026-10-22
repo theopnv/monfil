@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Engineering Leadership</title></head>
+  <body>
+    <outline text="Newsletters">
+      <outline text="The Pragmatic Engineer" title="The Pragmatic Engineer" type="rss" xmlUrl="https://newsletter.pragmaticengineer.com/feed"/>
+      <outline text="Engineering Enablement (Abi Noda)" title="Engineering Enablement (Abi Noda)" type="rss" xmlUrl="https://newsletter.getdx.com/feed"/>
+      <outline text="Refactoring (Luca Rossi)" title="Refactoring (Luca Rossi)" type="rss" xmlUrl="https://refactoring.fm/feed"/>
+      <outline text="Engineering Leadership (Gregor Ojstersek)" title="Engineering Leadership (Gregor Ojstersek)" type="rss" xmlUrl="https://newsletter.eng-leadership.com/feed"/>
+      <outline text="manager.dev (Anton Zaides)" title="manager.dev (Anton Zaides)" type="rss" xmlUrl="https://newsletter.manager.dev/feed"/>
+      <outline text="The Peterman Post (Ryan Peterman)" title="The Peterman Post (Ryan Peterman)" type="rss" xmlUrl="https://www.developing.dev/feed"/>
+      <outline text="LeadDev" title="LeadDev" type="rss" xmlUrl="https://leaddev.com/feed"/>
+    </outline>
+    <outline text="Writers">
+      <outline text="Irrational Exuberance (Will Larson)" title="Irrational Exuberance (Will Larson)" type="rss" xmlUrl="https://lethain.com/feeds/"/>
+      <outline text="Charity Majors" title="Charity Majors" type="rss" xmlUrl="https://charity.wtf/feed"/>
+      <outline text="Rands in Repose" title="Rands in Repose" type="rss" xmlUrl="https://randsinrepose.com/feed/"/>
+      <outline text="Lara Hogan" title="Lara Hogan" type="rss" xmlUrl="https://larahogan.me/feed.xml"/>
+      <outline text="The Engineering Manager (James Stanier)" title="The Engineering Manager (James Stanier)" type="rss" xmlUrl="https://www.theengineeringmanager.com/feed/"/>
+      <outline text="Tidy First? (Kent Beck)" title="Tidy First? (Kent Beck)" type="rss" xmlUrl="https://tidyfirst.substack.com/feed"/>
+      <outline text="Camille Fournier" title="Camille Fournier" type="rss" xmlUrl="https://skamille.medium.com/feed"/>
+      <outline text="Scarlet Ink" title="Scarlet Ink" type="rss" xmlUrl="https://www.scarletink.com/feed"/>
+    </outline>
+    <outline text="Engineers">
+      <outline text="Sean Goedecke" title="Sean Goedecke" type="rss" xmlUrl="https://www.seangoedecke.com/rss.xml"/>
+      <outline text="Swizec Teller" title="Swizec Teller" type="rss" xmlUrl="https://swizec.com/rss.xml"/>
+      <outline text="Martin Fowler" title="Martin Fowler" type="rss" xmlUrl="https://martinfowler.com/feed.atom"/>
+      <outline text="The Overflow (Stack Overflow)" title="The Overflow (Stack Overflow)" type="rss" xmlUrl="https://stackoverflow.blog/feed/"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Gergely Orosz (Bluesky)" title="Gergely Orosz (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/gergely.pragmaticengineer.com/rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="The Pragmatic Engineer (YouTube)" title="The Pragmatic Engineer (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCPbwhExawYrn9xxI21TFfyw"/>
+      <outline text="LeadDev (YouTube)" title="LeadDev (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCmM3eCpmWKLJj2PDW_jdGkg"/>
+      <outline text="GOTO Conferences" title="GOTO Conferences" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCs_tLP3AiwYKwdUHpltJPuA"/>
+    </outline>
+    <outline text="Events">
+      <outline text="Engineering leadership conferences" title="Engineering leadership conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=leadership"/>
+    </outline>
+  </body>
+</opml>

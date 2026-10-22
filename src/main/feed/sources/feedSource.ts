@@ -6,6 +6,7 @@ import { fetchConditional, fetchText, type FetchValidators, type NotModified } f
 import type { FeedFetchError, FetchUrlError, ParsedSource, SourceType } from '../../../shared/contracts';
 import type { Result } from '../../../shared/result';
 import { parseFeedContent } from './feedContent';
+import { resolveSiteIcon } from './siteIcon';
 import type { FeedCandidate, ParsedFeedContent, SourceAdapter } from './types';
 
 /** The most candidates one link may fetch, so a page with many feed links stays cheap to validate. */
@@ -97,7 +98,9 @@ export async function fetchCandidates(
       return unsupported('The feed did not change since it was last fetched.');
     }
     const { parsed, body } = fetched.data;
-    const icon = candidate.icon ?? await resolveIcon?.(candidate, body).catch(() => undefined);
+    const icon = candidate.icon
+      ?? await resolveIcon?.(candidate, body).catch(() => undefined)
+      ?? await resolveSiteIcon(parsed.siteLink ?? candidate.link);
     return {
       success: true,
       data: { type, link: candidate.link, title: parsed.title, description: parsed.description, items: parsed.items, icon, ...(candidate.label ? { label: candidate.label } : {}) },
@@ -156,7 +159,7 @@ export function createFeedSource(spec: FeedSourceSpec): SourceAdapter {
         return { success: true, data: fetched.data };
       }
       const { parsed, validators } = fetched.data;
-      return { success: true, data: { validators, parsed: { type: spec.type, link, title: parsed.title, description: parsed.description, items: parsed.items, icon: undefined } } };
+      return { success: true, data: { validators, parsed: { type: spec.type, link, title: parsed.title, description: parsed.description, items: parsed.items, icon: undefined, siteLink: parsed.siteLink } } };
     },
     parse,
   };

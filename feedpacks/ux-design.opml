@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>UI/UX Design</title></head>
+  <body>
+    <outline text="Research &amp; UX">
+      <outline text="Nielsen Norman Group" title="Nielsen Norman Group" type="rss" xmlUrl="https://www.nngroup.com/feed/rss/"/>
+      <outline text="UX Tigers (Jakob Nielsen)" title="UX Tigers (Jakob Nielsen)" type="rss" xmlUrl="https://jakobnielsenphd.substack.com/feed"/>
+      <outline text="MeasuringU" title="MeasuringU" type="rss" xmlUrl="https://measuringu.com/feed/"/>
+      <outline text="Baymard Institute" title="Baymard Institute" type="rss" xmlUrl="https://baymard.com/blog/feed.xml"/>
+      <outline text="UX Collective" title="UX Collective" type="rss" xmlUrl="https://uxdesign.cc/feed"/>
+    </outline>
+    <outline text="Product Design">
+      <outline text="Figma Blog" title="Figma Blog" type="rss" xmlUrl="https://www.figma.com/blog/feed/atom.xml"/>
+      <outline text="Figma (YouTube)" title="Figma (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCQsVmhSa4X-G3lHlUtejzLA"/>
+      <outline text="Maggie Appleton" title="Maggie Appleton" type="rss" xmlUrl="https://maggieappleton.com/rss.xml"/>
+    </outline>
+    <outline text="Design Systems">
+      <outline text="Brad Frost" title="Brad Frost" type="rss" xmlUrl="https://bradfrost.com/feed/"/>
+      <outline text="Design Systems Collective" title="Design Systems Collective" type="rss" xmlUrl="https://www.designsystemscollective.com/feed"/>
+    </outline>
+    <outline text="Accessibility">
+      <outline text="Adrian Roselli" title="Adrian Roselli" type="rss" xmlUrl="https://adrianroselli.com/feed"/>
+      <outline text="WebAIM Blog" title="WebAIM Blog" type="rss" xmlUrl="https://webaim.org/blog/feed"/>
+      <outline text="Sara Soueidan" title="Sara Soueidan" type="rss" xmlUrl="https://www.sarasoueidan.com/blog/index.xml"/>
+      <outline text="Eric Bailey" title="Eric Bailey" type="rss" xmlUrl="https://ericwbailey.website/feed/feed.xml"/>
+      <outline text="Deque Blog" title="Deque Blog" type="rss" xmlUrl="https://www.deque.com/feed/"/>
+      <outline text="Tink (Léonie Watson)" title="Tink (Léonie Watson)" type="rss" xmlUrl="https://tink.uk/feed.xml"/>
+    </outline>
+    <outline text="Visual Design &amp; Typography">
+      <outline text="I Love Typography" title="I Love Typography" type="rss" xmlUrl="https://ilovetypography.com/feed/"/>
+      <outline text="Fonts In Use" title="Fonts In Use" type="rss" xmlUrl="https://fontsinuse.com/main.rss"/>
+      <outline text="Creative Bloq" title="Creative Bloq" type="rss" xmlUrl="https://www.creativebloq.com/feeds/all"/>
+      <outline text="Design Milk" title="Design Milk" type="rss" xmlUrl="https://design-milk.com/feed/"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Brad Frost (Bluesky)" title="Brad Frost (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/bradfrost.com/rss"/>
+      <outline text="Adrian Roselli (Bluesky)" title="Adrian Roselli (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/aardrian.bsky.social/rss"/>
+      <outline text="Sara Soueidan (Bluesky)" title="Sara Soueidan (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/sarasoueidan.com/rss"/>
+      <outline text="Léonie Watson (Bluesky)" title="Léonie Watson (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/tink.uk/rss"/>
+      <outline text="Maggie Appleton (Bluesky)" title="Maggie Appleton (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/maggieappleton.com/rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="NN/g (YouTube)" title="NN/g (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC2oCugzU6W8-h95W7eBTUEg"/>
+      <outline text="Flux Academy" title="Flux Academy" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCN7dywl5wDxTu1RM3eJ_h9Q"/>
+    </outline>
+    <outline text="Events">
+      <outline text="Design and UX conferences" title="Design and UX conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=design,ux,user-experience"/>
+    </outline>
+  </body>
+</opml>

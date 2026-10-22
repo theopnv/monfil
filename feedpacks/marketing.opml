@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Content Creation &amp; Marketing</title></head>
+  <body>
+    <outline text="Social Platforms">
+      <outline text="Social Media Today" title="Social Media Today" type="rss" xmlUrl="https://www.socialmediatoday.com/feeds/news/"/>
+      <outline text="Social Media Examiner" title="Social Media Examiner" type="rss" xmlUrl="https://www.socialmediaexaminer.com/feed/"/>
+      <outline text="YouTube Official Blog" title="YouTube Official Blog" type="rss" xmlUrl="https://blog.youtube/rss/"/>
+      <outline text="Creator Insider" title="Creator Insider" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCGg-UqjRgzhYDPJMr-9HXCg"/>
+      <outline text="Meta Newsroom" title="Meta Newsroom" type="rss" xmlUrl="https://about.fb.com/feed/"/>
+      <outline text="Buffer Blog" title="Buffer Blog" type="rss" xmlUrl="https://buffer.com/resources/rss/"/>
+      <outline text="Hootsuite Blog" title="Hootsuite Blog" type="rss" xmlUrl="https://blog.hootsuite.com/feed/"/>
+      <outline text="Sprout Social Insights" title="Sprout Social Insights" type="rss" xmlUrl="https://sproutsocial.com/insights/feed/"/>
+    </outline>
+    <outline text="Creator Economy">
+      <outline text="Tubefilter" title="Tubefilter" type="rss" xmlUrl="https://www.tubefilter.com/feed/"/>
+      <outline text="ICYMI (Lia Haberman)" title="ICYMI (Lia Haberman)" type="rss" xmlUrl="https://liahaberman.substack.com/feed"/>
+      <outline text="Creator Science (Jay Clouse)" title="Creator Science (Jay Clouse)" type="rss" xmlUrl="https://creatorscience.com/feed/"/>
+      <outline text="Colin and Samir" title="Colin and Samir" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCamLstJyCa-t5gfZegxsFMw"/>
+    </outline>
+    <outline text="Content Marketing">
+      <outline text="Seth Godin" title="Seth Godin" type="rss" xmlUrl="https://seths.blog/feed/"/>
+      <outline text="HubSpot Marketing Blog" title="HubSpot Marketing Blog" type="rss" xmlUrl="https://blog.hubspot.com/marketing/rss.xml"/>
+      <outline text="SparkToro" title="SparkToro" type="rss" xmlUrl="https://sparktoro.com/blog/feed/"/>
+    </outline>
+    <outline text="SEO &amp; Search">
+      <outline text="Google Search Central Blog" title="Google Search Central Blog" type="rss" xmlUrl="https://developers.google.com/search/blog/feed.xml"/>
+      <outline text="Search Engine Roundtable" title="Search Engine Roundtable" type="rss" xmlUrl="https://www.seroundtable.com/index.xml"/>
+      <outline text="Ahrefs Blog" title="Ahrefs Blog" type="rss" xmlUrl="https://ahrefs.com/blog/feed/"/>
+      <outline text="Moz Blog" title="Moz Blog" type="rss" xmlUrl="https://moz.com/posts/rss/blog"/>
+    </outline>
+    <outline text="Growth">
+      <outline text="Elena Verna" title="Elena Verna" type="rss" xmlUrl="https://www.elenaverna.com/feed"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Rand Fishkin (Bluesky)" title="Rand Fishkin (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/randfish.bsky.social/rss"/>
+      <outline text="Lily Ray (Bluesky)" title="Lily Ray (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/lilyray.nyc/rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="Ahrefs (YouTube)" title="Ahrefs (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCWquNQV8Y0_defMKnGKrFOQ"/>
+      <outline text="Think Media" title="Think Media" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCGxjDWAN1KwrkXYVi8CXtjQ"/>
+    </outline>
+  </body>
+</opml>

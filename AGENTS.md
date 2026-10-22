@@ -53,6 +53,7 @@ In VS Code, the `Main + renderer` compound launch configuration debugs both Elec
 
 ## Changes and checks
 
+- Pick the commit type and the PR title by what users of the shipped app see, because semantic-release reads them. `feat` makes a minor release and `fix` or `perf` makes a patch release. Use them only for a change in the packaged app, under `src/`. Use `ci`, `build`, `test`, `chore`, `docs`, or `refactor` for CI, tooling, scripts, `infra/`, tests, configs, and documentation, which release nothing. When in doubt, choose the type that releases nothing. A squash merge takes the PR title as its commit, so it follows the same rule. Check the type of every commit and the PR title before you push.
 - For a bug fix, first add a test that fails for the reported behavior. Then fix the code and run the affected test again.
 - Keep unit tests next to source as `*.test.ts` or `*.test.tsx`. Put Electron end-to-end tests in `test/e2e/*.spec.ts`. Renderer component tests run in Vitest Browser Mode, not the Node suite.
 - After you write or change tests for a module, run `npm run mutate -- <path>` on it. Kill each survivor with a test, or suppress a proven equivalent mutant with `// Stryker disable next-line <mutator>: <reason>`. Use `.ai/skills/test-quality/SKILL.md` to improve or prune the tests of a path from its results.

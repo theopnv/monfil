@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Founders &amp; Solopreneurs</title></head>
+  <body>
+    <outline text="Essays">
+      <outline text="Paul Graham" title="Paul Graham" type="rss" xmlUrl="http://www.aaronsw.com/2002/feeds/pgessays.rss"/>
+      <outline text="Stratechery" title="Stratechery" type="rss" xmlUrl="https://stratechery.com/feed/"/>
+      <outline text="Not Boring" title="Not Boring" type="rss" xmlUrl="https://www.notboring.co/feed"/>
+      <outline text="Steve Blank" title="Steve Blank" type="rss" xmlUrl="https://steveblank.com/feed/"/>
+      <outline text="A Smart Bear (Jason Cohen)" title="A Smart Bear (Jason Cohen)" type="rss" xmlUrl="https://longform.asmartbear.com/index.xml"/>
+      <outline text="Y Combinator Blog" title="Y Combinator Blog" type="rss" xmlUrl="https://www.ycombinator.com/blog/rss/"/>
+    </outline>
+    <outline text="Indie &amp; Bootstrapping">
+      <outline text="Pieter Levels" title="Pieter Levels" type="rss" xmlUrl="https://levels.io/rss"/>
+      <outline text="Just Ship It" title="Just Ship It" type="rss" xmlUrl="https://rss.beehiiv.com/feeds/eFrYnr889a.xml"/>
+      <outline text="Justin Jackson" title="Justin Jackson" type="rss" xmlUrl="https://justinjackson.ca/feed"/>
+      <outline text="Startups For the Rest of Us" title="Startups For the Rest of Us" type="rss" xmlUrl="https://www.startupsfortherestofus.com/feed/podcast"/>
+      <outline text="Starter Story (YouTube)" title="Starter Story (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UChhw6DlKKTQ9mYSpTfXUYqA"/>
+    </outline>
+    <outline text="Growth &amp; SaaS">
+      <outline text="SaaStr" title="SaaStr" type="rss" xmlUrl="https://www.saastr.com/feed/"/>
+      <outline text="Lenny's Newsletter" title="Lenny's Newsletter" type="rss" xmlUrl="https://www.lennysnewsletter.com/feed"/>
+      <outline text="Bits about Money" title="Bits about Money" type="rss" xmlUrl="https://www.bitsaboutmoney.com/archive/rss/"/>
+      <outline text="Stripe Blog" title="Stripe Blog" type="rss" xmlUrl="https://stripe.com/blog/feed.rss"/>
+    </outline>
+    <outline text="Launches">
+      <outline text="Product Hunt" title="Product Hunt" type="rss" xmlUrl="https://www.producthunt.com/feed"/>
+      <outline text="Show HN (100+ points)" title="Show HN (100+ points)" type="rss" xmlUrl="https://hnrss.org/show?points=100"/>
+      <outline text="Hacker News (300+ points)" title="Hacker News (300+ points)" type="rss" xmlUrl="https://hnrss.org/newest?points=300"/>
+    </outline>
+    <outline text="Funding News">
+      <outline text="TechCrunch Startups" title="TechCrunch Startups" type="rss" xmlUrl="https://techcrunch.com/category/startups/feed/"/>
+      <outline text="Crunchbase News" title="Crunchbase News" type="rss" xmlUrl="https://news.crunchbase.com/feed/"/>
+    </outline>
+    <outline text="Podcasts &amp; Video">
+      <outline text="In Depth (First Round)" title="In Depth (First Round)" type="rss" xmlUrl="https://firstround.libsyn.com/rss"/>
+      <outline text="How I Built This" title="How I Built This" type="rss" xmlUrl="https://rss.art19.com/how-i-built-this"/>
+      <outline text="My First Million" title="My First Million" type="rss" xmlUrl="https://feeds.megaphone.fm/HS2300184645"/>
+      <outline text="Y Combinator (YouTube)" title="Y Combinator (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCcefcZRL2oaA_uBNeo5UOWg"/>
+      <outline text="Greg Isenberg" title="Greg Isenberg" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCPjNBjflYl0-HQtUvOx0Ibw"/>
+    </outline>
+  </body>
+</opml>

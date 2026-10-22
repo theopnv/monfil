@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Data</title></head>
+  <body>
+    <outline text="Data Engineering">
+      <outline text="Data Engineering Weekly" title="Data Engineering Weekly" type="rss" xmlUrl="https://www.dataengineeringweekly.com/feed"/>
+      <outline text="Seattle Data Guy" title="Seattle Data Guy" type="rss" xmlUrl="https://seattledataguy.substack.com/feed"/>
+      <outline text="Joe Reis" title="Joe Reis" type="rss" xmlUrl="https://joereis.substack.com/feed"/>
+      <outline text="benn.substack" title="benn.substack" type="rss" xmlUrl="https://benn.substack.com/feed"/>
+    </outline>
+    <outline text="Platforms &amp; Tools">
+      <outline text="dbt Blog" title="dbt Blog" type="rss" xmlUrl="https://www.getdbt.com/blog/rss.xml"/>
+      <outline text="Databricks Blog" title="Databricks Blog" type="rss" xmlUrl="https://www.databricks.com/feed"/>
+      <outline text="DuckDB Blog" title="DuckDB Blog" type="rss" xmlUrl="https://duckdb.org/feed.xml"/>
+      <outline text="MotherDuck Blog" title="MotherDuck Blog" type="rss" xmlUrl="https://motherduck.com/rss.xml"/>
+      <outline text="ClickHouse Blog" title="ClickHouse Blog" type="rss" xmlUrl="https://clickhouse.com/rss.xml"/>
+      <outline text="Apache Arrow Blog" title="Apache Arrow Blog" type="rss" xmlUrl="https://arrow.apache.org/feed.xml"/>
+      <outline text="Polars Blog" title="Polars Blog" type="rss" xmlUrl="https://pola.rs/rss.xml"/>
+    </outline>
+    <outline text="Data Science">
+      <outline text="Towards Data Science" title="Towards Data Science" type="rss" xmlUrl="https://towardsdatascience.com/feed"/>
+      <outline text="KDnuggets" title="KDnuggets" type="rss" xmlUrl="https://www.kdnuggets.com/feed"/>
+      <outline text="Statistical Modeling, Causal Inference, and Social Science" title="Statistical Modeling, Causal Inference, and Social Science" type="rss" xmlUrl="https://statmodeling.stat.columbia.edu/feed/"/>
+      <outline text="Real Python" title="Real Python" type="rss" xmlUrl="https://realpython.com/atom.xml"/>
+      <outline text="PyCoder's Weekly" title="PyCoder's Weekly" type="rss" xmlUrl="https://pycoders.com/feed"/>
+    </outline>
+    <outline text="Visualization">
+      <outline text="FlowingData" title="FlowingData" type="rss" xmlUrl="https://flowingdata.com/feed"/>
+      <outline text="The Pudding" title="The Pudding" type="rss" xmlUrl="https://pudding.cool/feed/index.xml"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="dbt Core releases" title="dbt Core releases" type="rss" xmlUrl="https://github.com/dbt-labs/dbt-core/releases.atom"/>
+      <outline text="Apache Airflow Blog" title="Apache Airflow Blog" type="rss" xmlUrl="https://airflow.apache.org/blog/index.xml"/>
+      <outline text="DuckDB releases" title="DuckDB releases" type="rss" xmlUrl="https://github.com/duckdb/duckdb/releases.atom"/>
+      <outline text="pandas releases" title="pandas releases" type="rss" xmlUrl="https://github.com/pandas-dev/pandas/releases.atom"/>
+      <outline text="Polars releases" title="Polars releases" type="rss" xmlUrl="https://github.com/pola-rs/polars/releases.atom"/>
+      <outline text="Apache Iceberg releases" title="Apache Iceberg releases" type="rss" xmlUrl="https://github.com/apache/iceberg/releases.atom"/>
+      <outline text="Dagster releases" title="Dagster releases" type="rss" xmlUrl="https://github.com/dagster-io/dagster/releases.atom"/>
+      <outline text="Apache Superset releases" title="Apache Superset releases" type="rss" xmlUrl="https://github.com/apache/superset/releases.atom"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Hadley Wickham (Bluesky)" title="Hadley Wickham (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/hadley.nz/rss"/>
+      <outline text="Vicki Boykis (Bluesky)" title="Vicki Boykis (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/vickiboykis.com/rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="StatQuest" title="StatQuest" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCtYLUTtgS3k1Fg4y5tAhLbw"/>
+      <outline text="Alex The Analyst" title="Alex The Analyst" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC7cs8q-gJRlGwj4A8OmCmXg"/>
+    </outline>
+    <outline text="Events">
+      <outline text="Data conferences" title="Data conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=data,data-science,big-data,analytics"/>
+    </outline>
+  </body>
+</opml>
