@@ -26,6 +26,8 @@ const SCHEME_ERROR = { success: false, error: { name: 'BLOCKED_URL_ERROR', messa
 interface RecordedRequest {
   url: string;
   headers: Record<string, string | string[] | undefined>;
+  /** How many times the fetch released this hop's connection. */
+  aborts: number;
 }
 
 interface StubResponse {
@@ -44,13 +46,17 @@ interface StubResponse {
 function stubTransport(responses: (url: string) => StubResponse | undefined): { transport: RequestTransport; requests: RecordedRequest[] } {
   const requests: RecordedRequest[] = [];
   const transport: RequestTransport = async (target, headers) => {
-    requests.push({ url: target.href, headers });
+    const request: RecordedRequest = { url: target.href, headers, aborts: 0 };
+    requests.push(request);
+    const abort = () => {
+      request.aborts += 1;
+    };
     const response = responses(target.href);
     if (!response) {
       throw Object.assign(new Error(`net::ERR_NO_MATCHING_STUB for ${target.href}`), { name: 'Error' });
     }
     if (response.redirectTo !== undefined) {
-      return { status: response.status, statusMessage: '', headers: {}, redirectUrl: response.redirectTo, abort: () => undefined };
+      return { status: response.status, statusMessage: '', headers: {}, redirectUrl: response.redirectTo, abort };
     }
     const body = response.body ?? '';
     const stream = typeof body === 'string'
@@ -88,7 +94,7 @@ function stubTransport(responses: (url: string) => StubResponse | undefined): { 
           text += decoder.decode(value, { stream: true });
         }
       },
-      abort: () => undefined,
+      abort,
     };
   };
   return { transport, requests };
@@ -129,15 +135,20 @@ describe('fetchText', () => {
     expect(requests[0]?.headers['Cache-Control']).toBe('no-cache');
   });
 
-  test('returns GENERIC_FETCH_ERROR when the response is not ok', async () => {
+  test.each([
+    { status: 199, statusMessage: 'Informational' },
+    { status: 300, statusMessage: 'Multiple Choices' },
+    { status: 404, statusMessage: 'Not Found' },
+  ])('returns GENERIC_FETCH_ERROR for a $status and releases the unread response', async ({ status, statusMessage }) => {
     // Arrange
-    useTransport(() => ({ status: 404, statusMessage: 'Not Found' }));
+    const requests = useTransport(() => ({ status, statusMessage }));
 
     // Act
     const result = await fetchText('https://example.com');
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: '404: Not Found' } });
+    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: `${status}: ${statusMessage}` } });
+    expect(requests.map((request) => request.aborts)).toEqual([1]);
   });
 
   test('returns NETWORK_ERROR when the transport throws a Chromium network error', async () => {
@@ -179,6 +190,57 @@ describe('fetchText', () => {
     expect(requests).toHaveLength(0);
   });
 
+  test('reports a caller abort during the request as an abort, not a timeout', async () => {
+    // Arrange
+    const controller = new AbortController();
+    let markStarted: () => void = () => undefined;
+    const started = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
+    setRequestTransport(() => {
+      markStarted();
+      return new Promise<never>(() => undefined);
+    });
+    const pending = fetchText('https://example.com', { signal: controller.signal });
+    await started;
+
+    // Act
+    controller.abort();
+    const result = await pending;
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'NOT_ALLOWED_OR_ABORTED_ERROR', message: 'Request was aborted or not allowed' } });
+  });
+
+  test('stops when the caller aborts while the host is being checked', async () => {
+    // Arrange
+    useTransport(() => ({ status: 200, body: 'ok' }));
+    const controller = new AbortController();
+    mockedLookup.mockImplementation(async () => {
+      controller.abort();
+      return [{ address: '93.184.216.34', family: 4 }];
+    });
+
+    // Act
+    const result = await fetchText('https://example.com', { signal: controller.signal, blockPrivateHosts: true });
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'NOT_ALLOWED_OR_ABORTED_ERROR', message: 'Request was aborted or not allowed' } });
+  });
+
+  test('leaves a finished response alone when the caller aborts later', async () => {
+    // Arrange
+    const requests = useTransport(() => ({ status: 200, body: 'ok' }));
+    const controller = new AbortController();
+    await fetchText('https://example.com', { signal: controller.signal });
+
+    // Act
+    controller.abort();
+
+    // Assert
+    expect(requests.map((request) => request.aborts)).toEqual([0]);
+  });
+
   test('refuses a non-http scheme without fetching', async () => {
     // Arrange
     const requests = useTransport(() => ({ status: 200, body: '' }));
@@ -194,13 +256,14 @@ describe('fetchText', () => {
   test('rejects a streamed body past the cap', async () => {
     // Arrange
     const chunk = new Uint8Array(MAX_FETCH_BYTES + 1);
-    useTransport(() => ({ status: 200, body: new ReadableStream<Uint8Array>({ start: (controller) => controller.enqueue(chunk) }) }));
+    const requests = useTransport(() => ({ status: 200, body: new ReadableStream<Uint8Array>({ start: (controller) => controller.enqueue(chunk) }) }));
 
     // Act
     const result = await fetchText('https://example.com');
 
     // Assert
     expect(result).toEqual({ success: false, error: { name: 'RESPONSE_TOO_LARGE_ERROR', message: 'This feed is too large to read.' } });
+    expect(requests.map((request) => request.aborts)).toEqual([1]);
   });
 
   test('rejects on a content-length over the cap without reading the body', async () => {
@@ -295,7 +358,7 @@ describe('fetchText', () => {
       expect(requests.map((request) => request.url)).toEqual(['https://example.com/a/start', 'https://example.com/moved']);
     });
 
-    test('gives up after MAX_REDIRECTS hops', async () => {
+    test('gives up after MAX_REDIRECTS hops and releases the last one', async () => {
       // Arrange
       const requests = useTransport(() => ({ status: 302, redirectTo: '/loop' }));
 
@@ -305,6 +368,7 @@ describe('fetchText', () => {
       // Assert
       expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'Too many redirects.' } });
       expect(requests).toHaveLength(MAX_REDIRECTS + 1);
+      expect(requests.at(-1)?.aborts).toBe(1);
     });
 
     test('refuses a redirect to a non-http scheme', async () => {
@@ -420,18 +484,20 @@ describe('fetchText', () => {
       expect(requests).toHaveLength(1);
     });
 
-    test('allowPrivateHosts lets a guarded fetch reach a private address', async () => {
+    test('allowPrivateHosts lets a guarded fetch reach a private address it refused before', async () => {
       // Arrange: a fresh module instance, so the process-wide switch does not leak into other tests.
       vi.resetModules();
       const isolated = await import('./fetch');
       const { transport, requests } = stubTransport(() => ({ status: 200, body: 'local' }));
       isolated.setRequestTransport(transport);
-      isolated.allowPrivateHosts();
+      const refused = await isolated.fetchText('http://127.0.0.1/', { blockPrivateHosts: true });
 
       // Act
+      isolated.allowPrivateHosts();
       const result = await isolated.fetchText('http://127.0.0.1/', { blockPrivateHosts: true });
 
       // Assert
+      expect(refused).toEqual(PRIVATE_HOST_ERROR);
       expect(result).toEqual({ success: true, data: { body: 'local', validators: { etag: undefined, last_modified: undefined } } });
       expect(requests).toHaveLength(1);
     });
@@ -456,15 +522,19 @@ describe('fetchConditional', () => {
     expect(requests[0]?.headers['If-Modified-Since']).toBe('Tue, 15 Nov 1994 12:45:26 GMT');
   });
 
-  test('reports a 304 as notModified without reading a body', async () => {
+  test.each([
+    { etag: '"v1"', last_modified: undefined },
+    { etag: undefined, last_modified: 'Tue, 15 Nov 1994 12:45:26 GMT' },
+  ])('reports a 304 as notModified and releases it without reading a body (%o)', async (validators) => {
     // Arrange
-    useTransport(() => ({ status: 304 }));
+    const requests = useTransport(() => ({ status: 304 }));
 
     // Act
-    const result = await fetchConditional('https://example.com/feed', { validators: { etag: '"v1"', last_modified: undefined } });
+    const result = await fetchConditional('https://example.com/feed', { validators });
 
     // Assert
     expect(result).toEqual({ success: true, data: { notModified: true } });
+    expect(requests.map((request) => request.aborts)).toEqual([1]);
   });
 
   test('treats a 304 as an error when no validator was sent', async () => {
