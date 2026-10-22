@@ -54,15 +54,16 @@ jobs:
       # Vitest transforms every renderer file for the report, and routeTree.gen.ts only exists after a build.
       - run: npx vite build --config src/renderer/vite.config.mts
 
-      - run: npm run coverage:vitest
+      - run: npm run coverage:vitest -- --reporter=json --outputFile.json=coverage/tests/vitest.json
 
       # xvfb-run defaults to a 640x480 screen, and the maximized app window would follow it.
       - name: Run the e2e suite on an instrumented build
         env:
           COVERAGE: '1'
-        run: xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:e2e
+          PLAYWRIGHT_JSON_OUTPUT_FILE: coverage/tests/e2e.json
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:e2e -- --reporter=dot,json
 
-      - run: npm run coverage:merge
+      - run: npm run coverage:merge -- --vitest-results coverage/tests/vitest.json --e2e-results coverage/tests/e2e.json
 
       - id: vitest-report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

@@ -1,6 +1,6 @@
 ---
 title: Code coverage
-description: Run the coverage suites, open the reports, and read the history on the dashboard.
+description: Run the coverage suites, open the reports, and read the coverage and test count history on the dashboard.
 sidebar:
   order: 12
 ---
@@ -47,6 +47,22 @@ These files are not counted: test files, `*.d.ts`, `src/renderer/components/unti
 
 `coverage:merge` maps every entry back to its source file with `istanbul-lib-source-maps`, so a file that the router plugin splits into several modules is one file in the report. It prints how many e2e files it read.
 
+## Count the tests
+
+The same `Coverage` run counts the tests of each suite. Vitest and Playwright write their `json` reporter output to `coverage/tests/`, and `coverage:merge` adds a `tests` object to the snapshot when it gets both files:
+
+```bash
+npm run coverage:merge -- --vitest-results coverage/tests/vitest.json --e2e-results coverage/tests/e2e.json
+```
+
+| Suite | Source |
+| --- | --- |
+| `unit` | The Vitest files outside `src/renderer/`, which the `node` project runs. |
+| `integration` | The Vitest files under `src/renderer/`, which the `browser` project runs. |
+| `e2e` | The Playwright run. A flaky test counts as passed, because it passed on a retry. |
+
+Each suite has `files`, `tests`, `passed`, `failed`, and `skipped`. A skipped, todo, or pending test counts in `tests` and in `skipped`. Without the two flags, the snapshot has no `tests` object and the ingest removes the counts of that sha.
+
 ## Open the reports
 
 - Each `Coverage` run on GitHub uploads two artifacts. `vitest-report` is the Vitest HTML report with its Coverage view. The run prints a notice with a link to `https://viewer.vitest.dev/?url=…`. `coverage-report` is the merged HTML report. Download it from the run page and open `index.html`.
@@ -67,8 +83,8 @@ npx vite preview --outDir .vitest
 1. It makes a worktree and runs `npm ci` there.
 2. It installs `@vitest/coverage-istanbul` at the version that matches the tag's `vitest`, and `istanbul-lib-instrument`, without saving them.
 3. It copies the plugins into the tag, and wraps the tag's main and renderer Vite configs with them. The configs come from the tag's `forge.config.ts`.
-4. It runs the e2e suite, then the tag's Vitest configs one at a time with command-line coverage flags.
-5. It runs the current `merge.mts` on the results.
+4. It runs the e2e suite, then the tag's Vitest configs one at a time with command-line coverage and reporter flags.
+5. It runs the current `merge.mts` on the results, with the test counts.
 
 A failing test does not stop a tag, because the coverage of the tests that ran is still valid. The script prints a warning. A suite that cannot start stops the tag.
 
@@ -78,7 +94,7 @@ To try it without the upload:
 node scripts/coverage/backfill.mts --dry-run --out-dir /tmp/coverage-snapshots v0.5.1
 ```
 
-Run the backfill again after a change to the excludes or to the instrumentation. Otherwise old rows and new rows were measured differently, and the trend shows a step that comes from the tool. One tag writes about 730 rows to D1, and the free plan allows 100,000 rows a day. Start a full backfill on a day with less than 75,000 rows already written.
+Run the backfill again after a change to the excludes or to the instrumentation, or to fill the test counts of tags measured before they existed. Otherwise old rows and new rows were measured differently, and the trend shows a step that comes from the tool. One tag writes about 730 rows to D1, and the free plan allows 100,000 rows a day. Start a full backfill on a day with less than 75,000 rows already written.
 
 ## Store the history
 
@@ -93,6 +109,7 @@ The tables store covered and total counts and never percents, so a sum over file
 
 - `coverage_files` has one row for each commit, suite (`vitest`, `e2e`, or `merged`), and file.
 - `coverage_folder_summary` has one row for each commit, suite, and folder, with the sums and `file_count`. `src` includes `src/main`, which includes `src/main/feed`. Filter a query on one folder, or on the direct children of one folder. Never add up all the rows.
+- `coverage_tests` has one row for each commit and test suite (`unit`, `integration`, or `e2e`), with `files`, `tests`, `passed`, `failed`, and `skipped`. A check makes `tests` equal to the sum of the other three. The suites do not overlap, so the sum of the rows of one commit is its total.
 
 Dates are stored in UTC. A coverage query is refused when it names a complexity table or a `sqlite_` table, and the reverse holds on the complexity route.
 
@@ -141,6 +158,18 @@ Every panel query starts with the `f(folder)` expression, which uses `src` when 
 
 ```json
 {"sql":"WITH f(folder) AS (SELECT CASE WHEN ?1 = '' OR substr(?1, 1, 1) = '$' THEN 'src' ELSE ?1 END), latest(sha) AS (SELECT sha FROM coverage_folder_summary WHERE folder = (SELECT folder FROM f) AND suite = 'merged' ORDER BY date DESC LIMIT 1) SELECT s.suite, 100.0 * s.lines_covered / s.lines_total AS lines_pct, 100.0 * s.branches_covered / s.branches_total AS branches_pct FROM coverage_folder_summary s, f WHERE s.sha = (SELECT sha FROM latest) AND s.folder = f.folder","params":["$folder"]}
+```
+
+**Test count trend** (time series): the total number of tests and the number in each suite, for each commit. These panels do not use the `folder` variable.
+
+```json
+{"sql":"SELECT date, sum(tests) AS total, sum(CASE WHEN suite = 'unit' THEN tests END) AS unit, sum(CASE WHEN suite = 'integration' THEN tests END) AS integration, sum(CASE WHEN suite = 'e2e' THEN tests END) AS e2e FROM coverage_tests GROUP BY sha, date ORDER BY date"}
+```
+
+**Tests** (stat or table): the counts of each suite and the total, for the latest commit.
+
+```json
+{"sql":"WITH latest(sha) AS (SELECT sha FROM coverage_tests ORDER BY date DESC LIMIT 1) SELECT suite, tests, files, skipped FROM coverage_tests WHERE sha = (SELECT sha FROM latest) UNION ALL SELECT 'total', sum(tests), sum(files), sum(skipped) FROM coverage_tests WHERE sha = (SELECT sha FROM latest)"}
 ```
 
 Declare the `date` column as **Timestamp**, and keep a fixed time range on the dashboard, for the same reasons as in [Code complexity](../complexity/#panels).

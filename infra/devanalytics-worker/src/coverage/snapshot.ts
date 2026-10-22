@@ -15,11 +15,21 @@ export interface FileCoverage extends Counts {
   file: string;
 }
 
+export const TEST_SUITES = ['unit', 'integration', 'e2e'] as const;
+export type TestSuite = (typeof TEST_SUITES)[number];
+
+const TEST_COUNTS = ['files', 'tests', 'passed', 'failed', 'skipped'] as const;
+
+/** The counts of one test run, in the order of the table columns. */
+export type TestCounts = Record<(typeof TEST_COUNTS)[number], number>;
+
 export interface CoverageSnapshot {
   sha: string;
   /** UTC ISO 8601, so that dates sort as text. */
   date: string;
   suites: Record<Suite, FileCoverage[]>;
+  /** Absent in a snapshot from before the test counts. */
+  tests?: Record<TestSuite, TestCounts>;
 }
 
 export interface FolderCoverage {
@@ -59,10 +69,29 @@ function parseSuite(value: unknown, suite: Suite): FileCoverage[] {
   return value.map((file: unknown, index) => parseFile(file, `suites.${suite}[${index}]`));
 }
 
+function parseTestCounts(value: unknown, field: string): TestCounts {
+  const entry = expectObject(value, field);
+  const counts = Object.fromEntries(TEST_COUNTS.map((name) => [name, expectInteger(entry[name], `${field}.${name}`)]));
+  return counts as TestCounts;
+}
+
+function parseTests(value: unknown): CoverageSnapshot['tests'] {
+  if (value === undefined) {
+    return undefined;
+  }
+  const tests = expectObject(value, 'tests');
+  return {
+    unit: parseTestCounts(tests['unit'], 'tests.unit'),
+    integration: parseTestCounts(tests['integration'], 'tests.integration'),
+    e2e: parseTestCounts(tests['e2e'], 'tests.e2e'),
+  };
+}
+
 /** Checks a snapshot written by `scripts/coverage/merge.mts`. */
 export function parseCoverageSnapshot(value: unknown): CoverageSnapshot {
   const snapshot = expectObject(value, 'snapshot');
   const suites = expectObject(snapshot['suites'], 'suites');
+  const tests = parseTests(snapshot['tests']);
   return {
     sha: expectSha(snapshot['sha']),
     date: expectDate(snapshot['date']),
@@ -71,7 +100,14 @@ export function parseCoverageSnapshot(value: unknown): CoverageSnapshot {
       e2e: parseSuite(suites['e2e'], 'e2e'),
       merged: parseSuite(suites['merged'], 'merged'),
     },
+    ...(tests && { tests }),
   };
+}
+
+/** One row for each test suite, in the order of the table columns. Empty for a snapshot without test counts. */
+export function testRows(snapshot: CoverageSnapshot): (string | number)[][] {
+  const { tests } = snapshot;
+  return tests ? TEST_SUITES.map((suite) => [suite, ...TEST_COUNTS.map((name) => tests[suite][name])]) : [];
 }
 
 export function fileSums(file: FileCoverage): number[] {
