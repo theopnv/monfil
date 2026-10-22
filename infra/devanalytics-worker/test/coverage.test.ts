@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { coverageBadge } from '../src/coverage/badge.ts';
 import { CoverageSnapshotError, parseCoverageSnapshot, summarizeCoverage, type CoverageSnapshot, type FileCoverage } from '../src/coverage/snapshot.ts';
 import { ValidationError } from '../src/shared/expect.ts';
 
@@ -75,5 +76,37 @@ describe('parseCoverageSnapshot', () => {
 
     // Assert
     expect(parse).toThrow(CoverageSnapshotError);
+  });
+});
+
+describe('coverageBadge', () => {
+  it.each([
+    [599, 'red', '59.9%'],
+    [600, 'orange', '60.0%'],
+    [799, 'orange', '79.9%'],
+    [800, 'brightgreen', '80.0%'],
+    [1000, 'brightgreen', '100.0%'],
+  ])('colors %i of 1000 lines %s', (covered, color, message) => {
+    // Act
+    const badge = coverageBadge({ lines_covered: covered, lines_total: 1000 });
+
+    // Assert
+    expect(badge).toEqual({ schemaVersion: 1, label: 'coverage', message, color, cacheSeconds: 3600 });
+  });
+
+  it('colors a value that rounds up to a band by its rounded value', () => {
+    // Act
+    const badge = coverageBadge({ lines_covered: 79_996, lines_total: 100_000 });
+
+    // Assert
+    expect(badge).toMatchObject({ message: '80.0%', color: 'brightgreen' });
+  });
+
+  it('says unknown for a folder without lines', () => {
+    // Act
+    const badge = coverageBadge({ lines_covered: 0, lines_total: 0 });
+
+    // Assert
+    expect(badge.message).toBe('unknown');
   });
 });

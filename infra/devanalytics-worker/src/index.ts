@@ -1,5 +1,6 @@
 import { ingestComplexity } from './complexity/db.ts';
 import { parseSnapshot } from './complexity/snapshot.ts';
+import { readCoverageBadge } from './coverage/badge.ts';
 import { ingestCoverage } from './coverage/db.ts';
 import { parseCoverageSnapshot } from './coverage/snapshot.ts';
 import { hasToken } from './shared/auth.ts';
@@ -10,6 +11,11 @@ import { COMPLEXITY_TABLES, COVERAGE_TABLES } from './shared/tables.ts';
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
 type Handler = (request: Request, env: Env) => Promise<Response>;
+
+interface Route {
+  method: 'GET' | 'POST';
+  handle: Handler;
+}
 
 async function readJson(request: Request): Promise<unknown> {
   try {
@@ -41,11 +47,17 @@ function queryRoute(allowedTables: readonly string[]): Handler {
   };
 }
 
-const ROUTES: Record<string, Handler> = {
-  '/complexity/ingest': ingestRoute(parseSnapshot, ingestComplexity),
-  '/complexity/query': queryRoute(COMPLEXITY_TABLES),
-  '/coverage/ingest': ingestRoute(parseCoverageSnapshot, ingestCoverage),
-  '/coverage/query': queryRoute(COVERAGE_TABLES),
+/** Public and read-only: shields.io fetches it without a token, so it runs one fixed query and reads nothing from the request. */
+const coverageBadgeRoute: Handler = async (_request, env) => Response.json(await readCoverageBadge(env.DB), {
+  headers: { 'Cache-Control': 'public, max-age=3600' },
+});
+
+const ROUTES: Record<string, Route> = {
+  '/complexity/ingest': { method: 'POST', handle: ingestRoute(parseSnapshot, ingestComplexity) },
+  '/complexity/query': { method: 'POST', handle: queryRoute(COMPLEXITY_TABLES) },
+  '/coverage/ingest': { method: 'POST', handle: ingestRoute(parseCoverageSnapshot, ingestCoverage) },
+  '/coverage/query': { method: 'POST', handle: queryRoute(COVERAGE_TABLES) },
+  '/coverage/badge': { method: 'GET', handle: coverageBadgeRoute },
 };
 
 function errorResponse(error: unknown): Response {
@@ -63,11 +75,11 @@ export default {
     if (!route) {
       return json({ error: 'not found' }, 404);
     }
-    if (request.method !== 'POST') {
+    if (request.method !== route.method) {
       return json({ error: 'method not allowed' }, 405);
     }
     try {
-      return await route(request, env);
+      return await route.handle(request, env);
     } catch (error) {
       return errorResponse(error);
     }
