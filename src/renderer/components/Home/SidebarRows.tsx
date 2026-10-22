@@ -19,7 +19,6 @@ import {
   VISIBILITY_STATE_LABEL,
   type FeedVisibility,
 } from "@/lib/river/feed-visibility";
-import { resolveFeedIcon } from "@/lib/favicon";
 import type { FeedSummary } from "../../../shared/contracts";
 
 type SetVisibility = (feeds: FeedSummary[], target: FeedVisibility) => void;
@@ -69,7 +68,7 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
           state === "home" && "text-secondary",
         )}
       >
-        <FeedAvatar title={feed.title} faviconUrl={resolveFeedIcon(feed.icon, feed.link)} size="sm" />
+        <FeedAvatar title={feed.title} faviconUrl={feed.icon} size="sm" />
         <span className="min-w-0 flex-1 truncate">{feed.title}</span>
         {feed.last_error && <span role="img" aria-label={`${feed.title} refresh failed`} title="The last refresh failed" className="text-warning-primary">!</span>}
         <span data-testid="feed-count" className={COUNT_CLASSES}>{feed.unreadCount > 0 ? feed.unreadCount : ''}</span>

@@ -125,6 +125,21 @@ export async function setFeedFetchResult(feedId: number, result: { last_error: s
 }
 
 /**
+ * Stores the icon found for a feed that had none, leaving an icon set meanwhile untouched.
+ * @param feedId the id of the feed
+ * @param icon the icon URL
+ */
+export async function setFeedIconIfMissing(feedId: number, icon: string): Promise<Result<void, UpdateFeedError>> {
+  await dbReady;
+  try {
+    await db.updateTable('feedMetadata').set({ icon }).where('id', '=', feedId).where('icon', 'is', null).execute();
+    return { success: true, data: undefined };
+  } catch (error) {
+    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+  }
+}
+
+/**
  * Sets `read_at` on a batch of feed items in one statement.
  * @param itemIds the ids of the items to update
  * @param read whether the items are read

@@ -15,6 +15,7 @@ export function parseFeedContent(content: string): ParsedFeedContent | null {
       return {
         title: decodeText(feed.title ?? ''),
         description: decodeText(feed.description ?? ''),
+        siteLink: feed.link,
         items: feed.items
           ? feed.items.map(item => {
             const title = decodeText(item.title ?? 'No title');
@@ -37,6 +38,7 @@ export function parseFeedContent(content: string): ParsedFeedContent | null {
       return {
         title: decodeText(feed.title?.value ?? ''),
         description: decodeText(feed.subtitle?.value ?? ''),
+        siteLink: feed.links?.find(link => link.rel === 'alternate' || !link.rel)?.href,
         items: feed.entries
           ? feed.entries.map(entry => {
             const title = decodeText(entry.title?.value ?? 'No title');
@@ -60,6 +62,7 @@ export function parseFeedContent(content: string): ParsedFeedContent | null {
       return {
         title: decodeText(feed.title ?? ''),
         description: decodeText(feed.description ?? ''),
+        siteLink: feed.link,
         items: feed.items
           ? feed.items.map(item => {
             const title = decodeText(item.title ?? 'No title');
@@ -82,6 +85,7 @@ export function parseFeedContent(content: string): ParsedFeedContent | null {
       return {
         title: decodeText(feed.title ?? ''),
         description: decodeText(feed.description ?? ''),
+        siteLink: feed.home_page_url,
         items: feed.items
           ? feed.items.map(item => {
             const title = decodeText(item.title ?? 'No title');

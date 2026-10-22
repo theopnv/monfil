@@ -10,7 +10,8 @@ import type { FeedItem, FeedMetadataRow } from '../db/types';
 import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { enrichItems } from './enrichItems';
 import { sourceFor } from './sources/registry';
-import { setFeedFetchResult } from '../db/crud/update';
+import { setFeedFetchResult, setFeedIconIfMissing } from '../db/crud/update';
+import { resolveSiteIcon } from './sources/siteIcon';
 import type { RefreshSummary, RetentionDays, SourceType } from '../../shared/contracts';
 import { runWithConcurrency } from '../lib/utils';
 import { FEED_FETCH_CONCURRENCY } from '../lib/constants';
@@ -19,11 +20,35 @@ import { pruneExpiredItems, retentionCutoff } from '../db/retention';
 
 const ENRICHMENT_BUDGET = 200;
 
+const iconLookups = new Set<string>();
+
+function needsIconLookup(feed: FeedMetadataRow): boolean {
+  return !feed.icon && !iconLookups.has(feed.link);
+}
+
+/** Looks up the site icon of a feed stored without one, at most once per feed link per session. */
+async function fillMissingIcon(feed: FeedMetadataRow, siteLink: string | undefined): Promise<void> {
+  if (!needsIconLookup(feed)) {
+    return;
+  }
+  iconLookups.add(feed.link);
+  const icon = await resolveSiteIcon(siteLink ?? feed.link);
+  if (!icon) {
+    return;
+  }
+  const stored = await setFeedIconIfMissing(feed.id, icon);
+  if (!stored.success) {
+    logger.error('operation.failure', { operation: 'store-feed-icon', entityId: feed.id }, stored.error);
+  }
+}
+
 async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: boolean): Promise<{ items: FeedItem[]; updated: number; failed: boolean }> {
   if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
     return { items: [], updated: 0, failed: false };
   }
-  const result = await sourceFor(feed.type).fetch({ link: feed.link, ...(force ? {} : { validators: { etag: feed.etag ?? undefined, last_modified: feed.last_modified ?? undefined } }) });
+  // A 304 carries no site link, so a feed still owed its icon lookup is fetched in full once.
+  const conditional = !force && !needsIconLookup(feed);
+  const result = await sourceFor(feed.type).fetch({ link: feed.link, ...(conditional ? { validators: { etag: feed.etag ?? undefined, last_modified: feed.last_modified ?? undefined } } : {}) });
   if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
     return { items: [], updated: 0, failed: false };
   }
@@ -47,6 +72,7 @@ async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: bool
     return { items: [], updated: 0, failed: false };
   }
 
+  await fillMissingIcon(feed, outcome.parsed.siteLink);
   const inserted = await syncFeedItemsToDatabase(db, feed.id, outcome.parsed.items, cutoff);
   if (!inserted.success) {
     logger.error('operation.failure', { operation: 'store-refreshed-items', entityId: feed.id }, inserted.error);

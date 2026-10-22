@@ -217,6 +217,7 @@ describe('parseFeedContent', () => {
     expect(result).toEqual({
       title: 'Test Feed',
       description: 'A feed for testing',
+      siteLink: 'https://example.com',
       items: [
         {
           title: 'Item 1',
@@ -271,6 +272,7 @@ describe('parseFeedContent', () => {
     expect(result).toEqual({
       title: 'Test Feed',
       description: 'A feed for testing',
+      siteLink: 'http://example.com',
       items: [
         {
           title: 'Item 1',
@@ -693,6 +695,39 @@ describe('rssSource.discover', () => {
 
     // Assert
     expect(result).toEqual({ success: true, data: [expect.objectContaining({ type: 'rss', link: 'https://medium.test/@writer/feed' })] });
+  });
+
+  test('takes the icon a direct feed\'s site page declares', async () => {
+    // Arrange
+    const feed = '<rss version="2.0"><channel><title>Moderne</title><link>https://moderne.test/blog</link></channel></rss>';
+    mockedFetchText.mockImplementation((url) => Promise.resolve(
+      url === 'https://moderne.test/feed.xml' ? ok(feed)
+        : url === 'https://moderne.test/blog' ? ok('<link rel="icon" href="/brand/symbol.svg">')
+          : notFound,
+    ));
+
+    // Act
+    const result = await rssSource.discover('https://moderne.test/feed.xml');
+
+    // Assert
+    expect(result).toEqual({ success: true, data: [expect.objectContaining({ icon: 'https://moderne.test/brand/symbol.svg' })] });
+  });
+
+  test('takes the icon an advertised feed\'s site page declares', async () => {
+    // Arrange
+    const page = '<link rel="alternate" type="application/rss+xml" href="https://feeds.test/blog"><link rel="icon" href="/favicon.svg">';
+    const feed = '<feed xmlns="http://www.w3.org/2005/Atom"><title>Blog</title><link rel="alternate" href="https://blog.test/"/></feed>';
+    mockedFetchText.mockImplementation((url) => Promise.resolve(
+      url === 'https://blog.test/' ? ok(page)
+        : url === 'https://feeds.test/blog' ? ok(feed)
+          : notFound,
+    ));
+
+    // Act
+    const result = await rssSource.discover('https://blog.test/');
+
+    // Assert
+    expect(result).toEqual({ success: true, data: [expect.objectContaining({ link: 'https://feeds.test/blog', icon: 'https://blog.test/favicon.svg' })] });
   });
 });
 
