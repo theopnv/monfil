@@ -30,7 +30,7 @@ async function writeModule(file: string, imports: string[]): Promise<void> {
   const target = path.join(baseDir, file);
   await mkdir(path.dirname(target), { recursive: true });
   const lines = imports.map((imported, index) => {
-    let specifier = path.relative(path.dirname(file), imported).replace(/\.tsx?$/, '');
+    let specifier = path.posix.relative(path.posix.dirname(file), imported).replace(/\.tsx?$/, '');
     if (!specifier.startsWith('.')) {
       specifier = `./${specifier}`;
     }
