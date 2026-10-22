@@ -25,6 +25,7 @@ Tables:
 
 - `coverage_files`: one row for each source file, suite (`vitest`, `e2e` or `merged`) and commit, with covered and total counts for lines, statements, functions and branches.
 - `coverage_folder_summary`: the same sums for each folder in the subtree of each file, with `file_count`. `src` includes `src/main`, so filter on one folder and never add up all rows.
+- `coverage_tests`: one row for each test suite (`unit`, `integration` or `e2e`) and commit, with the counts of test files, tests, and passed, failed and skipped tests. It comes from the optional `tests` object of the snapshot. A snapshot without it removes the rows of its sha.
 
 The tables store counts and never percents, so a sum of counts gives a correct percent. One ingest writes about 730 rows, and a second ingest of the same sha writes about twice that, because deletes count as writes.
 

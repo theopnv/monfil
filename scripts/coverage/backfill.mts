@@ -88,39 +88,46 @@ function coverageFlags(dir: string, scope: Scope): string[] {
   ];
 }
 
+function mustExist(file: string, what: string): string {
+  if (!existsSync(file)) {
+    throw new Error(`${what} wrote no ${file}.`);
+  }
+  return file;
+}
+
 /** Runs the tag's Node and browser Vitest configs one at a time. A tag with `test.projects` runs once. */
-async function runVitest(worktree: string): Promise<string[]> {
+async function runVitest(worktree: string): Promise<{ coverage: string[]; results: string[] }> {
   const configs = VITEST_CONFIGS.filter((name) => existsSync(path.join(worktree, name)));
   const rootText = configs[0] ? await readFile(path.join(worktree, configs[0]), 'utf8') : '';
   const hasProjects = /\bprojects\s*:/.test(rootText);
   const selected = hasProjects ? configs.slice(0, 1) : configs;
-  const files: string[] = [];
+  const files = { coverage: [] as string[], results: [] as string[] };
   for (const config of selected) {
     const dir = path.join(worktree, 'coverage', 'vitest', config.replace(/\.mts$/, ''));
     const scope: Scope = hasProjects ? 'all' : config.includes('browser') ? 'browser' : 'node';
-    const ok = run('npx', ['vitest', 'run', `--config=${config}`, ...coverageFlags(dir, scope)], worktree);
-    const report = path.join(dir, 'coverage-final.json');
-    if (!existsSync(report)) {
-      throw new Error(`${config} wrote no coverage.`);
-    }
+    const results = path.join(worktree, 'coverage', 'tests', `${path.basename(dir)}.json`);
+    const reporters = ['--reporter=default', '--reporter=json', `--outputFile.json=${results}`];
+    const ok = run('npx', ['vitest', 'run', `--config=${config}`, ...coverageFlags(dir, scope), ...reporters], worktree);
+    files.coverage.push(mustExist(path.join(dir, 'coverage-final.json'), config));
+    files.results.push(mustExist(results, config));
     if (!ok) {
       process.stderr.write(`warning: ${config} has failing tests. The coverage of the tests that ran still counts.\n`);
     }
-    files.push(report);
   }
   return files;
 }
 
-function runE2e(worktree: string): string {
+function runE2e(worktree: string): { dir: string; results: string } {
   const dir = path.join(worktree, 'coverage', 'e2e', 'raw');
-  const ok = run('npm', ['run', 'test:e2e'], worktree, { COVERAGE: '1', COVERAGE_DIR: dir });
-  if (!existsSync(dir)) {
-    throw new Error('The e2e suite wrote no coverage.');
-  }
+  const results = path.join(worktree, 'coverage', 'tests', 'e2e.json');
+  const env = { COVERAGE: '1', COVERAGE_DIR: dir, PLAYWRIGHT_JSON_OUTPUT_FILE: results };
+  const ok = run('npm', ['run', 'test:e2e', '--', '--reporter=dot,json'], worktree, env);
+  mustExist(dir, 'The e2e suite');
+  mustExist(results, 'The e2e suite');
   if (!ok) {
     process.stderr.write('warning: the e2e suite has failing tests. The coverage of the tests that ran still counts.\n');
   }
-  return dir;
+  return { dir, results };
 }
 
 /** Measures one tag with the current coverage tooling, in a worktree that is always removed. */
@@ -137,7 +144,14 @@ async function measureTag(tag: string, parent: string): Promise<Snapshot | null>
     const e2e = runE2e(worktree);
     const vitest = await runVitest(worktree);
     const merge = path.join(REPO, 'scripts', 'coverage', 'merge.mts');
-    must(run(process.execPath, [merge, '--root', worktree, ...vitest.flatMap((file) => ['--vitest', file]), '--e2e', e2e], worktree), 'merge');
+    const args = [
+      '--root', worktree,
+      ...vitest.coverage.flatMap((file) => ['--vitest', file]),
+      ...vitest.results.flatMap((file) => ['--vitest-results', file]),
+      '--e2e', e2e.dir,
+      '--e2e-results', e2e.results,
+    ];
+    must(run(process.execPath, [merge, ...args], worktree), 'merge');
     return JSON.parse(await readFile(path.join(worktree, 'coverage', 'snapshot.json'), 'utf8')) as Snapshot;
   } finally {
     git('worktree', 'remove', '--force', worktree);

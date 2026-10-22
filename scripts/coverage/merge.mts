@@ -7,8 +7,25 @@ import libReport from 'istanbul-lib-report';
 import reports from 'istanbul-reports';
 import { headCommit } from '../complexity/metrics.mts';
 import { buildSuites, loadE2eMap, loadVitestMap, mergeMaps, total, type Snapshot } from './maps.mts';
+import { loadTestSuites, type TestSuites } from './tests.mts';
 
-const USAGE = 'Usage: npm run coverage:merge -- [--root <checkout>] [--vitest <coverage-final.json> ...] [--e2e <dir>] [--out <dir>]';
+const USAGE = 'Usage: npm run coverage:merge -- [--root <checkout>] [--vitest <coverage-final.json> ...] [--e2e <dir>] [--out <dir>]'
+  + ' [--vitest-results <vitest.json> ... --e2e-results <playwright.json>]';
+
+/** Reads the test counts when the reporter files are given. Without them, the snapshot has no `tests`. */
+async function testSuites(vitestFiles: string[] | undefined, playwrightFile: string | undefined, root: string): Promise<TestSuites | undefined> {
+  if (!vitestFiles && !playwrightFile) {
+    return undefined;
+  }
+  if (!vitestFiles || !playwrightFile) {
+    throw new Error('Give both --vitest-results and --e2e-results, or neither.');
+  }
+  const tests = await loadTestSuites(vitestFiles.map((file) => path.resolve(root, file)), path.resolve(root, playwrightFile), root);
+  for (const [name, counts] of Object.entries(tests)) {
+    process.stderr.write(`${name}: ${counts.tests} tests in ${counts.files} files, ${counts.failed} failed, ${counts.skipped} skipped\n`);
+  }
+  return tests;
+}
 
 async function main() {
   const { values } = parseArgs({
@@ -17,6 +34,8 @@ async function main() {
       vitest: { type: 'string', multiple: true },
       e2e: { type: 'string' },
       out: { type: 'string' },
+      'vitest-results': { type: 'string', multiple: true },
+      'e2e-results': { type: 'string' },
     },
   });
   // Coverage paths are real paths, and a temporary folder can sit behind a symlink.
@@ -30,8 +49,10 @@ async function main() {
     throw new Error('No e2e coverage files. Run the e2e suite with COVERAGE=1.');
   }
 
+  const tests = await testSuites(values['vitest-results'], values['e2e-results'], root);
+
   const { mergedMap, ...suites } = buildSuites(vitest, e2e);
-  const snapshot: Snapshot = { ...headCommit(root), suites };
+  const snapshot: Snapshot = { ...headCommit(root), suites, ...(tests && { tests }) };
   await mkdir(path.join(out, 'merged'), { recursive: true });
   const context = libReport.createContext({
     dir: path.join(out, 'merged'),

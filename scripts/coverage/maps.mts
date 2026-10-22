@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import libCoverage, { type CoverageMap, type CoverageMapData, type FileCoverageData } from 'istanbul-lib-coverage';
 import libSourceMaps from 'istanbul-lib-source-maps';
+import type { TestSuites } from './tests.mts';
 
 export type Count = [covered: number, total: number];
 
@@ -17,6 +18,7 @@ export interface Snapshot {
   sha: string;
   date: string;
   suites: { vitest: FileSummary[]; e2e: FileSummary[]; merged: FileSummary[] };
+  tests?: TestSuites;
 }
 
 const SOURCE_ROOT = 'src/';

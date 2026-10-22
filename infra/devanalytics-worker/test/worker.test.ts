@@ -2,7 +2,7 @@ import { env } from 'cloudflare:test';
 import { exports } from 'cloudflare:workers';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { FunctionRow } from '../src/complexity/snapshot.ts';
-import type { CoverageSnapshot, FileCoverage } from '../src/coverage/snapshot.ts';
+import type { CoverageSnapshot, FileCoverage, TestCounts } from '../src/coverage/snapshot.ts';
 import { CHUNK_SIZE } from '../src/shared/chunks.ts';
 import { MAX_QUERY_ROWS } from '../src/shared/query.ts';
 
@@ -48,12 +48,19 @@ function coverageSnapshot(files: FileCoverage[], sha = SHA): CoverageSnapshot {
   return { sha, date: '2026-10-20T17:56:56+02:00', suites: { vitest: files, e2e: files.slice(0, 3), merged: files } };
 }
 
+function testCounts(passed: number, skipped = 0): TestCounts {
+  return { files: 2, tests: passed + skipped, passed, failed: 0, skipped };
+}
+
+const TESTS = { unit: testCounts(120, 2), integration: testCounts(40), e2e: testCounts(15, 1) };
+
 beforeEach(async () => {
   await env.DB.batch([
     env.DB.prepare('DELETE FROM complexity_functions'),
     env.DB.prepare('DELETE FROM complexity_folder_summary'),
     env.DB.prepare('DELETE FROM coverage_files'),
     env.DB.prepare('DELETE FROM coverage_folder_summary'),
+    env.DB.prepare('DELETE FROM coverage_tests'),
   ]);
 });
 
@@ -225,6 +232,7 @@ describe('POST /complexity/query tables', () => {
   it.each([
     ['a coverage table', 'SELECT * FROM coverage_files'],
     ['a quoted coverage table', 'SELECT * FROM "coverage_folder_summary"'],
+    ['the test counts', 'SELECT * FROM coverage_tests'],
     ['a sqlite_ table', 'SELECT name FROM sqlite_master'],
   ])('refuses %s', async (_label, sql) => {
     // Act
@@ -289,6 +297,47 @@ describe('POST /coverage/ingest', () => {
     expect(await count('coverage_files')).toBe(5 + 3 + 5);
   });
 
+  it('stores one row of test counts for each suite', async () => {
+    // Act
+    const response = await post('/coverage/ingest', INGEST, { ...coverageSnapshot(coverageFiles(5)), tests: TESTS });
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ testSuites: 3 });
+    const rows = await env.DB.prepare('SELECT suite, files, tests, passed, failed, skipped, date FROM coverage_tests ORDER BY suite').all();
+    expect(rows.results).toEqual([
+      { suite: 'e2e', files: 2, tests: 16, passed: 15, failed: 0, skipped: 1, date: '2026-10-20T15:56:56.000Z' },
+      { suite: 'integration', files: 2, tests: 40, passed: 40, failed: 0, skipped: 0, date: '2026-10-20T15:56:56.000Z' },
+      { suite: 'unit', files: 2, tests: 122, passed: 120, failed: 0, skipped: 2, date: '2026-10-20T15:56:56.000Z' },
+    ]);
+  });
+
+  it('removes the test counts of a sha when the new snapshot has none', async () => {
+    // Arrange
+    await post('/coverage/ingest', INGEST, { ...coverageSnapshot(coverageFiles(5)), tests: TESTS });
+
+    // Act
+    const response = await post('/coverage/ingest', INGEST, coverageSnapshot(coverageFiles(5)));
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(await count('coverage_tests')).toBe(0);
+  });
+
+  it('refuses test counts that do not add up and keeps the old rows', async () => {
+    // Arrange
+    await post('/coverage/ingest', INGEST, { ...coverageSnapshot(coverageFiles(5)), tests: TESTS });
+    const tests = { ...TESTS, e2e: { ...TESTS.e2e, tests: 99 } };
+
+    // Act
+    const response = await post('/coverage/ingest', INGEST, { ...coverageSnapshot(coverageFiles(2)), tests });
+
+    // Assert
+    expect(response.status).toBe(422);
+    expect(await count('coverage_tests')).toBe(3);
+    expect(await count('coverage_files')).toBe(5 + 3 + 5);
+  });
+
   it.each([
     ['no token', null],
     ['the query token', QUERY],
@@ -320,7 +369,7 @@ describe('POST /coverage/ingest', () => {
 
 describe('POST /coverage/query', () => {
   beforeEach(async () => {
-    await post('/coverage/ingest', INGEST, coverageSnapshot(coverageFiles(20)));
+    await post('/coverage/ingest', INGEST, { ...coverageSnapshot(coverageFiles(20)), tests: TESTS });
     await post('/complexity/ingest', INGEST, { sha: SHA, date: '2026-10-20T00:00:00Z', functions: functions(5) });
   });
 
@@ -336,6 +385,15 @@ describe('POST /coverage/query', () => {
     const body = await response.json<{ rows: unknown[] }>();
     expect(body.rows).toHaveLength(1);
     expect(body.rows[0]).toMatchObject({ lines_total: 100, file_count: 20 });
+  });
+
+  it('runs a SELECT on the test counts', async () => {
+    // Act
+    const response = await post('/coverage/query', QUERY, { sql: 'SELECT sum(tests) AS tests FROM coverage_tests WHERE sha = ?1', params: [SHA] });
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect((await response.json<{ rows: unknown[] }>()).rows).toEqual([{ tests: 122 + 40 + 16 }]);
   });
 
   it.each([

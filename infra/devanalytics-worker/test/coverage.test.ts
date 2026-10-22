@@ -3,6 +3,7 @@ import { CoverageSnapshotError, parseCoverageSnapshot, summarizeCoverage, type C
 import { ValidationError } from '../src/shared/expect.ts';
 
 const SHA = 'a'.repeat(40);
+const TEST_COUNTS = { files: 1, tests: 3, passed: 2, failed: 0, skipped: 1 };
 
 function file(name: string, covered: number, total: number): FileCoverage {
   return { file: name, lines: [covered, total], statements: [covered, total], functions: [covered, total], branches: [0, 0] };
@@ -30,6 +31,19 @@ describe('summarizeCoverage', () => {
 });
 
 describe('parseCoverageSnapshot', () => {
+  it('keeps the test counts and accepts a snapshot without them', () => {
+    // Arrange
+    const tests = { unit: TEST_COUNTS, integration: TEST_COUNTS, e2e: TEST_COUNTS };
+
+    // Act
+    const withTests = parseCoverageSnapshot({ ...snapshot([]), tests });
+    const withoutTests = parseCoverageSnapshot(snapshot([]));
+
+    // Assert
+    expect(withTests.tests).toEqual(tests);
+    expect(withoutTests).not.toHaveProperty('tests');
+  });
+
   it('converts the date to UTC so that dates sort as text', () => {
     // Act
     const result = parseCoverageSnapshot({ ...snapshot([]), date: '2026-10-20T17:56:56+02:00' });
@@ -45,6 +59,8 @@ describe('parseCoverageSnapshot', () => {
     ['a count that is not an integer', snapshot([{ ...file('src/a.ts', 1, 2), lines: [0.5, 2] }])],
     ['a pair of the wrong length', snapshot([{ ...file('src/a.ts', 1, 2), lines: [1] } as unknown as FileCoverage])],
     ['a negative count', snapshot([file('src/a.ts', -1, 2)])],
+    ['test counts without a suite', { ...snapshot([]), tests: { unit: TEST_COUNTS, e2e: TEST_COUNTS } }],
+    ['a test count that is not an integer', { ...snapshot([]), tests: { unit: TEST_COUNTS, integration: { ...TEST_COUNTS, skipped: '1' }, e2e: TEST_COUNTS } }],
   ])('refuses %s', (_label, body) => {
     // Act
     const parse = () => parseCoverageSnapshot(body);
