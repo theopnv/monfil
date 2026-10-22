@@ -3,10 +3,12 @@
 // See LICENSE in the repository root for full terms.
 
 import { useEffect, useRef } from "react";
-import { Eye, RefreshCw01, SearchLg, XClose } from "@untitledui/icons";
+import { RefreshCw01, SearchLg, XClose } from "@untitledui/icons";
+import { ToggleButton, ToggleButtonGroup } from "react-aria-components";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import RiverFilterStrip from "@/components/Home/RiverFilterStrip";
 import { Input } from "@/components/untitled-ui/base/input/input";
+import { cx } from "@/components/untitled-ui/utils/cx";
 import { announce } from "@/lib/announcer";
 import { useApplyPendingRefresh, useHasPendingRefresh } from "@/lib/ipc-bridge";
 import { useFeedsRefresh } from "@/providers/feeds-provider";
@@ -16,22 +18,37 @@ import type { FeedSummary } from "../../../shared/contracts";
 
 const REFRESH_FAILED_MESSAGE = "Couldn't refresh feeds. Check your connection and try again.";
 
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) {
-    return "Good morning";
-  }
-  if (hour < 18) {
-    return "Good afternoon";
-  }
-  return "Good evening";
-}
-
 // Input's `icon` prop is typed as ComponentType<HTMLAttributes<HTMLOrSVGElement>>,
 // but @untitledui/icons components are typed against SVGProps. InputBase only
 // ever passes `className`, so this wrapper narrows to what's actually used.
 function SearchIcon({ className }: { className?: string | undefined }) {
   return <SearchLg className={className} />;
+}
+
+function ReadFilter({ unreadOnly, onChange }: { unreadOnly: boolean; onChange: (unreadOnly: boolean) => void }) {
+  return (
+    <ToggleButtonGroup
+      aria-label="Items to show"
+      selectionMode="single"
+      disallowEmptySelection
+      selectedKeys={[unreadOnly ? "unread" : "all"]}
+      onSelectionChange={(keys) => onChange(keys.has("unread"))}
+      className="flex flex-none rounded-full bg-secondary p-0.5 ring-1 ring-secondary ring-inset"
+    >
+      {[{ id: "all", label: "All" }, { id: "unread", label: "Unread" }].map(({ id, label }) => (
+        <ToggleButton
+          key={id}
+          id={id}
+          className={({ isSelected }) => cx(
+            "rounded-full px-3.5 py-1.5 text-sm font-semibold outline-brand transition duration-100 ease-linear focus-visible:outline-2",
+            isSelected ? "bg-primary text-secondary shadow-xs" : "text-quaternary hover:text-tertiary",
+          )}
+        >
+          {label}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
+  );
 }
 
 export interface RiverHeaderProps {
@@ -96,7 +113,7 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, vis
       <div className="mx-auto flex w-full max-w-[860px] flex-col gap-2">
         <div className="flex items-end gap-5">
           <div className="min-w-0 flex-1">
-            <div className="mb-1 text-xs font-semibold tracking-wide text-brand-secondary uppercase">{savedView ? activeWorkspace?.name ?? "Home" : getGreeting()}</div>
+            {savedView && <div className="mb-1 text-xs font-semibold tracking-wide text-brand-secondary uppercase">{activeWorkspace?.name ?? "Home"}</div>}
             <h1 className="font-display text-display-md leading-none text-primary">{savedView ? "Saved" : activeWorkspace?.name ?? "Home"}</h1>
           </div>
 
@@ -124,14 +141,7 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, vis
                   </button>
                 )}
               </div>
-              {!savedView && <Button
-                color="secondary"
-                iconLeading={Eye}
-                className="flex-none rounded-full"
-                onPress={() => setPreference("hideReadItems", !preferences.hideReadItems)}
-              >
-                {preferences.hideReadItems ? "Show All" : "Show Unread"}
-              </Button>}
+              {!savedView && <ReadFilter unreadOnly={preferences.hideReadItems} onChange={(unreadOnly) => setPreference("hideReadItems", unreadOnly)} />}
               {hasPendingRefresh && <Button
                 aria-label="Refresh, new articles available"
                 color="primary"

@@ -13,9 +13,10 @@ import DeleteFeedDialog from "@/components/Home/DeleteFeedDialog";
 import FeedpackInstallDialog from '@/components/Feedpacks/FeedpackInstallDialog';
 import Hint from "@/components/common/Hint";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
+import { Tooltip } from "@/components/untitled-ui/base/tooltip/tooltip";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { categoryErrorMessage } from "@/lib/river/category-errors";
-import { COUNT_CLASSES, EYE_SLOT_MARGIN_CLASSES, FeedRow, FolderVisibilityControls } from "@/components/Home/SidebarRows";
+import { FeedRow, FolderVisibilityControls } from "@/components/Home/SidebarRows";
 import { folderVisibility, type FeedVisibility } from "@/lib/river/feed-visibility";
 import {
   useClearDeleteCategoryRequest,
@@ -44,7 +45,6 @@ interface Folder {
   id: number;
   name: string;
   feeds: FeedSummary[];
-  count: number;
   open: boolean;
 }
 
@@ -80,13 +80,12 @@ function groupByCategory(categories: FeedCategory[], feeds: FeedSummary[]): Fold
   const openFolderIds = loadOpenFolderIds();
   const folders = new Map<number, Folder>();
   for (const category of categories) {
-    folders.set(category.id, { id: category.id, name: category.name, feeds: [], count: 0, open: openFolderIds.has(category.id) });
+    folders.set(category.id, { id: category.id, name: category.name, feeds: [], open: openFolderIds.has(category.id) });
   }
   for (const feed of feeds) {
     const { id, name } = feed.category;
-    const folder = folders.get(id) ?? { id, name, feeds: [], count: 0, open: openFolderIds.has(id) };
+    const folder = folders.get(id) ?? { id, name, feeds: [], open: openFolderIds.has(id) };
     folder.feeds.push(feed);
-    folder.count += feed.unreadCount;
     folders.set(id, folder);
   }
   return [...folders.values()];
@@ -302,14 +301,20 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
       <div className="flex items-center justify-between px-4.5 pb-2">
         <span className="text-xs font-bold tracking-wide text-tertiary uppercase">Feeds</span>
         <div className="flex items-center gap-1">
-          <Button aria-label="New folder" size="xs" color="tertiary" iconLeading={FolderPlus} onPress={startCreatingFolder} />
+          <Tooltip title="New folder" placement="top">
+            <Button aria-label="New folder" size="xs" color="tertiary" iconLeading={FolderPlus} onPress={startCreatingFolder} />
+          </Tooltip>
           <div ref={addFeedAnchorRef} className="flex">
-            <Button aria-label="Add feed" size="xs" color="tertiary" iconLeading={Plus} onPress={() => setIsAddFeedOpen(true)} />
+            <Tooltip title="Add feed" placement="top">
+              <Button aria-label="Add feed" size="xs" color="tertiary" iconLeading={Plus} onPress={() => setIsAddFeedOpen(true)} />
+            </Tooltip>
           </div>
           <Hint triggerRef={addFeedAnchorRef} isOpen={addFeedHint.isOpen} onDismiss={addFeedHint.dismiss} placement="bottom end">
             Add a feed here. To delete a feed, right-click it.
           </Hint>
-          <Button aria-label="Add feedpack" size="xs" color="tertiary" iconLeading={LayersTwo01} onPress={() => setIsFeedpackBrowserOpen(true)} />
+          <Tooltip title="Add feedpack" placement="top">
+            <Button aria-label="Add feedpack" size="xs" color="tertiary" iconLeading={LayersTwo01} onPress={() => setIsFeedpackBrowserOpen(true)} />
+          </Tooltip>
         </div>
       </div>
       {isCreatingFolder && (
@@ -432,11 +437,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                   {!isEditing && (
                     <FolderVisibilityControls folderName={folder.name} feeds={folder.feeds} showOnlyLinks={showOnlyLinks} onSetVisibility={onSetVisibility} />
                   )}
-                  {isEditing && renameError ? (
-                    <span className="text-xs text-error-primary">{renameError}</span>
-                  ) : (
-                    <span data-testid="folder-count" className={cx(COUNT_CLASSES, EYE_SLOT_MARGIN_CLASSES, "font-bold")}>{folder.count > 0 ? folder.count : ''}</span>
-                  )}
+                  {isEditing && renameError && <span className="text-xs text-error-primary">{renameError}</span>}
                 </div>
               </GridListItem>
             );
