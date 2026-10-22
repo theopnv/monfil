@@ -17,7 +17,7 @@ import { openLink } from "@/lib/river/utils";
 import { useLoadMoreOnScroll } from "@/lib/river/useLoadMoreOnScroll";
 import { useMarkReadOnScroll } from "@/lib/river/useMarkReadOnScroll";
 import { useRiverKeyboardNav } from "@/lib/river/useRiverKeyboardNav";
-import { useRiverScope } from "@/lib/river/useRiverScope";
+import { useRiverScope } from "@/providers/river-scope-provider";
 import { useCategories, useFeeds, useReadState, useRiver, useSetShowInWorkspace } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import { useSearch } from "@/providers/search-provider";

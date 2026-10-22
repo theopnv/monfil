@@ -6,7 +6,7 @@ import { beforeAll, describe, afterEach, test, expect, vi } from 'vitest';
 import { listenToLinkOpen, listenToRevealDatabaseFile, listenToRevealLogFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu } from './listeners';
 import { initializeDatabase } from '../db/database';
 import { BrowserWindow, Menu, shell } from 'electron';
-import { setLogFilePath } from '../main-state';
+import { setLogFilePath } from '../app/main-state';
 
 vi.mock(import('electron'), () => ({
   shell: {

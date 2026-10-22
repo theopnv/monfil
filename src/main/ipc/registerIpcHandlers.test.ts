@@ -12,14 +12,14 @@ import * as update from '../db/crud/update';
 import * as remove from '../db/crud/delete';
 import * as query from '../db/crud/query';
 import * as saved from '../db/saved';
-import * as settings from '../settings';
+import * as settings from '../app/settings';
 import { resolveSource } from '../feed/sources/registry';
 import { refreshAllFeeds } from '../feed/refresh';
 import { openAndImportOpml } from '../opml/import';
 import { exportWorkspaceOpml } from '../opml/export';
 import { getFeedpackCatalog } from '../feedpacks/catalog';
 import { installFeedpack, previewFeedpack } from '../feedpacks/install';
-import { getAppInfo } from '../app-info';
+import { getAppInfo } from '../app/app-info';
 import { logger } from '../logging/logger';
 import { registerIpcHandlers } from './registerIpcHandlers';
 
@@ -49,8 +49,8 @@ vi.mock(import('../feed/enrichItems'), () => ({ enrichItems: vi.fn() }));
 vi.mock(import('../feed/extractArticle'), () => ({ deriveArticleContentStatus: vi.fn() }));
 vi.mock(import('../feed/extractArticleUtility'), () => ({ extractArticleInUtilityProcess: vi.fn() }));
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
-vi.mock(import('./sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
-vi.mock(import('../settings'), () => ({
+vi.mock(import('../lib/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
+vi.mock(import('../app/settings'), () => ({
   getDetailedLogging: vi.fn(), getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn(), getRetentionDays: vi.fn(),
   setDetailedLogging: vi.fn(), setRefreshInterval: vi.fn(), setRefreshOnLaunch: vi.fn(), setRetentionDays: vi.fn(),
   toRefreshInterval: () => 30, toRetentionDays: () => 30,
@@ -59,7 +59,7 @@ vi.mock(import('../opml/import'), () => ({ openAndImportOpml: vi.fn() }));
 vi.mock(import('../opml/export'), () => ({ exportWorkspaceOpml: vi.fn() }));
 vi.mock(import('../feedpacks/catalog'), () => ({ getFeedpackCatalog: vi.fn() }));
 vi.mock(import('../feedpacks/install'), () => ({ installFeedpack: vi.fn(), previewFeedpack: vi.fn() }));
-vi.mock(import('../app-info'), () => ({ getAppInfo: vi.fn() }));
+vi.mock(import('../app/app-info'), () => ({ getAppInfo: vi.fn() }));
 vi.mock(import('../updates/auto-updater'), () => ({ getUpdateState: () => ({ name: 'NONE' as const }) }));
 
 const category: FeedCategory = { id: 3, name: 'Tech', workspace_id: 1 };

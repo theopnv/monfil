@@ -6,11 +6,11 @@ import { app, BrowserWindow, Menu, shell, type IpcMainEvent } from "electron";
 import type { OneWayRendererToMainChannelPayloads } from "../../shared/channels";
 import { HOME_WORKSPACE_ID } from "../../shared/contracts";
 import { dbFilePath, dbStatus } from "../db/database";
-import { sendToRenderer } from "./sendToRenderer";
-import { openExternalLink } from "../window-security";
-import { logFilePath } from '../main-state';
+import { sendToRenderer } from "../lib/sendToRenderer";
+import { openExternalLink } from "../app/window-security";
+import { logFilePath } from '../app/main-state';
 import { logger } from '../logging/logger';
-import { titleBarOverlayForTheme } from '../window-chrome';
+import { titleBarOverlayForTheme } from '../app/window-chrome';
 import { installUpdate } from '../updates/auto-updater';
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {

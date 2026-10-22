@@ -4,7 +4,7 @@
 
 import { ArrowLeft, ChevronDown, ChevronUp, Circle } from "@untitledui/icons";
 import SaveButton from "@/components/common/SaveButton";
-import FeedAvatar from "@/components/Home/FeedAvatar";
+import FeedAvatar from "@/components/common/FeedAvatar";
 import ArticleSourceLink from "@/components/Reader/ArticleSourceLink";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Tooltip } from "@/components/untitled-ui/base/tooltip/tooltip";

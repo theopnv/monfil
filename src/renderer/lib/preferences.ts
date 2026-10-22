@@ -3,7 +3,10 @@
 // See LICENSE in the repository root for full terms.
 
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
-import { DENSITIES, type Density } from "@/lib/river/utils";
+
+export type Density = "Cards" | "Magazine" | "Compact";
+
+export const DENSITIES: readonly Density[] = ["Cards", "Magazine", "Compact"];
 
 export interface Preferences {
   density: Density;

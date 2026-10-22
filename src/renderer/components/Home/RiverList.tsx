@@ -8,7 +8,7 @@ import RiverCardArticle from "@/components/Home/RiverCardArticle";
 import RiverCardCompact from "@/components/Home/RiverCardCompact";
 import RiverCardMagazine from "@/components/Home/RiverCardMagazine";
 import { useMasonryRows } from "@/lib/river/useMasonryRows";
-import type { Density } from "@/lib/river/utils";
+import type { Density } from "@/lib/preferences";
 import type { RiverRow } from "../../../shared/contracts";
 
 export interface RiverListProps {

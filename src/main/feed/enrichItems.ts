@@ -6,7 +6,7 @@ import type { FeedItem } from '../db/types';
 import { runWithConcurrency } from '../lib/utils';
 import { fetchText } from '../lib/fetch';
 import { extractOgImageUrl } from './extractOgImage';
-import { ENRICHMENT_CONCURRENCY, ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
+import { ENRICHMENT_CONCURRENCY, ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 
 const ABSOLUTE_HTTP_URL_REGEX = /^https?:\/\//i;
 

@@ -4,7 +4,7 @@
 
 import { fetchText } from '../lib/fetch';
 import type { Feedpack, FeedpackError, FeedpackInstallTarget, FeedpackPreview, ImportOpmlTarget, ImportSummary, InstallFeedpackError } from '../../shared/contracts';
-import { broadcastToRenderers } from '../ipc/sendToRenderer';
+import { broadcastToRenderers } from '../lib/sendToRenderer';
 import type { Result } from '../../shared/result';
 import { startOpmlImport } from '../opml/import';
 import { parseOpmlDocument } from '../opml/parse';

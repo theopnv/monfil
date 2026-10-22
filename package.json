@@ -6,7 +6,8 @@
   "main": ".vite/build/main.cjs",
   "private": true,
   "scripts": {
-    "lint": "tsc -b . && eslint --ext .ts,.tsx .",
+    "lint": "tsc -b . && eslint --ext .ts,.tsx . && npm run lint:deps",
+    "lint:deps": "depcruise src",
     "lint:docs": "markdownlint-cli2 \"README.md\" \"CONTRIBUTING.md\" \"doc/src/content/docs/**/*.{md,mdx}\"",
     "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:unit": "vitest --run --project node",
@@ -72,6 +73,7 @@
     "@vitest/coverage-istanbul": "^5.0.2",
     "@vitest/ui": "^5.0.5",
     "conventional-changelog-conventionalcommits": "^10.4.0",
+    "dependency-cruiser": "^18.7.0",
     "electron": "43.7.0",
     "eslint": "^10.8.0",
     "eslint-plugin-react-hooks": "^7.1.1",
