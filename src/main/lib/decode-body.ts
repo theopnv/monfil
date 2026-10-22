@@ -31,6 +31,7 @@ function decoderFor(label: string | undefined): TextDecoder | undefined {
     return undefined;
   }
   try {
+    // Stryker disable next-line ObjectLiteral: `fatal` is false by default, so an empty options object decodes the same
     return new TextDecoder(label, { fatal: false });
   } catch {
     return undefined;
