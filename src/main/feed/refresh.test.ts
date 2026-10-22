@@ -14,13 +14,16 @@ import { HOME_WORKSPACE_ID, type ParsedSource } from '../../shared/contracts';
 import { refreshAllFeeds } from './refresh';
 import type { FeedItem } from '../db/types';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
+import { resolveSiteIcon } from './sources/siteIcon';
 
 vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: true, matches: vi.fn(), discover: vi.fn(), fetch: vi.fn(), parse: vi.fn() } }));
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
+vi.mock(import('./sources/siteIcon'), () => ({ resolveSiteIcon: vi.fn() }));
 vi.mock(import('../lib/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedFetchFeed = vi.mocked(rssSource.fetch);
 const mockedFetchText = vi.mocked(fetchText);
+const mockedResolveSiteIcon = vi.mocked(resolveSiteIcon);
 
 type NewItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>;
 const TEST_PUB_DATE = new Date().toISOString();
@@ -77,12 +80,60 @@ afterEach(async () => {
   vi.restoreAllMocks();
   mockedFetchFeed.mockReset();
   mockedFetchText.mockReset();
+  mockedResolveSiteIcon.mockReset();
   await db.deleteFrom('feedItem').execute();
   await db.deleteFrom('feedMetadata').execute();
   await db.deleteFrom('feedCategory').execute();
 });
 
 describe('refreshAllFeeds', () => {
+  test('stores the site icon of a feed that has none', async () => {
+    // Arrange
+    const link = 'https://moderne.example/feed.xml';
+    const feedId = await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: { ...fetched(link, []), parsed: { ...parsed(link, []), siteLink: 'https://moderne.example/blog' } } });
+    mockedResolveSiteIcon.mockResolvedValue('https://moderne.example/brand/symbol.svg');
+
+    // Act
+    await refreshAllFeeds();
+
+    // Assert
+    expect(mockedResolveSiteIcon).toHaveBeenCalledWith('https://moderne.example/blog');
+    expect(await db.selectFrom('feedMetadata').select('icon').where('id', '=', feedId).executeTakeFirstOrThrow()).toEqual({ icon: 'https://moderne.example/brand/symbol.svg' });
+  });
+
+  test('looks up a missing icon once per session', async () => {
+    // Arrange
+    const link = 'https://no-icon.example/feed.xml';
+    await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, []) });
+    mockedResolveSiteIcon.mockResolvedValue(undefined);
+
+    // Act
+    await refreshAllFeeds();
+    await refreshAllFeeds();
+
+    // Assert
+    expect(mockedResolveSiteIcon).toHaveBeenCalledTimes(1);
+    expect(mockedResolveSiteIcon).toHaveBeenCalledWith(link);
+  });
+
+  test('keeps the icon a feed already has', async () => {
+    // Arrange
+    const link = 'https://avatar.example/feed.xml';
+    const stored = await addFeedToDatabase({ link, title: 'Avatar', type: 'rss', icon: 'https://cdn.example/avatar.png', items: [], categoryName: 'tech', workspaceId: HOME_WORKSPACE_ID, showInWorkspace: true });
+    if (!stored.success) {
+      throw new Error('expected the feed to be stored');
+    }
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, []) });
+
+    // Act
+    await refreshAllFeeds();
+
+    // Assert
+    expect(mockedResolveSiteIcon).not.toHaveBeenCalled();
+  });
+
   test('discards a feed response when its source was removed during the fetch', async () => {
     // Arrange
     const link = 'https://saved.example/feed';

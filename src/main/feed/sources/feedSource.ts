@@ -159,7 +159,7 @@ export function createFeedSource(spec: FeedSourceSpec): SourceAdapter {
         return { success: true, data: fetched.data };
       }
       const { parsed, validators } = fetched.data;
-      return { success: true, data: { validators, parsed: { type: spec.type, link, title: parsed.title, description: parsed.description, items: parsed.items, icon: undefined } } };
+      return { success: true, data: { validators, parsed: { type: spec.type, link, title: parsed.title, description: parsed.description, items: parsed.items, icon: undefined, siteLink: parsed.siteLink } } };
     },
     parse,
   };
