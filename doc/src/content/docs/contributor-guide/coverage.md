@@ -22,7 +22,7 @@ main ──> coverage.yml ──> Worker /coverage/ingest ──> D1 <── Wor
 | `COVERAGE=1 npm run test:e2e` | Packages an instrumented app, runs the Electron tests, and writes one file for each launch to `coverage/e2e/raw/`. |
 | `npm run coverage:merge` | Merges both runs. Writes `coverage/merged/` and `coverage/snapshot.json`. |
 
-`vitest.config.mts` is the root config. Its `test.projects` list holds the `node` project and `vitest.browser.config.mts`. A command that names a single file still works with `--config`, for example `npx vitest run --config=vitest.browser.config.mts path/to/file.test.tsx`.
+`vitest.config.mts` is the root config. Its `test.projects` list holds `vitest.node.config.mts` (the `node` project) and `vitest.browser.config.mts` (the `browser` project). A command that names a single file still works with `--config`, for example `npx vitest run --config=vitest.browser.config.mts path/to/file.test.tsx`.
 
 On Windows PowerShell, set the variable first with `$env:COVERAGE = '1'`.
 
@@ -104,12 +104,15 @@ The [devanalytics Worker](https://github.com/theopnv/monfil/tree/main/infra/deva
 | --- | --- | --- |
 | `POST /coverage/ingest` | `INGEST_TOKEN` | Replaces every row of the snapshot's sha in one transaction |
 | `POST /coverage/query` | `QUERY_TOKEN` | Runs one `SELECT` or `WITH` statement on the coverage tables and returns at most 10,000 rows |
+| `GET /coverage/badge` | None | Returns the shields.io badge JSON for the merged line coverage of `src` in the newest snapshot |
 
 The tables store covered and total counts and never percents, so a sum over files or folders stays correct:
 
 - `coverage_files` has one row for each commit, suite (`vitest`, `e2e`, or `merged`), and file.
 - `coverage_folder_summary` has one row for each commit, suite, and folder, with the sums and `file_count`. `src` includes `src/main`, which includes `src/main/feed`. Filter a query on one folder, or on the direct children of one folder. Never add up all the rows.
 - `coverage_tests` has one row for each commit and test suite (`unit`, `integration`, or `e2e`), with `files`, `tests`, `passed`, `failed`, and `skipped`. A check makes `tests` equal to the sum of the other three. The suites do not overlap, so the sum of the rows of one commit is its total.
+
+The README badge reads `/coverage/badge` through `https://img.shields.io/endpoint?url=…`. The route is public, so it runs one fixed query and reads nothing from the request. The Worker and shields.io both cache the answer for an hour, so a new snapshot shows on the badge within about an hour.
 
 Dates are stored in UTC. A coverage query is refused when it names a complexity table or a `sqlite_` table, and the reverse holds on the complexity route.
 

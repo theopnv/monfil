@@ -20,6 +20,7 @@ A query route refuses SQL that names a table of another domain, or any `sqlite_`
 
 - `POST /coverage/ingest` takes a snapshot from `npm run coverage:merge` and replaces every row of its sha in one batch. It needs `Authorization: Bearer <INGEST_TOKEN>`.
 - `POST /coverage/query` works like `/complexity/query`, on the coverage tables. It needs `Authorization: Bearer <QUERY_TOKEN>`.
+- `GET /coverage/badge` needs no token. It returns the [shields.io endpoint](https://shields.io/badges/endpoint-badge) JSON for the line coverage of `src` in the newest `merged` snapshot, with `cacheSeconds: 3600` for shields.io and `Cache-Control: public, max-age=3600`. It runs one fixed query and reads nothing from the request. The badge is red below 60%, orange below 80%, and green from 80%, like the Stryker mutation score badge. Without a snapshot it says `unknown`.
 
 Tables:
 

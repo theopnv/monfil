@@ -115,3 +115,33 @@ describe('complexity limits', () => {
     expect(result?.messages.filter((message) => message.ruleId === ruleId)).toHaveLength(0);
   });
 });
+
+describe('Stryker suppression comments', () => {
+  test.each([
+    ['a named mutator with a reason', '// Stryker disable next-line StringLiteral: the label only reaches the log'],
+    ['two named mutators with a reason', '// Stryker disable next-line EqualityOperator,ConditionalExpression: both bounds give the same slice'],
+    ['a restore comment', '// Stryker restore all'],
+    ['an unrelated comment', '// Disable the button while the request runs'],
+  ])('accepts %s', async (_label, comment) => {
+    // Act
+    const count = await ruleErrors(`${comment}\nexport const a = 1;\n`, 'src/main/example.ts', 'mutation/stryker-disable');
+
+    // Assert
+    expect(count).toBe(0);
+  });
+
+  test.each([
+    ['a comment without a reason', '// Stryker disable next-line StringLiteral'],
+    ['a comment with an empty reason', '// Stryker disable next-line StringLiteral:   '],
+    ['all mutators', '// Stryker disable next-line all: noisy'],
+    ['all mutators in a list', '// Stryker disable next-line StringLiteral,all: noisy'],
+    ['a range disable', '// Stryker disable StringLiteral: the labels only reach the log'],
+    ['a block comment range disable', '/* Stryker disable all */'],
+  ])('rejects %s', async (_label, comment) => {
+    // Act
+    const count = await ruleErrors(`${comment}\nexport const a = 1;\n`, 'src/main/example.ts', 'mutation/stryker-disable');
+
+    // Assert
+    expect(count).toBe(1);
+  });
+});

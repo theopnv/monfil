@@ -118,3 +118,7 @@ src/renderer/routeTree.gen.ts
 
 # Claude Code agent worktrees: full checkouts of this repo, each with its own node_modules.
 .claude/worktrees/
+
+# Stryker
+.stryker-tmp/
+.mutation/

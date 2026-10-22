@@ -417,3 +417,40 @@ describe('POST /coverage/query', () => {
     expect(response.status).toBe(401);
   });
 });
+
+describe('GET /coverage/badge', () => {
+  function srcLines(covered: number, total: number): FileCoverage[] {
+    return [{ file: 'src/main/a.ts', lines: [covered, total], statements: [0, 0], functions: [0, 0], branches: [0, 0] }];
+  }
+
+  it('gives the merged line coverage of src for the newest snapshot, without a token', async () => {
+    // Arrange
+    await post('/coverage/ingest', INGEST, { ...coverageSnapshot(srcLines(889, 1000)), date: '2026-10-21T00:00:00Z' });
+    await post('/coverage/ingest', INGEST, { ...coverageSnapshot(srcLines(50, 100), 'b'.repeat(40)), date: '2026-10-19T00:00:00Z' });
+
+    // Act
+    const response = await exports.default.fetch(new Request('https://worker.test/coverage/badge'));
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe('public, max-age=3600');
+    expect(response.headers.get('Content-Type')).toContain('application/json');
+    expect(await response.json()).toEqual({ schemaVersion: 1, label: 'coverage', message: '88.9%', color: 'brightgreen', cacheSeconds: 3600 });
+  });
+
+  it('says unknown when no coverage is stored', async () => {
+    // Act
+    const response = await exports.default.fetch(new Request('https://worker.test/coverage/badge'));
+
+    // Assert
+    expect(await response.json()).toEqual({ schemaVersion: 1, label: 'coverage', message: 'unknown', color: 'lightgrey', cacheSeconds: 3600 });
+  });
+
+  it('refuses POST', async () => {
+    // Act
+    const response = await post('/coverage/badge', QUERY, {});
+
+    // Assert
+    expect(response.status).toBe(405);
+  });
+});
