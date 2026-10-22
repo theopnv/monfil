@@ -8,7 +8,7 @@ import type { AddressInfo } from 'node:net';
 import { lookup } from 'node:dns/promises';
 import type { LookupAddress } from 'node:dns';
 import { fetchConditional, fetchText, setRequestTransport, type RequestTransport } from './fetch';
-import { MAX_FETCH_BYTES, MAX_REDIRECTS } from '../constants';
+import { MAX_FETCH_BYTES, MAX_REDIRECTS } from './constants';
 
 vi.mock(import('node:dns/promises'), () => ({ lookup: vi.fn() }));
 

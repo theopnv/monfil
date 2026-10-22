@@ -3,17 +3,17 @@
 // See LICENSE in the repository root for full terms.
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { broadcastToRenderers } from '../ipc/sendToRenderer';
-import { getRefreshInterval, getRefreshOnLaunch, getRetentionDays } from '../settings';
+import { broadcastToRenderers } from '../lib/sendToRenderer';
+import { getRefreshInterval, getRefreshOnLaunch, getRetentionDays } from '../app/settings';
 import { pruneExpiredItems } from '../db/retention';
 import { refreshAllFeeds } from './refresh';
 import { rescheduleRefresh, startRefreshScheduler, stopRefreshScheduler } from './scheduler';
 import type { RefreshSummary } from '../../shared/contracts';
 
 vi.mock(import('./refresh'), () => ({ refreshAllFeeds: vi.fn() }));
-vi.mock(import('../settings'), () => ({ getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn(), getRetentionDays: vi.fn() }));
+vi.mock(import('../app/settings'), () => ({ getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn(), getRetentionDays: vi.fn() }));
 vi.mock(import('../db/retention'), () => ({ pruneExpiredItems: vi.fn() }));
-vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
+vi.mock(import('../lib/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedRefreshAllFeeds = vi.mocked(refreshAllFeeds);
 const mockedGetRefreshInterval = vi.mocked(getRefreshInterval);

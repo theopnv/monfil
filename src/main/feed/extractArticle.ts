@@ -8,7 +8,7 @@ import { JSDOM } from 'jsdom';
 import type { ArticleContentStatus } from '../db/types';
 import { SANITIZE_CONFIG } from '../../shared/sanitize-html';
 import { resolveEmbedUrl, type EmbedDescriptor } from '../../shared/embeds';
-import { MIN_ARTICLE_LENGTH } from '../constants';
+import { MIN_ARTICLE_LENGTH } from '../lib/constants';
 
 export interface ExtractedArticle {
   html: string;

@@ -23,7 +23,7 @@ export default defineConfig([
         // A nested checkout brings a second tsconfig.json; without this the parser refuses to guess between them.
         tsconfigRootDir: import.meta.dirname,
         projectService: {
-          allowDefaultProject: ['eslint.config.test.ts', 'src/*/boundary-test.ts', 'src/*/example.ts'],
+          allowDefaultProject: ['eslint.config.test.ts', 'dependency-cruiser.test.ts', 'src/*/boundary-test.ts', 'src/*/example.ts'],
         },
       },
     },

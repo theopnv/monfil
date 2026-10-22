@@ -8,7 +8,7 @@ import { extractOgImageUrl } from './extractOgImage';
 import { enrichItems } from './enrichItems';
 import { fetchText } from '../lib/fetch';
 import type { FeedItem } from '../db/types';
-import { ARTICLE_FETCH_TIMEOUT_MS, ENRICHMENT_CONCURRENCY } from '../constants';
+import { ARTICLE_FETCH_TIMEOUT_MS, ENRICHMENT_CONCURRENCY } from '../lib/constants';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
 vi.mock(import('./extractOgImage'), () => ({ extractOgImageUrl: vi.fn() }));

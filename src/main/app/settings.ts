@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { db, dbReady } from './db/database';
-import { querySettings } from './db/crud/query';
-import type { RefreshInterval, RetentionDays } from '../shared/contracts';
+import { db, dbReady } from '../db/database';
+import { querySettings } from '../db/crud/query';
+import type { RefreshInterval, RetentionDays } from '../../shared/contracts';
 
 export const REFRESH_INTERVALS: readonly RefreshInterval[] = [15, 30, 60, 360, 'manual'];
 

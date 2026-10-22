@@ -9,17 +9,17 @@ import started from 'electron-squirrel-startup';
 import { registerIpcHandlers } from './ipc/registerIpcHandlers';
 import { registerIpcListeners } from './ipc/registerIpcListeners';
 import { closeDatabase, dbStatus, initializeDatabase } from './db/database';
-import { DB_FILE_NAME } from './constants';
+import { DB_FILE_NAME } from './lib/constants';
 import { startRefreshScheduler, stopRefreshScheduler } from './feed/scheduler';
 import { stopArticleExtractionProcess } from './feed/extractArticleUtility';
 import { resolveDevUserDataDir } from './dev-user-data-dir';
-import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents } from './window-security';
+import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents } from './app/window-security';
 import { allowPrivateHosts } from './lib/fetch';
 import { configureLogging, logger } from './logging/logger';
 import { installFatalHandlers } from './logging/fatal';
-import { setLogFilePath } from './main-state';
-import { getDetailedLogging } from './settings';
-import { titleBarOverlayForTheme } from './window-chrome';
+import { setLogFilePath } from './app/main-state';
+import { getDetailedLogging } from './app/settings';
+import { titleBarOverlayForTheme } from './app/window-chrome';
 import { startAutoUpdates, stopAutoUpdates } from './updates/auto-updater';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.

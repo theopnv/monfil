@@ -104,8 +104,8 @@ describe('complexity limits', () => {
   test.each([
     ['src/renderer/components/untitled-ui/base/buttons/button.tsx', '@sonarjs/cognitive-complexity'],
     ['src/renderer/components/untitled-ui/base/buttons/button.tsx', '@sonarjs/cyclomatic-complexity'],
-    ['src/main/settings.test.ts', '@sonarjs/cognitive-complexity'],
-    ['src/main/settings.test.ts', '@sonarjs/cyclomatic-complexity'],
+    ['src/main/app/settings.test.ts', '@sonarjs/cognitive-complexity'],
+    ['src/main/app/settings.test.ts', '@sonarjs/cyclomatic-complexity'],
   ])('allows complex code in %s for %s', async (filePath, ruleId) => {
     // Act
     const [result] = await eslint.lintText(nestedConditions, { filePath });

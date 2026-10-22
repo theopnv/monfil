@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import FeedAvatar from "@/components/Home/FeedAvatar";
+import FeedAvatar from "@/components/common/FeedAvatar";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx } from "@/components/untitled-ui/utils/cx";
 

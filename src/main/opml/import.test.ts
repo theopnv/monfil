@@ -14,7 +14,7 @@ vi.mock(import('../lib/fetch'), () => ({
   fetchText: vi.fn(() => Promise.resolve({ success: false as const, error: { name: 'NETWORK_ERROR' as const, message: 'offline' } })),
   fetchConditional: vi.fn(() => Promise.resolve({ success: false as const, error: { name: 'NETWORK_ERROR' as const, message: 'offline' } })),
 }));
-vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
+vi.mock(import('../lib/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedFetchFeed = vi.mocked(rssSource.fetch);
 
