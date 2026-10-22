@@ -5,7 +5,7 @@
 import { app, net } from 'electron';
 import type { Result } from '../../shared/result.ts';
 import type { FetchUrlError } from '../../shared/contracts.ts';
-import { FETCH_TIMEOUT_MS, MAX_FETCH_BYTES, MAX_REDIRECTS } from '../constants.ts';
+import { FETCH_TIMEOUT_MS, MAX_FETCH_BYTES, MAX_REDIRECTS } from './constants.ts';
 import { classifyHost } from './private-network.ts';
 import { decodeBody } from './decode-body.ts';
 

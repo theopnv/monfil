@@ -7,14 +7,14 @@ import { logger } from '../logging/logger';
 import { syncFeedItemsToDatabase, updateFeedItemImage } from '../db/crud/insert';
 import { querySubscribedFeedMetadata } from '../db/crud/query';
 import type { FeedItem, FeedMetadataRow } from '../db/types';
-import { broadcastToRenderers } from '../ipc/sendToRenderer';
+import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { enrichItems } from './enrichItems';
 import { sourceFor } from './sources/registry';
 import { setFeedFetchResult } from '../db/crud/update';
 import type { RefreshSummary, RetentionDays, SourceType } from '../../shared/contracts';
 import { runWithConcurrency } from '../lib/utils';
-import { FEED_FETCH_CONCURRENCY } from '../constants';
-import { getRetentionDays } from '../settings';
+import { FEED_FETCH_CONCURRENCY } from '../lib/constants';
+import { getRetentionDays } from '../app/settings';
 import { pruneExpiredItems, retentionCutoff } from '../db/retention';
 
 const ENRICHMENT_BUDGET = 200;

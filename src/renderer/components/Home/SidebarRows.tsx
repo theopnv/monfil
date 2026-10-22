@@ -5,7 +5,7 @@
 import { DotsGrid, Eye, EyeOff, LayerSingle } from "@untitledui/icons";
 import { Button as DragHandleButton } from "react-aria-components";
 import { ipc } from '@/lib/ipc-client';
-import FeedAvatar from "@/components/Home/FeedAvatar";
+import FeedAvatar from "@/components/common/FeedAvatar";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import {
   feedVisibility,

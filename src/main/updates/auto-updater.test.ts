@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { broadcastToRenderers } from '../ipc/sendToRenderer';
+import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { getUpdateState, installUpdate, startAutoUpdates, stopAutoUpdates } from './auto-updater';
 
 const { mockAutoUpdater } = await vi.hoisted(async () => {
@@ -24,7 +24,7 @@ vi.mock(import('electron'), () => ({
   } as unknown as Electron.App,
   autoUpdater: mockAutoUpdater as unknown as Electron.AutoUpdater,
 }));
-vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
+vi.mock(import('../lib/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedBroadcast = vi.mocked(broadcastToRenderers);
 const MINUTE = 60 * 1000;

@@ -5,13 +5,13 @@
 import { describe, expect, test, vi } from 'vitest';
 import type { Feedpack } from '../../shared/contracts';
 import { fetchText } from '../lib/fetch';
-import { broadcastToRenderers } from '../ipc/sendToRenderer';
+import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { startOpmlImport } from '../opml/import';
 import { getFeedpackCatalog, readBundledFeedpack, usesBundledFeedpacks } from './catalog';
 import { installFeedpack, previewFeedpack } from './install';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
-vi.mock(import('../ipc/sendToRenderer'), () => ({ broadcastToRenderers: vi.fn() }));
+vi.mock(import('../lib/sendToRenderer'), () => ({ broadcastToRenderers: vi.fn() }));
 vi.mock(import('../opml/import'), () => ({ startOpmlImport: vi.fn() }));
 vi.mock(import('./catalog'), () => ({
   getFeedpackCatalog: vi.fn(),

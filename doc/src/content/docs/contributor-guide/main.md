@@ -19,6 +19,6 @@ Keep third-party HTML behind the sanitization path before it reaches the reader.
 
 ## Keep network and window boundaries
 
-The [network helpers](https://github.com/theopnv/monfil/tree/main/src/main/lib) accept HTTP and HTTPS URLs and check redirects. [Window security](https://github.com/theopnv/monfil/blob/main/src/main/window-security.ts) keeps app windows on the app document, denies web permissions, and opens external links in the system browser.
+The [network helpers](https://github.com/theopnv/monfil/tree/main/src/main/lib) accept HTTP and HTTPS URLs and check redirects. [Window security](https://github.com/theopnv/monfil/blob/main/src/main/app/window-security.ts) keeps app windows on the app document, denies web permissions, and opens external links in the system browser.
 
 The renderer's Vite config supplies the Content Security Policy. Run the [window security tests](https://github.com/theopnv/monfil/blob/main/test/e2e/window-security.spec.ts) when you change URL handling or window behavior.

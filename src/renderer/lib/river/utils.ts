@@ -5,10 +5,6 @@
 import type { RiverRow, SourceType } from '../../../shared/contracts';
 import { ipc } from '@/lib/ipc-client';
 
-export type Density = "Cards" | "Magazine" | "Compact";
-
-export const DENSITIES: readonly Density[] = ["Cards", "Magazine", "Compact"];
-
 /** The uppercase badge word for a source type, e.g. "RSS" / "YOUTUBE". */
 export const SOURCE_TYPE_LABEL: Record<SourceType, string> = {
   rss: 'RSS',

@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { parseFeed } from 'feedsmith';
-import { extractAtomImageUrl, extractImageUrl, extractJsonImageUrl, extractRdfImageUrl } from '../extractImage';
+import { extractAtomImageUrl, extractImageUrl, extractJsonImageUrl, extractRdfImageUrl } from './extractImage';
 import { decodeOptional, decodeText, resolveGuid } from './text';
 import type { ParsedFeedContent } from './types';
 

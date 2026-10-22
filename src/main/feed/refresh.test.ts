@@ -13,11 +13,11 @@ import { rssSource } from './sources/rss';
 import { HOME_WORKSPACE_ID, type ParsedSource } from '../../shared/contracts';
 import { refreshAllFeeds } from './refresh';
 import type { FeedItem } from '../db/types';
-import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
+import { ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 
 vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: true, matches: vi.fn(), discover: vi.fn(), fetch: vi.fn(), parse: vi.fn() } }));
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
-vi.mock(import('../ipc/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
+vi.mock(import('../lib/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 
 const mockedFetchFeed = vi.mocked(rssSource.fetch);
 const mockedFetchText = vi.mocked(fetchText);

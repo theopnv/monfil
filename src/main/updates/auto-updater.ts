@@ -4,7 +4,7 @@
 
 import { app, autoUpdater } from 'electron';
 import type { AppUpdateState } from '../../shared/contracts';
-import { broadcastToRenderers } from '../ipc/sendToRenderer';
+import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { logger } from '../logging/logger';
 import { resolveUpdateSource } from './update-source';
 

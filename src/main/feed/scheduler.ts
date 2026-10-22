@@ -4,9 +4,9 @@
 
 import type { RefreshInterval } from '../../shared/contracts';
 import { logger } from '../logging/logger';
-import { getRefreshInterval, getRefreshOnLaunch, getRetentionDays } from '../settings';
+import { getRefreshInterval, getRefreshOnLaunch, getRetentionDays } from '../app/settings';
 import { pruneExpiredItems } from '../db/retention';
-import { broadcastToRenderers } from '../ipc/sendToRenderer';
+import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { refreshAllFeeds } from './refresh';
 
 const MINUTE_IN_MS = 60 * 1000;

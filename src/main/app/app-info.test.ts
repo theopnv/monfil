@@ -8,10 +8,10 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { sql } from 'kysely';
 import { getAppInfo } from './app-info';
-import { closeDatabase, db, initializeDatabase } from './db/database';
-import { addFeedToDatabase } from './db/crud/insert';
-import { HOME_WORKSPACE_ID } from '../shared/contracts';
-import { rmTestDir } from './lib/rmTestDir';
+import { closeDatabase, db, initializeDatabase } from '../db/database';
+import { addFeedToDatabase } from '../db/crud/insert';
+import { HOME_WORKSPACE_ID } from '../../shared/contracts';
+import { rmTestDir } from '../lib/rmTestDir';
 
 vi.mock(import('electron'), () => ({
   app: { getVersion: vi.fn(() => '1.2.3') } as unknown as Electron.App,

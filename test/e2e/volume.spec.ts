@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { initializeDatabase, closeDatabase } from '../../src/main/db/database';
 import { addFeedToDatabase } from '../../src/main/db/crud/insert';
-import { DB_FILE_NAME } from '../../src/main/constants';
+import { DB_FILE_NAME } from '../../src/main/lib/constants';
 import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
 
 const FEED_COUNT = 20;

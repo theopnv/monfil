@@ -5,7 +5,7 @@
 import SegmentedControl from "@/components/common/SegmentedControl";
 import SettingsRow from "@/components/Settings/SettingsRow";
 import SettingsSection from "@/components/Settings/SettingsSection";
-import { DENSITIES } from "@/lib/river/utils";
+import { DENSITIES } from "@/lib/preferences";
 import { usePreferences } from "@/providers/preferences-provider";
 import { useTheme } from "@/providers/theme-provider";
 

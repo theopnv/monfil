@@ -8,7 +8,7 @@ import { addFeedToDatabase, upsertArticleContent } from '../db/crud/insert';
 import { fetchText } from '../lib/fetch';
 import { extractArticleInUtilityProcess } from '../feed/extractArticleUtility';
 import { handleAppHintsEnabled, handleItemsGetContent } from './handlers';
-import { ARTICLE_FETCH_TIMEOUT_MS } from '../constants';
+import { ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 import type { IpcMainInvokeEvent } from 'electron';
 import { HOME_WORKSPACE_ID, type SourceType } from '../../shared/contracts';
 

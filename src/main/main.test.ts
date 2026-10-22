@@ -51,7 +51,7 @@ vi.mock(import('electron'), () => ({
   session: { defaultSession: {} } as typeof Electron.session,
 }));
 
-vi.mock(import('./window-security'), () => ({
+vi.mock(import('./app/window-security'), () => ({
   configureYouTubeEmbedReferrer: vi.fn(),
   denyWebPermissions: vi.fn(),
   hardenWebContents: vi.fn(),
@@ -75,7 +75,7 @@ vi.mock(import('./db/database'), () => ({
   dbStatus: { name: 'OK' } as const,
 }));
 
-vi.mock(import('./settings'), () => ({
+vi.mock(import('./app/settings'), () => ({
   getDetailedLogging: vi.fn().mockResolvedValue(false),
 }));
 
@@ -94,7 +94,7 @@ vi.mock(import('./logging/fatal'), () => ({
   installFatalHandlers: vi.fn(),
 }));
 
-vi.mock(import('./main-state'), () => ({
+vi.mock(import('./app/main-state'), () => ({
   setLogFilePath: vi.fn(),
 }));
 
