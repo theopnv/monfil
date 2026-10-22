@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Platform Engineering</title></head>
+  <body>
+    <outline text="Newsletters">
+      <outline text="Platform Weekly" title="Platform Weekly" type="rss" xmlUrl="https://platformweekly.com/feed"/>
+      <outline text="SRE Weekly" title="SRE Weekly" type="rss" xmlUrl="https://sreweekly.com/feed/"/>
+      <outline text="Last Week in AWS" title="Last Week in AWS" type="rss" xmlUrl="https://www.lastweekinaws.com/feed/"/>
+      <outline text="Last Week in Kubernetes Development" title="Last Week in Kubernetes Development" type="rss" xmlUrl="https://lwkd.info/feed.xml"/>
+    </outline>
+    <outline text="Projects &amp; Foundations">
+      <outline text="Kubernetes Blog" title="Kubernetes Blog" type="rss" xmlUrl="https://kubernetes.io/feed.xml"/>
+      <outline text="CNCF Blog" title="CNCF Blog" type="rss" xmlUrl="https://www.cncf.io/feed/"/>
+      <outline text="Backstage Blog" title="Backstage Blog" type="rss" xmlUrl="https://backstage.io/blog/rss.xml"/>
+      <outline text="Crossplane Blog" title="Crossplane Blog" type="rss" xmlUrl="https://blog.crossplane.io/rss/"/>
+      <outline text="OpenTelemetry Blog" title="OpenTelemetry Blog" type="rss" xmlUrl="https://opentelemetry.io/blog/index.xml"/>
+      <outline text="platformengineering.org" title="platformengineering.org" type="rss" xmlUrl="https://platformengineering.org/blog/rss.xml"/>
+    </outline>
+    <outline text="Cloud &amp; Vendors">
+      <outline text="AWS News Blog" title="AWS News Blog" type="rss" xmlUrl="https://aws.amazon.com/blogs/aws/feed/"/>
+      <outline text="Google Cloud Blog" title="Google Cloud Blog" type="rss" xmlUrl="https://cloudblog.withgoogle.com/rss/"/>
+      <outline text="Azure Blog" title="Azure Blog" type="rss" xmlUrl="https://azure.microsoft.com/en-us/blog/feed/"/>
+      <outline text="Cloudflare Blog" title="Cloudflare Blog" type="rss" xmlUrl="https://blog.cloudflare.com/rss/"/>
+      <outline text="HashiCorp Blog" title="HashiCorp Blog" type="rss" xmlUrl="https://www.hashicorp.com/blog/feed.xml"/>
+      <outline text="Grafana Labs Blog" title="Grafana Labs Blog" type="rss" xmlUrl="https://grafana.com/blog/index.xml"/>
+      <outline text="Honeycomb Blog" title="Honeycomb Blog" type="rss" xmlUrl="https://www.honeycomb.io/rss/blog.xml"/>
+      <outline text="Moderne Blog" title="Moderne Blog" type="rss" xmlUrl="https://moderne.ai/feed.xml"/>
+    </outline>
+    <outline text="People">
+      <outline text="Charity Majors" title="Charity Majors" type="rss" xmlUrl="https://charity.wtf/feed"/>
+      <outline text="Brendan Gregg" title="Brendan Gregg" type="rss" xmlUrl="https://www.brendangregg.com/blog/rss.xml"/>
+      <outline text="Julia Evans" title="Julia Evans" type="rss" xmlUrl="https://jvns.ca/atom.xml"/>
+      <outline text="Zeitgeist of Bytes" title="Zeitgeist of Bytes" type="rss" xmlUrl="https://www.zeitgeistofbytes.com/feed"/>
+    </outline>
+    <outline text="Media &amp; Podcasts">
+      <outline text="The New Stack" title="The New Stack" type="rss" xmlUrl="https://thenewstack.io/feed/"/>
+      <outline text="InfoQ DevOps" title="InfoQ DevOps" type="rss" xmlUrl="https://feed.infoq.com/Devops"/>
+      <outline text="Kubernetes Podcast from Google" title="Kubernetes Podcast from Google" type="rss" xmlUrl="https://kubernetespodcast.com/feeds/audio.xml"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="Kubernetes releases" title="Kubernetes releases" type="rss" xmlUrl="https://github.com/kubernetes/kubernetes/releases.atom"/>
+      <outline text="OpenTofu releases" title="OpenTofu releases" type="rss" xmlUrl="https://github.com/opentofu/opentofu/releases.atom"/>
+      <outline text="Terraform releases" title="Terraform releases" type="rss" xmlUrl="https://github.com/hashicorp/terraform/releases.atom"/>
+      <outline text="Helm releases" title="Helm releases" type="rss" xmlUrl="https://github.com/helm/helm/releases.atom"/>
+      <outline text="Prometheus releases" title="Prometheus releases" type="rss" xmlUrl="https://github.com/prometheus/prometheus/releases.atom"/>
+      <outline text="Grafana releases" title="Grafana releases" type="rss" xmlUrl="https://github.com/grafana/grafana/releases.atom"/>
+      <outline text="Backstage releases" title="Backstage releases" type="rss" xmlUrl="https://github.com/backstage/backstage/releases.atom"/>
+      <outline text="Docker Compose releases" title="Docker Compose releases" type="rss" xmlUrl="https://github.com/docker/compose/releases.atom"/>
+      <outline text="Crossplane releases" title="Crossplane releases" type="rss" xmlUrl="https://github.com/crossplane/crossplane/releases.atom"/>
+      <outline text="Cilium releases" title="Cilium releases" type="rss" xmlUrl="https://github.com/cilium/cilium/releases.atom"/>
+      <outline text="Loki releases" title="Loki releases" type="rss" xmlUrl="https://github.com/grafana/loki/releases.atom"/>
+    </outline>
+    <outline text="Community">
+      <outline text="#kubernetes on Hachyderm" title="#kubernetes on Hachyderm" type="rss" xmlUrl="https://hachyderm.io/tags/kubernetes.rss"/>
+      <outline text="#platformengineering on Mastodon" title="#platformengineering on Mastodon" type="rss" xmlUrl="https://mastodon.social/tags/platformengineering.rss"/>
+      <outline text="Julia Evans (Bluesky)" title="Julia Evans (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/b0rk.jvns.ca/rss"/>
+      <outline text="Kelsey Hightower (Bluesky)" title="Kelsey Hightower (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/kelseyhightower.com/rss"/>
+      <outline text="Kubernetes (Bluesky)" title="Kubernetes (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/kubernetes.io/rss"/>
+      <outline text="CNCF (Bluesky)" title="CNCF (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/cncf.io/rss"/>
+      <outline text="Corey Quinn (Bluesky)" title="Corey Quinn (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/quinnypig.com/rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="TechWorld with Nana" title="TechWorld with Nana" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCdngmbVKX1Tgre699-XLlUA"/>
+      <outline text="DevOps &amp; AI Toolkit (Viktor Farcic)" title="DevOps &amp; AI Toolkit (Viktor Farcic)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCfz8x0lVzJpb_dgWm9kPVrw"/>
+      <outline text="Anton Putra" title="Anton Putra" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCeLvlbC754U6FyFQbKc0UnQ"/>
+    </outline>
+    <outline text="Events">
+      <outline text="Cloud native and platform conferences" title="Cloud native and platform conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=platform-engineering,kubernetes,cloud-native,sre,observability"/>
+    </outline>
+  </body>
+</opml>

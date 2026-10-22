@@ -2,24 +2,274 @@
   "version": 1,
   "packs": [
     {
-      "slug": "devsecops",
-      "title": "DevSecOps",
-      "description": "Testing, continuous delivery, code quality, and engineering platform sources.",
-      "tags": ["devsecops", "testing", "ci-cd"],
-      "curator": "Monfil",
-      "sourceCount": 26,
-      "updatedAt": "2026-10-18",
-      "opml": "devsecops.opml"
-    },
-    {
       "slug": "ai",
       "title": "AI",
-      "description": "Research, reporting, and updates from AI labs, companies, and independent voices.",
-      "tags": ["ai", "artificial-intelligence", "research"],
+      "description": "Research, reporting, and updates from AI labs, companies, builders, and independent voices.",
+      "tags": ["ai", "artificial-intelligence", "llm", "machine-learning", "research"],
+      "curator": "Monfil",
+      "sourceCount": 59,
+      "updatedAt": "2026-10-22",
+      "opml": "ai.opml"
+    },
+    {
+      "slug": "platform-engineering",
+      "title": "Platform Engineering",
+      "description": "Kubernetes, cloud, infrastructure as code, observability, SRE, and internal developer platforms.",
+      "tags": ["platform-engineering", "kubernetes", "cloud", "sre", "observability", "infrastructure"],
+      "curator": "Monfil",
+      "sourceCount": 47,
+      "updatedAt": "2026-10-22",
+      "opml": "platform-engineering.opml"
+    },
+    {
+      "slug": "ci-cd",
+      "title": "CI/CD Engineering",
+      "description": "Build systems, pipelines, GitOps, release engineering, and delivery performance.",
+      "tags": ["ci-cd", "continuous-delivery", "gitops", "build", "release-engineering"],
+      "curator": "Monfil",
+      "sourceCount": 30,
+      "updatedAt": "2026-10-22",
+      "opml": "ci-cd.opml"
+    },
+    {
+      "slug": "quality-engineering",
+      "title": "Quality Engineering",
+      "description": "Testing practice, test automation, and quality strategy from testers, SDETs, and tool makers.",
+      "tags": ["testing", "qa", "test-automation", "sdet", "quality"],
+      "curator": "Monfil",
+      "sourceCount": 38,
+      "updatedAt": "2026-10-22",
+      "opml": "quality-engineering.opml"
+    },
+    {
+      "slug": "security",
+      "title": "Cybersecurity",
+      "description": "Security news, threat intelligence, vulnerability research, AppSec, and software supply chain security.",
+      "tags": ["security", "cybersecurity", "appsec", "threat-intel", "supply-chain"],
+      "curator": "Monfil",
+      "sourceCount": 45,
+      "updatedAt": "2026-10-22",
+      "opml": "security.opml"
+    },
+    {
+      "slug": "frontend",
+      "title": "Frontend Engineering",
+      "description": "Web platform, CSS, JavaScript frameworks, browsers, and the people who shape them.",
+      "tags": ["frontend", "web", "javascript", "css", "react", "browsers"],
+      "curator": "Monfil",
+      "sourceCount": 53,
+      "updatedAt": "2026-10-22",
+      "opml": "frontend.opml"
+    },
+    {
+      "slug": "backend",
+      "title": "Backend Engineering",
+      "description": "Architecture, distributed systems, databases, languages, and engineering blogs from teams at scale.",
+      "tags": ["backend", "architecture", "distributed-systems", "databases", "apis"],
+      "curator": "Monfil",
+      "sourceCount": 54,
+      "updatedAt": "2026-10-22",
+      "opml": "backend.opml"
+    },
+    {
+      "slug": "mobile",
+      "title": "Mobile Development",
+      "description": "iOS, Android, and cross-platform app development, platform news, and app business.",
+      "tags": ["mobile", "ios", "android", "swift", "kotlin", "flutter"],
+      "curator": "Monfil",
+      "sourceCount": 27,
+      "updatedAt": "2026-10-22",
+      "opml": "mobile.opml"
+    },
+    {
+      "slug": "data",
+      "title": "Data",
+      "description": "Data engineering, analytics, databases, data science, and visualization.",
+      "tags": ["data", "data-engineering", "analytics", "data-science", "visualization"],
+      "curator": "Monfil",
+      "sourceCount": 31,
+      "updatedAt": "2026-10-22",
+      "opml": "data.opml"
+    },
+    {
+      "slug": "graphics-programming",
+      "title": "Graphics Programming",
+      "description": "Real-time rendering, GPU programming, graphics APIs, shaders, and rendering research.",
+      "tags": ["graphics", "rendering", "gpu", "vulkan", "webgpu", "shaders"],
+      "curator": "Monfil",
+      "sourceCount": 33,
+      "updatedAt": "2026-10-22",
+      "opml": "graphics-programming.opml"
+    },
+    {
+      "slug": "engineering-leadership",
+      "title": "Engineering Leadership",
+      "description": "Engineering management, staff+ careers, developer productivity, and team culture.",
+      "tags": ["engineering-management", "leadership", "careers", "developer-productivity"],
+      "curator": "Monfil",
+      "sourceCount": 24,
+      "updatedAt": "2026-10-22",
+      "opml": "engineering-leadership.opml"
+    },
+    {
+      "slug": "tech-writing",
+      "title": "Technical Writing",
+      "description": "Documentation craft, docs-as-code tooling, API docs, and style for technical writers.",
+      "tags": ["technical-writing", "documentation", "docs-as-code", "api-docs", "writing"],
+      "curator": "Monfil",
+      "sourceCount": 22,
+      "updatedAt": "2026-10-22",
+      "opml": "tech-writing.opml"
+    },
+    {
+      "slug": "ux-design",
+      "title": "UI/UX Design",
+      "description": "User research, product design, design systems, accessibility, and typography.",
+      "tags": ["ux", "ui", "design", "design-systems", "accessibility"],
+      "curator": "Monfil",
+      "sourceCount": 28,
+      "updatedAt": "2026-10-22",
+      "opml": "ux-design.opml"
+    },
+    {
+      "slug": "product-management",
+      "title": "Product Management",
+      "description": "Product strategy, discovery, growth, and the craft of building products people want.",
+      "tags": ["product-management", "product", "strategy", "growth", "discovery"],
+      "curator": "Monfil",
+      "sourceCount": 20,
+      "updatedAt": "2026-10-22",
+      "opml": "product-management.opml"
+    },
+    {
+      "slug": "founders",
+      "title": "Founders & Solopreneurs",
+      "description": "Startup essays, bootstrapping, launches, and funding news for founders and indie makers.",
+      "tags": ["startups", "founders", "indie-hackers", "bootstrapping", "saas"],
+      "curator": "Monfil",
+      "sourceCount": 25,
+      "updatedAt": "2026-10-22",
+      "opml": "founders.opml"
+    },
+    {
+      "slug": "linux-open-source",
+      "title": "Linux & Self-Hosting",
+      "description": "Linux, open source projects, self-hosted software, and homelab hardware.",
+      "tags": ["linux", "open-source", "self-hosting", "homelab", "foss"],
+      "curator": "Monfil",
+      "sourceCount": 38,
+      "updatedAt": "2026-10-22",
+      "opml": "linux-open-source.opml"
+    },
+    {
+      "slug": "tech-news",
+      "title": "Tech News",
+      "description": "Daily technology headlines, analysis, gadgets, and launches for creators and tech fans.",
+      "tags": ["tech", "news", "gadgets", "apple", "google", "launches"],
+      "curator": "Monfil",
+      "sourceCount": 36,
+      "updatedAt": "2026-10-22",
+      "opml": "tech-news.opml"
+    },
+    {
+      "slug": "world-news",
+      "title": "World News",
+      "description": "International headlines from public broadcasters, newspapers, wire-style services, and analysis outlets.",
+      "tags": ["news", "world", "politics", "international"],
+      "curator": "Monfil",
+      "sourceCount": 36,
+      "updatedAt": "2026-10-22",
+      "opml": "world-news.opml"
+    },
+    {
+      "slug": "science",
+      "title": "Science & Research",
+      "description": "Journals, science magazines, space, health research, and research integrity.",
+      "tags": ["science", "research", "space", "health", "physics", "biology"],
+      "curator": "Monfil",
+      "sourceCount": 30,
+      "updatedAt": "2026-10-22",
+      "opml": "science.opml"
+    },
+    {
+      "slug": "climate",
+      "title": "Climate & Energy",
+      "description": "Climate science, clean energy, electric vehicles, climate tech, and policy.",
+      "tags": ["climate", "energy", "cleantech", "ev", "sustainability"],
+      "curator": "Monfil",
+      "sourceCount": 26,
+      "updatedAt": "2026-10-22",
+      "opml": "climate.opml"
+    },
+    {
+      "slug": "finance",
+      "title": "Finance & Markets",
+      "description": "Markets news, economics, central banks, regulators, fintech, and long-form commentary.",
+      "tags": ["finance", "markets", "economics", "fintech", "investing"],
+      "curator": "Monfil",
+      "sourceCount": 28,
+      "updatedAt": "2026-10-22",
+      "opml": "finance.opml"
+    },
+    {
+      "slug": "crypto",
+      "title": "Crypto & Web3",
+      "description": "Crypto news, protocol research, Bitcoin and Ethereum development, on-chain data, and security incidents.",
+      "tags": ["crypto", "web3", "bitcoin", "ethereum", "defi", "blockchain"],
+      "curator": "Monfil",
+      "sourceCount": 25,
+      "updatedAt": "2026-10-22",
+      "opml": "crypto.opml"
+    },
+    {
+      "slug": "privacy",
+      "title": "Privacy & Digital Rights",
+      "description": "Surveillance, data protection, regulation, and civil liberties online.",
+      "tags": ["privacy", "digital-rights", "surveillance", "gdpr", "civil-liberties"],
+      "curator": "Monfil",
+      "sourceCount": 29,
+      "updatedAt": "2026-10-22",
+      "opml": "privacy.opml"
+    },
+    {
+      "slug": "marketing",
+      "title": "Content Creation & Marketing",
+      "description": "Social platforms, the creator economy, content marketing, SEO, and growth.",
+      "tags": ["marketing", "social-media", "creators", "seo", "content"],
+      "curator": "Monfil",
+      "sourceCount": 24,
+      "updatedAt": "2026-10-22",
+      "opml": "marketing.opml"
+    },
+    {
+      "slug": "hr",
+      "title": "HR & People",
+      "description": "HR news, recruiting, the future of work, workplace research, and people leadership.",
+      "tags": ["hr", "people", "recruiting", "future-of-work", "leadership"],
       "curator": "Monfil",
       "sourceCount": 21,
-      "updatedAt": "2026-10-17",
-      "opml": "ai.opml"
+      "updatedAt": "2026-10-22",
+      "opml": "hr.opml"
+    },
+    {
+      "slug": "video-games",
+      "title": "Video Games",
+      "description": "Game news, reviews, industry coverage, platforms, and indie development.",
+      "tags": ["games", "gaming", "game-industry", "indie-games", "game-dev"],
+      "curator": "Monfil",
+      "sourceCount": 31,
+      "updatedAt": "2026-10-22",
+      "opml": "video-games.opml"
+    },
+    {
+      "slug": "veille-tech-fr",
+      "title": "Veille Tech FR",
+      "description": "Actualité tech, dev, sécurité et libertés numériques en français.",
+      "tags": ["french", "francais", "tech", "dev", "veille"],
+      "curator": "Monfil",
+      "sourceCount": 31,
+      "updatedAt": "2026-10-22",
+      "opml": "veille-tech-fr.opml"
     }
   ]
 }

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Technical Writing</title></head>
+  <body>
+    <outline text="Writers">
+      <outline text="I'd Rather Be Writing (Tom Johnson)" title="I'd Rather Be Writing (Tom Johnson)" type="rss" xmlUrl="https://idratherbewriting.com/feed.xml"/>
+      <outline text="passo.uno (Fabrizio Ferri-Benedetti)" title="passo.uno (Fabrizio Ferri-Benedetti)" type="rss" xmlUrl="https://passo.uno/index.xml"/>
+      <outline text="Docs by Design (Bob Watson)" title="Docs by Design (Bob Watson)" type="rss" xmlUrl="https://docsbydesign.com/feed/"/>
+      <outline text="Cherryleaf" title="Cherryleaf" type="rss" xmlUrl="https://www.cherryleaf.com/feed/"/>
+      <outline text="Technical Writer HQ" title="Technical Writer HQ" type="rss" xmlUrl="https://technicalwriterhq.com/feed/"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Write the Docs Newsletter" title="Write the Docs Newsletter" type="rss" xmlUrl="https://www.writethedocs.org/blog/archive/atom.xml"/>
+      <outline text="The Good Docs Project" title="The Good Docs Project" type="rss" xmlUrl="https://www.thegooddocsproject.dev/rss.xml"/>
+      <outline text="#technicalwriting on Mastodon" title="#technicalwriting on Mastodon" type="rss" xmlUrl="https://mastodon.social/tags/technicalwriting.rss"/>
+      <outline text="#techcomm on Mastodon" title="#techcomm on Mastodon" type="rss" xmlUrl="https://mastodon.social/tags/techcomm.rss"/>
+    </outline>
+    <outline text="Docs Tools">
+      <outline text="Docusaurus Blog" title="Docusaurus Blog" type="rss" xmlUrl="https://docusaurus.io/blog/rss.xml"/>
+      <outline text="Mintlify Blog" title="Mintlify Blog" type="rss" xmlUrl="https://www.mintlify.com/feed.xml"/>
+      <outline text="Material for MkDocs releases" title="Material for MkDocs releases" type="rss" xmlUrl="https://github.com/squidfunk/mkdocs-material/releases.atom"/>
+      <outline text="Starlight releases" title="Starlight releases" type="rss" xmlUrl="https://github.com/withastro/starlight/releases.atom"/>
+      <outline text="Hugo releases" title="Hugo releases" type="rss" xmlUrl="https://github.com/gohugoio/hugo/releases.atom"/>
+      <outline text="Sphinx releases" title="Sphinx releases" type="rss" xmlUrl="https://github.com/sphinx-doc/sphinx/releases.atom"/>
+      <outline text="Vale releases" title="Vale releases" type="rss" xmlUrl="https://github.com/errata-ai/vale/releases.atom"/>
+    </outline>
+    <outline text="API Docs">
+      <outline text="Nordic APIs" title="Nordic APIs" type="rss" xmlUrl="https://nordicapis.com/feed/"/>
+      <outline text="API Evangelist" title="API Evangelist" type="rss" xmlUrl="https://apievangelist.com/feed.xml"/>
+    </outline>
+    <outline text="Language &amp; Style">
+      <outline text="CMOS Shop Talk" title="CMOS Shop Talk" type="rss" xmlUrl="https://cmosshoptalk.com/feed/"/>
+      <outline text="Grammarphobia" title="Grammarphobia" type="rss" xmlUrl="https://www.grammarphobia.com/blog/feed"/>
+      <outline text="Language Log" title="Language Log" type="rss" xmlUrl="https://languagelog.ldc.upenn.edu/nll/?feed=rss2"/>
+    </outline>
+    <outline text="Video">
+      <outline text="Write the Docs (YouTube)" title="Write the Docs (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCr019846MitZUEhc6apDdcQ"/>
+    </outline>
+  </body>
+</opml>

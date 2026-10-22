@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>HR &amp; People</title></head>
+  <body>
+    <outline text="HR News">
+      <outline text="HR Dive" title="HR Dive" type="rss" xmlUrl="https://www.hrdive.com/feeds/news/"/>
+      <outline text="HR Morning" title="HR Morning" type="rss" xmlUrl="https://www.hrmorning.com/feed/"/>
+      <outline text="Personnel Today" title="Personnel Today" type="rss" xmlUrl="https://www.personneltoday.com/feed/"/>
+      <outline text="HR Grapevine" title="HR Grapevine" type="rss" xmlUrl="https://www.hrgrapevine.com/rss"/>
+      <outline text="The HR Digest" title="The HR Digest" type="rss" xmlUrl="https://www.thehrdigest.com/feed/"/>
+    </outline>
+    <outline text="Talent Acquisition">
+      <outline text="ERE" title="ERE" type="rss" xmlUrl="https://www.ere.net/feed/"/>
+      <outline text="TLNT" title="TLNT" type="rss" xmlUrl="https://www.tlnt.com/feed/"/>
+      <outline text="SourceCon" title="SourceCon" type="rss" xmlUrl="https://www.sourcecon.com/feed/"/>
+      <outline text="Recruiting Brainfood (Hung Lee)" title="Recruiting Brainfood (Hung Lee)" type="rss" xmlUrl="https://recruitingbrainfood.substack.com/feed"/>
+    </outline>
+    <outline text="Future of Work">
+      <outline text="Josh Bersin" title="Josh Bersin" type="rss" xmlUrl="https://joshbersin.com/feed/"/>
+      <outline text="Culture Study (Anne Helen Petersen)" title="Culture Study (Anne Helen Petersen)" type="rss" xmlUrl="https://annehelen.substack.com/feed"/>
+      <outline text="Charter" title="Charter" type="rss" xmlUrl="https://www.charterworks.com/feed/"/>
+      <outline text="Fast Company: Work Life" title="Fast Company: Work Life" type="rss" xmlUrl="https://www.fastcompany.com/work-life/rss"/>
+      <outline text="Workology" title="Workology" type="rss" xmlUrl="https://workology.com/feed/"/>
+    </outline>
+    <outline text="Research">
+      <outline text="MIT Sloan Management Review" title="MIT Sloan Management Review" type="rss" xmlUrl="https://sloanreview.mit.edu/feed/"/>
+      <outline text="Wharton Knowledge" title="Wharton Knowledge" type="rss" xmlUrl="https://knowledge.wharton.upenn.edu/feed/"/>
+      <outline text="Gallup Workplace" title="Gallup Workplace" type="rss" xmlUrl="https://news.gallup.com/topic/workplace.rss"/>
+    </outline>
+    <outline text="Voices &amp; Podcasts">
+      <outline text="Adam Grant" title="Adam Grant" type="rss" xmlUrl="https://adamgrant.substack.com/feed"/>
+      <outline text="WorkLife with Adam Grant" title="WorkLife with Adam Grant" type="rss" xmlUrl="https://feeds.feedburner.com/WorklifeWithAdamGrant"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Anne Helen Petersen (Bluesky)" title="Anne Helen Petersen (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/annehelen.bsky.social/rss"/>
+      <outline text="Adam Grant (Bluesky)" title="Adam Grant (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/adamgrant.bsky.social/rss"/>
+    </outline>
+  </body>
+</opml>

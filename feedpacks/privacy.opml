@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Privacy &amp; Digital Rights</title></head>
+  <body>
+    <outline text="Advocacy">
+      <outline text="EFF Deeplinks" title="EFF Deeplinks" type="rss" xmlUrl="https://www.eff.org/rss/updates.xml"/>
+      <outline text="noyb" title="noyb" type="rss" xmlUrl="https://noyb.eu/en/rss"/>
+      <outline text="EDRi" title="EDRi" type="rss" xmlUrl="https://edri.org/feed/"/>
+      <outline text="Access Now" title="Access Now" type="rss" xmlUrl="https://www.accessnow.org/feed/"/>
+      <outline text="Open Rights Group" title="Open Rights Group" type="rss" xmlUrl="https://www.openrightsgroup.org/feed/"/>
+      <outline text="EPIC" title="EPIC" type="rss" xmlUrl="https://epic.org/feed/"/>
+      <outline text="Article 19" title="Article 19" type="rss" xmlUrl="https://www.article19.org/feed/"/>
+      <outline text="Fight for the Future" title="Fight for the Future" type="rss" xmlUrl="https://www.fightforthefuture.org/news/feed.xml"/>
+      <outline text="Freedom of the Press Foundation" title="Freedom of the Press Foundation" type="rss" xmlUrl="https://freedom.press/news/feed/"/>
+    </outline>
+    <outline text="Journalism">
+      <outline text="404 Media" title="404 Media" type="rss" xmlUrl="https://www.404media.co/rss/"/>
+      <outline text="The Markup" title="The Markup" type="rss" xmlUrl="https://themarkup.org/feeds/rss.xml"/>
+      <outline text="Techdirt" title="Techdirt" type="rss" xmlUrl="https://www.techdirt.com/feed/"/>
+      <outline text="Pluralistic (Cory Doctorow)" title="Pluralistic (Cory Doctorow)" type="rss" xmlUrl="https://pluralistic.net/feed/"/>
+    </outline>
+    <outline text="Research &amp; Policy">
+      <outline text="Citizen Lab" title="Citizen Lab" type="rss" xmlUrl="https://citizenlab.ca/feed/"/>
+      <outline text="Schneier on Security" title="Schneier on Security" type="rss" xmlUrl="https://www.schneier.com/feed/atom/"/>
+      <outline text="Future of Privacy Forum" title="Future of Privacy Forum" type="rss" xmlUrl="https://fpf.org/feed/"/>
+      <outline text="European Data Protection Board" title="European Data Protection Board" type="rss" xmlUrl="https://www.edpb.europa.eu/feed/news_en"/>
+    </outline>
+    <outline text="Privacy Tools">
+      <outline text="Tor Project Blog" title="Tor Project Blog" type="rss" xmlUrl="https://blog.torproject.org/rss.xml"/>
+      <outline text="Signal Blog" title="Signal Blog" type="rss" xmlUrl="https://signal.org/blog/rss.xml"/>
+      <outline text="Proton Blog" title="Proton Blog" type="rss" xmlUrl="https://proton.me/blog/feed"/>
+      <outline text="Mullvad Blog" title="Mullvad Blog" type="rss" xmlUrl="https://mullvad.net/en/blog/feed/atom/"/>
+      <outline text="Tuta Blog" title="Tuta Blog" type="rss" xmlUrl="https://tuta.com/blog/feed.xml"/>
+      <outline text="DuckDuckGo Blog" title="DuckDuckGo Blog" type="rss" xmlUrl="https://spreadprivacy.com/rss/"/>
+    </outline>
+    <outline text="Community">
+      <outline text="#privacy on Mastodon" title="#privacy on Mastodon" type="rss" xmlUrl="https://mastodon.social/tags/privacy.rss"/>
+      <outline text="Meredith Whittaker (Bluesky)" title="Meredith Whittaker (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/meredithmeredith.bsky.social/rss"/>
+      <outline text="Tor Project (Mastodon)" title="Tor Project (Mastodon)" type="rss" xmlUrl="https://mastodon.social/@torproject.rss"/>
+      <outline text="Privacy Guides (Mastodon)" title="Privacy Guides (Mastodon)" type="rss" xmlUrl="https://mastodon.neat.computer/@privacyguides.rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="The Hated One" title="The Hated One" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCjr2bPAyPV7t35MvcgT3W8Q"/>
+      <outline text="Naomi Brockwell TV" title="Naomi Brockwell TV" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCSuHzQ3GrHSzoBbwrIq3LLA"/>
+    </outline>
+  </body>
+</opml>

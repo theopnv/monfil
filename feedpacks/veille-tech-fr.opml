@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Veille Tech FR</title></head>
+  <body>
+    <outline text="Actu tech">
+      <outline text="Korben" title="Korben" type="rss" xmlUrl="https://korben.info/feedfull.xml"/>
+      <outline text="Numerama" title="Numerama" type="rss" xmlUrl="https://www.numerama.com/feed/"/>
+      <outline text="Next" title="Next" type="rss" xmlUrl="https://next.ink/feed/"/>
+      <outline text="Frandroid" title="Frandroid" type="rss" xmlUrl="https://www.frandroid.com/feed"/>
+      <outline text="Les Numériques" title="Les Numériques" type="rss" xmlUrl="https://www.lesnumeriques.com/rss.xml"/>
+      <outline text="Journal du Geek" title="Journal du Geek" type="rss" xmlUrl="https://www.journaldugeek.com/feed/"/>
+      <outline text="01net" title="01net" type="rss" xmlUrl="https://www.01net.com/feed/"/>
+      <outline text="Clubic" title="Clubic" type="rss" xmlUrl="https://www.clubic.com/feed/news.rss"/>
+      <outline text="Siècle Digital" title="Siècle Digital" type="rss" xmlUrl="https://siecledigital.fr/feed/"/>
+      <outline text="Blog du Modérateur" title="Blog du Modérateur" type="rss" xmlUrl="https://www.blogdumoderateur.com/feed/"/>
+    </outline>
+    <outline text="Dev &amp; Ops">
+      <outline text="Le Touilleur Express" title="Le Touilleur Express" type="rss" xmlUrl="https://www.touilleur-express.fr/feed"/>
+      <outline text="Stéphane Robert" title="Stéphane Robert" type="rss" xmlUrl="https://blog.stephane-robert.info/rss.xml"/>
+      <outline text="LinuxFr.org" title="LinuxFr.org" type="rss" xmlUrl="https://linuxfr.org/news.atom"/>
+      <outline text="Developpez.com" title="Developpez.com" type="rss" xmlUrl="https://www.developpez.com/index/rss"/>
+      <outline text="Journal du hacker" title="Journal du hacker" type="rss" xmlUrl="https://www.journalduhacker.net/rss"/>
+      <outline text="Le Monde Informatique" title="Le Monde Informatique" type="rss" xmlUrl="https://www.lemondeinformatique.fr/flux-rss/thematique/toutes-les-actualites/rss.xml"/>
+      <outline text="Redaction-technique.org" title="Redaction-technique.org" type="rss" xmlUrl="https://redaction-technique.org/rss.xml"/>
+      <outline text="Jean-Jérôme Lévy" title="Jean-Jérôme Lévy" type="rss" xmlUrl="https://mastodon.social/@jeanjeromelevy.rss"/>
+    </outline>
+    <outline text="Sécurité &amp; libertés">
+      <outline text="CERT-FR" title="CERT-FR" type="rss" xmlUrl="https://www.cert.ssi.gouv.fr/feed/"/>
+      <outline text="La Quadrature du Net" title="La Quadrature du Net" type="rss" xmlUrl="https://www.laquadrature.net/feed/"/>
+    </outline>
+    <outline text="Startups">
+      <outline text="Maddyness" title="Maddyness" type="rss" xmlUrl="https://www.maddyness.com/feed/"/>
+      <outline text="FrenchWeb" title="FrenchWeb" type="rss" xmlUrl="https://www.frenchweb.fr/feed"/>
+    </outline>
+    <outline text="Podcasts">
+      <outline text="Les Cast Codeurs" title="Les Cast Codeurs" type="rss" xmlUrl="https://lescastcodeurs.libsyn.com/rss"/>
+    </outline>
+    <outline text="Communauté">
+      <outline text="La Quadrature du Net (Mastodon)" title="La Quadrature du Net (Mastodon)" type="rss" xmlUrl="https://mamot.fr/@LaQuadrature.rss"/>
+    </outline>
+    <outline text="Vidéo">
+      <outline text="Underscore_" title="Underscore_" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCWedHS9qKebauVIK2J7383g"/>
+      <outline text="Micode" title="Micode" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCYnvxJ-PKiGXo_tYXpWAC-w"/>
+      <outline text="Grafikart" title="Grafikart" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCj_iGliGCkLcHSZ8eqVNPDQ"/>
+      <outline text="cocadmin" title="cocadmin" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCVRJ6D343dX-x730MRP8tNw"/>
+      <outline text="xavki" title="xavki" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCs_AZuYXi6NA9tkdbhjItHQ"/>
+      <outline text="Devoxx France" title="Devoxx France" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCsVPQfo5RZErDL41LoWvk0A"/>
+    </outline>
+    <outline text="Événements">
+      <outline text="Conférences en France" title="Conférences en France" type="rss" xmlUrl="https://developers.events/all-events.json?places=France"/>
+    </outline>
+  </body>
+</opml>

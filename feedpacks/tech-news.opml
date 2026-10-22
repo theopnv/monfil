@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Tech News</title></head>
+  <body>
+    <outline text="Headlines">
+      <outline text="The Verge" title="The Verge" type="rss" xmlUrl="https://www.theverge.com/rss/index.xml"/>
+      <outline text="TechCrunch" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/"/>
+      <outline text="WIRED" title="WIRED" type="rss" xmlUrl="https://www.wired.com/feed/rss"/>
+      <outline text="Ars Technica" title="Ars Technica" type="rss" xmlUrl="https://feeds.arstechnica.com/arstechnica/index"/>
+      <outline text="Engadget" title="Engadget" type="rss" xmlUrl="https://www.engadget.com/rss.xml"/>
+      <outline text="The Register" title="The Register" type="rss" xmlUrl="https://www.theregister.com/headlines.atom"/>
+      <outline text="Techmeme" title="Techmeme" type="rss" xmlUrl="https://www.techmeme.com/feed.xml"/>
+    </outline>
+    <outline text="Analysis">
+      <outline text="Platformer" title="Platformer" type="rss" xmlUrl="https://www.platformer.news/rss/"/>
+      <outline text="Stratechery" title="Stratechery" type="rss" xmlUrl="https://stratechery.com/feed/"/>
+      <outline text="Rest of World" title="Rest of World" type="rss" xmlUrl="https://restofworld.org/feed/latest"/>
+      <outline text="MIT Technology Review" title="MIT Technology Review" type="rss" xmlUrl="https://www.technologyreview.com/feed/"/>
+      <outline text="Benedict Evans" title="Benedict Evans" type="rss" xmlUrl="https://www.ben-evans.com/benedictevans?format=rss"/>
+      <outline text="404 Media" title="404 Media" type="rss" xmlUrl="https://www.404media.co/rss/"/>
+    </outline>
+    <outline text="Apple &amp; Google">
+      <outline text="Daring Fireball" title="Daring Fireball" type="rss" xmlUrl="https://daringfireball.net/feeds/main"/>
+      <outline text="MacRumors" title="MacRumors" type="rss" xmlUrl="https://feeds.macrumors.com/MacRumors-All"/>
+      <outline text="9to5Mac" title="9to5Mac" type="rss" xmlUrl="https://9to5mac.com/feed/"/>
+      <outline text="9to5Google" title="9to5Google" type="rss" xmlUrl="https://9to5google.com/feed/"/>
+      <outline text="Six Colors" title="Six Colors" type="rss" xmlUrl="https://sixcolors.com/feed/"/>
+    </outline>
+    <outline text="Hardware">
+      <outline text="Tom's Hardware" title="Tom's Hardware" type="rss" xmlUrl="https://www.tomshardware.com/feeds/all"/>
+    </outline>
+    <outline text="Launches &amp; Community">
+      <outline text="Hacker News (300+ points)" title="Hacker News (300+ points)" type="rss" xmlUrl="https://hnrss.org/newest?points=300"/>
+      <outline text="Product Hunt" title="Product Hunt" type="rss" xmlUrl="https://www.producthunt.com/feed"/>
+    </outline>
+    <outline text="Podcasts">
+      <outline text="Decoder" title="Decoder" type="rss" xmlUrl="https://feeds.megaphone.fm/recodedecode"/>
+      <outline text="The Vergecast" title="The Vergecast" type="rss" xmlUrl="https://feeds.megaphone.fm/vergecast"/>
+      <outline text="Hard Fork" title="Hard Fork" type="rss" xmlUrl="https://feeds.simplecast.com/l2i9YnTd"/>
+    </outline>
+    <outline text="Video">
+      <outline text="Marques Brownlee" title="Marques Brownlee" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ"/>
+      <outline text="Linus Tech Tips" title="Linus Tech Tips" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCXuqSBlHAE6Xw-yeJA0Tunw"/>
+      <outline text="Fireship" title="Fireship" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCsBjURrPoezykLs9EqgamOA"/>
+      <outline text="The Verge (YouTube)" title="The Verge (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCddiUEpeqJcYeBxX1IVBKvQ"/>
+      <outline text="Dave2D" title="Dave2D" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCVYamHliCI9rw1tHR1xbkfw"/>
+      <outline text="Mrwhosetheboss" title="Mrwhosetheboss" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCMiJRAwDNSNzuYeN2uWa0pA"/>
+      <outline text="ColdFusion" title="ColdFusion" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC4QZ_LsYcvcq7qOsOhpAX4A"/>
+      <outline text="TechLinked" title="TechLinked" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCeeFfhMcJa1kjtfZAGskOCA"/>
+      <outline text="Asianometry" title="Asianometry" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC1LpsuAUaKoMzzJSEt5WImw"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Casey Newton (Bluesky)" title="Casey Newton (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/caseynewton.bsky.social/rss"/>
+      <outline text="Nilay Patel (Bluesky)" title="Nilay Patel (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/reckless.bsky.social/rss"/>
+      <outline text="John Gruber (Mastodon)" title="John Gruber (Mastodon)" type="rss" xmlUrl="https://mastodon.social/@gruber.rss"/>
+    </outline>
+  </body>
+</opml>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Science &amp; Research</title></head>
+  <body>
+    <outline text="Journals">
+      <outline text="Nature" title="Nature" type="rss" xmlUrl="https://www.nature.com/nature.rss"/>
+      <outline text="Science: News" title="Science: News" type="rss" xmlUrl="https://www.science.org/rss/news_current.xml"/>
+      <outline text="PNAS" title="PNAS" type="rss" xmlUrl="https://www.pnas.org/action/showFeed?type=etoc&amp;feed=rss&amp;jc=pnas"/>
+    </outline>
+    <outline text="Magazines">
+      <outline text="Quanta Magazine" title="Quanta Magazine" type="rss" xmlUrl="https://www.quantamagazine.org/feed/"/>
+      <outline text="New Scientist" title="New Scientist" type="rss" xmlUrl="https://www.newscientist.com/feed/home/"/>
+      <outline text="Scientific American" title="Scientific American" type="rss" xmlUrl="https://www.scientificamerican.com/platform/syndication/rss/"/>
+      <outline text="SingularityHub" title="SingularityHub" type="rss" xmlUrl="https://singularityhub.com/feed/"/>
+      <outline text="Nautilus" title="Nautilus" type="rss" xmlUrl="https://nautil.us/feed/"/>
+      <outline text="Ars Technica: Science" title="Ars Technica: Science" type="rss" xmlUrl="https://arstechnica.com/science/feed/"/>
+      <outline text="Knowable Magazine" title="Knowable Magazine" type="rss" xmlUrl="https://knowablemagazine.org/rss"/>
+    </outline>
+    <outline text="Daily Research News">
+      <outline text="ScienceDaily" title="ScienceDaily" type="rss" xmlUrl="https://www.sciencedaily.com/rss/all.xml"/>
+      <outline text="Phys.org" title="Phys.org" type="rss" xmlUrl="https://phys.org/rss-feed/"/>
+    </outline>
+    <outline text="Space">
+      <outline text="NASA" title="NASA" type="rss" xmlUrl="https://www.nasa.gov/feed/"/>
+      <outline text="ESA" title="ESA" type="rss" xmlUrl="https://www.esa.int/rssfeed/Our_Activities"/>
+      <outline text="Astronomy Picture of the Day" title="Astronomy Picture of the Day" type="rss" xmlUrl="https://apod.com/feed.rss"/>
+    </outline>
+    <outline text="Health &amp; Life Sciences">
+      <outline text="STAT" title="STAT" type="rss" xmlUrl="https://www.statnews.com/feed/"/>
+    </outline>
+    <outline text="Data &amp; Integrity">
+      <outline text="Our World in Data" title="Our World in Data" type="rss" xmlUrl="https://ourworldindata.org/atom.xml"/>
+      <outline text="Retraction Watch" title="Retraction Watch" type="rss" xmlUrl="https://retractionwatch.com/feed/"/>
+    </outline>
+    <outline text="Video">
+      <outline text="Veritasium" title="Veritasium" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCHnyfMqiRRG1u-2MsSQLbXA"/>
+      <outline text="Kurzgesagt" title="Kurzgesagt" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCsXVk37bltHxD1rDPwtNM8Q"/>
+      <outline text="PBS Space Time" title="PBS Space Time" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC7_gcs09iThXybpVgjHZ_7g"/>
+      <outline text="3Blue1Brown" title="3Blue1Brown" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw"/>
+      <outline text="SmarterEveryDay" title="SmarterEveryDay" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC6107grRI4m0o2-emgoDnAA"/>
+      <outline text="Mark Rober" title="Mark Rober" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCY1kMZp36IQSyNx_9h4mpCg"/>
+      <outline text="Real Engineering" title="Real Engineering" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCR1IuLEqb6UEA_zQ81kwXfg"/>
+      <outline text="Practical Engineering" title="Practical Engineering" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCMOqf8ab-42UUQIdVoKwjlQ"/>
+      <outline text="Scott Manley" title="Scott Manley" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCxzC4EngIsMrPmbm6Nxvb-A"/>
+      <outline text="Steve Mould" title="Steve Mould" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCEIwxahdLz7bap-VDs9h35A"/>
+      <outline text="minutephysics" title="minutephysics" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCUHW94eEFW7hkUMVaZz4eDg"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Katie Mack (Bluesky)" title="Katie Mack (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/astrokatie.com/rss"/>
+    </outline>
+  </body>
+</opml>
