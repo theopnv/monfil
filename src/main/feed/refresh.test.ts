@@ -255,7 +255,7 @@ describe('refreshAllFeeds', () => {
 
     // Assert
     const stored = await db.selectFrom('feedItem').selectAll().where('feed_id', '=', feedId).executeTakeFirstOrThrow();
-    expect(stored.published_at).toBe(first);
+    expect(stored.published_at).toBe(first - 7 * 86400000);
   });
 
   test('does not duplicate an item that is already stored', async () => {

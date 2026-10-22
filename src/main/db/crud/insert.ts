@@ -12,6 +12,8 @@ import type { Result } from '../../../shared/result';
 import { stripHtml, truncateOnWordBoundary } from '../../lib/strip-html';
 
 const EXCERPT_MAX_LENGTH = 200;
+// Undated items on a feed's first fetch are backlog, so they must not bury the news that came with them.
+const FIRST_FETCH_UNDATED_AGE_MS = 7 * 86_400_000;
 
 // SQLite cannot parse RFC-822 pubDates, so this must run in JS rather than in SQL.
 function parsePublishedAt(pubDate: string, fetchedAt: number): number {
@@ -21,7 +23,7 @@ function parsePublishedAt(pubDate: string, fetchedAt: number): number {
 
 type IncomingItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>;
 
-async function itemDates(executor: Kysely<Database>, feedId: number, items: IncomingItem[], fetchedAt: number): Promise<Map<string, number>> {
+async function itemDates(executor: Kysely<Database>, feedId: number, items: IncomingItem[], fetchedAt: number, firstSeenAt = fetchedAt): Promise<Map<string, number>> {
   const undated = items.filter((item) => !Number.isFinite(new Date(item.pubDate).getTime()));
   const existing = undated.length > 0
     ? await executor.selectFrom('undatedItem').selectAll().where('feed_id', '=', feedId).where('guid', 'in', undated.map((item) => item.guid)).execute()
@@ -29,10 +31,10 @@ async function itemDates(executor: Kysely<Database>, feedId: number, items: Inco
   const dates = new Map(existing.map((row) => [row.guid, row.first_fetched_at]));
   const fresh = undated.filter((item) => !dates.has(item.guid));
   if (fresh.length > 0) {
-    await executor.insertInto('undatedItem').values(fresh.map((item) => ({ feed_id: feedId, guid: item.guid, first_fetched_at: fetchedAt })))
+    await executor.insertInto('undatedItem').values(fresh.map((item) => ({ feed_id: feedId, guid: item.guid, first_fetched_at: firstSeenAt })))
       .onConflict((oc) => oc.columns(['feed_id', 'guid']).doNothing()).execute();
     for (const item of fresh) {
-      dates.set(item.guid, fetchedAt);
+      dates.set(item.guid, firstSeenAt);
     }
   }
   return dates;
@@ -115,12 +117,12 @@ async function addFeedPlacementToDatabase(trx: Kysely<Database>, feedId: number,
 
 export type AddFeedItemsError = { name: 'DB_ERROR'; message: string };
 
-async function insertFeedItems(executor: Kysely<Database>, feedId: number, items: IncomingItem[]): Promise<FeedItem[]> {
+async function insertFeedItems(executor: Kysely<Database>, feedId: number, items: IncomingItem[], dates?: Map<string, number>): Promise<FeedItem[]> {
   if (items.length === 0) {
     return [];
   }
   const fetchedAt = Date.now();
-  const dates = await itemDates(executor, feedId, items, fetchedAt);
+  dates ??= await itemDates(executor, feedId, items, fetchedAt);
   return executor.insertInto('feedItem')
     .values(items.map((item) => ({
       feed_id: feedId,
@@ -149,13 +151,20 @@ export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId:
   }
 }
 
+async function hasItemHistory(trx: Kysely<Database>, feedId: number): Promise<boolean> {
+  const item = await trx.selectFrom('feedItem').select('id').where('feed_id', '=', feedId).limit(1).executeTakeFirst();
+  const marker = await trx.selectFrom('undatedItem').select('guid').where('feed_id', '=', feedId).limit(1).executeTakeFirst();
+  return item !== undefined || marker !== undefined;
+}
+
 async function syncFeedItemsInTransaction(trx: Kysely<Database>, feedId: number, items: IncomingItem[], cutoff: number): Promise<{ inserted: FeedItem[]; updated: number }> {
   if (items.length === 0) {
     return { inserted: [], updated: 0 };
   }
   const fetchedAt = Date.now();
   const oldMarkers = await trx.selectFrom('undatedItem').selectAll().where('feed_id', '=', feedId).where('guid', 'in', items.map((item) => item.guid)).execute();
-  const markerByGuid = await itemDates(trx, feedId, items, fetchedAt);
+  const firstFetch = !(await hasItemHistory(trx, feedId));
+  const markerByGuid = await itemDates(trx, feedId, items, fetchedAt, firstFetch ? fetchedAt - FIRST_FETCH_UNDATED_AGE_MS : fetchedAt);
   const tombstones = new Set(oldMarkers.map((row) => row.guid));
   const previous = await trx.selectFrom('feedItem').selectAll().where('feed_id', '=', feedId).where('guid', 'in', items.map((item) => item.guid)).execute();
   const byGuid = new Map(previous.map((item) => [item.guid, item]));
@@ -176,7 +185,7 @@ async function syncFeedItemsInTransaction(trx: Kysely<Database>, feedId: number,
     }
     return date >= cutoff || protectedGuids.has(item.guid);
   });
-  const added = await insertFeedItems(trx, feedId, fresh);
+  const added = await insertFeedItems(trx, feedId, fresh, markerByGuid);
   let updated = 0;
   for (const item of items) {
     const old = byGuid.get(item.guid);
