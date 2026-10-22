@@ -27,6 +27,7 @@ Run commands from the repository root unless a command says otherwise.
 | Run Vitest with coverage (report in `.vitest/`) | `npm run coverage:vitest` |
 | Run the end-to-end tests on an instrumented build | `COVERAGE=1 npm run test:e2e` |
 | Merge the Vitest and e2e coverage (`coverage/merged/`, `coverage/snapshot.json`) | `npm run coverage:merge` |
+| Mutation-test the files changed against `main` (report in `.mutation/`) | `npm run mutate` |
 | Package the app | `npm run package` |
 | Make platform installers | `npm run make` |
 | Check feedpacks | `npm run check:feedpacks` |
@@ -54,6 +55,7 @@ In VS Code, the `Main + renderer` compound launch configuration debugs both Elec
 
 - For a bug fix, first add a test that fails for the reported behavior. Then fix the code and run the affected test again.
 - Keep unit tests next to source as `*.test.ts` or `*.test.tsx`. Put Electron end-to-end tests in `test/e2e/*.spec.ts`. Renderer component tests run in Vitest Browser Mode, not the Node suite.
+- After you write or change tests for a module, run `npm run mutate -- <path>` on it. Kill each survivor with a test, or suppress a proven equivalent mutant with `// Stryker disable next-line <mutator>: <reason>`. Use `.ai/skills/test-quality/SKILL.md` to improve or prune the tests of a path from its results.
 - Test observable behavior. Use fixtures and setup or teardown hooks when they help. Mark test phases with `// Arrange`, `// Act`, and `// Assert`. Use `vi.mock(import('./module.ts'))` for Vitest module mocks.
 - Functions in `src/` must stay at or below cognitive complexity 15 and cyclomatic complexity 10. Test files and `src/renderer/components/untitled-ui/` have no limit. Split a function that goes above a limit. Do not add a suppression. `eslint-suppressions.json` holds the old violations. When you bring old code below a limit, run `npx eslint --prune-suppressions .` and commit the smaller file.
 - Run focused checks for the area you changed. Run `npm run lint` for TypeScript changes. Run broader suites when a change crosses process boundaries or affects packaging, migrations, or security.

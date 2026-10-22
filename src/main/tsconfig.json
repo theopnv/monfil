@@ -18,6 +18,7 @@
     "../renderer/vite.config.mts",
     "../../vitest.browser.config.mts",
     "../../vitest.config.mts",
+    "../../vitest.node.config.mts",
     "../../scripts/**/*.ts",
     "../../scripts/**/*.mts"
   ]

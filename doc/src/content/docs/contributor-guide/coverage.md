@@ -22,7 +22,7 @@ main ──> coverage.yml ──> Worker /coverage/ingest ──> D1 <── Wor
 | `COVERAGE=1 npm run test:e2e` | Packages an instrumented app, runs the Electron tests, and writes one file for each launch to `coverage/e2e/raw/`. |
 | `npm run coverage:merge` | Merges both runs. Writes `coverage/merged/` and `coverage/snapshot.json`. |
 
-`vitest.config.mts` is the root config. Its `test.projects` list holds the `node` project and `vitest.browser.config.mts`. A command that names a single file still works with `--config`, for example `npx vitest run --config=vitest.browser.config.mts path/to/file.test.tsx`.
+`vitest.config.mts` is the root config. Its `test.projects` list holds `vitest.node.config.mts` (the `node` project) and `vitest.browser.config.mts` (the `browser` project). A command that names a single file still works with `--config`, for example `npx vitest run --config=vitest.browser.config.mts path/to/file.test.tsx`.
 
 On Windows PowerShell, set the variable first with `$env:COVERAGE = '1'`.
 
