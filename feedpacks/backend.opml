@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Backend Engineering</title></head>
+  <body>
+    <outline text="Architecture">
+      <outline text="Martin Fowler" title="Martin Fowler" type="rss" xmlUrl="https://martinfowler.com/feed.atom"/>
+      <outline text="ByteByteGo" title="ByteByteGo" type="rss" xmlUrl="https://blog.bytebytego.com/feed"/>
+      <outline text="InfoQ" title="InfoQ" type="rss" xmlUrl="https://feed.infoq.com/"/>
+    </outline>
+    <outline text="Engineering Blogs">
+      <outline text="Netflix TechBlog" title="Netflix TechBlog" type="rss" xmlUrl="https://netflixtechblog.com/feed"/>
+      <outline text="Meta Engineering" title="Meta Engineering" type="rss" xmlUrl="https://engineering.fb.com/feed/"/>
+      <outline text="Slack Engineering" title="Slack Engineering" type="rss" xmlUrl="https://slack.engineering/feed"/>
+      <outline text="Dropbox Tech" title="Dropbox Tech" type="rss" xmlUrl="https://dropbox.tech/feed"/>
+      <outline text="Airbnb Engineering" title="Airbnb Engineering" type="rss" xmlUrl="https://medium.com/feed/airbnb-engineering"/>
+      <outline text="GitHub Engineering" title="GitHub Engineering" type="rss" xmlUrl="https://github.blog/engineering/feed/"/>
+      <outline text="Discord Engineering" title="Discord Engineering" type="rss" xmlUrl="https://discord.com/blog/rss.xml"/>
+      <outline text="Shopify Engineering" title="Shopify Engineering" type="rss" xmlUrl="https://shopify.engineering/blog.atom"/>
+    </outline>
+    <outline text="Databases">
+      <outline text="PostgreSQL News" title="PostgreSQL News" type="rss" xmlUrl="https://www.postgresql.org/news.rss"/>
+      <outline text="Postgres Weekly" title="Postgres Weekly" type="rss" xmlUrl="https://cprss.s3.amazonaws.com/postgresweekly.com.xml"/>
+      <outline text="PlanetScale Blog" title="PlanetScale Blog" type="rss" xmlUrl="https://planetscale.com/blog/feed.atom"/>
+      <outline text="Marc Brooker" title="Marc Brooker" type="rss" xmlUrl="https://brooker.co.za/blog/rss.xml"/>
+      <outline text="Murat Demirbas" title="Murat Demirbas" type="rss" xmlUrl="https://muratbuffalo.blogspot.com/feeds/posts/default"/>
+      <outline text="Phil Eaton" title="Phil Eaton" type="rss" xmlUrl="https://notes.eatonphil.com/rss.xml"/>
+    </outline>
+    <outline text="Languages &amp; Runtimes">
+      <outline text="The Go Blog" title="The Go Blog" type="rss" xmlUrl="https://go.dev/blog/feed.atom"/>
+      <outline text="Rust Blog" title="Rust Blog" type="rss" xmlUrl="https://blog.rust-lang.org/feed.xml"/>
+      <outline text="This Week in Rust" title="This Week in Rust" type="rss" xmlUrl="https://this-week-in-rust.org/rss.xml"/>
+      <outline text="Python Insider" title="Python Insider" type="rss" xmlUrl="https://blog.python.org/feeds/posts/default"/>
+      <outline text="Node.js Blog" title="Node.js Blog" type="rss" xmlUrl="https://nodejs.org/en/feed/blog.xml"/>
+      <outline text="Inside Java" title="Inside Java" type="rss" xmlUrl="https://inside.java/feed.xml"/>
+      <outline text="Kotlin Blog" title="Kotlin Blog" type="rss" xmlUrl="https://blog.jetbrains.com/kotlin/feed/"/>
+      <outline text=".NET Blog" title=".NET Blog" type="rss" xmlUrl="https://devblogs.microsoft.com/dotnet/feed/"/>
+      <outline text="Golang Weekly" title="Golang Weekly" type="rss" xmlUrl="https://cprss.s3.amazonaws.com/golangweekly.com.xml"/>
+      <outline text="Node Weekly" title="Node Weekly" type="rss" xmlUrl="https://cprss.s3.amazonaws.com/nodeweekly.com.xml"/>
+    </outline>
+    <outline text="People">
+      <outline text="Sean Goedecke" title="Sean Goedecke" type="rss" xmlUrl="https://www.seangoedecke.com/rss.xml"/>
+      <outline text="Dan Luu" title="Dan Luu" type="rss" xmlUrl="https://danluu.com/atom.xml"/>
+      <outline text="Hillel Wayne" title="Hillel Wayne" type="rss" xmlUrl="https://buttondown.com/hillelwayne/rss"/>
+      <outline text="Mitchell Hashimoto" title="Mitchell Hashimoto" type="rss" xmlUrl="https://mitchellh.com/feed.xml"/>
+      <outline text="Armin Ronacher" title="Armin Ronacher" type="rss" xmlUrl="https://lucumr.pocoo.org/feed.atom"/>
+      <outline text="antirez" title="antirez" type="rss" xmlUrl="https://antirez.com/rss"/>
+    </outline>
+    <outline text="Podcasts &amp; Video">
+      <outline text="Software Engineering Radio" title="Software Engineering Radio" type="rss" xmlUrl="https://seradio.libsyn.com/rss"/>
+      <outline text="The Changelog" title="The Changelog" type="rss" xmlUrl="https://changelog.com/podcast/feed"/>
+      <outline text="Hussein Nasser" title="Hussein Nasser" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC_ML5xP23TOWKUcc-oAE_Eg"/>
+      <outline text="ByteByteGo (YouTube)" title="ByteByteGo (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZgt6AzoyjslHTC9dz0UoTw"/>
+      <outline text="The PrimeTime" title="The PrimeTime" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCUyeluBRhGPCW4rPe_UvBZQ"/>
+      <outline text="CMU Database Group" title="CMU Database Group" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCHnBsf2rH-K7pn09rb3qvkA"/>
+      <outline text="Computerphile" title="Computerphile" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGm29I7JiwpnA"/>
+      <outline text="No Boilerplate" title="No Boilerplate" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCUMwY9iS8oMyWDYIe6_RmoA"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Hillel Wayne (Bluesky)" title="Hillel Wayne (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/hillelwayne.com/rss"/>
+      <outline text="Armin Ronacher (Bluesky)" title="Armin Ronacher (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/mitsuhiko.at/rss"/>
+      <outline text="Steve Klabnik (Bluesky)" title="Steve Klabnik (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/steveklabnik.com/rss"/>
+      <outline text="Andy Pavlo (Bluesky)" title="Andy Pavlo (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/andypavlo.bsky.social/rss"/>
+      <outline text="Mitchell Hashimoto (Mastodon)" title="Mitchell Hashimoto (Mastodon)" type="rss" xmlUrl="https://hachyderm.io/@mitchellh.rss"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="Deno releases" title="Deno releases" type="rss" xmlUrl="https://github.com/denoland/deno/releases.atom"/>
+      <outline text="Bun releases" title="Bun releases" type="rss" xmlUrl="https://github.com/oven-sh/bun/releases.atom"/>
+      <outline text="Rust releases" title="Rust releases" type="rss" xmlUrl="https://github.com/rust-lang/rust/releases.atom"/>
+      <outline text="Redis releases" title="Redis releases" type="rss" xmlUrl="https://github.com/redis/redis/releases.atom"/>
+      <outline text="Valkey releases" title="Valkey releases" type="rss" xmlUrl="https://github.com/valkey-io/valkey/releases.atom"/>
+      <outline text="SQLite releases" title="SQLite releases" type="rss" xmlUrl="https://github.com/sqlite/sqlite/releases.atom"/>
+      <outline text="Ruff releases" title="Ruff releases" type="rss" xmlUrl="https://github.com/astral-sh/ruff/releases.atom"/>
+    </outline>
+    <outline text="Events">
+      <outline text="Backend and architecture conferences" title="Backend and architecture conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=backend,software-architecture,architecture,java,go"/>
+    </outline>
+  </body>
+</opml>

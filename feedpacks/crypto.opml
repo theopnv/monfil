@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Crypto &amp; Web3</title></head>
+  <body>
+    <outline text="News">
+      <outline text="CoinDesk" title="CoinDesk" type="rss" xmlUrl="https://www.coindesk.com/arc/outboundfeeds/rss/"/>
+      <outline text="The Block" title="The Block" type="rss" xmlUrl="https://www.theblock.co/rss.xml"/>
+      <outline text="Decrypt" title="Decrypt" type="rss" xmlUrl="https://decrypt.co/feed"/>
+      <outline text="Cointelegraph" title="Cointelegraph" type="rss" xmlUrl="https://cointelegraph.com/rss"/>
+      <outline text="The Defiant" title="The Defiant" type="rss" xmlUrl="https://thedefiant.io/api/feed"/>
+      <outline text="Bitcoin Magazine" title="Bitcoin Magazine" type="rss" xmlUrl="https://bitcoinmagazine.com/feed"/>
+    </outline>
+    <outline text="Protocols">
+      <outline text="Ethereum Foundation Blog" title="Ethereum Foundation Blog" type="rss" xmlUrl="https://blog.ethereum.org/feed.xml"/>
+      <outline text="Ethereum Research" title="Ethereum Research" type="rss" xmlUrl="https://ethresear.ch/latest.rss"/>
+      <outline text="Vitalik Buterin" title="Vitalik Buterin" type="rss" xmlUrl="https://vitalik.eth.limo/feed.xml"/>
+      <outline text="Bitcoin Optech" title="Bitcoin Optech" type="rss" xmlUrl="https://bitcoinops.org/feed.xml"/>
+      <outline text="Solana News" title="Solana News" type="rss" xmlUrl="https://solana.com/news/rss.xml"/>
+    </outline>
+    <outline text="Research &amp; Data">
+      <outline text="a16z crypto" title="a16z crypto" type="rss" xmlUrl="https://a16zcrypto.com/feed/"/>
+      <outline text="Coin Metrics" title="Coin Metrics" type="rss" xmlUrl="https://coinmetrics.substack.com/feed"/>
+      <outline text="Chainalysis" title="Chainalysis" type="rss" xmlUrl="https://www.chainalysis.com/feed/"/>
+    </outline>
+    <outline text="Security &amp; Critics">
+      <outline text="rekt news" title="rekt news" type="rss" xmlUrl="https://rekt.news/rss/feed.xml"/>
+      <outline text="Web3 Is Going Just Great" title="Web3 Is Going Just Great" type="rss" xmlUrl="https://www.web3isgoinggreat.com/feed.xml"/>
+      <outline text="Citation Needed (Molly White)" title="Citation Needed (Molly White)" type="rss" xmlUrl="https://www.citationneeded.news/rss/"/>
+    </outline>
+    <outline text="Podcasts &amp; Video">
+      <outline text="Bankless" title="Bankless" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCAl9Ld79qaZxp9JzEOwd3aA"/>
+      <outline text="Unchained" title="Unchained" type="rss" xmlUrl="https://unchainedcrypto.com/feed/"/>
+      <outline text="Coin Bureau" title="Coin Bureau" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCqK_GSMbpiV8spgD3ZGloSw"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="Bitcoin Core releases" title="Bitcoin Core releases" type="rss" xmlUrl="https://github.com/bitcoin/bitcoin/releases.atom"/>
+      <outline text="Geth releases" title="Geth releases" type="rss" xmlUrl="https://github.com/ethereum/go-ethereum/releases.atom"/>
+      <outline text="LND releases" title="LND releases" type="rss" xmlUrl="https://github.com/lightningnetwork/lnd/releases.atom"/>
+      <outline text="Agave (Solana validator) releases" title="Agave (Solana validator) releases" type="rss" xmlUrl="https://github.com/anza-xyz/agave/releases.atom"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Molly White (Bluesky)" title="Molly White (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/molly.wiki/rss"/>
+    </outline>
+  </body>
+</opml>

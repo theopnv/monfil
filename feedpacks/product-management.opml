@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Product Management</title></head>
+  <body>
+    <outline text="Strategy">
+      <outline text="Lenny's Newsletter" title="Lenny's Newsletter" type="rss" xmlUrl="https://www.lennysnewsletter.com/feed"/>
+      <outline text="SVPG (Marty Cagan)" title="SVPG (Marty Cagan)" type="rss" xmlUrl="https://www.svpg.com/feed/"/>
+      <outline text="Stratechery" title="Stratechery" type="rss" xmlUrl="https://stratechery.com/feed/"/>
+      <outline text="The Looking Glass (Julie Zhuo)" title="The Looking Glass (Julie Zhuo)" type="rss" xmlUrl="https://lg.substack.com/feed"/>
+      <outline text="Hunter Walk" title="Hunter Walk" type="rss" xmlUrl="https://hunterwalk.com/feed/"/>
+    </outline>
+    <outline text="Discovery &amp; Delivery">
+      <outline text="Product Talk (Teresa Torres)" title="Product Talk (Teresa Torres)" type="rss" xmlUrl="https://www.producttalk.org/feed/"/>
+      <outline text="The Beautiful Mess (John Cutler)" title="The Beautiful Mess (John Cutler)" type="rss" xmlUrl="https://cutlefish.substack.com/feed"/>
+      <outline text="Roman Pichler" title="Roman Pichler" type="rss" xmlUrl="https://www.romanpichler.com/feed/"/>
+      <outline text="Ryan Singer (Shape Up)" title="Ryan Singer (Shape Up)" type="rss" xmlUrl="https://www.feltpresence.com/feed"/>
+      <outline text="Jason Fried" title="Jason Fried" type="rss" xmlUrl="https://world.hey.com/jason/feed.atom"/>
+    </outline>
+    <outline text="Growth">
+      <outline text="Andrew Chen" title="Andrew Chen" type="rss" xmlUrl="https://andrewchen.substack.com/feed"/>
+      <outline text="Elena Verna" title="Elena Verna" type="rss" xmlUrl="https://www.elenaverna.com/feed"/>
+      <outline text="Casey Winters" title="Casey Winters" type="rss" xmlUrl="https://caseyaccidental.com/feed/"/>
+      <outline text="Product Growth (Aakash Gupta)" title="Product Growth (Aakash Gupta)" type="rss" xmlUrl="https://www.news.aakashg.com/feed"/>
+    </outline>
+    <outline text="Practitioners">
+      <outline text="Shreyas Doshi" title="Shreyas Doshi" type="rss" xmlUrl="https://shreyasdoshi.substack.com/feed"/>
+      <outline text="Product Coalition" title="Product Coalition" type="rss" xmlUrl="https://productcoalition.com/feed"/>
+      <outline text="Intercom Blog" title="Intercom Blog" type="rss" xmlUrl="https://www.intercom.com/blog/feed/"/>
+    </outline>
+    <outline text="Launches &amp; Changelogs">
+      <outline text="Product Hunt" title="Product Hunt" type="rss" xmlUrl="https://www.producthunt.com/feed"/>
+      <outline text="Linear Changelog" title="Linear Changelog" type="rss" xmlUrl="https://linear.app/rss/changelog.xml"/>
+    </outline>
+    <outline text="Podcasts">
+      <outline text="Lenny's Podcast" title="Lenny's Podcast" type="rss" xmlUrl="https://api.substack.com/feed/podcast/10845.rss"/>
+    </outline>
+  </body>
+</opml>

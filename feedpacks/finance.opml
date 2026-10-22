@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Finance &amp; Markets</title></head>
+  <body>
+    <outline text="Markets News">
+      <outline text="Bloomberg Markets" title="Bloomberg Markets" type="rss" xmlUrl="https://feeds.bloomberg.com/markets/news.rss"/>
+      <outline text="CNBC Markets" title="CNBC Markets" type="rss" xmlUrl="https://www.cnbc.com/id/20910258/device/rss/rss.html"/>
+      <outline text="MarketWatch Top Stories" title="MarketWatch Top Stories" type="rss" xmlUrl="https://feeds.content.dowjones.io/public/rss/mw_topstories"/>
+      <outline text="WSJ Markets" title="WSJ Markets" type="rss" xmlUrl="https://feeds.content.dowjones.io/public/rss/RSSMarketsMain"/>
+      <outline text="Financial Times" title="Financial Times" type="rss" xmlUrl="https://www.ft.com/rss/home"/>
+      <outline text="The Economist: Finance &amp; Economics" title="The Economist: Finance &amp; Economics" type="rss" xmlUrl="https://www.economist.com/finance-and-economics/rss.xml"/>
+    </outline>
+    <outline text="Economics">
+      <outline text="Noahpinion" title="Noahpinion" type="rss" xmlUrl="https://www.noahpinion.blog/feed"/>
+      <outline text="Marginal Revolution" title="Marginal Revolution" type="rss" xmlUrl="https://marginalrevolution.com/feed"/>
+      <outline text="Apricitas Economics" title="Apricitas Economics" type="rss" xmlUrl="https://www.apricitas.io/feed"/>
+      <outline text="Calculated Risk" title="Calculated Risk" type="rss" xmlUrl="https://calculatedrisk.substack.com/feed"/>
+    </outline>
+    <outline text="Commentary">
+      <outline text="Bits about Money" title="Bits about Money" type="rss" xmlUrl="https://www.bitsaboutmoney.com/archive/rss/"/>
+      <outline text="Net Interest" title="Net Interest" type="rss" xmlUrl="https://www.netinterest.co/feed"/>
+      <outline text="Aswath Damodaran" title="Aswath Damodaran" type="rss" xmlUrl="https://aswathdamodaran.blogspot.com/feeds/posts/default"/>
+      <outline text="The Big Picture" title="The Big Picture" type="rss" xmlUrl="https://ritholtz.com/feed/"/>
+      <outline text="A Wealth of Common Sense" title="A Wealth of Common Sense" type="rss" xmlUrl="https://awealthofcommonsense.com/feed/"/>
+      <outline text="Abnormal Returns" title="Abnormal Returns" type="rss" xmlUrl="https://abnormalreturns.com/feed/"/>
+    </outline>
+    <outline text="Central Banks &amp; Regulators">
+      <outline text="Federal Reserve" title="Federal Reserve" type="rss" xmlUrl="https://www.federalreserve.gov/feeds/press_all.xml"/>
+      <outline text="European Central Bank" title="European Central Bank" type="rss" xmlUrl="https://www.ecb.europa.eu/rss/press.html"/>
+      <outline text="SEC Press Releases" title="SEC Press Releases" type="rss" xmlUrl="https://www.sec.gov/news/pressreleases.rss"/>
+    </outline>
+    <outline text="Fintech">
+      <outline text="Fintech Business Weekly" title="Fintech Business Weekly" type="rss" xmlUrl="https://fintechbusinessweekly.substack.com/feed"/>
+      <outline text="Finextra" title="Finextra" type="rss" xmlUrl="https://www.finextra.com/rss/headlines.aspx"/>
+    </outline>
+    <outline text="Podcasts">
+      <outline text="Planet Money" title="Planet Money" type="rss" xmlUrl="https://feeds.npr.org/510289/podcast.xml"/>
+      <outline text="Odd Lots" title="Odd Lots" type="rss" xmlUrl="https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/8a94442e-5a74-4fa2-8b8d-ae27003a8d6b/982f5071-765c-403d-969d-ae27003a8d83/podcast.rss"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Jason Furman (Bluesky)" title="Jason Furman (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/jasonfurman.bsky.social/rss"/>
+      <outline text="Claudia Sahm (Bluesky)" title="Claudia Sahm (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/claudia-sahm.bsky.social/rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="The Plain Bagel" title="The Plain Bagel" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCFCEuCsyWP0YkP3CZ3Mr01Q"/>
+      <outline text="Money &amp; Macro" title="Money &amp; Macro" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCCKpicnIwBP3VPxBAZWDeNA"/>
+      <outline text="Ben Felix" title="Ben Felix" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCDXTQ8nWmx_EhZ2v-kp7QxA"/>
+    </outline>
+  </body>
+</opml>

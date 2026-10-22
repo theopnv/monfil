@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Linux &amp; Self-Hosting</title></head>
+  <body>
+    <outline text="News">
+      <outline text="LWN.net" title="LWN.net" type="rss" xmlUrl="https://lwn.net/headlines/rss"/>
+      <outline text="Phoronix" title="Phoronix" type="rss" xmlUrl="https://www.phoronix.com/rss.php"/>
+      <outline text="It's FOSS" title="It's FOSS" type="rss" xmlUrl="https://itsfoss.com/rss/"/>
+      <outline text="OMG! Ubuntu" title="OMG! Ubuntu" type="rss" xmlUrl="https://www.omgubuntu.co.uk/feed"/>
+    </outline>
+    <outline text="Distros &amp; Desktops">
+      <outline text="Fedora Magazine" title="Fedora Magazine" type="rss" xmlUrl="https://fedoramagazine.org/feed/"/>
+      <outline text="Arch Linux News" title="Arch Linux News" type="rss" xmlUrl="https://archlinux.org/feeds/news/"/>
+      <outline text="Ubuntu Blog" title="Ubuntu Blog" type="rss" xmlUrl="https://ubuntu.com/blog/feed"/>
+      <outline text="KDE Announcements" title="KDE Announcements" type="rss" xmlUrl="https://kde.org/index.xml"/>
+      <outline text="This Week in GNOME" title="This Week in GNOME" type="rss" xmlUrl="https://thisweek.gnome.org/index.xml"/>
+    </outline>
+    <outline text="Kernel">
+      <outline text="Linux Kernel Releases" title="Linux Kernel Releases" type="rss" xmlUrl="https://www.kernel.org/feeds/kdist.xml"/>
+    </outline>
+    <outline text="Self-Hosting">
+      <outline text="selfh.st" title="selfh.st" type="rss" xmlUrl="https://selfh.st/rss/"/>
+      <outline text="Home Assistant Blog" title="Home Assistant Blog" type="rss" xmlUrl="https://www.home-assistant.io/atom.xml"/>
+      <outline text="Tailscale Blog" title="Tailscale Blog" type="rss" xmlUrl="https://tailscale.com/blog/index.xml"/>
+      <outline text="Immich releases" title="Immich releases" type="rss" xmlUrl="https://github.com/immich-app/immich/releases.atom"/>
+      <outline text="Jellyfin releases" title="Jellyfin releases" type="rss" xmlUrl="https://github.com/jellyfin/jellyfin/releases.atom"/>
+    </outline>
+    <outline text="Homelab &amp; Hardware">
+      <outline text="Jeff Geerling" title="Jeff Geerling" type="rss" xmlUrl="https://www.jeffgeerling.com/blog.xml"/>
+      <outline text="Raspberry Pi News" title="Raspberry Pi News" type="rss" xmlUrl="https://www.raspberrypi.com/news/feed/"/>
+    </outline>
+    <outline text="Open Source Community">
+      <outline text="The Changelog" title="The Changelog" type="rss" xmlUrl="https://changelog.com/podcast/feed"/>
+      <outline text="Open Source Initiative" title="Open Source Initiative" type="rss" xmlUrl="https://opensource.org/feed"/>
+      <outline text="Drew DeVault" title="Drew DeVault" type="rss" xmlUrl="https://drewdevault.com/blog/index.xml"/>
+      <outline text="#linux on Fosstodon" title="#linux on Fosstodon" type="rss" xmlUrl="https://fosstodon.org/tags/linux.rss"/>
+      <outline text="#selfhosted on Fosstodon" title="#selfhosted on Fosstodon" type="rss" xmlUrl="https://fosstodon.org/tags/selfhosted.rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="Jeff Geerling (YouTube)" title="Jeff Geerling (YouTube)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCR-DXc1voovS8nhAvccRZhg"/>
+      <outline text="Brodie Robertson" title="Brodie Robertson" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCld68syR8Wi-GY_n4CaoJGA"/>
+      <outline text="DistroTube" title="DistroTube" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCVls1GmFKf6WlTraIb_IaJg"/>
+      <outline text="Chris Titus Tech" title="Chris Titus Tech" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCg6gPGh8HU2U01vaFCAsvmQ"/>
+      <outline text="Techno Tim" title="Techno Tim" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCOk-gHyjcWZNj3Br4oxwh0A"/>
+      <outline text="Learn Linux TV" title="Learn Linux TV" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCxQKHvKbmSzGMvUrVtJYnUA"/>
+      <outline text="ServeTheHome" title="ServeTheHome" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCv6J_jJa8GJqFwQNgNrMuww"/>
+    </outline>
+    <outline text="Community">
+      <outline text="KDE (Mastodon)" title="KDE (Mastodon)" type="rss" xmlUrl="https://floss.social/@kde.rss"/>
+      <outline text="GNOME (Mastodon)" title="GNOME (Mastodon)" type="rss" xmlUrl="https://floss.social/@gnome.rss"/>
+      <outline text="Jeff Geerling (Mastodon)" title="Jeff Geerling (Mastodon)" type="rss" xmlUrl="https://mastodon.social/@geerlingguy.rss"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="Nextcloud releases" title="Nextcloud releases" type="rss" xmlUrl="https://github.com/nextcloud/server/releases.atom"/>
+      <outline text="Paperless-ngx releases" title="Paperless-ngx releases" type="rss" xmlUrl="https://github.com/paperless-ngx/paperless-ngx/releases.atom"/>
+      <outline text="Syncthing releases" title="Syncthing releases" type="rss" xmlUrl="https://github.com/syncthing/syncthing/releases.atom"/>
+      <outline text="Vaultwarden releases" title="Vaultwarden releases" type="rss" xmlUrl="https://github.com/dani-garcia/vaultwarden/releases.atom"/>
+      <outline text="Pi-hole releases" title="Pi-hole releases" type="rss" xmlUrl="https://github.com/pi-hole/pi-hole/releases.atom"/>
+    </outline>
+    <outline text="Events">
+      <outline text="Open source and Linux conferences" title="Open source and Linux conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=open-source,linux"/>
+    </outline>
+  </body>
+</opml>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>CI/CD Engineering</title></head>
+  <body>
+    <outline text="Platforms">
+      <outline text="GitHub Changelog" title="GitHub Changelog" type="rss" xmlUrl="https://github.blog/changelog/feed/"/>
+      <outline text="GitLab Blog" title="GitLab Blog" type="rss" xmlUrl="https://about.gitlab.com/atom.xml"/>
+      <outline text="CircleCI Blog" title="CircleCI Blog" type="rss" xmlUrl="https://circleci.com/blog/feed.xml"/>
+      <outline text="Buildkite Changelog" title="Buildkite Changelog" type="rss" xmlUrl="https://buildkite.com/changelog.atom"/>
+      <outline text="Jenkins Blog" title="Jenkins Blog" type="rss" xmlUrl="https://feeds.feedburner.com/ContinuousBlog"/>
+      <outline text="Semaphore Blog" title="Semaphore Blog" type="rss" xmlUrl="https://semaphore.io/feed"/>
+      <outline text="Depot Blog" title="Depot Blog" type="rss" xmlUrl="https://depot.dev/rss.xml"/>
+      <outline text="Mergify Blog" title="Mergify Blog" type="rss" xmlUrl="https://mergify.com/blog/rss.xml"/>
+    </outline>
+    <outline text="GitOps &amp; Delivery">
+      <outline text="Argo Project Blog" title="Argo Project Blog" type="rss" xmlUrl="https://blog.argoproj.io/feed"/>
+      <outline text="Flux Blog" title="Flux Blog" type="rss" xmlUrl="https://fluxcd.io/blog/index.xml"/>
+      <outline text="CD Foundation Blog" title="CD Foundation Blog" type="rss" xmlUrl="https://cd.foundation/feed/"/>
+      <outline text="Tekton Blog" title="Tekton Blog" type="rss" xmlUrl="https://tekton.dev/blog/index.xml"/>
+    </outline>
+    <outline text="Build Systems">
+      <outline text="Bazel Blog" title="Bazel Blog" type="rss" xmlUrl="https://blog.bazel.build/feed.xml"/>
+      <outline text="Gradle Blog" title="Gradle Blog" type="rss" xmlUrl="https://feed.gradle.org/blog.atom"/>
+      <outline text="Nx Blog" title="Nx Blog" type="rss" xmlUrl="https://nx.dev/blog/rss.xml"/>
+    </outline>
+    <outline text="People">
+      <outline text="Modern Software Engineering (Dave Farley)" title="Modern Software Engineering (Dave Farley)" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCCfqyGl3nq_V0bo64CjZh8g"/>
+      <outline text="jd:/dev/blog (Julien Danjou)" title="jd:/dev/blog (Julien Danjou)" type="rss" xmlUrl="https://julien.danjou.info/rss.xml"/>
+    </outline>
+    <outline text="Releases">
+      <outline text="GitHub Actions Runner releases" title="GitHub Actions Runner releases" type="rss" xmlUrl="https://github.com/actions/runner/releases.atom"/>
+      <outline text="GitLab Runner releases" title="GitLab Runner releases" type="rss" xmlUrl="https://gitlab.com/gitlab-org/gitlab-runner/-/releases.atom"/>
+      <outline text="Flux releases" title="Flux releases" type="rss" xmlUrl="https://github.com/fluxcd/flux2/releases.atom"/>
+      <outline text="Tekton Pipelines releases" title="Tekton Pipelines releases" type="rss" xmlUrl="https://github.com/tektoncd/pipeline/releases.atom"/>
+      <outline text="Jenkins releases" title="Jenkins releases" type="rss" xmlUrl="https://github.com/jenkinsci/jenkins/releases.atom"/>
+      <outline text="Gradle releases" title="Gradle releases" type="rss" xmlUrl="https://github.com/gradle/gradle/releases.atom"/>
+      <outline text="Woodpecker CI releases" title="Woodpecker CI releases" type="rss" xmlUrl="https://github.com/woodpecker-ci/woodpecker/releases.atom"/>
+      <outline text="Forgejo releases" title="Forgejo releases" type="rss" xmlUrl="https://codeberg.org/forgejo/forgejo/releases.rss"/>
+    </outline>
+    <outline text="Community">
+      <outline text="#cicd on Mastodon" title="#cicd on Mastodon" type="rss" xmlUrl="https://mastodon.social/tags/cicd.rss"/>
+      <outline text="#gitops on Mastodon" title="#gitops on Mastodon" type="rss" xmlUrl="https://mastodon.social/tags/gitops.rss"/>
+      <outline text="GitHub (Bluesky)" title="GitHub (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/github.com/rss"/>
+      <outline text="Dave Farley (Bluesky)" title="Dave Farley (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/davefarley77.bsky.social/rss"/>
+    </outline>
+    <outline text="Events">
+      <outline text="DevOps conferences" title="DevOps conferences" type="rss" xmlUrl="https://developers.events/all-events.json?topics=devops"/>
+    </outline>
+  </body>
+</opml>
