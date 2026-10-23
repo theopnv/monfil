@@ -92,6 +92,7 @@ export default function Toolbar() {
   const workspaces = useWorkspaces();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isFeedpackBrowserOpen, setIsFeedpackBrowserOpen] = useState(false);
+  const [feedpackDraft, setFeedpackDraft] = useState<{ name: string; icon: string; color: string }>();
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<WorkspaceSummary | null>(null);
   const [workspacePendingDelete, setWorkspacePendingDelete] = useState<WorkspaceSummary | null>(null);
@@ -148,7 +149,8 @@ export default function Toolbar() {
     }
   }
 
-  function openFeedpackBrowser() {
+  function openFeedpackBrowser(draft: { name: string; icon: string; color: string }) {
+    setFeedpackDraft(draft);
     setIsCreateOpen(false);
     setIsFeedpackBrowserOpen(true);
   }
@@ -190,7 +192,7 @@ export default function Toolbar() {
 
       <WorkspaceSwitcher isOpen={isSwitcherOpen} onOpenChange={setIsSwitcherOpen} workspaces={workspaces} onSelect={goToWorkspace} />
       <WorkspaceDialog isOpen={isCreateOpen} onOpenChange={setIsCreateOpen} onBrowseFeedpacks={openFeedpackBrowser} />
-      <FeedpackInstallDialog isOpen={isFeedpackBrowserOpen} onOpenChange={setIsFeedpackBrowserOpen} />
+      <FeedpackInstallDialog isOpen={isFeedpackBrowserOpen} onOpenChange={setIsFeedpackBrowserOpen} newWorkspaceDraft={feedpackDraft} />
       <WorkspaceDialog
         isOpen={editingWorkspace !== null}
         onOpenChange={(open) => {

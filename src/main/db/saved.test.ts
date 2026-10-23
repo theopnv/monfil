@@ -252,3 +252,90 @@ test('unsaving an expired item makes it eligible for cleanup again', async () =>
   // Assert
   expect(await db.selectFrom('feedItem').select('id').where('id', '=', itemId).execute()).toEqual([]);
 });
+
+async function saveFirst(feed: Awaited<ReturnType<typeof seed>>, count: number) {
+  for (const [index, item] of feed.items.slice(0, count).entries()) {
+    await setItemSaved({ workspaceId: HOME_WORKSPACE_ID, itemId: item.id, saved: true }, index + 1);
+  }
+}
+
+test('restricts the Saved page to the requested ids', async () => {
+  // Arrange
+  const feed = await seed();
+  await saveFirst(feed, 3);
+
+  // Act
+  const page = await querySavedPage({ workspaceId: HOME_WORKSPACE_ID, limit: 50, ids: [feed.items[1].id] });
+
+  // Assert
+  expect(page.rows.map((row) => row.id)).toEqual([feed.items[1].id]);
+});
+
+test('unreadOnly leaves out saved items that were read', async () => {
+  // Arrange
+  const feed = await seed();
+  await saveFirst(feed, 2);
+
+  // Act
+  const page = await querySavedPage({ workspaceId: HOME_WORKSPACE_ID, limit: 50, unreadOnly: true });
+
+  // Assert
+  expect(page.rows.map((row) => row.id)).toEqual([feed.items[1].id]);
+});
+
+test.each([
+  ['a percent sign is not a wildcard', '5%'],
+  ['an underscore is not a wildcard', 'article_1'],
+])('search: %s', async (_name, search) => {
+  // Arrange
+  const feed = await seed();
+  await saveFirst(feed, 3);
+
+  // Act
+  const page = await querySavedPage({ workspaceId: HOME_WORKSPACE_ID, limit: 50, search });
+
+  // Assert
+  expect(page.rows).toEqual([]);
+});
+
+test('search matches a literal percent sign, whatever the case of the query', async () => {
+  // Arrange
+  const feed = await seed();
+  await saveFirst(feed, 3);
+
+  // Act
+  const page = await querySavedPage({ workspaceId: HOME_WORKSPACE_ID, limit: 50, search: '  OLDER   50%  ' });
+
+  // Assert
+  expect(page.rows.map((row) => row.id)).toEqual([feed.items[0].id]);
+});
+
+test('a page that holds exactly the limit has no next cursor', async () => {
+  // Arrange
+  const feed = await seed();
+  await saveFirst(feed, 3);
+
+  // Act
+  const page = await querySavedPage({ workspaceId: HOME_WORKSPACE_ID, limit: 3 });
+
+  // Assert
+  expect(page.rows).toHaveLength(3);
+  expect(page.nextCursor).toBeUndefined();
+});
+
+test('a full page returns only the limit and a cursor to the rest', async () => {
+  // Arrange
+  const feed = await seed();
+  await saveFirst(feed, 3);
+  const third = feed.items[2];
+  if (!third) {
+    throw new Error('The feed fixture needs three items.');
+  }
+
+  // Act
+  const page = await querySavedPage({ workspaceId: HOME_WORKSPACE_ID, limit: 2 });
+
+  // Assert
+  expect(page.rows.map((row) => row.id)).toEqual([third.id, feed.items[1].id]);
+  expect(page.nextCursor).toMatchObject({ savedAt: 2, id: feed.items[1].id });
+});

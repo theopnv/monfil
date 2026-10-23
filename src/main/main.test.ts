@@ -167,6 +167,17 @@ describe('main', () => {
     }));
   });
 
+  test('opens the database file that earlier versions wrote in userData', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+
+    // Act
+    await import('./main');
+
+    // Assert
+    expect(initializeDatabase).toHaveBeenCalledWith(path.join('mock-user-data', 'monfil.db'));
+  });
+
   test('quits before opening the database or logging when another instance holds the lock', async () => {
     // Arrange
     const { BrowserWindow } = await import('electron');

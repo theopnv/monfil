@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { HOME_WORKSPACE_ID, type NewFeedInput } from '../../../shared/contracts';
 import { db, initializeDatabase } from '../database';
-import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedItemsRead, setFeedsShowInWorkspace, updateWorkspace } from './update';
+import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedFetchResult, setFeedItemsRead, setFeedsShowInWorkspace, updateWorkspace } from './update';
 import { addFeedToDatabase, createCategory, createWorkspace } from './insert';
 
 const feedA: NewFeedInput = {
@@ -310,6 +310,24 @@ describe('renameCategory', () => {
     expect(row.name).toBe('Foreign');
   });
 
+  test('a name the database refuses for another reason is a DB_ERROR, not a duplicate', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+
+    // Act
+    const result = await renameCategory(inserted.data.category.id, null as unknown as string, HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('DB_ERROR');
+  });
+
   test('the same name in another workspace is not a duplicate', async () => {
     // Arrange
     const other = await createWorkspace('Other', 'Stars01', '#000000');
@@ -370,6 +388,24 @@ describe('moveFeedsToCategory', () => {
     expect(result.error.name).toBe('CATEGORY_NOT_FOUND');
   });
 
+  test('a destination the database refuses for another reason is a DB_ERROR, not a missing category', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+
+    // Act
+    const result = await moveFeedsToCategory([inserted.data.id], null as unknown as number, HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('DB_ERROR');
+  });
+
   test('an empty id list succeeds without writing', async () => {
     // Act
     const result = await moveFeedsToCategory([], 1, HOME_WORKSPACE_ID);
@@ -404,6 +440,64 @@ describe('moveFeedsToCategory', () => {
   });
 });
 
+describe('setFeedFetchResult', () => {
+  async function storedFeed(feedId: number) {
+    return db.selectFrom('feedMetadata').select(['last_error', 'last_fetched_at', 'etag', 'last_modified']).where('id', '=', feedId).executeTakeFirstOrThrow();
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test('records the error and the time of the fetch', async () => {
+    // Arrange
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-05-06T07:08:09.000Z'));
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+
+    // Act
+    const result = await setFeedFetchResult(inserted.data.id, { last_error: 'HTTP 500' });
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(await storedFeed(inserted.data.id)).toMatchObject({ last_error: 'HTTP 500', last_fetched_at: '2026-05-06T07:08:09.000Z' });
+  });
+
+  test('keeps stored validators that the result leaves out and clears those set to null', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+    await setFeedFetchResult(inserted.data.id, { last_error: null, etag: '"v1"', last_modified: 'Mon, 01 Jan 2024 00:00:00 GMT' });
+
+    // Act
+    await setFeedFetchResult(inserted.data.id, { last_error: null });
+    const kept = await storedFeed(inserted.data.id);
+    await setFeedFetchResult(inserted.data.id, { last_error: null, etag: null, last_modified: null });
+    const cleared = await storedFeed(inserted.data.id);
+
+    // Assert
+    expect(kept).toMatchObject({ etag: '"v1"', last_modified: 'Mon, 01 Jan 2024 00:00:00 GMT' });
+    expect(cleared).toMatchObject({ etag: null, last_modified: null });
+  });
+
+  test('an unknown feed id returns FEED_NOT_FOUND', async () => {
+    // Act
+    const result = await setFeedFetchResult(999999, { last_error: null });
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('FEED_NOT_FOUND');
+  });
+});
+
 describe('updateWorkspace', () => {
   test('updates the given fields and returns the updated row', async () => {
     // Arrange
@@ -433,6 +527,20 @@ describe('updateWorkspace', () => {
       return;
     }
     expect(result.error.name).toBe('WORKSPACE_NOT_FOUND');
+  });
+
+  test('a value the database refuses returns DB_ERROR and keeps the stored name', async () => {
+    // Act
+    const result = await updateWorkspace(HOME_WORKSPACE_ID, { name: null as unknown as string });
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('DB_ERROR');
+    const row = await db.selectFrom('workspace').select('name').where('id', '=', HOME_WORKSPACE_ID).executeTakeFirstOrThrow();
+    expect(row.name).not.toBeNull();
   });
 });
 
@@ -500,6 +608,26 @@ describe('moveFeedToWorkspace', () => {
     const placements = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', inserted.data.id).execute();
     expect(placements).toHaveLength(1);
     expect(placements[0]?.workspace_id).toBe(destination.data.id);
+  });
+
+  test('a destination workspace that does not exist returns DB_ERROR and keeps the feed where it was', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+
+    // Act
+    const result = await moveFeedToWorkspace(inserted.data.id, HOME_WORKSPACE_ID, 999999, 'General');
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('DB_ERROR');
+    const placements = await db.selectFrom('feedPlacement').select(['workspace_id', 'category_id']).where('feed_id', '=', inserted.data.id).execute();
+    expect(placements).toEqual([{ workspace_id: HOME_WORKSPACE_ID, category_id: inserted.data.category.id }]);
   });
 
   test('creates the destination category when it does not exist yet', async () => {

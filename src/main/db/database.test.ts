@@ -3,13 +3,14 @@
 // See LICENSE in the repository root for full terms.
 
 import { afterEach, describe, expect, test, beforeEach } from 'vitest';
-import { mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
+import { existsSync, statSync } from 'node:fs';
+import { mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import SQLite from 'better-sqlite3';
 import { sql } from 'kysely';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
-import { closeDatabase, db, dbReady, initializeDatabase } from './database';
+import { backUpDatabase, closeDatabase, db, dbReady, dbStatus, initializeDatabase, vacuumDatabase } from './database';
 import { rmTestDir } from '../lib/rmTestDir';
 
 describe('initializeDatabase', () => {
@@ -168,5 +169,181 @@ describe('recovering from a corrupted database file', () => {
 
     // Assert
     await expect(db.selectFrom('setting').selectAll().execute()).resolves.toEqual([]);
+  });
+
+  // A damaged index page makes quick_check return a report row instead of throwing, so the schema
+  // still opens and only the explicit integrity check can notice.
+  test('quarantines a file whose quick_check reports damage and reports the reset', async () => {
+    // Arrange
+    await initializeDatabase(filePath);
+    await db.insertInto('setting').values({ key: 'theme', value: 'dark' }).execute();
+    await closeDatabase();
+
+    const probe = new SQLite(filePath);
+    const pageSize = probe.pragma('page_size', { simple: true }) as number;
+    const { rootpage } = probe.prepare("SELECT rootpage FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_autoindex%'").get() as { rootpage: number };
+    probe.close();
+
+    const bytes = await readFile(filePath);
+    const pageStart = (rootpage - 1) * pageSize;
+    bytes.subarray(pageStart, pageStart + pageSize).fill(0xff);
+    await writeFile(filePath, bytes);
+
+    // Act
+    await initializeDatabase(filePath);
+    const files = await readdir(dir);
+
+    // Assert
+    expect(dbStatus).toEqual({ name: 'RESET', quarantinePath: expect.stringContaining(`${filePath}.corrupt-`), incidentId: expect.any(String) });
+    expect(files.filter((name) => name.startsWith('monfil.db.corrupt-'))).toEqual([path.basename((dbStatus as { quarantinePath: string }).quarantinePath)]);
+    await expect(db.selectFrom('setting').selectAll().execute()).resolves.toEqual([]);
+  });
+});
+
+describe('failing to open a file database', () => {
+  let dir: string;
+  let filePath: string;
+
+  beforeEach(async () => {
+    dir = await mkdtemp(path.join(tmpdir(), 'monfil-db-'));
+    filePath = path.join(dir, 'monfil.db');
+    await initializeDatabase(filePath);
+    await closeDatabase();
+  });
+
+  afterEach(async () => {
+    await closeDatabase();
+    await rmTestDir(dir);
+  });
+
+  test('rejects, reports FAILED, and releases the file when a pending migration cannot apply', async () => {
+    // Arrange
+    const old = new SQLite(filePath);
+    old.exec("DELETE FROM kysely_migration WHERE name = '0008_saved_items'");
+    old.close();
+
+    // Act
+    const opening = initializeDatabase(filePath);
+
+    // Assert
+    await expect(opening).rejects.toThrow(/already exists/);
+    expect(dbStatus).toEqual({ name: 'FAILED', message: expect.stringContaining('already exists'), incidentId: expect.any(String) });
+    expect(existsSync(`${filePath}-wal`)).toBe(false);
+  });
+
+  test('rejects when the file holds a foreign key reference to a missing row', async () => {
+    // Arrange
+    const old = new SQLite(filePath);
+    old.pragma('foreign_keys = OFF');
+    old.exec("INSERT INTO feedCategory (name, workspace_id) VALUES ('orphan', 999)");
+    old.close();
+
+    // Act
+    const opening = initializeDatabase(filePath);
+
+    // Assert
+    await expect(opening).rejects.toThrow(`Migration left 1 broken foreign key reference(s) at "${filePath}".`);
+    expect(dbStatus.name).toBe('FAILED');
+    expect(existsSync(`${filePath}-wal`)).toBe(false);
+  });
+
+  test('reports OK again after a later successful initialization', async () => {
+    // Arrange
+    const old = new SQLite(filePath);
+    old.exec("DELETE FROM kysely_migration WHERE name = '0008_saved_items'");
+    old.close();
+    await initializeDatabase(filePath).catch(() => undefined);
+
+    // Act
+    await initializeDatabase(':memory:');
+
+    // Assert
+    expect(dbStatus).toEqual({ name: 'OK' });
+  });
+});
+
+describe('closing and maintaining a file database', () => {
+  let dir: string;
+  let filePath: string;
+
+  beforeEach(async () => {
+    dir = await mkdtemp(path.join(tmpdir(), 'monfil-db-'));
+    filePath = path.join(dir, 'monfil.db');
+    await initializeDatabase(filePath);
+  });
+
+  afterEach(async () => {
+    await closeDatabase();
+    await rmTestDir(dir);
+  });
+
+  test('closing empties the write-ahead log even while another connection keeps the file open', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'theme', value: 'dark' }).execute();
+    const other = new SQLite(filePath);
+    other.prepare('SELECT count(*) FROM setting').get();
+
+    // Act
+    await closeDatabase();
+
+    // Assert
+    expect(statSync(`${filePath}-wal`).size).toBe(0);
+    other.close();
+  });
+
+  test('vacuum returns the freed pages to the main file', async () => {
+    // Arrange
+    const blob = 'x'.repeat(10_000);
+    await db.insertInto('setting').values(Array.from({ length: 200 }, (_, index) => ({ key: `k${index}`, value: blob }))).execute();
+    await db.deleteFrom('setting').execute();
+    await sql`PRAGMA wal_checkpoint(TRUNCATE)`.execute(db);
+    const sizeBefore = statSync(filePath).size;
+
+    // Act
+    vacuumDatabase();
+
+    // Assert
+    expect(statSync(filePath).size).toBeLessThan(sizeBefore / 2);
+    expect(statSync(`${filePath}-wal`).size).toBe(0);
+  });
+
+  test('vacuum does nothing once the database is closed', async () => {
+    // Arrange
+    await closeDatabase();
+
+    // Act
+    // Assert
+    expect(() => vacuumDatabase()).not.toThrow();
+  });
+
+  test('a backup request fails once the database is closed', async () => {
+    // Arrange
+    await closeDatabase();
+
+    // Act
+    // Assert
+    await expect(backUpDatabase(path.join(dir, 'copy.db'))).rejects.toThrow('Database is closed');
+  });
+
+  test('a failing backup rethrows the original error when no partial file exists', async () => {
+    // Arrange
+    const destination = path.join(dir, 'missing-folder', 'copy.db');
+
+    // Act
+    // Assert
+    await expect(backUpDatabase(destination)).rejects.toMatchObject({ code: 'SQLITE_CANTOPEN' });
+  });
+
+  test('a backup whose final rename fails leaves no partial file behind', async () => {
+    // Arrange
+    const destination = path.join(dir, 'taken');
+    await mkdir(destination);
+    await writeFile(path.join(destination, 'keep.txt'), 'x');
+
+    // Act
+    await expect(backUpDatabase(destination)).rejects.toThrow();
+
+    // Assert
+    expect((await readdir(dir)).filter((name) => name.includes('.partial-'))).toEqual([]);
   });
 });

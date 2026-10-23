@@ -23,4 +23,27 @@ describe('runWithConcurrency', () => {
     // Assert
     expect(completed).toEqual([1, 3]);
   });
+
+  test('throws every failure together after the queue is done when several workers fail', async () => {
+    // Arrange
+    const first = new Error('item 1');
+    const third = new Error('item 3');
+    const completed: number[] = [];
+
+    // Act
+    const outcome = await runWithConcurrency([1, 2, 3], 1, async (item) => {
+      if (item === 1) {
+        throw first;
+      }
+      if (item === 3) {
+        throw third;
+      }
+      completed.push(item);
+    }).catch((error: unknown) => error);
+
+    // Assert
+    expect(outcome).toBeInstanceOf(AggregateError);
+    expect((outcome as AggregateError).errors).toEqual([first, third]);
+    expect(completed).toEqual([2]);
+  });
 });

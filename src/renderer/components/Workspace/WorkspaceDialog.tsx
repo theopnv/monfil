@@ -20,7 +20,7 @@ const DEFAULT_COLOR = WORKSPACE_COLORS[0];
 export interface WorkspaceDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onBrowseFeedpacks?: () => void;
+  onBrowseFeedpacks?: (draft: { name: string; icon: WorkspaceIconName; color: string }) => void;
   /** The workspace to edit. Omitted, the dialog creates a new one. */
   workspace?: WorkspaceSummary;
 }
@@ -152,7 +152,7 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
 
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
             {!isEditing && onBrowseFeedpacks && (
-              <Button color="secondary" size="md" className="rounded-full" onPress={onBrowseFeedpacks}>
+              <Button color="secondary" size="md" className="rounded-full" onPress={() => onBrowseFeedpacks({ name, icon, color })}>
                 Browse feedpacks
               </Button>
             )}

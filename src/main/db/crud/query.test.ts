@@ -5,7 +5,7 @@
 import { beforeEach, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 import { db, initializeDatabase } from '../database';
-import { countFeedItems, countFeedMetadata, countUnreadRiverItems, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from './query';
+import { countFeedItems, countFeedMetadata, countUnreadRiverItems, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedMetadataByIds, queryFeedSummaries, queryRiverPage, querySubscribedFeedMetadata, queryWorkspaceById, queryWorkspaceSummaries } from './query';
 
 beforeAll(async () => {
   await initializeDatabase(':memory:');
@@ -92,6 +92,64 @@ describe('queryFeedMetadata', () => {
     // Assert
     expect(result).toHaveLength(1);
     expect(result[0]?.link).toBe('https://b.example/feed');
+  });
+});
+
+describe('queryFeedMetadata with unset criteria', () => {
+  test('ignores a criterion whose value is undefined', async () => {
+    // Arrange
+    await db.insertInto('feedMetadata').values([{ link: 'https://a.example/feed', title: 'Feed A' }, { link: 'https://b.example/feed', title: 'Feed B' }]).execute();
+
+    // Act
+    const result = await queryFeedMetadata({ title: 'Feed B', icon: undefined });
+
+    // Assert
+    expect(result.map((row) => row.link)).toEqual(['https://b.example/feed']);
+  });
+});
+
+describe('querySubscribedFeedMetadata', () => {
+  test('lists only the feeds that have a placement, narrowed to the given ids', async () => {
+    // Arrange
+    const first = await seedFeed({ link: 'https://a.example/feed' });
+    const second = await seedFeed({ link: 'https://b.example/feed' });
+    await db.insertInto('feedMetadata').values({ link: 'https://unplaced.example/feed', title: 'Unplaced' }).execute();
+
+    // Act
+    const all = await querySubscribedFeedMetadata();
+    const narrowed = await querySubscribedFeedMetadata([second]);
+
+    // Assert
+    expect(all.map((row) => row.id).sort()).toEqual([first, second].sort());
+    expect(narrowed.map((row) => row.id)).toEqual([second]);
+  });
+});
+
+describe('queryFeedMetadataByIds', () => {
+  test('returns the stored feeds with the given ids, and nothing for an empty list', async () => {
+    // Arrange
+    const first = await seedFeed({ link: 'https://a.example/feed' });
+    await seedFeed({ link: 'https://b.example/feed' });
+
+    // Act
+    const found = await queryFeedMetadataByIds([first]);
+    const none = await queryFeedMetadataByIds([]);
+
+    // Assert
+    expect(found.map((row) => row.id)).toEqual([first]);
+    expect(none).toEqual([]);
+  });
+});
+
+describe('queryWorkspaceById', () => {
+  test('returns the workspace with that id, or undefined when there is none', async () => {
+    // Act
+    const home = await queryWorkspaceById(HOME_WORKSPACE_ID);
+    const missing = await queryWorkspaceById(999999);
+
+    // Assert
+    expect(home?.id).toBe(HOME_WORKSPACE_ID);
+    expect(missing).toBeUndefined();
   });
 });
 
@@ -677,6 +735,21 @@ describe('queryRiverPage', () => {
     // Assert
     expect(before.rows[0]?.job).toBeUndefined();
     expect(after.rows[0]?.job).toEqual({ company: 'Acme', location: 'Paris', workMode: 'hybrid', salaryLabel: '€60k–€75k' });
+  });
+
+  test.each([
+    ['a percent sign', '5%'],
+    ['an underscore', 'sale_'],
+  ])('does not treat %s in the search string as a wildcard', async (_name, search) => {
+    // Arrange
+    const feedId = await seedFeed();
+    await seedItem(feedId, { title: '50% off sale' });
+
+    // Act
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, search });
+
+    // Assert
+    expect(page.rows).toEqual([]);
   });
 
   test('returns an empty page for an empty database', async () => {
