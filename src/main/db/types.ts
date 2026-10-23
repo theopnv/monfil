@@ -23,7 +23,15 @@ export interface Database {
   setting: SettingTable
   articleContent: ArticleContentTable
   savedItem: SavedItemTable
+  usage_counter: UsageCounterTable
   savedSearch: SavedSearchTable
+}
+
+// Per-day tallies for opt-in usage analytics. See doc/src/content/docs/contributor-guide/usage-analytics.md.
+export interface UsageCounterTable {
+  day: string;
+  name: string;
+  value: number;
 }
 
 // A saved search is a named river query, shown as a pill above the river of one workspace.

@@ -14,6 +14,7 @@ import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
 import { useUpdateNotification } from '@/lib/app-update';
+import { useUsageReporting } from '@/providers/usage-reporting';
 import AppShell from '@/components/AppShell';
 import { ErrorRecovery } from '@/components/errors/ErrorRecovery';
 import { StartupGate } from '@/components/errors/StartupGate';
@@ -34,6 +35,7 @@ export const Route = createRootRoute({
 function IpcBridgedAppShell() {
   useIpcBridge();
   useUpdateNotification();
+  useUsageReporting();
   return <AppShell />;
 }
 

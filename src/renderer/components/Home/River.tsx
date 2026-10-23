@@ -14,6 +14,7 @@ import RiverSidebar from "@/components/Home/RiverSidebar";
 import ImportOpmlDialog from "@/components/Workspace/ImportOpmlDialog";
 import FeedpackInstallDialog from '@/components/Feedpacks/FeedpackInstallDialog';
 import { announce } from "@/lib/announcer";
+import { recordUsage } from "@/lib/usage";
 import { useFeedpackRefreshing } from '@/lib/ipc-bridge';
 import { type FeedVisibility } from "@/lib/river/feed-visibility";
 import { openLink } from "@/lib/river/utils";
@@ -73,6 +74,12 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
     const count = visibleItems.length;
     announce(count === 0 ? `No results for "${debouncedSearch}"` : `${count} result${count === 1 ? '' : 's'} for "${debouncedSearch}"`);
   }, [debouncedSearch, visibleItems.length]);
+
+  useEffect(() => {
+    if (debouncedSearch.length > 0) {
+      recordUsage('searches');
+    }
+  }, [debouncedSearch]);
 
   const handleOpen = useCallback((id: number) => {
     const item = visibleItems.find((candidate) => candidate.id === id);

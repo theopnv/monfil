@@ -42,6 +42,9 @@ beforeEach(() => {
       case 'settings:get-refresh-on-launch': return Promise.resolve(true);
       case 'settings:set-refresh-interval': return Promise.resolve(60);
       case 'settings:set-refresh-on-launch': return Promise.resolve(false);
+      case 'settings:get-usage-analytics': return Promise.resolve({ consent: 'unset', shouldPrompt: false, available: true });
+      case 'settings:set-usage-analytics': return Promise.resolve({ consent: 'granted', shouldPrompt: false, available: true });
+      case 'analytics:preview': return Promise.resolve({ day: '2026-10-23', articles_opened: 0 });
       case 'settings:get-retention-days': return Promise.resolve(30);
       case 'settings:set-retention-days': return Promise.resolve(90);
       case 'app:back-up-database': return Promise.resolve({ success: true, data: undefined });
@@ -75,6 +78,7 @@ test('renders every section heading', async () => {
   await expect.element(getByRole('heading', { name: 'Refreshing' })).toBeInTheDocument();
   await expect.element(getByRole('heading', { name: 'Your data' })).toBeInTheDocument();
   await expect.element(getByRole('heading', { name: 'About' })).toBeInTheDocument();
+  await expect.element(getByRole('heading', { name: 'Privacy' })).toBeInTheDocument();
 });
 
 test('about section lists the changelog, issue and donation links', async () => {
@@ -244,4 +248,39 @@ test('importing OPML merged into Home invokes opml:import with that target', asy
   // Assert
   await expect.element(getByRole('heading', { name: 'Import complete' })).toBeInTheDocument();
   expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('opml:import', { target: { kind: 'merge-workspace', workspaceId: HOME_WORKSPACE_ID } });
+});
+
+test('turning on "Share anonymous usage stats" stores the choice', async () => {
+  // Arrange
+  const { getByText } = await renderSettings();
+
+  // Act
+  await getByText('Share anonymous usage stats', { exact: true }).click();
+
+  // Assert
+  await vi.waitFor(() => expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set-usage-analytics', 'granted'));
+  await expect.element(getByText('Share anonymous usage stats', { exact: true })).toBeInTheDocument();
+});
+
+test('"See what is sent" shows the summary', async () => {
+  // Arrange
+  const { getByRole, getByLabelText } = await renderSettings();
+
+  // Act
+  await getByRole('button', { name: 'See what is sent' }).click();
+
+  // Assert
+  await vi.waitFor(() => expect(getByLabelText('Usage stats preview').element().textContent).toContain('"articles_opened": 0'));
+});
+
+test('the toggle is off when the build collects nothing', async () => {
+  // Arrange
+  const original = invokeImpl;
+  invokeImpl = (channel) => channel === 'settings:get-usage-analytics' ? Promise.resolve({ consent: 'unset', shouldPrompt: false, available: false }) : original(channel);
+
+  // Act
+  const { getByText } = await renderSettings();
+
+  // Assert
+  await expect.element(getByText('This build of Monfil does not collect usage stats.')).toBeInTheDocument();
 });

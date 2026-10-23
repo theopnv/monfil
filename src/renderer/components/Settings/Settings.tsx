@@ -8,6 +8,7 @@ import DiagnosticsSection from '@/components/Settings/DiagnosticsSection';
 import AboutSection from "@/components/Settings/AboutSection";
 import AppearanceSection from "@/components/Settings/AppearanceSection";
 import DataSection from "@/components/Settings/DataSection";
+import PrivacySection from "@/components/Settings/PrivacySection";
 import ReadingSection from "@/components/Settings/ReadingSection";
 import RefreshingSection from "@/components/Settings/RefreshingSection";
 import SettingsNav from "@/components/Settings/SettingsNav";
@@ -17,6 +18,7 @@ const SECTIONS = [
   { id: "reading", label: "Reading" },
   { id: "refreshing", label: "Refreshing" },
   { id: "data", label: "Your data" },
+  { id: "privacy", label: "Privacy" },
   { id: "diagnostics", label: "Diagnostics" },
   { id: "about", label: "About" },
 ] as const;
@@ -42,6 +44,7 @@ export default function Settings() {
           <ReadingSection />
           <RefreshingSection />
           <DataSection />
+          <PrivacySection />
           <DiagnosticsSection />
           <AboutSection version={version} />
         </div>

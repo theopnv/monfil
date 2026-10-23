@@ -21,6 +21,7 @@ import { setLogFilePath } from './app/main-state';
 import { getDetailedLogging } from './app/settings';
 import { titleBarOverlayForTheme } from './app/window-chrome';
 import { startAutoUpdates, stopAutoUpdates } from './updates/auto-updater';
+import { startUsageAnalytics, stopUsageAnalytics } from './analytics/scheduler';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // app.quit() only schedules an exit, so without this return the rest of the module (and its app.on(...) wiring)
@@ -125,6 +126,9 @@ function bootstrap() {
       logger.error('feed.refresh', { outcome: 'failed' }, error);
     });
     startAutoUpdates();
+    startUsageAnalytics().catch((error: unknown) => {
+      logger.warn('app.analytics', { outcome: 'failed', events: 0 }, error);
+    });
   }
 
   // This method will be called when Electron has finished initialization and is ready to create browser windows.
@@ -156,6 +160,7 @@ function bootstrap() {
   app.on('before-quit', () => {
     stopRefreshScheduler();
     stopAutoUpdates();
+    stopUsageAnalytics();
     stopArticleExtractionProcess();
     closeDatabase().catch((error) => {
       logger.error('database.recovery', { outcome: 'failed' }, error);

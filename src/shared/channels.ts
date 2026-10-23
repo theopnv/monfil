@@ -9,6 +9,7 @@ import type {
   CatalogError,
   CreateCategoryError,
   CreateWorkspaceError,
+  DailySummaryProps,
   DeleteCategoryError,
   DeleteFeedError,
   DeleteWorkspaceError,
@@ -29,6 +30,7 @@ import type {
   NewFeedInput,
   ParsedSource,
   RefreshInterval,
+  RendererUsageCounter,
   RefreshSummary,
   RetentionDays,
   RiverPage,
@@ -45,6 +47,8 @@ import type {
   UpdateFeedError,
   UpdateItemError,
   UpdateWorkspaceError,
+  UsageAnalyticsState,
+  UsagePreferences,
   Workspace,
   WorkspaceSummary,
 } from './contracts';
@@ -63,6 +67,8 @@ export type OneWayRendererToMainChannelPayloads = {
   'app:install-update': undefined;
   'app:set-window-theme': 'light' | 'dark';
   'log:write': { level: LogLevel; event: LogEventName; data: LogEventMap[LogEventName]; error?: string };
+  'usage:record': { counter: RendererUsageCounter };
+  'usage:preferences': UsagePreferences;
 };
 
 export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayloads;
@@ -118,6 +124,10 @@ export type TwoWayRendererMainChannelPayloads = {
   'app:get-update-state': AppUpdateState;
   'settings:get-detailed-logging': boolean;
   'settings:set-detailed-logging': boolean;
+  'settings:get-usage-analytics': UsageAnalyticsState;
+  'settings:set-usage-analytics': UsageAnalyticsState;
+  'settings:dismiss-usage-analytics-prompt': UsageAnalyticsState;
+  'analytics:preview': DailySummaryProps;
   'opml:import': Result<ImportSummary, ImportOpmlError>;
   'opml:export': Result<void, ExportOpmlError>;
   'feedpacks:list': Result<FeedpackCatalog, CatalogError>;
@@ -170,6 +180,10 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'app:get-update-state': undefined;
   'settings:get-detailed-logging': undefined;
   'settings:set-detailed-logging': boolean;
+  'settings:get-usage-analytics': undefined;
+  'settings:set-usage-analytics': 'granted' | 'denied';
+  'settings:dismiss-usage-analytics-prompt': undefined;
+  'analytics:preview': undefined;
   'opml:import': { target: ImportOpmlTarget };
   'opml:export': { workspaceId: number };
   'feedpacks:list': undefined;

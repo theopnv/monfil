@@ -4,6 +4,7 @@
 
 import { createElement, useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import { openLink } from "@/lib/river/utils";
+import { recordUsage } from "@/lib/usage";
 import { sanitizeArticleHtml } from "@/lib/sanitize-html";
 import { prepareReaderHtml } from "@/lib/reader/prepareReaderHtml";
 import { resolveEmbedUrl, type EmbedDescriptor } from "../../../shared/embeds";
@@ -48,7 +49,10 @@ function EmbedCard({ embed, title }: { embed: EmbedDescriptor; title: string }) 
           allowFullScreen
         />
       ) : (
-        <button type="button" className="rounded-md bg-brand-solid px-3 py-2 text-sm font-semibold text-white hover:bg-brand-solid_hover focus-visible:outline-2 focus-visible:outline-brand-solid" onClick={() => setLoaded(true)}>
+        <button type="button" className="rounded-md bg-brand-solid px-3 py-2 text-sm font-semibold text-white hover:bg-brand-solid_hover focus-visible:outline-2 focus-visible:outline-brand-solid" onClick={() => {
+          recordUsage('embeds_loaded');
+          setLoaded(true);
+        }}>
           Load {name}
         </button>
       )}

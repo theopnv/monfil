@@ -17,6 +17,7 @@ Monfil is an Electron app written in TypeScript. Start with [Getting started](..
 - [Feed sources](../feed-sources/) explains adapters and refresh.
 - [Feedpacks and OPML](../feedpacks-and-opml/) follows feed lists into and out of the app.
 - [Diagnostics](../diagnostics/) shows how to investigate errors.
+- [Usage analytics](../usage-analytics/) explains the opt-in counters and how to add one.
 - [Code complexity](../complexity/) covers the lint limits, the pull request report, and the dashboard.
 - [Release procedure](../release-procedure/) records the maintainer's publish steps.
 

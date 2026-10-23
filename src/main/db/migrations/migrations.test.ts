@@ -464,6 +464,24 @@ describe('0009_saved_search', () => {
   });
 });
 
+describe('0010_usage_counters', () => {
+  test('keeps one tally per day and name, and rolls back cleanly', async () => {
+    // Arrange
+    assertMigrated(await migrateToLatest());
+    await db.insertInto('usage_counter').values({ day: '2026-10-22', name: 'articles_opened', value: 3 }).execute();
+
+    // Act
+    const duplicate = db.insertInto('usage_counter').values({ day: '2026-10-22', name: 'articles_opened', value: 1 }).execute();
+    const sameNameOtherDay = db.insertInto('usage_counter').values({ day: '2026-10-23', name: 'articles_opened', value: 1 }).execute();
+
+    // Assert
+    await expect(duplicate).rejects.toThrow(/UNIQUE|PRIMARY KEY/);
+    await expect(sameNameOtherDay).resolves.toBeDefined();
+    assertMigrated(await migrateTo('0009_saved_search'));
+    await expect(sql`SELECT name FROM sqlite_master WHERE name = 'usage_counter'`.execute(db)).resolves.toMatchObject({ rows: [] });
+  });
+});
+
 describe('the migration list', () => {
   test('has unique names, already in the order Migrator will run them', () => {
     // Assert

@@ -4,7 +4,7 @@
 
 import { infiniteQueryOptions, queryOptions, type InfiniteData } from '@tanstack/react-query';
 import { ipc, rendererLogger } from '@/lib/ipc-client';
-import type { AppInfo, FeedCategory, FeedSummary, RiverCursor, SavedSearchList, RiverPage, RiverQuery, RiverRow, SavedCursor, WorkspaceSummary } from '../../shared/contracts';
+import type { AppInfo, UsageAnalyticsState, FeedCategory, FeedSummary, RiverCursor, SavedSearchList, RiverPage, RiverQuery, RiverRow, SavedCursor, WorkspaceSummary } from '../../shared/contracts';
 
 export const RIVER_PAGE_SIZE = 50;
 export const RIVER_MAX_PAGES = 8;
@@ -23,6 +23,7 @@ function normalizeScope(scope: RiverScope): RiverScope {
 export const queryKeys = {
   appInfo: ['app-info'] as const,
   updateState: ['app-update-state'] as const,
+  usageAnalytics: ['usage-analytics'] as const,
   feeds: (workspaceId: number) => ['feeds', workspaceId] as const,
   categories: (workspaceId: number) => ['categories', workspaceId] as const,
   workspaces: ['workspaces'] as const,
@@ -42,6 +43,13 @@ export function appInfoQuery() {
         throw error;
       }
     },
+  });
+}
+
+export function usageAnalyticsQuery() {
+  return queryOptions({
+    queryKey: queryKeys.usageAnalytics,
+    queryFn: (): Promise<UsageAnalyticsState> => ipc.invoke('settings:get-usage-analytics', undefined),
   });
 }
 

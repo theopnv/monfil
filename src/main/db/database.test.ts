@@ -28,7 +28,7 @@ describe('initializeDatabase', () => {
 
     // Assert
     expect(tables.map((table) => table.name).sort()).toEqual([
-      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'feedPlacement', 'savedItem', 'savedSearch', 'setting', 'undatedItem', 'workspace',
+      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'feedPlacement', 'savedItem', 'savedSearch', 'setting', 'undatedItem', 'usage_counter', 'workspace',
     ]);
   });
 
@@ -47,6 +47,7 @@ describe('initializeDatabase', () => {
     expect(columnsOf('undatedItem')).toEqual(['feed_id', 'first_fetched_at', 'guid']);
     expect(columnsOf('setting')).toEqual(['key', 'value']);
     expect(columnsOf('articleContent')).toEqual(['html', 'item_id', 'status', 'text', 'word_count']);
+    expect(columnsOf('usage_counter')).toEqual(['day', 'name', 'value']);
   });
 
   test('the shared db is queryable once dbReady resolves', async () => {
@@ -100,7 +101,7 @@ describe('reopening an already-migrated file', () => {
     await closeDatabase();
     const old = new SQLite(filePath);
     old.pragma('journal_mode = WAL');
-    old.exec("DROP TABLE savedSearch; ALTER TABLE workspace DROP COLUMN search_hint_dismissed_at; DELETE FROM kysely_migration WHERE name = '0009_saved_search'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
+    old.exec("DROP TABLE usage_counter; DELETE FROM kysely_migration WHERE name = '0010_usage_counters'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
 
     // Act
     await initializeDatabase(filePath);
@@ -110,7 +111,7 @@ describe('reopening an already-migrated file', () => {
     // Assert
     expect(backups).toHaveLength(1);
     expect(backup.prepare("SELECT value FROM setting WHERE key = 'wal-row'").get()).toEqual({ value: 'present' });
-    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0009_saved_search'").get()).toBeUndefined();
+    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0010_usage_counters'").get()).toBeUndefined();
     backup.close();
     old.close();
   });
@@ -219,7 +220,7 @@ describe('failing to open a file database', () => {
   test('rejects, reports FAILED, and releases the file when a pending migration cannot apply', async () => {
     // Arrange
     const old = new SQLite(filePath);
-    old.exec("DELETE FROM kysely_migration WHERE name = '0009_saved_search'");
+    old.exec("DELETE FROM kysely_migration WHERE name = '0010_usage_counters'");
     old.close();
 
     // Act

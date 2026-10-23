@@ -5,7 +5,7 @@
 import { ipcMain } from "electron";
 import type { IpcMainEvent } from "electron";
 import type { OneWayRendererToMainChannelPayloads, OneWayRendererToMainChannels } from "../../shared/channels";
-import { listenToInstallUpdate, listenToLinkOpen, listenToRendererLog, listenToRestart, listenToRevealDatabaseBackup, listenToRevealDatabaseFile, listenToRevealLogFile, listenToSetWindowTheme, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu } from "./listeners";
+import { listenToInstallUpdate, listenToLinkOpen, listenToRendererLog, listenToRestart, listenToRevealDatabaseBackup, listenToRevealDatabaseFile, listenToRevealLogFile, listenToSetWindowTheme, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu, listenToUsagePreferences, listenToUsageRecord } from "./listeners";
 
 // IPC Listeners - Renderer to main
 // Triggered from the renderer side (exposed through preload): ipcRenderer.send(channel, payload)
@@ -29,6 +29,8 @@ const listeners: { [C in OneWayRendererToMainChannels]: Listener<C> } = {
   "app:install-update": listenToInstallUpdate,
   "app:set-window-theme": listenToSetWindowTheme,
   "log:write": listenToRendererLog,
+  "usage:record": listenToUsageRecord,
+  "usage:preferences": listenToUsagePreferences,
 };
 
 export function registerIpcListeners() {

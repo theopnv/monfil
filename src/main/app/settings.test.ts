@@ -4,7 +4,7 @@
 
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../db/database';
-import { DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, getRefreshInterval, getRefreshOnLaunch, setRefreshInterval, setRefreshOnLaunch } from './settings';
+import { DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, getRefreshInterval, getRefreshOnLaunch, setRefreshInterval, setRefreshOnLaunch, getUsageAnalyticsConsent, getUsageAnalyticsPromptHistory, recordAppLaunch, recordUsageAnalyticsPromptDismissed, setUsageAnalyticsConsent, toUsageAnalyticsConsent } from './settings';
 
 beforeAll(async () => {
   await initializeDatabase(':memory:');
@@ -144,5 +144,58 @@ describe('setRefreshOnLaunch', () => {
     expect(await getRefreshOnLaunch()).toBe(true);
     const rows = await db.selectFrom('setting').selectAll().execute();
     expect(rows).toHaveLength(1);
+  });
+});
+
+describe('usage analytics settings', () => {
+  test('consent is unset by default and narrows odd values to unset', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'usageAnalyticsConsent', value: 'maybe' }).execute();
+
+    // Act, Assert
+    expect(await getUsageAnalyticsConsent()).toBe('unset');
+    expect(toUsageAnalyticsConsent('granted')).toBe('granted');
+    expect(toUsageAnalyticsConsent('denied')).toBe('denied');
+    expect(toUsageAnalyticsConsent(undefined)).toBe('unset');
+  });
+
+  test('stores the choice with its date and notice version, replacing the previous one', async () => {
+    // Act
+    await setUsageAnalyticsConsent('granted', 'v1', new Date('2026-10-01T00:00:00Z'));
+    await setUsageAnalyticsConsent('denied', 'v2', new Date('2026-10-02T00:00:00Z'));
+
+    // Assert
+    expect(await getUsageAnalyticsConsent()).toBe('denied');
+    const rows = await db.selectFrom('setting').selectAll().orderBy('key').execute();
+    expect(rows).toEqual([
+      { key: 'usageAnalyticsConsent', value: 'denied' },
+      { key: 'usageAnalyticsConsentAt', value: '2026-10-02T00:00:00.000Z' },
+      { key: 'usageAnalyticsNoticeVersion', value: 'v2' },
+    ]);
+  });
+
+  test('counts launches and dismissals of the card', async () => {
+    // Arrange
+    expect(await getUsageAnalyticsPromptHistory()).toEqual({ launchCount: 0, promptCount: 0, lastShownAt: undefined });
+
+    // Act
+    await recordAppLaunch();
+    await recordAppLaunch();
+    await recordUsageAnalyticsPromptDismissed(new Date('2026-10-02T00:00:00Z'));
+
+    // Assert
+    expect(await getUsageAnalyticsPromptHistory()).toEqual({ launchCount: 2, promptCount: 1, lastShownAt: new Date('2026-10-02T00:00:00Z') });
+  });
+
+  test('ignores damaged history values', async () => {
+    // Arrange
+    await db.insertInto('setting').values([
+      { key: 'usageAnalyticsLaunchCount', value: '-3' },
+      { key: 'usageAnalyticsPromptCount', value: 'many' },
+      { key: 'usageAnalyticsPromptLastShownAt', value: 'yesterday' },
+    ]).execute();
+
+    // Act, Assert
+    expect(await getUsageAnalyticsPromptHistory()).toEqual({ launchCount: 0, promptCount: 0, lastShownAt: undefined });
   });
 });

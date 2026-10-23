@@ -21,6 +21,9 @@ import { getDetailedLogging, getRefreshInterval, getRefreshOnLaunch, setDetailed
 import { getAppInfo } from "../app/app-info";
 import { getUpdateState } from "../updates/auto-updater";
 import { sendToRenderer } from "../lib/sendToRenderer";
+import { changeUsageAnalyticsConsent, dismissUsageAnalyticsPrompt, getUsageAnalyticsState } from '../analytics/consent';
+import { incrementCounter } from '../analytics/counters';
+import { previewSummary } from '../analytics/report';
 import { openAndImportOpml } from "../opml/import";
 import { exportWorkspaceOpml } from "../opml/export";
 import { getFeedpackCatalog } from '../feedpacks/catalog';
@@ -70,6 +73,7 @@ import type {
   Workspace,
   WorkspaceSummary,
 } from "../../shared/contracts";
+import type { DailySummaryProps, UsageAnalyticsState } from '../../shared/contracts';
 import type { Result } from "../../shared/result";
 import { dbReady, dbStatus } from '../db/database';
 import type { StartupHealth } from '../../shared/contracts';
@@ -240,6 +244,7 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
   }
   const status = deriveArticleContentStatus(article);
   await upsertArticleContent({ item_id: itemId, html: article?.html, text: article?.text, word_count: article?.wordCount, status });
+  void incrementCounter('fulltext_extracted');
 
   return {
     description: item.description,
@@ -322,6 +327,22 @@ export async function handleSettingsSetDetailedLogging(_event: IpcMainInvokeEven
   await setDetailedLogging(payload);
   applyDetailedLogging(payload);
   return payload;
+}
+
+export function handleSettingsGetUsageAnalytics(): Promise<UsageAnalyticsState> {
+  return getUsageAnalyticsState();
+}
+
+export function handleSettingsSetUsageAnalytics(_event: IpcMainInvokeEvent, payload: 'granted' | 'denied'): Promise<UsageAnalyticsState> {
+  return changeUsageAnalyticsConsent(payload);
+}
+
+export function handleSettingsDismissUsageAnalyticsPrompt(): Promise<UsageAnalyticsState> {
+  return dismissUsageAnalyticsPrompt();
+}
+
+export function handleAnalyticsPreview(): Promise<DailySummaryProps> {
+  return previewSummary();
 }
 
 export async function handleOpmlImport(_event: IpcMainInvokeEvent, payload: { target: ImportOpmlTarget }): Promise<Result<ImportSummary, ImportOpmlError>> {

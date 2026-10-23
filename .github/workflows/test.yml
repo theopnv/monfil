@@ -112,6 +112,10 @@ jobs:
   e2e:
     needs: [lint, unit, integration, os_matrix]
     runs-on: ${{ matrix.os }}
+    # The e2e step packages the app, and a release ships that package, so the release build takes its analytics key here.
+    env:
+      MONFIL_APTABASE_KEY: ${{ inputs.upload_package && vars.MONFIL_APTABASE_KEY || '' }}
+      MONFIL_APTABASE_HOST: ${{ inputs.upload_package && vars.MONFIL_APTABASE_HOST || '' }}
     strategy:
       fail-fast: false
       matrix:

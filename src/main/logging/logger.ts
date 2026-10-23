@@ -63,6 +63,22 @@ export function serializeError(error: unknown): LogRecord['error'] | undefined {
   return { name: 'UnknownError', message: safeMessage(String(error)) };
 }
 
+type LogObserver = (event: LogEventName, data: LogEventMap[LogEventName], level: LogLevel) => void;
+
+const observers = new Set<LogObserver>();
+
+/**
+ * Calls `observer` for every record that is logged, so another module can react without the logger importing it.
+ * @param observer receives the event, its data before redaction, and its level
+ * @returns a function that removes the observer
+ */
+export function observeLogs(observer: LogObserver): () => void {
+  observers.add(observer);
+  return () => {
+    observers.delete(observer);
+  };
+}
+
 class ElectronLogger implements Logger {
   constructor(private readonly scope: string) {}
 
@@ -97,6 +113,13 @@ class ElectronLogger implements Logger {
       ...(errorRecord ? { error: errorRecord } : {}),
     };
     electronLog[level](JSON.stringify(record));
+    for (const observer of observers) {
+      try {
+        observer(event, data, level);
+      } catch {
+        // A failing observer must never break logging.
+      }
+    }
   }
 }
 

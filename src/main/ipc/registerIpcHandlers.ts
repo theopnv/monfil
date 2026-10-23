@@ -6,9 +6,11 @@ import { ipcMain } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
 import type { ChannelPayloads, IpcInvokeResponse, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../shared/channels";
 import { invokePayloadGuards } from '../../shared/ipc-payloads';
+import { recordInvokeUsage } from '../analytics/channel-counters';
 import { createIncidentId } from '../logging/incident';
 import { logger } from '../logging/logger';
 import {
+  handleAnalyticsPreview,
   handleAppGetInfo,
   handleAppGetStartupHealth,
   handleAppGetUpdateState,
@@ -35,7 +37,10 @@ import {
   handleItemsSetRead,
   handleOpmlExport,
   handleOpmlImport,
+  handleSettingsDismissUsageAnalyticsPrompt,
   handleSettingsGetDetailedLogging,
+  handleSettingsGetUsageAnalytics,
+  handleSettingsSetUsageAnalytics,
   handleSettingsGetRefreshInterval,
   handleSettingsGetRefreshOnLaunch,
   handleSettingsSetDetailedLogging,
@@ -107,6 +112,10 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "app:get-update-state": handleAppGetUpdateState,
   "settings:get-detailed-logging": handleSettingsGetDetailedLogging,
   "settings:set-detailed-logging": handleSettingsSetDetailedLogging,
+  "settings:get-usage-analytics": handleSettingsGetUsageAnalytics,
+  "settings:set-usage-analytics": handleSettingsSetUsageAnalytics,
+  "settings:dismiss-usage-analytics-prompt": handleSettingsDismissUsageAnalyticsPrompt,
+  "analytics:preview": handleAnalyticsPreview,
   "searches:list": handleSearchesList,
   "searches:create": handleSearchesCreate,
   "searches:update": handleSearchesUpdate,
@@ -121,7 +130,9 @@ export function registerIpcHandlers() {
         if (!invokePayloadGuards[channel](arg)) {
           return { success: false, error: { name: 'INVALID_PAYLOAD', message: 'Invalid request payload.' } };
         }
-        return await handler(event, arg);
+        const response = await handler(event, arg);
+        recordInvokeUsage(channel, arg, response);
+        return response;
       } catch (error) {
         const incidentId = createIncidentId();
         logger.error('ipc.failure', { channel, incidentId }, error);
