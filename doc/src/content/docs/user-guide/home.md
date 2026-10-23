@@ -70,7 +70,7 @@ To save a workspace as an OPML file, right-click its icon in the left rail and s
 
 ## Read and find articles
 
-Select an article in the main list to open it in Monfil's reader. Use **Search everything** above the list to find articles in the current workspace. Select **Unread** to hide read items, and select **All** to bring them back. The refresh button beside it checks your feeds for new items.
+Select an article in the main list to open it in Monfil's reader. Use **Search** above the list to find articles in the current workspace. Select **Unread** to hide read items, and select **All** to bring them back. The refresh button beside it checks your feeds for new items.
 
 For keyboard controls, open **Settings** and turn on **Keyboard navigation** under **Reading**. Then use `j` and `k` to move between articles. Press `Esc` to leave the reader.
 

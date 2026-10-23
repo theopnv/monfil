@@ -44,6 +44,11 @@ import {
   handleSettingsGetRetentionDays,
   handleSettingsSetRetentionDays,
   handleAppBackUpDatabase,
+  handleSearchesCreate,
+  handleSearchesDelete,
+  handleSearchesDismissHint,
+  handleSearchesList,
+  handleSearchesUpdate,
   handleWorkspacesCreate,
   handleWorkspacesDelete,
   handleWorkspacesList,
@@ -102,6 +107,11 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "app:get-update-state": handleAppGetUpdateState,
   "settings:get-detailed-logging": handleSettingsGetDetailedLogging,
   "settings:set-detailed-logging": handleSettingsSetDetailedLogging,
+  "searches:list": handleSearchesList,
+  "searches:create": handleSearchesCreate,
+  "searches:update": handleSearchesUpdate,
+  "searches:delete": handleSearchesDelete,
+  "searches:dismiss-hint": handleSearchesDismissHint,
 };
 
 export function registerIpcHandlers() {

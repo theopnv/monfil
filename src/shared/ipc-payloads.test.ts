@@ -202,3 +202,22 @@ describe('IPC payload guards', () => {
     expect(installValid).toBe(false);
   });
 });
+
+describe('saved search payloads', () => {
+  test('accepts well-formed requests', () => {
+    // Act / Assert
+    expect(invokePayloadGuards['searches:create']({ workspaceId: 1, name: 'a', query: 'b' })).toBe(true);
+    expect(invokePayloadGuards['searches:update']({ searchId: 1, name: 'a' })).toBe(true);
+    expect(invokePayloadGuards['searches:update']({ searchId: 1 })).toBe(true);
+    expect(invokePayloadGuards['searches:delete']({ searchId: 1 })).toBe(true);
+    expect(invokePayloadGuards['searches:list']({ workspaceId: 1 })).toBe(true);
+    expect(invokePayloadGuards['searches:dismiss-hint']({ workspaceId: 1 })).toBe(true);
+  });
+
+  test('rejects malformed requests', () => {
+    // Act / Assert
+    expect(invokePayloadGuards['searches:create']({ workspaceId: 1, name: 'a' })).toBe(false);
+    expect(invokePayloadGuards['searches:update']({ searchId: 0 })).toBe(false);
+    expect(invokePayloadGuards['searches:delete']({ searchId: 1, extra: true })).toBe(false);
+  });
+});

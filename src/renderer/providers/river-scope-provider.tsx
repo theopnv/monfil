@@ -16,6 +16,8 @@ type ShowOnlyUpdater = (prev: ReadonlySet<string>) => ReadonlySet<string>;
 interface RiverScopeContextType {
   getShowOnlyLinks: (workspaceId: number) => ReadonlySet<string>;
   setShowOnlyLinks: (workspaceId: number, updater: ShowOnlyUpdater) => void;
+  getActiveSearchId: (workspaceId: number) => number | undefined;
+  setActiveSearchId: (workspaceId: number, searchId: number | undefined) => void;
 }
 
 const NO_LINKS: ReadonlySet<string> = new Set();
@@ -60,7 +62,30 @@ export const RiverScopeProvider = ({ children }: PropsWithChildren) => {
     });
   }, []);
 
-  const value = useMemo(() => ({ getShowOnlyLinks, setShowOnlyLinks }), [getShowOnlyLinks, setShowOnlyLinks]);
+  // The active saved search is only a highlight on the pill: the query text in the search box stays what the river is filtered by.
+  const [activeSearchByWorkspace, setActiveSearchByWorkspace] = useState<ReadonlyMap<number, number>>(() => new Map());
+
+  const getActiveSearchId = useCallback((workspaceId: number) => activeSearchByWorkspace.get(workspaceId), [activeSearchByWorkspace]);
+
+  const setActiveSearchId = useCallback((workspaceId: number, searchId: number | undefined) => {
+    setActiveSearchByWorkspace((prev) => {
+      if (prev.get(workspaceId) === searchId) {
+        return prev;
+      }
+      const map = new Map(prev);
+      if (searchId === undefined) {
+        map.delete(workspaceId);
+      } else {
+        map.set(workspaceId, searchId);
+      }
+      return map;
+    });
+  }, []);
+
+  const value = useMemo(
+    () => ({ getShowOnlyLinks, setShowOnlyLinks, getActiveSearchId, setActiveSearchId }),
+    [getShowOnlyLinks, setShowOnlyLinks, getActiveSearchId, setActiveSearchId],
+  );
 
   return (
     <RiverScopeContext.Provider value={value}>
@@ -104,4 +129,12 @@ export function useRiverScope(feeds: FeedSummary[], saved = false): RiverScopeRe
   }), [workspaceId, saved, visibleFeedIdsSet, preferences.hideReadItems, debouncedSearch]);
 
   return { scope, visibleFeedIdsSet, showOnlyLinks, setShowOnlyLinks, debouncedSearch };
+}
+
+/** The saved search whose pill is selected in the active workspace, if any. */
+export function useActiveSearchId(): [number | undefined, (searchId: number | undefined) => void] {
+  const { getActiveSearchId, setActiveSearchId } = useRiverScopeState();
+  const workspaceId = useActiveWorkspaceId();
+  const set = useCallback((searchId: number | undefined) => setActiveSearchId(workspaceId, searchId), [setActiveSearchId, workspaceId]);
+  return [getActiveSearchId(workspaceId), set];
 }

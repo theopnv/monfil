@@ -96,7 +96,7 @@ searchTest('search filters river items by title and clears with Escape', async (
   ]);
   const page = await launchApp();
   await subscribe(page, feedServer.url);
-  const search = page.getByRole('textbox', { name: 'Search everything' });
+  const search = page.getByRole('textbox', { name: 'Search' });
 
   // Act
   await search.fill('pasta');
@@ -123,7 +123,7 @@ searchTest('search matches the feed name and surfaces its items', async ({ feedS
   ]);
   const page = await launchApp();
   await subscribe(page, feedServer.url);
-  const search = page.getByRole('textbox', { name: 'Search everything' });
+  const search = page.getByRole('textbox', { name: 'Search' });
 
   // Act
   await search.fill('local');
@@ -140,7 +140,7 @@ searchTest('search over the description shows a no-results message when nothing 
   ]);
   const page = await launchApp();
   await subscribe(page, feedServer.url);
-  const search = page.getByRole('textbox', { name: 'Search everything' });
+  const search = page.getByRole('textbox', { name: 'Search' });
 
   // Act
   await search.fill('executors kubernetes');

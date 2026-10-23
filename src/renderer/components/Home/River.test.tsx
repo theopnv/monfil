@@ -13,8 +13,10 @@ import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import { useIpcBridge } from '@/lib/ipc-bridge';
+import { NotificationHost } from '@/lib/notifications';
 import River from './River';
-import { HOME_WORKSPACE_ID, type FeedSummary, type RefreshSummary, type RiverPage, type RiverQuery, type RiverRow, type SavedQuery, type SetSavedItemInput, type WorkspaceSummary } from '../../../shared/contracts';
+import { parseSearchQuery } from '../../../shared/search-query';
+import { HOME_WORKSPACE_ID, type FeedSummary, type RefreshSummary, type RiverPage, type RiverQuery, type RiverRow, type SavedQuery, type SavedSearch, type SetSavedItemInput, type WorkspaceSummary } from '../../../shared/contracts';
 
 let nextFeedId = 1;
 let nextItemId = 1;
@@ -68,6 +70,9 @@ let invokeMock: ReturnType<typeof vi.fn>;
 let failSave: boolean;
 let feedA: FeedSummary;
 let feedsRefreshedHandler: ((payload: RefreshSummary) => void) | undefined;
+let savedSearches: SavedSearch[];
+let hintExample: string | undefined;
+let nextSearchId: number;
 
 function createWorkspace(overrides: Partial<WorkspaceSummary> = {}): WorkspaceSummary {
   return {
@@ -99,10 +104,11 @@ function computeRiverPage(query: RiverQuery): RiverPage {
     candidates = candidates.filter((row) => !row.readAt);
   }
 
-  const words = query.search?.trim().toLowerCase().split(/\s+/).filter(Boolean) ?? [];
-  candidates = candidates.filter((row) => words.every((word) =>
-    row.title.toLowerCase().includes(word) || row.excerpt.toLowerCase().includes(word) || row.feedTitle.toLowerCase().includes(word),
-  ));
+  const clauses = parseSearchQuery(query.search ?? '');
+  candidates = candidates.filter((row) => clauses.every((clause) => {
+    const hit = clause.alternatives.some((term) => (term.field === 'title' ? row.title : `${row.title} ${row.excerpt} ${row.feedTitle}`).toLowerCase().includes(term.text));
+    return clause.negated ? !hit : hit;
+  }));
 
   const sorted = [...candidates].sort((a, b) => b.publishedAt - a.publishedAt || b.id - a.id);
   const cursor = query.cursor;
@@ -126,6 +132,9 @@ beforeEach(() => {
   workspaces = [];
   failSave = false;
   feedsRefreshedHandler = undefined;
+  savedSearches = [];
+  hintExample = undefined;
+  nextSearchId = 1;
   opmlImportResult = { success: true, data: { workspaceId: HOME_WORKSPACE_ID, imported: 0, skipped: [], failed: [] } };
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
@@ -153,6 +162,28 @@ beforeEach(() => {
         return Promise.resolve(computeRiverPage(arg as RiverQuery));
       case 'workspaces:list':
         return Promise.resolve(workspaces);
+      case 'searches:list':
+        return Promise.resolve({
+          searches: savedSearches.map((search) => ({ ...search, unreadCount: computeRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 1000, unreadOnly: true, search: search.query }).rows.length })),
+          hintExample: savedSearches.length === 0 ? hintExample : undefined,
+        });
+      case 'searches:create': {
+        const { name, query } = arg as { name: string; query: string };
+        const created: SavedSearch = { id: nextSearchId++, workspace_id: HOME_WORKSPACE_ID, name, query, position: savedSearches.length, created_at: 1 };
+        savedSearches = [...savedSearches, created];
+        return Promise.resolve({ success: true, data: created });
+      }
+      case 'searches:update': {
+        const { searchId, ...patch } = arg as { searchId: number; name?: string; query?: string };
+        savedSearches = savedSearches.map((search) => (search.id === searchId ? { ...search, ...patch } : search));
+        return Promise.resolve({ success: true, data: savedSearches.find((search) => search.id === searchId) });
+      }
+      case 'searches:delete':
+        savedSearches = savedSearches.filter((search) => search.id !== (arg as { searchId: number }).searchId);
+        return Promise.resolve({ success: true, data: undefined });
+      case 'searches:dismiss-hint':
+        hintExample = undefined;
+        return Promise.resolve({ success: true, data: undefined });
       case 'opml:import':
         return Promise.resolve(opmlImportResult);
       case 'items:set-read': {
@@ -261,6 +292,7 @@ test('Saved searches its own items and removes a save without opening it', async
 
   // Act
   await getByRole('textbox').fill('Item A1');
+  await userEvent.keyboard('{Enter}');
   await expect.element(getByText('Item A2', { exact: true })).not.toBeInTheDocument();
   await getByRole('button', { name: 'Remove from Saved' }).click();
 
@@ -500,7 +532,7 @@ test('shows an onboarding empty state with zero feeds and opens the Add Feed mod
 
   // Assert: no controls for a river that has nothing to search, filter or refresh.
   await expect.element(getByText('Pick your sources', { exact: true })).toBeInTheDocument();
-  await expect.element(getByRole('textbox', { name: 'Search everything' })).not.toBeInTheDocument();
+  await expect.element(getByRole('textbox', { name: 'Search' })).not.toBeInTheDocument();
   await expect.element(getByRole('heading', { name: 'Add a feed' })).not.toBeInTheDocument();
 
   // Act
@@ -604,7 +636,7 @@ test('shows the YOUTUBE badge for an item from a youtube feed', async () => {
 test('search filters river items by title', async () => {
   // Arrange
   const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
-  const search = getByRole('textbox', { name: 'Search everything' });
+  const search = getByRole('textbox', { name: 'Search' });
 
   // Act
   await search.fill('Item B1');
@@ -618,7 +650,7 @@ test('search filters river items by title', async () => {
 test('search matches the feed name and surfaces that feed\'s items', async () => {
   // Arrange: "feed a" appears in no item title or description, only in the feed title.
   const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
-  const search = getByRole('textbox', { name: 'Search everything' });
+  const search = getByRole('textbox', { name: 'Search' });
 
   // Act
   await search.fill('feed a');
@@ -632,7 +664,7 @@ test('search matches the feed name and surfaces that feed\'s items', async () =>
 test('search requires every word to match', async () => {
   // Arrange
   const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
-  const search = getByRole('textbox', { name: 'Search everything' });
+  const search = getByRole('textbox', { name: 'Search' });
 
   // Act
   await search.fill('item b1 description');
@@ -645,7 +677,7 @@ test('search requires every word to match', async () => {
 test('shows a no-results message and Escape restores every item', async () => {
   // Arrange
   const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
-  const search = getByRole('textbox', { name: 'Search everything' });
+  const search = getByRole('textbox', { name: 'Search' });
 
   // Act
   await search.fill('quantum');
@@ -665,7 +697,7 @@ test('shows a no-results message and Escape restores every item', async () => {
 test('cross button appears while typing and clears the query on click', async () => {
   // Arrange
   const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
-  const search = getByRole('textbox', { name: 'Search everything' });
+  const search = getByRole('textbox', { name: 'Search' });
   const cross = getByRole('button', { name: 'Clear search' });
 
   // Assert: nothing typed yet, so the cross is hidden.
@@ -702,7 +734,7 @@ test('search query survives unmounting and remounting River', async () => {
     );
   }
   const screen = await renderWithQueryClient(<Sessionable showRiver />);
-  const search = screen.getByRole('textbox', { name: 'Search everything' });
+  const search = screen.getByRole('textbox', { name: 'Search' });
   await search.fill('Item B1');
   await expect.element(screen.getByText('Item B1', { exact: true })).toBeInTheDocument();
 
@@ -781,5 +813,299 @@ describe('refresh button', () => {
 
     // Assert
     await expect.element(getByRole('button', { name: 'Refresh, new articles available' })).not.toBeInTheDocument();
+  });
+});
+
+function addSearch(name: string, query: string): void {
+  savedSearches = [...savedSearches, { id: nextSearchId++, workspace_id: HOME_WORKSPACE_ID, name, query, position: savedSearches.length, created_at: 1 }];
+}
+
+describe('saved search pills', () => {
+  test('shows each pill with its unread count and no row without a saved search', async () => {
+    // Arrange
+    addSearch('A items', 'title:"item a"');
+    allRows = allRows.map((row) => (row.title === 'Item A2' ? { ...row, readAt: '2026-01-01' } : row));
+
+    // Act
+    const { getByRole } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+
+    // Assert
+    await expect.element(getByRole('button', { name: 'A items, 1 unread' })).toHaveAttribute('aria-pressed', 'false');
+    await expect.element(getByRole('toolbar', { name: 'Saved searches' })).toBeVisible();
+  });
+
+  test('selecting a pill runs its search, selecting it again clears it', async () => {
+    // Arrange
+    addSearch('B items', 'title:"item b"');
+    const { getByRole, getByText, getByPlaceholder } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    const pill = getByRole('button', { name: 'B items, 1 unread' });
+
+    // Act
+    await pill.click();
+
+    // Assert
+    await expect.element(pill).toHaveAttribute('aria-pressed', 'true');
+    await expect.element(getByPlaceholder('Search')).toHaveValue('title:"item b"');
+    await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
+    await expect.element(getByText('Item B1', { exact: true })).toBeVisible();
+
+    // Act
+    await pill.click();
+
+    // Assert
+    await expect.element(pill).toHaveAttribute('aria-pressed', 'false');
+    await expect.element(getByPlaceholder('Search')).toHaveValue('');
+    await expect.element(getByText('Item A1', { exact: true })).toBeVisible();
+  });
+
+  test('selecting a pill turns unread only off, so read matches stay visible', async () => {
+    // Arrange
+    localStorage.setItem('preferences-hide-read-items', JSON.stringify(true));
+    addSearch('B items', 'title:"item b"');
+    allRows = allRows.map((row) => (row.title === 'Item B1' ? { ...row, readAt: '2026-01-01' } : row));
+    const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+
+    // Act
+    await getByRole('button', { name: 'B items, 0 unread' }).click();
+
+    // Assert
+    await expect.element(getByText('Item B1', { exact: true })).toBeVisible();
+    await expect.element(getByRole('radio', { name: 'All' })).toBeChecked();
+    expect(localStorage.getItem('preferences-hide-read-items')).toBe('false');
+  });
+
+  test('saves the typed search under a name and selects the new pill', async () => {
+    // Arrange
+    const { getByRole, getByPlaceholder } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    await getByPlaceholder('Search').fill('item b -"item a"');
+
+    // Act
+    await getByRole('button', { name: 'Save search' }).click();
+    const name = getByRole('textbox', { name: 'Name of the saved search' });
+    await expect.element(name).toHaveValue('item b -"item a"');
+    await name.fill('Bs');
+    await getByRole('dialog', { name: 'Name this search' }).getByRole('button', { name: 'Save', exact: true }).click();
+
+    // Assert
+    await expect.element(getByRole('button', { name: 'Bs, 1 unread' })).toHaveAttribute('aria-pressed', 'true');
+    expect(invokeMock).toHaveBeenCalledWith('searches:create', { workspaceId: HOME_WORKSPACE_ID, name: 'Bs', query: 'item b -"item a"' });
+    await expect.element(getByRole('button', { name: 'Save search' })).not.toBeInTheDocument();
+  });
+
+  test('offers Update and Save as new once a selected pill query is edited', async () => {
+    // Arrange
+    addSearch('B items', 'item b');
+    const { getByRole, getByPlaceholder } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    await getByRole('button', { name: 'B items, 1 unread' }).click();
+    await expect.element(getByRole('button', { name: 'Update' })).not.toBeInTheDocument();
+
+    // Act
+    await getByPlaceholder('Search').fill('item');
+    await getByRole('button', { name: 'Update' }).click();
+
+    // Assert
+    await expect.poll(() => invokeMock.mock.calls.some(([channel, arg]) => channel === 'searches:update' && (arg as { query?: string }).query === 'item')).toBe(true);
+
+    // Act
+    await getByPlaceholder('Search').fill('item a');
+    await getByRole('button', { name: 'Save as new' }).click();
+    await getByRole('textbox', { name: 'Name of the saved search' }).fill('As');
+    await getByRole('dialog', { name: 'Name this search' }).getByRole('button', { name: 'Save', exact: true }).click();
+
+    // Assert
+    await expect.element(getByRole('button', { name: 'As, 2 unread' })).toBeVisible();
+  });
+
+  test('shows the error when a name is already taken', async () => {
+    // Arrange
+    addSearch('Bs', 'item b');
+    const duplicate = { success: false, error: { name: 'DUPLICATE_NAME', message: 'A saved search named "Bs" already exists.' } };
+    const original = invokeMock.getMockImplementation() as (channel: string, arg: unknown) => Promise<unknown>;
+    invokeMock.mockImplementation((channel: string, arg: unknown) => (channel === 'searches:create' ? Promise.resolve(duplicate) : original(channel, arg)));
+    const { getByRole, getByText, getByPlaceholder } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    await getByPlaceholder('Search').fill('item a');
+
+    // Act
+    await getByRole('button', { name: 'Save search' }).click();
+    await getByRole('textbox', { name: 'Name of the saved search' }).fill('Bs');
+    await getByRole('dialog', { name: 'Name this search' }).getByRole('button', { name: 'Save', exact: true }).click();
+
+    // Assert
+    await expect.element(getByText('A saved search named "Bs" already exists.')).toBeVisible();
+  });
+
+  test('deletes a pill from its cross and brings it back with Undo', async () => {
+    // Arrange
+    addSearch('B items', 'item b');
+    const { getByRole } = await renderWithQueryClient(<Session><NotificationHost /><River onOpenItem={vi.fn()} /></Session>);
+    await expect.element(getByRole('button', { name: 'B items, 1 unread' })).toBeVisible();
+
+    // Act
+    await getByRole('button', { name: 'Delete saved search B items' }).click({ force: true });
+
+    // Assert
+    await expect.element(getByRole('button', { name: 'B items, 1 unread' })).not.toBeInTheDocument();
+
+    // Act
+    await getByRole('button', { name: 'Undo' }).click();
+
+    // Assert
+    await expect.element(getByRole('button', { name: 'B items, 1 unread' })).toBeVisible();
+    expect(invokeMock).toHaveBeenCalledWith('searches:create', { workspaceId: HOME_WORKSPACE_ID, name: 'B items', query: 'item b' });
+  });
+
+  test('renames a pill from the keyboard', async () => {
+    // Arrange
+    addSearch('B items', 'item b');
+    const { getByRole } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    await expect.element(getByRole('button', { name: 'B items, 1 unread' })).toBeVisible();
+    getByRole('button', { name: 'B items, 1 unread' }).element().focus();
+
+    // Act
+    await userEvent.keyboard('{F2}');
+    await getByRole('textbox', { name: 'Rename saved search B items' }).fill('Bs');
+    await userEvent.keyboard('{Enter}');
+
+    // Assert
+    await expect.element(getByRole('button', { name: 'Bs, 1 unread' })).toBeVisible();
+    expect(invokeMock).toHaveBeenCalledWith('searches:update', { searchId: 1, name: 'Bs' });
+  });
+
+  test('lists every pill in the overflow menu and selects from it', async () => {
+    // Arrange
+    addSearch('A items', 'item a');
+    addSearch('B items', 'item b');
+    const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+
+    // Act
+    await getByRole('button', { name: 'All saved searches' }).click();
+    await getByRole('menuitem', { name: /B items/ }).click();
+
+    // Assert
+    await expect.element(getByRole('button', { name: 'B items, 1 unread' })).toHaveAttribute('aria-pressed', 'true');
+    await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
+  });
+
+  test('shows the hint pill only when the main process offers an example, fills the search from it and dismisses it', async () => {
+    // Arrange
+    hintExample = 'title:engineer -manager';
+    const { getByRole, getByPlaceholder } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    const hint = getByRole('button', { name: /Save a search for each role you want/ });
+    await expect.element(hint).toBeVisible();
+
+    // Act
+    await hint.click();
+
+    // Assert
+    await expect.element(getByPlaceholder('Search')).toHaveValue('title:engineer -manager');
+
+    // Act
+    await getByRole('button', { name: 'Dismiss the saved search hint' }).click();
+
+    // Assert
+    await expect.element(hint).not.toBeInTheDocument();
+    expect(invokeMock).toHaveBeenCalledWith('searches:dismiss-hint', { workspaceId: HOME_WORKSPACE_ID });
+  });
+
+  test('shows no hint and no row by default', async () => {
+    // Arrange
+    const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    await expect.element(getByText('Item A1', { exact: true })).toBeVisible();
+
+    // Assert
+    await expect.element(getByRole('toolbar', { name: 'Saved searches' })).not.toBeInTheDocument();
+  });
+
+  test('lists the search syntax in the help popover', async () => {
+    // Arrange
+    const { getByText, getByPlaceholder } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+
+    // Act
+    await getByPlaceholder('Search').click();
+
+    // Assert
+    await expect.element(getByText('title:release')).toBeVisible();
+    await expect.element(getByText('kubernetes OR k8s')).toBeVisible();
+  });
+});
+
+describe('job cards', () => {
+  test('show the company, place, work mode and salary of a job, or that the salary is not shown', async () => {
+    // Arrange
+    const jobFeed = createFeed({ title: 'Acme · Jobs', link: 'https://api.lever.co/v0/postings/acme?mode=json', type: 'ats' });
+    allFeeds = [jobFeed];
+    allRows = [
+      createRow(jobFeed, { title: 'Backend Engineer', job: { company: 'Acme', location: 'Paris', workMode: 'remote', salaryLabel: '€60k–€75k', } }),
+      createRow(jobFeed, { title: 'Designer', job: { company: 'Acme', location: undefined, workMode: undefined, salaryLabel: undefined } }),
+    ];
+
+    // Act
+    const { getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+
+    // Assert
+    await expect.element(getByText('Acme · Paris')).toBeVisible();
+    await expect.element(getByText('Remote', { exact: true })).toBeVisible();
+    await expect.element(getByText('€60k–€75k')).toBeVisible();
+    await expect.element(getByText('salary not shown')).toBeVisible();
+    await expect.element(getByText('Acme', { exact: true })).toBeVisible();
+  });
+});
+
+describe('search box', () => {
+  test('opens the syntax help on focus and closes it on Enter, keeping the filter', async () => {
+    // Arrange
+    const { getByRole, getByText, getByPlaceholder } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    const box = getByPlaceholder('Search');
+    await expect.element(getByText('title:release')).not.toBeInTheDocument();
+
+    // Act
+    await box.click();
+
+    // Assert
+    await expect.element(getByRole('region', { name: 'Search syntax' })).toBeVisible();
+
+    // Act
+    await box.fill('item b');
+    await userEvent.keyboard('{Enter}');
+
+    // Assert
+    await expect.element(getByRole('region', { name: 'Search syntax' })).not.toBeInTheDocument();
+    await expect.element(box).toHaveValue('item b');
+  });
+
+  test('stays open while the save popover is used, and closes on a press outside', async () => {
+    // Arrange
+    const { getByRole, getByTestId, getByPlaceholder } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    await getByPlaceholder('Search').fill('item b');
+
+    // Act
+    await getByRole('button', { name: 'Save search' }).click();
+
+    // Assert
+    await expect.element(getByRole('dialog', { name: 'Name this search' })).toBeVisible();
+    await expect.element(getByRole('region', { name: 'Search syntax' })).toBeVisible();
+
+    // Act
+    await userEvent.keyboard('{Escape}');
+    await expect.element(getByRole('region', { name: 'Search syntax' })).toBeVisible();
+    (getByTestId('search-scrim').element() as HTMLElement).click();
+
+    // Assert
+    await expect.element(getByRole('region', { name: 'Search syntax' })).not.toBeInTheDocument();
+  });
+
+  test('a click outside closes the search without opening the item under it', async () => {
+    // Arrange
+    const onOpen = vi.fn();
+    const { getByRole, getByTestId, getByPlaceholder } = await renderWithQueryClient(<Session><River onOpenItem={onOpen} /></Session>);
+    await getByPlaceholder('Search').click();
+    await expect.element(getByRole('region', { name: 'Search syntax' })).toBeVisible();
+
+    // Act
+    (getByTestId('search-scrim').element() as HTMLElement).click();
+
+    // Assert
+    await expect.element(getByRole('region', { name: 'Search syntax' })).not.toBeInTheDocument();
+    expect(onOpen).not.toHaveBeenCalled();
   });
 });

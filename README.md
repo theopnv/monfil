@@ -17,11 +17,11 @@
 </p>
 <p align="center"><a href="doc/src/content/docs/user-guide/install.md">Install Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="doc/src/content/docs/contributor-guide/home.md">Contribute</a></p>
 
-Monfil is a source-available, cross-platform desktop feed reader for anyone who wants to stay ahead. Keep track of what's happening in your field across 10 kinds of sources, with more to come: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, and Mastodon.
+Monfil is a cross-platform desktop feed reader for anyone who wants to stay ahead. Keep track of what's happening in your field across 10 kinds of sources, with more to come: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, Mastodon...
 
-Stay ahead of your competitors, new trends, and new technology without spending hours browsing, all in one unified interface.
+Stay ahead of your competitors, search for your next job and learn about new trends and technologies without spending hours browsing, all in one unified interface.
 
-Start with one of 27 curated feedpacks, from Platform Engineering, Quality Engineering, and AI to Tech News, Science, Finance, and Video Games. Or submit your own!
+Start with one of the many curated feedpacks, from Software Engineering, Cybersecurity, and AI to Sports, Science, Finance, and Video Games. Or submit your own!
 
 "Mon fil" means "My feed" in French.
 
@@ -42,7 +42,7 @@ Start with one of 27 curated feedpacks, from Platform Engineering, Quality Engin
 
 Keeping up with everything that's happening around us is increasingly difficult.
 
-Important information is scattered across blogs, social networks, release notes, changelogs, YouTube channels, GitHub repositories, and security advisories. Social networks make discovery easier, but their algorithms can narrow what you see.
+Important information is scattered across blogs, social networks, release notes, changelogs, YouTube channels, GitHub repositories, and security advisories. Job postings are spread across many boards. Social networks make discovery easier, but their algorithms can narrow what you see.
 
 Monfil gives you a transparent alternative: choose your sources, organize them into workspaces, and read them in one focused place.
 
@@ -51,15 +51,16 @@ Monfil gives you a transparent alternative: choose your sources, organize them i
 Monfil combines:
 
 - A distraction-free desktop feed reader
-- Supported sources: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, and Mastodon (no signup needed!)
-- Feedpacks: curated source packs for specific technical fields
+- Supported sources: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, Mastodon (no signup needed!) and ATS (the "job postings" format).
+- Feedpacks: curated source packs for specific fields
 - Workspaces, search and read/unread tracking
+- Advanced search and queries
 - Keyboard shortcuts
 - OPML import/export support
 
 ## Paste a link, Monfil finds the feed
 
-You do not need to find a feed URL. Paste the link of the page that you read, and Monfil finds the feed behind it. When a page has more than one feed, you pick the one you want.
+You do not need to find a feed URL. Paste the link of the page that you read, and Monfil tries to find the feed behind it. When a page has more than one feed, you pick the one you want.
 
 | Source | Paste | You follow |
 | --- | --- | --- |
@@ -72,6 +73,7 @@ You do not need to find a feed URL. Paste the link of the page that you read, an
 | Mastodon | A profile link, a tag link, or `@user@server` | A person's posts, or the posts with a tag |
 | YouTube | A channel, a video, or a playlist | New videos |
 | Substack and Google Alerts | The publication, or the alert feed | New posts, or new alerts |
+| Greenhouse, Lever, Ashby and other job postings providers | A company job board, such as `jobs.lever.co/spotify` | New job postings from that company |
 
 ## Guides
 
@@ -85,9 +87,9 @@ You do not need to find a feed URL. Paste the link of the page that you read, an
 
 **Why does this exist? Don't RSS readers already exist?**
 
+- Monfil supports many sources other than RSS.
 - You choose the sources: No opaque recommendation algorithm decides what deserves your attention.
 - Start with a pack: You do not need to spend hours discovering and configuring sources. Begin with a curated pack, then customize it.
-- Monfil supports many sources other than RSS.
 - Own your information diet: Monfil's source is available for review and built around transparency, portability, and control.
 
 **Is my data private?**
