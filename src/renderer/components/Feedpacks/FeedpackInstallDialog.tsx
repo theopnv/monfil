@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { useCallback, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Heading } from 'react-aria-components';
 import { Dialog, Modal, ModalOverlay } from '@/components/untitled-ui/application/modals/modal';
@@ -16,18 +16,28 @@ export interface FeedpackInstallDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   workspaceId?: number;
+  /** Name, icon and colour typed or picked in the new-workspace form before browsing; used when installing into a new workspace. */
+  newWorkspaceDraft?: { name: string; icon: string; color: string } | undefined;
 }
 
-export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceId }: FeedpackInstallDialogProps) {
+export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceId, newWorkspaceDraft }: FeedpackInstallDialogProps) {
   const install = useInstallFeedpack();
   const navigate = useNavigate();
   const [selected, setSelected] = useState<FeedpackPreview | null>(null);
   const [isInstalling, setIsInstalling] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const handleSelectionChange = useCallback((selection: FeedpackPreview | null) => {
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelected(null);
+      setError(null);
+    }
+  }, [isOpen]);
+
+  function select(selection: FeedpackPreview | null) {
     setSelected(selection);
     setError(null);
-  }, []);
+  }
 
   async function installSelected() {
     if (!selected) {
@@ -36,7 +46,7 @@ export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceI
     setIsInstalling(true);
     setError(null);
     const target: FeedpackInstallTarget = workspaceId === undefined
-      ? { kind: 'new-workspace', name: selected.pack.title, icon: WORKSPACE_ICONS[0], color: WORKSPACE_COLORS[0] }
+      ? { kind: 'new-workspace', name: newWorkspaceDraft?.name.trim() || selected.pack.title, icon: newWorkspaceDraft?.icon ?? WORKSPACE_ICONS[0], color: newWorkspaceDraft?.color ?? WORKSPACE_COLORS[0] }
       : { kind: 'merge-workspace', workspaceId };
     const result = await install(selected.pack.slug, target);
     setIsInstalling(false);
@@ -57,10 +67,11 @@ export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceI
             <p className="text-sm text-tertiary">Install a curated set of sources.</p>
           </div>
 
-          <FeedpackBrowser isActive={isOpen} onSelectionChange={handleSelectionChange} />
+          <FeedpackBrowser isActive={isOpen} selected={selected} onSelect={select} />
 
           {error && <p className="px-6 pb-2 text-sm text-error-primary">{error}</p>}
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+            {selected && <Button color="secondary" size="md" className="mr-auto" onPress={() => select(null)}>Back to feedpacks</Button>}
             <Button color="secondary" size="md" onPress={() => onOpenChange(false)}>Close</Button>
             {selected && <Button color="primary" size="md" isLoading={isInstalling} onPress={installSelected}>Install</Button>}
           </div>

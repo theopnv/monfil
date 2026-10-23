@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useEffect, useState } from 'react';
+import { SearchLg } from '@untitledui/icons';
 import { Button } from '@/components/untitled-ui/base/buttons/button';
 import { useFeedpackCatalog, useFeedpackPreview } from '@/providers/feedpacks-provider';
 import type { Feedpack } from '../../../shared/contracts';
@@ -10,23 +11,29 @@ import type { FeedpackPreview } from '../../../shared/contracts';
 
 export interface FeedpackBrowserProps {
   isActive: boolean;
-  onSelectionChange: (selection: FeedpackPreview | null) => void;
+  selected: FeedpackPreview | null;
+  onSelect: (selection: FeedpackPreview) => void;
 }
 
-export default function FeedpackBrowser({ isActive, onSelectionChange }: FeedpackBrowserProps) {
+function matchesQuery(pack: Feedpack, query: string): boolean {
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const haystack = [pack.title, pack.description, pack.curator, ...pack.tags].join(' ').toLowerCase();
+  return terms.every((term) => haystack.includes(term));
+}
+
+export default function FeedpackBrowser({ isActive, selected, onSelect }: FeedpackBrowserProps) {
   const catalog = useFeedpackCatalog(isActive);
   const preview = useFeedpackPreview();
-  const [selected, setSelected] = useState<FeedpackPreview | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (!isActive) {
-      setSelected(null);
       setError(null);
-      onSelectionChange(null);
+      setQuery('');
     }
-  }, [isActive, onSelectionChange]);
+  }, [isActive]);
 
   async function showPack(pack: Feedpack) {
     setIsLoadingPreview(true);
@@ -34,20 +41,15 @@ export default function FeedpackBrowser({ isActive, onSelectionChange }: Feedpac
     const result = await preview(pack.slug);
     setIsLoadingPreview(false);
     if (result.success) {
-      setSelected(result.data);
-      onSelectionChange(result.data);
+      onSelect(result.data);
     } else {
       setError(result.error.message);
     }
   }
 
-  function showCatalog() {
-    setSelected(null);
-    setError(null);
-    onSelectionChange(null);
-  }
-
   const catalogError = catalog.data && !catalog.data.success ? catalog.data.error.message : null;
+  const packs = catalog.data?.success ? catalog.data.data.packs : [];
+  const visiblePacks = packs.filter((pack) => matchesQuery(pack, query));
 
   if (selected) {
     return (
@@ -68,30 +70,44 @@ export default function FeedpackBrowser({ isActive, onSelectionChange }: Feedpac
             </li>
           ))}
         </ul>
-
-        <Button color="secondary" size="md" className="mt-5" onPress={showCatalog}>Back to feedpacks</Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4.5">
-      <div className="flex flex-col gap-2">
-        {catalog.isPending && <p className="text-sm text-tertiary">Loading feedpacks…</p>}
-        {(catalogError ?? error) && <p className="text-sm text-error-primary">{catalogError ?? error}</p>}
-        {catalog.data?.success && catalog.data.data.packs.length === 0 && <p className="text-sm text-tertiary">No feedpacks are available.</p>}
-        {catalog.data?.success && catalog.data.data.packs.map((pack) => (
-          <Button key={pack.slug} color="secondary" size="md" className="h-auto justify-start py-3 text-left" onPress={() => void showPack(pack)}>
-            <span className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className="flex min-w-0 items-baseline gap-2">
-                <span className="min-w-0 truncate font-medium">{pack.title}</span>
-                <span className="flex-none text-tertiary">{pack.sourceCount} sources</span>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="px-6 pb-3">
+        <div className="flex items-center gap-2 rounded-lg border border-secondary bg-primary px-3 py-2">
+          <SearchLg aria-hidden className="size-4 flex-none text-tertiary" />
+          <input
+            type="search"
+            aria-label="Search feedpacks"
+            placeholder="Search feedpacks"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className="min-w-0 flex-1 bg-transparent text-sm text-primary outline-none"
+          />
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4.5">
+        <div className="flex flex-col gap-2">
+          {catalog.isPending && <p className="text-sm text-tertiary">Loading feedpacks…</p>}
+          {(catalogError ?? error) && <p className="text-sm text-error-primary">{catalogError ?? error}</p>}
+          {catalog.data?.success && packs.length === 0 && <p className="text-sm text-tertiary">No feedpacks are available.</p>}
+          {packs.length > 0 && visiblePacks.length === 0 && <p className="text-sm text-tertiary">No feedpacks match &quot;{query.trim()}&quot;.</p>}
+          {visiblePacks.map((pack) => (
+            <Button key={pack.slug} color="secondary" size="md" className="h-auto justify-start py-3 text-left" onPress={() => void showPack(pack)}>
+              <span className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="flex min-w-0 items-baseline gap-2">
+                  <span className="min-w-0 truncate font-medium">{pack.title}</span>
+                  <span className="flex-none text-tertiary">{pack.sourceCount} sources</span>
+                </span>
+                <span className="whitespace-normal break-words text-tertiary">{pack.description}</span>
               </span>
-              <span className="whitespace-normal break-words text-tertiary">{pack.description}</span>
-            </span>
-          </Button>
-        ))}
-        {isLoadingPreview && <p className="text-sm text-tertiary">Loading sources…</p>}
+            </Button>
+          ))}
+          {isLoadingPreview && <p className="text-sm text-tertiary">Loading sources…</p>}
+        </div>
       </div>
     </div>
   );
