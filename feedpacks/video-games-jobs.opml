@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Video Game Jobs</title></head>
+  <body>
+    <outline text="Studios and publishers">
+      <outline text="Ubisoft" title="Ubisoft" type="rss" xmlUrl="https://api.smartrecruiters.com/v1/companies/Ubisoft2/postings?limit=100"/>
+      <outline text="Voodoo" title="Voodoo" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/voodoo?includeCompensation=true"/>
+      <outline text="Gameloft" title="Gameloft" type="rss" xmlUrl="https://api.smartrecruiters.com/v1/companies/Gameloft/postings?limit=100"/>
+      <outline text="Dont Nod" title="Dont Nod" type="rss" xmlUrl="https://api.smartrecruiters.com/v1/companies/DontNod/postings?limit=100"/>
+      <outline text="Ankama" title="Ankama" type="rss" xmlUrl="https://ankama.teamtailor.com/jobs.rss"/>
+      <outline text="Sloclap" title="Sloclap" type="rss" xmlUrl="https://sloclap.teamtailor.com/jobs.rss"/>
+      <outline text="Epic Games" title="Epic Games" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/epicgames/jobs?content=true"/>
+      <outline text="Riot Games" title="Riot Games" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/riotgames/jobs?content=true"/>
+      <outline text="Roblox" title="Roblox" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/roblox/jobs?content=true"/>
+      <outline text="Discord" title="Discord" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/discord/jobs?content=true"/>
+      <outline text="Krafton" title="Krafton" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/krafton/jobs?content=true"/>
+      <outline text="Supercell" title="Supercell" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/supercell?includeCompensation=true"/>
+      <outline text="Scopely" title="Scopely" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/scopely/jobs?content=true"/>
+      <outline text="2K" title="2K" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/2k/jobs?content=true"/>
+      <outline text="Twitch" title="Twitch" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/twitch/jobs?content=true"/>
+      <outline text="Remedy Entertainment" title="Remedy Entertainment" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/remedy/jobs?content=true"/>
+      <outline text="Larian Studios" title="Larian Studios" type="rss" xmlUrl="https://api.lever.co/v0/postings/larian?mode=json"/>
+      <outline text="Kabam" title="Kabam" type="rss" xmlUrl="https://api.lever.co/v0/postings/kabam?mode=json"/>
+      <outline text="Jam City" title="Jam City" type="rss" xmlUrl="https://api.lever.co/v0/postings/jamcity?mode=json"/>
+      <outline text="Moon Active" title="Moon Active" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/moonactive?includeCompensation=true"/>
+      <outline text="Bungie" title="Bungie" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/bungie/jobs?content=true"/>
+      <outline text="Avalanche Studios" title="Avalanche Studios" type="rss" xmlUrl="https://api.lever.co/v0/postings/avalanchestudios?mode=json"/>
+    </outline>
+  </body>
+</opml>
