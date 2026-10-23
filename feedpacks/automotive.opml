@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Automotive</title></head>
+  <body>
+    <outline text="News &amp; Reviews">
+      <outline text="Car and Driver" title="Car and Driver" type="rss" xmlUrl="https://www.caranddriver.com/rss/all.xml/"/>
+      <outline text="Jalopnik" title="Jalopnik" type="rss" xmlUrl="https://jalopnik.com/rss"/>
+      <outline text="Carscoops" title="Carscoops" type="rss" xmlUrl="https://www.carscoops.com/feed/"/>
+      <outline text="The Drive" title="The Drive" type="rss" xmlUrl="https://www.thedrive.com/feed"/>
+      <outline text="Road &amp; Track" title="Road &amp; Track" type="rss" xmlUrl="https://www.roadandtrack.com/rss/all.xml/"/>
+      <outline text="Motor1" title="Motor1" type="rss" xmlUrl="https://www.motor1.com/rss/articles/all/"/>
+      <outline text="Autoweek" title="Autoweek" type="rss" xmlUrl="https://www.autoweek.com/rss/all.xml/"/>
+      <outline text="Ars Technica: Cars" title="Ars Technica: Cars" type="rss" xmlUrl="https://arstechnica.com/cars/feed/"/>
+    </outline>
+    <outline text="Electric &amp; Industry">
+      <outline text="Electrek" title="Electrek" type="rss" xmlUrl="https://electrek.co/feed/"/>
+      <outline text="InsideEVs" title="InsideEVs" type="rss" xmlUrl="https://insideevs.com/rss/news/all/"/>
+      <outline text="CleanTechnica" title="CleanTechnica" type="rss" xmlUrl="https://cleantechnica.com/feed/"/>
+    </outline>
+    <outline text="Motorsport">
+      <outline text="Motorsport.com" title="Motorsport.com" type="rss" xmlUrl="https://www.motorsport.com/rss/all/news/"/>
+      <outline text="Autosport" title="Autosport" type="rss" xmlUrl="https://www.autosport.com/rss/feed/all"/>
+      <outline text="Formula 1" title="Formula 1" type="rss" xmlUrl="https://www.formula1.com/content/fom-website/en/latest/all.xml"/>
+      <outline text="RacerMag" title="RacerMag" type="rss" xmlUrl="https://racer.com/feed/"/>
+      <outline text="BBC Sport: Formula 1" title="BBC Sport: Formula 1" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/formula1/rss.xml"/>
+      <outline text="ESPN: F1" title="ESPN: F1" type="rss" xmlUrl="https://www.espn.com/espn/rss/f1/news"/>
+      <outline text="The Guardian: Formula 1" title="The Guardian: Formula 1" type="rss" xmlUrl="https://www.theguardian.com/sport/formulaone/rss"/>
+    </outline>
+    <outline text="Video">
+      <outline text="Doug DeMuro" title="Doug DeMuro" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCsqjHFMB_JYTaEnf_vmTNqg"/>
+      <outline text="Donut Media" title="Donut Media" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCL6JmiMXKoXS6bpP1D3bk8g"/>
+      <outline text="Savagegeese" title="Savagegeese" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCgUvk6jVaf-1uKOqG8XNcaQ"/>
+      <outline text="The Straight Pipes" title="The Straight Pipes" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC86SBFIAgnYL3ll2ZDgmsuA"/>
+      <outline text="Jay Leno's Garage" title="Jay Leno's Garage" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCQMELFlXQL38KPm8kM-4Adg"/>
+      <outline text="Engineering Explained" title="Engineering Explained" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UClqhvGmHcvWL9w3R48t9QXQ"/>
+      <outline text="Top Gear" title="Top Gear" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCjOl2AUblVmg2rA_cRgZkFg"/>
+      <outline text="Formula 1" title="Formula 1" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCB_qr75-ydFVKSF9Dmo6izg"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Mastodon #cars" title="Mastodon #cars" type="rss" xmlUrl="https://mastodon.social/tags/cars.rss"/>
+      <outline text="Mastodon #formula1" title="Mastodon #formula1" type="rss" xmlUrl="https://mastodon.social/tags/formula1.rss"/>
+      <outline text="Mastodon #electricvehicles" title="Mastodon #electricvehicles" type="rss" xmlUrl="https://mastodon.social/tags/electricvehicles.rss"/>
+      <outline text="Electrek (Bluesky)" title="Electrek (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/electrek.co/rss"/>
+      <outline text="The Drive (Bluesky)" title="The Drive (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/thedrive.com/rss"/>
+      <outline text="Mastodon #f1" title="Mastodon #f1" type="rss" xmlUrl="https://mastodon.social/tags/f1.rss"/>
+      <outline text="Mastodon #ev" title="Mastodon #ev" type="rss" xmlUrl="https://mastodon.social/tags/ev.rss"/>
+      <outline text="Formula 1 (Mastodon)" title="Formula 1 (Mastodon)" type="rss" xmlUrl="https://mastodon.social/@F1.rss"/>
+    </outline>
+  </body>
+</opml>

@@ -270,6 +270,66 @@
       "sourceCount": 31,
       "updatedAt": "2026-10-22",
       "opml": "veille-tech-fr.opml"
+    },
+    {
+      "slug": "sports",
+      "title": "Sports",
+      "description": "News, analysis, and video across major sports, from football to F1, tennis, golf, and cycling.",
+      "tags": ["sports", "news", "olympics", "tennis", "golf", "cycling"],
+      "curator": "Monfil",
+      "sourceCount": 36,
+      "updatedAt": "2026-10-23",
+      "opml": "sports.opml"
+    },
+    {
+      "slug": "automotive",
+      "title": "Automotive",
+      "description": "Car news and reviews, electric vehicles, industry coverage, motorsport, and enthusiast video.",
+      "tags": ["cars", "automotive", "ev", "motorsport", "formula-1"],
+      "curator": "Monfil",
+      "sourceCount": 34,
+      "updatedAt": "2026-10-23",
+      "opml": "automotive.opml"
+    },
+    {
+      "slug": "football",
+      "title": "Football (Soccer)",
+      "description": "Premier League, European, and world football news, tactics, club coverage, and transfers.",
+      "tags": ["football", "soccer", "premier-league", "tactics", "transfers"],
+      "curator": "Monfil",
+      "sourceCount": 31,
+      "updatedAt": "2026-10-23",
+      "opml": "football.opml"
+    },
+    {
+      "slug": "american-football",
+      "title": "American Football",
+      "description": "NFL and college football news, analysis, and video.",
+      "tags": ["nfl", "american-football", "college-football", "analytics"],
+      "curator": "Monfil",
+      "sourceCount": 26,
+      "updatedAt": "2026-10-23",
+      "opml": "american-football.opml"
+    },
+    {
+      "slug": "baseball",
+      "title": "Baseball",
+      "description": "MLB news, sabermetrics, prospects, trade rumors, and video.",
+      "tags": ["baseball", "mlb", "sabermetrics", "prospects"],
+      "curator": "Monfil",
+      "sourceCount": 20,
+      "updatedAt": "2026-10-23",
+      "opml": "baseball.opml"
+    },
+    {
+      "slug": "basketball",
+      "title": "Basketball",
+      "description": "NBA, WNBA, college, and EuroLeague news, analysis, and video.",
+      "tags": ["basketball", "nba", "wnba", "euroleague"],
+      "curator": "Monfil",
+      "sourceCount": 26,
+      "updatedAt": "2026-10-23",
+      "opml": "basketball.opml"
     }
   ]
 }
