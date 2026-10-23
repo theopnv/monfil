@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import type { SourceType } from '../../../shared/contracts';
+import { atsSource, isAtsLink } from './ats';
 import { arxivSource, isArxivLink } from './arxiv';
 import { blueskySource, isBlueskyLink } from './bluesky';
 import { conferenceSource, isConferenceLink } from './conference';
@@ -25,10 +26,11 @@ const sources = {
   bluesky: blueskySource,
   mastodon: mastodonSource,
   conference: conferenceSource,
+  ats: atsSource,
 } satisfies Record<SourceType, SourceAdapter>;
 
 // Checked in order, so a more specific source must come before a broader one. RSS takes the rest.
-const DETECTION_ORDER: SourceAdapter[] = [youtubeSource, githubSource, gitlabSource, hackernewsSource, arxivSource, blueskySource, mastodonSource, conferenceSource];
+const DETECTION_ORDER: SourceAdapter[] = [atsSource, youtubeSource, githubSource, gitlabSource, hackernewsSource, arxivSource, blueskySource, mastodonSource, conferenceSource];
 
 /**
  * The adapter that owns a stored feed.
@@ -55,6 +57,9 @@ export function resolveSource(link: string, hint?: SourceType): SourceAdapter {
  * Mastodon feeds stay `rss` here: any host can run Mastodon, and this must not touch the network.
  */
 export function detectType(feedUrl: string): SourceType {
+  if (isAtsLink(feedUrl)) {
+    return 'ats';
+  }
   if (isYoutubeLink(feedUrl)) {
     return 'youtube';
   }

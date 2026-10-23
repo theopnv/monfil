@@ -4,6 +4,7 @@
 
 import { sql, type Kysely } from 'kysely';
 import { db, dbReady } from './database';
+import { searchCondition } from './search';
 import type { Database } from './types';
 import type { RiverPage, SavedQuery, SetSavedItemInput, UpdateSavedItemError } from '../../shared/contracts';
 import type { Result } from '../../shared/result';
@@ -71,13 +72,9 @@ export async function querySavedPage(query: SavedQuery): Promise<RiverPage> {
   if (query.unreadOnly) {
     builder = builder.where('i.read_at', 'is', null);
   }
-  for (const word of query.search?.trim().toLowerCase().split(/\s+/).filter(Boolean) ?? []) {
-    const pattern = `%${word.replace(/[\\%_]/g, '\\$&')}%`;
-    builder = builder.where((eb) => eb.or([
-      sql<boolean>`${eb.ref('i.title')} like ${pattern} escape '\\'`,
-      sql<boolean>`${eb.ref('i.excerpt')} like ${pattern} escape '\\'`,
-      sql<boolean>`${eb.ref('f.title')} like ${pattern} escape '\\'`,
-    ]));
+  const search = searchCondition(query.search);
+  if (search) {
+    builder = builder.where(search);
   }
   if (query.cursor) {
     const { savedAt, id } = query.cursor;

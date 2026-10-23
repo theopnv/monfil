@@ -16,6 +16,7 @@ import { addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage
 import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from "../db/crud/delete";
 import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace } from "../db/crud/update";
 import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from "../db/crud/query";
+import { createSavedSearch, deleteSavedSearch, dismissSearchHint, listSavedSearches, updateSavedSearch } from '../db/crud/searches';
 import { getDetailedLogging, getRefreshInterval, getRefreshOnLaunch, setDetailedLogging, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval } from "../app/settings";
 import { getAppInfo } from "../app/app-info";
 import { getUpdateState } from "../updates/auto-updater";
@@ -56,6 +57,9 @@ import type {
   RiverPage,
   RiverQuery,
   SavedQuery,
+  SavedSearch,
+  SavedSearchError,
+  SavedSearchList,
   SetSavedItemInput,
   UpdateSavedItemError,
   SourceType,
@@ -338,4 +342,27 @@ export function handleFeedpacksPreview(_event: IpcMainInvokeEvent, payload: { sl
 
 export function handleFeedpacksInstall(_event: IpcMainInvokeEvent, payload: { slug: string; target: FeedpackInstallTarget }): Promise<Result<ImportSummary, InstallFeedpackError>> {
   return installFeedpack(payload.slug, payload.target);
+}
+
+export function handleSearchesList(_event: IpcMainInvokeEvent, payload: { workspaceId: number }): Promise<SavedSearchList> {
+  return listSavedSearches(payload.workspaceId);
+}
+
+export function handleSearchesCreate(_event: IpcMainInvokeEvent, payload: { workspaceId: number; name: string; query: string }): Promise<Result<SavedSearch, SavedSearchError>> {
+  return createSavedSearch(payload.workspaceId, payload.name, payload.query);
+}
+
+export function handleSearchesUpdate(_event: IpcMainInvokeEvent, payload: { searchId: number; name?: string; query?: string }): Promise<Result<SavedSearch, SavedSearchError>> {
+  return updateSavedSearch(payload.searchId, {
+    ...(payload.name !== undefined ? { name: payload.name } : {}),
+    ...(payload.query !== undefined ? { query: payload.query } : {}),
+  });
+}
+
+export function handleSearchesDelete(_event: IpcMainInvokeEvent, payload: { searchId: number }): Promise<Result<void, SavedSearchError>> {
+  return deleteSavedSearch(payload.searchId);
+}
+
+export function handleSearchesDismissHint(_event: IpcMainInvokeEvent, payload: { workspaceId: number }): Promise<Result<void, UpdateWorkspaceError>> {
+  return dismissSearchHint(payload.workspaceId);
 }

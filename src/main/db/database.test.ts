@@ -27,7 +27,7 @@ describe('initializeDatabase', () => {
 
     // Assert
     expect(tables.map((table) => table.name).sort()).toEqual([
-      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'feedPlacement', 'savedItem', 'setting', 'undatedItem', 'workspace',
+      'articleContent', 'feedCategory', 'feedItem', 'feedMetadata', 'feedPlacement', 'savedItem', 'savedSearch', 'setting', 'undatedItem', 'workspace',
     ]);
   });
 
@@ -38,7 +38,7 @@ describe('initializeDatabase', () => {
       tables.find((table) => table.name === tableName)?.columns.map((column) => column.name).sort();
 
     // Assert
-    expect(columnsOf('workspace')).toEqual(['color', 'icon', 'id', 'installed_at', 'name', 'position', 'source_slug', 'source_version']);
+    expect(columnsOf('workspace')).toEqual(['color', 'icon', 'id', 'installed_at', 'name', 'position', 'search_hint_dismissed_at', 'source_slug', 'source_version']);
     expect(columnsOf('feedCategory')).toEqual(['id', 'name', 'workspace_id']);
     expect(columnsOf('feedMetadata')).toEqual(['etag', 'icon', 'id', 'last_error', 'last_fetched_at', 'last_modified', 'link', 'title', 'type']);
     expect(columnsOf('feedPlacement')).toEqual(['category_id', 'feed_id', 'showInWorkspace', 'workspace_id']);
@@ -99,7 +99,7 @@ describe('reopening an already-migrated file', () => {
     await closeDatabase();
     const old = new SQLite(filePath);
     old.pragma('journal_mode = WAL');
-    old.exec("DROP TABLE savedItem; DELETE FROM kysely_migration WHERE name = '0008_saved_items'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
+    old.exec("DROP TABLE savedSearch; ALTER TABLE workspace DROP COLUMN search_hint_dismissed_at; DELETE FROM kysely_migration WHERE name = '0009_saved_search'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
 
     // Act
     await initializeDatabase(filePath);
@@ -109,7 +109,7 @@ describe('reopening an already-migrated file', () => {
     // Assert
     expect(backups).toHaveLength(1);
     expect(backup.prepare("SELECT value FROM setting WHERE key = 'wal-row'").get()).toEqual({ value: 'present' });
-    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0008_saved_items'").get()).toBeUndefined();
+    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0009_saved_search'").get()).toBeUndefined();
     backup.close();
     old.close();
   });

@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import FeedAvatar from "@/components/common/FeedAvatar";
+import JobFacts from "@/components/Home/JobFacts";
 import RiverCardImage from "@/components/Home/RiverCardImage";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { describeRiverCard, estimateReadTime, formatRelativeTime, type RiverCardProps } from "@/lib/river/utils";
@@ -36,6 +37,7 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
         </div>
 
         <h4 className="mb-1.75 text-lg leading-tight font-bold text-pretty text-primary">{item.title}</h4>
+        {item.job && <JobFacts job={item.job} className="mb-1.75" />}
         {item.excerpt && <p className="text-sm leading-relaxed text-pretty text-tertiary">{item.excerpt}</p>}
 
         <div className="mt-3.25 flex items-center gap-2">

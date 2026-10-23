@@ -267,4 +267,44 @@ describe('AddFeedModal', () => {
       + 'Examples: devops · kubernetes, cloud in France · java in Belgium, online. A developers.events link also works.',
     );
   });
+
+  test('the Jobs chip names the supported providers and says that coverage is not complete', async () => {
+    // Arrange
+    const { getByLabelText, getByRole, getByText } = await renderWithQueryClient(
+      <AddFeedModal isOpen onOpenChange={vi.fn()} />,
+    );
+
+    // Act
+    await getByRole('button', { name: 'Jobs' }).click();
+
+    // Assert
+    await expect.element(getByLabelText('Feed URL')).toHaveAttribute('placeholder', "Paste a company's job board or careers page…");
+    await expect.element(getByText(/Greenhouse, Lever, Ashby/)).toHaveTextContent(
+      'Works with Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor and Personio boards. '
+      + 'Coverage is not complete: other job systems are not supported yet. Monfil lists every open job of the company.',
+    );
+  });
+
+  test('a job board ends with a line about saving a search for each role', async () => {
+    // Arrange
+    const jobFeed: ParsedSource = { ...parsedFeed, type: 'ats', link: 'https://api.lever.co/v0/postings/acme?mode=json', title: 'Acme · Jobs' };
+    stubElectron({
+      validateFeedUrl: { success: true, data: [jobFeed] },
+      submitAddFeed: { success: true, data: { ...insertedFeed, type: 'ats', title: 'Acme · Jobs', link: jobFeed.link } },
+    });
+    const { getByLabelText, getByRole, getByText } = await renderWithQueryClient(
+      <AddFeedModal isOpen onOpenChange={vi.fn()} />,
+    );
+
+    // Act
+    await getByRole('button', { name: 'Jobs' }).click();
+    await getByLabelText('Feed URL').fill('jobs.lever.co/acme');
+    await userEvent.keyboard('{Enter}');
+    await getByRole('button', { name: 'Continue' }).click();
+    await getByText('Tech', { exact: true }).click();
+    await getByRole('button', { name: 'Add source' }).click();
+
+    // Assert
+    await expect.element(getByText("All of Acme's jobs now appear in your feed. To filter them, search for each role you want and save the search.")).toBeVisible();
+  });
 });

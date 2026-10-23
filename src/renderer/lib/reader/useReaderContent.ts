@@ -53,6 +53,10 @@ const STRATEGY_BY_TYPE: Record<SourceType, ReaderContentStrategy> = {
     renderDescription: (raw) => raw,
     showStandfirst: false,
   },
+  ats: {
+    renderDescription: (raw) => raw,
+    showStandfirst: false,
+  },
 };
 
 export interface ReaderContent {

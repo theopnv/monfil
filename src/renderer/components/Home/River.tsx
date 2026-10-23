@@ -7,6 +7,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EmptyRiver from "@/components/Home/EmptyRiver";
 import RiverHeader from "@/components/Home/RiverHeader";
 import RiverList from "@/components/Home/RiverList";
+import SearchPills from "@/components/Home/SearchPills";
+import SearchSaveControl from "@/components/Home/SearchSaveControl";
+import { useSearchPills } from "@/components/Home/useSearchPills";
 import RiverSidebar from "@/components/Home/RiverSidebar";
 import ImportOpmlDialog from "@/components/Workspace/ImportOpmlDialog";
 import FeedpackInstallDialog from '@/components/Feedpacks/FeedpackInstallDialog';
@@ -45,6 +48,7 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
 
   const { scope, visibleFeedIdsSet, showOnlyLinks, setShowOnlyLinks, debouncedSearch } = useRiverScope(feeds, savedView);
   const { query: searchQuery, setQuery: setSearchQuery } = useSearch(savedView);
+  const pills = useSearchPills(searchQuery, setSearchQuery);
 
   // The corpus-wide unread count of the visible feeds. Comes from FeedSummary.
   const unreadCount = useMemo(
@@ -150,7 +154,23 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
           showOnlyLinks={showOnlyLinks}
           onClearFocus={clearFocus}
           onShowHidden={showHiddenFeeds}
+          searchActions={savedView ? undefined : (
+            <SearchSaveControl query={searchQuery} searches={pills.searches} activeSearch={pills.activeSearch} onCreate={pills.create} onUpdate={pills.update} />
+          )}
         />
+
+        {!savedView && hasFeeds && (
+          <SearchPills
+            searches={pills.searches}
+            activeId={pills.activeSearch?.id}
+            hintExample={pills.hintExample}
+            onToggle={pills.toggle}
+            onDelete={pills.remove}
+            onRename={pills.rename}
+            onUseExample={pills.applyExample}
+            onDismissHint={pills.dismissHint}
+          />
+        )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">

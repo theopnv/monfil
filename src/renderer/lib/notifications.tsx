@@ -27,6 +27,11 @@ export function notifyAction(message: string, key: string, action: { label: stri
   toast(message, { id: key, action, duration: Infinity });
 }
 
+/** Shows a short-lived message with an Undo button. */
+export function notifyUndo(message: string, onUndo: () => void): void {
+  toast(message, { action: { label: 'Undo', onClick: onUndo }, duration: 8000 });
+}
+
 export function dismissAllNotifications(): void {
   toast.dismiss();
 }

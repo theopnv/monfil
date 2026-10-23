@@ -152,4 +152,9 @@ export const invokePayloadGuards: { [C in TwoWayRendererMainChannels]: Guard<Two
   'feedpacks:list': isUndefined,
   'feedpacks:preview': object({ slug: isString }),
   'feedpacks:install': object({ slug: isString, target: isFeedpackTarget }),
+  'searches:list': isWorkspace,
+  'searches:create': object({ workspaceId: isPositiveSafeInteger, name: isString, query: isString }),
+  'searches:update': object<TwoWayRendererMainChannelsInvokeArgs['searches:update']>({ searchId: isPositiveSafeInteger, name: optional(isString), query: optional(isString) }),
+  'searches:delete': object({ searchId: isPositiveSafeInteger }),
+  'searches:dismiss-hint': isWorkspace,
 };

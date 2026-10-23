@@ -432,6 +432,38 @@ describe('0005_placement_category_workspace backfill', () => {
   });
 });
 
+describe('0009_saved_search', () => {
+  test('adds the savedSearch table and leaves existing workspaces with no dismissed hint', async () => {
+    // Arrange
+    assertMigrated(await migrateTo('0008_saved_items'));
+    await seed();
+
+    // Act
+    assertMigrated(await migrateToLatest());
+
+    // Assert
+    const workspace = await db.selectFrom('workspace').selectAll().where('id', '=', HOME_WORKSPACE_ID).executeTakeFirstOrThrow();
+    expect(workspace['search_hint_dismissed_at']).toBeNull();
+    expect(await tableNames()).toContain('savedSearch');
+  });
+
+  test('deletes a workspace saved searches with the workspace and refuses a duplicate name', async () => {
+    // Arrange
+    assertMigrated(await migrateToLatest());
+    const other = await db.insertInto('workspace').values({ name: 'Jobs', icon: 'Stars01', color: '#000000', position: 1 }).returning('id').executeTakeFirstOrThrow();
+    const row = { workspace_id: other.id, name: 'Engineers', query: 'title:engineer', position: 0, created_at: 1 };
+    await db.insertInto('savedSearch').values(row).execute();
+
+    // Act
+    const duplicate = db.insertInto('savedSearch').values(row).execute();
+    await expect(duplicate).rejects.toThrow(/UNIQUE/);
+    await db.deleteFrom('workspace').where('id', '=', other.id).execute();
+
+    // Assert
+    expect(await db.selectFrom('savedSearch').selectAll().execute()).toEqual([]);
+  });
+});
+
 describe('the migration list', () => {
   test('has unique names, already in the order Migrator will run them', () => {
     // Assert
