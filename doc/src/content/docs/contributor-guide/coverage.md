@@ -121,7 +121,7 @@ Dates are stored in UTC. A coverage query is refused when it names a complexity 
 The work is split over two workflows, like the complexity report:
 
 - `coverage.yml` runs on `pull_request` with a read-only token. It runs the PR's code and uploads the snapshot and the PR number.
-- `coverage-comment.yml` runs on `workflow_run` with `pull-requests: write`. It checks out only `scripts/coverage` and `scripts/complexity` from `main`, checks the PR number and head sha, and reads the base from D1. The base is the row of the merge base. If that sha has no row, the comment compares with the latest earlier commit on `main` and says so. It lists the totals of each suite and the merged line coverage of the changed files under `src/`.
+- `coverage-comment.yml` runs on `workflow_run` with `pull-requests: write`. It checks out only `scripts/coverage` and `scripts/complexity` from `main`, checks the PR number and head sha, and reads the base from D1. The base is the row of the merge base. If that sha has no row, the comment compares with the latest earlier commit on `main` and says so. It lists the totals of each suite and the changed files under `src/` that lost merged line coverage.
 
 `workflow_run` workflows run from the default branch. A change to `coverage-comment.yml` takes effect only after it lands in `main`.
 

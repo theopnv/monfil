@@ -15,19 +15,22 @@ function snapshot(sha: string, files: FileSummary[]): Snapshot {
 }
 
 describe('compareSnapshots', () => {
-  it('sums the suites, and lists only the changed files of the head run, the least covered first', () => {
+  it('sums the suites, and lists only the changed files that lost line coverage, the least covered first', () => {
     // Arrange
-    const base = snapshot(BASE, [file('src/a.ts', 5, 10), file('src/b.ts', 10, 10)]);
-    const head = snapshot(HEAD, [file('src/a.ts', 8, 10), file('src/b.ts', 10, 10), file('src/c.ts', 1, 10)]);
+    const base = snapshot(BASE, [file('src/a.ts', 5, 10), file('src/b.ts', 10, 10), file('src/d.ts', 9, 10), file('src/e.ts', 8, 10), file('src/f.ts', 7, 10)]);
+    const head = snapshot(HEAD, [
+      file('src/a.ts', 8, 10), file('src/b.ts', 10, 10), file('src/c.ts', 1, 10),
+      file('src/d.ts', 4, 10), file('src/e.ts', 7, 10), file('src/f.ts', 7, 10),
+    ]);
 
     // Act
-    const diff = compareSnapshots(base, head, { mergeBaseSha: BASE, changedFiles: ['src/a.ts', 'src/c.ts', 'README.md'] });
+    const diff = compareSnapshots(base, head, { mergeBaseSha: BASE, changedFiles: ['src/a.ts', 'src/c.ts', 'src/d.ts', 'src/e.ts', 'src/f.ts', 'README.md'] });
 
     // Assert
-    expect(diff.suites.merged.lines).toEqual({ base: [15, 20], head: [19, 30] });
+    expect(diff.suites.merged.lines).toEqual({ base: [39, 50], head: [37, 60] });
     expect(diff.files).toEqual([
-      { file: 'src/c.ts', lines: [1, 10], base_lines: null },
-      { file: 'src/a.ts', lines: [8, 10], base_lines: [5, 10] },
+      { file: 'src/d.ts', lines: [4, 10], base_lines: [9, 10] },
+      { file: 'src/e.ts', lines: [7, 10], base_lines: [8, 10] },
     ]);
   });
 
@@ -103,7 +106,7 @@ describe('parseSnapshot', () => {
 
 describe('renderMarkdown', () => {
   const diff = compareSnapshots(
-    snapshot(BASE, [file('src/a.ts', 5, 10)]),
+    snapshot(BASE, [file('src/a.ts', 5, 10), file('src/`x`|[link](http://evil.test).ts', 4, 4)]),
     snapshot(HEAD, [file('src/a.ts', 8, 10), file('src/`x`|[link](http://evil.test).ts', 0, 4)]),
     { mergeBaseSha: BASE, changedFiles: ['src/a.ts', 'src/`x`|[link](http://evil.test).ts'] },
   );
@@ -114,7 +117,7 @@ describe('renderMarkdown', () => {
 
     // Assert
     expect(result.startsWith(MARKER)).toBe(true);
-    expect(result).toContain('| Merged | 57.1% (+7.1) · 8/14 |');
+    expect(result).toContain('| Merged | 57.1% (−7.1) · 8/14 |');
   });
 
   it('puts every path in a code span with no pipe, so that no link or cell break survives', () => {
@@ -123,7 +126,7 @@ describe('renderMarkdown', () => {
 
     // Assert
     const row = result.split('\n').find((line) => line.includes('evil.test'));
-    expect(row).toBe('| `` src/`x`∣[link](http://evil.test).ts `` | 0.0% · 0/4 (new) |');
+    expect(row).toBe('| `` src/`x`∣[link](http://evil.test).ts `` | 0.0% (−100.0) · 0/4 |');
   });
 
   it('says so when there is no stored base', () => {
@@ -136,7 +139,20 @@ describe('renderMarkdown', () => {
     // Assert
     expect(result).toContain('No stored coverage to compare');
     expect(result).not.toContain('(+');
-    expect(result).not.toContain('(new)');
+    expect(result).not.toContain('src/a.ts');
+    expect(result).not.toContain('lost line coverage');
+  });
+
+  it('says so when no changed file lost line coverage', () => {
+    // Arrange
+    const same = compareSnapshots(snapshot(BASE, [file('src/a.ts', 1, 2)]), snapshot(HEAD, [file('src/a.ts', 2, 2)]), { mergeBaseSha: BASE, changedFiles: ['src/a.ts'] });
+
+    // Act
+    const result = renderMarkdown(same);
+
+    // Assert
+    expect(result).toContain('No changed file under `src/` lost line coverage.');
+    expect(result).not.toContain('| File |');
   });
 
   it('says which commit it falls back to when the merge base has no row', () => {

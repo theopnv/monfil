@@ -36,20 +36,16 @@ export interface DiffRow {
 export interface Diff {
   base_sha: string;
   head_sha: string;
-  cognitive: Totals;
-  cyclomatic: Totals;
   above_limits: Totals;
-  new_above_limits: number;
-  new_count: number;
-  changed_count: number;
-  removed_count: number;
-  /** New and changed functions, the most complex first. */
-  rows: DiffRow[];
+  /** New functions above a limit. The most complex first. */
+  introduced: DiffRow[];
+  /** Existing functions above a limit that got more complex. The most complex first. */
+  worse: DiffRow[];
+  /** Existing functions that were above a limit and now are below both. The most complex first. */
+  improved: DiffRow[];
 }
 
 const key = (fn: SnapshotFunction) => `${fn.file}\u0000${fn.qualified_name}`;
-const sum = (functions: SnapshotFunction[], metric: 'cognitive' | 'cyclomatic') =>
-  functions.reduce((total, fn) => total + fn[metric], 0);
 
 export function isAboveLimits(fn: { cognitive: number; cyclomatic: number }): boolean {
   return fn.cognitive > LIMITS.cognitive || fn.cyclomatic > LIMITS.cyclomatic;
@@ -72,36 +68,37 @@ function byComplexity(a: DiffRow, b: DiffRow): number {
     || a.file.localeCompare(b.file) || a.line - b.line;
 }
 
+function grew(fn: SnapshotFunction, before: SnapshotFunction): boolean {
+  return fn.cognitive > before.cognitive || fn.cyclomatic > before.cyclomatic;
+}
+
 /** Compares the functions outside test files. Functions match by file and qualified name, so a moved line is no change. */
 export function compareSnapshots(base: Snapshot, head: Snapshot): Diff {
   const baseFunctions = base.functions.filter((fn) => !fn.is_test);
   const headFunctions = head.functions.filter((fn) => !fn.is_test);
   const baseByKey = new Map(baseFunctions.map((fn) => [key(fn), fn]));
-  const headKeys = new Set(headFunctions.map(key));
-  const rows: DiffRow[] = [];
-  let newAboveLimits = 0;
+  const introduced: DiffRow[] = [];
+  const worse: DiffRow[] = [];
+  const improved: DiffRow[] = [];
   for (const fn of headFunctions) {
     const before = baseByKey.get(key(fn));
-    if (before && before.cognitive === fn.cognitive && before.cyclomatic === fn.cyclomatic) {
-      continue;
-    }
-    rows.push(toRow(fn, before));
-    if (isAboveLimits(fn) && !(before && isAboveLimits(before))) {
-      newAboveLimits += 1;
+    if (!before) {
+      if (isAboveLimits(fn)) {
+        introduced.push(toRow(fn, before));
+      }
+    } else if (isAboveLimits(fn) && grew(fn, before)) {
+      worse.push(toRow(fn, before));
+    } else if (isAboveLimits(before) && !isAboveLimits(fn)) {
+      improved.push(toRow(fn, before));
     }
   }
-  const newCount = rows.filter((row) => row.base_cognitive === null).length;
   return {
     base_sha: base.sha,
     head_sha: head.sha,
-    cognitive: { base: sum(baseFunctions, 'cognitive'), head: sum(headFunctions, 'cognitive') },
-    cyclomatic: { base: sum(baseFunctions, 'cyclomatic'), head: sum(headFunctions, 'cyclomatic') },
     above_limits: { base: baseFunctions.filter(isAboveLimits).length, head: headFunctions.filter(isAboveLimits).length },
-    new_above_limits: newAboveLimits,
-    new_count: newCount,
-    changed_count: rows.length - newCount,
-    removed_count: baseFunctions.filter((fn) => !headKeys.has(key(fn))).length,
-    rows: rows.sort(byComplexity),
+    introduced: introduced.sort(byComplexity),
+    worse: worse.sort(byComplexity),
+    improved: improved.sort(byComplexity),
   };
 }
 
@@ -143,8 +140,8 @@ function parseTotals(value: unknown, field: string): Totals {
   return { base: expectCount(totals['base'], `${field}.base`), head: expectCount(totals['head'], `${field}.head`) };
 }
 
-function parseRow(value: unknown, index: number): DiffRow {
-  const field = `rows[${index}]`;
+function parseRow(value: unknown, list: string, index: number): DiffRow {
+  const field = `${list}[${index}]`;
   const row = expectObject(value, field);
   return {
     file: expectString(row['file'], `${field}.file`),
@@ -157,23 +154,23 @@ function parseRow(value: unknown, index: number): DiffRow {
   };
 }
 
+function parseRows(value: unknown, field: string): DiffRow[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${field} must be an array`);
+  }
+  return value.map((row, index) => parseRow(row, field, index));
+}
+
 /** Checks the shape of a diff that comes from untrusted code, and keeps only the known fields. */
 export function parseDiff(value: unknown): Diff {
   const diff = expectObject(value, 'diff');
-  if (!Array.isArray(diff['rows'])) {
-    throw new Error('rows must be an array');
-  }
   return {
     base_sha: expectSha(diff['base_sha'], 'base_sha'),
     head_sha: expectSha(diff['head_sha'], 'head_sha'),
-    cognitive: parseTotals(diff['cognitive'], 'cognitive'),
-    cyclomatic: parseTotals(diff['cyclomatic'], 'cyclomatic'),
     above_limits: parseTotals(diff['above_limits'], 'above_limits'),
-    new_above_limits: expectCount(diff['new_above_limits'], 'new_above_limits'),
-    new_count: expectCount(diff['new_count'], 'new_count'),
-    changed_count: expectCount(diff['changed_count'], 'changed_count'),
-    removed_count: expectCount(diff['removed_count'], 'removed_count'),
-    rows: diff['rows'].map(parseRow),
+    introduced: parseRows(diff['introduced'], 'introduced'),
+    worse: parseRows(diff['worse'], 'worse'),
+    improved: parseRows(diff['improved'], 'improved'),
   };
 }
 
@@ -196,32 +193,25 @@ export function codeSpan(text: string): string {
   return `${fence} ${clean} ${fence}`;
 }
 
-const NUMBER = new Intl.NumberFormat('en-US');
-
-function signed(delta: number): string {
-  if (delta === 0) {
-    return '±0';
-  }
-  return delta > 0 ? `+${NUMBER.format(delta)}` : `−${NUMBER.format(-delta)}`;
-}
-
-function totalLine(label: string, totals: Totals): string {
-  return `${label} **${signed(totals.head - totals.base)}** (${NUMBER.format(totals.base)} → ${NUMBER.format(totals.head)})`;
-}
-
 function scoreCell(score: number, baseScore: number | null, limit: number): string {
   const value = score > limit ? `**${score}**` : String(score);
   if (baseScore === null) {
     return `${value} (new)`;
   }
-  return `${value} (${signed(score - baseScore)})`;
+  const delta = score - baseScore;
+  if (delta === 0) {
+    return `${value} (±0)`;
+  }
+  return `${value} (${delta > 0 ? '+' : '−'}${Math.abs(delta)})`;
 }
 
-function tableLines(rows: DiffRow[]): string[] {
+function section(title: string, rows: DiffRow[], note?: string): string[] {
   if (rows.length === 0) {
-    return ['No function outside test files changed its complexity.'];
+    return [];
   }
   const lines = [
+    `**${title} (${rows.length})**`,
+    '',
     '| Function | Cognitive | Cyclomatic |',
     '| --- | ---: | ---: |',
     ...rows.slice(0, MAX_ROWS).map((row) => [
@@ -229,33 +219,51 @@ function tableLines(rows: DiffRow[]): string[] {
       scoreCell(row.cognitive, row.base_cognitive, LIMITS.cognitive),
       `${scoreCell(row.cyclomatic, row.base_cyclomatic, LIMITS.cyclomatic)} |`,
     ].join(' | ')),
+    '',
   ];
   if (rows.length > MAX_ROWS) {
-    lines.push('', `${rows.length - MAX_ROWS} more changed functions are not shown.`);
+    lines.push(`${rows.length - MAX_ROWS} more functions are not shown.`, '');
+  }
+  if (note) {
+    lines.push(note, '');
   }
   return lines;
 }
 
+function remaining(count: number): string {
+  if (count === 0) {
+    return 'No function is above the limits.';
+  }
+  return `${count} ${count === 1 ? 'function is' : 'functions are'} above the limits in total.`;
+}
+
 /** Renders the sticky PR comment. Every string from the snapshots goes through `codeSpan`. */
 export function renderMarkdown(diff: Diff): string {
-  const summary = [
-    totalLine('Cognitive', diff.cognitive),
-    totalLine('cyclomatic', diff.cyclomatic),
-    `functions above the limits **${diff.above_limits.head}** (${diff.new_above_limits} new)`,
-  ].join(', ');
-  return [
+  const header = [
     MARKER,
     '### Complexity',
     '',
     `Compared with the merge base ${codeSpan(diff.base_sha.slice(0, 7))} for ${codeSpan(diff.head_sha.slice(0, 7))}.`,
     '',
-    `${summary}.`,
+  ];
+  const footer = `<sub>Limits: cognitive ${LIMITS.cognitive}, cyclomatic ${LIMITS.cyclomatic}. A bold score is above its limit. Test files are not counted.</sub>`;
+  const total = diff.above_limits.head;
+  if (diff.introduced.length === 0 && diff.worse.length === 0 && diff.improved.length === 0) {
+    const old = total === 0 ? 'No function is above the limits.' : `${total} old ${total === 1 ? 'violation remains' : 'violations remain'}.`;
+    return [...header, `No function crossed the limits. ${old}`, '', footer, ''].join('\n');
+  }
+  return [
+    ...header,
+    ...section('New functions above the limits', diff.introduced),
+    ...section('Existing functions above the limits that got worse', diff.worse),
+    ...section(
+      'Functions that dropped below the limits',
+      diff.improved,
+      'Run `npx eslint --prune-suppressions .` and commit the smaller `eslint-suppressions.json`.',
+    ),
+    remaining(total),
     '',
-    `Functions: ${diff.new_count} new, ${diff.changed_count} changed, ${diff.removed_count} removed.`,
-    '',
-    ...tableLines(diff.rows),
-    '',
-    `<sub>Limits: cognitive ${LIMITS.cognitive}, cyclomatic ${LIMITS.cyclomatic}. A bold score is above its limit. Test files are not counted.</sub>`,
+    footer,
     '',
   ].join('\n');
 }

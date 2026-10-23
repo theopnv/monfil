@@ -149,7 +149,7 @@ function ratio(count: Count): number {
   return count[1] === 0 ? 1 : count[0] / count[1];
 }
 
-/** Compares the suites, and lists the changed files of the head run. `base` is null when no stored run exists. */
+/** Compares the suites, and lists the changed files of the head run that lost line coverage. `base` is null when no stored run exists. */
 export function compareSnapshots(base: Snapshot | null, head: Snapshot, options: CompareOptions): Diff {
   const suites = {} as Diff['suites'];
   for (const name of SUITES) {
@@ -162,6 +162,10 @@ export function compareSnapshots(base: Snapshot | null, head: Snapshot, options:
   const changed = new Set(options.changedFiles);
   const files = head.suites.merged
     .filter((file) => changed.has(file.file) && file.file.startsWith('src/'))
+    .filter((file) => {
+      const before = baseByFile.get(file.file);
+      return before !== undefined && ratio(file.lines) < ratio(before);
+    })
     .map((file) => ({ file: file.file, lines: file.lines, base_lines: baseByFile.get(file.file) ?? null }))
     .sort((a, b) => ratio(a.lines) - ratio(b.lines) || a.file.localeCompare(b.file));
   return { base_sha: base?.sha ?? null, head_sha: head.sha, merge_base_sha: options.mergeBaseSha, suites, files };
@@ -240,22 +244,21 @@ function baseNote(diff: Diff): string {
 }
 
 function fileLines(files: FileRow[], hasBase: boolean): string[] {
-  if (files.length === 0) {
-    return ['No changed file under `src/` has coverage.'];
+  if (!hasBase) {
+    return [];
   }
-  const lines = [
+  if (files.length === 0) {
+    return ['No changed file under `src/` lost line coverage.', ''];
+  }
+  return [
+    '**Changed files that lost line coverage**',
+    '',
     '| File | Lines |',
     '| --- | ---: |',
-    ...files.slice(0, MAX_ROWS).map((row) => {
-      const totals: Totals = { base: row.base_lines, head: row.lines };
-      const label = hasBase && row.base_lines === null ? `${cell(totals)} (new)` : cell(totals);
-      return `| ${codeSpan(row.file)} | ${label} |`;
-    }),
+    ...files.slice(0, MAX_ROWS).map((row) => `| ${codeSpan(row.file)} | ${cell({ base: row.base_lines, head: row.lines })} |`),
+    '',
+    ...(files.length > MAX_ROWS ? [`${files.length - MAX_ROWS} more changed files are not shown.`, ''] : []),
   ];
-  if (files.length > MAX_ROWS) {
-    lines.push('', `${files.length - MAX_ROWS} more changed files are not shown.`);
-  }
-  return lines;
 }
 
 /** Renders the sticky PR comment. Every path goes through `codeSpan`, and every number comes from a checked count. */
@@ -271,7 +274,6 @@ export function renderMarkdown(diff: Diff): string {
     ...SUITES.map((name) => `| ${SUITE_LABELS[name]} | ${cell(diff.suites[name].lines)} | ${cell(diff.suites[name].branches)} |`),
     '',
     ...fileLines(diff.files, diff.base_sha !== null),
-    '',
     '<sub>The change in each cell is in percentage points. Merged joins the Vitest and e2e runs. Preload code runs in an isolated world, so only the Vitest run counts it.</sub>',
     '',
   ].join('\n');

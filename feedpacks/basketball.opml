@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Basketball</title></head>
+  <body>
+    <outline text="News">
+      <outline text="ESPN: NBA" title="ESPN: NBA" type="rss" xmlUrl="https://www.espn.com/espn/rss/nba/news"/>
+      <outline text="CBS Sports: NBA" title="CBS Sports: NBA" type="rss" xmlUrl="https://www.cbssports.com/rss/headlines/nba/"/>
+      <outline text="Yahoo Sports: NBA" title="Yahoo Sports: NBA" type="rss" xmlUrl="https://sports.yahoo.com/nba/rss/"/>
+      <outline text="Basketball Insiders" title="Basketball Insiders" type="rss" xmlUrl="https://www.basketballinsiders.com/feed/"/>
+      <outline text="SB Nation: NBA" title="SB Nation: NBA" type="rss" xmlUrl="https://www.sbnation.com/rss/nba/index.xml"/>
+      <outline text="Sporting News: NBA" title="Sporting News: NBA" type="rss" xmlUrl="https://www.sportingnews.com/us/rss/nba"/>
+      <outline text="Eurohoops" title="Eurohoops" type="rss" xmlUrl="https://www.eurohoops.net/en/feed/"/>
+      <outline text="BBC Sport: Basketball" title="BBC Sport: Basketball" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/basketball/rss.xml"/>
+      <outline text="Basketball News" title="Basketball News" type="rss" xmlUrl="https://www.basketballnews.com/feed"/>
+      <outline text="RotoWire: NBA" title="RotoWire: NBA" type="rss" xmlUrl="https://www.rotowire.com/rss/news.php?sport=NBA"/>
+    </outline>
+    <outline text="Analysis &amp; Culture">
+      <outline text="Cleaning the Glass" title="Cleaning the Glass" type="rss" xmlUrl="https://cleaningtheglass.com/feed/"/>
+      <outline text="Hardwood Paroxysm" title="Hardwood Paroxysm" type="rss" xmlUrl="https://hardwoodparoxysm.com/feed/"/>
+    </outline>
+    <outline text="College &amp; Women's">
+      <outline text="ESPN: Men's College Basketball" title="ESPN: Men's College Basketball" type="rss" xmlUrl="https://www.espn.com/espn/rss/ncb/news"/>
+      <outline text="ESPN: WNBA" title="ESPN: WNBA" type="rss" xmlUrl="https://www.espn.com/espn/rss/wnba/news"/>
+      <outline text="CBS Sports: College Basketball" title="CBS Sports: College Basketball" type="rss" xmlUrl="https://www.cbssports.com/rss/headlines/college-basketball/"/>
+    </outline>
+    <outline text="Video">
+      <outline text="NBA" title="NBA" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCWJ2lWNubArHWmf3FIHbfcQ"/>
+      <outline text="House of Highlights" title="House of Highlights" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCqQo7ewe87aYAe7ub5UqXMw"/>
+      <outline text="ESPN" title="ESPN" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCiWLfSweyRNmLpgEHekhoAg"/>
+      <outline text="Secret Base" title="Secret Base" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCw_LnTX4iYwMic7q20I4uRQ"/>
+      <outline text="Thinking Basketball" title="Thinking Basketball" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC3HPbvB6f58X_7SMIp6OPYw"/>
+      <outline text="EuroLeague" title="EuroLeague" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCGr3nR_XH9r6E5b09ZJAT9w"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Mastodon #nba" title="Mastodon #nba" type="rss" xmlUrl="https://mastodon.social/tags/nba.rss"/>
+      <outline text="Mastodon #basketball" title="Mastodon #basketball" type="rss" xmlUrl="https://mastodon.social/tags/basketball.rss"/>
+      <outline text="Mastodon #wnba" title="Mastodon #wnba" type="rss" xmlUrl="https://mastodon.social/tags/wnba.rss"/>
+      <outline text="NBA (Bluesky)" title="NBA (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/nba.com/rss"/>
+      <outline text="Shams Charania (Bluesky)" title="Shams Charania (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/shamscharania.bsky.social/rss"/>
+    </outline>
+  </body>
+</opml>
