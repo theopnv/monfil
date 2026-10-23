@@ -84,6 +84,7 @@ export async function querySubscribedFeedMetadata(ids?: number[]): Promise<FeedM
 /** Every stored feed whose id is in `ids`, in no particular order. Used to refresh a specific batch (e.g. a freshly imported OPML) rather than every feed. */
 export async function queryFeedMetadataByIds(ids: number[]): Promise<FeedMetadataRow[]> {
   await dbReady;
+  // Stryker disable next-line BlockStatement: an empty IN list matches no row, so the query returns the same empty array
   if (ids.length === 0) {
     return [];
   }
@@ -301,6 +302,7 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
     builder = builder.where('i.read_at', 'is', null);
   }
 
+  // Stryker disable next-line MethodExpression,Regex: an empty word becomes the pattern %%, which matches every row, and SQLite LIKE ignores ASCII case
   const words = query.search?.trim().toLowerCase().split(/\s+/).filter(Boolean) ?? [];
   for (const word of words) {
     const pattern = `%${escapeLikeWord(word)}%`;
