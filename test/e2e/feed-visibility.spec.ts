@@ -91,7 +91,7 @@ async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Pro
 // The folder's open state is saved to localStorage, so a relaunch against the same user data
 // dir can start with it already expanded.
 async function ensureFolderOpen(page: Page): Promise<void> {
-  await expect(page.getByRole('row', { name: 'tech', exact: true }).getByTestId('folder-count')).toHaveText('1');
+  await expect(page.getByRole('button', { name: 'tech', exact: true })).toBeVisible();
   const row = page.getByRole('button', { name: /^Local feed/ });
   if (!(await row.isVisible())) {
     await page.getByRole('button', { name: 'tech', exact: true }).click();
@@ -167,6 +167,7 @@ feedVisibilityTest('the strip shows hidden feeds again', async ({ feedServer, la
   const page = await launchApp();
   await subscribe(page, feedServer.url);
   await ensureFolderOpen(page);
+  await page.getByRole('button', { name: /^Local feed/ }).hover();
   await page.getByRole('button', { name: 'Hide Local feed' }).click();
   await expect(page.getByText('1 hidden feed', { exact: true })).toBeVisible();
 

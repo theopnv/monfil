@@ -36,10 +36,7 @@ test('Saved keeps read and unread articles through restart and source removal', 
       return result.data.id;
     }, HOME_WORKSPACE_ID);
     let page = await launch();
-    const showAll = page.getByRole('button', { name: 'Show All', exact: true });
-    if (await showAll.isVisible()) {
-      await showAll.click();
-    }
+    await page.getByRole('radio', { name: 'All', exact: true }).click();
     await expect(page.getByText('Read reference', { exact: true })).toBeVisible();
 
     // Act

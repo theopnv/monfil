@@ -23,13 +23,10 @@ import type { FeedSummary } from "../../../shared/contracts";
 
 type SetVisibility = (feeds: FeedSummary[], target: FeedVisibility) => void;
 
-// Folder and feed counts share a right edge, so a column of them reads as one vertical line.
-export const COUNT_CLASSES = 'w-6 flex-none text-right text-xs text-tertiary tabular-nums';
-// A feed row ends with the eye button; a folder row reserves the same width after its count.
-export const EYE_SLOT_WIDTH_CLASSES = 'size-5.5';
-export const EYE_SLOT_MARGIN_CLASSES = 'mr-5.5';
+const EYE_SLOT_CLASSES = 'h-5.5 w-5.5';
 
-const REVEALED = 'opacity-0 focus-visible:opacity-100';
+// Hidden controls take no width, so a name uses the full row until the pointer or focus reveals them.
+const COLLAPSED = 'w-0 overflow-hidden opacity-0 focus-visible:w-auto focus-visible:opacity-100';
 
 export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: {
   feed: FeedSummary;
@@ -54,7 +51,7 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
       <button
         type="button"
         title={`${feed.title} — ${VISIBILITY_STATE_LABEL[state]}. Click to ${focusAction.toLowerCase()}.`}
-        aria-label={`${feed.title}, ${VISIBILITY_STATE_LABEL[state]}${feed.unreadCount > 0 ? `, ${feed.unreadCount} unread` : ''}. Click to ${focusAction.toLowerCase()}.`}
+        aria-label={`${feed.title}, ${VISIBILITY_STATE_LABEL[state]}. Click to ${focusAction.toLowerCase()}.`}
         data-visibility={state}
         onClick={() => onSetVisibility([feed], toggleFocus(state))}
         onContextMenu={(event) => {
@@ -71,7 +68,6 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
         <FeedAvatar title={feed.title} faviconUrl={feed.icon} size="sm" />
         <span className="min-w-0 flex-1 truncate">{feed.title}</span>
         {feed.last_error && <span role="img" aria-label={`${feed.title} refresh failed`} title="The last refresh failed" className="text-warning-primary">!</span>}
-        <span data-testid="feed-count" className={COUNT_CLASSES}>{feed.unreadCount > 0 ? feed.unreadCount : ''}</span>
       </button>
       <button
         type="button"
@@ -80,8 +76,7 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
         onClick={() => onSetVisibility([feed], toggleHidden(state))}
         className={cx(
           "flex flex-none items-center justify-center rounded-md text-quaternary hover:text-secondary",
-          EYE_SLOT_WIDTH_CLASSES,
-          state === "hidden" ? "opacity-100" : cx(REVEALED, "group-hover/row:opacity-100"),
+          state === "hidden" ? EYE_SLOT_CLASSES : cx(COLLAPSED, "h-5.5 group-hover/row:w-5.5 group-hover/row:opacity-100 focus-visible:w-5.5"),
         )}
       >
         <HideIcon aria-hidden className="size-3.5" />
@@ -107,7 +102,7 @@ export function FolderVisibilityControls({ folderName, feeds, showOnlyLinks, onS
         type="button"
         aria-label={`${focusAction} ${folderName}`}
         onClick={() => onSetVisibility(feeds, toggleFolderFocus(feeds, showOnlyLinks))}
-        className={cx("flex-none", state === "only" ? "opacity-100" : cx(REVEALED, "group-hover:opacity-100"))}
+        className={cx("flex-none", state === "only" ? "" : cx(COLLAPSED, "group-hover:w-auto group-hover:opacity-100"))}
       >
         <LayerSingle aria-hidden className="size-3.5 text-quaternary" />
       </button>
@@ -115,7 +110,7 @@ export function FolderVisibilityControls({ folderName, feeds, showOnlyLinks, onS
         type="button"
         aria-label={`${hideAction} ${folderName}`}
         onClick={() => onSetVisibility(feeds, toggleFolderHidden(feeds, showOnlyLinks))}
-        className={cx("flex-none", state === "hidden" ? "opacity-100" : cx(REVEALED, "group-hover:opacity-100"))}
+        className={cx("flex-none", state === "hidden" ? "" : cx(COLLAPSED, "group-hover:w-auto group-hover:opacity-100"))}
       >
         <HideIcon aria-hidden className="size-3.5 text-quaternary" />
       </button>

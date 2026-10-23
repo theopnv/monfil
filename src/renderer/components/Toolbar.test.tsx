@@ -3,13 +3,14 @@
 // See LICENSE in the repository root for full terms.
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { createRootRoute, createRoute, createRouter, createMemoryHistory, Outlet, RouterProvider } from '@tanstack/react-router';
+import { createRootRoute, createRoute, createRouter, createMemoryHistory, Outlet, RouterProvider, useParams } from '@tanstack/react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
+import { userEvent } from 'vitest/browser';
 import { RouteProvider } from '@/providers/route-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useFeeds } from '@/providers/feeds-provider';
-import { useIpcBridge } from '@/lib/ipc-bridge';
+import { useFeedpackRefreshing, useIpcBridge } from '@/lib/ipc-bridge';
 import { createTestQueryClient } from '@/lib/test/render-with-query-client';
 import Toolbar from './Toolbar';
 import type { DeleteWorkspaceError } from '../../shared/contracts';
@@ -60,6 +61,7 @@ let editWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let exportWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let deleteWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let invokeMock: ReturnType<typeof vi.fn>;
+let installedCount: number;
 let feedpacks: { slug: string; title: string; description: string; tags: string[]; curator: string; sourceCount: number; updatedAt: string; opml: string }[];
 
 beforeEach(() => {
@@ -71,6 +73,7 @@ beforeEach(() => {
   exportWorkspaceRequestedHandler = undefined;
   deleteWorkspaceRequestedHandler = undefined;
   feedpacks = [];
+  installedCount = 1;
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
@@ -108,7 +111,7 @@ beforeEach(() => {
           : { success: false, error: { name: 'PACK_NOT_FOUND', message: 'Missing pack.' } });
       }
       case 'feedpacks:install':
-        return Promise.resolve({ success: true, data: { workspaceId: 3, imported: 1, skipped: [], failed: [] } });
+        return Promise.resolve({ success: true, data: { workspaceId: 3, imported: installedCount, skipped: [], failed: [] } });
       default:
         return Promise.resolve([]);
     }
@@ -137,7 +140,14 @@ beforeEach(() => {
 
 function FeedsList() {
   const feeds = useFeeds();
-  return <ul aria-label="Feeds in workspace">{feeds.map((feed) => <li key={feed.id}>{feed.title}</li>)}</ul>;
+  const { workspaceId } = useParams({ strict: false });
+  const isRefreshing = useFeedpackRefreshing(workspaceId === undefined ? undefined : Number(workspaceId));
+  return (
+    <>
+      <ul aria-label="Feeds in workspace">{feeds.map((feed) => <li key={feed.id}>{feed.title}</li>)}</ul>
+      {isRefreshing && <p>Fetching sources</p>}
+    </>
+  );
 }
 
 function IpcBridgeMount() {
@@ -227,6 +237,79 @@ test('installs a selected feedpack with standard workspace details', async () =>
   }));
 });
 
+test('installs a selected feedpack with the name, icon and colour picked before browsing', async () => {
+  // Arrange
+  feedpacks = [{ slug: 'devsecops-watch', title: 'DevSecOps Watch', description: 'Testing sources.', tags: ['testing'], curator: 'Monfil', sourceCount: 1, updatedAt: '2026-09-21', opml: 'devsecops-watch.opml' }];
+  const { getByRole } = await renderApp('/workspace/1');
+  await getByRole('button', { name: 'New workspace' }).click();
+  await getByRole('textbox', { name: 'Name' }).fill('My packs');
+  await getByRole('button', { name: 'ShieldTick' }).click();
+  await getByRole('button', { name: 'Colour #a855f7' }).click();
+  await getByRole('button', { name: 'Browse feedpacks' }).click();
+
+  // Act
+  await getByRole('button', { name: /DevSecOps Watch.*Testing sources/ }).click();
+  await getByRole('button', { name: 'Install' }).click();
+
+  // Assert
+  await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('feedpacks:install', {
+    slug: 'devsecops-watch',
+    target: { kind: 'new-workspace', name: 'My packs', icon: 'ShieldTick', color: '#a855f7' },
+  }));
+});
+
+test('filters feedpacks by keyword', async () => {
+  // Arrange
+  feedpacks = [
+    { slug: 'devsecops-watch', title: 'DevSecOps Watch', description: 'Testing sources.', tags: ['security'], curator: 'Monfil', sourceCount: 1, updatedAt: '2026-09-21', opml: 'devsecops-watch.opml' },
+    { slug: 'graphics', title: 'Graphics Programming', description: 'Rendering news.', tags: ['gpu'], curator: 'Monfil', sourceCount: 1, updatedAt: '2026-09-21', opml: 'graphics.opml' },
+  ];
+  const { getByRole } = await renderApp('/workspace/1');
+  await getByRole('button', { name: 'New workspace' }).click();
+  await getByRole('button', { name: 'Browse feedpacks' }).click();
+
+  // Act
+  await getByRole('searchbox', { name: 'Search feedpacks' }).fill('gpu');
+
+  // Assert
+  await expect.element(getByRole('button', { name: /Graphics Programming/ })).toBeInTheDocument();
+  await expect.element(getByRole('button', { name: /DevSecOps Watch/ })).not.toBeInTheDocument();
+});
+
+test('offers the way back to the catalog from the dialog footer', async () => {
+  // Arrange
+  feedpacks = [{ slug: 'devsecops-watch', title: 'DevSecOps Watch', description: 'Testing sources.', tags: ['testing'], curator: 'Monfil', sourceCount: 1, updatedAt: '2026-09-21', opml: 'devsecops-watch.opml' }];
+  const { getByRole } = await renderApp('/workspace/1');
+  await getByRole('button', { name: 'New workspace' }).click();
+  await getByRole('button', { name: 'Browse feedpacks' }).click();
+  await getByRole('button', { name: /DevSecOps Watch.*Testing sources/ }).click();
+
+  // Act
+  await getByRole('button', { name: 'Back to feedpacks' }).click();
+
+  // Assert
+  await expect.element(getByRole('button', { name: /DevSecOps Watch.*Testing sources/ })).toBeInTheDocument();
+  await expect.element(getByRole('button', { name: 'Install' })).not.toBeInTheDocument();
+});
+
+test('does not wait for sources when a feedpack adds nothing', async () => {
+  // Arrange
+  installedCount = 0;
+  feedpacks = [{ slug: 'devsecops-watch', title: 'DevSecOps Watch', description: 'Testing sources.', tags: ['testing'], curator: 'Monfil', sourceCount: 1, updatedAt: '2026-09-21', opml: 'devsecops-watch.opml' }];
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+  await getByRole('button', { name: 'New workspace' }).click();
+  await getByRole('button', { name: 'Browse feedpacks' }).click();
+  await getByRole('button', { name: /DevSecOps Watch.*Testing sources/ }).click();
+
+  // Act
+  await getByRole('button', { name: 'Install' }).click();
+
+  // Assert
+  await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('feedpacks:install', expect.anything()));
+  await expect.element(getByRole('list', { name: 'Feeds in workspace' })).toBeInTheDocument();
+  await expect.element(getByText('Fetching sources')).not.toBeInTheDocument();
+});
+
 test('keeps workspace details out of the feedpack browser', async () => {
   // Arrange
   feedpacks = [{ slug: 'devsecops-watch', title: 'DevSecOps Watch', description: 'Testing sources.', tags: ['testing'], curator: 'Monfil', sourceCount: 1, updatedAt: '2026-09-21', opml: 'devsecops-watch.opml' }];
@@ -261,6 +344,55 @@ test('switching tabs swaps the river to the other workspace\'s feeds', async () 
   // Assert
   await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Home feed', { exact: true })).not.toBeInTheDocument();
+});
+
+const MOD = navigator.userAgent.includes('Mac') ? 'Meta' : 'Control';
+
+test('hovering a workspace icon shows its name and shortcut', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  const { getByRole } = await renderApp('/workspace/1');
+  // React Aria opens hover tooltips only once it has seen a pointer interaction.
+  await getByRole('img', { name: 'Monfil' }).click();
+
+  // Act
+  await getByRole('link', { name: 'CI/CD watch' }).hover();
+
+  // Assert
+  await expect.element(getByRole('tooltip')).toBeInTheDocument();
+  expect(getByRole('tooltip').element().textContent).toMatch(/^CI\/CD watch (⌘|Ctrl\+)2$/);
+});
+
+test('the modifier and a digit open the workspace at that position', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  feedsByWorkspace = { 2: [createFeed({ id: 2, title: 'Pack feed', workspaceId: 2 })] };
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'CI/CD watch' })).toBeInTheDocument();
+
+  // Act
+  await userEvent.keyboard(`{${MOD}>}2{/${MOD}}`);
+
+  // Assert
+  await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
+});
+
+test('the quick switcher filters workspaces by name and opens the chosen one', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' }), createWorkspace({ id: 3, name: 'Security' })];
+  feedsByWorkspace = { 3: [createFeed({ id: 3, title: 'Security feed', workspaceId: 3 })] };
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'Security' })).toBeInTheDocument();
+
+  // Act
+  await userEvent.keyboard(`{${MOD}>}k{/${MOD}}`);
+  await userEvent.keyboard('secu');
+  await expect.element(getByRole('option', { name: /CI\/CD watch/ })).not.toBeInTheDocument();
+  await userEvent.keyboard('{Enter}');
+
+  // Assert
+  await expect.element(getByText('Security feed', { exact: true })).toBeInTheDocument();
+  await expect.element(getByRole('dialog', { name: 'Switch workspace' })).not.toBeInTheDocument();
 });
 
 test('right-clicking a workspace sends workspaces:show-context-menu with its id', async () => {

@@ -250,7 +250,7 @@ test('Saved shows read and unread items even when their source is removed', asyn
   await expect.element(getByText('Item A1', { exact: true })).toBeVisible();
   await expect.element(getByText('Item A2', { exact: true })).toBeVisible();
   expect(invokeMock.mock.calls.filter(([channel]) => channel === 'saved:query').map(([, arg]) => arg)).toEqual([{ workspaceId: HOME_WORKSPACE_ID, limit: 50 }]);
-  await expect.element(getByRole('button', { name: 'Show All' })).not.toBeInTheDocument();
+  await expect.element(getByRole('radiogroup', { name: 'Items to show' })).not.toBeInTheDocument();
 });
 
 test('Saved searches its own items and removes a save without opening it', async () => {
@@ -446,17 +446,19 @@ test('the unread toggle hides read items and brings them back', async () => {
   await expect.element(getByText('Read item', { exact: true })).toBeInTheDocument();
 
   // Act
-  await getByRole('button', { name: 'Show Unread' }).click();
+  await getByRole('radio', { name: 'Unread', exact: true }).click();
 
   // Assert
   await expect.element(getByText('Unread item', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Read item', { exact: true })).not.toBeInTheDocument();
+  await expect.element(getByRole('radio', { name: 'Unread', exact: true })).toBeChecked();
   expect(localStorage.getItem('preferences-hide-read-items')).toBe('true');
 
   // Act
-  await getByRole('button', { name: 'Show All' }).click();
+  await getByRole('radio', { name: 'All', exact: true }).click();
 
   // Assert
+  await expect.element(getByRole('radio', { name: 'All', exact: true })).toBeChecked();
   await expect.element(getByText('Read item', { exact: true })).toBeInTheDocument();
   expect(localStorage.getItem('preferences-hide-read-items')).toBe('false');
 });
@@ -469,7 +471,7 @@ test('shows a caught-up message when the unread filter leaves no items', async (
   const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
 
   // Act
-  await getByRole('button', { name: 'Show Unread' }).click();
+  await getByRole('radio', { name: 'Unread', exact: true }).click();
 
   // Assert
   await expect.element(getByText("You're all caught up", { exact: true })).toBeInTheDocument();

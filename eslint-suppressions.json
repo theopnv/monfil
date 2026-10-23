@@ -106,11 +106,6 @@
       "count": 1
     }
   },
-  "src/renderer/components/Home/RiverSidebar.tsx": {
-    "@sonarjs/cyclomatic-complexity": {
-      "count": 1
-    }
-  },
   "src/renderer/components/Reader/ArticleBody.tsx": {
     "@sonarjs/cyclomatic-complexity": {
       "count": 1

@@ -470,9 +470,10 @@ describe('syncFeedItemsToDatabase', () => {
       await syncFeedItemsToDatabase(db, feed.data.id, [{ ...undated, title: 'Edited' }]);
 
       // Assert
+      const firstFetchDate = 1_000_000 - 7 * 86_400_000;
       const stored = await db.selectFrom('feedItem').select(['title', 'published_at']).where('feed_id', '=', feed.data.id).execute();
-      expect(stored).toEqual([{ title: 'Edited', published_at: 1_000_000 }]);
-      expect(await db.selectFrom('undatedItem').select(['guid', 'first_fetched_at']).execute()).toEqual([{ guid: 'undated', first_fetched_at: 1_000_000 }]);
+      expect(stored).toEqual([{ title: 'Edited', published_at: firstFetchDate }]);
+      expect(await db.selectFrom('undatedItem').select(['guid', 'first_fetched_at']).execute()).toEqual([{ guid: 'undated', first_fetched_at: firstFetchDate }]);
     });
 
     test('records a first-fetch date only for the items without a usable date', async () => {
@@ -504,6 +505,39 @@ describe('syncFeedItemsToDatabase', () => {
       expect(await db.selectFrom('undatedItem').selectAll().execute()).toEqual([]);
       const stored = await db.selectFrom('feedItem').select('published_at').where('feed_id', '=', feed.data.id).execute();
       expect(stored).toEqual([{ published_at: Date.parse('2026-02-03T00:00:00Z') }]);
+    });
+
+    test('dates the undated items of a first fetch a week back, below recent news', async () => {
+      // Arrange
+      const before = Date.now();
+      const undated = { guid: 'backlog', title: 'Backlog', link: 'https://a.example/backlog', pubDate: '', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined };
+
+      // Act
+      const feed = await addFeedToDatabase({ ...feedA, items: [undated] });
+
+      // Assert
+      if (!feed.success) {
+        throw new Error('feed insert failed');
+      }
+      const stored = await db.selectFrom('feedItem').selectAll().where('feed_id', '=', feed.data.id).executeTakeFirstOrThrow();
+      expect(stored.published_at).toBeGreaterThanOrEqual(before - 7 * 86_400_000);
+      expect(stored.published_at).toBeLessThanOrEqual(Date.now() - 7 * 86_400_000);
+    });
+
+    test('dates an undated item that appears after the first fetch at the time it was seen', async () => {
+      // Arrange
+      const feed = await addFeedToDatabase({ ...feedA, items: [{ guid: 'first', title: 'First', link: 'https://a.example/first', pubDate: '', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }] });
+      if (!feed.success) {
+        throw new Error('feed insert failed');
+      }
+      const before = Date.now();
+
+      // Act
+      await syncFeedItemsToDatabase(db, feed.data.id, [{ guid: 'later', title: 'Later', link: 'https://a.example/later', pubDate: '', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }]);
+
+      // Assert
+      const stored = await db.selectFrom('feedItem').selectAll().where('guid', '=', 'later').executeTakeFirstOrThrow();
+      expect(stored.published_at).toBeGreaterThanOrEqual(before);
     });
   });
 });

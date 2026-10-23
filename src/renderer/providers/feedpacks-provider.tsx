@@ -31,7 +31,10 @@ export const useInstallFeedpack = (): ((slug: string, target: FeedpackInstallTar
     mutationFn: ({ slug, target }: { slug: string; target: FeedpackInstallTarget }) => ipc.invoke('feedpacks:install', { slug, target }),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.setQueryData(uiKeys.feedpackRefreshing(result.data.workspaceId), true);
+        // With nothing imported the refresh ends before this runs, so the finished broadcast would never clear the flag.
+        if (result.data.imported > 0) {
+          queryClient.setQueryData(uiKeys.feedpackRefreshing(result.data.workspaceId), true);
+        }
         void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });
         void queryClient.invalidateQueries({ queryKey: ['categories'] });
