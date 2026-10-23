@@ -3,7 +3,7 @@ title: Privacy notice
 description: How the Monfil website and desktop app handle data.
 ---
 
-Last updated: 18 October 2026.
+Last updated: 23 October 2026.
 
 ## Documentation website
 
@@ -31,7 +31,25 @@ The Monfil website maintainer is responsible for this website. For privacy quest
 
 ## Desktop app
 
-Monfil is a desktop feed reader. It has no account, Monfil server, or usage analytics. It stores your feeds, saved articles, and read state on your device. Some display settings use local storage. You can find and back up the database in Settings.
+Monfil is a desktop feed reader. It has no account and no Monfil server. It stores your feeds, saved articles, and read state on your device. Some display settings use local storage. You can find and back up the database in Settings.
+
+### Anonymous usage stats (optional)
+
+Monfil can send anonymous usage stats. They are off until you agree. After you have added a feed and opened the app twice, Monfil shows a card with two equal buttons, **Share usage stats** and **No thanks**. Closing the card asks again later, at most once more after 14 days. You can change your choice at any time in **Settings > Privacy**. **See what is sent** shows the summary that Monfil would send today.
+
+If you agree, Monfil counts on your device what you do. Once a day it sends one `daily_summary` event for each day you used the app. When you agree, it also sends one `consent_granted` event with no data. The `daily_summary` event holds:
+
+- Counts for the day: articles opened, full-text extractions, feeds added, feeds removed, manual refreshes, items saved, feedpacks installed, OPML files imported, OPML files exported, backups made, workspaces created, workspaces switched, searches, and embeds loaded.
+- Counts of failures for the day: feed refresh failures, article extraction failures, internal request failures, and interface failures. These are numbers only. They carry no error text.
+- The state of your library: a size range for your feeds (`0`, `1-5`, `6-20`, `21-100`, or `100+`), the number of workspaces, the number of folders, and the types of feed you use, such as `rss+youtube`.
+- Your display settings: density, theme, whether read items are hidden, whether items are marked read on scroll, whether links open in your browser, and whether keyboard navigation is on.
+- The day it covers, the Monfil version, your operating system and its version, your language setting, and the version of the web engine in Monfil.
+
+The event never holds a feed name, a link, article text, search text, or a name for you. Monfil sends no identifier that lasts. Each request uses a new random session ID.
+
+Aptabase receives the events. Technov Solutions SRL runs Aptabase and is our processor under a data processing agreement. Monfil uses the EU region. The Aptabase server sees your IP address and user agent when it receives a request. It turns them into a daily hash with a salt that changes every day, so it cannot follow you from one day to the next. See the [Aptabase privacy policy](https://aptabase.com/legal/privacy) for how long it keeps data.
+
+The legal basis is your consent. Your choice is stored on your device with its date and the version of this notice. To withdraw, turn off **Share anonymous usage stats** in Settings. Monfil then stops counting, stops sending, and deletes the counts it kept on your device. Events already received cannot be linked back to you. A build of Monfil that has no analytics key, such as a build you compile yourself, sends nothing.
 
 ### Requests to other sites
 

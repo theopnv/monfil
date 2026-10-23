@@ -295,3 +295,41 @@ export interface FeedpackPreview {
 export type FeedpackInstallTarget =
   | { kind: 'new-workspace'; name: string; icon: string; color: string }
   | { kind: 'merge-workspace'; workspaceId: number };
+
+/** Matches the "Last updated" date of the privacy notice in `doc/src/content/docs/user-guide/privacy.md`. */
+export const USAGE_ANALYTICS_NOTICE_VERSION = '2026-10-23';
+
+export const USAGE_ANALYTICS_NOTICE_URL = 'https://theopnv.github.io/monfil/user-guide/privacy/';
+
+export type UsageAnalyticsConsent = 'unset' | 'granted' | 'denied';
+
+export const RENDERER_USAGE_COUNTERS = ['searches', 'embeds_loaded', 'workspaces_switched'] as const;
+export type RendererUsageCounter = typeof RENDERER_USAGE_COUNTERS[number];
+
+export const MAIN_USAGE_COUNTERS = [
+  'articles_opened', 'fulltext_extracted', 'feeds_added', 'feeds_removed', 'manual_refreshes', 'items_saved',
+  'feedpacks_installed', 'opml_imported', 'opml_exported', 'backups_made', 'workspaces_created',
+  'refresh_failures', 'extraction_failures', 'ipc_failures', 'renderer_failures',
+] as const;
+
+export const USAGE_COUNTERS = [...MAIN_USAGE_COUNTERS, ...RENDERER_USAGE_COUNTERS] as const;
+export type UsageCounter = typeof USAGE_COUNTERS[number];
+
+export interface UsageAnalyticsState {
+  consent: UsageAnalyticsConsent;
+  shouldPrompt: boolean;
+  /** False in a build that has no analytics endpoint, where the choice would change nothing. */
+  available: boolean;
+}
+
+/** The display settings the renderer keeps in `localStorage`, reported so the daily summary can include them. */
+export interface UsagePreferences {
+  density: 'Cards' | 'Magazine' | 'Compact';
+  theme: 'light' | 'dark' | 'system';
+  hideReadItems: boolean;
+  markReadOnScroll: boolean;
+  openLinksExternally: boolean;
+  keyboardNavigation: boolean;
+}
+
+export type DailySummaryProps = Record<string, string | number>;

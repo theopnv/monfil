@@ -11,6 +11,9 @@ import { openExternalLink } from "../app/window-security";
 import { logFilePath } from '../app/main-state';
 import { logger } from '../logging/logger';
 import { titleBarOverlayForTheme } from '../app/window-chrome';
+import { incrementCounter } from '../analytics/counters';
+import { setPreferencesSnapshot } from '../analytics/preferences';
+import { isRendererUsageRecord, isUsagePreferences } from '../../shared/ipc-payloads';
 import { installUpdate } from '../updates/auto-updater';
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {
@@ -49,6 +52,18 @@ export function listenToSetWindowTheme(event: IpcMainEvent, theme: OneWayRendere
 
 export function listenToRendererLog(_event: IpcMainEvent, payload: OneWayRendererToMainChannelPayloads['log:write']) {
   logger[payload.level](payload.event, payload.data, payload.error);
+}
+
+export function listenToUsageRecord(_event: IpcMainEvent, payload: OneWayRendererToMainChannelPayloads['usage:record']) {
+  if (isRendererUsageRecord(payload)) {
+    void incrementCounter(payload.counter);
+  }
+}
+
+export function listenToUsagePreferences(_event: IpcMainEvent, payload: OneWayRendererToMainChannelPayloads['usage:preferences']) {
+  if (isUsagePreferences(payload)) {
+    setPreferencesSnapshot(payload);
+  }
 }
 
 export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayRendererToMainChannelPayloads["feeds:show-feed-context-menu"]) {

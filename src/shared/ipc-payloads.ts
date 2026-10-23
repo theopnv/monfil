@@ -3,8 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import type { TwoWayRendererMainChannels, TwoWayRendererMainChannelsInvokeArgs } from './channels';
-import { SOURCE_TYPES } from './contracts';
-import type { FeedpackInstallTarget, ImportOpmlTarget, NewFeedInput, RefreshInterval, RetentionDays, RiverCursor, RiverQuery, SavedCursor, SavedQuery, SourceItem, SourceType } from './contracts';
+import { RENDERER_USAGE_COUNTERS, SOURCE_TYPES } from './contracts';
+import type { FeedpackInstallTarget, ImportOpmlTarget, NewFeedInput, RefreshInterval, RendererUsageCounter, RetentionDays, RiverCursor, RiverQuery, SavedCursor, SavedQuery, SourceItem, SourceType, UsagePreferences } from './contracts';
 import { isPositiveSafeInteger } from './validation';
 
 type Guard<T> = (value: unknown) => value is T;
@@ -71,6 +71,25 @@ function isRefreshInterval(value: unknown): value is RefreshInterval {
 function isRetentionDays(value: unknown): value is RetentionDays {
   return value === 15 || value === 30 || value === 60 || value === 90 || value === 180;
 }
+
+function isConsentChoice(value: unknown): value is 'granted' | 'denied' {
+  return value === 'granted' || value === 'denied';
+}
+
+export function isRendererUsageCounter(value: unknown): value is RendererUsageCounter {
+  return (RENDERER_USAGE_COUNTERS as readonly unknown[]).includes(value);
+}
+
+export const isRendererUsageRecord = object<{ counter: RendererUsageCounter }>({ counter: isRendererUsageCounter });
+
+export const isUsagePreferences = object<UsagePreferences>({
+  density: (value): value is UsagePreferences['density'] => value === 'Cards' || value === 'Magazine' || value === 'Compact',
+  theme: (value): value is UsagePreferences['theme'] => value === 'light' || value === 'dark' || value === 'system',
+  hideReadItems: isBoolean,
+  markReadOnScroll: isBoolean,
+  openLinksExternally: isBoolean,
+  keyboardNavigation: isBoolean,
+});
 
 const isSourceItem = object<SourceItem>({
   title: isString, guid: isString, link: optional(isString), pubDate: isString, description: isString,
@@ -147,6 +166,10 @@ export const invokePayloadGuards: { [C in TwoWayRendererMainChannels]: Guard<Two
   'app:get-update-state': isUndefined,
   'settings:get-detailed-logging': isUndefined,
   'settings:set-detailed-logging': isBoolean,
+  'settings:get-usage-analytics': isUndefined,
+  'settings:set-usage-analytics': isConsentChoice,
+  'settings:dismiss-usage-analytics-prompt': isUndefined,
+  'analytics:preview': isUndefined,
   'opml:import': object({ target: isImportTarget }),
   'opml:export': isWorkspace,
   'feedpacks:list': isUndefined,

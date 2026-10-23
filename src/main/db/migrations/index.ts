@@ -11,6 +11,7 @@ import * as placementCategoryWorkspace from './0005_placement_category_workspace
 import * as feedConditionalGet from './0006_feed_conditional_get';
 import * as itemRetention from './0007_item_retention';
 import * as savedItems from './0008_saved_items';
+import * as usageCounters from './0009_usage_counters';
 
 const migrations: Record<string, Migration> = {
   '0001_initial_schema': initialSchema,
@@ -21,6 +22,7 @@ const migrations: Record<string, Migration> = {
   '0006_feed_conditional_get': feedConditionalGet,
   '0007_item_retention': itemRetention,
   '0008_saved_items': savedItems,
+  '0009_usage_counters': usageCounters,
 };
 
 export const migrationProvider: MigrationProvider = {

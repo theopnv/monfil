@@ -2,6 +2,8 @@
 
 interface ImportMetaEnv {
   readonly DEV: boolean;
+  readonly MONFIL_APTABASE_KEY: string | undefined;
+  readonly MONFIL_APTABASE_HOST: string | undefined;
 }
 
 interface ImportMeta {

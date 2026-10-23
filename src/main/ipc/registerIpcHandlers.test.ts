@@ -19,8 +19,11 @@ import { openAndImportOpml } from '../opml/import';
 import { exportWorkspaceOpml } from '../opml/export';
 import { getFeedpackCatalog } from '../feedpacks/catalog';
 import { installFeedpack, previewFeedpack } from '../feedpacks/install';
+import { changeUsageAnalyticsConsent, dismissUsageAnalyticsPrompt, getUsageAnalyticsState } from '../analytics/consent';
+import { previewSummary } from '../analytics/report';
 import { getAppInfo } from '../app/app-info';
 import { logger } from '../logging/logger';
+import { incrementCounter } from '../analytics/counters';
 import { registerIpcHandlers } from './registerIpcHandlers';
 
 vi.mock(import('electron'), () => ({ ipcMain: { handle: vi.fn() } as unknown as typeof ipcMain, dialog: { showSaveDialog: vi.fn() } as unknown as typeof dialog }));
@@ -60,6 +63,9 @@ vi.mock(import('../opml/export'), () => ({ exportWorkspaceOpml: vi.fn() }));
 vi.mock(import('../feedpacks/catalog'), () => ({ getFeedpackCatalog: vi.fn() }));
 vi.mock(import('../feedpacks/install'), () => ({ installFeedpack: vi.fn(), previewFeedpack: vi.fn() }));
 vi.mock(import('../app/app-info'), () => ({ getAppInfo: vi.fn() }));
+vi.mock(import('../analytics/counters'), () => ({ incrementCounter: vi.fn() }));
+vi.mock(import('../analytics/consent'), () => ({ changeUsageAnalyticsConsent: vi.fn(), dismissUsageAnalyticsPrompt: vi.fn(), getUsageAnalyticsState: vi.fn() }));
+vi.mock(import('../analytics/report'), () => ({ previewSummary: vi.fn() }));
 vi.mock(import('../updates/auto-updater'), () => ({ getUpdateState: () => ({ name: 'NONE' as const }) }));
 
 const category: FeedCategory = { id: 3, name: 'Tech', workspace_id: 1 };
@@ -82,6 +88,8 @@ const newFeed: NewFeedInput = {
 const done = { success: true, data: undefined } as const;
 const imported = { success: true as const, data: { workspaceId: 1, imported: 1, skipped: [], failed: [] } };
 const catalog: FeedpackCatalog = { version: 1, packs: [] };
+const usageState = { consent: 'granted' as const, shouldPrompt: false, available: true };
+const summary = { day: '2026-10-23', articles_opened: 1 };
 const preview = { pack: { slug: 'tech', title: 'Tech', description: '', tags: [], curator: '', sourceCount: 1, updatedAt: '', opml: 'tech.opml' }, sources: { title: 'Tech', categories: [] } };
 
 type Fixture<C extends TwoWayRendererMainChannels> = {
@@ -126,6 +134,10 @@ const fixtures: { [C in TwoWayRendererMainChannels]: Fixture<C> } = {
   'app:get-update-state': { arg: undefined, response: { name: 'NONE' }, handler: handlers.handleAppGetUpdateState },
   'settings:get-detailed-logging': { arg: undefined, response: false, handler: handlers.handleSettingsGetDetailedLogging },
   'settings:set-detailed-logging': { arg: false, response: false, handler: handlers.handleSettingsSetDetailedLogging },
+  'settings:get-usage-analytics': { arg: undefined, response: usageState, handler: handlers.handleSettingsGetUsageAnalytics },
+  'settings:set-usage-analytics': { arg: 'granted', response: usageState, handler: handlers.handleSettingsSetUsageAnalytics },
+  'settings:dismiss-usage-analytics-prompt': { arg: undefined, response: usageState, handler: handlers.handleSettingsDismissUsageAnalyticsPrompt },
+  'analytics:preview': { arg: undefined, response: summary, handler: handlers.handleAnalyticsPreview },
   'opml:import': { arg: { target: { kind: 'new-workspace', name: 'Tech', icon: 'Home01', color: 'blue', sourceSlug: 'tech', sourceVersion: '1' } }, response: imported, handler: handlers.handleOpmlImport },
   'opml:export': { arg: { workspaceId: 1 }, response: done, handler: handlers.handleOpmlExport },
   'feedpacks:list': { arg: undefined, response: { success: true, data: catalog }, handler: handlers.handleFeedpacksList },
@@ -173,6 +185,10 @@ beforeEach(() => {
   vi.mocked(getFeedpackCatalog).mockResolvedValue({ success: true, data: catalog });
   vi.mocked(previewFeedpack).mockResolvedValue({ success: true, data: preview });
   vi.mocked(installFeedpack).mockResolvedValue(imported);
+  vi.mocked(getUsageAnalyticsState).mockResolvedValue(usageState);
+  vi.mocked(changeUsageAnalyticsConsent).mockResolvedValue(usageState);
+  vi.mocked(dismissUsageAnalyticsPrompt).mockResolvedValue(usageState);
+  vi.mocked(previewSummary).mockResolvedValue(summary);
   vi.mocked(getAppInfo).mockResolvedValue(fixtures['app:get-info'].response);
   vi.mocked(dialog.showSaveDialog).mockResolvedValue({ canceled: true, filePath: '' });
   registerIpcHandlers();
@@ -257,5 +273,75 @@ describe('invoke channel contract', () => {
     expect(response).toEqual({ success: false, error: { name: 'UNEXPECTED_ERROR', message: 'The operation could not be completed.', incidentId: 'test-incident' } });
     expect(structuredClone(response)).toEqual(response);
     expect(logger.error).toHaveBeenCalledWith('ipc.failure', { channel: 'feeds:list', incidentId: 'test-incident' }, error);
+  });
+});
+
+describe('usage counters', () => {
+  test.each([
+    ['items:get-content', 'articles_opened'],
+    ['feeds:submit-add-feed', 'feeds_added'],
+    ['feeds:delete-feed', 'feeds_removed'],
+    ['feeds:refresh', 'manual_refreshes'],
+    ['items:set-saved', 'items_saved'],
+    ['feedpacks:install', 'feedpacks_installed'],
+    ['opml:import', 'opml_imported'],
+    ['opml:export', 'opml_exported'],
+    ['workspaces:create', 'workspaces_created'],
+  ] as const)('%s counts %s after a successful request', async (channel, counter) => {
+    // Act
+    await registered(channel)(event, structuredClone(fixtures[channel].arg));
+
+    // Assert
+    expect(incrementCounter).toHaveBeenCalledExactlyOnceWith(counter);
+  });
+
+  test('counts a backup that finished', async () => {
+    // Arrange
+    vi.mocked(dialog.showSaveDialog).mockResolvedValueOnce({ canceled: false, filePath: 'backup.db' });
+
+    // Act
+    await registered('app:back-up-database')(event, undefined);
+
+    // Assert
+    expect(incrementCounter).toHaveBeenCalledExactlyOnceWith('backups_made');
+  });
+
+  test('counts nothing for a failed result', async () => {
+    // Arrange
+    vi.mocked(insert.addFeedToDatabase).mockResolvedValueOnce({ success: false, error: { name: 'DUPLICATE_FEED', message: 'Exists.' } as never });
+
+    // Act
+    await registered('feeds:submit-add-feed')(event, fixtures['feeds:submit-add-feed'].arg);
+    await registered('app:back-up-database')(event, undefined);
+
+    // Assert
+    expect(incrementCounter).not.toHaveBeenCalled();
+  });
+
+  test('counts nothing when the handler throws', async () => {
+    // Arrange
+    vi.mocked(query.queryFeedItems).mockRejectedValueOnce(new Error('down'));
+
+    // Act
+    await registered('items:get-content')(event, 4);
+
+    // Assert
+    expect(incrementCounter).not.toHaveBeenCalled();
+  });
+
+  test('counts an unsave for nothing', async () => {
+    // Act
+    await registered('items:set-saved')(event, { workspaceId: 1, itemId: 4, saved: false });
+
+    // Assert
+    expect(incrementCounter).not.toHaveBeenCalled();
+  });
+
+  test('counts nothing for a channel without a counter', async () => {
+    // Act
+    await registered('feeds:list')(event, { workspaceId: 1 });
+
+    // Assert
+    expect(incrementCounter).not.toHaveBeenCalled();
   });
 });

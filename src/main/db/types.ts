@@ -23,6 +23,14 @@ export interface Database {
   setting: SettingTable
   articleContent: ArticleContentTable
   savedItem: SavedItemTable
+  usage_counter: UsageCounterTable
+}
+
+// Per-day tallies for opt-in usage analytics. See doc/src/content/docs/contributor-guide/usage-analytics.md.
+export interface UsageCounterTable {
+  day: string;
+  name: string;
+  value: number;
 }
 
 export interface SavedItemTable {
