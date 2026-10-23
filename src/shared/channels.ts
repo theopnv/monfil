@@ -36,6 +36,9 @@ import type {
   RiverPage,
   RiverQuery,
   SavedQuery,
+  SavedSearch,
+  SavedSearchError,
+  SavedSearchList,
   SetSavedItemInput,
   UpdateSavedItemError,
   SourceType,
@@ -130,6 +133,11 @@ export type TwoWayRendererMainChannelPayloads = {
   'feedpacks:list': Result<FeedpackCatalog, CatalogError>;
   'feedpacks:preview': Result<FeedpackPreview, FeedpackError>;
   'feedpacks:install': Result<ImportSummary, InstallFeedpackError>;
+  'searches:list': SavedSearchList;
+  'searches:create': Result<SavedSearch, SavedSearchError>;
+  'searches:update': Result<SavedSearch, SavedSearchError>;
+  'searches:delete': Result<void, SavedSearchError>;
+  'searches:dismiss-hint': Result<void, UpdateWorkspaceError>;
 };
 
 export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
@@ -181,6 +189,11 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feedpacks:list': undefined;
   'feedpacks:preview': { slug: string };
   'feedpacks:install': { slug: string; target: FeedpackInstallTarget };
+  'searches:list': { workspaceId: number };
+  'searches:create': { workspaceId: number; name: string; query: string };
+  'searches:update': { searchId: number; name?: string; query?: string };
+  'searches:delete': { searchId: number };
+  'searches:dismiss-hint': { workspaceId: number };
 };
 
 export type ChannelPayloads = OneWayRendererToMainChannelPayloads

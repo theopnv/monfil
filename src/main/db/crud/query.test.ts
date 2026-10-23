@@ -5,7 +5,7 @@
 import { beforeEach, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 import { db, initializeDatabase } from '../database';
-import { countFeedItems, countFeedMetadata, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedMetadataByIds, queryFeedSummaries, queryRiverPage, querySubscribedFeedMetadata, queryWorkspaceById, queryWorkspaceSummaries } from './query';
+import { countFeedItems, countFeedMetadata, countUnreadRiverItems, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedMetadataByIds, queryFeedSummaries, queryRiverPage, querySubscribedFeedMetadata, queryWorkspaceById, queryWorkspaceSummaries } from './query';
 
 beforeAll(async () => {
   await initializeDatabase(':memory:');
@@ -667,6 +667,93 @@ describe('queryRiverPage', () => {
 
     // Assert
     expect(page.rows.map((row) => row.title)).toEqual(['50% off sale']);
+  });
+
+  test('supports phrases, OR, exclusions and title: together', async () => {
+    // Arrange
+    const feedId = await seedFeed({ title: 'Acme Jobs' });
+    await seedItem(feedId, { title: 'Data Analyst', excerpt: 'sql and python' });
+    await seedItem(feedId, { title: 'Senior Data Analyst', excerpt: 'sql' });
+    await seedItem(feedId, { title: 'Data Engineer', excerpt: 'we need a data analyst friend' });
+    await seedItem(feedId, { title: 'Product Designer', excerpt: 'figma' });
+    const titles = async (search: string) => (await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, search })).rows.map((row) => row.title).sort();
+
+    // Act / Assert
+    expect(await titles('"data analyst"')).toEqual(['Data Analyst', 'Data Engineer', 'Senior Data Analyst']);
+    expect(await titles('title:"data analyst"')).toEqual(['Data Analyst', 'Senior Data Analyst']);
+    expect(await titles('title:"data analyst" -senior')).toEqual(['Data Analyst']);
+    expect(await titles('designer OR engineer')).toEqual(['Data Engineer', 'Product Designer']);
+    expect(await titles('-data')).toEqual(['Product Designer']);
+    expect(await titles('title:acme')).toEqual([]);
+    expect(await titles('acme -senior -engineer')).toEqual(['Data Analyst', 'Product Designer']);
+  });
+
+  test('matches a short bare word as a whole word, and a quoted one as a substring', async () => {
+    // Arrange
+    const feedId = await seedFeed();
+    await seedItem(feedId, { title: 'CI Engineer' });
+    await seedItem(feedId, { title: 'Producing Assistant' });
+    await seedItem(feedId, { title: 'Senior (CI/CD) Lead' });
+    const titles = async (search: string) => (await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, search })).rows.map((row) => row.title).sort();
+
+    // Act / Assert
+    expect(await titles('ci')).toEqual(['CI Engineer', 'Senior (CI/CD) Lead']);
+    expect(await titles('"ci"')).toEqual(['CI Engineer', 'Producing Assistant', 'Senior (CI/CD) Lead']);
+    expect(await titles('title:ci -lead')).toEqual(['CI Engineer']);
+    expect(await titles('produc')).toEqual(['Producing Assistant']);
+  });
+
+  test('searches the place and work mode of a job, and a negated place keeps other items', async () => {
+    // Arrange
+    const jobs = await seedFeed({ title: 'Acme · Jobs', link: 'https://api.lever.co/v0/postings/acme?mode=json' });
+    await db.updateTable('feedMetadata').set({ type: 'ats' }).where('id', '=', jobs).execute();
+    const paris = await seedItem(jobs, { title: 'Engineer' });
+    const dublin = await seedItem(jobs, { title: 'Analyst' });
+    await db.updateTable('feedItem').set({ extra: JSON.stringify({ location: 'Paris, France', workMode: 'hybrid' }) }).where('id', '=', paris).execute();
+    await db.updateTable('feedItem').set({ extra: JSON.stringify({ location: 'Dublin', workMode: 'remote' }) }).where('id', '=', dublin).execute();
+    const blog = await seedFeed({ link: 'https://blog.example/feed' });
+    await seedItem(blog, { title: 'A blog post' });
+    const titles = async (search: string) => (await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, search })).rows.map((row) => row.title).sort();
+
+    // Act / Assert
+    expect(await titles('paris')).toEqual(['Engineer']);
+    expect(await titles('remote')).toEqual(['Analyst']);
+    expect(await titles('-paris')).toEqual(['A blog post', 'Analyst']);
+    expect(await titles('title:paris')).toEqual([]);
+  });
+
+  test('counts unread matches with the same filters as the page', async () => {
+    // Arrange
+    const feedId = await seedFeed();
+    await seedItem(feedId, { title: 'Data Analyst' });
+    await seedItem(feedId, { title: 'Data Analyst II', readAt: '2024-01-01' });
+    await seedItem(feedId, { title: 'Designer' });
+    const search = 'title:"data analyst"';
+
+    // Act
+    const count = await countUnreadRiverItems({ workspaceId: HOME_WORKSPACE_ID, search });
+    const page = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, search, unreadOnly: true });
+
+    // Assert
+    expect(count).toBe(1);
+    expect(page.rows).toHaveLength(count);
+  });
+
+  test('fills job details for ats items only', async () => {
+    // Arrange
+    const feedId = await seedFeed();
+    const itemId = await seedItem(feedId, { title: 'Engineer' });
+    const extra = JSON.stringify({ company: 'Acme', location: 'Paris', workMode: 'hybrid', salaryLabel: '€60k–€75k' });
+    await db.updateTable('feedItem').set({ extra }).where('id', '=', itemId).execute();
+
+    // Act
+    const before = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10 });
+    await db.updateTable('feedMetadata').set({ type: 'ats' }).where('id', '=', feedId).execute();
+    const after = await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10 });
+
+    // Assert
+    expect(before.rows[0]?.job).toBeUndefined();
+    expect(after.rows[0]?.job).toEqual({ company: 'Acme', location: 'Paris', workMode: 'hybrid', salaryLabel: '€60k–€75k' });
   });
 
   test.each([

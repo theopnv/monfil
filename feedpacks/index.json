@@ -330,6 +330,36 @@
       "sourceCount": 26,
       "updatedAt": "2026-10-23",
       "opml": "basketball.opml"
+    },
+    {
+      "slug": "tech-jobs",
+      "title": "Tech Jobs",
+      "description": "Open jobs at tech companies, scale-ups and AI labs around the world, from public job boards. Filter by place in the search box.",
+      "tags": ["jobs", "tech", "engineering", "ai", "careers"],
+      "curator": "Monfil",
+      "sourceCount": 52,
+      "updatedAt": "2026-10-23",
+      "opml": "tech-jobs.opml"
+    },
+    {
+      "slug": "video-games-jobs",
+      "title": "Video Game Jobs",
+      "description": "Open jobs at video game studios and publishers around the world, from public job boards. Filter by place in the search box.",
+      "tags": ["jobs", "games", "game-dev", "careers"],
+      "curator": "Monfil",
+      "sourceCount": 22,
+      "updatedAt": "2026-10-23",
+      "opml": "video-games-jobs.opml"
+    },
+    {
+      "slug": "finance-jobs",
+      "title": "Finance Jobs",
+      "description": "Open jobs at fintech, payments and finance companies around the world, from public job boards. Filter by place in the search box.",
+      "tags": ["jobs", "finance", "fintech", "payments", "careers"],
+      "curator": "Monfil",
+      "sourceCount": 41,
+      "updatedAt": "2026-10-23",
+      "opml": "finance-jobs.opml"
     }
   ]
 }

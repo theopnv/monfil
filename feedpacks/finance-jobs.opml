@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Finance Jobs</title></head>
+  <body>
+    <outline text="Neobanks and fintech">
+      <outline text="Qonto" title="Qonto" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/qonto?includeCompensation=true"/>
+      <outline text="Pennylane" title="Pennylane" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/pennylane?includeCompensation=true"/>
+      <outline text="Ledger" title="Ledger" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/ledger?includeCompensation=true"/>
+      <outline text="Alan" title="Alan" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/alan?includeCompensation=true"/>
+      <outline text="Swile" title="Swile" type="rss" xmlUrl="https://api.lever.co/v0/postings/swile?mode=json"/>
+      <outline text="Younited" title="Younited" type="rss" xmlUrl="https://api.lever.co/v0/postings/younited?mode=json"/>
+      <outline text="Payplug" title="Payplug" type="rss" xmlUrl="https://payplug.teamtailor.com/jobs.rss"/>
+      <outline text="Shine" title="Shine" type="rss" xmlUrl="https://shine.teamtailor.com/jobs.rss"/>
+      <outline text="iBanFirst" title="iBanFirst" type="rss" xmlUrl="https://ibanfirst.recruitee.com/api/offers/"/>
+      <outline text="Monzo" title="Monzo" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/monzo/jobs?content=true"/>
+      <outline text="N26" title="N26" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/n26/jobs?content=true"/>
+      <outline text="Nubank" title="Nubank" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/nubank?includeCompensation=true"/>
+      <outline text="Tide" title="Tide" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/tide/jobs?content=true"/>
+      <outline text="Zopa" title="Zopa" type="rss" xmlUrl="https://api.lever.co/v0/postings/zopa?mode=json"/>
+      <outline text="Chime" title="Chime" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/chime/jobs?content=true"/>
+      <outline text="SoFi" title="SoFi" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/sofi/jobs?content=true"/>
+      <outline text="Wealthfront" title="Wealthfront" type="rss" xmlUrl="https://api.lever.co/v0/postings/wealthfront?mode=json"/>
+      <outline text="Wealthsimple" title="Wealthsimple" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/wealthsimple?includeCompensation=true"/>
+      <outline text="Robinhood" title="Robinhood" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/robinhood/jobs?content=true"/>
+      <outline text="Affirm" title="Affirm" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/affirm/jobs?content=true"/>
+      <outline text="Upstart" title="Upstart" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/upstart/jobs?content=true"/>
+      <outline text="Mercury" title="Mercury" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/mercury/jobs?content=true"/>
+      <outline text="Brex" title="Brex" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/brex/jobs?content=true"/>
+      <outline text="Ramp" title="Ramp" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/ramp?includeCompensation=true"/>
+      <outline text="Pleo" title="Pleo" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/pleo?includeCompensation=true"/>
+      <outline text="Carta" title="Carta" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/carta/jobs?content=true"/>
+      <outline text="Plaid" title="Plaid" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/plaid?includeCompensation=true"/>
+    </outline>
+    <outline text="Payments">
+      <outline text="Adyen" title="Adyen" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/adyen/jobs?content=true"/>
+      <outline text="Stripe" title="Stripe" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/stripe/jobs?content=true"/>
+      <outline text="SumUp" title="SumUp" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/sumup/jobs?content=true"/>
+      <outline text="Block" title="Block" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/block/jobs?content=true"/>
+      <outline text="Mollie" title="Mollie" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/mollie?includeCompensation=true"/>
+      <outline text="Trustly" title="Trustly" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/trustly?includeCompensation=true"/>
+      <outline text="Payoneer" title="Payoneer" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/payoneer/jobs?content=true"/>
+      <outline text="Nium" title="Nium" type="rss" xmlUrl="https://api.lever.co/v0/postings/nium?mode=json"/>
+    </outline>
+    <outline text="Crypto">
+      <outline text="Coinbase" title="Coinbase" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/coinbase/jobs?content=true"/>
+      <outline text="Bitpanda" title="Bitpanda" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/bitpanda/jobs?content=true"/>
+      <outline text="Ripple" title="Ripple" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/ripple/jobs?content=true"/>
+      <outline text="Fireblocks" title="Fireblocks" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/fireblocks/jobs?content=true"/>
+      <outline text="Anchorage Digital" title="Anchorage Digital" type="rss" xmlUrl="https://api.lever.co/v0/postings/anchorage?mode=json"/>
+      <outline text="Gemini" title="Gemini" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/gemini/jobs?content=true"/>
+    </outline>
+  </body>
+</opml>

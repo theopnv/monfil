@@ -24,6 +24,7 @@ export interface Database {
   articleContent: ArticleContentTable
   savedItem: SavedItemTable
   usage_counter: UsageCounterTable
+  savedSearch: SavedSearchTable
 }
 
 // Per-day tallies for opt-in usage analytics. See doc/src/content/docs/contributor-guide/usage-analytics.md.
@@ -32,6 +33,20 @@ export interface UsageCounterTable {
   name: string;
   value: number;
 }
+
+// A saved search is a named river query, shown as a pill above the river of one workspace.
+export interface SavedSearchTable {
+  id: Generated<number>;
+  workspace_id: number;
+  name: string;
+  query: string;
+  position: number;
+  created_at: number;
+}
+
+export type SavedSearchRow = Selectable<SavedSearchTable>;
+export type NewSavedSearch = Insertable<SavedSearchTable>;
+export type UpdateSavedSearch = Updateable<SavedSearchTable>;
 
 export interface SavedItemTable {
   workspace_id: number;
@@ -54,6 +69,8 @@ export interface WorkspaceTable {
   source_slug: string | undefined;
   source_version: string | undefined;
   installed_at: string | undefined;
+  // Set once the user dismisses the saved-search hint; it lives here so it goes away with the workspace.
+  search_hint_dismissed_at: string | undefined | null;
 }
 
 export type WorkspaceRow = Selectable<WorkspaceTable>;

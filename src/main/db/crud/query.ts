@@ -5,7 +5,8 @@
 import { sql, type SelectQueryBuilder } from 'kysely';
 import { type ArticleContent, type Database, type FeedItem, type FeedMetadataRow, type Setting } from '../types';
 import { db, dbReady } from '../database';
-import type { FeedCategory, FeedSummary, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from '../../../shared/contracts';
+import { searchCondition } from '../search';
+import type { FeedCategory, FeedSummary, JobDetails, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from '../../../shared/contracts';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
 // Adding a new field to a table object and forgetting to add it here will result in a compilation error.
@@ -255,9 +256,55 @@ export async function queryWorkspaceById(workspaceId: number): Promise<Workspace
   return db.selectFrom('workspace').selectAll().where('id', '=', workspaceId).executeTakeFirst();
 }
 
-// Escapes SQLite LIKE wildcards so a search word is matched literally rather than as a pattern.
-function escapeLikeWord(word: string): string {
-  return word.replace(/[\\%_]/g, (char) => `\\${char}`);
+function riverItems(query: Pick<RiverQuery, 'workspaceId' | 'feedIds' | 'ids' | 'unreadOnly' | 'search'>) {
+  let builder = db.selectFrom('feedItem as i')
+    .innerJoin('feedMetadata as f', 'f.id', 'i.feed_id')
+    .innerJoin('feedPlacement as p', (join) => join.onRef('p.feed_id', '=', 'f.id').on('p.workspace_id', '=', query.workspaceId))
+    .innerJoin('feedCategory as c', 'c.id', 'p.category_id')
+    .leftJoin('savedItem as s', (join) => join.onRef('s.item_id', '=', 'i.id').on('s.workspace_id', '=', query.workspaceId));
+
+  builder = query.feedIds
+    ? builder.where('f.id', 'in', query.feedIds)
+    : builder.where('p.showInWorkspace', '=', 1);
+
+  if (query.ids) {
+    builder = builder.where('i.id', 'in', query.ids);
+  }
+
+  if (query.unreadOnly) {
+    builder = builder.where('i.read_at', 'is', null);
+  }
+
+  const search = searchCondition(query.search);
+  return search ? builder.where(search) : builder;
+}
+
+/** How many unread items match `query`, through the same filters as `queryRiverPage` so a count and its page always agree. */
+export async function countUnreadRiverItems(query: Pick<RiverQuery, 'workspaceId' | 'feedIds' | 'search'>): Promise<number> {
+  await dbReady;
+  const { count } = await riverItems({ ...query, unreadOnly: true })
+    .select((eb) => eb.fn.countAll<number>().as('count'))
+    .executeTakeFirstOrThrow();
+  return count;
+}
+
+function toJobDetails(extra: string | undefined): JobDetails | undefined {
+  if (!extra) {
+    return undefined;
+  }
+  try {
+    const raw: unknown = JSON.parse(extra);
+    if (typeof raw !== 'object' || raw === null) {
+      return undefined;
+    }
+    const field = (key: string): string | undefined => {
+      const value: unknown = (raw as Record<string, unknown>)[key];
+      return typeof value === 'string' && value !== '' ? value : undefined;
+    };
+    return { company: field('company'), location: field('location'), workMode: field('workMode'), salaryLabel: field('salaryLabel') };
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -268,11 +315,7 @@ function escapeLikeWord(word: string): string {
 export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
   await dbReady;
 
-  let builder = db.selectFrom('feedItem as i')
-    .innerJoin('feedMetadata as f', 'f.id', 'i.feed_id')
-    .innerJoin('feedPlacement as p', (join) => join.onRef('p.feed_id', '=', 'f.id').on('p.workspace_id', '=', query.workspaceId))
-    .innerJoin('feedCategory as c', 'c.id', 'p.category_id')
-    .leftJoin('savedItem as s', (join) => join.onRef('s.item_id', '=', 'i.id').on('s.workspace_id', '=', query.workspaceId))
+  let builder = riverItems(query)
     .select([
       'i.id as id',
       'i.title as title',
@@ -288,30 +331,8 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
       'c.name as categoryName',
       'f.type as type',
       's.saved_at as savedAt',
-    ]);
-
-  builder = query.feedIds
-    ? builder.where('f.id', 'in', query.feedIds)
-    : builder.where('p.showInWorkspace', '=', 1);
-
-  if (query.ids) {
-    builder = builder.where('i.id', 'in', query.ids);
-  }
-
-  if (query.unreadOnly) {
-    builder = builder.where('i.read_at', 'is', null);
-  }
-
-  // Stryker disable next-line MethodExpression,Regex: an empty word becomes the pattern %%, which matches every row, and SQLite LIKE ignores ASCII case
-  const words = query.search?.trim().toLowerCase().split(/\s+/).filter(Boolean) ?? [];
-  for (const word of words) {
-    const pattern = `%${escapeLikeWord(word)}%`;
-    builder = builder.where((eb) => eb.or([
-      sql<boolean>`${eb.ref('i.title')} like ${pattern} escape '\\'`,
-      sql<boolean>`${eb.ref('i.excerpt')} like ${pattern} escape '\\'`,
-      sql<boolean>`${eb.ref('f.title')} like ${pattern} escape '\\'`,
-    ]));
-  }
+    ])
+    .select(sql<string | null>`case when f.type = 'ats' then i.extra end`.as('extra'));
 
   if (query.cursor) {
     const { publishedAt, id } = query.cursor;
@@ -335,7 +356,10 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
   const last = page[page.length - 1];
 
   return {
-    rows: page.map((row) => ({ ...row, savedAt: row.savedAt ?? undefined })),
+    rows: page.map(({ extra, ...row }) => {
+      const job = row.type === 'ats' ? toJobDetails(extra ?? undefined) : undefined;
+      return { ...row, savedAt: row.savedAt ?? undefined, ...(job ? { job } : {}) };
+    }),
     ...(hasMore && last ? { nextCursor: { publishedAt: last.publishedAt, id: last.id } } : {}),
   };
 }

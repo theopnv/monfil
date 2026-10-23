@@ -16,6 +16,7 @@ export const SOURCE_TYPE_LABEL: Record<SourceType, string> = {
   bluesky: 'BLUESKY',
   mastodon: 'MASTODON',
   conference: 'CONF',
+  ats: 'JOB',
 };
 
 export interface RiverCardProps {

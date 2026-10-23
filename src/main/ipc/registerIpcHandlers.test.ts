@@ -5,13 +5,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { dialog, ipcMain, type IpcMainInvokeEvent } from 'electron';
 import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannels, TwoWayRendererMainChannelsInvokeArgs } from '../../shared/channels';
-import type { FeedCategory, FeedpackCatalog, FeedSummary, NewFeedInput, ParsedSource, WorkspaceSummary } from '../../shared/contracts';
+import type { FeedCategory, FeedpackCatalog, FeedSummary, NewFeedInput, ParsedSource, SavedSearch, WorkspaceSummary } from '../../shared/contracts';
 import * as handlers from './handlers';
 import * as insert from '../db/crud/insert';
 import * as update from '../db/crud/update';
 import * as remove from '../db/crud/delete';
 import * as query from '../db/crud/query';
 import * as saved from '../db/saved';
+import * as searches from '../db/crud/searches';
 import * as settings from '../app/settings';
 import { resolveSource } from '../feed/sources/registry';
 import { refreshAllFeeds } from '../feed/refresh';
@@ -43,6 +44,7 @@ vi.mock(import('../db/crud/query'), () => ({
   queryArticleContent: vi.fn(), queryFeedCategory: vi.fn(), queryFeedItems: vi.fn(), queryFeedMetadata: vi.fn(),
   queryFeedSummaries: vi.fn(), queryRiverPage: vi.fn(), queryWorkspaceSummaries: vi.fn(),
 }));
+vi.mock(import('../db/crud/searches'), () => ({ createSavedSearch: vi.fn(), deleteSavedSearch: vi.fn(), dismissSearchHint: vi.fn(), listSavedSearches: vi.fn(), updateSavedSearch: vi.fn() }));
 vi.mock(import('../db/saved'), () => ({ querySavedPage: vi.fn(), setItemSaved: vi.fn() }));
 vi.mock(import('../db/retention'), () => ({ retentionCutoff: () => 0, retainedFetchedItems: <T>(items: T[]) => items, pruneExpiredItems: async () => 0 }));
 vi.mock(import('../feed/sources/registry'), () => ({ resolveSource: vi.fn(), sourceFor: vi.fn(() => ({ type: 'rss' as const, fetchesFullArticle: false, matches: vi.fn(), discover: vi.fn(), fetch: vi.fn(), parse: vi.fn() })) }));
@@ -77,6 +79,7 @@ const workspace: WorkspaceSummary = {
   id: 1, name: 'Home', icon: 'Home01', color: 'blue', position: 0,
   source_slug: undefined, source_version: undefined, installed_at: undefined, hasUnread: false,
 };
+const savedSearch: SavedSearch = { id: 4, workspace_id: 1, name: 'Engineers', query: 'title:engineer', position: 0, created_at: 1 };
 const source: ParsedSource = {
   link: feed.link, title: feed.title, type: 'rss', icon: undefined, description: '',
   items: [{ title: 'Item', guid: 'item', link: undefined, pubDate: 'invalid-date', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
@@ -143,6 +146,11 @@ const fixtures: { [C in TwoWayRendererMainChannels]: Fixture<C> } = {
   'feedpacks:list': { arg: undefined, response: { success: true, data: catalog }, handler: handlers.handleFeedpacksList },
   'feedpacks:preview': { arg: { slug: 'tech' }, response: { success: true, data: preview }, handler: handlers.handleFeedpacksPreview },
   'feedpacks:install': { arg: { slug: 'tech', target: { kind: 'merge-workspace', workspaceId: 1 } }, response: imported, handler: handlers.handleFeedpacksInstall },
+  'searches:list': { arg: { workspaceId: 1 }, response: { searches: [], hintExample: undefined }, handler: handlers.handleSearchesList },
+  'searches:create': { arg: { workspaceId: 1, name: 'Engineers', query: 'title:engineer' }, response: { success: true, data: savedSearch }, handler: handlers.handleSearchesCreate },
+  'searches:update': { arg: { searchId: 4, name: 'Engineers' }, response: { success: true, data: savedSearch }, handler: handlers.handleSearchesUpdate },
+  'searches:delete': { arg: { searchId: 4 }, response: done, handler: handlers.handleSearchesDelete },
+  'searches:dismiss-hint': { arg: { workspaceId: 1 }, response: done, handler: handlers.handleSearchesDismissHint },
 };
 
 const channels = Object.keys(fixtures) as TwoWayRendererMainChannels[];
@@ -171,6 +179,11 @@ beforeEach(() => {
   vi.mocked(query.queryFeedSummaries).mockResolvedValue([feed]);
   vi.mocked(query.queryWorkspaceSummaries).mockResolvedValue([workspace]);
   vi.mocked(saved.setItemSaved).mockResolvedValue(done);
+  vi.mocked(searches.listSavedSearches).mockResolvedValue({ searches: [], hintExample: undefined });
+  vi.mocked(searches.createSavedSearch).mockResolvedValue({ success: true, data: savedSearch });
+  vi.mocked(searches.updateSavedSearch).mockResolvedValue({ success: true, data: savedSearch });
+  vi.mocked(searches.deleteSavedSearch).mockResolvedValue(done);
+  vi.mocked(searches.dismissSearchHint).mockResolvedValue(done);
   vi.mocked(saved.querySavedPage).mockResolvedValue({ rows: [] });
   vi.mocked(query.queryRiverPage).mockResolvedValue(fixtures['items:query'].response);
   vi.mocked(query.queryFeedItems).mockResolvedValue([]);

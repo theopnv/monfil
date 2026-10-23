@@ -6,6 +6,7 @@ import type { Database } from './types.ts'
 import { logger } from '../logging/logger';
 import { createIncidentId } from '../logging/incident';
 import SQLite from 'better-sqlite3'
+import { registerSearchFunctions } from './search'
 import { Kysely, SqliteDialect } from 'kysely'
 import { Migrator } from 'kysely/migration'
 import { migrationProvider } from './migrations/index.ts'
@@ -54,6 +55,7 @@ async function openAndMigrate(filePath: string): Promise<void> {
     throw error;
   }
 
+  registerSearchFunctions(sqlite);
   db = new Kysely<Database>({ dialect: new SqliteDialect({ database: sqlite }) });
   sqliteConnection = sqlite;
 

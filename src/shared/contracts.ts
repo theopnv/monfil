@@ -6,7 +6,7 @@
 // deleted, so its id is permanently 1.
 export const HOME_WORKSPACE_ID = 1;
 
-export const SOURCE_TYPES = ['rss', 'youtube', 'github', 'gitlab', 'hackernews', 'arxiv', 'bluesky', 'mastodon', 'conference'] as const;
+export const SOURCE_TYPES = ['rss', 'youtube', 'github', 'gitlab', 'hackernews', 'arxiv', 'bluesky', 'mastodon', 'conference', 'ats'] as const;
 export type SourceType = typeof SOURCE_TYPES[number];
 export type RefreshInterval = 15 | 30 | 60 | 360 | 'manual';
 export type RetentionDays = 15 | 30 | 60 | 90 | 180;
@@ -26,6 +26,30 @@ export interface Workspace {
   source_version: string | undefined;
   installed_at: string | undefined;
 }
+
+export interface SavedSearch {
+  id: number;
+  workspace_id: number;
+  name: string;
+  query: string;
+  position: number;
+  created_at: number;
+}
+
+export type SavedSearchSummary = SavedSearch & { unreadCount: number };
+
+export interface SavedSearchList {
+  searches: SavedSearchSummary[];
+  // Set only when the workspace has an ats feed, no saved search and no dismissed hint.
+  hintExample: string | undefined;
+}
+
+export type SavedSearchError =
+  | { name: 'DB_ERROR'; message: string }
+  | { name: 'WORKSPACE_NOT_FOUND'; message: string }
+  | { name: 'SEARCH_NOT_FOUND'; message: string }
+  | { name: 'DUPLICATE_NAME'; message: string }
+  | { name: 'INVALID_INPUT'; message: string };
 
 export interface FeedCategory {
   id: number;
@@ -134,6 +158,14 @@ export type FeedSummary = FeedMetadata & {
 
 export type WorkspaceSummary = Workspace & { hasUnread: boolean };
 
+/** What a job card shows beyond the title, read from an `ats` item's `extra` JSON. */
+export interface JobDetails {
+  company: string | undefined;
+  location: string | undefined;
+  workMode: string | undefined;
+  salaryLabel: string | undefined;
+}
+
 export interface RiverRow {
   id: number;
   title: string;
@@ -149,6 +181,7 @@ export interface RiverRow {
   categoryName: string;
   type: SourceType;
   savedAt?: number | undefined;
+  job?: JobDetails;
 }
 
 export interface RiverCursor {

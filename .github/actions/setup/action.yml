@@ -56,11 +56,6 @@ runs:
     - run: npm ci
       shell: bash
 
-    - name: Install Linux system dependencies
-      if: runner.os == 'Linux' && (inputs.electron-dependencies == 'true' || inputs.chromium == 'true')
-      run: npx playwright install-deps chromium
-      shell: bash
-
     - name: Install Linux Electron libraries
       if: runner.os == 'Linux' && inputs.electron-dependencies == 'true'
       run: sudo apt-get install --yes --no-install-recommends libgtk-3-0t64 libx11-xcb1 libxss1

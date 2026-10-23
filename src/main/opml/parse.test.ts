@@ -94,6 +94,7 @@ describe('parseOpmlDocument', () => {
       <outline type="rss" text="Playwright" xmlUrl="https://github.com/microsoft/playwright/releases.atom"/>
       <outline type="rss" text="cs.AI" xmlUrl="https://rss.arxiv.org/rss/cs.AI"/>
       <outline type="rss" text="HN" xmlUrl="https://hnrss.org/newest?points=300"/>
+      <outline type="rss" text="Acme" xmlUrl="https://api.lever.co/v0/postings/acme?mode=json"/>
       <outline type="rss" text="Blog" xmlUrl="https://example.com/feed.xml"/>`);
 
     // Act
@@ -104,7 +105,7 @@ describe('parseOpmlDocument', () => {
     if (!result.success) {
       return;
     }
-    expect(result.data.categories[0]?.feeds.map((feed) => feed.type)).toEqual(['github', 'arxiv', 'hackernews', 'rss']);
+    expect(result.data.categories[0]?.feeds.map((feed) => feed.type)).toEqual(['github', 'arxiv', 'hackernews', 'ats', 'rss']);
   });
 
   test('imports a document that holds a feed URL with a malformed percent-encoding', () => {

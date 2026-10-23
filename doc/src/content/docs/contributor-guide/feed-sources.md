@@ -5,7 +5,7 @@ sidebar:
   order: 8
 ---
 
-Monfil uses a `SourceAdapter` for each source type. The [source adapters](https://github.com/theopnv/monfil/tree/main/src/main/feed/sources) cover RSS, Atom, RDF, JSON Feed, YouTube, GitHub, GitLab, Hacker News, arXiv, Bluesky, Mastodon, and conference milestones from developers.events.
+Monfil uses a `SourceAdapter` for each source type. The [source adapters](https://github.com/theopnv/monfil/tree/main/src/main/feed/sources) cover RSS, Atom, RDF, JSON Feed, YouTube, GitHub, GitLab, Hacker News, arXiv, Bluesky, Mastodon, conference milestones from developers.events, and job boards on applicant tracking systems.
 
 ## Follow an item
 
@@ -33,6 +33,23 @@ The RSS adapter's `discover` tries these steps in order:
 2. If the link itself parses as a feed, it uses the link.
 3. It reads the `<link rel="alternate">` feed tags on the page and fetches up to five of them.
 4. It tries common feed paths on the page origin and stops at the first one that parses.
+
+## Job boards
+
+An [applicant tracking system (ATS)](https://www.sap.com/resources/what-is-an-applicant-tracking-system) is a software application that companies use to digitally manage their hiring and recruitment workflows. Monfil uses ATS providers such as Greenhouse, Lever or Ashby to gather all the job postings users are interested in.
+
+The `ats` source type reads the public job board of a company. One adapter in `src/main/feed/sources/ats/` serves every applicant tracking system. A small file in `providers/` holds the rules of one system:
+
+- `toBoard` takes a board page or API URL and returns the provider, the company slug, and the API URL, without any network request. The API URL is the identity of the stored feed.
+- `normalize` reads the API response into a common job shape. It returns `null` when the response is not in that provider's shape.
+
+The adapter turns each job into an item. The title is the job title, the author is the company, and the description is the posting HTML. The date is the first publication date when the system gives one. Otherwise the date stays empty and the first-seen time applies, because dates such as `updated_at` change on every edit. The `extra` JSON holds the provider, company, location, work mode, salary label, department, and employment type. `queryRiverPage` reads `extra` for `ats` rows only and returns it as `RiverRow.job`, which the river cards show.
+
+`salary.ts` reads a pay label from a structured field or from the posting text. `workMode.ts` reads the provider field, or keywords in the location and the title. Both only feed the card label. Neither is a search filter.
+
+Job pages are often single-page apps that Readability cannot read, so `fetchesFullArticle` is `false`. A board larger than the 10 MB fetch limit fails with `RESPONSE_TOO_LARGE_ERROR`. SmartRecruiters returns the first 100 postings, and its API URL keeps the `country`, `region`, `city`, `department`, and `q` filters.
+
+To add a provider, add a file in `providers/`, list it in `providers/index.ts`, and test `toBoard` and `normalize` with a recorded response. Check the endpoint by hand first, because these APIs are not versioned for third parties.
 
 ## Add a source type
 

@@ -30,6 +30,11 @@ export default function Step3Done({ feed }: Step3DoneProps) {
       <p className="mt-2 mb-5.5 max-w-[44ch] text-sm leading-relaxed text-tertiary text-pretty">
         Backfilled {feed.itemCount} item{feed.itemCount === 1 ? "" : "s"}. Everything stays on this machine.
       </p>
+      {feed.type === "ats" && (
+        <p className="mb-5.5 max-w-[44ch] text-sm leading-relaxed text-secondary text-pretty">
+          All of {feed.title.replace(/ · Jobs$/, "")}&apos;s jobs now appear in your feed. To filter them, search for each role you want and save the search.
+        </p>
+      )}
 
       {items.length > 0 && (
         <div className="w-full overflow-hidden rounded-xl border border-secondary text-left">

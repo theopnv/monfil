@@ -4,7 +4,7 @@
 
 import { infiniteQueryOptions, queryOptions, type InfiniteData } from '@tanstack/react-query';
 import { ipc, rendererLogger } from '@/lib/ipc-client';
-import type { AppInfo, UsageAnalyticsState, FeedCategory, FeedSummary, RiverCursor, RiverPage, RiverQuery, RiverRow, SavedCursor, WorkspaceSummary } from '../../shared/contracts';
+import type { AppInfo, UsageAnalyticsState, FeedCategory, FeedSummary, RiverCursor, SavedSearchList, RiverPage, RiverQuery, RiverRow, SavedCursor, WorkspaceSummary } from '../../shared/contracts';
 
 export const RIVER_PAGE_SIZE = 50;
 export const RIVER_MAX_PAGES = 8;
@@ -27,6 +27,8 @@ export const queryKeys = {
   feeds: (workspaceId: number) => ['feeds', workspaceId] as const,
   categories: (workspaceId: number) => ['categories', workspaceId] as const,
   workspaces: ['workspaces'] as const,
+  // Nested under 'feeds' on purpose: every refresh, read-state change and feed edit already invalidates that prefix, which keeps the pill counts current.
+  searches: (workspaceId: number) => ['feeds', 'searches', workspaceId] as const,
   river: (scope: RiverScope) => ['river', normalizeScope(scope)] as const,
 };
 
@@ -63,6 +65,14 @@ export function categoriesQuery(workspaceId: number) {
   return queryOptions({
     queryKey: queryKeys.categories(workspaceId),
     queryFn: (): Promise<FeedCategory[]> => ipc.invoke('feeds:list-categories', { workspaceId }),
+  });
+}
+
+/** The saved searches of `workspaceId`, each with its unread count, plus the onboarding hint example when it applies. */
+export function savedSearchesQuery(workspaceId: number) {
+  return queryOptions({
+    queryKey: queryKeys.searches(workspaceId),
+    queryFn: (): Promise<SavedSearchList> => ipc.invoke('searches:list', { workspaceId }),
   });
 }
 

@@ -49,6 +49,11 @@ import {
   handleSettingsGetRetentionDays,
   handleSettingsSetRetentionDays,
   handleAppBackUpDatabase,
+  handleSearchesCreate,
+  handleSearchesDelete,
+  handleSearchesDismissHint,
+  handleSearchesList,
+  handleSearchesUpdate,
   handleWorkspacesCreate,
   handleWorkspacesDelete,
   handleWorkspacesList,
@@ -111,6 +116,11 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "settings:set-usage-analytics": handleSettingsSetUsageAnalytics,
   "settings:dismiss-usage-analytics-prompt": handleSettingsDismissUsageAnalyticsPrompt,
   "analytics:preview": handleAnalyticsPreview,
+  "searches:list": handleSearchesList,
+  "searches:create": handleSearchesCreate,
+  "searches:update": handleSearchesUpdate,
+  "searches:delete": handleSearchesDelete,
+  "searches:dismiss-hint": handleSearchesDismissHint,
 };
 
 export function registerIpcHandlers() {

@@ -22,6 +22,7 @@ const KINDS: { id: FeedType; label: string }[] = [
   { id: "bluesky", label: "Bluesky" },
   { id: "mastodon", label: "Mastodon" },
   { id: "conference", label: "Conferences" },
+  { id: "ats", label: "Jobs" },
 ];
 
 const COPY: Record<"anything" | SourceType, { placeholder: string; hint: string }> = {
@@ -64,6 +65,10 @@ const COPY: Record<"anything" | SourceType, { placeholder: string; hint: string 
   conference: {
     placeholder: "Type topics, then \"in\" and places…",
     hint: "Format: topics in places, then press Enter. Separate items with commas. Places are optional, and online counts as a place. Examples: devops · kubernetes, cloud in France · java in Belgium, online. A developers.events link also works.",
+  },
+  ats: {
+    placeholder: "Paste a company's job board or careers page…",
+    hint: "Works with Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor and Personio boards. Coverage is not complete: other job systems are not supported yet. Monfil lists every open job of the company.",
   },
 };
 
