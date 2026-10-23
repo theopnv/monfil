@@ -107,7 +107,7 @@ describe('stripHtml', () => {
     const result = stripHtml(html);
 
     // Assert
-    expect(result).not.toContain('<');
+    expect(result).toBe('ipt>alert(1)Body');
   });
 });
 
