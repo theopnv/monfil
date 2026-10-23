@@ -71,6 +71,7 @@ export async function querySavedPage(query: SavedQuery): Promise<RiverPage> {
   if (query.unreadOnly) {
     builder = builder.where('i.read_at', 'is', null);
   }
+  // Stryker disable next-line MethodExpression,Regex: an empty word becomes the pattern %%, which matches every row, and SQLite LIKE ignores ASCII case
   for (const word of query.search?.trim().toLowerCase().split(/\s+/).filter(Boolean) ?? []) {
     const pattern = `%${word.replace(/[\\%_]/g, '\\$&')}%`;
     builder = builder.where((eb) => eb.or([
