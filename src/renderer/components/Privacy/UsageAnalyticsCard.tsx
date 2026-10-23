@@ -19,7 +19,7 @@ export default function UsageAnalyticsCard() {
   }
 
   return (
-    <section aria-label="Anonymous usage stats" className="absolute right-6 bottom-6 z-10 flex w-[360px] flex-col gap-3 rounded-xl border border-secondary bg-primary p-4 shadow-lg">
+    <section aria-label="Anonymous usage stats" className="absolute right-6 bottom-6 z-10 flex w-[360px] flex-col gap-3 rounded-xl border-2 border-brand-solid bg-primary p-4 shadow-2xl ring-8 ring-black/5">
       <button type="button" aria-label="Ask me later" className="absolute top-3 right-3 text-tertiary hover:text-secondary" onClick={() => dismiss()}>
         <XClose className="size-4" />
       </button>

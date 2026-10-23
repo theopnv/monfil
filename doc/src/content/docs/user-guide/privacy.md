@@ -47,9 +47,11 @@ If you agree, Monfil counts on your device what you do. Once a day it sends one 
 
 The event never holds a feed name, a link, article text, search text, or a name for you. Monfil sends no identifier that lasts. Each request uses a new random session ID.
 
-Aptabase receives the events. Technov Solutions SRL runs Aptabase and is our processor under a data processing agreement. Monfil uses the EU region. The Aptabase server sees your IP address and user agent when it receives a request. It turns them into a daily hash with a salt that changes every day, so it cannot follow you from one day to the next. See the [Aptabase privacy policy](https://aptabase.com/legal/privacy) for how long it keeps data.
+[Aptabase](https://aptabase.com) receives the events. Technov Solutions SRL, a company based in Bucharest, Romania, runs Aptabase. It acts as the processor for the Monfil maintainer under its [data processing agreement](https://aptabase.com/legal/dpa). Monfil uses the EU region (`eu.aptabase.com`). Aptabase states that it processes and stores the data of EU-region accounts only within the European Union.
 
-The legal basis is your consent. Your choice is stored on your device with its date and the version of this notice. To withdraw, turn off **Share anonymous usage stats** in Settings. Monfil then stops counting, stops sending, and deletes the counts it kept on your device. Events already received cannot be linked back to you. A build of Monfil that has no analytics key, such as a build you compile yourself, sends nothing.
+Aptabase derives an anonymous user ID on its server as a hash of your IP address and user agent with a salt. Aptabase states that the salt is different for each app and is discarded every 24 hours. The ID changes every day, so the maintainer cannot follow one person from one day to the next. Aptabase states that it keeps analytics data for up to 5 years. See the [Aptabase privacy policy](https://aptabase.com/legal/privacy) for details.
+
+The legal basis is your consent. Your choice is stored on your device with its date and the version of this notice. To withdraw, turn off **Share anonymous usage stats** in Settings. Monfil then stops counting, stops sending, and deletes the counts it kept on your device. Events already received cannot be linked back to you. To ask about your data, email [support@theopnv.com](mailto:support@theopnv.com). A build of Monfil that has no analytics key, such as a build you compile yourself, sends nothing.
 
 ### Requests to other sites
 
