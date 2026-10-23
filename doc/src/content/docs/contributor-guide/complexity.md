@@ -40,9 +40,12 @@ npx eslint --prune-suppressions .
 
 Each pull request that changes `src/` gets one comment, which CI updates on each push. It compares the PR head with its merge base, so other merges into `main` do not show up as changes. The comment shows:
 
-- the change in the sum of cognitive and cyclomatic complexity
-- the number of functions above the limits, and how many went above in this PR
-- up to 15 new or changed functions, the most complex first
+- new functions above the limits
+- existing functions above the limits that got more complex
+- functions that dropped below the limits, with a reminder to prune `eslint-suppressions.json`
+- the number of functions that are above the limits in total
+
+Each group lists up to 15 functions, the most complex first. When no function crossed the limits, the comment is one line.
 
 Test files are not counted. A function that only moved to another line is not a change.
 
