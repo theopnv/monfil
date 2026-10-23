@@ -19,18 +19,18 @@ Some employers use job systems that Monfil does not read yet. Those employers ar
 
 ## Find the roles you want
 
-Monfil lists all jobs of a company, so use the [search box](../search/) to keep only the roles you want. These forms work well for jobs:
+Monfil lists the jobs of every office of a company, in every country. Use the [search box](../search/) to keep only the roles and the places you want. These forms work well for jobs:
 
 | Type | Monfil shows |
 | --- | --- |
-| `title:engineer` | Jobs with `engineer` in the job title. Without `title:`, the search also matches the company name and the start of the description. |
+| `title:engineer` | Jobs with `engineer` in the job title. Without `title:`, the search also matches the place, the work mode, the company name and the start of the description. |
 | `title:"data analyst" -senior` | Data analyst jobs, without the senior ones |
 | `title:designer OR title:researcher` | Either role |
-| `paris remote` | Jobs that mention both words, for example in the title or the description start |
-| `-intern -stage` | Without internships |
+| `paris` | Jobs in Paris. Monfil searches the place of the job. |
+| `remote` | Jobs that are remote |
+| `title:engineer paris -senior` | Engineer jobs in Paris, without the senior ones |
+| `-intern` | Without internships |
 
 Save a search for each role you want. The pill keeps the search, and its count shows the unread jobs that match. A job stays in its search after you read it, so you can come back to it on the next days. See [Search and saved searches](../search/#save-a-search).
-
-The first time you follow a job board, Monfil shows a hint in the pill row with an example search. Select the hint to put the example in the search box. Select the cross on the hint to hide it.
 
 A job stays in the river as long as the retention setting keeps it. Monfil does not remove a job when the company fills it.

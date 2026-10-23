@@ -36,6 +36,8 @@ The RSS adapter's `discover` tries these steps in order:
 
 ## Job boards
 
+An [applicant tracking system (ATS)](https://www.sap.com/resources/what-is-an-applicant-tracking-system) is a software application that companies use to digitally manage their hiring and recruitment workflows. Monfil uses ATS providers such as Greenhouse, Lever or Ashby to gather all the job postings users are interested in.
+
 The `ats` source type reads the public job board of a company. One adapter in `src/main/feed/sources/ats/` serves every applicant tracking system. A small file in `providers/` holds the rules of one system:
 
 - `toBoard` takes a board page or API URL and returns the provider, the company slug, and the API URL, without any network request. The API URL is the identity of the stored feed.

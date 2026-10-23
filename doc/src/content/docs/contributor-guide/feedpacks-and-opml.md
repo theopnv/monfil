@@ -9,9 +9,9 @@ A feedpack is a curated OPML list with catalog metadata. Browse the [feedpacks f
 
 ## Job packs
 
-A job pack lists company job boards. Name the file `feedpacks/<region>-<sector>-jobs.opml`, for example `paris-tech-jobs.opml`. Each `xmlUrl` is the API URL of a board, as the `ats` adapter stores it, so `detectType` sets the `ats` type by host. Packs only add feeds, and the install flow does not change.
+A job pack lists company job boards. Name the file `feedpacks/<sector>-jobs.opml`, for example `tech-jobs.opml`. Do not put a region in the name. A company board lists the jobs of every office, so the user filters by place with the search box. Each `xmlUrl` is the API URL of a board, as the `ats` adapter stores it, so `detectType` sets the `ats` type by host. Packs only add feeds, and the install flow does not change.
 
-Every company needs a working board and at least one open job in the area when you add it. `npm run check:feedpacks` probes each board of a known job system. It fails on a 404 and warns on an empty board or a network error. Pass `--no-probe` to skip the probe when you are offline. Many employers use systems that Monfil does not read, such as Workday, SuccessFactors, and Taleo, so a pack for a sector like banking can be small.
+Every company needs a working board and at least one open job when you add it. Keep a board below about 8 MB, because the fetch limit is 10 MB. `npm run check:feedpacks` probes each board of a known job system. It fails on a 404 and warns on an empty board or a network error. Pass `--no-probe` to skip the probe when you are offline. Many employers use systems that Monfil does not read, such as Workday, SuccessFactors, and Taleo, so a pack for a sector like banking can be small.
 
 ## Browse and install a pack
 

@@ -19,9 +19,7 @@ You can combine the forms: `title:"release notes" -beta`. A chain such as `go OR
 
 A word of three letters or fewer, such as `ci`, matches whole words only, so it does not find `producing`. Any other word also matches inside longer words, so `engineer` finds `engineers`. Put a short word in quotes, as in `"ci"`, to match it inside words too.
 
-Without `title:`, Monfil looks in the title, in the first 200 characters of the text, and in the feed name. It does not search the full text of an item.
-
-When you select the search box, it moves to the center of the header and opens this list below it. Press Enter, or select anywhere outside the box, to close it and keep the filter. Press Escape to clear the search.
+Without `title:`, Monfil looks in the title, in the first 200 characters of the text, and in the feed name. For a job, it also looks in the place and the work mode. It does not search the full text of an item.
 
 ## Save a search
 
@@ -32,7 +30,7 @@ The search is now a pill above the river. The number on the pill is the count of
 
 - Select a pill to run its search. Select it again to clear the search.
 - A pill shows read and unread items, so an item stays in its search on the days after you read it. Select **Unread** to hide the read items again.
-- Point at a pill and select the cross to delete it. A message lets you undo the delete.
+- Point at a pill and select the cross to delete it.
 - Right-click a pill, or focus it and press F2, to rename it.
 - If you change the search of a selected pill, **Update** changes the pill. **Save as new** makes a second pill.
 - When there are more pills than the row can show, scroll the row sideways or select the menu with three dots to see all of them.
