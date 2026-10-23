@@ -219,7 +219,7 @@ describe('failing to open a file database', () => {
   test('rejects, reports FAILED, and releases the file when a pending migration cannot apply', async () => {
     // Arrange
     const old = new SQLite(filePath);
-    old.exec("DELETE FROM kysely_migration WHERE name = '0008_saved_items'");
+    old.exec("DELETE FROM kysely_migration WHERE name = '0009_saved_search'");
     old.close();
 
     // Act
