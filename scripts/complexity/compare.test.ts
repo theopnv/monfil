@@ -13,45 +13,39 @@ function snapshot(sha: string, functions: SnapshotFunction[]): Snapshot {
 }
 
 describe('compareSnapshots', () => {
-  it('lists new and changed functions, and ignores a function that only moved', () => {
+  it('groups new violations, worse violations and improvements, and ignores everything else', () => {
     // Arrange
-    const base = snapshot(BASE_SHA, [fn('moved', 2, 2), fn('grew', 3, 2), fn('gone', 5, 4)]);
-    const head = snapshot(HEAD_SHA, [fn('moved', 2, 2, { line: 40 }), fn('grew', 9, 4), fn('added', 1, 1)]);
+    const base = snapshot(BASE_SHA, [
+      fn('moved', 2, 2), fn('small growth', 3, 2), fn('old debt', 20, 3), fn('same debt', 20, 3),
+      fn('crossed', 15, 10), fn('fixed', 20, 3), fn('gone', 30, 3),
+    ]);
+    const head = snapshot(HEAD_SHA, [
+      fn('moved', 2, 2, { line: 40 }), fn('small growth', 9, 4), fn('old debt', 22, 3), fn('same debt', 20, 3),
+      fn('crossed', 15, 11), fn('fixed', 5, 3), fn('new debt', 16, 1), fn('new small', 1, 1),
+    ]);
 
     // Act
     const diff = compareSnapshots(base, head);
 
     // Assert
-    expect(diff.rows.map((row) => row.qualified_name)).toEqual(['grew', 'added']);
-    expect(diff.rows[1]).toMatchObject({ base_cognitive: null, base_cyclomatic: null });
-    expect(diff).toMatchObject({ new_count: 1, changed_count: 1, removed_count: 1 });
-    expect(diff.cognitive).toEqual({ base: 10, head: 12 });
-    expect(diff.cyclomatic).toEqual({ base: 8, head: 7 });
+    expect(diff.introduced.map((row) => row.qualified_name)).toEqual(['new debt']);
+    expect(diff.introduced[0]).toMatchObject({ base_cognitive: null, base_cyclomatic: null });
+    expect(diff.worse.map((row) => row.qualified_name)).toEqual(['old debt', 'crossed']);
+    expect(diff.improved.map((row) => row.qualified_name)).toEqual(['fixed']);
+    expect(diff.above_limits).toEqual({ base: 4, head: 4 });
   });
 
   it('matches functions by file as well as by name', () => {
     // Arrange
-    const base = snapshot(BASE_SHA, [fn('load', 2, 2)]);
-    const head = snapshot(HEAD_SHA, [fn('load', 2, 2, { file: 'src/main/b.ts' })]);
+    const base = snapshot(BASE_SHA, [fn('load', 20, 2)]);
+    const head = snapshot(HEAD_SHA, [fn('load', 20, 2, { file: 'src/main/b.ts' })]);
 
     // Act
     const diff = compareSnapshots(base, head);
 
     // Assert
-    expect(diff).toMatchObject({ new_count: 1, removed_count: 1 });
-  });
-
-  it('counts only the functions that went above a limit in this change', () => {
-    // Arrange
-    const base = snapshot(BASE_SHA, [fn('old debt', 20, 3), fn('crossed', 15, 10)]);
-    const head = snapshot(HEAD_SHA, [fn('old debt', 22, 3), fn('crossed', 15, 11), fn('new debt', 16, 1)]);
-
-    // Act
-    const diff = compareSnapshots(base, head);
-
-    // Assert
-    expect(diff.new_above_limits).toBe(2);
-    expect(diff.above_limits).toEqual({ base: 1, head: 3 });
+    expect(diff.introduced).toHaveLength(1);
+    expect(diff.worse).toEqual([]);
   });
 
   it('leaves test files out', () => {
@@ -63,8 +57,8 @@ describe('compareSnapshots', () => {
     const diff = compareSnapshots(base, head);
 
     // Assert
-    expect(diff.rows).toEqual([]);
-    expect(diff.cognitive).toEqual({ base: 0, head: 0 });
+    expect(diff.introduced).toEqual([]);
+    expect(diff.above_limits).toEqual({ base: 0, head: 0 });
   });
 });
 
@@ -106,14 +100,56 @@ describe('renderMarkdown', () => {
 
     // Assert
     expect(markdown.startsWith(MARKER)).toBe(true);
+    expect(markdown).toContain('**New functions above the limits (1)**');
     expect(markdown).toContain(`\` ${name} \`<br>`);
     expect(markdown).toContain('| **20** (new) | 3 (new) |');
     expect(markdown.split('\n').filter((line) => line.includes('@octocat'))).toHaveLength(1);
   });
 
-  it(`shows at most ${MAX_ROWS} rows and says how many it left out`, () => {
+  it('says in one line that nothing crossed the limits, and counts the old violations', () => {
     // Arrange
-    const functions = Array.from({ length: MAX_ROWS + 3 }, (_, index) => fn(`f${index}`, index, 1));
+    const diff = compareSnapshots(snapshot(BASE_SHA, [fn('old', 20, 3), fn('ok', 1, 1)]), snapshot(HEAD_SHA, [fn('old', 20, 3), fn('ok', 2, 1)]));
+
+    // Act
+    const markdown = renderMarkdown(diff);
+
+    // Assert
+    expect(markdown).toContain('No function crossed the limits. 1 old violation remains.');
+    expect(markdown).not.toContain('| Function |');
+  });
+
+  it('says so when no function is above the limits', () => {
+    // Arrange
+    const diff = compareSnapshots(snapshot(BASE_SHA, []), snapshot(HEAD_SHA, [fn('ok', 1, 1)]));
+
+    // Act
+    const markdown = renderMarkdown(diff);
+
+    // Assert
+    expect(markdown).toContain('No function crossed the limits. No function is above the limits.');
+  });
+
+  it('shows the three groups, and tells how to prune the suppressions after an improvement', () => {
+    // Arrange
+    const base = snapshot(BASE_SHA, [fn('worse', 20, 3), fn('better', 20, 3)]);
+    const head = snapshot(HEAD_SHA, [fn('worse', 21, 3), fn('better', 4, 3), fn('fresh', 16, 1)]);
+
+    // Act
+    const markdown = renderMarkdown(compareSnapshots(base, head));
+
+    // Assert
+    expect(markdown).toContain('**New functions above the limits (1)**');
+    expect(markdown).toContain('**Existing functions above the limits that got worse (1)**');
+    expect(markdown).toContain('| **21** (+1) | 3 (±0) |');
+    expect(markdown).toContain('**Functions that dropped below the limits (1)**');
+    expect(markdown).toContain('| 4 (−16) | 3 (±0) |');
+    expect(markdown).toContain('npx eslint --prune-suppressions .');
+    expect(markdown).toContain('2 functions are above the limits in total.');
+  });
+
+  it(`shows at most ${MAX_ROWS} rows of a group and says how many it left out`, () => {
+    // Arrange
+    const functions = Array.from({ length: MAX_ROWS + 3 }, (_, index) => fn(`f${index}`, 16 + index, 1));
     const diff = compareSnapshots(snapshot(BASE_SHA, []), snapshot(HEAD_SHA, functions));
 
     // Act
@@ -121,25 +157,14 @@ describe('renderMarkdown', () => {
 
     // Assert
     expect(markdown.split('\n').filter((line) => line.startsWith('| `'))).toHaveLength(MAX_ROWS);
-    expect(markdown).toContain('3 more changed functions are not shown.');
-  });
-
-  it('shows the total change with a sign', () => {
-    // Arrange
-    const diff = compareSnapshots(snapshot(BASE_SHA, [fn('a', 1200, 4)]), snapshot(HEAD_SHA, [fn('a', 1190, 4)]));
-
-    // Act
-    const markdown = renderMarkdown(diff);
-
-    // Assert
-    expect(markdown).toContain('Cognitive **−10** (1,200 → 1,190), cyclomatic **±0** (4 → 4)');
+    expect(markdown).toContain('3 more functions are not shown.');
   });
 });
 
 describe('parseDiff', () => {
   it('accepts a diff from compareSnapshots and drops unknown fields', () => {
     // Arrange
-    const diff = compareSnapshots(snapshot(BASE_SHA, []), snapshot(HEAD_SHA, [fn('a', 1, 1)]));
+    const diff = compareSnapshots(snapshot(BASE_SHA, []), snapshot(HEAD_SHA, [fn('a', 20, 1)]));
 
     // Act
     const result = parseDiff(JSON.parse(JSON.stringify({ ...diff, extra: '<script>' })));
@@ -150,9 +175,9 @@ describe('parseDiff', () => {
 
   it.each([
     ['a bad sha', { base_sha: 'main' }],
-    ['a score that is not a number', { new_count: '1' }],
-    ['a negative score', { removed_count: -1 }],
-    ['rows that are not an array', { rows: 'x' }],
+    ['a count that is not a number', { above_limits: { base: '1', head: 1 } }],
+    ['a negative count', { above_limits: { base: -1, head: 1 } }],
+    ['rows that are not an array', { introduced: 'x' }],
   ])('refuses %s', (_label, change) => {
     // Arrange
     const diff = { ...compareSnapshots(snapshot(BASE_SHA, []), snapshot(HEAD_SHA, [])), ...change };
