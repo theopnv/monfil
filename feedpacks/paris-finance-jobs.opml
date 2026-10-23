@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Paris Finance Jobs</title></head>
+  <body>
+    <outline text="Neobanks and fintech">
+      <outline text="Qonto" title="Qonto" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/qonto?includeCompensation=true"/>
+      <outline text="Pennylane" title="Pennylane" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/pennylane?includeCompensation=true"/>
+      <outline text="Ledger" title="Ledger" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/ledger?includeCompensation=true"/>
+      <outline text="Alan" title="Alan" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/alan?includeCompensation=true"/>
+      <outline text="Swile" title="Swile" type="rss" xmlUrl="https://api.lever.co/v0/postings/swile?mode=json"/>
+      <outline text="Younited" title="Younited" type="rss" xmlUrl="https://api.lever.co/v0/postings/younited?mode=json"/>
+      <outline text="Payplug" title="Payplug" type="rss" xmlUrl="https://payplug.teamtailor.com/jobs.rss"/>
+      <outline text="Shine" title="Shine" type="rss" xmlUrl="https://shine.teamtailor.com/jobs.rss"/>
+      <outline text="iBanFirst" title="iBanFirst" type="rss" xmlUrl="https://ibanfirst.recruitee.com/api/offers/"/>
+    </outline>
+    <outline text="Payments">
+      <outline text="Adyen" title="Adyen" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/adyen/jobs?content=true"/>
+      <outline text="Stripe" title="Stripe" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/stripe/jobs?content=true"/>
+      <outline text="SumUp" title="SumUp" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/sumup/jobs?content=true"/>
+    </outline>
+  </body>
+</opml>

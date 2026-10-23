@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Paris Tech Jobs</title></head>
+  <body>
+    <outline text="Product scale-ups">
+      <outline text="Doctolib" title="Doctolib" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/doctolib?includeCompensation=true"/>
+      <outline text="Alan" title="Alan" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/alan?includeCompensation=true"/>
+      <outline text="Back Market" title="Back Market" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/backmarket?includeCompensation=true"/>
+      <outline text="Pennylane" title="Pennylane" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/pennylane?includeCompensation=true"/>
+      <outline text="Qonto" title="Qonto" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/qonto?includeCompensation=true"/>
+      <outline text="Aircall" title="Aircall" type="rss" xmlUrl="https://api.lever.co/v0/postings/aircall?mode=json"/>
+      <outline text="Brevo" title="Brevo" type="rss" xmlUrl="https://api.lever.co/v0/postings/brevo?mode=json"/>
+      <outline text="Pigment" title="Pigment" type="rss" xmlUrl="https://api.lever.co/v0/postings/pigment?mode=json"/>
+      <outline text="BlaBlaCar" title="BlaBlaCar" type="rss" xmlUrl="https://api.lever.co/v0/postings/blablacar?mode=json"/>
+      <outline text="Deezer" title="Deezer" type="rss" xmlUrl="https://deezer.teamtailor.com/jobs.rss"/>
+      <outline text="PayFit" title="PayFit" type="rss" xmlUrl="https://payfit.teamtailor.com/jobs.rss"/>
+      <outline text="Ornikar" title="Ornikar" type="rss" xmlUrl="https://ornikar.teamtailor.com/jobs.rss"/>
+      <outline text="Mirakl" title="Mirakl" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/mirakl/jobs?content=true"/>
+      <outline text="Algolia" title="Algolia" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/algolia/jobs?content=true"/>
+    </outline>
+    <outline text="AI">
+      <outline text="Hugging Face" title="Hugging Face" type="rss" xmlUrl="https://apply.workable.com/api/v1/widget/accounts/huggingface?details=true"/>
+      <outline text="H Company" title="H Company" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/hcompany?includeCompensation=true"/>
+      <outline text="Dust" title="Dust" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/dust?includeCompensation=true"/>
+      <outline text="PhotoRoom" title="PhotoRoom" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/photoroom?includeCompensation=true"/>
+      <outline text="Nabla" title="Nabla" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/nabla?includeCompensation=true"/>
+      <outline text="Owkin" title="Owkin" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/owkin?includeCompensation=true"/>
+    </outline>
+    <outline text="Infrastructure and consulting">
+      <outline text="Datadog" title="Datadog" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/datadog/jobs?content=true"/>
+      <outline text="Scaleway" title="Scaleway" type="rss" xmlUrl="https://api.lever.co/v0/postings/scaleway?mode=json"/>
+      <outline text="Theodo" title="Theodo" type="rss" xmlUrl="https://api.lever.co/v0/postings/theodo?mode=json"/>
+      <outline text="MongoDB" title="MongoDB" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/mongodb/jobs?content=true"/>
+      <outline text="Airbnb" title="Airbnb" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/airbnb/jobs?content=true"/>
+      <outline text="Figma" title="Figma" type="rss" xmlUrl="https://boards-api.greenhouse.io/v1/boards/figma/jobs?content=true"/>
+    </outline>
+  </body>
+</opml>

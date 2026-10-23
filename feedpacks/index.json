@@ -270,6 +270,36 @@
       "sourceCount": 31,
       "updatedAt": "2026-10-22",
       "opml": "veille-tech-fr.opml"
+    },
+    {
+      "slug": "paris-tech-jobs",
+      "title": "Paris Tech Jobs",
+      "description": "Open jobs at tech companies and scale-ups with offices in Paris, from public job boards.",
+      "tags": ["jobs", "paris", "tech", "engineering", "careers"],
+      "curator": "Monfil",
+      "sourceCount": 26,
+      "updatedAt": "2026-10-23",
+      "opml": "paris-tech-jobs.opml"
+    },
+    {
+      "slug": "paris-videogames-jobs",
+      "title": "Paris Video Game Jobs",
+      "description": "Open jobs at video game studios and publishers in the Paris area, from public job boards.",
+      "tags": ["jobs", "paris", "games", "game-dev", "careers"],
+      "curator": "Monfil",
+      "sourceCount": 6,
+      "updatedAt": "2026-10-23",
+      "opml": "paris-videogames-jobs.opml"
+    },
+    {
+      "slug": "paris-finance-jobs",
+      "title": "Paris Finance Jobs",
+      "description": "Open jobs at fintech and finance companies with teams in Paris, from public job boards.",
+      "tags": ["jobs", "paris", "finance", "fintech", "careers"],
+      "curator": "Monfil",
+      "sourceCount": 12,
+      "updatedAt": "2026-10-23",
+      "opml": "paris-finance-jobs.opml"
     }
   ]
 }
