@@ -176,7 +176,9 @@ async function syncFeedItemsInTransaction(trx: Kysely<Database>, feedId: number,
   }
   const protectedGuids = new Set([...rank].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([guid]) => guid));
   const fresh = items.filter((item) => {
+    // Stryker disable next-line BlockStatement: a guid that is already stored reaches the insert's onConflict doNothing, which skips it the same way
     if (byGuid.has(item.guid)) {
+      // Stryker disable next-line BooleanLiteral: same reason, a stored guid is skipped by the insert whatever this returns
       return false;
     }
     const date = parsePublishedAt(item.pubDate, markerByGuid.get(item.guid) ?? fetchedAt);

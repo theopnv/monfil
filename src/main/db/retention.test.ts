@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { beforeAll, afterEach, expect, test, vi } from 'vitest';
+import { beforeAll, afterEach, describe, expect, test, vi } from 'vitest';
 import { db, initializeDatabase } from './database';
 import { addFeedToDatabase, syncFeedItemsToDatabase, upsertArticleContent } from './crud/insert';
-import { pruneExpiredItems, retainedFetchedItems, retentionCutoff } from './retention';
+import { isItemExpired, pruneExpiredItems, retainedFetchedItems, retentionCutoff } from './retention';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
 
 beforeAll(async () => {
@@ -28,6 +28,37 @@ test('keeps ten old items when a new source has no recent articles', () => {
 
   // Assert
   expect(retained.map((item) => item.guid)).toEqual(Array.from({ length: 10 }, (_, index) => String(index)));
+});
+
+test('keeps the ten newest of a fetched batch even when the batch lists the oldest first', () => {
+  // Arrange
+  const now = Date.parse('2026-09-23T12:00:00Z');
+  const items = Array.from({ length: 12 }, (_, index) => ({ guid: String(index), pubDate: new Date(now - (400 - index) * 86400000).toISOString() }));
+
+  // Act
+  const retained = retainedFetchedItems(items, retentionCutoff(30, now), now);
+
+  // Assert
+  expect(retained.map((item) => item.guid)).toEqual(Array.from({ length: 10 }, (_, index) => String(index + 2)));
+});
+
+describe('isItemExpired', () => {
+  const cutoff = Date.parse('2026-08-24T12:00:00Z');
+  const fetchedAt = Date.parse('2026-09-23T12:00:00Z');
+
+  test.each([
+    ['one millisecond before the cutoff', new Date(cutoff - 1).toISOString(), fetchedAt, true],
+    ['exactly at the cutoff', new Date(cutoff).toISOString(), fetchedAt, false],
+    ['an undated item first fetched before the cutoff', 'not a date', cutoff - 1, true],
+    ['an undated item first fetched exactly at the cutoff', 'not a date', cutoff, false],
+    ['an undated item fetched after the cutoff', 'not a date', fetchedAt, false],
+  ])('%s', (_name, pubDate, fetched, expected) => {
+    // Act
+    const expired = isItemExpired({ pubDate }, cutoff, fetched);
+
+    // Assert
+    expect(expired).toBe(expected);
+  });
 });
 
 test('keeps an undated item deleted until a longer retention includes it', async () => {

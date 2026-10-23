@@ -41,6 +41,8 @@ export function strykerOptions(suite: MutationSuite, mutate: string[]): PartialS
     clearTextReporter: { allowEmojis: false, logTests: false, reportTests: false, reportMutants: false },
     tempDirName: '.stryker-tmp',
     cleanTempDir: 'always',
+    // A linked node_modules would share the Vitest module cache with the repository, and each side clears it for the other because they hash the lockfile differently.
+    symlinkNodeModules: false,
     ...(CONCURRENCY[suite] && { concurrency: CONCURRENCY[suite] }),
   };
 }

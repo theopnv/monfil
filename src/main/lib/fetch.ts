@@ -91,6 +91,7 @@ async function findRefusal(target: URL, blockPrivateHosts: boolean): Promise<Fet
 
 function headerValue(headers: Record<string, string | string[]>, name: string): string | undefined {
   const value = headers[name] ?? headers[name.toLowerCase()];
+  // Stryker disable next-line ConditionalExpression,BlockStatement: an undefined value falls through to `return value`, which also gives undefined
   if (value === undefined) {
     return undefined;
   }
@@ -213,6 +214,7 @@ function raceAbort<T>(promise: Promise<T>, signal: AbortSignal, abort?: () => vo
   return new Promise<T>((resolve, reject) => {
     const onAbort = () => {
       try {
+        // Stryker disable next-line OptionalChaining: the catch below swallows the TypeError of calling an undefined abort
         abort?.();
       } catch {
         // The request may already be closed when the signal fires.
@@ -228,6 +230,7 @@ function raceAbort<T>(promise: Promise<T>, signal: AbortSignal, abort?: () => vo
       onAbort();
       return;
     }
+    // Stryker disable next-line ObjectLiteral,BooleanLiteral: an AbortSignal dispatches 'abort' at most once, so `once` changes nothing
     signal.addEventListener('abort', onAbort, { once: true });
     promise.then(
       (value) => {
@@ -346,6 +349,7 @@ async function fetchResource(
         return body;
       }
       const validators = validatorsOf(hop.headers);
+      // Stryker disable next-line BlockStatement: without a validator, `validators` already holds two undefined fields, so the fall-through returns the same value
       if (!hasValidator(validators)) {
         // A body without validators cannot be conditional-GET next time; clear whatever is stored
         // so a later refresh never replays a dead `If-None-Match`.

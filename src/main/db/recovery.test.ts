@@ -92,9 +92,22 @@ describe('withCorruptionRecovery', () => {
     if (result === null) {
       throw new Error('expected the database to be quarantined');
     }
-    expect(result).toMatch(/\.corrupt-/);
+    expect(path.basename(result)).toMatch(/^monfil\.db\.corrupt-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z$/);
     await expect(readFile(result, 'utf-8')).resolves.toBe('garbage');
     await expect(readFile(`${result}-wal`, 'utf-8')).resolves.toBe('garbage wal');
+  });
+
+  test.each(['SQLITE_CORRUPT_INDEX', 'SQLITE_CORRUPT_VTAB', 'SQLITE_NOTADB'])('treats %s as corruption and retries', async (code) => {
+    // Arrange
+    await writeFile(filePath, 'garbage');
+    const attempt = vi.fn().mockRejectedValueOnce(Object.assign(new Error('bad file'), { code })).mockResolvedValueOnce(undefined);
+
+    // Act
+    const result = await withCorruptionRecovery(filePath, attempt, vi.fn());
+
+    // Assert
+    expect(attempt).toHaveBeenCalledTimes(2);
+    expect(result).toEqual(expect.any(String));
   });
 
   test('rethrows an I/O error without quarantining, since it does not mean the data is gone', async () => {
@@ -156,6 +169,20 @@ describe('withCorruptionRecovery', () => {
       expect(existsSync(`${filePath}-wal`)).toBe(false);
       expect(existsSync(`${filePath}-shm`)).toBe(false);
       expect(existsSync(`${filePath}-journal`)).toBe(false);
+    });
+
+    // Act
+    await withCorruptionRecovery(filePath, attempt, vi.fn());
+
+    // Assert
+    expect(attempt).toHaveBeenCalledTimes(1);
+  });
+
+  test('removes a single leftover sidecar when the main file is missing', async () => {
+    // Arrange
+    await writeFile(`${filePath}-wal`, 'stale');
+    const attempt = vi.fn(async () => {
+      expect(existsSync(`${filePath}-wal`)).toBe(false);
     });
 
     // Act

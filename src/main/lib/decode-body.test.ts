@@ -32,26 +32,20 @@ describe('decodeBody', () => {
     expect(text).toBe(`<rss><title>${FRENCH_TITLE}</title></rss>`);
   });
 
-  test('uses the charset from the Content-Type header', () => {
+  test.each([
+    'application/rss+xml; charset=ISO-8859-1',
+    'text/xml; charset="windows-1252"',
+    'text/xml;charset=ISO-8859-1',
+    'text/xml; charset = ISO-8859-1',
+  ])('uses the charset from the Content-Type header %j', (contentType) => {
     // Arrange
     const bytes = iso88591Feed('');
 
     // Act
-    const text = decodeBody(bytes, 'application/rss+xml; charset=ISO-8859-1');
+    const text = decodeBody(bytes, contentType);
 
     // Assert
-    expect(text).toContain(`<title>${FRENCH_TITLE}</title>`);
-  });
-
-  test('accepts a quoted charset parameter', () => {
-    // Arrange
-    const bytes = iso88591Feed('');
-
-    // Act
-    const text = decodeBody(bytes, 'text/xml; charset="windows-1252"');
-
-    // Assert
-    expect(text).toContain(`<title>${FRENCH_TITLE}</title>`);
+    expect(text).toBe(`<rss><channel><title>${FRENCH_TITLE}</title></channel></rss>`);
   });
 
   test('falls back to the encoding in the XML prolog when the header has no charset', () => {
@@ -74,6 +68,29 @@ describe('decodeBody', () => {
 
     // Assert
     expect(text).toContain(`<title>${FRENCH_TITLE}</title>`);
+  });
+
+  test('reads a prolog encoding with spaces around the equals sign, as the XML Eq production allows', () => {
+    // Arrange
+    const bytes = iso88591Feed('<?xml version="1.0" encoding = "ISO-8859-1"?>');
+
+    // Act
+    const text = decodeBody(bytes, undefined);
+
+    // Assert
+    expect(text).toContain(`<title>${FRENCH_TITLE}</title>`);
+  });
+
+  test('ignores an XML declaration that is not at the start of the body', () => {
+    // Arrange
+    const body = `<rss><description><![CDATA[<?xml version="1.0" encoding="ISO-8859-1"?>]]></description><title>${FRENCH_TITLE}</title></rss>`;
+    const bytes = new TextEncoder().encode(body);
+
+    // Act
+    const text = decodeBody(bytes, undefined);
+
+    // Assert
+    expect(text).toBe(body);
   });
 
   test('prefers the Content-Type charset over the XML prolog', () => {
@@ -99,15 +116,27 @@ describe('decodeBody', () => {
     expect(text).toContain(`<title>${FRENCH_TITLE}</title>`);
   });
 
-  test('strips a UTF-8 BOM', () => {
+  test('decodes a UTF-8 BOM-prefixed body as UTF-8 over the header and the prolog, and strips the BOM', () => {
     // Arrange
-    const bytes = new Uint8Array([0xef, 0xbb, 0xbf, ...new TextEncoder().encode('<rss/>')]);
+    const body = `<?xml version="1.0" encoding="ISO-8859-1"?><title>${FRENCH_TITLE}</title>`;
+    const bytes = new Uint8Array([0xef, 0xbb, 0xbf, ...new TextEncoder().encode(body)]);
 
     // Act
-    const text = decodeBody(bytes, undefined);
+    const text = decodeBody(bytes, 'application/xml; charset=ISO-8859-1');
 
     // Assert
-    expect(text).toBe('<rss/>');
+    expect(text).toBe(body);
+  });
+
+  test.each(['ï»x', 'ïx¿', 'x»¿', 'þx', 'xÿ', 'ÿx', 'xþ'])('keeps the header charset when the body starts with only part of a byte order mark (%j)', (prefix) => {
+    // Arrange
+    const bytes = Buffer.from(`${prefix}<rss/>`, 'latin1');
+
+    // Act
+    const text = decodeBody(bytes, 'text/xml; charset=ISO-8859-1');
+
+    // Assert
+    expect(text).toBe(`${prefix}<rss/>`);
   });
 
   test('ignores an unknown charset label and falls back to the next source', () => {
@@ -121,12 +150,12 @@ describe('decodeBody', () => {
     expect(text).toContain(`<title>${FRENCH_TITLE}</title>`);
   });
 
-  test('replaces invalid bytes instead of throwing', () => {
+  test.each(['text/xml; charset=utf-8', undefined])('replaces invalid bytes instead of throwing (Content-Type %j)', (contentType) => {
     // Arrange
     const bytes = new Uint8Array([0x3c, 0x61, 0x3e, 0xff, 0x3c, 0x2f, 0x61, 0x3e]);
 
     // Act
-    const text = decodeBody(bytes, 'text/xml; charset=utf-8');
+    const text = decodeBody(bytes, contentType);
 
     // Assert
     expect(text).toBe('<a>�</a>');

@@ -72,6 +72,6 @@ async function main() {
 }
 
 main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n${USAGE}\n`);
-  process.exitCode = 1;
+  // Stryker can leave child process pipes open after a crash, and they keep Node alive.
+  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n${USAGE}\n`, () => process.exit(1));
 });

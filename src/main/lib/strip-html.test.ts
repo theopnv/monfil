@@ -39,9 +39,9 @@ describe('stripHtml', () => {
     expect(result).toBe("Tom & Jerry’s");
   });
 
-  test('collapses whitespace', () => {
+  test('collapses whitespace and trims the ends', () => {
     // Arrange
-    const html = '<p>Line one</p>\n\n<p>Line   two</p>';
+    const html = '\n <p>Line one</p>\n\n<p>Line   two</p> \n';
 
     // Act
     const result = stripHtml(html);
@@ -88,7 +88,7 @@ describe('stripHtml', () => {
     expect(result).toBe('Body');
   });
 
-  test('strips an unterminated tag with no closing bracket', () => {
+  test('drops the bracket of an unterminated tag and keeps the rest as text', () => {
     // Arrange
     const html = 'Body<script src=evil.js';
 
@@ -96,7 +96,7 @@ describe('stripHtml', () => {
     const result = stripHtml(html);
 
     // Assert
-    expect(result).not.toContain('<script');
+    expect(result).toBe('Bodyscript src=evil.js');
   });
 
   test('strips a tag nested inside another tag', () => {
@@ -107,28 +107,33 @@ describe('stripHtml', () => {
     const result = stripHtml(html);
 
     // Assert
-    expect(result).not.toContain('<');
+    expect(result).toBe('ipt>alert(1)Body');
   });
 });
 
 describe('truncateOnWordBoundary', () => {
-  test('returns text unchanged when under the limit', () => {
+  test.each([
+    { text: 'Short text', maxLength: 200 },
+    { text: 'Short text', maxLength: 10 },
+    { text: '  Short text  ', maxLength: 10 },
+  ])('returns the trimmed text unchanged when it fits in $maxLength characters ($text)', ({ text, maxLength }) => {
     // Act
-    const result = truncateOnWordBoundary('Short text', 200);
+    const result = truncateOnWordBoundary(text, maxLength);
 
     // Assert
     expect(result).toBe('Short text');
   });
 
-  test('truncates on a word boundary and appends an ellipsis', () => {
-    // Arrange
-    const text = 'one two three four five';
-
+  test.each([
+    { text: 'one two three four five', maxLength: 14, expected: 'one two three…' },
+    { text: 'one two three four five', maxLength: 16, expected: 'one two three…' },
+    { text: 'one  two', maxLength: 6, expected: 'one…' },
+  ])('truncates $text to $maxLength on a word boundary and appends an ellipsis', ({ text, maxLength, expected }) => {
     // Act
-    const result = truncateOnWordBoundary(text, 14);
+    const result = truncateOnWordBoundary(text, maxLength);
 
     // Assert
-    expect(result).toBe('one two three…');
+    expect(result).toBe(expected);
   });
 
   test('falls back to a hard cut when there is no earlier space', () => {
