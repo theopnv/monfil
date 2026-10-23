@@ -703,6 +703,25 @@ describe('queryRiverPage', () => {
     expect(await titles('produc')).toEqual(['Producing Assistant']);
   });
 
+  test('searches the place and work mode of a job, and a negated place keeps other items', async () => {
+    // Arrange
+    const jobs = await seedFeed({ title: 'Acme · Jobs', link: 'https://api.lever.co/v0/postings/acme?mode=json' });
+    await db.updateTable('feedMetadata').set({ type: 'ats' }).where('id', '=', jobs).execute();
+    const paris = await seedItem(jobs, { title: 'Engineer' });
+    const dublin = await seedItem(jobs, { title: 'Analyst' });
+    await db.updateTable('feedItem').set({ extra: JSON.stringify({ location: 'Paris, France', workMode: 'hybrid' }) }).where('id', '=', paris).execute();
+    await db.updateTable('feedItem').set({ extra: JSON.stringify({ location: 'Dublin', workMode: 'remote' }) }).where('id', '=', dublin).execute();
+    const blog = await seedFeed({ link: 'https://blog.example/feed' });
+    await seedItem(blog, { title: 'A blog post' });
+    const titles = async (search: string) => (await queryRiverPage({ workspaceId: HOME_WORKSPACE_ID, limit: 10, search })).rows.map((row) => row.title).sort();
+
+    // Act / Assert
+    expect(await titles('paris')).toEqual(['Engineer']);
+    expect(await titles('remote')).toEqual(['Analyst']);
+    expect(await titles('-paris')).toEqual(['A blog post', 'Analyst']);
+    expect(await titles('title:paris')).toEqual([]);
+  });
+
   test('counts unread matches with the same filters as the page', async () => {
     // Arrange
     const feedId = await seedFeed();

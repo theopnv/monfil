@@ -38,14 +38,23 @@ export function registerSearchFunctions(sqlite: SQLite.Database): void {
   sqlite.function('has_word', { deterministic: true }, hasWord);
 }
 
+// Where a job is and how it is worked live in `extra`, so a place such as "paris" finds it. The empty string
+// for other rows keeps a NOT (...) clause from turning NULL and dropping them.
+const JOB_PLACE = sql`coalesce(case when f.type = 'ats' then coalesce(json_extract(i.extra, '$.location'), '') || ' ' || coalesce(json_extract(i.extra, '$.workMode'), '') end, '')`;
+
+function termColumns(term: SearchTerm) {
+  const title = sql.ref('i.title');
+  return term.field === 'title' ? [title] : [title, sql.ref('i.excerpt'), sql.ref('f.title'), JOB_PLACE];
+}
+
 function termExpression(term: SearchTerm): Expression<SqlBool> {
   const eb = expressionBuilder<Database, never>();
-  const columns = term.field === 'title' ? ['i.title'] : ['i.title', 'i.excerpt', 'f.title'];
+  const columns = termColumns(term);
   if (needsWholeWord(term)) {
-    return eb.or(columns.map((column) => sql<boolean>`has_word(${sql.ref(column)}, ${term.text})`));
+    return eb.or(columns.map((column) => sql<boolean>`has_word(${column}, ${term.text})`));
   }
   const pattern = `%${escapeLike(term.text)}%`;
-  return eb.or(columns.map((column) => sql<boolean>`${sql.ref(column)} like ${pattern} escape '\\'`));
+  return eb.or(columns.map((column) => sql<boolean>`${column} like ${pattern} escape '\\'`));
 }
 
 /**
