@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { afterEach, expect, test } from 'vitest';
-import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import SQLite from 'better-sqlite3';
@@ -35,6 +35,28 @@ test('backs up WAL data and keeps two migration copies', () => {
   expect(backup.prepare('SELECT value FROM item').get()).toEqual({ value: 'from WAL' });
   expect(readdirSync(dir).filter((name) => name.includes('.migration-'))).toHaveLength(2);
   backup.close();
+  source.close();
+});
+
+test('prunes only the oldest migration copy of this database and names copies so they sort by time', () => {
+  // Arrange
+  const dir = mkdtempSync(path.join(tmpdir(), 'monfil-backup-'));
+  dirs.push(dir);
+  const filePath = path.join(dir, 'monfil.db');
+  const source = new SQLite(filePath);
+  source.exec('CREATE TABLE item (value TEXT)');
+  const bystanders = ['other.db.migration-2020-01-01T00-00-00.000Z-1.db', 'monfil.db.migration-notes.txt', 'monfil.db.corrupt-2020.db'];
+  for (const name of bystanders) {
+    writeFileSync(path.join(dir, name), 'keep');
+  }
+
+  // Act
+  const paths = [backUpBeforeMigration(source, filePath), backUpBeforeMigration(source, filePath), backUpBeforeMigration(source, filePath)];
+
+  // Assert
+  expect(readdirSync(dir).sort()).toEqual([...bystanders, 'monfil.db', ...paths.slice(1).map((copy) => path.basename(copy))].sort());
+  expect(paths.every((copy) => /^monfil\.db\.migration-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.\d{3}Z-\d+\.db$/.test(path.basename(copy)))).toBe(true);
+  expect([...paths].sort()).toEqual(paths);
   source.close();
 });
 
