@@ -104,6 +104,18 @@ describe('deleteFeedFromDatabase', () => {
     expect(result.error.name).toBe('FEED_NOT_FOUND');
   });
 
+  test('a failed removal does not collect other feeds that have no placement', async () => {
+    // Arrange
+    await db.insertInto('feedMetadata').values({ link: 'https://unplaced.example/feed', title: 'Unplaced', type: 'rss' }).execute();
+
+    // Act
+    const result = await deleteFeedFromDatabase(999999, HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(await db.selectFrom('feedMetadata').select('title').execute()).toEqual([{ title: 'Unplaced' }]);
+  });
+
   test('removes the article content row of its items through the cascade', async () => {
     // Arrange
     const inserted = await addFeedToDatabase(feedA);
