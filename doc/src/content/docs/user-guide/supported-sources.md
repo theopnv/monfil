@@ -81,6 +81,18 @@ Monfil adds a card to the river when one of these events occurs:
 
 When you add the feed, you get a card for each event that has already occurred. Monfil reads the data from developers.events each time it refreshes. It does not keep a copy of the full list. The data has the [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) licence, and each card names its source.
 
+## Jobs
+
+Pick the **Jobs** chip. Paste the job board of a company, such as `jobs.lever.co/spotify` or `boards.greenhouse.io/datadog`. You can also paste the careers page of the company. Monfil looks on the page for a link to a supported job board.
+
+Monfil reads the public job boards of these systems: Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor, and Personio. Other systems, such as Workday, are not supported yet, so coverage is not complete.
+
+Each open job is one card. The card shows the company, the place, the work mode, and the salary when the posting states one. Monfil reads the salary from the posting. If the posting has none, the card says "salary not shown".
+
+Monfil lists all jobs of the company. To keep only the roles you want, save a search for each role. See [Jobs and saved searches](../jobs-and-saved-searches/).
+
+A job stays in the river as long as the retention setting keeps it. Monfil does not remove a job when the company fills it.
+
 ## Substack
 
 Paste the publication address, such as `name.substack.com` or its custom domain. Monfil finds the feed. You can also add `/feed` at the end of the address yourself.
