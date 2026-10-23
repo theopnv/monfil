@@ -83,13 +83,13 @@ When you add the feed, you get a card for each event that has already occurred. 
 
 ## Jobs
 
-Pick the **Jobs** chip. Paste the job board of a company, such as `jobs.lever.co/spotify` or `boards.greenhouse.io/datadog`. You can also paste the careers page of the company. Monfil looks on the page for a link to a supported job board.
+Pick the **Jobs** chip. Paste the job board of a company, such as `jobs.lever.co/spotify` or `boards.greenhouse.io/datadog`. You can also paste the careers page of the company. Monfil looks on the page for a link to a supported job board (this may not always work).
 
 Monfil reads the public job boards of these systems: Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor, and Personio. Other systems, such as Workday, are not supported yet, so coverage is not complete.
 
-Each open job is one card. The card shows the company, the place, the work mode, and the salary when the posting states one. Monfil reads the salary from the posting. If the posting has none, the card says "salary not shown".
+Each open job is one card. The card shows the company, the place, the work mode, and the salary when the posting states one. Monfil reads the salary from the posting when it's available.
 
-Monfil lists all jobs of the company. To keep only the roles you want, save a search for each role. See [Jobs and saved searches](../jobs-and-saved-searches/).
+Monfil lists all jobs of the company. To keep only the roles you want, save a search for each role. See [Jobs](../jobs/).
 
 A job stays in the river as long as the retention setting keeps it. Monfil does not remove a job when the company fills it.
 
