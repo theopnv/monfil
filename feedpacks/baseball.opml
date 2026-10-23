@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Baseball</title></head>
+  <body>
+    <outline text="News">
+      <outline text="ESPN: MLB" title="ESPN: MLB" type="rss" xmlUrl="https://www.espn.com/espn/rss/mlb/news"/>
+      <outline text="CBS Sports: MLB" title="CBS Sports: MLB" type="rss" xmlUrl="https://www.cbssports.com/rss/headlines/mlb/"/>
+      <outline text="Yahoo Sports: MLB" title="Yahoo Sports: MLB" type="rss" xmlUrl="https://sports.yahoo.com/mlb/rss/"/>
+      <outline text="MLB Trade Rumors" title="MLB Trade Rumors" type="rss" xmlUrl="https://www.mlbtraderumors.com/feed"/>
+      <outline text="SB Nation: MLB" title="SB Nation: MLB" type="rss" xmlUrl="https://www.sbnation.com/rss/mlb/index.xml"/>
+      <outline text="Sporting News: MLB" title="Sporting News: MLB" type="rss" xmlUrl="https://www.sportingnews.com/us/rss/mlb"/>
+      <outline text="RotoWire: MLB" title="RotoWire: MLB" type="rss" xmlUrl="https://www.rotowire.com/rss/news.php?sport=MLB"/>
+    </outline>
+    <outline text="Analysis &amp; Sabermetrics">
+      <outline text="FanGraphs" title="FanGraphs" type="rss" xmlUrl="https://blogs.fangraphs.com/feed/"/>
+      <outline text="Baseball Prospectus" title="Baseball Prospectus" type="rss" xmlUrl="https://www.baseballprospectus.com/feed/"/>
+      <outline text="Baseball America" title="Baseball America" type="rss" xmlUrl="https://www.baseballamerica.com/feed/"/>
+      <outline text="Pitcher List" title="Pitcher List" type="rss" xmlUrl="https://pitcherlist.com/feed/"/>
+    </outline>
+    <outline text="Video &amp; Audio">
+      <outline text="MLB" title="MLB" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCoLrcjPV5PbUrUyXq5mjc_A"/>
+      <outline text="Foolish Baseball" title="Foolish Baseball" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCbW12JIVAdi5NugdakbU33A"/>
+      <outline text="Jomboy Media" title="Jomboy Media" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCl9E4Zxa8CVr2LBLD0_TaNg"/>
+      <outline text="FanGraphs" title="FanGraphs" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCReaZYLOth6UfTQHOWly3UA"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Mastodon #mlb" title="Mastodon #mlb" type="rss" xmlUrl="https://mastodon.social/tags/mlb.rss"/>
+      <outline text="Mastodon #baseball" title="Mastodon #baseball" type="rss" xmlUrl="https://mastodon.social/tags/baseball.rss"/>
+      <outline text="MLB (Bluesky)" title="MLB (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/mlb.com/rss"/>
+      <outline text="FanGraphs (Bluesky)" title="FanGraphs (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/fangraphs.com/rss"/>
+      <outline text="Jeff Passan (Bluesky)" title="Jeff Passan (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/jeffpassan.bsky.social/rss"/>
+    </outline>
+  </body>
+</opml>

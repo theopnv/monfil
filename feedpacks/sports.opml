@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Sports</title></head>
+  <body>
+    <outline text="News">
+      <outline text="ESPN Top Headlines" title="ESPN Top Headlines" type="rss" xmlUrl="https://www.espn.com/espn/rss/news"/>
+      <outline text="BBC Sport" title="BBC Sport" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/rss.xml"/>
+      <outline text="Sky Sports" title="Sky Sports" type="rss" xmlUrl="https://www.skysports.com/rss/12040"/>
+      <outline text="The Guardian: Sport" title="The Guardian: Sport" type="rss" xmlUrl="https://www.theguardian.com/sport/rss"/>
+      <outline text="CBS Sports" title="CBS Sports" type="rss" xmlUrl="https://www.cbssports.com/rss/headlines/"/>
+      <outline text="Yahoo Sports" title="Yahoo Sports" type="rss" xmlUrl="https://sports.yahoo.com/rss/"/>
+      <outline text="Fox Sports" title="Fox Sports" type="rss" xmlUrl="https://api.foxsports.com/v2/content/optimized-rss?partnerKey=MB0Wehpmuj2lUhuRhQaafhBjAJqaPU244mlTDK1i&amp;size=30"/>
+      <outline text="France 24: Sport" title="France 24: Sport" type="rss" xmlUrl="https://www.france24.com/en/sport/rss"/>
+      <outline text="SB Nation" title="SB Nation" type="rss" xmlUrl="https://www.sbnation.com/rss/index.xml"/>
+      <outline text="Sporting News" title="Sporting News" type="rss" xmlUrl="https://www.sportingnews.com/us/rss"/>
+    </outline>
+    <outline text="Analysis &amp; Longform">
+      <outline text="The Athletic" title="The Athletic" type="rss" xmlUrl="https://www.nytimes.com/athletic/rss/news/"/>
+      <outline text="Defector" title="Defector" type="rss" xmlUrl="https://defector.com/feed"/>
+      <outline text="Sportico" title="Sportico" type="rss" xmlUrl="https://www.sportico.com/feed/"/>
+    </outline>
+    <outline text="Olympics &amp; Other Sports">
+      <outline text="Cycling Weekly" title="Cycling Weekly" type="rss" xmlUrl="https://www.cyclingweekly.com/feeds/all"/>
+      <outline text="Formula 1" title="Formula 1" type="rss" xmlUrl="https://www.formula1.com/content/fom-website/en/latest/all.xml"/>
+    </outline>
+    <outline text="Video">
+      <outline text="ESPN" title="ESPN" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCiWLfSweyRNmLpgEHekhoAg"/>
+      <outline text="Sky Sports" title="Sky Sports" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCTU_wC79Dgi9rh4e9-baTqA"/>
+      <outline text="Olympics" title="Olympics" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCTl3QQTvqHFjurroKxexy2Q"/>
+      <outline text="House of Highlights" title="House of Highlights" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCqQo7ewe87aYAe7ub5UqXMw"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Mastodon #sports" title="Mastodon #sports" type="rss" xmlUrl="https://mastodon.social/tags/sports.rss"/>
+      <outline text="Mastodon #olympics" title="Mastodon #olympics" type="rss" xmlUrl="https://mastodon.social/tags/olympics.rss"/>
+      <outline text="Mastodon #tennis" title="Mastodon #tennis" type="rss" xmlUrl="https://mastodon.social/tags/tennis.rss"/>
+      <outline text="ESPN (Bluesky)" title="ESPN (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/espn.com/rss"/>
+      <outline text="The Athletic (Bluesky)" title="The Athletic (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/theathletic.com/rss"/>
+      <outline text="Mastodon #cycling" title="Mastodon #cycling" type="rss" xmlUrl="https://mastodon.social/tags/cycling.rss"/>
+    </outline>
+    <outline text="Other Sports">
+      <outline text="BBC Sport: Formula 1" title="BBC Sport: Formula 1" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/formula1/rss.xml"/>
+      <outline text="BBC Sport: Tennis" title="BBC Sport: Tennis" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/tennis/rss.xml"/>
+      <outline text="BBC Sport: Cycling" title="BBC Sport: Cycling" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/cycling/rss.xml"/>
+      <outline text="BBC Sport: Golf" title="BBC Sport: Golf" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/golf/rss.xml"/>
+      <outline text="ESPN: Golf" title="ESPN: Golf" type="rss" xmlUrl="https://www.espn.com/espn/rss/golf/news"/>
+      <outline text="ESPN: Tennis" title="ESPN: Tennis" type="rss" xmlUrl="https://www.espn.com/espn/rss/tennis/news"/>
+      <outline text="ESPN: NHL" title="ESPN: NHL" type="rss" xmlUrl="https://www.espn.com/espn/rss/nhl/news"/>
+      <outline text="Cyclingnews" title="Cyclingnews" type="rss" xmlUrl="https://www.cyclingnews.com/feeds.xml"/>
+      <outline text="Golf.com" title="Golf.com" type="rss" xmlUrl="https://golf.com/feed/"/>
+      <outline text="MMA Fighting" title="MMA Fighting" type="rss" xmlUrl="https://www.mmafighting.com/rss/index.xml"/>
+      <outline text="The Guardian: Formula 1" title="The Guardian: Formula 1" type="rss" xmlUrl="https://www.theguardian.com/sport/formulaone/rss"/>
+    </outline>
+  </body>
+</opml>

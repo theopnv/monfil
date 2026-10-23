@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>Football (Soccer)</title></head>
+  <body>
+    <outline text="News">
+      <outline text="BBC Sport: Football" title="BBC Sport: Football" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/football/rss.xml"/>
+      <outline text="Sky Sports: Football" title="Sky Sports: Football" type="rss" xmlUrl="https://www.skysports.com/rss/12040"/>
+      <outline text="The Guardian: Football" title="The Guardian: Football" type="rss" xmlUrl="https://www.theguardian.com/football/rss"/>
+      <outline text="ESPN FC" title="ESPN FC" type="rss" xmlUrl="https://www.espn.com/espn/rss/soccer/news"/>
+      <outline text="FourFourTwo" title="FourFourTwo" type="rss" xmlUrl="https://www.fourfourtwo.com/feeds/all"/>
+      <outline text="talkSPORT: Football" title="talkSPORT: Football" type="rss" xmlUrl="https://talksport.com/football/feed/"/>
+      <outline text="90min" title="90min" type="rss" xmlUrl="https://www.90min.com/feed"/>
+      <outline text="CBS Sports: Soccer" title="CBS Sports: Soccer" type="rss" xmlUrl="https://www.cbssports.com/rss/headlines/soccer/"/>
+      <outline text="L'Équipe: Football" title="L'Équipe: Football" type="rss" xmlUrl="https://dwh.lequipe.fr/api/edito/rss?path=/Football/"/>
+      <outline text="Marca" title="Marca" type="rss" xmlUrl="https://e00-marca.uecdn.es/rss/en/index.xml"/>
+      <outline text="BBC Sport: Premier League" title="BBC Sport: Premier League" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/football/premier-league/rss.xml"/>
+      <outline text="BBC Sport: European Football" title="BBC Sport: European Football" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/football/european/rss.xml"/>
+      <outline text="The Guardian: Premier League" title="The Guardian: Premier League" type="rss" xmlUrl="https://www.theguardian.com/football/premierleague/rss"/>
+      <outline text="Football Italia" title="Football Italia" type="rss" xmlUrl="https://www.football-italia.net/feed"/>
+      <outline text="RotoWire: Soccer" title="RotoWire: Soccer" type="rss" xmlUrl="https://www.rotowire.com/rss/news.php?sport=SOC"/>
+    </outline>
+    <outline text="Analysis &amp; Tactics">
+      <outline text="The Athletic: Football" title="The Athletic: Football" type="rss" xmlUrl="https://www.nytimes.com/athletic/rss/football/"/>
+      <outline text="Spielverlagerung" title="Spielverlagerung" type="rss" xmlUrl="https://spielverlagerung.com/feed/"/>
+      <outline text="The Analyst" title="The Analyst" type="rss" xmlUrl="https://theanalyst.com/feed"/>
+    </outline>
+    <outline text="Clubs &amp; Leagues">
+    </outline>
+    <outline text="Video">
+      <outline text="Premier League" title="Premier League" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCG5qGWdu8nIRZqJ_GgDwQ-w"/>
+      <outline text="UEFA" title="UEFA" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCyGa1YEx9ST66rYrJTGIKOw"/>
+      <outline text="Men in Blazers" title="Men in Blazers" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCwWgXewMHxlPkP5FkxoZvKQ"/>
+      <outline text="FIFA" title="FIFA" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCpcTrCXblq78GZrTUTLWeBw"/>
+      <outline text="Squawka" title="Squawka" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC_QgsfA8W1TdLADOz0txpTg"/>
+      <outline text="Sky Sports Football" title="Sky Sports Football" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCZ7wY7MRDSygp63HIEfdQZA"/>
+      <outline text="ESPN FC" title="ESPN FC" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC6c1z7bA__85CIWZ_jpCK-Q"/>
+      <outline text="B/R Football" title="B/R Football" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UClvow1RFSyeh5CRwRB_m5sA"/>
+      <outline text="CBS Sports Golazo" title="CBS Sports Golazo" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCET00YnetHT7tOpu12v8jxg"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Mastodon #football" title="Mastodon #football" type="rss" xmlUrl="https://mastodon.social/tags/football.rss"/>
+      <outline text="Mastodon #premierleague" title="Mastodon #premierleague" type="rss" xmlUrl="https://mastodon.social/tags/premierleague.rss"/>
+      <outline text="Mastodon #soccer" title="Mastodon #soccer" type="rss" xmlUrl="https://mastodon.social/tags/soccer.rss"/>
+      <outline text="Fabrizio Romano (Bluesky)" title="Fabrizio Romano (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/fabrizioromano.bsky.social/rss"/>
+    </outline>
+  </body>
+</opml>

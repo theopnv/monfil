@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>American Football</title></head>
+  <body>
+    <outline text="News">
+      <outline text="ESPN: NFL" title="ESPN: NFL" type="rss" xmlUrl="https://www.espn.com/espn/rss/nfl/news"/>
+      <outline text="CBS Sports: NFL" title="CBS Sports: NFL" type="rss" xmlUrl="https://www.cbssports.com/rss/headlines/nfl/"/>
+      <outline text="Pro Football Talk" title="Pro Football Talk" type="rss" xmlUrl="https://profootballtalk.nbcsports.com/feed/"/>
+      <outline text="Yahoo Sports: NFL" title="Yahoo Sports: NFL" type="rss" xmlUrl="https://sports.yahoo.com/nfl/rss/"/>
+      <outline text="Pro Football Focus" title="Pro Football Focus" type="rss" xmlUrl="https://www.pff.com/feed"/>
+      <outline text="The 33rd Team" title="The 33rd Team" type="rss" xmlUrl="https://www.the33rdteam.com/feed/"/>
+      <outline text="SB Nation: NFL" title="SB Nation: NFL" type="rss" xmlUrl="https://www.sbnation.com/rss/nfl/index.xml"/>
+      <outline text="Sporting News: NFL" title="Sporting News: NFL" type="rss" xmlUrl="https://www.sportingnews.com/us/rss/nfl"/>
+      <outline text="BBC Sport: American Football" title="BBC Sport: American Football" type="rss" xmlUrl="https://feeds.bbci.co.uk/sport/american-football/rss.xml"/>
+      <outline text="RotoWire: NFL" title="RotoWire: NFL" type="rss" xmlUrl="https://www.rotowire.com/rss/news.php?sport=NFL"/>
+    </outline>
+    <outline text="College Football">
+      <outline text="ESPN: College Football" title="ESPN: College Football" type="rss" xmlUrl="https://www.espn.com/espn/rss/ncf/news"/>
+      <outline text="CBS Sports: College Football" title="CBS Sports: College Football" type="rss" xmlUrl="https://www.cbssports.com/rss/headlines/college-football/"/>
+      <outline text="Yahoo Sports: College Football" title="Yahoo Sports: College Football" type="rss" xmlUrl="https://sports.yahoo.com/college-football/rss/"/>
+      <outline text="ESPNU" title="ESPNU" type="rss" xmlUrl="https://www.espn.com/espn/rss/espnu/news"/>
+    </outline>
+    <outline text="Analysis">
+      <outline text="Football Perspective" title="Football Perspective" type="rss" xmlUrl="https://www.footballperspective.com/feed/"/>
+      <outline text="Sharp Football" title="Sharp Football" type="rss" xmlUrl="https://www.sharpfootballanalysis.com/feed/"/>
+      <outline text="Field Gulls" title="Field Gulls" type="rss" xmlUrl="https://www.fieldgulls.com/rss/index.xml"/>
+    </outline>
+    <outline text="Video">
+      <outline text="NFL" title="NFL" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCDVYQ4Zhbm3S2dlz7P1GBDg"/>
+      <outline text="NFL Films" title="NFL Films" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCY3NEq2LYrmdoGkevo9BH5A"/>
+      <outline text="Good Morning Football" title="Good Morning Football" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UC6vAztUicir81j-bmVKpF7Q"/>
+      <outline text="Pat McAfee Show" title="Pat McAfee Show" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCxcTeAKWJca6XyJ37_ZoKIQ"/>
+      <outline text="Warren Sharp" title="Warren Sharp" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=UCDQHeo_ENerhAttX-5OlHaw"/>
+    </outline>
+    <outline text="Community">
+      <outline text="Mastodon #nfl" title="Mastodon #nfl" type="rss" xmlUrl="https://mastodon.social/tags/nfl.rss"/>
+      <outline text="Mastodon #collegefootball" title="Mastodon #collegefootball" type="rss" xmlUrl="https://mastodon.social/tags/collegefootball.rss"/>
+      <outline text="Adam Schefter (Bluesky)" title="Adam Schefter (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/adamschefter.bsky.social/rss"/>
+      <outline text="Jared Greenberg (Bluesky)" title="Jared Greenberg (Bluesky)" type="rss" xmlUrl="https://bsky.app/profile/jaredgreenberg.bsky.social/rss"/>
+    </outline>
+  </body>
+</opml>
