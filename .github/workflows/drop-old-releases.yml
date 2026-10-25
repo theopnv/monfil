@@ -17,15 +17,17 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: sgpublic/delete-release-action@0972c6da28d8829cdc95fae0e71afcb9079dadc9
-        with:
-          release-drop: true
-          release-keep-count: 2
-          release-drop-tag: false
-          pre-release-drop: true
-          pre-release-keep-count: 2
-          pre-release-drop-tag: false
-          draft-drop: true
-          draft-drop-count: -1
+      - name: Delete drafts and all but the two newest releases and pre-releases
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" | jq -s -r '
+            add
+            | (map(select(.draft)))
+              + (map(select(.draft | not) | select(.prerelease | not)) | sort_by(.created_at) | reverse | .[2:])
+              + (map(select(.draft | not) | select(.prerelease)) | sort_by(.created_at) | reverse | .[2:])
+            | .[] | "\(.id) \(.tag_name)"
+          ' | while read -r id tag; do
+            echo "Deleting release $tag"
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$id"
+          done
