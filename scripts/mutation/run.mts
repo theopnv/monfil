@@ -44,7 +44,7 @@ async function mutateSuite(suite: MutationSuite, mutate: string[]): Promise<void
   if (invalid.length > 0) {
     const sample = invalid.slice(0, 5).map(({ file, mutant }) => `  ${file}:${mutant.location.start.line} ${mutant.mutatorName}`);
     throw new Error([`${invalid.length} survivors of the ${suite} suite ran none of the tests that cover them, so the score is wrong.`,
-      'Check that patches/ still applies to @stryker-mutator/vitest-runner (stryker-js#6210).', ...sample].join('\n'));
+      'Check that the test name filter of @stryker-mutator/vitest-runner matches the Vitest version (stryker-js#6210).', ...sample].join('\n'));
   }
 }
 
