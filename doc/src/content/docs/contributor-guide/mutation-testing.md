@@ -108,9 +108,3 @@ The dashboard is public for a public repository, and a report holds the full sou
 - **Runner:** `@stryker-mutator/vitest-runner` with `coverageAnalysis: 'perTest'`, so a mutant runs only the tests that cover its line. `disableBail` runs all of them, so the report lists every test that kills a mutant. The work list needs that, and it did not make a run slower.
 - **Type check:** `@stryker-mutator/typescript-checker` compiles the root `tsconfig.json` before any test runs, and marks a mutant that does not compile as `CompileError`. About 45% of the mutants of the `unit` suite end there.
 - **Sandbox:** Stryker copies `src/`, `feedpacks/`, the configs, and `package.json` to `.stryker-tmp/`, and links `node_modules`. Nothing else is copied.
-
-### The Vitest 5 patch
-
-Vitest 5 matches a test name filter against the full name, with ` > ` between the suite and test names. `@stryker-mutator/vitest-runner` 10.0.0 still joins the names with a space, so the filter matches no nested test, and almost every mutant shows as survived ([stryker-js#6210](https://github.com/stryker-mutator/stryker-js/issues/6210)). `patches/@stryker-mutator+vitest-runner+10.0.0.patch` changes the join, and `patch-package` applies it in `postinstall`.
-
-After each suite, `run.mts` reads the report. If a survivor ran none of the tests that cover it, the command fails, because the score cannot be correct. That happens when the patch stops applying, for example after a version change. When a Stryker release fixes the issue, remove the patch and update the exact versions of the `@stryker-mutator/*` packages together.

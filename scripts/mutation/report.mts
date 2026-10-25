@@ -9,7 +9,7 @@ const clip = (text: string) => {
 
 /**
  * Lists the survivors that ran none of the tests that cover them. A Vitest name filter that matches nothing
- * gives this result, and so does stryker-js#6210 if `patches/` stops applying to the runner.
+ * gives this result, as in stryker-js#6210.
  */
 export function falseSurvivors(report: MutationTestResult): { file: string; mutant: MutantResult }[] {
   return Object.entries(report.files).flatMap(([file, result]) => result.mutants
