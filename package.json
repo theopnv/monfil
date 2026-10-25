@@ -108,7 +108,7 @@
     "@tanstack/react-router": "^1.170.46",
     "@tanstack/react-router-devtools": "^1.167.2",
     "@untitledui/icons": "^0.0.23",
-    "@vitejs/plugin-react": "^5.2.0",
+    "@vitejs/plugin-react": "^6.1.2",
     "better-sqlite3": "^13.0.3",
     "dompurify": "^3.4.17",
     "electron-log": "^5.4.4",
