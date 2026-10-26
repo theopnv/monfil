@@ -44,6 +44,17 @@ describe('arxivCandidates', () => {
     // Act / Assert
     expect(arxivCandidates('https://arxiv.org/abs/2610.20665')).toBeNull();
   });
+
+  test('a feed path on another host is rejected', () => {
+    // Act / Assert
+    expect(arxivCandidates('https://arxiv.org/rss/cs.AI')).toBeNull();
+    expect(arxivCandidates('https://example.com/rss/cs.AI')).toBeNull();
+  });
+
+  test('an atom feed URL is kept as it is', () => {
+    // Act / Assert
+    expect(arxivCandidates('https://rss.arxiv.org/atom/cs.CL')).toEqual([{ link: 'https://rss.arxiv.org/atom/cs.CL' }]);
+  });
 });
 
 describe('isArxivLink', () => {
@@ -59,6 +70,18 @@ describe('arxivSource.parse', () => {
   test('keeps new papers and cross-lists and drops replacements', () => {
     // Act
     const parsed = arxivSource.parse(FEED);
+
+    // Assert
+    expect(parsed?.items.map((entry) => entry.title)).toEqual(['Paper 2610.00001', 'Paper 2610.00002']);
+  });
+
+  test('keeps a new paper whose abstract later mentions a replacement', () => {
+    // Arrange
+    const abstract = `${'Words about the method. '.repeat(6)}Announce Type: replace is a label.`;
+    const feed = FEED.replace('Abstract: Something about 2610.00001.', `Abstract: ${abstract}`);
+
+    // Act
+    const parsed = arxivSource.parse(feed);
 
     // Assert
     expect(parsed?.items.map((entry) => entry.title)).toEqual(['Paper 2610.00001', 'Paper 2610.00002']);
