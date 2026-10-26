@@ -59,6 +59,7 @@ async function discover(query: string): Promise<Result<ParsedSource[], FeedFetch
     return unsupported("This doesn't look like a link.");
   }
 
+  // Stryker disable next-line ConditionalExpression: a link that is not Mastodon-shaped makes mastodonSource.discover refuse it without a request
   if (mastodonCandidates(link, true)) {
     const mastodon = await mastodonSource.discover(link);
     if (mastodon.success) {
@@ -77,6 +78,7 @@ async function discover(query: string): Promise<Result<ParsedSource[], FeedFetch
   }
 
   const advertised = findAlternateLinks(page.data.body, pageUrl.href);
+  // Stryker disable next-line ConditionalExpression,EqualityOperator: no advertised link gives a failed fetchCandidates, which falls through to the probe
   if (advertised.length > 0) {
     const found = await fetchCandidates('rss', advertised.map((alternate) => ({ link: alternate, blockPrivateHosts: new URL(alternate).host !== pageUrl.host })), parseFeedContent);
     if (found.success) {

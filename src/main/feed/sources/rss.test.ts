@@ -622,13 +622,54 @@ describe('rssSource.discover', () => {
 
   test('returns the feed itself when the link is already a feed', async () => {
     // Arrange
-    mockedFetchText.mockResolvedValue(ok(FEED('Direct')));
+    mockedFetchText.mockImplementation((url) => Promise.resolve(url === 'https://blog.test/posts/rss' ? ok(FEED('Direct')) : notFound));
 
     // Act
-    const result = await rssSource.discover('blog.test/feed');
+    const result = await rssSource.discover('blog.test/posts/rss');
 
     // Assert
-    expect(result).toEqual({ success: true, data: [expect.objectContaining({ type: 'rss', link: 'https://blog.test/feed', title: 'Direct' })] });
+    expect(result).toEqual({ success: true, data: [expect.objectContaining({ type: 'rss', link: 'https://blog.test/posts/rss', title: 'Direct' })] });
+  });
+
+  test('ignores the spaces around the link', async () => {
+    // Arrange
+    mockedFetchText.mockImplementation((url) => Promise.resolve(url === 'https://blog.test/posts/rss' ? ok(FEED('Direct')) : notFound));
+
+    // Act
+    const result = await rssSource.discover('  https://blog.test/posts/rss  ');
+
+    // Assert
+    expect(result).toEqual({ success: true, data: [expect.objectContaining({ link: 'https://blog.test/posts/rss' })] });
+  });
+
+  test('refuses text that is not a link without a request', async () => {
+    // Act
+    const result = await rssSource.discover('not a link');
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a link." } });
+    expect(mockedFetchText).not.toHaveBeenCalled();
+  });
+
+  test('probes the common paths when the feed that the page advertises does not load', async () => {
+    // Arrange
+    const page = '<html><head><link rel="alternate" type="application/rss+xml" href="/broken.xml"></head></html>';
+    mockedFetchText.mockImplementation((url) => Promise.resolve(
+      url === 'https://blog.test/' ? ok(page)
+        : url === 'https://blog.test/feed.xml' ? ok(FEED('Probed'))
+          : notFound,
+    ));
+
+    // Act
+    const result = await rssSource.discover('https://blog.test/');
+
+    // Assert
+    expect(result).toEqual({ success: true, data: [expect.objectContaining({ link: 'https://blog.test/feed.xml', title: 'Probed' })] });
+  });
+
+  test('fetches the full article of its items', () => {
+    // Act / Assert
+    expect(rssSource.fetchesFullArticle).toBe(true);
   });
 
   test('offers every feed a page links to, in page order', async () => {
