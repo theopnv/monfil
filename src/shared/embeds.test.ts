@@ -78,6 +78,7 @@ describe('resolveEmbedUrl for YouTube', () => {
     `https://youtube.com/embed/${YT}`,
     `https://m.youtube.com/shorts/${YT}`,
     `https://www.youtube-nocookie.com/embed/${YT}`,
+    `https://youtube-nocookie.com/embed/${YT}`,
     `https://youtu.be/${YT}`,
     `https://youtu.be/${YT}?t=10`,
   ])('resolves %s', (url) => {
@@ -264,6 +265,7 @@ describe('resolveEmbedUrl for X', () => {
     `https://platform.twitter.com/embed/Tweet.html/extra?id=${TWEET}`,
     'https://platform.twitter.com/embed/Tweet.html',
     'https://platform.twitter.com/embed/Tweet.html?id=',
+    `https://platform.twitter.com/jack/status/${TWEET}`,
   ])('rejects the URL shape %s', (url) => {
     // Act & Assert
     expect(resolveEmbedUrl(url)).toBeUndefined();
@@ -310,6 +312,7 @@ describe('resolveEmbedUrl for Vimeo', () => {
     'https://vimeo.com/video/76979871',
     'https://www.vimeo.com/video/76979871',
     'https://player.vimeo.com/video/',
+    'https://player.vimeo.com/76979871',
     'https://vimeo.com/channels/staff',
     'https://vimeo.com/',
   ])('rejects %s', (url) => {

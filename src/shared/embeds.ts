@@ -21,7 +21,7 @@ function youtubeId(url: URL, host: string, path: string[]): string | null | unde
 }
 
 function resolveYoutube(url: URL, host: string, path: string[]): EmbedDescriptor | undefined {
-  if (!['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtube-nocookie.com'].includes(host)) {
+  if (!['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'youtube-nocookie.com', 'www.youtube-nocookie.com'].includes(host)) {
     return undefined;
   }
   const id = youtubeId(url, host, path);
@@ -36,8 +36,8 @@ function resolveYoutube(url: URL, host: string, path: string[]): EmbedDescriptor
 }
 
 function tweetId(url: URL, host: string, path: string[]): string | null | undefined {
-  if (host === 'platform.twitter.com' && path.join('/') === 'embed/Tweet.html') {
-    return url.searchParams.get('id');
+  if (host === 'platform.twitter.com') {
+    return path.join('/') === 'embed/Tweet.html' ? url.searchParams.get('id') : undefined;
   }
   return path[1] === 'status' ? path[2] : undefined;
 }
@@ -62,7 +62,8 @@ function resolveVimeo(host: string, path: string[]): EmbedDescriptor | undefined
   if (!['vimeo.com', 'www.vimeo.com', 'player.vimeo.com'].includes(host)) {
     return undefined;
   }
-  const id = host === 'player.vimeo.com' && path[0] === 'video' ? path[1] : path[0];
+  const [first, second] = path;
+  const id = host === 'player.vimeo.com' ? first === 'video' ? second : undefined : first;
   if (!id || !/^\d{1,20}$/.test(id)) {
     return undefined;
   }
