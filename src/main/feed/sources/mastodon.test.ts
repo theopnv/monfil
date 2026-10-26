@@ -41,6 +41,12 @@ describe('isMastodonHandle', () => {
     expect(isMastodonHandle('@jay.bsky.team')).toBe(false);
     expect(isMastodonHandle('https://hachyderm.io/@nova')).toBe(false);
   });
+
+  test('ignores the spaces around the handle', () => {
+    // Act / Assert
+    expect(isMastodonHandle('  @nova@hachyderm.io  ')).toBe(true);
+    expect(mastodonCandidates('  @nova@hachyderm.io  ', false)?.[0]?.link).toBe('https://hachyderm.io/@nova.rss');
+  });
 });
 
 describe('mastodonSource.parse', () => {

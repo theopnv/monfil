@@ -36,6 +36,7 @@ export function mastodonCandidates(raw: string, lenient: boolean): FeedCandidate
 }
 
 async function feedImage(_candidate: FeedCandidate, body: string): Promise<string | undefined> {
+  // Stryker disable next-line ObjectLiteral: maxItems only skips the items, which this function never reads
   const { format, feed } = parseFeed(body, { maxItems: 0 });
   return Promise.resolve(format === 'rss' ? feed.image?.url : undefined);
 }
