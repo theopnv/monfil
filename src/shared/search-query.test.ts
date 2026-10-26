@@ -84,6 +84,23 @@ describe('parseSearchQuery', () => {
     ]);
   });
 
+  test('trims the spaces inside a phrase and drops a phrase of spaces', () => {
+    // Act / Assert
+    expect(parseSearchQuery('"  data analyst  "')).toEqual([{ alternatives: [phrase('data analyst')], negated: false }]);
+    expect(parseSearchQuery('a "   " b')).toEqual(all(word('a'), word('b')));
+  });
+
+  test('reads OR with a prefix or in quotes as a term, not as an operator', () => {
+    // Act / Assert
+    expect(parseSearchQuery('go -OR rust')).toEqual([
+      ...all(word('go')),
+      { alternatives: [word('or')], negated: true },
+      ...all(word('rust')),
+    ]);
+    expect(parseSearchQuery('go title:OR rust')).toEqual(all(word('go'), word('or', 'title'), word('rust')));
+    expect(parseSearchQuery('go "OR" rust')).toEqual(all(word('go'), phrase('or'), word('rust')));
+  });
+
   test('keeps a hyphenated word whole', () => {
     // Act / Assert
     expect(parseSearchQuery('front-end')).toEqual(all(word('front-end')));
