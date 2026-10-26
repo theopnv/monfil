@@ -204,6 +204,11 @@ describe('extractRdfImageUrl', () => {
     expect(result).toBeUndefined();
   });
 
+  test('skips media:content that has a medium but no type', () => {
+    const result = extractRdfImageUrl(rdfItem({ media: { contents: [{ url: 'https://example.com/video.mp4', medium: 'video' }] } }));
+    expect(result).toBeUndefined();
+  });
+
   test('falls back to the first img in content:encoded, then in the description', () => {
     const both = extractRdfImageUrl(rdfItem({
       content: { encoded: '<img src="https://example.com/encoded.jpg">' },
