@@ -28,6 +28,33 @@ describe('postTitle', () => {
     expect(title.endsWith('word…')).toBe(true);
   });
 
+  test('cuts back to the last word break when the cut falls inside a word', () => {
+    // Arrange
+    const long = 'abcdefg '.repeat(15);
+
+    // Act
+    const title = postTitle(long);
+
+    // Assert
+    expect(title).toBe(`${'abcdefg '.repeat(12).trim()}…`);
+  });
+
+  test('keeps a title of exactly 100 characters whole and cuts one of 101', () => {
+    // Act / Assert
+    expect(postTitle('a'.repeat(100))).toBe('a'.repeat(100));
+    expect(postTitle('a'.repeat(101))).toBe(`${'a'.repeat(100)}…`);
+  });
+
+  test('collapses runs of spaces and tabs and trims the line', () => {
+    // Act / Assert
+    expect(postTitle('  hello \t  big   world  ')).toBe('hello big world');
+  });
+
+  test('skips lines that are empty or hold only spaces', () => {
+    // Act / Assert
+    expect(postTitle('\n   \n\t\nSecond line\nThird')).toBe('Second line');
+  });
+
   test('does not split an emoji when it cuts', () => {
     // Arrange
     const long = '😀'.repeat(120);
