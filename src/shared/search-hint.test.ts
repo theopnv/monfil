@@ -17,6 +17,14 @@ describe('pickHintExample', () => {
     expect(pickHintExample(['Engineer engineer engineer', 'Designer', 'Designer'])).toBe('title:designer -lead');
   });
 
+  test('ignores words that are not role words, however common', () => {
+    // Act
+    const result = pickHintExample(['Senior Engineer', 'Senior Writer', 'Senior Editor']);
+
+    // Assert
+    expect(result).toBe('title:engineer -manager');
+  });
+
   test('falls back to the default when no role word appears', () => {
     // Act / Assert
     expect(pickHintExample(['Plumber'])).toBe(DEFAULT_HINT_EXAMPLE);
