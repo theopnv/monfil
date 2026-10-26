@@ -321,8 +321,10 @@ export interface Vocabulary {
 
 export function collectVocabulary(json: unknown): Vocabulary {
   const vocabulary: Vocabulary = { topics: new Map(), places: new Map() };
+  // Stryker disable next-line ArrayDeclaration: a stand-in string entry reads as an object without fields and adds nothing
   for (const entry of Array.isArray(json) ? json : []) {
     const raw = asRaw<'city' | 'country' | 'tags'>(entry);
+    // Stryker disable next-line ArrayDeclaration: a stand-in string tag has no value field and adds no topic
     for (const tag of Array.isArray(raw.tags) ? raw.tags : []) {
       const topic = text(asRaw<'value'>(tag).value).toLowerCase();
       if (topic) {

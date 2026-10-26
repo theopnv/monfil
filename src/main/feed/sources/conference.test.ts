@@ -109,6 +109,12 @@ describe('parseConferenceLink', () => {
     expect(unsupportedLinkFilters('https://developers.events/#/2026/list?country=Norway&language=english&topic_mode=any')).toEqual([]);
   });
 
+  test('a site filter with an empty or blank value is harmless, and "any" is harmless only for a mode', () => {
+    // Act / Assert
+    expect(unsupportedLinkFilters('https://developers.events/#/list?region=&city=%20')).toEqual([]);
+    expect(unsupportedLinkFilters('https://developers.events/#/list?region=any&topic_mode=any&tech_mode=all')).toEqual(['region', 'tech_mode']);
+  });
+
   test('a language filter keeps only events with that language tag', () => {
     // Arrange
     const now = Date.UTC(2026, 9, 18);
@@ -148,6 +154,12 @@ describe('parseConferenceLink', () => {
     expect(parsed && buildConferenceLink(parsed)).toBe(link);
   });
 
+  test('several languages are joined with commas in the link', () => {
+    // Act / Assert
+    expect(buildConferenceLink({ topics: ['devops'], places: ['Norway'], languages: ['english', 'french'] }))
+      .toBe('https://developers.events/all-events.json?topics=devops&places=Norway&languages=english,french');
+  });
+
   test('a filter with no topic and no place builds the bare dataset link', () => {
     // Act / Assert
     expect(buildConferenceLink(NO_FILTER)).toBe('https://developers.events/all-events.json');
@@ -178,6 +190,11 @@ describe('parseConferenceQuery', () => {
   test('spaces inside a topic become hyphens, as in the dataset tags', () => {
     // Act / Assert
     expect(parseConferenceQuery('software testing in Paris')).toEqual({ topics: ['software-testing'], places: ['Paris'] });
+  });
+
+  test('several spaces inside a topic become one hyphen', () => {
+    // Act / Assert
+    expect(parseConferenceQuery('software   testing in Paris')).toEqual({ topics: ['software-testing'], places: ['Paris'] });
   });
 
   test('empty text is not a query', () => {
@@ -216,6 +233,19 @@ describe('buildMilestoneItems filters', () => {
     // Assert
     expect(byCity.map((item) => item.title)).toEqual(['New conference: Texas Linux Fest 2027']);
     expect(byState.map((item) => item.title)).toEqual(['New conference: Texas Linux Fest 2027']);
+  });
+
+  test('an event needs only one of several topics, or one of several languages', () => {
+    // Arrange
+    const inEnglish = { ...devoxx, tags: [...devoxx.tags, { key: 'language', value: 'english' }] };
+
+    // Act
+    const byTopic = buildMilestoneItems(eventsAt(now, inEnglish), { topics: ['java', 'kubernetes'], places: [] }, now);
+    const byLanguage = buildMilestoneItems(eventsAt(now, inEnglish), { topics: [], places: [], languages: ['english', 'french'] }, now);
+
+    // Assert
+    expect(byTopic.map((item) => item.title)).toContain('New conference: Devoxx France 2027');
+    expect(byLanguage.map((item) => item.title)).toContain('New conference: Devoxx France 2027');
   });
 
   test('an event needs a matching topic and a matching place', () => {
@@ -356,6 +386,215 @@ describe('card content', () => {
   });
 });
 
+describe('milestones after the event', () => {
+  test('an event that has ended has no milestone', () => {
+    // Arrange
+    const events = eventsAt(START, devoxx);
+
+    // Act
+    const items = buildMilestoneItems(events, NO_FILTER, END + 1);
+
+    // Assert
+    expect(items).toEqual([]);
+  });
+});
+
+describe('card html', () => {
+  const credit = '<p><em>Data: <a href="https://developers.events/">developers.events</a> (CC BY-NC 4.0)</em></p>';
+
+  function firstDescription(raw: unknown, now: number): string | undefined {
+    return buildMilestoneItems(eventsAt(now, raw), NO_FILTER, now)[0]?.description;
+  }
+
+  test('lists the facts, the tags and both links', () => {
+    // Act
+    const description = firstDescription(devoxx, CFP_CLOSES - 1);
+
+    // Assert
+    expect(description).toBe(
+      '<p><strong>7–9 Apr 2027 · Paris, France · CFP closes 10 Jan 2027</strong></p>'
+      + '<p>Tags: java, DevOps</p>'
+      + '<p><a href="https://www.devoxx.fr/">Website</a> · <a href="https://cfp.devoxx.fr/">Call for papers</a></p>'
+      + credit,
+    );
+  });
+
+  test('leaves out the tags and the missing link, and an empty city', () => {
+    // Arrange
+    const plain = { name: 'Plain Conf', date: [START], hyperlink: 'http://plain.example/path', city: '', country: 'Online' };
+
+    // Act
+    const description = firstDescription(plain, START - 100 * DAY);
+
+    // Assert
+    expect(description).toBe(`<p><strong>7 Apr 2027 · Online</strong></p><p><a href="http://plain.example/path">Website</a></p>${credit}`);
+  });
+
+  test('a CFP link without a close date shows the link and no CFP fact, and a place named twice shows once', () => {
+    // Arrange
+    const cfpOnly = { name: 'Cfp Only', date: [START], city: 'Online', country: 'Online', cfp: { link: 'https://cfp.example/' } };
+    const noLinks = { name: 'No Links', date: [START] };
+
+    // Act
+    const withCfp = firstDescription(cfpOnly, START - 100 * DAY);
+    const bare = firstDescription(noLinks, START - 100 * DAY);
+
+    // Assert
+    expect(withCfp).toBe(`<p><strong>7 Apr 2027 · Online</strong></p><p><a href="https://cfp.example/">Call for papers</a></p>${credit}`);
+    expect(bare).toBe(`<p><strong>7 Apr 2027</strong></p>${credit}`);
+  });
+
+  test.each([
+    { first: Date.UTC(2027, 3, 7), last: Date.UTC(2027, 3, 7), range: '7 Apr 2027' },
+    { first: Date.UTC(2027, 3, 7), last: Date.UTC(2027, 3, 9), range: '7–9 Apr 2027' },
+    { first: Date.UTC(2027, 3, 30), last: Date.UTC(2027, 4, 2), range: '30 Apr – 2 May 2027' },
+    { first: Date.UTC(2027, 11, 30), last: Date.UTC(2028, 0, 2), range: '30 Dec 2027 – 2 Jan 2028' },
+  ])('an event from $first to $last is written as $range', ({ first, last, range }) => {
+    // Act
+    const description = firstDescription({ name: 'Range Conf', date: [first, last] }, first - 100 * DAY);
+
+    // Assert
+    expect(description).toBe(`<p><strong>${range}</strong></p>${credit}`);
+  });
+});
+
+describe('item identity', () => {
+  const now = START - 100 * DAY;
+
+  test('the guid slug drops accents and joins other characters with single hyphens', () => {
+    // Arrange
+    const accented = { name: '!Café Dév & Co!', date: [START], city: 'São Paulo' };
+
+    // Act
+    const [item] = buildMilestoneItems(eventsAt(now, accented), NO_FILTER, now);
+
+    // Assert
+    expect(item?.guid).toBe('cafe-dev-co-sao-paulo-2027:announced');
+  });
+
+  test('a missing city leaves no empty part in the guid', () => {
+    // Act
+    const [item] = buildMilestoneItems(eventsAt(now, { name: 'Remote Conf', date: [START] }), NO_FILTER, now);
+
+    // Assert
+    expect(item?.guid).toBe('remote-conf-2027:announced');
+  });
+
+  test('the extra field carries the event details for the card', () => {
+    // Act
+    const [item] = buildMilestoneItems(eventsAt(now, devoxx), NO_FILTER, now);
+
+    // Assert
+    expect(JSON.parse(item?.extra ?? '{}')).toEqual({
+      milestone: 'announced',
+      start: START,
+      end: END,
+      city: 'Paris',
+      country: 'France',
+      website: 'https://www.devoxx.fr/',
+      cfpLink: 'https://cfp.devoxx.fr/',
+      cfpCloses: CFP_CLOSES,
+      tags: ['java', 'DevOps'],
+    });
+  });
+});
+
+describe('collectVocabulary', () => {
+  test('counts the events for each topic and place, and skips empty values', () => {
+    // Act
+    const vocabulary = collectVocabulary([
+      { city: 'Paris', country: 'France', tags: [{ value: 'DevOps' }, { value: '' }] },
+      { city: '', country: 'France', tags: [{ value: 'devops' }] },
+      { city: 'Austin, TX', country: 'USA', tags: 'java' },
+    ]);
+
+    // Assert
+    expect(vocabulary.topics).toEqual(new Map([['devops', 2]]));
+    expect(vocabulary.places).toEqual(new Map([
+      ['paris', { name: 'Paris', count: 1 }],
+      ['france', { name: 'France', count: 2 }],
+      ['austin, tx', { name: 'Austin, TX', count: 1 }],
+      ['austin', { name: 'Austin', count: 1 }],
+      ['tx', { name: 'TX', count: 1 }],
+      ['usa', { name: 'USA', count: 1 }],
+    ]));
+  });
+
+  test('anything other than an array gives an empty vocabulary', () => {
+    // Act
+    const vocabulary = collectVocabulary({ city: 'Paris' });
+
+    // Assert
+    expect(vocabulary.topics.size).toBe(0);
+    expect(vocabulary.places.size).toBe(0);
+  });
+});
+
+describe('checkFilter suggestions', () => {
+  function vocabularyOfTopics(...topics: string[]) {
+    return collectVocabulary(topics.map((topic) => ({ tags: [{ value: topic }] })));
+  }
+
+  test('names the three most used close tags, most used first', () => {
+    // Arrange
+    const used = [['contest', 1], ['testing', 2], ['tests', 3], ['unit-test', 5]] as const;
+    const vocabulary = vocabularyOfTopics(...used.flatMap(([topic, count]) => Array.from({ length: count }, () => topic)));
+
+    // Act
+    const error = checkFilter({ topics: ['test'], places: [] }, vocabulary);
+
+    // Assert
+    expect(error?.message).toBe('No conference has the topic "test". Try unit-test, tests or testing.');
+  });
+
+  test('keeps three suggestions in all when several topics are unknown', () => {
+    // Arrange
+    const vocabulary = vocabularyOfTopics('aaaa1', 'aaaa2', 'aaaa3', 'bbbb1', 'bbbb2', 'bbbb3');
+
+    // Act
+    const error = checkFilter({ topics: ['aaaa', 'bbbb'], places: [] }, vocabulary);
+
+    // Assert
+    expect(error?.message).toBe('No conference has the topic "aaaa" or "bbbb". Try aaaa1, aaaa2 or aaaa3.');
+  });
+
+  test('lists three unknown topics with commas and "or"', () => {
+    // Act
+    const error = checkFilter({ topics: ['zzz', 'yyy', 'xxx'], places: [] }, vocabularyOfTopics('devops'));
+
+    // Assert
+    expect(error?.message).toBe('No conference has the topic "zzz", "yyy" or "xxx". Topics are tags such as devops, java or testing.');
+  });
+
+  test('keeps three place suggestions in all when several places are unknown', () => {
+    // Arrange
+    const cities = ['Alpha1', 'Alpha2', 'Alpha3', 'Bravo1', 'Bravo2', 'Bravo3'];
+    const vocabulary = collectVocabulary(cities.map((city) => ({ city, country: 'Zed' })));
+
+    // Act
+    const error = checkFilter({ topics: [], places: ['Alpha', 'Bravo'] }, vocabulary);
+
+    // Assert
+    expect(error?.message).toBe('No conference takes place in "Alpha" or "Bravo". Try Alpha1, Alpha2 or Alpha3.');
+  });
+
+  test.each([
+    ['go', 'golang', false],
+    ['abc', 'xabcx', true],
+    ['rusy', 'rust', true],
+    ['rust', 'ruby', false],
+    ['pytho', 'pythia', false],
+    ['python', 'pythia', true],
+    ['abcd', 'abxc', false],
+  ])('the unknown topic %s is close to the tag %s: %s', (term, known, close) => {
+    // Act
+    const error = checkFilter({ topics: [term], places: [] }, vocabularyOfTopics(known));
+
+    // Assert
+    expect(error?.message.includes(`Try ${known}.`)).toBe(close);
+  });
+});
+
 describe('checkFilter', () => {
   const vocabulary = collectVocabulary([
     devoxx, kubecon, helloStavanger, texas, ended,
@@ -413,6 +652,52 @@ describe('normalizeEvents', () => {
 
     // Assert
     expect(events.map((event) => event.name)).toEqual(['Devoxx France 2027']);
+  });
+
+  test('reads every field of an event', () => {
+    // Act
+    const events = normalizeEvents([devoxx], Date.UTC(2026, 9, 18));
+
+    // Assert
+    expect(events).toEqual([{
+      name: 'Devoxx France 2027',
+      start: START,
+      end: END,
+      city: 'Paris',
+      country: 'France',
+      website: 'https://www.devoxx.fr/',
+      cfpLink: 'https://cfp.devoxx.fr/',
+      cfpCloses: CFP_CLOSES,
+      tags: ['java', 'DevOps'],
+    }]);
+  });
+
+  test('trims text and gives empty defaults to missing fields', () => {
+    // Act
+    const events = normalizeEvents([
+      { name: '  Spaced Conf ', date: [START], city: ' Paris ', country: ' France ', tags: [{ value: ' go ' }, { value: '' }, { value: '  ' }, { key: 'x' }, 'junk'] },
+      { name: 'Bare Conf', date: [START], tags: 'java' },
+    ], Date.UTC(2026, 9, 18));
+
+    // Assert
+    expect(events).toEqual([
+      { name: 'Spaced Conf', start: START, end: START + DAY - 1, city: 'Paris', country: 'France', website: undefined, cfpLink: undefined, cfpCloses: undefined, tags: ['go'] },
+      { name: 'Bare Conf', start: START, end: START + DAY - 1, city: '', country: '', website: undefined, cfpLink: undefined, cfpCloses: undefined, tags: [] },
+    ]);
+  });
+
+  test('keeps an http link and drops a link that is not an http URL', () => {
+    // Act
+    const [plain, broken] = normalizeEvents([
+      { name: 'Plain', date: [START], hyperlink: 'http://plain.example/', cfp: { link: 'not a url' } },
+      { name: 'Broken', date: [START], hyperlink: 42, cfp: { link: 'ftp://files.example/cfp' } },
+    ], Date.UTC(2026, 9, 18));
+
+    // Assert
+    expect(plain?.website).toBe('http://plain.example/');
+    expect(plain?.cfpLink).toBeUndefined();
+    expect(broken?.website).toBeUndefined();
+    expect(broken?.cfpLink).toBeUndefined();
   });
 
   test('anything other than an array gives no events', () => {
@@ -539,6 +824,103 @@ describe('conferenceSource', () => {
 
     // Assert
     expect(!result.success && result.error.name).toBe('UNSUPPORTED_FORMAT');
+  });
+
+  test('discover names every topic, place and language in the title', async () => {
+    // Arrange
+    vi.setSystemTime(Date.UTC(2026, 9, 18));
+    mockedFetchText.mockResolvedValue({ success: true, data: { body, validators } });
+
+    // Act
+    const typed = await conferenceSource.discover('devops, java in France, Online');
+    const pasted = await conferenceSource.discover('https://developers.events/#/list?language=english,french');
+
+    // Assert
+    expect(typed.success && typed.data[0]?.title).toBe('Conferences · devops, java · France, Online');
+    expect(pasted.success && pasted.data[0]?.title).toBe('Conferences · english, french');
+  });
+
+  test('discover asks for topics and places when the text has none', async () => {
+    // Act
+    const result = await conferenceSource.discover('  ,  ');
+
+    // Assert
+    expect(!result.success && result.error).toEqual({
+      name: 'UNSUPPORTED_FORMAT',
+      message: 'Type topics and places, such as "devops in France", or paste a developers.events link.',
+    });
+  });
+
+  test('discover lists every site filter it cannot apply', async () => {
+    // Act
+    const result = await conferenceSource.discover('https://developers.events/#/list?region=Europe&callForPapers=true');
+
+    // Assert
+    expect(!result.success && result.error.message).toBe('Monfil cannot apply the region or callForPapers filters from developers.events. Remove them from the link, or type topics and places.');
+  });
+
+  test('a refresh of a link that is not on developers.events is refused', async () => {
+    // Act
+    const result = await conferenceSource.fetch({ link: 'https://example.com/all-events.json' });
+
+    // Assert
+    expect(!result.success && result.error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a developers.events link." });
+    expect(mockedFetchText).not.toHaveBeenCalled();
+  });
+
+  test('a body that is not the dataset names the dataset in its message', async () => {
+    // Arrange
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: '{"events":[]}', validators } });
+
+    // Act
+    const result = await conferenceSource.fetch({ link });
+
+    // Assert
+    expect(!result.success && result.error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like the developers.events dataset." });
+  });
+
+  test('a failed download is passed on as it is', async () => {
+    // Arrange
+    mockedFetchText.mockResolvedValue({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
+
+    // Act
+    const result = await conferenceSource.fetch({ link });
+
+    // Assert
+    expect(!result.success && result.error).toEqual({ name: 'NETWORK_ERROR', message: 'offline' });
+  });
+
+  test('a failed conditional request is passed on, and a changed body replaces the cached dataset', async () => {
+    // Arrange
+    vi.setSystemTime(Date.UTC(2026, 9, 18));
+    mockedFetchText.mockResolvedValue({ success: true, data: { body, validators } });
+    await conferenceSource.fetch({ link: 'https://developers.events/all-events.json' });
+    mockedFetchConditional.mockResolvedValueOnce({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
+    const fresh = { success: true as const, data: { body: JSON.stringify([kubecon]), validators: { etag: '"v2"', last_modified: undefined } } };
+    mockedFetchConditional.mockResolvedValueOnce(fresh);
+
+    // Act
+    const failed = await conferenceSource.fetch({ link: 'https://developers.events/all-events.json', validators });
+    const changed = await conferenceSource.fetch({ link: 'https://developers.events/all-events.json', validators });
+
+    // Assert
+    expect(!failed.success && failed.error).toEqual({ name: 'NETWORK_ERROR', message: 'offline' });
+    expect(changed.success && 'parsed' in changed.data && changed.data.parsed.items.map((item) => item.title)).toEqual(['New conference: KubeCon Online 2027']);
+    expect(changed.success && 'validators' in changed.data && changed.data.validators).toEqual({ etag: '"v2"', last_modified: undefined });
+  });
+
+  test('an error thrown while fetching becomes a parse error, and a thrown value that is not an error an unknown one', async () => {
+    // Arrange
+    mockedFetchText.mockRejectedValueOnce(new Error('boom'));
+    mockedFetchText.mockRejectedValueOnce('boom');
+
+    // Act
+    const failed = await conferenceSource.fetch({ link });
+    const unknown = await conferenceSource.fetch({ link });
+
+    // Assert
+    expect(!failed.success && failed.error).toEqual({ name: 'PARSE_ERROR', message: 'boom' });
+    expect(!unknown.success && unknown.error).toEqual({ name: 'UNKNOWN_ERROR', message: 'An unknown error occurred' });
   });
 
   test('parse keeps every event and uses the current time', () => {
