@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { invokePayloadGuards } from './ipc-payloads';
+import { invokePayloadGuards, isUsagePreferences } from './ipc-payloads';
 import type { NewFeedInput, SourceItem } from './contracts';
 import type { TwoWayRendererMainChannels } from './channels';
 
@@ -200,6 +200,80 @@ describe('IPC payload guards', () => {
     // Assert
     expect(importValid).toBe(true);
     expect(installValid).toBe(false);
+  });
+});
+
+describe('payload object shape', () => {
+  test('accepts an object without a prototype', () => {
+    // Arrange
+    const arg = Object.assign(Object.create(null) as object, { workspaceId: 1 });
+
+    // Act & Assert
+    expect(invokePayloadGuards['feeds:list'](arg)).toBe(true);
+  });
+});
+
+describe('consent choice payload', () => {
+  test.each(['granted', 'denied'])('accepts %s', (arg) => {
+    // Act & Assert
+    expect(invokePayloadGuards['settings:set-usage-analytics'](arg)).toBe(true);
+  });
+
+  test.each(['', 'GRANTED', 'yes', true, undefined, null])('rejects %j', (arg) => {
+    // Act & Assert
+    expect(invokePayloadGuards['settings:set-usage-analytics'](arg)).toBe(false);
+  });
+});
+
+describe('usage preferences', () => {
+  const preferences = {
+    density: 'Cards', theme: 'light', hideReadItems: false, markReadOnScroll: true, openLinksExternally: false, keyboardNavigation: true,
+  };
+
+  test.each(['Cards', 'Magazine', 'Compact'])('accepts the density %s', (density) => {
+    // Act & Assert
+    expect(isUsagePreferences({ ...preferences, density })).toBe(true);
+  });
+
+  test.each(['light', 'dark', 'system'])('accepts the theme %s', (theme) => {
+    // Act & Assert
+    expect(isUsagePreferences({ ...preferences, theme })).toBe(true);
+  });
+
+  test.each([
+    ['density', ''],
+    ['density', 'cards'],
+    ['density', 'Comfortable'],
+    ['theme', ''],
+    ['theme', 'Light'],
+    ['theme', 'auto'],
+    ['hideReadItems', 'false'],
+    ['markReadOnScroll', 1],
+    ['openLinksExternally', null],
+    ['keyboardNavigation', undefined],
+  ])('rejects %s set to %j', (field, value) => {
+    // Act & Assert
+    expect(isUsagePreferences({ ...preferences, [field]: value })).toBe(false);
+  });
+
+  test('rejects extra fields and non-objects', () => {
+    // Act & Assert
+    expect(isUsagePreferences({ ...preferences, extra: true })).toBe(false);
+    expect(isUsagePreferences(null)).toBe(false);
+    expect(isUsagePreferences('Cards')).toBe(false);
+  });
+});
+
+describe('import target kinds', () => {
+  test.each([
+    { kind: 'other', workspaceId: 1 },
+    { kind: 'new-workspace', workspaceId: 1 },
+    { kind: 'other', name: '', icon: '', color: '' },
+    { kind: 'merge-workspace', name: '', icon: '', color: '' },
+  ])('rejects the target %j', (target) => {
+    // Act & Assert
+    expect(invokePayloadGuards['opml:import']({ target })).toBe(false);
+    expect(invokePayloadGuards['feedpacks:install']({ slug: 'tech', target })).toBe(false);
   });
 });
 
