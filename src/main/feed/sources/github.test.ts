@@ -44,6 +44,46 @@ describe('githubCandidates', () => {
     expect(candidates?.[0]?.link).toBe('https://github.com/microsoft/playwright/releases.atom');
   });
 
+  test('another feed of a repository is kept as it is, with the owner avatar', () => {
+    // Act
+    const candidates = githubCandidates('https://github.com/microsoft/playwright/commits/main.atom', false);
+
+    // Assert
+    expect(candidates).toEqual([{ link: 'https://github.com/microsoft/playwright/commits/main.atom', icon: 'https://github.com/microsoft.png' }]);
+  });
+
+  test('the activity feed of a user is kept as it is', () => {
+    // Act
+    const candidates = githubCandidates('https://github.com/torvalds.atom', false);
+
+    // Assert
+    expect(candidates).toEqual([{ link: 'https://github.com/torvalds.atom', label: 'Public activity', icon: 'https://github.com/torvalds.png' }]);
+  });
+
+  test('a first segment that ends in .atom is a user feed only when it is the whole path', () => {
+    // Act
+    const candidates = githubCandidates('https://github.com/odd.atom/repo', false);
+
+    // Assert
+    expect(candidates?.[0]?.link).toBe('https://github.com/odd.atom/repo/releases.atom');
+  });
+
+  test('".git" is cut only from the end of a repository name', () => {
+    // Act
+    const candidates = githubCandidates('https://github.com/octocat/octocat.github.io', false);
+
+    // Assert
+    expect(candidates?.[0]?.link).toBe('https://github.com/octocat/octocat.github.io/releases.atom');
+  });
+
+  test('a bare owner/repo with spaces around it resolves when the GitHub chip is picked', () => {
+    // Act
+    const candidates = githubCandidates('  microsoft/playwright  ', true);
+
+    // Assert
+    expect(candidates?.[0]?.link).toBe('https://github.com/microsoft/playwright/releases.atom');
+  });
+
   test('a bare owner/repo resolves only when the GitHub chip is picked', () => {
     // Act
     const withChip = githubCandidates('microsoft/playwright', true);
@@ -67,6 +107,7 @@ describe('isGithubLink', () => {
     // Act / Assert
     expect(isGithubLink('https://github.com/microsoft/playwright')).toBe(true);
     expect(isGithubLink('https://example.com/microsoft/playwright')).toBe(false);
+    expect(isGithubLink('microsoft/playwright')).toBe(false);
   });
 });
 
@@ -178,5 +219,77 @@ describe('githubSource.parse', () => {
     // Assert
     expect(description).not.toMatch(/<!--|<script|<scr|javascript:/i);
     expect(description).toContain('<a href="https://github.com/ok">ok</a>');
+  });
+
+  const descriptionOf = (content: string) => githubSource.parse(feed(entry('tag:github.com,2008:push/9', `<div class="x js-feed-item-view">${content}</div>`)))?.items[0]?.description;
+
+  test('keeps an entry without a details box whole', () => {
+    // Act
+    const description = descriptionOf('<a href="/swyxio">swyxio</a> started following <a href="/gaearon">gaearon</a>');
+
+    // Assert
+    expect(description).toBe('<p><a href="https://github.com/swyxio">swyxio</a> started following <a href="https://github.com/gaearon">gaearon</a></p>');
+  });
+
+  test('keeps an http link and replaces a tag it does not keep with a space', () => {
+    // Act
+    const description = descriptionOf('one<span>two</span>three <a href="http://example.com/a">x</a>');
+
+    // Assert
+    expect(description).toBe('<p>one two three <a href="http://example.com/a">x</a></p>');
+  });
+
+  test('keeps only a link href: other tags lose their attributes', () => {
+    // Act
+    const description = descriptionOf('<code href="/x" class="y">c</code>');
+
+    // Assert
+    expect(description).toBe('<p><code>c</code></p>');
+  });
+
+  test('drops links with no text, whatever their href or spacing, and the time of the event', () => {
+    // Act
+    const description = descriptionOf('x<a href="/a"></a>y<a href="javascript:z">  </a>w <a href="/b">b</a><relative-time datetime="2026-10-16T19:33:34Z">October 16</relative-time>');
+
+    // Assert
+    expect(description).toBe('<p>xyw <a href="https://github.com/b">b</a></p>');
+  });
+
+  test('removes the private-use characters that stand in for tag brackets in the input', () => {
+    // Arrange
+    const open = String.fromCharCode(0xE000);
+    const close = String.fromCharCode(0xE001);
+
+    // Act
+    const description = descriptionOf(`x ${open}b${close} y`);
+
+    // Assert
+    expect(description).toBe('<p>x b y</p>');
+  });
+
+  test('puts each paragraph and list of the details box in its own block and wraps loose text', () => {
+    // Arrange
+    const star = '<a href="/swyxio">swyxio</a> starred <a href="/smol-ai/skit">smol-ai/skit</a>'
+      + '<div class="Box">loose one<p>A better way.</p><p><span>TypeScript</span> <a href="https://github.com/smol-ai/skit/stargazers">15</a></p>loose two</div>';
+
+    // Act
+    const description = descriptionOf(star);
+
+    // Assert
+    expect(description).toBe(
+      '<p><a href="https://github.com/swyxio">swyxio</a> starred <a href="https://github.com/smol-ai/skit">smol-ai/skit</a></p>'
+      + '<p>loose one</p><p>A better way.</p><p>TypeScript <a href="https://github.com/smol-ai/skit/stargazers">15 stars</a></p><p>loose two</p>',
+    );
+  });
+
+  test.each(['https://example.com/picture.png', 'picture.png'])('keeps the thumbnail %s, which is not an avatar', (thumbnail) => {
+    // Arrange
+    const withPicture = feed(entry('tag:github.com,2008:Repository/1/v2', '<p>notes</p>').replace('https://avatars.githubusercontent.com/u/6764957?s=30&amp;v=4', thumbnail));
+
+    // Act
+    const parsed = githubSource.parse(withPicture);
+
+    // Assert
+    expect(parsed?.items[0]?.image).toBe(thumbnail);
   });
 });
