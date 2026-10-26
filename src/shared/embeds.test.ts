@@ -313,6 +313,7 @@ describe('resolveEmbedUrl for Vimeo', () => {
     'https://www.vimeo.com/video/76979871',
     'https://player.vimeo.com/video/',
     'https://player.vimeo.com/76979871',
+    'https://player.vimeo.com/channels/76979871',
     'https://vimeo.com/channels/staff',
     'https://vimeo.com/',
   ])('rejects %s', (url) => {
