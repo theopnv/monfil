@@ -28,15 +28,20 @@ export function isExtractArticleRequest(value: unknown): value is ExtractArticle
   return typeof request.id === 'number' && typeof request.html === 'string' && typeof request.url === 'string';
 }
 
+function isExtractedArticle(value: unknown): value is ExtractedArticle {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const article = value as Partial<ExtractedArticle>;
+  return typeof article.html === 'string' && typeof article.text === 'string' && typeof article.wordCount === 'number';
+}
+
 export function isExtractArticleResponse(value: unknown): value is ExtractArticleResponse {
   if (!value || typeof value !== 'object') {
     return false;
   }
   const response = value as Partial<ExtractArticleResponse>;
-  return typeof response.id === 'number'
-    && (response.article === undefined || (typeof response.article.html === 'string'
-      && typeof response.article.text === 'string'
-      && typeof response.article.wordCount === 'number'));
+  return typeof response.id === 'number' && (response.article === undefined || isExtractedArticle(response.article));
 }
 
 export function isExtractArticleLog(value: unknown): value is ExtractArticleLog {

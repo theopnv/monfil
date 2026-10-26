@@ -89,6 +89,7 @@ describe('isExtractArticleResponse', () => {
     ['with a numeric text', { id: 1, article: { html: 'x', text: 1, wordCount: 1 } }],
     ['with a string wordCount', { id: 1, article: { html: 'x', text: 'x', wordCount: '1' } }],
     ['with a primitive article', { id: 1, article: 5 }],
+    ['with a null article', { id: 1, article: null }],
   ])('rejects a response %s', (_name, value) => {
     // Act & Assert
     expect(isExtractArticleResponse(value)).toBe(false);
