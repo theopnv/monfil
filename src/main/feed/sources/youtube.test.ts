@@ -521,6 +521,17 @@ describe('fetchFeed', () => {
     expect(mockedFetchText).toHaveBeenCalledWith('https://www.youtube.com/@Underscore_');
   });
 
+  test('a handle page that fails to load passes its error on', async () => {
+    // Arrange
+    mockResponses({ 'https://www.youtube.com/@Nobody': { success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } } });
+
+    // Act
+    const result = await fetchFeed({ link: '@Nobody' });
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
+  });
+
   test('a handle page with no channel id is refused', async () => {
     // Arrange
     mockResponses({ 'https://www.youtube.com/@Nobody': fetched('<html></html>') });
