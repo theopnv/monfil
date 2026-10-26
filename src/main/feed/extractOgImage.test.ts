@@ -38,6 +38,17 @@ describe('extractOgImageUrl', () => {
     expect(result).toBe('https://example.com/og.jpg');
   });
 
+  test.each([
+    ['an og:image tag with an empty content', '<meta property="og:image" content=""><meta property="og:image" content="https://example.com/second.jpg">', 'https://example.com/second.jpg'],
+    ['an empty og:image before a twitter:image', '<meta property="og:image" content=""><meta name="twitter:image" content="https://example.com/tw.jpg">', 'https://example.com/tw.jpg'],
+  ])('skips %s', (_name, html, expected) => {
+    // Act
+    const result = extractOgImageUrl(html);
+
+    // Assert
+    expect(result).toBe(expected);
+  });
+
   test('ignores an unrelated meta tag', () => {
     const result = extractOgImageUrl('<meta name="description" content="https://example.com/f.jpg">');
     expect(result).toBeUndefined();
