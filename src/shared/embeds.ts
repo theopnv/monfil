@@ -11,13 +11,14 @@ export interface EmbedDescriptor {
 }
 
 function youtubeId(url: URL, host: string, path: string[]): string | null | undefined {
+  const [first, second] = path;
   if (host === 'youtu.be') {
-    return path[0];
+    return first;
   }
-  if (path[0] === 'watch') {
+  if (first === 'watch') {
     return url.searchParams.get('v');
   }
-  return ['embed', 'shorts', 'live'].includes(path[0] ?? '') ? path[1] : undefined;
+  return first === 'embed' || first === 'shorts' || first === 'live' ? second : undefined;
 }
 
 function resolveYoutube(url: URL, host: string, path: string[]): EmbedDescriptor | undefined {
@@ -47,8 +48,8 @@ function resolveX(url: URL, host: string, path: string[]): EmbedDescriptor | und
     return undefined;
   }
   const id = tweetId(url, host, path);
-  const author = host === 'platform.twitter.com' ? 'i' : path[0] ?? '';
-  if (!id || !/^\d{5,25}$/.test(id) || !/^[A-Za-z0-9_]{1,15}$/.test(author)) {
+  const author = host === 'platform.twitter.com' ? 'i' : path[0];
+  if (!id || !/^\d{5,25}$/.test(id) || author === undefined || !/^[A-Za-z0-9_]{1,15}$/.test(author)) {
     return undefined;
   }
   return {
@@ -78,8 +79,8 @@ function resolveInstagram(host: string, path: string[]): EmbedDescriptor | undef
   if (host !== 'instagram.com' && host !== 'www.instagram.com') {
     return undefined;
   }
-  const [kind = '', id] = path;
-  if (!['p', 'reel', 'tv'].includes(kind) || !id || !/^[A-Za-z0-9_-]{5,30}$/.test(id)) {
+  const [kind, id] = path;
+  if (kind === undefined || !['p', 'reel', 'tv'].includes(kind) || !id || !/^[A-Za-z0-9_-]{5,30}$/.test(id)) {
     return undefined;
   }
   return {
@@ -93,8 +94,8 @@ function resolveSpotify(host: string, path: string[]): EmbedDescriptor | undefin
   if (host !== 'open.spotify.com') {
     return undefined;
   }
-  const [kind = '', id] = path[0] === 'embed' ? path.slice(1) : path;
-  if (!['track', 'album', 'playlist', 'episode', 'show', 'artist'].includes(kind) || !id || !/^[A-Za-z0-9]{22}$/.test(id)) {
+  const [kind, id] = path[0] === 'embed' ? path.slice(1) : path;
+  if (kind === undefined || !['track', 'album', 'playlist', 'episode', 'show', 'artist'].includes(kind) || !id || !/^[A-Za-z0-9]{22}$/.test(id)) {
     return undefined;
   }
   return {
