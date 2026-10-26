@@ -53,6 +53,8 @@ describe('detectType', () => {
     ['https://mastodon.social/@Mastodon.rss', 'rss'],
     ['https://example.com/feed.xml', 'rss'],
     ['not a url', 'rss'],
+    ['http://bsky.app/profile/bsky.app/rss', 'bluesky'],
+    ['bsky.app/profile/bsky.app?next=https://example.com', 'rss'],
   ] as const)('stores %s as %s', (link, type) => {
     // Act / Assert
     expect(detectType(link)).toBe(type);
