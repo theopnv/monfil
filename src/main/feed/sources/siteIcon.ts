@@ -25,6 +25,7 @@ function attribute(tag: string, regex: RegExp): string | undefined {
 }
 
 function isIconRel(rel: string): boolean {
+  // Stryker disable next-line Regex: with a single-space split an extra space only adds an empty token, which matches nothing
   return rel.toLowerCase().split(/\s+/).some((token) => token === 'icon' || token.startsWith('apple-touch-icon'));
 }
 
@@ -33,6 +34,7 @@ function declaredSize(tag: string, rel: string, href: string): number {
   if (sizes === 'any' || (!sizes && /\.svg(?:$|[?#])/i.test(href))) {
     return SCALABLE_ICON_SIZE;
   }
+  // Stryker disable next-line StringLiteral,Regex: a non-numeric or empty token parses to NaN and is filtered out
   const widths = (sizes ?? '').split(/\s+/).map((size) => Number.parseInt(size, 10)).filter(Number.isFinite);
   if (widths.length > 0) {
     return Math.max(...widths);
@@ -48,6 +50,7 @@ function toIconLink(tag: string, pageUrl: string): IconLink | undefined {
   }
   let href: URL;
   try {
+    // Stryker disable next-line MethodExpression: the URL parser already strips the spaces around its input
     href = new URL(raw.trim(), pageUrl);
   } catch {
     return undefined;
@@ -68,6 +71,7 @@ function toIconLink(tag: string, pageUrl: string): IconLink | undefined {
  * @returns absolute http(s) or `data:image` URLs, largest first and dark-scheme variants last
  */
 export function extractIconLinks(html: string, pageUrl: string): string[] {
+  // Stryker disable next-line ArrayDeclaration: a stand-in string has no rel or href, so it yields no icon
   const links = (html.match(LINK_TAG_REGEX) ?? []).flatMap((tag) => toIconLink(tag, pageUrl) ?? []);
   return links.sort((a, b) => b.score - a.score).map((link) => link.href);
 }
