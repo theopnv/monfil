@@ -633,7 +633,7 @@ describe('checkFilter', () => {
     const error = checkFilter({ topics: [], places: ['Parris'] }, vocabulary);
 
     // Assert
-    expect(error?.message).toBe('No conference takes place in "Parris". Try Paris.');
+    expect(error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: 'No conference takes place in "Parris". Try Paris.' });
   });
 
   test('an unknown place without a close place asks for a city or a country', () => {
