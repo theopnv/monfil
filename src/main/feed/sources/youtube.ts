@@ -98,6 +98,7 @@ function parseYoutubeUrl(url: URL): YoutubeTarget | null {
  */
 export function parseYoutubeInput(raw: string, assumeYoutube = false): YoutubeTarget | null {
   const trimmed = raw.trim();
+  // Stryker disable next-line ConditionalExpression,BlockStatement: empty text matches no pattern below, so every path returns null anyway
   if (!trimmed) {
     return null;
   }
@@ -155,6 +156,7 @@ export function extractChannel(html: string): ExtractedChannel {
 // Channel feeds truncate their own <yt:channelId> (the "UC" prefix goes missing), so that field
 // must never be trusted to identify a channel feed's own owner. Playlist feeds don't have the bug.
 function extractPlaylistOwner(feedContent: string): string | undefined {
+  // Stryker disable next-line ObjectLiteral: maxItems only skips the entries, which this function never reads
   const { format, feed } = parseFeed(feedContent, { maxItems: 0 });
   return format === 'atom' ? feed.yt?.channelId : undefined;
 }
