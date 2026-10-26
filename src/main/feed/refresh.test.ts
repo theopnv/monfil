@@ -11,7 +11,8 @@ import { fetchText } from '../lib/fetch';
 import { logger } from '../logging/logger';
 import { rssSource } from './sources/rss';
 import { HOME_WORKSPACE_ID, type ParsedSource } from '../../shared/contracts';
-import { refreshAllFeeds } from './refresh';
+import { refreshAllFeeds, refreshFeeds } from './refresh';
+import { broadcastToRenderers } from '../lib/sendToRenderer';
 import type { FeedItem } from '../db/types';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 import { resolveSiteIcon } from './sources/siteIcon';
@@ -24,6 +25,7 @@ vi.mock(import('../lib/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broad
 const mockedFetchFeed = vi.mocked(rssSource.fetch);
 const mockedFetchText = vi.mocked(fetchText);
 const mockedResolveSiteIcon = vi.mocked(resolveSiteIcon);
+const mockedBroadcast = vi.mocked(broadcastToRenderers);
 
 type NewItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>;
 const TEST_PUB_DATE = new Date().toISOString();
@@ -169,10 +171,35 @@ describe('refreshAllFeeds', () => {
       throw new Error('Expected a pending feed fetch.');
     }
     finish({ success: true, data: fetched(link, [item({ guid: 'new', title: 'Late item' })]) });
-    await refreshing;
+    const summary = await refreshing;
 
     // Assert
     expect(await db.selectFrom('feedItem').select('id').execute()).toEqual([{ id: saved.id }]);
+    expect(summary.failedFeedIds).toBeUndefined();
+  });
+
+  test('does not fetch a feed that was removed while an earlier feed was being fetched', async () => {
+    // Arrange
+    const links = ['a', 'c', 'd', 'e', 'b'].map((name) => `https://${name}.example/feed`);
+    const [linkA, , , , linkB] = links;
+    const feedIds: number[] = [];
+    for (const link of links) {
+      feedIds.push(await storeFeed(link));
+    }
+    const removedId = feedIds[4] ?? 0;
+    mockedFetchFeed.mockImplementation(async (input) => {
+      if (input.link === linkA) {
+        await deleteFeedFromDatabase(removedId, HOME_WORKSPACE_ID);
+      }
+      return { success: true, data: fetched(input.link, []) };
+    });
+
+    // Act
+    const summary = await refreshAllFeeds();
+
+    // Assert
+    expect(mockedFetchFeed.mock.calls.map(([input]) => input.link)).not.toContain(linkB);
+    expect(summary.failedFeedIds).toBeUndefined();
   });
 
   test('does not fetch a removed source retained by Saved', async () => {
@@ -396,14 +423,16 @@ describe('refreshAllFeeds', () => {
     mockedFetchFeed.mockResolvedValue({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
 
     // Act
-    await refreshAllFeeds();
+    const failedSummary = await refreshAllFeeds();
     const failed = await db.selectFrom('feedMetadata').selectAll().where('id', '=', feedId).executeTakeFirstOrThrow();
 
     mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, []) });
-    await refreshAllFeeds();
+    const recoveredSummary = await refreshAllFeeds();
     const recovered = await db.selectFrom('feedMetadata').selectAll().where('id', '=', feedId).executeTakeFirstOrThrow();
 
     // Assert
+    expect(failedSummary.failedFeedIds).toEqual([feedId]);
+    expect(recoveredSummary.failedFeedIds).toBeUndefined();
     expect(failed.last_error).toBe('offline');
     expect(failed.last_fetched_at).toEqual(expect.any(String));
     expect(recovered.last_error).toBeNull();
@@ -501,5 +530,97 @@ describe('refreshAllFeeds', () => {
 
     // Assert
     expect(mockedFetchText).not.toHaveBeenCalledWith('https://a.example/200', expect.anything());
+  });
+
+  test('shares the image enrichment budget across feeds', async () => {
+    // Arrange
+    const firstLink = 'https://a.example/feed';
+    const secondLink = 'https://b.example/feed';
+    await storeFeed(firstLink);
+    await storeFeed(secondLink);
+    mockedFetchFeed.mockImplementation((input) => Promise.resolve({
+      success: true,
+      data: fetched(input.link, Array.from({ length: input.link === firstLink ? 150 : 100 }, (_, index) => item({ title: `${input.link} ${index}`, link: `${input.link}/${index}` }))),
+    }));
+
+    // Act
+    await refreshAllFeeds();
+    await vi.waitFor(() => expect(mockedFetchText).toHaveBeenCalledTimes(200));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    // Assert
+    expect(mockedFetchText).toHaveBeenCalledTimes(200);
+    expect(mockedFetchText).toHaveBeenCalledWith(`${secondLink}/49`, expect.anything());
+    expect(mockedFetchText).not.toHaveBeenCalledWith(`${secondLink}/50`, expect.anything());
+  });
+
+  test('stores and announces the image found for a new item', async () => {
+    // Arrange
+    const link = 'https://a.example/feed';
+    const feedId = await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, [item({ title: 'New item', link: 'https://a.example/new' })]) });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: '<html><head><meta property="og:image" content="https://a.example/cover.png"></head></html>', validators: { etag: undefined, last_modified: undefined } } });
+
+    // Act
+    await refreshAllFeeds();
+    await vi.waitFor(() => expect(mockedBroadcast).toHaveBeenCalled());
+    const stored = await db.selectFrom('feedItem').select(['id', 'image']).where('feed_id', '=', feedId).executeTakeFirstOrThrow();
+
+    // Assert
+    expect(mockedBroadcast).toHaveBeenCalledWith('feeds:item-image-fetched', { feedId, itemId: stored.id, image: 'https://a.example/cover.png' });
+    await vi.waitFor(async () => {
+      expect((await db.selectFrom('feedItem').select('image').where('id', '=', stored.id).executeTakeFirstOrThrow()).image).toBe('https://a.example/cover.png');
+    });
+  });
+
+  test('does not look for images when the source already carries the full article', async () => {
+    // Arrange
+    const link = 'https://a.example/feed';
+    await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, [item({ title: 'New item', link: 'https://a.example/new' })]) });
+    Object.defineProperty(rssSource, 'fetchesFullArticle', { value: false, configurable: true });
+
+    // Act
+    try {
+      await refreshAllFeeds();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    } finally {
+      Object.defineProperty(rssSource, 'fetchesFullArticle', { value: true, configurable: true });
+    }
+
+    // Assert
+    expect(mockedFetchText).not.toHaveBeenCalled();
+  });
+});
+
+describe('refreshFeeds', () => {
+  test('returns an empty summary without touching any feed when given no ids', async () => {
+    // Arrange
+    await storeFeed('https://a.example/feed');
+
+    // Act
+    const summary = await refreshFeeds([]);
+
+    // Assert
+    expect(summary).toEqual({ perFeed: [] });
+    expect(mockedFetchFeed).not.toHaveBeenCalled();
+  });
+
+  test('fetches only the given feeds, with their stored validators', async () => {
+    // Arrange
+    const link = 'https://a.example/feed';
+    const otherLink = 'https://b.example/feed';
+    const feedId = await storeFeed(link);
+    await storeFeed(otherLink);
+    await db.updateTable('feedMetadata').set({ etag: '"old"', icon: 'https://a.example/icon.png' }).where('id', '=', feedId).execute();
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, [item({ title: 'Fresh', link: 'https://a.example/1' })]) });
+
+    // Act
+    const summary = await refreshFeeds([feedId]);
+
+    // Assert
+    expect(mockedFetchFeed).toHaveBeenCalledTimes(1);
+    expect(mockedFetchFeed).toHaveBeenCalledWith({ link, validators: { etag: '"old"', last_modified: undefined } });
+    expect(summary.perFeed).toEqual([{ feedId, inserted: 1 }]);
   });
 });
