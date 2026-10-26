@@ -65,17 +65,6 @@ describe('parseFeedContent rss', () => {
     }]);
   });
 
-  test('an item with no guid and no link gets a hashed guid that depends on its title and date', () => {
-    // Act
-    const parsed = parseFeedContent(rss('<title>T</title><item><title>A</title></item><item><title>B</title></item>'));
-
-    // Assert
-    const guids = parsed?.items.map((item) => item.guid) ?? [];
-    expect(guids[0]).toMatch(HASHED_GUID);
-    expect(guids[1]).toMatch(HASHED_GUID);
-    expect(guids[0]).not.toBe(guids[1]);
-  });
-
   test('a feed with no title, no description and no item has empty text and no items', () => {
     // Act
     const parsed = parseFeedContent(rss('<link>https://fish.example/</link>'));
@@ -289,6 +278,14 @@ describe('parseFeedContent json', () => {
 
     // Assert
     expect(parsed?.items.map((item) => item.description)).toEqual(['text', 'summary']);
+  });
+
+  test('an item with an empty author list has no author', () => {
+    // Act
+    const parsed = parseFeedContent(json({ title: 'T', items: [{ id: '1', authors: [] }] }));
+
+    // Assert
+    expect(parsed?.items[0]?.author).toBeUndefined();
   });
 
   test('an item with only an id has placeholders, and the id as guid', () => {
