@@ -123,6 +123,116 @@ describe('parseOpmlDocument', () => {
     expect(result.data.categories[0]?.feeds.map((feed) => feed.type)).toEqual(['rss', 'rss']);
   });
 
+  test('folds feeds nested several folders deep into the category at the top of the branch', () => {
+    // Arrange
+    const xml = opml(`
+      <outline text="Tech">
+        <outline text="Video">
+          <outline text="Talks">
+            <outline type="rss" text="Deep" xmlUrl="https://example.com/deep.xml"/>
+          </outline>
+        </outline>
+      </outline>
+    `);
+
+    // Act
+    const result = parseOpmlDocument(xml);
+
+    // Assert
+    expect(result).toEqual({
+      success: true,
+      data: { title: 'My feeds', categories: [{ name: 'Tech', feeds: [{ title: 'Deep', xmlUrl: 'https://example.com/deep.xml', type: 'rss' }] }] },
+    });
+  });
+
+  test('leaves out a category that has no feeds', () => {
+    // Arrange
+    const xml = opml(`
+      <outline text="Empty folder"></outline>
+      <outline text="Folder of folders"><outline text="Still empty"></outline></outline>
+      <outline text="Tech"><outline type="rss" text="Blog" xmlUrl="https://example.com/blog.xml"/></outline>
+    `);
+
+    // Act
+    const result = parseOpmlDocument(xml);
+
+    // Assert
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
+    expect(result.data.categories.map((category) => category.name)).toEqual(['Tech']);
+  });
+
+  test('adds the top-level feeds as a category after the folders', () => {
+    // Arrange
+    const xml = opml(`
+      <outline type="rss" text="Loose" xmlUrl="https://example.com/loose.xml"/>
+      <outline text="Tech"><outline type="rss" text="Blog" xmlUrl="https://example.com/blog.xml"/></outline>
+    `, 'Mixed');
+
+    // Act
+    const result = parseOpmlDocument(xml);
+
+    // Assert
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
+    expect(result.data.categories.map((category) => [category.name, category.feeds.map((feed) => feed.title)])).toEqual([
+      ['Tech', ['Blog']],
+      ['Mixed', ['Loose']],
+    ]);
+  });
+
+  test('names a category "Imported" when its folder has no text', () => {
+    // Arrange
+    const xml = opml('<outline><outline type="rss" text="Blog" xmlUrl="https://example.com/blog.xml"/></outline>');
+
+    // Act
+    const result = parseOpmlDocument(xml);
+
+    // Assert
+    expect(result.success && result.data.categories.map((category) => category.name)).toEqual(['Imported']);
+  });
+
+  test('uses "Imported" for the title and the loose feeds category when the document has no head', () => {
+    // Arrange
+    const xml = '<?xml version="1.0"?><opml version="1.0"><body><outline type="rss" text="Blog" xmlUrl="https://example.com/blog.xml"/></body></opml>';
+
+    // Act
+    const result = parseOpmlDocument(xml);
+
+    // Assert
+    expect(result).toEqual({
+      success: true,
+      data: { title: 'Imported', categories: [{ name: 'Imported', feeds: [{ title: 'Blog', xmlUrl: 'https://example.com/blog.xml', type: 'rss' }] }] },
+    });
+  });
+
+  test('names a feed from its title, then its text, then its URL', () => {
+    // Arrange
+    const xml = opml(`
+      <outline type="rss" title="Title wins" text="Text" xmlUrl="https://example.com/a.xml"/>
+      <outline type="rss" text="Text wins" xmlUrl="https://example.com/b.xml"/>
+      <outline type="rss" xmlUrl="https://example.com/c.xml"/>
+    `);
+
+    // Act
+    const result = parseOpmlDocument(xml);
+
+    // Assert
+    expect(result.success && result.data.categories[0]?.feeds.map((feed) => feed.title)).toEqual(['Title wins', 'Text wins', 'https://example.com/c.xml']);
+  });
+
+  test('fails with NO_FEEDS when the body is empty', () => {
+    // Act
+    const result = parseOpmlDocument(opml(''));
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'NO_FEEDS', message: expect.any(String) } });
+  });
+
   test('fails with MALFORMED_XML on unparsable input', () => {
     // Act
     const result = parseOpmlDocument('not xml at all <<<');
