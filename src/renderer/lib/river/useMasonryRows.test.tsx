@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { expect, test } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { useMasonryRows } from './useMasonryRows';
@@ -56,4 +56,22 @@ test('clears row spans when disabled', async () => {
 
   // Assert
   expect(getByTestId('card-0').element().style.gridRowEnd).toBe('');
+});
+
+test('sizes the rows before a parent layout effect runs', async () => {
+  // Arrange
+  let heightSeenByParent = 0;
+  function Parent() {
+    const wrapper = useRef<HTMLDivElement>(null);
+    useLayoutEffect(() => {
+      heightSeenByParent = wrapper.current?.getBoundingClientRect().height ?? 0;
+    }, []);
+    return <div ref={wrapper}><Masonry heights={[100, 300, 100]} /></div>;
+  }
+
+  // Act
+  await render(<Parent />);
+
+  // Assert
+  expect(heightSeenByParent).toBe(310);
 });
