@@ -13,6 +13,7 @@ export function asArray(value: unknown): unknown[] {
 }
 
 export function str(value: unknown): string | undefined {
+  // Stryker disable next-line ConditionalExpression: Number.isFinite is false for every non-number without coercion
   if (typeof value === 'number' && Number.isFinite(value)) {
     return String(value);
   }
@@ -24,6 +25,7 @@ export function str(value: unknown): string | undefined {
 }
 
 export function num(value: unknown): number | undefined {
+  // Stryker disable next-line ConditionalExpression: Number.isFinite is false for every non-number without coercion
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
