@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { broadcastToRenderers } from '../lib/sendToRenderer';
+import { logger } from '../logging/logger';
 import { getUpdateState, installUpdate, startAutoUpdates, stopAutoUpdates } from './auto-updater';
 
 const { mockAutoUpdater } = await vi.hoisted(async () => {
@@ -134,11 +135,60 @@ describe('startAutoUpdates', () => {
     runAs({});
     startAutoUpdates();
 
+    const warned = vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
+    const failure = new Error('offline');
+
     // Act
-    mockAutoUpdater.emit('error', new Error('offline'));
+    mockAutoUpdater.emit('error', failure);
 
     // Assert
     expect(getUpdateState()).toEqual({ name: 'NONE' });
+    expect(warned).toHaveBeenCalledWith('app.update', { outcome: 'failed' }, failure);
+  });
+});
+
+describe('stopAutoUpdates', () => {
+  test('cancels the first check that is still waiting', () => {
+    // Arrange
+    runAs({});
+    startAutoUpdates();
+
+    // Act
+    stopAutoUpdates();
+    vi.advanceTimersByTime(MINUTE);
+
+    // Assert
+    expect(mockAutoUpdater.checkForUpdates).not.toHaveBeenCalled();
+  });
+
+  test('cancels the periodic check', () => {
+    // Arrange
+    runAs({});
+    startAutoUpdates();
+    vi.advanceTimersByTime(MINUTE);
+    mockAutoUpdater.checkForUpdates.mockClear();
+
+    // Act
+    stopAutoUpdates();
+    vi.advanceTimersByTime(12 * 60 * MINUTE);
+
+    // Assert
+    expect(mockAutoUpdater.checkForUpdates).not.toHaveBeenCalled();
+  });
+
+  test('forgets a downloaded update and ignores later events', () => {
+    // Arrange
+    runAs({});
+    startAutoUpdates();
+    mockAutoUpdater.emit('update-downloaded');
+
+    // Act
+    stopAutoUpdates();
+    mockAutoUpdater.emit('update-downloaded');
+
+    // Assert
+    expect(getUpdateState()).toEqual({ name: 'NONE' });
+    expect(mockedBroadcast).toHaveBeenCalledOnce();
   });
 });
 
