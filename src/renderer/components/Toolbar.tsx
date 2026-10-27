@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ipc } from '@/lib/ipc-client';
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { Link } from "react-aria-components";
+import { Button as DragHandleButton, DropIndicator, GridList, GridListItem, Link, useDragAndDrop } from "react-aria-components";
 import { Plus, Sliders01 } from "@untitledui/icons";
 import { Button } from "./untitled-ui/base/buttons/button";
 import { Tooltip } from "./untitled-ui/base/tooltip/tooltip";
@@ -25,10 +25,11 @@ import {
   useExportWorkspaceRequestedId,
 } from "@/lib/ipc-bridge";
 import { hasOnlyModKey, MOD_KEY_LABEL } from "@/lib/keyboard";
+import { reorderIds } from "@/lib/reorder";
 import { workspaceIconComponent } from "@/lib/workspace-icons";
 import { useHint } from "@/providers/hints-provider";
 import { useExportOpml } from "@/providers/opml-provider";
-import { useActiveWorkspaceId, useWorkspaces } from "@/providers/workspace-provider";
+import { useActiveWorkspaceId, useReorderWorkspaces, useWorkspaces } from "@/providers/workspace-provider";
 import { HOME_WORKSPACE_ID, type WorkspaceSummary } from "../../shared/contracts";
 
 const activeNavClasses = "rounded-xl bg-brand-secondary *:data-icon:text-fg-brand-secondary hover:bg-brand-secondary hover:*:data-icon:text-fg-brand-secondary";
@@ -42,6 +43,7 @@ function WorkspaceButton({ workspace, isActive, shortcut }: { workspace: Workspa
       <Link
         href={`/workspace/${workspace.id}`}
         aria-label={workspace.name}
+        {...(isActive && { 'aria-current': 'page' as const })}
         onContextMenu={(event) => {
           event.preventDefault();
           ipc.send('workspaces:show-context-menu', workspace.id);
@@ -55,6 +57,49 @@ function WorkspaceButton({ workspace, isActive, shortcut }: { workspace: Workspa
         <Icon aria-hidden className="size-4.5 stroke-[2.25px]" />
       </Link>
     </Tooltip>
+  );
+}
+
+function WorkspaceRail({ workspaces, isActive, goTo }: { workspaces: WorkspaceSummary[]; isActive: (workspaceId: number) => boolean; goTo: (workspaceId: number) => void }) {
+  const reorderWorkspaces = useReorderWorkspaces();
+  const { dragAndDropHooks } = useDragAndDrop({
+    // Stryker disable next-line ArrowFunction,ObjectLiteral,ArrayDeclaration: the rail only reorders within itself, so nothing reads the drag payload
+    getItems: (keys) => [...keys].map((key) => ({ 'text/plain': String(key) })),
+    onReorder: (event) => {
+      const ids = workspaces.map((workspace) => workspace.id);
+      const orderedIds = event.target.dropPosition === 'on' ? ids : reorderIds(ids, event.keys, event.target.key, event.target.dropPosition);
+      if (orderedIds.some((id, index) => id !== ids[index])) {
+        void reorderWorkspaces(orderedIds);
+      }
+    },
+    renderDropIndicator: (target) => (
+      <DropIndicator target={target} className={({ isDropTarget }) => cx("-my-1.75 h-0.5 w-8 rounded-full", isDropTarget && "bg-brand-solid")} />
+    ),
+  });
+
+  return (
+    <GridList
+      aria-label="Workspaces"
+      items={workspaces}
+      selectionMode="none"
+      onAction={(key) => goTo(Number(key))}
+      dragAndDropHooks={dragAndDropHooks}
+      className="flex flex-col items-center gap-3.5 outline-none"
+    >
+      {(workspace) => {
+        const index = workspaces.indexOf(workspace);
+        return (
+          <GridListItem id={workspace.id} textValue={workspace.name} className="rounded-xl outline-brand data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-dragging:opacity-50">
+            <DragHandleButton slot="drag" aria-label={`Move ${workspace.name}`} className="sr-only" />
+            <WorkspaceButton
+              workspace={workspace}
+              shortcut={index < 9 ? `${MOD_KEY_LABEL}${index + 1}` : undefined}
+              isActive={isActive(workspace.id)}
+            />
+          </GridListItem>
+        );
+      }}
+    </GridList>
   );
 }
 
@@ -160,14 +205,11 @@ export default function Toolbar() {
       <div className="flex flex-col items-center gap-3.5">
         <MonfilLogo className="size-8.5" />
 
-        {workspaces.map((workspace, index) => (
-          <WorkspaceButton
-            key={workspace.id}
-            workspace={workspace}
-            shortcut={index < 9 ? `${MOD_KEY_LABEL}${index + 1}` : undefined}
-            isActive={pathname === `/workspace/${workspace.id}` || pathname.startsWith(`/workspace/${workspace.id}/`)}
-          />
-        ))}
+        <WorkspaceRail
+          workspaces={workspaces}
+          goTo={goToWorkspace}
+          isActive={(workspaceId) => pathname === `/workspace/${workspaceId}` || pathname.startsWith(`/workspace/${workspaceId}/`)}
+        />
       </div>
 
       <div ref={newWorkspaceAnchorRef} className="flex">
