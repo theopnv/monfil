@@ -557,6 +557,30 @@ describe('syncFeedItemsToDatabase', () => {
       const stored = await db.selectFrom('feedItem').selectAll().where('guid', '=', 'later').executeTakeFirstOrThrow();
       expect(stored.published_at).toBeGreaterThanOrEqual(before);
     });
+
+    test.each([
+      ['a stored dated item', async (feedId: number) => {
+        await addFeedItemsToDatabase(db, feedId, [{ ...undated, guid: 'dated', pubDate: '2026-02-03T00:00:00Z' }]);
+      }],
+      ['only the marker of an item that retention removed', async (feedId: number) => {
+        await db.insertInto('undatedItem').values({ feed_id: feedId, guid: 'gone', first_fetched_at: 1_000_000 }).execute();
+      }],
+    ])('counts %s as an earlier fetch, so a new undated item gets the time it was seen', async (_history, seed) => {
+      // Arrange
+      const feed = await addFeedToDatabase(feedA);
+      if (!feed.success) {
+        throw new Error('feed insert failed');
+      }
+      await seed(feed.data.id);
+      const before = Date.now();
+
+      // Act
+      await syncFeedItemsToDatabase(db, feed.data.id, [{ ...undated, guid: 'later' }]);
+
+      // Assert
+      const stored = await db.selectFrom('feedItem').select('published_at').where('guid', '=', 'later').executeTakeFirstOrThrow();
+      expect(stored.published_at).toBeGreaterThanOrEqual(before);
+    });
   });
 });
 
