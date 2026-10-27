@@ -26,7 +26,7 @@ function safeMessage(value: string): string {
         return '[redacted-url]';
       }
     })
-    .replace(/(?<=^|[\s"'(=[])(?:[A-Za-z]:\\|\/)(?:[^\s/\\:]+[\\/])+[^\s"')]*/g, '[redacted-path]');
+    .replace(/(?<=^|[\s"'(=[])(?:[A-Za-z]:\\|\/)[^\s/\\:]+[\\/][^\s"')]*/g, '[redacted-path]');
 }
 
 // Stryker disable next-line StringLiteral: any default key without a sensitive word behaves like an empty one
