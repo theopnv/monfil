@@ -49,20 +49,23 @@ export const DEFAULT_REFRESH_ON_LAUNCH = true;
 
 const REFRESH_ON_LAUNCH_KEY = 'refreshOnLaunch';
 
-/**
- * Narrows an untrusted value, such as a hand-edited database row or an IPC payload, to a boolean.
- * @param value anything that is meant to be the refresh-on-launch preference
- * @returns the matching boolean, or `DEFAULT_REFRESH_ON_LAUNCH` when there is no match
- */
-export function toRefreshOnLaunch(value: unknown): boolean {
-  // Stryker disable next-line ConditionalExpression,StringLiteral,BlockStatement: DEFAULT_REFRESH_ON_LAUNCH is true, so dropping this branch returns the same value through the fallback
+function toBoolean(value: unknown, fallback: boolean): boolean {
   if (value === 'true' || value === true) {
     return true;
   }
   if (value === 'false' || value === false) {
     return false;
   }
-  return DEFAULT_REFRESH_ON_LAUNCH;
+  return fallback;
+}
+
+/**
+ * Narrows an untrusted value, such as a hand-edited database row or an IPC payload, to a boolean.
+ * @param value anything that is meant to be the refresh-on-launch preference
+ * @returns the matching boolean, or `DEFAULT_REFRESH_ON_LAUNCH` when there is no match
+ */
+export function toRefreshOnLaunch(value: unknown): boolean {
+  return toBoolean(value, DEFAULT_REFRESH_ON_LAUNCH);
 }
 
 /**
@@ -112,7 +115,7 @@ const DETAILED_LOGGING_KEY = 'detailedLogging';
 
 export async function getDetailedLogging(): Promise<boolean> {
   const [row] = await querySettings({ key: DETAILED_LOGGING_KEY });
-  return toRefreshOnLaunch(row?.value ?? DEFAULT_DETAILED_LOGGING);
+  return toBoolean(row?.value, DEFAULT_DETAILED_LOGGING);
 }
 
 export async function setDetailedLogging(value: boolean): Promise<void> {

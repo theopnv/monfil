@@ -287,6 +287,14 @@ describe('getDetailedLogging', () => {
     // Act & Assert
     expect(await getDetailedLogging()).toBe(DEFAULT_DETAILED_LOGGING);
   });
+
+  test.each(['yes', '', 'TRUE', '1'])('stays off for the stored text %j, which is not a boolean', async (stored) => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'detailedLogging', value: stored }).execute();
+
+    // Act & Assert
+    expect(await getDetailedLogging()).toBe(false);
+  });
 });
 
 describe('setDetailedLogging', () => {
