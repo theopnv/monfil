@@ -13,6 +13,10 @@ import { addFeedToDatabase } from '../db/crud/insert';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
 import { rmTestDir } from '../lib/rmTestDir';
 
+vi.mock(import('node:fs/promises'), async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, stat: vi.fn(actual.stat) as unknown as typeof actual.stat };
+});
 vi.mock(import('electron'), () => ({
   app: { getVersion: vi.fn(() => '1.2.3') } as unknown as Electron.App,
 }));
@@ -28,6 +32,7 @@ describe('getAppInfo', () => {
   });
 
   afterEach(async () => {
+    vi.mocked(stat).mockReset();
     await closeDatabase();
     await rmTestDir(dir);
   });
@@ -56,12 +61,38 @@ describe('getAppInfo', () => {
   test('sums the main file and the -wal sidecar', async () => {
     // Arrange
     await writeFile(`${filePath}-wal`, Buffer.alloc(4096));
+    const [mainStat, walStat, shmStat] = await Promise.all([
+      stat(filePath),
+      stat(`${filePath}-wal`),
+      stat(`${filePath}-shm`).catch(() => ({ size: 0 })),
+    ]);
 
     // Act
     const info = await getAppInfo();
 
     // Assert
-    expect(info.databaseSizeBytes).toBeGreaterThanOrEqual(4096);
+    expect(walStat.size).toBe(4096);
+    expect(info.databaseSizeBytes).toBe(mainStat.size + 4096 + shmStat.size);
+  });
+
+  test('counts a sidecar file that does not exist as 0 bytes', async () => {
+    // Arrange
+    await closeDatabase();
+    await initializeDatabase(':memory:');
+
+    // Act
+    const info = await getAppInfo();
+
+    // Assert
+    expect(info.databaseSizeBytes).toBe(0);
+  });
+
+  test('fails when a database file cannot be read for a reason other than being absent', async () => {
+    // Arrange
+    vi.mocked(stat).mockRejectedValue(Object.assign(new Error('permission denied'), { code: 'EACCES' }));
+
+    // Act & Assert
+    await expect(getAppInfo()).rejects.toThrow('permission denied');
   });
 
   test('accounts for a checkpointed -wal/-shm sidecar without throwing', async () => {
