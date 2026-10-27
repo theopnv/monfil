@@ -49,19 +49,23 @@ export const DEFAULT_REFRESH_ON_LAUNCH = true;
 
 const REFRESH_ON_LAUNCH_KEY = 'refreshOnLaunch';
 
-/**
- * Narrows an untrusted value, such as a hand-edited database row or an IPC payload, to a boolean.
- * @param value anything that is meant to be the refresh-on-launch preference
- * @returns the matching boolean, or `DEFAULT_REFRESH_ON_LAUNCH` when there is no match
- */
-export function toRefreshOnLaunch(value: unknown): boolean {
+function toBoolean(value: unknown, fallback: boolean): boolean {
   if (value === 'true' || value === true) {
     return true;
   }
   if (value === 'false' || value === false) {
     return false;
   }
-  return DEFAULT_REFRESH_ON_LAUNCH;
+  return fallback;
+}
+
+/**
+ * Narrows an untrusted value, such as a hand-edited database row or an IPC payload, to a boolean.
+ * @param value anything that is meant to be the refresh-on-launch preference
+ * @returns the matching boolean, or `DEFAULT_REFRESH_ON_LAUNCH` when there is no match
+ */
+export function toRefreshOnLaunch(value: unknown): boolean {
+  return toBoolean(value, DEFAULT_REFRESH_ON_LAUNCH);
 }
 
 /**
@@ -111,7 +115,7 @@ const DETAILED_LOGGING_KEY = 'detailedLogging';
 
 export async function getDetailedLogging(): Promise<boolean> {
   const [row] = await querySettings({ key: DETAILED_LOGGING_KEY });
-  return toRefreshOnLaunch(row?.value ?? DEFAULT_DETAILED_LOGGING);
+  return toBoolean(row?.value, DEFAULT_DETAILED_LOGGING);
 }
 
 export async function setDetailedLogging(value: boolean): Promise<void> {
@@ -141,6 +145,7 @@ async function writeSetting(key: string, value: string): Promise<void> {
 async function readCount(key: string): Promise<number> {
   const [row] = await querySettings({ key });
   const count = Number(row?.value);
+  // Stryker disable next-line EqualityOperator: for a count of 0 both operators return 0, and a stored "-0" still behaves as 0 in every comparison and sum
   return Number.isSafeInteger(count) && count > 0 ? count : 0;
 }
 

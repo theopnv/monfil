@@ -67,6 +67,7 @@ export async function listDays(): Promise<string[]> {
 }
 
 export async function deleteDays(days: readonly string[]): Promise<void> {
+  // Stryker disable next-line ConditionalExpression,BlockStatement: SQLite accepts an empty IN list and deletes nothing, so the early return only saves a query
   if (days.length === 0) {
     return;
   }

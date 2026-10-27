@@ -20,6 +20,10 @@ export async function exportWorkspaceOpml(workspaceId: number): Promise<Result<v
   }
 
   const feeds = await queryFeedSummaries(workspaceId);
+  // OPML 2.0 needs at least one outline in the body, so an empty workspace has no valid file.
+  if (feeds.length === 0) {
+    return { success: false, error: { name: 'NO_FEEDS', message: 'This workspace has no feeds to export.' } };
+  }
   const categoriesByName = new Map<string, OpmlCategoryInput>();
   for (const feed of feeds) {
     const category: OpmlCategoryInput = categoriesByName.get(feed.category.name) ?? { name: feed.category.name, feeds: [] };

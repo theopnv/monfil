@@ -54,6 +54,7 @@ export function parseOpmlDocument(xml: string): Result<ParsedOpml, ParseOpmlErro
   const categories: ParsedOpmlCategory[] = [];
   const uncategorized: ParsedOpmlFeed[] = [];
 
+  // Stryker disable next-line ArrayDeclaration: a placeholder entry has no feed and no children, so it ends in NO_FEEDS like an empty list
   for (const outline of document.body?.outlines ?? []) {
     const feed = toFeed(outline);
     if (feed) {
@@ -70,6 +71,7 @@ export function parseOpmlDocument(xml: string): Result<ParsedOpml, ParseOpmlErro
     categories.push({ name: document.head?.title ?? DEFAULT_TITLE, feeds: uncategorized });
   }
 
+  // Stryker disable next-line ArrowFunction,ArithmeticOperator: a category is only added with feeds, so the total is zero exactly when the list is empty
   const totalFeeds = categories.reduce((sum, category) => sum + category.feeds.length, 0);
   if (totalFeeds === 0) {
     return { success: false, error: { name: 'NO_FEEDS', message: 'The OPML document has no feeds.' } };

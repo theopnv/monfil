@@ -288,6 +288,7 @@ export type ImportOpmlError =
 
 export type ExportOpmlError =
   | { name: 'WORKSPACE_NOT_FOUND'; message: string }
+  | { name: 'NO_FEEDS'; message: string }
   | { name: 'CANCELLED'; message: string }
   | { name: 'FS_ERROR'; message: string };
 

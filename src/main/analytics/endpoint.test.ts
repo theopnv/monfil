@@ -35,6 +35,14 @@ describe('resolveAnalyticsEndpoint', () => {
     expect(endpoint).toEqual({ name: 'ENABLED', url: 'https://analytics.example.com:8080/api/v0/events', key: 'A-SH-1234567890' });
   });
 
+  test('accepts a plain http host for a self-hosted key', () => {
+    // Act
+    const endpoint = resolveAnalyticsEndpoint({ ...packaged, key: 'A-SH-1234567890', host: 'http://192.168.1.5:3000' });
+
+    // Assert
+    expect(endpoint).toEqual({ name: 'ENABLED', url: 'http://192.168.1.5:3000/api/v0/events', key: 'A-SH-1234567890' });
+  });
+
   test.each([
     ['no host', undefined, 'MISSING_HOST'],
     ['an empty host', '', 'MISSING_HOST'],
@@ -53,7 +61,7 @@ describe('resolveAnalyticsEndpoint', () => {
     expect(resolveAnalyticsEndpoint({ ...packaged, key })).toEqual({ name: 'DISABLED', reason: 'NO_KEY' });
   });
 
-  test.each(['A-XX-123', 'B-EU-123', 'A-EU-', 'A-EU-12x', 'garbage'])('is disabled for the key %s', (key) => {
+  test.each(['A-XX-123', 'B-EU-123', 'A-EU-', 'A-EU-12x', 'A-EU-123-4', 'xA-EU-123', 'A-eu-123', 'garbage'])('is disabled for the key %s', (key) => {
     // Act, Assert
     expect(resolveAnalyticsEndpoint({ ...packaged, key })).toEqual({ name: 'DISABLED', reason: 'INVALID_KEY' });
   });
@@ -74,6 +82,14 @@ describe('resolveAnalyticsEndpoint', () => {
 
     // Assert
     expect(endpoint).toEqual({ name: 'ENABLED', url: 'http://127.0.0.1:9/api/v0/events', key: 'A-SH-E2E' });
+  });
+
+  test('keeps the build key when it sends to the override in an end-to-end run', () => {
+    // Act
+    const endpoint = resolveAnalyticsEndpoint({ ...packaged, isE2E: true, override: 'http://127.0.0.1:9/api/v0/events' });
+
+    // Assert
+    expect(endpoint).toEqual({ name: 'ENABLED', url: 'http://127.0.0.1:9/api/v0/events', key: 'A-EU-1234567890' });
   });
 
   test('ignores the override outside an end-to-end run', () => {
