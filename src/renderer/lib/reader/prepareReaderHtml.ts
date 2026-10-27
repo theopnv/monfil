@@ -11,6 +11,7 @@ function httpUrl(value: string | null, baseUrl?: string): string | undefined {
   try {
     const url = new URL(value, baseUrl);
     return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
+    // Stryker disable next-line BlockStatement: an empty catch also returns undefined
   } catch {
     return undefined;
   }
@@ -32,6 +33,7 @@ export function prepareReaderHtml(html: string, sourceUrl?: string): string {
     const lazy = image.getAttribute('data-src') ?? image.getAttribute('data-lazy-src') ?? image.getAttribute('data-original');
     if (!current || current.startsWith('data:') || current === 'about:blank') {
       const lazySet = image.getAttribute('data-srcset');
+      // Stryker disable next-line Regex: an unanchored match still starts at the first non-space run
       const source = httpUrl(lazy, sourceUrl) ?? httpUrl(lazySet?.match(/^\s*(\S+)/)?.[1] ?? null, sourceUrl);
       if (source) {
         image.setAttribute('src', source);
