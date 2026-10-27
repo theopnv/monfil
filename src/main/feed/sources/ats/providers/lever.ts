@@ -4,7 +4,7 @@
 
 import { salaryFromRange, salaryFromText, intervalFromProvider } from '../salary';
 import type { AtsBoard, AtsJob, AtsListing, AtsProviderAdapter } from '../types';
-import { asArray, asRec, firstSegment, isoFromMs, joinParts, num, parseJson, str } from '../values';
+import { asArray, asRec, firstSegment, isoFromMs, joinParts, num, parseJson, pathSegments, str } from '../values';
 import { detectWorkMode } from '../workMode';
 import { escapeText } from '../../text';
 
@@ -16,7 +16,7 @@ const HOSTS: Record<string, string> = {
 };
 
 function slugOf(url: URL): string | undefined {
-  const segments = url.pathname.split('/').filter(Boolean);
+  const segments = pathSegments(url);
   return url.hostname.startsWith('api.') ? (segments[0] === 'v0' && segments[1] === 'postings' ? segments[2] : undefined) : firstSegment(url);
 }
 

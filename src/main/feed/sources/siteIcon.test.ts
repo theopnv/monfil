@@ -56,6 +56,90 @@ describe('extractIconLinks', () => {
     expect(links).toEqual(['https://site.example/big.png', 'https://site.example/touch.png', 'https://site.example/small.png', 'https://site.example/dark.svg']);
   });
 
+  const png256 = '<link rel="icon" href="/p256.png" sizes="256x256">';
+
+  test.each([
+    ['sizes="any", in any letter case', '<link rel="icon" href="/scalable.ico" sizes="ANY">', 'https://site.example/scalable.ico'],
+    ['an svg file with no sizes', '<link rel="icon" href="/logo.svg">', 'https://site.example/logo.svg'],
+    ['an svg file with a query', '<link rel="icon" href="/logo.svg?v=2">', 'https://site.example/logo.svg?v=2'],
+    ['an svg file with a fragment', '<link rel="icon" href="/logo.svg#mark">', 'https://site.example/logo.svg#mark'],
+  ])('an icon with %s comes before a 256 pixel png', (_name, scalable, expected) => {
+    // Act
+    const links = extractIconLinks(`${png256}${scalable}`, 'https://site.example/');
+
+    // Assert
+    expect(links).toEqual([expected, 'https://site.example/p256.png']);
+  });
+
+  test.each([
+    ['an svg file with declared sizes', '<link rel="icon" href="/logo.svg" sizes="16x16">'],
+    ['a file name that only starts with .svg', '<link rel="icon" href="/logo.svgx">'],
+    ['a name that has .svg in the middle', '<link rel="icon" href="/logo.svg.png">'],
+  ])('%s is not taken as scalable', (_name, other) => {
+    // Act
+    const links = extractIconLinks(`${other}${png256}`, 'https://site.example/');
+
+    // Assert
+    expect(links[0]).toBe('https://site.example/p256.png');
+  });
+
+  test('an icon with several sizes counts with the largest', () => {
+    // Arrange
+    const html = '<link rel="icon" href="/mid.png" sizes="48x48"><link rel="icon" href="/multi.png" sizes="16x16 64x64">';
+
+    // Act
+    const links = extractIconLinks(html, 'https://site.example/');
+
+    // Assert
+    expect(links).toEqual(['https://site.example/multi.png', 'https://site.example/mid.png']);
+  });
+
+  test('an apple touch icon with no sizes comes before an icon with no sizes, and the precomposed one counts', () => {
+    // Arrange
+    const html = '<link rel="icon" href="/plain.png"><link rel="apple-touch-icon-precomposed" href="/touch.png">';
+
+    // Act
+    const links = extractIconLinks(html, 'https://site.example/');
+
+    // Assert
+    expect(links).toEqual(['https://site.example/touch.png', 'https://site.example/plain.png']);
+  });
+
+  test('a dark-scheme icon comes after an icon with no sizes', () => {
+    // Arrange
+    const html = '<link rel="icon" href="/dark.png" media="(prefers-color-scheme: dark)"><link rel="icon" href="/plain.png">';
+
+    // Act
+    const links = extractIconLinks(html, 'https://site.example/');
+
+    // Assert
+    expect(links).toEqual(['https://site.example/plain.png', 'https://site.example/dark.png']);
+  });
+
+  test('reads single-quoted and unquoted attributes, and resolves relative and protocol-relative links', () => {
+    // Arrange
+    const html = '<link rel=\'icon\' href=\'img/a.png\' sizes=\'64x64\'><link rel=icon href=//cdn.example/b.png sizes=32x32>';
+
+    // Act
+    const links = extractIconLinks(html, 'https://site.example/blog/post');
+
+    // Assert
+    expect(links).toEqual(['https://site.example/blog/img/a.png', 'https://cdn.example/b.png']);
+  });
+
+  test('keeps an http icon', () => {
+    // Act
+    const links = extractIconLinks('<link rel="icon" href="http://plain.example/i.png">', 'https://site.example/');
+
+    // Assert
+    expect(links).toEqual(['http://plain.example/i.png']);
+  });
+
+  test('a page with no link tag has no icon', () => {
+    // Act / Assert
+    expect(extractIconLinks('<p>nothing</p>', 'https://site.example/')).toEqual([]);
+  });
+
   test('drops links that are not web or data images', () => {
     // Arrange
     const html = '<link rel="icon" href="javascript:alert(1)"><link rel="icon" href="data:image/png;base64,AAAA">';
@@ -65,6 +149,18 @@ describe('extractIconLinks', () => {
 
     // Assert
     expect(links).toEqual(['data:image/png;base64,AAAA']);
+  });
+
+  test.each([
+    'data:text/html;base64,AAAA',
+    'javascript:image/png',
+    'ftp://files.example/icon.png',
+  ])('drops the icon link %s', (href) => {
+    // Act
+    const links = extractIconLinks(`<link rel="icon" href="${href}">`, 'https://site.example/');
+
+    // Assert
+    expect(links).toEqual([]);
   });
 });
 
@@ -111,6 +207,29 @@ describe('resolveSiteIcon', () => {
 
     // Assert
     expect(icon).toBeUndefined();
+  });
+
+  test('reads the page of a site that uses http', async () => {
+    // Arrange
+    serve({ 'http://old.example/': ok('<link rel="icon" href="/i.png">') });
+
+    // Act
+    const icon = await resolveSiteIcon('http://old.example/');
+
+    // Assert
+    expect(icon).toBe('http://old.example/i.png');
+  });
+
+  test.each(['ftp://site.example/', 'javascript:alert(1)', 'not a url'])('makes no request for the site link %s', async (siteLink) => {
+    // Arrange
+    serve({});
+
+    // Act
+    const icon = await resolveSiteIcon(siteLink);
+
+    // Assert
+    expect(icon).toBeUndefined();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('refuses private hosts for every request', async () => {

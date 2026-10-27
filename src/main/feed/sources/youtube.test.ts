@@ -47,6 +47,7 @@ describe('parseYoutubeInput', () => {
 
   test('a /channel/ link resolves to a channel', () => {
     expect(parseYoutubeInput(`https://www.youtube.com/channel/${CHANNEL_ID}`)).toEqual({ kind: 'channel', channelId: CHANNEL_ID });
+    expect(parseYoutubeInput(`https://www.youtube.com/channel/${CHANNEL_ID}/videos`)).toEqual({ kind: 'channel', channelId: CHANNEL_ID });
   });
 
   test('a handle link with a trailing segment resolves to a page for the handle alone', () => {
@@ -101,6 +102,40 @@ describe('parseYoutubeInput', () => {
     expect(parseYoutubeInput('https://www.youtube.com/watch')).toBeNull();
     expect(parseYoutubeInput('https://www.youtube.com/watch?t=10')).toBeNull();
   });
+
+  test('accepts a link with the http scheme or with no scheme', () => {
+    expect(parseYoutubeInput('http://www.youtube.com/watch?v=abc123')).toEqual({ kind: 'video', videoId: 'abc123' });
+    expect(parseYoutubeInput('www.youtube.com/@Underscore_')).toEqual({ kind: 'page', path: '/@Underscore_' });
+    expect(parseYoutubeInput('youtu.be/abc123')).toEqual({ kind: 'video', videoId: 'abc123' });
+  });
+
+  test('a scheme that appears later in the text does not make it a link with a scheme', () => {
+    expect(parseYoutubeInput('youtube.com/watch?v=abc123&next=https://example.com')).toEqual({ kind: 'video', videoId: 'abc123' });
+  });
+
+  test('ignores the spaces around the text', () => {
+    expect(parseYoutubeInput('  @Underscore_  ')).toEqual({ kind: 'page', path: '/@Underscore_' });
+    expect(parseYoutubeInput('  https://youtu.be/abc123 ')).toEqual({ kind: 'video', videoId: 'abc123' });
+  });
+
+  test.each([
+    `https://www.youtube.com/other/channel/${CHANNEL_ID}`,
+    'https://www.youtube.com/other/@Underscore_',
+    'https://www.youtube.com/other/c/SomeName',
+    'https://www.youtube.com/other/user/SomeName',
+    'https://www.youtube.com/results?v=abc123',
+    'https://www.youtube.com/channel/UCshort',
+    'https://www.youtube.com/',
+  ])('%s is not a channel, a playlist or a video', (link) => {
+    expect(parseYoutubeInput(link)).toBeNull();
+  });
+
+  test('a channel id must have 22 characters after UC', () => {
+    expect(parseYoutubeInput(`UC${'a'.repeat(21)}`)).toBeNull();
+    expect(parseYoutubeInput(`UC${'a'.repeat(23)}`)).toBeNull();
+    expect(parseYoutubeInput(`https://www.youtube.com/channel/UC${'a'.repeat(21)}`)).toBeNull();
+    expect(parseYoutubeInput(`https://www.youtube.com/channel/UC${'a'.repeat(23)}`)).toBeNull();
+  });
 });
 
 describe('isYoutubeLink', () => {
@@ -118,6 +153,14 @@ describe('isYoutubeLink', () => {
 
   test('is false for a non-youtube host', () => {
     expect(isYoutubeLink('https://example.com/feed')).toBe(false);
+  });
+
+  test('is false for a youtube host with a page that is not a channel, a playlist or a video', () => {
+    expect(isYoutubeLink('https://www.youtube.com/')).toBe(false);
+  });
+
+  test('ignores the spaces around the link', () => {
+    expect(isYoutubeLink('  https://www.youtube.com/@Underscore_  ')).toBe(true);
   });
 });
 
@@ -231,6 +274,46 @@ describe('parseFeedContent', () => {
       extra: '{}',
       read_at: undefined,
     });
+  });
+
+  const atom = (inner: string) => `<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">${inner}</feed>`;
+
+  test('a feed with no title, subtitle or entry has empty text and no item', () => {
+    // Act
+    const result = parseFeedContent(atom('<id>feed</id>'));
+
+    // Assert
+    expect(result).toEqual({ title: '', description: '', items: [] });
+  });
+
+  test('an entry with no title, date, id or link gets placeholders and a hashed guid', () => {
+    // Act
+    const item = parseFeedContent(atom('<id>feed</id><entry><author><name>Someone</name></author></entry>'))?.items[0];
+
+    // Assert
+    expect(item?.title).toBe('No title');
+    expect(item?.pubDate).toBe('No publication date');
+    expect(item?.guid).toMatch(/^monfil:hash:[0-9a-f]{40}$/);
+  });
+
+  test('an entry with media outside a group has no description or thumbnail', () => {
+    // Act
+    const item = parseFeedContent(atom('<entry><id>x</id><title>T</title><published>2024-01-01T00:00:00Z</published><media:title>direct</media:title></entry>'))?.items[0];
+
+    // Assert
+    expect(item).toMatchObject({ description: '', image: undefined });
+  });
+
+  test.each([
+    ['the alternate link, whatever its place', '<link rel="enclosure" href="https://e.example/"/><link rel="alternate" href="https://a.example/"/>', 'https://a.example/'],
+    ['a link with no rel', '<link rel="enclosure" href="https://e.example/"/><link href="https://plain.example/"/>', 'https://plain.example/'],
+    ['the first link when none is an alternate', '<link rel="self" href="https://s.example/"/><link rel="enclosure" href="https://e.example/"/>', 'https://s.example/'],
+  ])('the link of an entry is %s', (_name, links, expected) => {
+    // Act
+    const item = parseFeedContent(atom(`<entry><id>x</id><title>T</title><published>2024-01-01T00:00:00Z</published>${links}</entry>`))?.items[0];
+
+    // Assert
+    expect(item?.link).toBe(expected);
   });
 
   test('returns null for a non-atom format', () => {
@@ -421,8 +504,120 @@ describe('fetchFeed', () => {
   test('returns UNSUPPORTED_FORMAT for an input with no recognizable shape', async () => {
     const result = await fetchFeed({ link: 'https://example.com/nothing' });
 
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: expect.any(String) } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel, playlist or video." } });
     expect(mockedFetchText).not.toHaveBeenCalled();
+  });
+
+  test('a stored bare word is read as a handle', async () => {
+    // Arrange
+    mockResponses({
+      'https://www.youtube.com/@Underscore_': fetched(channelPageHtml()),
+      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: fetched(channelFeedXml()),
+    });
+
+    // Act
+    const result = await fetchFeed({ link: 'Underscore_' });
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(mockedFetchText).toHaveBeenCalledWith('https://www.youtube.com/@Underscore_');
+  });
+
+  test('a handle page that fails to load passes its error on', async () => {
+    // Arrange
+    mockResponses({ 'https://www.youtube.com/@Nobody': { success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } } });
+
+    // Act
+    const result = await fetchFeed({ link: '@Nobody' });
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
+  });
+
+  test('a handle page with no channel id is refused', async () => {
+    // Arrange
+    mockResponses({ 'https://www.youtube.com/@Nobody': fetched('<html></html>') });
+
+    // Act
+    const result = await fetchFeed({ link: '@Nobody' });
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find a YouTube channel at that address." } });
+  });
+
+  test('a video page with no channel id is refused', async () => {
+    // Arrange
+    mockResponses({ 'https://www.youtube.com/watch?v=abc123': fetched('<html></html>') });
+
+    // Act
+    const result = await fetchFeed({ link: 'https://www.youtube.com/watch?v=abc123' });
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel for that video." } });
+  });
+
+  test('a playlist feed with no owner is refused', async () => {
+    // Arrange
+    const noOwner = playlistFeedXml().replace(/<yt:channelId>.*<\/yt:channelId>/, '');
+    mockResponses({ 'https://www.youtube.com/feeds/videos.xml?playlist_id=PL1': fetched(noOwner) });
+
+    // Act
+    const result = await fetchFeed({ link: 'https://www.youtube.com/playlist?list=PL1' });
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel that owns that playlist." } });
+  });
+
+  test('a feed body that is not atom is refused', async () => {
+    // Arrange
+    mockResponses({
+      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: fetched(channelPageHtml()),
+      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: fetched('<rss version="2.0"><channel><title>x</title></channel></rss>'),
+    });
+
+    // Act
+    const result = await fetchFeed({ link: CHANNEL_ID });
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel feed." } });
+  });
+
+  test('an error thrown while fetching becomes a parse error, and a value that is not an error an unknown one', async () => {
+    // Arrange
+    mockedFetchText.mockRejectedValueOnce(new Error('boom'));
+    mockedFetchText.mockRejectedValueOnce('boom');
+
+    // Act
+    const failed = await fetchFeed({ link: CHANNEL_ID });
+    const unknown = await fetchFeed({ link: CHANNEL_ID });
+
+    // Assert
+    expect(failed).toEqual({ success: false, error: { name: 'PARSE_ERROR', message: 'boom' } });
+    expect(unknown).toEqual({ success: false, error: { name: 'UNKNOWN_ERROR', message: 'An unknown error occurred' } });
+  });
+
+  test('discover returns the one feed that the input leads to', async () => {
+    // Arrange
+    mockResponses({
+      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: fetched(channelPageHtml()),
+      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: fetched(channelFeedXml()),
+    });
+
+    // Act
+    const result = await youtubeSource.discover(CHANNEL_ID);
+
+    // Assert
+    expect(result.success && result.data.map((source) => [source.type, source.link, source.title])).toEqual([
+      ['youtube', `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`, 'Underscore_'],
+    ]);
+  });
+
+  test('discover passes on a refusal', async () => {
+    // Act
+    const result = await youtubeSource.discover('https://example.com/nothing');
+
+    // Assert
+    expect(!result.success && result.error.name).toBe('UNSUPPORTED_FORMAT');
   });
 
   test('regression: a channel feed with a truncated feed-level yt:channelId still resolves the full id', async () => {

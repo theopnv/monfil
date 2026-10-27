@@ -15,14 +15,10 @@ import { workable } from './workable';
 
 export const PROVIDERS: AtsProviderAdapter[] = [greenhouse, lever, ashby, workable, smartrecruiters, recruitee, teamtailor, personio];
 
-export function providerFor(board: AtsBoard): AtsProviderAdapter | undefined {
-  return PROVIDERS.find((adapter) => adapter.provider === board.provider);
-}
-
 /** The ATS board a board page or API URL belongs to, or null. */
 export function toBoard(raw: string): AtsBoard | null {
   const url = toUrl(raw);
-  if (!url || !/^https?:$/.test(url.protocol)) {
+  if (!url) {
     return null;
   }
   for (const adapter of PROVIDERS) {

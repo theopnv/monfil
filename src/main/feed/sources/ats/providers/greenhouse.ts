@@ -5,7 +5,7 @@
 import { decodeText } from '../../text';
 import { salaryFromRange, salaryFromText } from '../salary';
 import type { AtsBoard, AtsJob, AtsListing, AtsProviderAdapter } from '../types';
-import { asArray, asRec, firstSegment, isoFromText, num, parseJson, str } from '../values';
+import { asArray, asRec, firstSegment, isoFromText, num, parseJson, pathSegments, str } from '../values';
 import { detectWorkMode } from '../workMode';
 
 const HOSTS = new Set(['boards.greenhouse.io', 'job-boards.greenhouse.io', 'boards-api.greenhouse.io']);
@@ -19,7 +19,7 @@ function slugOf(url: URL): string | undefined {
   if (embedded) {
     return embedded;
   }
-  const segments = url.pathname.split('/').filter(Boolean);
+  const segments = pathSegments(url);
   if (url.hostname === 'boards-api.greenhouse.io') {
     return segments[0] === 'v1' && segments[1] === 'boards' ? segments[2] : undefined;
   }

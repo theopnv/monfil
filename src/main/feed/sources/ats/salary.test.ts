@@ -19,6 +19,21 @@ describe('salaryFromText', () => {
     ['$45 - $60 per hour', '$45 - $60 / hour'],
     ['Paid $35/hr', '$35 / hour'],
     ['USD 120,000 - 150,000', 'USD 120,000 - 150,000'],
+    ['$1,200,000 – $1,500,000 per year', '$1,200,000 – $1,500,000 / year'],
+    ['€60.000 - €75.000 per year', '€60.000 - €75.000 / year'],
+    ['45\u00a0000 € - 55\u202f000 € par an', '45 000 € - 55 000 € / year'],
+    ['$10.2500 - $15 per hour', '$10.2500 - $15 / hour'],
+    ['$2500.750 - $3000 per month', '$2500.750 - $3000 / month'],
+    ['€9,50 - €12 per hour', '€9,50 - €12 / hour'],
+    ['$8 - $10 hourly', '$8 - $10 / hour'],
+    ['€500 - €700 per month', '€500 - €700 / month'],
+    ['€600 - €900 par mois', '€600 - €900 / month'],
+    ['$1,000 - $2,000 per year', '$1,000 - $2,000 / year'],
+    ['$1,000 - $2,000', '$1,000 - $2,000'],
+    ['$50,000 - $50,000 per year', '$50,000 - $50,000 / year'],
+    ['<strong>$100,000</strong> - <em>$120,000</em> per year', '$100,000 - $120,000 / year'],
+    ['$100,000<br>to<br>$120,000 per year', '$100,000 to $120,000 / year'],
+    ['$100,000   -   $120,000 per year', '$100,000 - $120,000 / year'],
   ])('reads %j', (text, expected) => {
     // Act / Assert
     expect(salaryFromText(text)).toBe(expected);
@@ -30,10 +45,33 @@ describe('salaryFromText', () => {
     'Experience: 3 - 5 years',
     'Founded between 2010 and 2015',
     'No pay information here',
+    '$90,000 - $50,000 per year',
+    '$900 - $950 per year',
+    '$500 - $900',
+    '€400 - €450 per month',
+    '$7 - $9 hourly',
     '',
   ])('finds nothing in %j', (text) => {
     // Act / Assert
     expect(salaryFromText(text)).toBeUndefined();
+  });
+});
+
+describe('salaryFromText around the range', () => {
+  test('ignores a pay interval that is far from the range', () => {
+    // Arrange
+    const text = `Salary $100,000 - $120,000. ${'We value teamwork and curiosity. '.repeat(3)}Bonus is paid per year.`;
+
+    // Act / Assert
+    expect(salaryFromText(text)).toBe('$100,000 - $120,000');
+  });
+
+  test('collapses a long run of whitespace before it looks for the interval', () => {
+    // Arrange
+    const text = `<td>$100,000 - $120,000</td>${'\n        '.repeat(8)}<td>per year</td>`;
+
+    // Act / Assert
+    expect(salaryFromText(text)).toBe('$100,000 - $120,000 / year');
   });
 });
 
@@ -45,6 +83,7 @@ describe('salaryFromRange', () => {
     expect(salaryFromRange(700000, 900000, 'NOK', 'year')).toBe('NOK 700,000–NOK 900,000 / year');
     expect(salaryFromRange(30, 30, 'GBP', 'hour')).toBe('£30 / hour');
     expect(salaryFromRange(undefined, 90000, 'USD', 'year')).toBe('$90,000 / year');
+    expect(salaryFromRange(60000, undefined, 'USD', 'year')).toBe('$60,000 / year');
   });
 
   test('gives no label without a currency or without an amount', () => {

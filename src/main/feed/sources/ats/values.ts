@@ -13,6 +13,7 @@ export function asArray(value: unknown): unknown[] {
 }
 
 export function str(value: unknown): string | undefined {
+  // Stryker disable next-line ConditionalExpression: Number.isFinite is false for every non-number without coercion
   if (typeof value === 'number' && Number.isFinite(value)) {
     return String(value);
   }
@@ -24,6 +25,7 @@ export function str(value: unknown): string | undefined {
 }
 
 export function num(value: unknown): number | undefined {
+  // Stryker disable next-line ConditionalExpression: Number.isFinite is false for every non-number without coercion
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
@@ -41,9 +43,18 @@ export function joinParts(parts: (string | undefined)[], separator = ', '): stri
   return present.length > 0 ? present.join(separator) : undefined;
 }
 
+/** The decoded path segments of a URL, or none when a segment holds a malformed escape. */
+export function pathSegments(url: URL): string[] {
+  try {
+    return url.pathname.split('/').filter(Boolean).map((segment) => decodeURIComponent(segment));
+  } catch {
+    return [];
+  }
+}
+
 /** The first path segment of a URL, which is the company slug on most job boards. */
 export function firstSegment(url: URL): string | undefined {
-  return url.pathname.split('/').find((segment) => segment !== '');
+  return pathSegments(url)[0];
 }
 
 export function isoFromMs(value: unknown): string {
@@ -56,7 +67,6 @@ export function isoFromText(value: unknown): string {
   if (!text) {
     return '';
   }
-  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC$/.test(text) ? `${text.slice(0, 10)}T${text.slice(11, 19)}Z` : text;
-  const time = Date.parse(normalized);
+  const time = Date.parse(text);
   return Number.isNaN(time) ? '' : new Date(time).toISOString();
 }

@@ -32,6 +32,7 @@ export function detectWorkMode(providerValue: string | undefined, ...texts: (str
   if (fromField) {
     return fromField;
   }
+  // Stryker disable next-line ConditionalExpression,MethodExpression: join writes an undefined part as an empty string, so the filter changes nothing
   const text = texts.filter((part): part is string => part !== undefined).join(' | ');
   if (HYBRID.test(text)) {
     return 'hybrid';

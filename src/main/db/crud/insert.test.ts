@@ -507,6 +507,24 @@ describe('syncFeedItemsToDatabase', () => {
       expect(stored).toEqual([{ published_at: Date.parse('2026-02-03T00:00:00Z') }]);
     });
 
+    test('keeps the stored date of an item whose date stops being readable', async () => {
+      // Arrange
+      const feed = await addFeedToDatabase(feedA);
+      if (!feed.success) {
+        throw new Error('feed insert failed');
+      }
+      const dated = Date.parse('2026-02-03T00:00:00Z');
+      await syncFeedItemsToDatabase(db, feed.data.id, [{ ...undated, pubDate: '2026-02-03T00:00:00Z' }]);
+
+      // Act
+      await syncFeedItemsToDatabase(db, feed.data.id, [undated]);
+
+      // Assert
+      const stored = await db.selectFrom('feedItem').select('published_at').where('feed_id', '=', feed.data.id).execute();
+      expect(stored).toEqual([{ published_at: dated }]);
+      expect(await db.selectFrom('undatedItem').select(['guid', 'first_fetched_at']).execute()).toEqual([{ guid: 'undated', first_fetched_at: dated }]);
+    });
+
     test('dates the undated items of a first fetch a week back, below recent news', async () => {
       // Arrange
       const before = Date.now();
@@ -537,6 +555,30 @@ describe('syncFeedItemsToDatabase', () => {
 
       // Assert
       const stored = await db.selectFrom('feedItem').selectAll().where('guid', '=', 'later').executeTakeFirstOrThrow();
+      expect(stored.published_at).toBeGreaterThanOrEqual(before);
+    });
+
+    test.each([
+      ['a stored dated item', async (feedId: number) => {
+        await addFeedItemsToDatabase(db, feedId, [{ ...undated, guid: 'dated', pubDate: '2026-02-03T00:00:00Z' }]);
+      }],
+      ['only the marker of an item that retention removed', async (feedId: number) => {
+        await db.insertInto('undatedItem').values({ feed_id: feedId, guid: 'gone', first_fetched_at: 1_000_000 }).execute();
+      }],
+    ])('counts %s as an earlier fetch, so a new undated item gets the time it was seen', async (_history, seed) => {
+      // Arrange
+      const feed = await addFeedToDatabase(feedA);
+      if (!feed.success) {
+        throw new Error('feed insert failed');
+      }
+      await seed(feed.data.id);
+      const before = Date.now();
+
+      // Act
+      await syncFeedItemsToDatabase(db, feed.data.id, [{ ...undated, guid: 'later' }]);
+
+      // Assert
+      const stored = await db.selectFrom('feedItem').select('published_at').where('guid', '=', 'later').executeTakeFirstOrThrow();
       expect(stored.published_at).toBeGreaterThanOrEqual(before);
     });
   });

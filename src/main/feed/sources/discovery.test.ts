@@ -65,6 +65,17 @@ describe('findAlternateLinks', () => {
     expect(links).toEqual(['https://blog.test/feed.xml']);
   });
 
+  test('reads a feed type that carries a parameter and spaces, in any letter case', () => {
+    // Arrange
+    const html = '<link rel="alternate" type="Application/RSS+XML ; charset=utf-8" href="/feed.xml">';
+
+    // Act
+    const links = findAlternateLinks(html, 'https://blog.test/');
+
+    // Assert
+    expect(links).toEqual(['https://blog.test/feed.xml']);
+  });
+
   test('returns nothing for a page without feed links', () => {
     // Act / Assert
     expect(findAlternateLinks('<html><head><title>x</title></head></html>', 'https://blog.test/')).toEqual([]);

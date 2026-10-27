@@ -146,13 +146,5 @@
     "@sonarjs/cyclomatic-complexity": {
       "count": 1
     }
-  },
-  "src/shared/embeds.ts": {
-    "@sonarjs/cognitive-complexity": {
-      "count": 1
-    },
-    "@sonarjs/cyclomatic-complexity": {
-      "count": 1
-    }
   }
 }
