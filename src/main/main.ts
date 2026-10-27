@@ -78,6 +78,7 @@ function bootstrap() {
       titleBarStyle: 'hidden',
       titleBarOverlay: process.platform === 'darwin'
         ? false
+        // Stryker disable next-line StringLiteral: titleBarOverlayForTheme gives the light overlay for any theme other than 'dark'
         : titleBarOverlayForTheme(nativeTheme.shouldUseDarkColors ? 'dark' : 'light'),
       show: !isE2ETest,
       icon: iconPath,
@@ -100,6 +101,7 @@ function bootstrap() {
       );
     }
 
+    // Stryker disable next-line ConditionalExpression: both branches are empty, so the condition has no effect
     if (import.meta.env.DEV) {
       // Uncomment this line to open the DevTools automatically when the app is launched in development mode.
       // mainWindow.webContents.openDevTools();

@@ -5,13 +5,18 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import path from 'node:path';
 import { initializeDatabase } from './db/database';
-import { configureLogging } from './logging/logger';
+import { configureLogging, logger } from './logging/logger';
+import { installFatalHandlers } from './logging/fatal';
+import { setLogFilePath } from './app/main-state';
+import { getDetailedLogging } from './app/settings';
+import { allowPrivateHosts } from './lib/fetch';
+import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents } from './app/window-security';
 import { startRefreshScheduler } from './feed/scheduler';
 
 const mockQuit = vi.fn();
 const mockRequestSingleInstanceLock = vi.fn(() => true);
 const mockOn = vi.fn();
-const mockGetPath = vi.fn(() => 'mock-user-data');
+const mockGetPath = vi.fn((_name: string) => 'mock-user-data');
 const mockGetAppPath = vi.fn(() => 'mock-app-path');
 const mockGetName = vi.fn(() => 'monfil');
 const mockSetPath = vi.fn();
@@ -38,6 +43,7 @@ vi.mock(import('electron'), () => ({
   } as unknown as Electron.App,
   BrowserWindow: Object.assign(vi.fn(function () {
     return {
+      webContents: {},
       maximize: vi.fn(),
       loadURL: vi.fn(),
       loadFile: vi.fn(),
@@ -68,6 +74,10 @@ vi.mock(import('./ipc/registerIpcHandlers'), () => ({
 vi.mock(import('./ipc/registerIpcListeners'), () => ({
   registerIpcListeners: vi.fn(),
 }));
+
+vi.mock(import('./lib/fetch'), () => ({
+  allowPrivateHosts: vi.fn(),
+} as unknown as typeof import('./lib/fetch')));
 
 vi.mock(import('./db/database'), () => ({
   initializeDatabase: vi.fn().mockResolvedValue(undefined),
@@ -119,12 +129,23 @@ describe('main', () => {
     mockRequestSingleInstanceLock.mockReturnValue(true);
     mockGetAllWindows.mockReturnValue([]);
     mockHasSwitch.mockReturnValue(true);
+    mockGetPath.mockImplementation(() => 'mock-user-data');
     mockIsPackaged = false;
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
+
+  async function launchAndGetWindow() {
+    const { BrowserWindow } = await import('electron');
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    await import('./main');
+    const ready = mockOn.mock.calls.find(([event]) => event === 'ready')?.[1] as () => void;
+    ready();
+    return vi.mocked(BrowserWindow).mock.results[0]?.value as Electron.BrowserWindow;
+  }
 
   test('quits without bootstrapping on a Squirrel install/uninstall event', async () => {
     // Arrange
@@ -279,6 +300,7 @@ describe('main', () => {
     await import('./main');
 
     // Assert
+    expect(mockHasSwitch).toHaveBeenCalledWith('user-data-dir');
     expect(mockMkdirSync).toHaveBeenCalledWith(path.join('mock-user-data', 'monfil-dev'), { recursive: true });
     expect(mockSetPath).toHaveBeenCalledWith('userData', path.join('mock-user-data', 'monfil-dev'));
     expect(mockSetPath.mock.invocationCallOrder[0]).toBeLessThan(mockRequestSingleInstanceLock.mock.invocationCallOrder[0] ?? 0);
@@ -296,6 +318,150 @@ describe('main', () => {
     // Assert
     expect(mockMkdirSync).not.toHaveBeenCalled();
     expect(mockSetPath).not.toHaveBeenCalled();
+  });
+
+  test('writes the log file in userData and shares its path with diagnostics and the fatal handlers', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    mockGetPath.mockImplementation((name: string) => (name === 'userData' ? 'mock-user-data' : 'other-dir'));
+    const logFilePath = path.join('mock-user-data', 'monfil.log');
+
+    // Act
+    await import('./main');
+
+    // Assert
+    expect(configureLogging).toHaveBeenNthCalledWith(1, logFilePath, false);
+    expect(setLogFilePath).toHaveBeenCalledWith(logFilePath);
+    expect(installFatalHandlers).toHaveBeenCalledWith(logger, logFilePath);
+  });
+
+  test('turns on detailed logging once the database is open when the user enabled it', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    vi.mocked(getDetailedLogging).mockResolvedValueOnce(true);
+
+    // Act
+    await import('./main');
+
+    // Assert
+    await vi.waitFor(() => {
+      expect(configureLogging).toHaveBeenNthCalledWith(2, path.join('mock-user-data', 'monfil.log'), true);
+    });
+  });
+
+  test.each([
+    { e2e: '1', allowsPrivateHosts: true, showsWindow: false },
+    { e2e: '0', allowsPrivateHosts: false, showsWindow: true },
+  ])('with E2E_TEST=$e2e, private hosts allowed: $allowsPrivateHosts, window shown: $showsWindow', async ({ e2e, allowsPrivateHosts, showsWindow }) => {
+    // Arrange
+    vi.stubEnv('E2E_TEST', e2e);
+    const { BrowserWindow } = await import('electron');
+
+    // Act
+    await launchAndGetWindow();
+
+    // Assert
+    expect(vi.mocked(allowPrivateHosts).mock.calls).toHaveLength(allowsPrivateHosts ? 1 : 0);
+    expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({ show: showsWindow }));
+  });
+
+  test('keeps the renderer isolated from Node and hardens its web contents', async () => {
+    // Arrange
+    const { BrowserWindow } = await import('electron');
+
+    // Act
+    const window = await launchAndGetWindow();
+
+    // Assert
+    expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
+      webPreferences: expect.objectContaining({ contextIsolation: true, nodeIntegration: false, sandbox: true }),
+    }));
+    expect(hardenWebContents).toHaveBeenCalledWith(window.webContents);
+    expect(window.maximize).toHaveBeenCalledTimes(1);
+  });
+
+  test('denies web permissions and sets the YouTube embed referrer on the default session at ready', async () => {
+    // Arrange
+    const { session } = await import('electron');
+
+    // Act
+    await launchAndGetWindow();
+
+    // Assert
+    expect(denyWebPermissions).toHaveBeenCalledWith(session.defaultSession);
+    expect(configureYouTubeEmbedReferrer).toHaveBeenCalledWith(session.defaultSession);
+  });
+
+  test.each([
+    { platform: 'darwin', dark: false, overlay: false },
+    { platform: 'win32', dark: false, overlay: { color: '#ebddc5', symbolColor: '#201e1d', height: 32 } },
+    { platform: 'linux', dark: true, overlay: { color: '#272019', symbolColor: '#f2e7d6', height: 32 } },
+  ])('uses title bar overlay $overlay on $platform (dark colors: $dark)', async ({ platform, dark, overlay }) => {
+    // Arrange
+    const { BrowserWindow, nativeTheme } = await import('electron');
+    const originalPlatform = process.platform;
+    Object.defineProperty(process, 'platform', { value: platform, configurable: true });
+    Object.defineProperty(nativeTheme, 'shouldUseDarkColors', { value: dark, configurable: true });
+
+    try {
+      // Act
+      await launchAndGetWindow();
+
+      // Assert
+      expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({ titleBarStyle: 'hidden', titleBarOverlay: overlay }));
+    } finally {
+      Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
+      Object.defineProperty(nativeTheme, 'shouldUseDarkColors', { value: false, configurable: true });
+    }
+  });
+
+  test('takes the window icon from the app source tree when unpackaged', async () => {
+    // Arrange
+    const { BrowserWindow } = await import('electron');
+
+    // Act
+    await launchAndGetWindow();
+
+    // Assert
+    expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
+      icon: path.join('mock-app-path', 'assets/icons/icon.png'),
+    }));
+  });
+
+  test('takes the window icon from the packaged resources directory', async () => {
+    // Arrange
+    const { BrowserWindow } = await import('electron');
+    mockIsPackaged = true;
+    Object.defineProperty(process, 'resourcesPath', { value: 'mock-resources-path', configurable: true });
+
+    // Act
+    await launchAndGetWindow();
+
+    // Assert
+    expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
+      icon: path.join('mock-resources-path', 'icon.png'),
+    }));
+  });
+
+  test('loads the built renderer page when no dev server URL is set', async () => {
+    // Arrange, Act
+    const window = await launchAndGetWindow();
+
+    // Assert
+    expect(window.loadFile).toHaveBeenCalledWith(path.join(__dirname, '../renderer/main_window/index.html'));
+    expect(window.loadURL).not.toHaveBeenCalled();
+  });
+
+  test('loads the dev server when its URL is set', async () => {
+    // Arrange
+    vi.stubGlobal('MAIN_WINDOW_VITE_DEV_SERVER_URL', 'http://localhost:5173');
+
+    // Act
+    const window = await launchAndGetWindow();
+
+    // Assert
+    expect(window.loadURL).toHaveBeenCalledWith('http://localhost:5173');
+    expect(window.loadFile).not.toHaveBeenCalled();
   });
 
   test('leaves userData alone when packaged', async () => {
