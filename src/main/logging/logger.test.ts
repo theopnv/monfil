@@ -98,6 +98,44 @@ describe('log redaction', () => {
     expect(result).toBe('Failed at [redacted-path]');
   });
 
+  test.each([
+    ['a home folder', 'open /Users/person failed', 'open [redacted-path] failed'],
+    ['a Windows home folder', String.raw`open C:\Users\person failed`, 'open [redacted-path] failed'],
+    ['a path with one folder', 'open /tmp/x failed', 'open [redacted-path] failed'],
+    ['a quoted path, keeping the quotes', `open '/Users/person' failed`, `open '[redacted-path]' failed`],
+    ['a path after an equals sign', 'cwd=/Users/person', 'cwd=[redacted-path]'],
+  ])('replaces %s with a marker', (_case, text, expected) => {
+    // Act
+    const result = redact(text);
+
+    // Assert
+    expect(result).toBe(expected);
+  });
+
+  test.each([
+    ['a root entry with no folder', 'open /x failed'],
+    ['a date', 'on 1/2/2026'],
+    ['a word pair', 'read and/or write'],
+  ])('keeps %s', (_case, text) => {
+    // Act
+    const result = redact(text);
+
+    // Assert
+    expect(result).toBe(text);
+  });
+
+  test.each([
+    ['a comma', 'see https://a.example/x, next', 'see a.example, next'],
+    ['a period at the end of a sentence', 'see https://a.example/x.', 'see a.example.'],
+    ['a question mark', 'is it https://a.example?', 'is it a.example?'],
+  ])('keeps %s after a URL out of the URL', (_case, text, expected) => {
+    // Act
+    const result = redact(text);
+
+    // Assert
+    expect(result).toBe(expected);
+  });
+
   test('reduces a URL to its host, without credentials, path or query', () => {
     // Act
     const result = redact('Could not fetch https://user:secret@Example.com:8080/private/feed.xml?token=abc retrying');
@@ -192,7 +230,7 @@ describe('log errors', () => {
     expect(result).toStrictEqual({
       name: 'TypeError',
       message: 'Cannot load example.com',
-      stack: 'TypeError: Cannot load example.com\n    at load ([redacted-path]',
+      stack: 'TypeError: Cannot load example.com\n    at load ([redacted-path])',
     });
   });
 

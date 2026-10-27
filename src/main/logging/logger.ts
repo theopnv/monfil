@@ -19,14 +19,14 @@ const SENSITIVE_KEYS = /(?:content|description|html|name|path|title|token|passwo
 
 function safeMessage(value: string): string {
   return value
-    .replace(/https?:\/\/[^\s)]+/gi, (url) => {
+    .replace(/https?:\/\/[^\s)]*[^\s).,;:!?]/gi, (url) => {
       try {
         return new URL(url).hostname;
       } catch {
         return '[redacted-url]';
       }
     })
-    .replace(/(?:[A-Za-z]:\\|\/)(?:[^\s/:]+[\\/]){2,}[^\s]*/g, '[redacted-path]');
+    .replace(/(?<=^|[\s"'(=[])(?:[A-Za-z]:\\|\/)(?:[^\s/\\:]+[\\/])+[^\s"')]*/g, '[redacted-path]');
 }
 
 // Stryker disable next-line StringLiteral: any default key without a sensitive word behaves like an empty one
