@@ -4,7 +4,7 @@
 
 import { escapeText } from '../../text';
 import type { AtsJob, AtsListing, AtsProviderAdapter } from '../types';
-import { asArray, asRec, firstSegment, isoFromText, joinParts, parseJson, str } from '../values';
+import { asArray, asRec, firstSegment, isoFromText, joinParts, parseJson, pathSegments, str } from '../values';
 import { detectWorkMode } from '../workMode';
 
 const PAGE_SIZE = 100;
@@ -12,7 +12,7 @@ const PAGE_SIZE = 100;
 const KEPT_PARAMS = ['country', 'region', 'city', 'department', 'q'];
 
 function slugOf(url: URL): string | undefined {
-  const segments = url.pathname.split('/').filter(Boolean);
+  const segments = pathSegments(url);
   return url.hostname === 'api.smartrecruiters.com' ? (segments[0] === 'v1' && segments[1] === 'companies' ? segments[2] : undefined) : firstSegment(url);
 }
 

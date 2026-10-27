@@ -46,7 +46,28 @@ describe('toBoard', () => {
   });
 
   test.each([
+    ['https://boards.greenhouse.io/a%20b', 'https://boards-api.greenhouse.io/v1/boards/a%20b/jobs?content=true'],
+    ['https://boards-api.greenhouse.io/v1/boards/a%20b/jobs', 'https://boards-api.greenhouse.io/v1/boards/a%20b/jobs?content=true'],
+    ['https://jobs.lever.co/a%20b', 'https://api.lever.co/v0/postings/a%20b?mode=json'],
+    ['https://api.lever.co/v0/postings/a%20b', 'https://api.lever.co/v0/postings/a%20b?mode=json'],
+    ['https://jobs.ashbyhq.com/a%20b', 'https://api.ashbyhq.com/posting-api/job-board/a%20b?includeCompensation=true'],
+    ['https://api.ashbyhq.com/posting-api/job-board/a%20b', 'https://api.ashbyhq.com/posting-api/job-board/a%20b?includeCompensation=true'],
+    ['https://apply.workable.com/a%20b/', 'https://apply.workable.com/api/v1/widget/accounts/a%20b?details=true'],
+    ['https://apply.workable.com/api/v1/widget/accounts/a%20b', 'https://apply.workable.com/api/v1/widget/accounts/a%20b?details=true'],
+    ['https://www.workable.com/api/accounts/a%20b', 'https://apply.workable.com/api/v1/widget/accounts/a%20b?details=true'],
+    ['https://jobs.smartrecruiters.com/a%20b', 'https://api.smartrecruiters.com/v1/companies/a%20b/postings?limit=100'],
+    ['https://api.smartrecruiters.com/v1/companies/a%20b/postings', 'https://api.smartrecruiters.com/v1/companies/a%20b/postings?limit=100'],
+  ])('reads the escaped slug of %s and escapes it once in the API link', (link, apiUrl) => {
+    // Act
+    const board = toBoard(link);
+
+    // Assert
+    expect(board).toMatchObject({ slug: 'a b', apiUrl });
+  });
+
+  test.each([
     'https://example.com/jobs',
+    'https://jobs.lever.co/%E0%A4%A',
     'https://boards.greenhouse.io/',
     'https://boards.greenhouse.io/embed',
     'https://jobs.lever.co/',

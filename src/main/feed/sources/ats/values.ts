@@ -43,9 +43,18 @@ export function joinParts(parts: (string | undefined)[], separator = ', '): stri
   return present.length > 0 ? present.join(separator) : undefined;
 }
 
+/** The decoded path segments of a URL, or none when a segment holds a malformed escape. */
+export function pathSegments(url: URL): string[] {
+  try {
+    return url.pathname.split('/').filter(Boolean).map((segment) => decodeURIComponent(segment));
+  } catch {
+    return [];
+  }
+}
+
 /** The first path segment of a URL, which is the company slug on most job boards. */
 export function firstSegment(url: URL): string | undefined {
-  return url.pathname.split('/').find((segment) => segment !== '');
+  return pathSegments(url)[0];
 }
 
 export function isoFromMs(value: unknown): string {

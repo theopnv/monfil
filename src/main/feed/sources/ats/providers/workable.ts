@@ -4,11 +4,11 @@
 
 import { salaryFromText } from '../salary';
 import type { AtsJob, AtsListing, AtsProviderAdapter } from '../types';
-import { asArray, asRec, firstSegment, isoFromText, joinParts, parseJson, str } from '../values';
+import { asArray, asRec, firstSegment, isoFromText, joinParts, parseJson, pathSegments, str } from '../values';
 import { detectWorkMode } from '../workMode';
 
 function slugOf(url: URL): string | undefined {
-  const segments = url.pathname.split('/').filter(Boolean);
+  const segments = pathSegments(url);
   if (url.hostname === 'www.workable.com') {
     return segments[0] === 'api' && segments[1] === 'accounts' ? segments[2] : undefined;
   }

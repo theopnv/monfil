@@ -4,11 +4,11 @@
 
 import { intervalFromProvider, salaryFromRange, salaryFromText } from '../salary';
 import type { AtsJob, AtsListing, AtsProviderAdapter } from '../types';
-import { asArray, asRec, firstSegment, isoFromText, num, parseJson, str } from '../values';
+import { asArray, asRec, firstSegment, isoFromText, num, parseJson, pathSegments, str } from '../values';
 import { detectWorkMode } from '../workMode';
 
 function slugOf(url: URL): string | undefined {
-  const segments = url.pathname.split('/').filter(Boolean);
+  const segments = pathSegments(url);
   return url.hostname === 'api.ashbyhq.com' ? (segments[0] === 'posting-api' && segments[1] === 'job-board' ? segments[2] : undefined) : firstSegment(url);
 }
 
