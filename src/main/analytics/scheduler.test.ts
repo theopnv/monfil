@@ -157,9 +157,10 @@ describe('flushUsageAnalytics', () => {
     expect(logger.info).toHaveBeenCalledWith('app.analytics', { outcome: 'dropped', events: 1 });
   });
 
-  test('sends nothing without consent', async () => {
+  test('does nothing without consent: it sends nothing and deletes nothing', async () => {
     // Arrange
     await incrementCounter('articles_opened', new Date('2026-10-22T09:00:00Z'));
+    await incrementCounter('articles_opened', new Date('2026-10-01T09:00:00Z'));
     setCountingEnabled(false);
 
     // Act
@@ -167,6 +168,7 @@ describe('flushUsageAnalytics', () => {
 
     // Assert
     expect(sendEvents).not.toHaveBeenCalled();
+    await expect(remainingDays()).resolves.toEqual(['2026-10-01', '2026-10-22']);
   });
 
   test('sends nothing when the build has no endpoint', async () => {
@@ -349,6 +351,39 @@ describe('startUsageAnalytics', () => {
     // Assert
     expect(sendEvents).not.toHaveBeenCalled();
     expect(stopObserving).toHaveBeenCalledOnce();
+  });
+
+  test('stops the hourly sending after stopUsageAnalytics', async () => {
+    // Arrange
+    await setUsageAnalyticsConsent('granted', 'v1', now);
+    setCountingEnabled(true);
+    await startUsageAnalytics();
+    await vi.advanceTimersByTimeAsync(61_000);
+    stopUsageAnalytics();
+    await incrementCounter('searches', new Date('2026-10-22T09:00:00Z'));
+
+    // Act
+    await vi.advanceTimersByTimeAsync(7_200_000);
+
+    // Assert
+    expect(sendEvents).not.toHaveBeenCalled();
+  });
+
+  test('keeps today for tomorrow in a normal run', async () => {
+    // Arrange
+    await setUsageAnalyticsConsent('granted', 'v1', now);
+    setCountingEnabled(true);
+    await incrementCounter('searches', new Date('2026-10-22T09:00:00Z'));
+    await incrementCounter('searches', now);
+    await startUsageAnalytics();
+
+    // Act
+    await vi.advanceTimersByTimeAsync(61_000);
+
+    // Assert
+    await vi.waitFor(() => expect(sendEvents).toHaveBeenCalledOnce());
+    expect(vi.mocked(sendEvents).mock.lastCall?.[1]).toHaveLength(1);
+    await expect(remainingDays()).resolves.toEqual(['2026-10-23']);
   });
 
   test('an end-to-end run can shorten the timer and send today', async () => {
