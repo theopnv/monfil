@@ -67,7 +67,6 @@ export function isoFromText(value: unknown): string {
   if (!text) {
     return '';
   }
-  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC$/.test(text) ? `${text.slice(0, 10)}T${text.slice(11, 19)}Z` : text;
-  const time = Date.parse(normalized);
+  const time = Date.parse(text);
   return Number.isNaN(time) ? '' : new Date(time).toISOString();
 }
