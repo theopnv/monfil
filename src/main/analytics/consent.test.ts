@@ -162,4 +162,87 @@ describe('usage analytics state', () => {
     // Assert
     expect(isCountingEnabled()).toBe(true);
   });
+
+  test('keeps counting off at startup when the user has not decided', async () => {
+    // Arrange
+    setCountingEnabled(true);
+
+    // Act
+    await loadUsageAnalyticsConsent();
+
+    // Assert
+    expect(isCountingEnabled()).toBe(false);
+  });
+
+  test('keeps counting off at startup when the user denied', async () => {
+    // Arrange
+    await changeUsageAnalyticsConsent('denied', now);
+    setCountingEnabled(true);
+
+    // Act
+    await loadUsageAnalyticsConsent();
+
+    // Assert
+    expect(isCountingEnabled()).toBe(false);
+  });
+
+  test('does not prompt a user who decided, even when everything else allows it', async () => {
+    // Arrange
+    await addFeed();
+    await recordAppLaunch();
+    await recordAppLaunch();
+    await changeUsageAnalyticsConsent('denied', now);
+
+    // Act
+    const state = await getUsageAnalyticsState(now);
+
+    // Assert
+    expect(state).toEqual({ consent: 'denied', shouldPrompt: false, available: true });
+  });
+
+  test('does not prompt a user with no feed', async () => {
+    // Arrange
+    await recordAppLaunch();
+    await recordAppLaunch();
+
+    // Act
+    const state = await getUsageAnalyticsState(now);
+
+    // Assert
+    expect(state.shouldPrompt).toBe(false);
+  });
+
+  test('does not prompt a user who opened the app once', async () => {
+    // Arrange
+    await addFeed();
+    await recordAppLaunch();
+
+    // Act
+    const state = await getUsageAnalyticsState(now);
+
+    // Assert
+    expect(state.shouldPrompt).toBe(false);
+  });
+
+  test('prompts again 14 days after a dismissal', async () => {
+    // Arrange
+    await addFeed();
+    await recordAppLaunch();
+    await recordAppLaunch();
+    await dismissUsageAnalyticsPrompt(now);
+
+    // Act
+    const state = await getUsageAnalyticsState(new Date('2026-11-06T08:00:00Z'));
+
+    // Assert
+    expect(state.shouldPrompt).toBe(true);
+  });
+
+  test('does not send consent_granted when the choice is denied', async () => {
+    // Act
+    await changeUsageAnalyticsConsent('denied', now);
+
+    // Assert
+    expect(sendConsentGranted).not.toHaveBeenCalled();
+  });
 });
