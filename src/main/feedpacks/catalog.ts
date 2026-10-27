@@ -23,6 +23,7 @@ export interface CatalogDependencies {
 }
 
 function isFeedpack(value: unknown): value is Feedpack {
+  // Stryker disable next-line ConditionalExpression: a primitive has no own fields, so the field checks below reject it anyway
   if (typeof value !== 'object' || value === null) {
     return false;
   }
