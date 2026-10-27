@@ -65,6 +65,18 @@ describe('exportWorkspaceOpml', () => {
     expect(dialog.showSaveDialog).not.toHaveBeenCalled();
   });
 
+  test('fails without asking where to save when the workspace has no feeds', async () => {
+    // Arrange
+    const workspaceId = await addWorkspace('Empty');
+
+    // Act
+    const result = await exportWorkspaceOpml(workspaceId);
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'NO_FEEDS', message: 'This workspace has no feeds to export.' } });
+    expect(dialog.showSaveDialog).not.toHaveBeenCalled();
+  });
+
   test('writes the feeds of the workspace, grouped by category, so that parsing the file returns them', async () => {
     // Arrange
     const workspaceId = await addWorkspace('CI/CD watch');
