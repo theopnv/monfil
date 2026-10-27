@@ -82,6 +82,53 @@ describe('importOpml', () => {
     expect(placements).toHaveLength(2);
   });
 
+  test('places a new workspace after the workspace with the highest position', async () => {
+    // Arrange
+    await db.insertInto('workspace').values({ name: 'Far', icon: 'Code01', color: '#3b82f6', position: 7 }).execute();
+    await db.insertInto('workspace').values({ name: 'Near', icon: 'Code01', color: '#3b82f6', position: 2 }).execute();
+    const xml = opml('<outline type="rss" text="Feed A" xmlUrl="https://a.example/feed"/>');
+
+    // Act
+    const result = await importOpml(xml, { kind: 'new-workspace', name: 'Latest', icon: 'Code01', color: '#3b82f6' });
+
+    // Assert
+    expect(result.success).toBe(true);
+    const created = await db.selectFrom('workspace').select('position').where('name', '=', 'Latest').executeTakeFirstOrThrow();
+    expect(created.position).toBe(8);
+  });
+
+  test('gives the first workspace position 0', async () => {
+    // Arrange
+    const home = await db.selectFrom('workspace').selectAll().where('id', '=', HOME_WORKSPACE_ID).executeTakeFirstOrThrow();
+    await db.deleteFrom('workspace').execute();
+    const xml = opml('<outline type="rss" text="Feed A" xmlUrl="https://a.example/feed"/>');
+
+    // Act
+    const result = await importOpml(xml, { kind: 'new-workspace', name: 'First', icon: 'Code01', color: '#3b82f6' });
+
+    // Assert
+    const created = await db.selectFrom('workspace').select('position').where('name', '=', 'First').executeTakeFirst();
+    await db.deleteFrom('feedPlacement').execute();
+    await db.deleteFrom('feedCategory').execute();
+    await db.deleteFrom('workspace').execute();
+    await db.insertInto('workspace').values(home).execute();
+    expect(result.success).toBe(true);
+    expect(created?.position).toBe(0);
+  });
+
+  test('returns DB_ERROR and writes nothing when the target workspace does not exist', async () => {
+    // Arrange
+    const xml = opml('<outline text="Tech"><outline type="rss" text="Feed A" xmlUrl="https://a.example/feed"/></outline>');
+
+    // Act
+    const result = await importOpml(xml, { kind: 'merge-workspace', workspaceId: 9999 });
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'DB_ERROR', message: expect.any(String) } });
+    expect(await db.selectFrom('feedMetadata').selectAll().execute()).toEqual([]);
+    expect(await db.selectFrom('feedCategory').selectAll().execute()).toEqual([]);
+  });
+
   test('falls back to the document title when the given workspace name is blank', async () => {
     // Arrange
     const xml = opml('<outline type="rss" text="Feed A" xmlUrl="https://a.example/feed"/>', 'From the file');
