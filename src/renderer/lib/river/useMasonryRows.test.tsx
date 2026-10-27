@@ -46,6 +46,19 @@ test('places cards that render later', async () => {
   await expect.poll(() => rect(2).top - rect(0).bottom).toBe(10);
 });
 
+test('moves the cards below a card that grows', async () => {
+  // Arrange
+  const { getByTestId, rerender } = await render(<Masonry heights={[100, 300, 100]} />);
+  const rect = (index: number) => getByTestId(`card-${index}`).element().getBoundingClientRect();
+  await expect.poll(() => rect(2).top - rect(0).bottom).toBe(10);
+
+  // Act
+  await rerender(<Masonry heights={[200, 300, 100]} />);
+
+  // Assert
+  await expect.poll(() => rect(2).top - rect(0).bottom).toBe(10);
+});
+
 test('clears row spans when disabled', async () => {
   // Arrange
   const { getByTestId, rerender } = await render(<Masonry heights={[100, 300, 100]} />);

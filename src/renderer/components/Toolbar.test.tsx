@@ -542,11 +542,15 @@ test('puts the workspaces back in their stored order when the save fails', async
   await userEvent.dragAndDrop(getByRole('link', { name: 'CI/CD watch' }), getByRole('link', { name: 'Home' }), { targetPosition: { x: 18, y: 2 } });
   await vi.waitFor(() => expect(railNames(container)).toEqual(['CI/CD watch', 'Home']));
 
+  const feedListCalls = () => invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:list').length;
+  const feedListCallsBefore = feedListCalls();
+
   // Act
   failSave({ success: false, error: { name: 'DB_ERROR', message: 'The database is locked.' } });
 
   // Assert
   await vi.waitFor(() => expect(railNames(container)).toEqual(['Home', 'CI/CD watch']));
+  expect(feedListCalls()).toBe(feedListCallsBefore);
 });
 
 test('highlights only the drop line the workspace would land on', async () => {
