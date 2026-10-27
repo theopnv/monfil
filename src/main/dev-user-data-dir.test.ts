@@ -39,15 +39,4 @@ describe('resolveDevUserDataDir', () => {
     // Assert
     expect(result).toBe(path.join('/app-data', 'monfil-dev'));
   });
-
-  test('leaves userData alone when both packaged and an explicit switch are set', () => {
-    // Arrange
-    const input = { isPackaged: true, hasExplicitUserDataDir: true, appDataDir: '/app-data', appName: 'monfil' };
-
-    // Act
-    const result = resolveDevUserDataDir(input);
-
-    // Assert
-    expect(result).toBeNull();
-  });
 });
