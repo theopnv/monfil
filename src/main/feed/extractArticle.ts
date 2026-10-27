@@ -8,6 +8,7 @@ import { JSDOM } from 'jsdom';
 import type { ArticleContentStatus } from '../db/types';
 import { SANITIZE_CONFIG } from '../../shared/sanitize-html';
 import { resolveEmbedUrl, type EmbedDescriptor } from '../../shared/embeds';
+import { removeFollowAuthorControls } from '../../shared/follow-author';
 import { MIN_ARTICLE_LENGTH } from '../lib/constants';
 
 export interface ExtractedArticle {
@@ -55,10 +56,7 @@ function prepareImages(document: Document, baseUrl: string): void {
 }
 
 function removeSiteModules(document: Document): void {
-  for (const control of document.querySelectorAll('[id^="follow-author-article_footer"]')) {
-    const list = control.closest('ul');
-    list?.parentElement?.remove();
-  }
+  removeFollowAuthorControls(document);
   for (const block of document.querySelectorAll('[data-nosnippet]')) {
     if ([...block.querySelectorAll('a[href]')].some((link) => {
       try {

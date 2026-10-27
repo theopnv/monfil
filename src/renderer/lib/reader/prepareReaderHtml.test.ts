@@ -313,6 +313,14 @@ describe('site chrome', () => {
     expect(document.body.innerHTML).toBe('<p>Body</p>');
   });
 
+  test('keeps the rest of the article when the follow-author list is a top-level element', () => {
+    // Act
+    const document = prepare('<ul><li><a id="follow-author-article_footer-3" href="/f">Follow</a></li></ul><p>Body</p>');
+
+    // Assert
+    expect(document.body.innerHTML).toBe('<p>Body</p>');
+  });
+
   test('removes a nosnippet block that links to the ad domain, however the link is written', () => {
     // Act
     const document = prepare(

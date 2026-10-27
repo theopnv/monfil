@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { resolveEmbedUrl, type EmbedDescriptor } from '../../../shared/embeds';
+import { removeFollowAuthorControls } from '../../../shared/follow-author';
 
 function httpUrl(value: string | null, baseUrl?: string): string | undefined {
   if (!value) {
@@ -85,9 +86,7 @@ export function prepareReaderHtml(html: string, sourceUrl?: string): string {
     }
   }
 
-  for (const control of document.querySelectorAll('[id^="follow-author-article_footer"]')) {
-    control.closest('ul')?.parentElement?.remove();
-  }
+  removeFollowAuthorControls(document);
   for (const block of document.querySelectorAll('[data-nosnippet]')) {
     if ([...block.querySelectorAll('a[href]')].some((link) => {
       try {
