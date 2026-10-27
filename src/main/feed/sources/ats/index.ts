@@ -117,7 +117,7 @@ export function boardsInPage(html: string): AtsBoard[] {
 
 async function discoverFromPage(query: string): Promise<Result<ParsedSource[], FeedFetchError>> {
   const url = toUrl(query);
-  if (!url || !/^https?:$/.test(url.protocol)) {
+  if (!url) {
     return unsupported(NOT_FOUND);
   }
   const page = await fetchText(url.href, { blockPrivateHosts: true });
