@@ -29,6 +29,7 @@ function safeMessage(value: string): string {
     .replace(/(?:[A-Za-z]:\\|\/)(?:[^\s/:]+[\\/]){2,}[^\s]*/g, '[redacted-path]');
 }
 
+// Stryker disable next-line StringLiteral: any default key without a sensitive word behaves like an empty one
 export function redact(value: unknown, key = ''): unknown {
   if (SENSITIVE_KEYS.test(key)) {
     return '[redacted]';
