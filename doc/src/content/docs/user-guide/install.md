@@ -5,6 +5,14 @@ description: Download Monfil for macOS, Windows, or Linux.
 
 On Windows, get Monfil from the [Microsoft Store](https://apps.microsoft.com/detail/9P4FZNFBR29Q). The Store installs Monfil with no security warning and keeps it up to date.
 
+To install the Store version from a terminal, run this command:
+
+```sh
+winget install --id 9P4FZNFBR29Q --source msstore
+```
+
+The Store updates this copy automatically. To update it yourself, run `winget upgrade --id 9P4FZNFBR29Q`.
+
 For macOS, Linux, or the Windows setup file:
 
 1. Open the [Monfil releases](https://github.com/theopnv/monfil/releases) and select the latest release.
