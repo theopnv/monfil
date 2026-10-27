@@ -486,6 +486,22 @@ test('marks the open workspace as the current page, also while reading one of it
   await expect.element(readerPage.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
 });
 
+test('moves the current page mark to the workspace that was opened', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  const { getByRole } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+
+  // Act
+  await getByRole('link', { name: 'CI/CD watch' }).click();
+
+  // Assert
+  await expect.element(getByRole('link', { name: 'CI/CD watch' })).toHaveAttribute('aria-current', 'page');
+  await expect.element(getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
+  await expect.element(getByRole('link', { name: 'CI/CD watch' })).toHaveClass('ring-2');
+  await expect.element(getByRole('link', { name: 'Home' })).not.toHaveClass('ring-2');
+});
+
 test('only the first nine workspaces get a shortcut', async () => {
   // Arrange
   workspaces = Array.from({ length: 10 }, (_, index) => createWorkspace({ id: index + 1, name: `Space ${index + 1}` }));

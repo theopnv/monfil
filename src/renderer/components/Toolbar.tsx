@@ -60,7 +60,7 @@ function WorkspaceButton({ workspace, isActive, shortcut }: { workspace: Workspa
   );
 }
 
-function WorkspaceRail({ workspaces, isActive, goTo }: { workspaces: WorkspaceSummary[]; isActive: (workspaceId: number) => boolean; goTo: (workspaceId: number) => void }) {
+function WorkspaceRail({ workspaces, activeId, goTo }: { workspaces: WorkspaceSummary[]; activeId: number | undefined; goTo: (workspaceId: number) => void }) {
   const reorderWorkspaces = useReorderWorkspaces();
   const { dragAndDropHooks } = useDragAndDrop({
     // Stryker disable next-line ArrowFunction,ObjectLiteral,ArrayDeclaration: the rail only reorders within itself, so nothing reads the drag payload
@@ -84,6 +84,7 @@ function WorkspaceRail({ workspaces, isActive, goTo }: { workspaces: WorkspaceSu
       selectionMode="none"
       onAction={(key) => goTo(Number(key))}
       dragAndDropHooks={dragAndDropHooks}
+      dependencies={[activeId]}
       className="flex flex-col items-center gap-3.5 outline-none"
     >
       {(workspace) => {
@@ -94,7 +95,7 @@ function WorkspaceRail({ workspaces, isActive, goTo }: { workspaces: WorkspaceSu
             <WorkspaceButton
               workspace={workspace}
               shortcut={index < 9 ? `${MOD_KEY_LABEL}${index + 1}` : undefined}
-              isActive={isActive(workspace.id)}
+              isActive={workspace.id === activeId}
             />
           </GridListItem>
         );
@@ -208,7 +209,7 @@ export default function Toolbar() {
         <WorkspaceRail
           workspaces={workspaces}
           goTo={goToWorkspace}
-          isActive={(workspaceId) => pathname === `/workspace/${workspaceId}` || pathname.startsWith(`/workspace/${workspaceId}/`)}
+          activeId={workspaces.find(({ id }) => pathname === `/workspace/${id}` || pathname.startsWith(`/workspace/${id}/`))?.id}
         />
       </div>
 
