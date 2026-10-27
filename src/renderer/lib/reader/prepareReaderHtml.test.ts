@@ -91,12 +91,25 @@ describe('images', () => {
     expect(image?.getAttribute('src')).toBe('https://example.com/img/a.jpg');
   });
 
-  test('leaves a src that is not http or https alone', () => {
+  test.each([
+    ['ftp:', 'ftp://c.example/a.jpg'],
+    ['cid:', 'cid:image001@example'],
+  ])('removes a %s src, which the reader cannot load, with or without the article URL', (_scheme, src) => {
     // Act
-    const image = prepare('<img src="ftp://c.example/a.jpg">', PAGE).querySelector('img');
+    const withPage = prepare(`<img src="${src}">`, PAGE).querySelector('img');
+    const withoutPage = prepare(`<img src="${src}">`).querySelector('img');
 
     // Assert
-    expect(image?.getAttribute('src')).toBe('ftp://c.example/a.jpg');
+    expect(withPage?.hasAttribute('src')).toBe(false);
+    expect(withoutPage?.hasAttribute('src')).toBe(false);
+  });
+
+  test('keeps an inline data image that has no lazy source', () => {
+    // Act
+    const image = prepare('<img src="data:image/png;base64,iVBORw0KGgo=">', PAGE).querySelector('img');
+
+    // Assert
+    expect(image?.getAttribute('src')).toBe('data:image/png;base64,iVBORw0KGgo=');
   });
 
   test('leaves a src alone when the article URL is unknown', () => {

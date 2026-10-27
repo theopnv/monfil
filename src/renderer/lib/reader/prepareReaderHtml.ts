@@ -18,6 +18,14 @@ function httpUrl(value: string | null, baseUrl?: string): string | undefined {
   }
 }
 
+/** The src to keep for an image: resolved when the article URL is known, and none for a scheme other than http or https. */
+function keptSource(current: string, sourceUrl?: string): string | undefined {
+  if (sourceUrl) {
+    return httpUrl(current, sourceUrl);
+  }
+  return /^[a-z][a-z\d+.-]*:/i.test(current) && !httpUrl(current) ? undefined : current;
+}
+
 function marker(document: Document, embed: EmbedDescriptor, title?: string | null): HTMLAnchorElement {
   const anchor = document.createElement('a');
   anchor.href = embed.sourceUrl;
@@ -39,10 +47,12 @@ export function prepareReaderHtml(html: string, sourceUrl?: string): string {
       if (source) {
         image.setAttribute('src', source);
       }
-    } else if (sourceUrl) {
-      const source = httpUrl(current, sourceUrl);
+    } else {
+      const source = keptSource(current, sourceUrl);
       if (source) {
         image.setAttribute('src', source);
+      } else {
+        image.removeAttribute('src');
       }
     }
     const lazySet = image.getAttribute('data-srcset');
