@@ -21,6 +21,7 @@ const INTERVALS: [RegExp, SalaryInterval][] = [
 ];
 
 function hasCurrency(text: string): boolean {
+  // Stryker disable next-line StringLiteral: the currency pattern reads the same with or without the u flag
   return new RegExp(CURRENCY, 'u').test(text);
 }
 
@@ -58,10 +59,12 @@ export function salaryFromText(text: string): string | undefined {
     const after = plain.slice(match.index + match[0].length, match.index + match[0].length + 40);
     const interval = intervalIn(after);
     if (isPlausible(match[1], match[2], interval)) {
+      // Stryker disable next-line MethodExpression,Regex: the text is already collapsed, and a range match starts and ends with a digit or a currency
       return withInterval(match[0].replace(/\s+/g, ' ').trim(), interval);
     }
   }
   const hourly = SINGLE_HOURLY.exec(plain);
+  // Stryker disable next-line MethodExpression: the hourly pattern group starts with a currency and ends with a digit
   return hourly?.[1] ? withInterval(hourly[1].trim(), 'hour') : undefined;
 }
 
@@ -73,6 +76,7 @@ function formatMoney(value: number, currency: string): string {
 
 /** Maps the interval words ATS APIs use ("per-year-salary", "1 YEAR", "month") to an interval. */
 export function intervalFromProvider(value: string | undefined): SalaryInterval | undefined {
+  // Stryker disable next-line StringLiteral: an absent value and the stand-in text both hold no interval word
   const text = value?.toLowerCase() ?? '';
   if (text.includes('hour')) {
     return 'hour';
