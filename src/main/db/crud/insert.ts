@@ -23,7 +23,7 @@ function parsePublishedAt(pubDate: string, fetchedAt: number): number {
 
 type IncomingItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>;
 
-async function itemDates(executor: Kysely<Database>, feedId: number, items: IncomingItem[], fetchedAt: number, firstSeenAt = fetchedAt): Promise<Map<string, number>> {
+async function itemDates(executor: Kysely<Database>, feedId: number, items: IncomingItem[], firstSeenAt: (guid: string) => number): Promise<Map<string, number>> {
   const undated = items.filter((item) => !Number.isFinite(new Date(item.pubDate).getTime()));
   const existing = undated.length > 0
     ? await executor.selectFrom('undatedItem').selectAll().where('feed_id', '=', feedId).where('guid', 'in', undated.map((item) => item.guid)).execute()
@@ -31,10 +31,11 @@ async function itemDates(executor: Kysely<Database>, feedId: number, items: Inco
   const dates = new Map(existing.map((row) => [row.guid, row.first_fetched_at]));
   const fresh = undated.filter((item) => !dates.has(item.guid));
   if (fresh.length > 0) {
-    await executor.insertInto('undatedItem').values(fresh.map((item) => ({ feed_id: feedId, guid: item.guid, first_fetched_at: firstSeenAt })))
+    const markers = fresh.map((item) => ({ feed_id: feedId, guid: item.guid, first_fetched_at: firstSeenAt(item.guid) }));
+    await executor.insertInto('undatedItem').values(markers)
       .onConflict((oc) => oc.columns(['feed_id', 'guid']).doNothing()).execute();
-    for (const item of fresh) {
-      dates.set(item.guid, firstSeenAt);
+    for (const marker of markers) {
+      dates.set(marker.guid, marker.first_fetched_at);
     }
   }
   return dates;
@@ -122,7 +123,7 @@ async function insertFeedItems(executor: Kysely<Database>, feedId: number, items
     return [];
   }
   const fetchedAt = Date.now();
-  dates ??= await itemDates(executor, feedId, items, fetchedAt);
+  dates ??= await itemDates(executor, feedId, items, () => fetchedAt);
   return executor.insertInto('feedItem')
     .values(items.map((item) => ({
       feed_id: feedId,
@@ -164,10 +165,11 @@ async function syncFeedItemsInTransaction(trx: Kysely<Database>, feedId: number,
   const fetchedAt = Date.now();
   const oldMarkers = await trx.selectFrom('undatedItem').selectAll().where('feed_id', '=', feedId).where('guid', 'in', items.map((item) => item.guid)).execute();
   const firstFetch = !(await hasItemHistory(trx, feedId));
-  const markerByGuid = await itemDates(trx, feedId, items, fetchedAt, firstFetch ? fetchedAt - FIRST_FETCH_UNDATED_AGE_MS : fetchedAt);
-  const tombstones = new Set(oldMarkers.map((row) => row.guid));
   const previous = await trx.selectFrom('feedItem').selectAll().where('feed_id', '=', feedId).where('guid', 'in', items.map((item) => item.guid)).execute();
   const byGuid = new Map(previous.map((item) => [item.guid, item]));
+  const undatedSince = firstFetch ? fetchedAt - FIRST_FETCH_UNDATED_AGE_MS : fetchedAt;
+  const markerByGuid = await itemDates(trx, feedId, items, (guid) => byGuid.get(guid)?.published_at ?? undatedSince);
+  const tombstones = new Set(oldMarkers.map((row) => row.guid));
   const newestStored = await trx.selectFrom('feedItem').select(['guid', 'published_at'])
     .where('feed_id', '=', feedId).orderBy('published_at', 'desc').orderBy('id', 'desc').limit(10).execute();
   const rank = new Map(newestStored.map((row) => [row.guid, row.published_at]));
