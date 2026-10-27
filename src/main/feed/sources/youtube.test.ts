@@ -47,6 +47,7 @@ describe('parseYoutubeInput', () => {
 
   test('a /channel/ link resolves to a channel', () => {
     expect(parseYoutubeInput(`https://www.youtube.com/channel/${CHANNEL_ID}`)).toEqual({ kind: 'channel', channelId: CHANNEL_ID });
+    expect(parseYoutubeInput(`https://www.youtube.com/channel/${CHANNEL_ID}/videos`)).toEqual({ kind: 'channel', channelId: CHANNEL_ID });
   });
 
   test('a handle link with a trailing segment resolves to a page for the handle alone', () => {
@@ -133,6 +134,7 @@ describe('parseYoutubeInput', () => {
     expect(parseYoutubeInput(`UC${'a'.repeat(21)}`)).toBeNull();
     expect(parseYoutubeInput(`UC${'a'.repeat(23)}`)).toBeNull();
     expect(parseYoutubeInput(`https://www.youtube.com/channel/UC${'a'.repeat(21)}`)).toBeNull();
+    expect(parseYoutubeInput(`https://www.youtube.com/channel/UC${'a'.repeat(23)}`)).toBeNull();
   });
 });
 

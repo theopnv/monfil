@@ -58,7 +58,7 @@ function parseYoutubeUrl(url: URL): YoutubeTarget | null {
     return playlistId ? { kind: 'playlist', playlistId } : null;
   }
 
-  const channelMatch = /^\/channel\/(UC[\w-]{22})/.exec(path);
+  const channelMatch = /^\/channel\/(UC[\w-]{22})(?:\/|$)/.exec(path);
   if (channelMatch?.[1]) {
     return { kind: 'channel', channelId: channelMatch[1] };
   }
