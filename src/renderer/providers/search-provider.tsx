@@ -23,9 +23,17 @@ export const useSearch = (saved = false): SearchContextType => {
 
 // Mounted above the router outlet so the query survives navigating to the
 // reader and back, while a restart of the app still starts with an empty search.
-export const SearchProvider = ({ children }: PropsWithChildren) => {
+// Opening another workspace clears it; a page with no workspace in its URL (Settings) keeps it.
+export const SearchProvider = ({ workspaceId, children }: PropsWithChildren<{ workspaceId?: number | undefined }>) => {
   const [query, setQuery] = useState("");
   const [savedQuery, setSavedQuery] = useState("");
+  const [searchWorkspaceId, setSearchWorkspaceId] = useState(workspaceId);
+
+  if (workspaceId !== undefined && workspaceId !== searchWorkspaceId) {
+    setSearchWorkspaceId(workspaceId);
+    setQuery("");
+    setSavedQuery("");
+  }
 
   return (
     <SearchContext.Provider value={{ feed: { query, setQuery }, saved: { query: savedQuery, setQuery: setSavedQuery } }}>

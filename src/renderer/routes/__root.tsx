@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { createRootRoute } from '@tanstack/react-router';
+import { createRootRoute, useParams } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouteProvider } from '@/providers/route-provider';
@@ -13,6 +13,7 @@ import { HintsProvider } from '@/providers/hints-provider';
 import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
+import { parseRouteId } from '@/lib/route-params';
 import { useUpdateNotification } from '@/lib/app-update';
 import { useUsageReporting } from '@/providers/usage-reporting';
 import AppShell from '@/components/AppShell';
@@ -40,11 +41,12 @@ function IpcBridgedAppShell() {
 }
 
 function RootComponent() {
+  const routeWorkspaceId = parseRouteId(useParams({ strict: false }).workspaceId);
   return (
     <RouteProvider>
       <ThemeProvider>
         <PreferencesProvider>
-          <SearchProvider>
+          <SearchProvider workspaceId={routeWorkspaceId}>
             <RiverScopeProvider>
               <ActiveWorkspaceIdProvider>
                 <QueryClientProvider client={queryClient}>
