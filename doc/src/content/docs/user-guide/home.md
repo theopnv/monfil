@@ -32,7 +32,7 @@ A strip appears under the title when a filter is on. **Showing 2 of 5 feeds** me
 
 ## Workspaces
 
-A workspace groups feeds and folders around a subject, such as work or hobbies. Each workspace has its own feed list and article list. Monfil opens in **Home**. Select a workspace icon in the narrow left rail to switch to it. Hold the pointer on an icon to see the workspace name. Press `Cmd+1` to `Cmd+9` (`Ctrl+1` to `Ctrl+9` on Windows and Linux) to open the first nine workspaces. Press `Cmd+K` (`Ctrl+K`) to find a workspace by name.
+A workspace groups feeds and folders around a subject, such as work or hobbies. Each workspace has its own feed list and article list. Monfil opens in **Home**. Select a workspace icon in the narrow left rail to switch to it. Hold the pointer on an icon to see the workspace name. Press `Cmd+1` to `Cmd+9` (`Ctrl+1` to `Ctrl+9` on Windows and Linux) to open the first nine workspaces. Press `Cmd+K` (`Ctrl+K`) to find a workspace by name. To change the order of the workspaces, drag an icon above or below another icon in the rail. The shortcuts follow the new order.
 
 ### Add a workspace
 
