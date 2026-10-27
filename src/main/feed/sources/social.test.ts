@@ -39,6 +39,17 @@ describe('postTitle', () => {
     expect(title).toBe(`${'abcdefg '.repeat(12).trim()}…`);
   });
 
+  test.each([
+    ['at half the length, so it keeps the characters', `${'a'.repeat(50)} ${'b'.repeat(60)}`, `${'a'.repeat(50)} ${'b'.repeat(49)}…`],
+    ['just after half the length, so it cuts there', `${'a'.repeat(51)} ${'b'.repeat(60)}`, `${'a'.repeat(51)}…`],
+  ])('uses the last word break only after half the length: a break %s', (_case, text, expected) => {
+    // Act
+    const title = postTitle(text);
+
+    // Assert
+    expect(title).toBe(expected);
+  });
+
   test('keeps a title of exactly 100 characters whole and cuts one of 101', () => {
     // Act / Assert
     expect(postTitle('a'.repeat(100))).toBe('a'.repeat(100));
