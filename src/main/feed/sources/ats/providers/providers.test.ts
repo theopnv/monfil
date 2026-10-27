@@ -24,6 +24,7 @@ describe('toBoard', () => {
     ['https://boards-api.greenhouse.io/v1/boards/datadog/jobs', 'greenhouse', 'datadog', 'https://boards-api.greenhouse.io/v1/boards/datadog/jobs?content=true'],
     ['boards.greenhouse.io/datadog', 'greenhouse', 'datadog', 'https://boards-api.greenhouse.io/v1/boards/datadog/jobs?content=true'],
     ['https://jobs.lever.co/spotify', 'lever', 'spotify', 'https://api.lever.co/v0/postings/spotify?mode=json'],
+    ['http://jobs.lever.co/spotify', 'lever', 'spotify', 'https://api.lever.co/v0/postings/spotify?mode=json'],
     ['https://jobs.eu.lever.co/acme/1234', 'lever', 'acme', 'https://api.eu.lever.co/v0/postings/acme?mode=json'],
     ['https://api.lever.co/v0/postings/spotify?mode=json', 'lever', 'spotify', 'https://api.lever.co/v0/postings/spotify?mode=json'],
     ['https://jobs.ashbyhq.com/ramp', 'ashby', 'ramp', 'https://api.ashbyhq.com/posting-api/job-board/ramp?includeCompensation=true'],
