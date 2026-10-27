@@ -122,6 +122,16 @@ describe('images', () => {
     expect(relative?.getAttribute('src')).toBe('/img/a.jpg');
   });
 
+  test('reads only a scheme at the start of a src when the article URL is unknown', () => {
+    // Act
+    const colonInPath = prepare('<img src="img/a:b.jpg">').querySelector('img');
+    const schemeWithDigit = prepare('<img src="web+x1:a.jpg">').querySelector('img');
+
+    // Assert
+    expect(colonInPath?.getAttribute('src')).toBe('img/a:b.jpg');
+    expect(schemeWithDigit?.hasAttribute('src')).toBe(false);
+  });
+
   test('copies data-srcset to srcset', () => {
     // Act
     const image = prepare('<img src="https://c.example/a.jpg" data-srcset="https://c.example/a.jpg 1x, https://c.example/b.jpg 2x">').querySelector('img');
