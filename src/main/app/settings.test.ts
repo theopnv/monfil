@@ -4,7 +4,11 @@
 
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { db, initializeDatabase } from '../db/database';
-import { DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, getRefreshInterval, getRefreshOnLaunch, setRefreshInterval, setRefreshOnLaunch, getUsageAnalyticsConsent, getUsageAnalyticsPromptHistory, recordAppLaunch, recordUsageAnalyticsPromptDismissed, setUsageAnalyticsConsent, toUsageAnalyticsConsent } from './settings';
+import {
+  DEFAULT_DETAILED_LOGGING, DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, DEFAULT_RETENTION_DAYS, getDetailedLogging, getRefreshInterval, getRefreshOnLaunch, getRetentionDays,
+  setDetailedLogging, setRefreshInterval, setRefreshOnLaunch, setRetentionDays, toRefreshInterval, toRefreshOnLaunch, toRetentionDays,
+  getUsageAnalyticsConsent, getUsageAnalyticsPromptHistory, recordAppLaunch, recordUsageAnalyticsPromptDismissed, setUsageAnalyticsConsent, toUsageAnalyticsConsent,
+} from './settings';
 
 beforeAll(async () => {
   await initializeDatabase(':memory:');
@@ -14,7 +18,31 @@ afterEach(async () => {
   await db.deleteFrom('setting').execute();
 });
 
+describe('toRefreshInterval', () => {
+  test.each([
+    [15, 15], [30, 30], [60, 60], [360, 360], ['manual', 'manual'], ['15', 15], ['360', 360],
+  ])('keeps the supported value %j as %j', (value, expected) => {
+    // Act & Assert
+    expect(toRefreshInterval(value)).toBe(expected);
+  });
+
+  test.each([
+    [7], ['7'], ['soon'], [''], [null], [undefined], [true], [[60]], [{}], [['manual']],
+  ])('gives the default for the value %j that is not a supported interval', (value) => {
+    // Act & Assert
+    expect(toRefreshInterval(value)).toBe(DEFAULT_REFRESH_INTERVAL);
+  });
+});
+
 describe('getRefreshInterval', () => {
+  test('reads a stored number of minutes', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'refreshIntervalMinutes', value: '15' }).execute();
+
+    // Act & Assert
+    expect(await getRefreshInterval()).toBe(15);
+  });
+
   test('falls back to the default when nothing is stored', async () => {
     // Act
     const interval = await getRefreshInterval();
@@ -97,7 +125,39 @@ describe('setRefreshInterval', () => {
   });
 });
 
+describe('toRefreshOnLaunch', () => {
+  test.each([
+    ['true', true], [true, true], ['false', false], [false, false],
+  ])('reads %j as %j', (value, expected) => {
+    // Act & Assert
+    expect(toRefreshOnLaunch(value)).toBe(expected);
+  });
+
+  test.each([
+    ['yes'], [''], [1], [0], [null], [undefined], ['TRUE'],
+  ])('gives the default for the value %j that is not a boolean', (value) => {
+    // Act & Assert
+    expect(toRefreshOnLaunch(value)).toBe(DEFAULT_REFRESH_ON_LAUNCH);
+  });
+});
+
 describe('getRefreshOnLaunch', () => {
+  test('reads a stored false', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'refreshOnLaunch', value: 'false' }).execute();
+
+    // Act & Assert
+    expect(await getRefreshOnLaunch()).toBe(false);
+  });
+
+  test('ignores the other settings rows', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'somethingElse', value: 'false' }).execute();
+
+    // Act & Assert
+    expect(await getRefreshOnLaunch()).toBe(DEFAULT_REFRESH_ON_LAUNCH);
+  });
+
   test('falls back to the default when nothing is stored', async () => {
     // Act
     const value = await getRefreshOnLaunch();
@@ -144,6 +204,107 @@ describe('setRefreshOnLaunch', () => {
     expect(await getRefreshOnLaunch()).toBe(true);
     const rows = await db.selectFrom('setting').selectAll().execute();
     expect(rows).toHaveLength(1);
+  });
+});
+
+describe('toRetentionDays', () => {
+  test.each([
+    [15, 15], [30, 30], [60, 60], [90, 90], [180, 180], ['15', 15], ['180', 180],
+  ])('keeps the supported value %j as %j', (value, expected) => {
+    // Act & Assert
+    expect(toRetentionDays(value)).toBe(expected);
+  });
+
+  test.each([
+    [7], ['7'], ['forever'], [''], [null], [undefined], [[90]], [{}], [true],
+  ])('gives the default for the value %j that is not a supported number of days', (value) => {
+    // Act & Assert
+    expect(toRetentionDays(value)).toBe(DEFAULT_RETENTION_DAYS);
+  });
+});
+
+describe('getRetentionDays', () => {
+  test('falls back to the default when nothing is stored', async () => {
+    // Act & Assert
+    expect(await getRetentionDays()).toBe(DEFAULT_RETENTION_DAYS);
+  });
+
+  test('reads the stored number of days and ignores the other settings rows', async () => {
+    // Arrange
+    await db.insertInto('setting').values([{ key: 'somethingElse', value: '15' }, { key: 'retentionDays', value: '90' }]).execute();
+
+    // Act & Assert
+    expect(await getRetentionDays()).toBe(90);
+  });
+
+  test('falls back to the default when the stored value is not a supported one', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'retentionDays', value: '45' }).execute();
+
+    // Act & Assert
+    expect(await getRetentionDays()).toBe(DEFAULT_RETENTION_DAYS);
+  });
+});
+
+describe('setRetentionDays', () => {
+  test('stores the days and reads them back, replacing the previous choice', async () => {
+    // Act
+    await setRetentionDays(180);
+    await setRetentionDays(60);
+
+    // Assert
+    expect(await getRetentionDays()).toBe(60);
+    expect(await db.selectFrom('setting').selectAll().execute()).toEqual([{ key: 'retentionDays', value: '60' }]);
+  });
+
+  test('stores the default for an unsupported number of days', async () => {
+    // Act
+    await setRetentionDays(7 as never);
+
+    // Assert
+    expect(await db.selectFrom('setting').selectAll().execute()).toEqual([{ key: 'retentionDays', value: String(DEFAULT_RETENTION_DAYS) }]);
+  });
+});
+
+describe('getDetailedLogging', () => {
+  test('is off when nothing is stored', async () => {
+    // Act & Assert
+    expect(await getDetailedLogging()).toBe(DEFAULT_DETAILED_LOGGING);
+  });
+
+  test.each([['true', true], ['false', false]])('reads the stored text %j as %j', async (stored, expected) => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'detailedLogging', value: stored }).execute();
+
+    // Act & Assert
+    expect(await getDetailedLogging()).toBe(expected);
+  });
+
+  test('ignores the other settings rows', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'somethingElse', value: 'true' }).execute();
+
+    // Act & Assert
+    expect(await getDetailedLogging()).toBe(DEFAULT_DETAILED_LOGGING);
+  });
+});
+
+describe('setDetailedLogging', () => {
+  test.each([true, false])('stores %j and reads it back', async (value) => {
+    // Act
+    await setDetailedLogging(value);
+
+    // Assert
+    expect(await getDetailedLogging()).toBe(value);
+  });
+
+  test('overwrites the previous choice instead of adding a row', async () => {
+    // Act
+    await setDetailedLogging(true);
+    await setDetailedLogging(false);
+
+    // Assert
+    expect(await db.selectFrom('setting').selectAll().execute()).toEqual([{ key: 'detailedLogging', value: 'false' }]);
   });
 });
 

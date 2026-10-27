@@ -55,6 +55,7 @@ const REFRESH_ON_LAUNCH_KEY = 'refreshOnLaunch';
  * @returns the matching boolean, or `DEFAULT_REFRESH_ON_LAUNCH` when there is no match
  */
 export function toRefreshOnLaunch(value: unknown): boolean {
+  // Stryker disable next-line ConditionalExpression,StringLiteral,BlockStatement: DEFAULT_REFRESH_ON_LAUNCH is true, so dropping this branch returns the same value through the fallback
   if (value === 'true' || value === true) {
     return true;
   }
@@ -141,6 +142,7 @@ async function writeSetting(key: string, value: string): Promise<void> {
 async function readCount(key: string): Promise<number> {
   const [row] = await querySettings({ key });
   const count = Number(row?.value);
+  // Stryker disable next-line EqualityOperator: for a count of 0 both operators return 0, and a stored "-0" still behaves as 0 in every comparison and sum
   return Number.isSafeInteger(count) && count > 0 ? count : 0;
 }
 
