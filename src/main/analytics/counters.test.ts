@@ -23,6 +23,19 @@ afterEach(async () => {
 
 const day = new Date('2026-10-22T10:00:00Z');
 
+describe('counting before any choice', () => {
+  test('is off in a fresh process, so nothing is counted before the user agreed', async () => {
+    // Arrange
+    vi.resetModules();
+
+    // Act
+    const fresh = await import('./counters');
+
+    // Assert
+    expect(fresh.isCountingEnabled()).toBe(false);
+  });
+});
+
 describe('incrementCounter', () => {
   test('adds one per call on the day of the action', async () => {
     // Act
