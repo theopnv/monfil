@@ -112,6 +112,117 @@ describe('fatal recovery handler', () => {
     expect(deps.dialog.showMessageBox).toHaveBeenCalledOnce();
   });
 
+  test('offers Restart, Show log file and Quit, with Restart as default and Quit as the escape', async () => {
+    // Arrange
+    const deps = dependencies(2);
+    const log = logger();
+    const handle = createFatalHandler(log, 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('uncaughtException', new Error('broken'));
+
+    // Assert
+    const incidentId = vi.mocked(log.error).mock.lastCall?.[1] as unknown as { incidentId: string };
+    expect(deps.dialog.showMessageBox).toHaveBeenCalledExactlyOnceWith({
+      type: 'error',
+      title: 'Monfil could not continue',
+      message: `Monfil encountered a system error. Incident ${incidentId.incidentId.slice(0, 8)}.`,
+      buttons: ['Restart', 'Show log file', 'Quit'],
+      defaultId: 0,
+      cancelId: 2,
+    });
+  });
+
+  test('restarting does not quit or reveal the log file', async () => {
+    // Arrange
+    const deps = dependencies(0);
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('uncaughtException', new Error('broken'));
+
+    // Assert
+    expect(deps.app.quit).not.toHaveBeenCalled();
+    expect(deps.shell.showItemInFolder).not.toHaveBeenCalled();
+  });
+
+  test('revealing the log file does not restart or quit', async () => {
+    // Arrange
+    const deps = dependencies(1);
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('uncaughtException', new Error('broken'));
+
+    // Assert
+    expect(deps.app.relaunch).not.toHaveBeenCalled();
+    expect(deps.app.exit).not.toHaveBeenCalled();
+    expect(deps.app.quit).not.toHaveBeenCalled();
+  });
+
+  test('quitting does not restart or reveal the log file', async () => {
+    // Arrange
+    const deps = dependencies(2);
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('uncaughtException', new Error('broken'));
+
+    // Assert
+    expect(deps.app.relaunch).not.toHaveBeenCalled();
+    expect(deps.app.exit).not.toHaveBeenCalled();
+    expect(deps.shell.showItemInFolder).not.toHaveBeenCalled();
+  });
+
+  test('logs the failure before Electron is ready', async () => {
+    // Arrange
+    const deps = dependencies(0);
+    deps.app.isReady.mockReturnValue(false);
+    const log = logger();
+    const handle = createFatalHandler(log, 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('uncaughtException', new Error('early'));
+
+    // Assert
+    expect(log.error).toHaveBeenCalledOnce();
+  });
+
+  test('shows a dialog for a later error after one that came before Electron was ready', async () => {
+    // Arrange
+    const deps = dependencies(1);
+    deps.app.isReady.mockReturnValueOnce(false);
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('uncaughtException', new Error('early'));
+    await handle('uncaughtException', new Error('late'));
+
+    // Assert
+    expect(deps.dialog.showMessageBox).toHaveBeenCalledOnce();
+  });
+
+  test('ignores a second error while the first dialog is open, and logs only the first', async () => {
+    // Arrange
+    const deps = dependencies(1);
+    let resolveDialog: ((value: { response: number }) => void) | undefined;
+    deps.dialog.showMessageBox.mockImplementation(() => new Promise((resolve) => {
+      resolveDialog = resolve;
+    }));
+    const log = logger();
+    const handle = createFatalHandler(log, 'mock-user-data/monfil.log', deps);
+
+    // Act
+    const first = handle('uncaughtException', new Error('first'));
+    await handle('unhandledRejection', new Error('second'));
+    resolveDialog?.({ response: 2 });
+    await first;
+
+    // Assert
+    expect(log.error).toHaveBeenCalledOnce();
+    expect(deps.app.quit).toHaveBeenCalledOnce();
+  });
+
   test('does not reject when recovery actions fail', async () => {
     // Arrange
     const deps = dependencies(1);
