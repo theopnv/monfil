@@ -24,6 +24,7 @@ export const useImportOpml = (): ((target: ImportOpmlTarget) => Promise<Result<I
     },
   });
   const { mutateAsync } = mutation;
+  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
   return useCallback((target: ImportOpmlTarget) => mutateAsync(target), [mutateAsync]);
 };
 
@@ -32,5 +33,6 @@ export const useExportOpml = (): ((workspaceId: number) => Promise<Result<void, 
     mutationFn: (workspaceId: number) => ipc.invoke('opml:export', { workspaceId }),
   });
   const { mutateAsync } = mutation;
+  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
   return useCallback((workspaceId: number) => mutateAsync(workspaceId), [mutateAsync]);
 };
