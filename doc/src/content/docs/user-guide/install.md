@@ -36,6 +36,12 @@ Monfil works on Windows 10 and Windows 11.
 
 The Store keeps Monfil up to date.
 
+You can also install the Store version from a terminal with winget:
+
+```sh
+winget install --id 9P4FZNFBR29Q --source msstore
+```
+
 ### Setup file
 
 Use this option if you cannot use the Microsoft Store.
