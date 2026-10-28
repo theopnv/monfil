@@ -38,9 +38,17 @@ describe('resolveUpdateSource', () => {
     expect(source).toEqual({ name: 'NONE', reason: 'DEVELOPMENT' });
   });
 
-  test.each(['darwin', 'linux'] as const)('does not update on %s', (platform) => {
+  test('uses the release feed for a macOS build', () => {
     // Act
-    const source = resolveUpdateSource({ ...installedOnWindows, platform });
+    const source = resolveUpdateSource({ ...installedOnWindows, platform: 'darwin', arch: 'arm64' });
+
+    // Assert
+    expect(source).toEqual({ name: 'FEED', url: 'https://update.electronjs.org/theopnv/monfil/darwin-arm64/1.2.3' });
+  });
+
+  test('does not update on Linux', () => {
+    // Act
+    const source = resolveUpdateSource({ ...installedOnWindows, platform: 'linux' });
 
     // Assert
     expect(source).toEqual({ name: 'NONE', reason: 'UNSUPPORTED_PLATFORM' });
