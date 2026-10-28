@@ -253,7 +253,6 @@ export const useReadState = (): ReadState => {
     if (ids.length > 0) {
       mutate({ itemIds: ids, read: true });
     }
-    // Stryker disable next-line ArrayDeclaration: mutate is the same function on every render
   }, [mutate]);
   // Stryker disable next-line ArrayDeclaration: mutate is the same function on every render
   const toggleRead = useCallback((id: number, currentlyRead: boolean) => mutate({ itemIds: [id], read: !currentlyRead }), [mutate]);
