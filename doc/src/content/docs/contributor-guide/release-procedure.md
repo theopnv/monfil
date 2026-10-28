@@ -40,6 +40,30 @@ The documentation workflow runs after publication to update the changelog. Clean
 
 If a publish run fails, correct the failure and rerun the failed jobs for that tag. Uploads can replace existing assets during a rerun. The version workflow can also be started manually after a credential or infrastructure failure.
 
+## Configure macOS signing
+
+A release signs the macOS app with a Developer ID Application certificate and notarizes it with Apple. `forge.config.ts` signs only when `APPLE_SIGNING_IDENTITY` is set, so a local `npm run package` still makes an unsigned app. Notarization also needs `APPLE_API_KEY`, `APPLE_API_KEY_ID`, and `APPLE_API_ISSUER`.
+
+The e2e job in `.github/workflows/test.yml` packages the app, so it signs and notarizes the app during a release run on macOS. The macOS installer job in `.github/workflows/publish.yml` then signs, notarizes, and staples the DMG. The `.github/actions/apple-signing` action imports the certificate into a temporary keychain in both jobs.
+
+Add these repository variables:
+
+| Variable | Value |
+| --- | --- |
+| `APPLE_SIGNING_IDENTITY` | The SHA-1 hash or the full name of the certificate, as shown by `security find-identity -v -p codesigning` |
+| `APPLE_API_KEY_ID` | The Key ID of the App Store Connect API key |
+| `APPLE_API_ISSUER` | The Issuer ID shown above the App Store Connect API keys |
+
+Add these repository secrets:
+
+| Secret | Value |
+| --- | --- |
+| `APPLE_CERTIFICATE_P12` | The certificate and its private key, exported as `.p12` and encoded in Base64 |
+| `APPLE_CERTIFICATE_PASSWORD` | The password of the `.p12` file |
+| `APPLE_API_KEY_P8` | The `.p8` API key file, encoded in Base64 |
+
+If `APPLE_SIGNING_IDENTITY` is missing, the release ships an unsigned macOS app. The Developer ID certificate expires after five years. An app signed before the expiry still opens, because notarization adds a secure timestamp.
+
 ## Configure the Microsoft Store submission
 
 The `store` job runs only when the repository variable `MSSTORE_PRODUCT_ID` exists and the tag is a minor or major release, such as `v1.3.0`. Patch releases go to GitHub only. Each Store submission needs a new certification, so this rule keeps the number of reviews low.
@@ -52,6 +76,6 @@ The Store CLI cannot replace a draft submission that was started in the Partner 
 
 ## Application updates
 
-The Windows setup file installs a copy of Monfil that updates itself. Monfil reads `update.electronjs.org`, which serves the Squirrel files of the latest public GitHub release. Monfil downloads an update in the background and offers a restart when the update is ready. A Store copy gets its updates from the Store and does not check GitHub.
+The Windows setup file and the signed macOS app install a copy of Monfil that updates itself. Monfil reads `update.electronjs.org`, which serves the Squirrel files of the latest public GitHub release. On macOS, it uses the release ZIP, so the release must keep the ZIP next to the DMG. Monfil downloads an update in the background and offers a restart when the update is ready. A Store copy gets its updates from the Store and does not check GitHub.
 
-`src/main/updates/update-source.ts` selects the update source for each platform. macOS needs a signed app before it can update itself. Linux packages do not have an Electron updater.
+`src/main/updates/update-source.ts` selects the update source for each platform. Squirrel.Mac accepts only an update signed with the same Developer ID as the running app. Linux packages do not have an Electron updater.

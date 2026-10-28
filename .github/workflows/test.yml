@@ -116,6 +116,10 @@ jobs:
     env:
       MONFIL_APTABASE_KEY: ${{ inputs.upload_package && vars.MONFIL_APTABASE_KEY || '' }}
       MONFIL_APTABASE_HOST: ${{ inputs.upload_package && vars.MONFIL_APTABASE_HOST || '' }}
+      # Packaging signs and notarizes the release app, so only a release run on macOS gets the Apple identity.
+      APPLE_SIGNING_IDENTITY: ${{ inputs.upload_package && matrix.os == 'macos-latest' && vars.APPLE_SIGNING_IDENTITY || '' }}
+      APPLE_API_KEY_ID: ${{ inputs.upload_package && matrix.os == 'macos-latest' && vars.APPLE_API_KEY_ID || '' }}
+      APPLE_API_ISSUER: ${{ inputs.upload_package && matrix.os == 'macos-latest' && vars.APPLE_API_ISSUER || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -127,6 +131,13 @@ jobs:
         with:
           electron: 'true'
           electron-dependencies: 'true'
+
+      - if: env.APPLE_SIGNING_IDENTITY != ''
+        uses: ./.github/actions/apple-signing
+        with:
+          certificate: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          api-key: ${{ secrets.APPLE_API_KEY_P8 }}
 
       # xvfb-run defaults to a 640x480 screen, and the maximized app window would follow it.
       - if: runner.os == 'Linux'

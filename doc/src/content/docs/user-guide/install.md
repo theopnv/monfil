@@ -17,29 +17,21 @@ For macOS, Linux, or the Windows setup file:
 
 1. Open the [Monfil releases](https://github.com/theopnv/monfil/releases) and select the latest release.
 2. Download the file for your system:
-    - Choose the ZIP for macOS
+    - Choose the DMG for macOS
     - Choose the setup file for Windows
     - Choose the DEB package for Debian or Ubuntu
     - Choose the RPM package for Fedora or RHEL
-3. Install it with your system's usual installer.
+3. Install it with your system's usual installer. On macOS, open the DMG and drag Monfil to the Applications folder.
 
-The Windows setup file installs a copy of Monfil that updates itself. When an update is ready, Monfil shows a message with a **Restart** button.
+The macOS app and the Windows setup file install a copy of Monfil that updates itself. On macOS, open Monfil from the Applications folder, not from the DMG, so that it can update. When an update is ready, Monfil shows a message with a **Restart** button.
 
 ## System warnings
 
-Monfil isn't code-signed. Signing costs money every year ($100/year for an Apple Developer account to sign macOS builds, and a paid certificate for Windows) and this is a free, one-person project, so that cost isn't covered.
+The macOS app is signed with an Apple Developer ID and notarized by Apple, so macOS opens it without a warning.
 
-That means both macOS and Windows will flag monfil as coming from an "unidentified developer." This is a warning about the *lack of a paid signature*, not a sign that the app is unsafe: every line of monfil's code is public in this repository for anyone to read, and the [release build](https://github.com/theopnv/monfil/blob/main/.github/workflows/publish.yml) is produced straight from that source, in the open, by GitHub's own servers.
+The Windows setup file isn't code-signed. Windows flags it as coming from an "unidentified developer." This is a warning about the *lack of a paid signature*, not a sign that the app is unsafe: every line of monfil's code is public in this repository for anyone to read, and the [release build](https://github.com/theopnv/monfil/blob/main/.github/workflows/publish.yml) is produced straight from that source, in the open, by GitHub's own servers.
 
-On macOS, the warning may say that `monfil.app` is damaged. Put the app in your Applications folder. Open Terminal in that folder and run:
-
-```sh
-xattr -cr monfil.app
-```
-
-Then open the app again.
-
-The Microsoft Store version does not show these warnings. If you use the Windows setup file, SmartScreen may show **Windows protected your PC**. Select **More info**, then **Run anyway**.
+The Microsoft Store version does not show this warning. If you use the Windows setup file, SmartScreen may show **Windows protected your PC**. Select **More info**, then **Run anyway**.
 
 On Linux, install the package with your package manager. From the folder that holds one Monfil DEB file, run this command on Debian or Ubuntu:
 
