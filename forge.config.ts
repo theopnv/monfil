@@ -82,7 +82,7 @@ const config: ForgeConfig = {
       sign: false,
     }),
     new MakerZIP({}, ['darwin']),
-    new MakerDMG({ icon: 'assets/icons/icon.icns' }),
+    new MakerDMG({ name: 'monfil-macos-arm64', title: 'Monfil', icon: 'assets/icons/icon.icns' }),
     new MakerRpm({ options: { icon: 'assets/icons/icon.png' } }),
     new MakerDeb({ options: { icon: 'assets/icons/icon.png' } }),
   ],
