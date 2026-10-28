@@ -22,6 +22,7 @@ export const useFeedpackCatalog = (enabled: boolean) => useQuery({
 export const useFeedpackPreview = (): ((slug: string) => Promise<Result<FeedpackPreview, FeedpackError>>) => {
   const mutation = useMutation({ mutationFn: (slug: string) => ipc.invoke('feedpacks:preview', { slug }) });
   const { mutateAsync } = mutation;
+  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
   return useCallback((slug: string) => mutateAsync(slug), [mutateAsync]);
 };
 
@@ -43,6 +44,7 @@ export const useInstallFeedpack = (): ((slug: string, target: FeedpackInstallTar
     },
   });
   const { mutateAsync } = mutation;
+  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
   return useCallback((slug: string, target: FeedpackInstallTarget) => mutateAsync({ slug, target }), [mutateAsync]);
 };
 
