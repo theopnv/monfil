@@ -78,7 +78,7 @@ You do not need to find a feed URL. Paste the link of the page that you read, an
 
 ## Guides
 
-- [Install Monfil](doc/src/content/docs/user-guide/install.md). On Windows, get it from the [Microsoft Store](https://apps.microsoft.com/detail/9P4FZNFBR29Q).
+- [Install Monfil](doc/src/content/docs/user-guide/install.md). On Windows, get it from the [Microsoft Store](https://apps.microsoft.com/detail/9P4FZNFBR29Q) or run `winget install --id 9P4FZNFBR29Q --source msstore`.
 - [Use Monfil](doc/src/content/docs/user-guide/home.md)
 - [Supported sources](doc/src/content/docs/user-guide/supported-sources.md)
 - [Use cases](doc/src/content/docs/user-guide/use-cases.md)

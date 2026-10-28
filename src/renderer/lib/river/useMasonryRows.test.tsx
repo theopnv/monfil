@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { expect, test } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { useMasonryRows } from './useMasonryRows';
@@ -46,6 +46,19 @@ test('places cards that render later', async () => {
   await expect.poll(() => rect(2).top - rect(0).bottom).toBe(10);
 });
 
+test('moves the cards below a card that grows', async () => {
+  // Arrange
+  const { getByTestId, rerender } = await render(<Masonry heights={[100, 300, 100]} />);
+  const rect = (index: number) => getByTestId(`card-${index}`).element().getBoundingClientRect();
+  await expect.poll(() => rect(2).top - rect(0).bottom).toBe(10);
+
+  // Act
+  await rerender(<Masonry heights={[200, 300, 100]} />);
+
+  // Assert
+  await expect.poll(() => rect(2).top - rect(0).bottom).toBe(10);
+});
+
 test('clears row spans when disabled', async () => {
   // Arrange
   const { getByTestId, rerender } = await render(<Masonry heights={[100, 300, 100]} />);
@@ -56,4 +69,22 @@ test('clears row spans when disabled', async () => {
 
   // Assert
   expect(getByTestId('card-0').element().style.gridRowEnd).toBe('');
+});
+
+test('sizes the rows before a parent layout effect runs', async () => {
+  // Arrange
+  let heightSeenByParent = 0;
+  function Parent() {
+    const wrapper = useRef<HTMLDivElement>(null);
+    useLayoutEffect(() => {
+      heightSeenByParent = wrapper.current?.getBoundingClientRect().height ?? 0;
+    }, []);
+    return <div ref={wrapper}><Masonry heights={[100, 300, 100]} /></div>;
+  }
+
+  // Act
+  await render(<Parent />);
+
+  // Assert
+  expect(heightSeenByParent).toBe(310);
 });

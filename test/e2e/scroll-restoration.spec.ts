@@ -121,7 +121,36 @@ scrollRestorationTest('keeps the river scroll position after returning from the 
 
   await page.getByText('Article number 15', { exact: true }).evaluate((element) => (element as HTMLElement).click());
   await expect(page.getByRole('heading', { name: 'Article number 15' })).toBeVisible();
-  await page.getByRole('button', { name: 'Home' }).evaluate((element) => (element as HTMLElement).click());
+  await page.getByRole('button', { name: 'Home', exact: true }).evaluate((element) => (element as HTMLElement).click());
+  await expect(page.getByText('Article number 29', { exact: true })).toBeAttached();
+
+  // Assert
+  await expect.poll(() => riverScrollContainer(page).evaluate((element) => element.scrollTop)).toBe(scrollTopBeforeLeaving);
+});
+
+scrollRestorationTest('keeps the Magazine river scroll position after returning from the reader', async ({ feedServer, launchApp }) => {
+  // Arrange
+  const articles = Array.from({ length: 30 }, (_, index) => ({
+    title: `Article number ${index}`,
+    link: `http://127.0.0.1/article-${index}`,
+  }));
+  feedServer.publish(articles);
+  const page = await launchApp();
+  await page.evaluate(() => localStorage.setItem('preferences-density', JSON.stringify('Magazine')));
+  await page.reload();
+  await subscribe(page, feedServer.url);
+  await expect(page.getByText('Article number 0', { exact: true })).toBeAttached();
+  await riverScrollContainer(page).evaluate((element) => {
+    element.scrollTop = 1500;
+    element.dispatchEvent(new Event('scroll', { bubbles: true }));
+  });
+  const scrollTopBeforeLeaving = await riverScrollContainer(page).evaluate((element) => element.scrollTop);
+  expect(scrollTopBeforeLeaving).toBeGreaterThan(1000);
+
+  // Act
+  await page.getByText('Article number 15', { exact: true }).evaluate((element) => (element as HTMLElement).click());
+  await expect(page.getByRole('heading', { name: 'Article number 15' })).toBeVisible();
+  await page.getByRole('button', { name: 'Home', exact: true }).evaluate((element) => (element as HTMLElement).click());
   await expect(page.getByText('Article number 29', { exact: true })).toBeAttached();
 
   // Assert

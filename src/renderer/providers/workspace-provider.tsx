@@ -99,11 +99,11 @@ export const useReorderWorkspaces = (): ((orderedIds: number[]) => Promise<Resul
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: (orderedIds: number[]) => ipc.invoke('workspaces:reorder', { orderedIds }),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
-      }
+    onMutate: (orderedIds) => {
+      // Stryker disable next-line ConditionalExpression: the rail can only be dragged once the list has loaded
+      queryClient.setQueryData<WorkspaceSummary[]>(queryKeys.workspaces, (current) => current && orderedIds.flatMap((id) => current.filter((workspace) => workspace.id === id)));
     },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.workspaces }),
   });
   const { mutateAsync } = mutation;
   // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
