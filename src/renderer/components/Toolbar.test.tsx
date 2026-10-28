@@ -61,6 +61,7 @@ let editWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let exportWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let deleteWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let invokeMock: ReturnType<typeof vi.fn>;
+let reorderResponse: Promise<Result<void, UpdateWorkspaceError>> | undefined;
 let installedCount: number;
 let feedpacks: { slug: string; title: string; description: string; tags: string[]; curator: string; sourceCount: number; updatedAt: string; opml: string }[];
 
@@ -74,6 +75,7 @@ beforeEach(() => {
   deleteWorkspaceRequestedHandler = undefined;
   feedpacks = [];
   installedCount = 1;
+  reorderResponse = undefined;
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
@@ -99,6 +101,14 @@ beforeEach(() => {
           workspaces = workspaces.filter((workspace) => workspace.id !== workspaceId);
         }
         return Promise.resolve(result);
+      }
+      case 'workspaces:reorder': {
+        if (reorderResponse) {
+          return reorderResponse;
+        }
+        const { orderedIds } = arg as { orderedIds: number[] };
+        workspaces = orderedIds.flatMap((id) => workspaces.filter((workspace) => workspace.id === id));
+        return Promise.resolve({ success: true, data: undefined });
       }
       case 'opml:export':
         return Promise.resolve({ success: true, data: undefined });
@@ -170,8 +180,9 @@ function renderApp(initialPath: string) {
     ),
   });
   const workspaceRoute = createRoute({ getParentRoute: () => rootRoute, path: '/workspace/$workspaceId', component: FeedsList });
+  const readerRoute = createRoute({ getParentRoute: () => rootRoute, path: '/workspace/$workspaceId/reader/$itemId', component: () => <p>Reader</p> });
   const router = createRouter({
-    routeTree: rootRoute.addChildren([workspaceRoute]),
+    routeTree: rootRoute.addChildren([workspaceRoute, readerRoute]),
     history: createMemoryHistory({ initialEntries: [initialPath] }),
   });
 
@@ -375,6 +386,190 @@ test('the modifier and a digit open the workspace at that position', async () =>
 
   // Assert
   await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
+});
+
+function railNames(container: HTMLElement): string[] {
+  return [...container.querySelectorAll('[aria-label="Workspaces"] a')].map((link) => link.getAttribute('aria-label') ?? '');
+}
+
+test('dragging a workspace icon onto the top of another moves it there', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' }), createWorkspace({ id: 3, name: 'Security' })];
+  const { getByRole, container } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'Security' })).toBeInTheDocument();
+
+  // Act
+  await userEvent.dragAndDrop(getByRole('link', { name: 'Security' }), getByRole('link', { name: 'Home' }), { targetPosition: { x: 18, y: 2 } });
+
+  // Assert
+  await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('workspaces:reorder', { orderedIds: [3, 1, 2] }));
+  await vi.waitFor(() => expect(railNames(container)).toEqual(['Security', 'Home', 'CI/CD watch']));
+});
+
+test('the drag handle moves a workspace with the keyboard', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' }), createWorkspace({ id: 3, name: 'Security' })];
+  const { getByRole, container } = await renderApp('/workspace/1');
+  await expect.element(getByRole('button', { name: 'Move Home' })).toBeInTheDocument();
+  (getByRole('button', { name: 'Move Home' }).element() as HTMLElement).focus();
+
+  // Act
+  await userEvent.keyboard('{Enter}');
+  await userEvent.keyboard('{ArrowDown}');
+  await userEvent.keyboard('{Enter}');
+
+  // Assert
+  await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('workspaces:reorder', { orderedIds: [2, 1, 3] }));
+  await vi.waitFor(() => expect(railNames(container)).toEqual(['CI/CD watch', 'Home', 'Security']));
+});
+
+test('dropping a workspace back where it was saves nothing', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  const { getByRole } = await renderApp('/workspace/1');
+  await expect.element(getByRole('button', { name: 'Move Home' })).toBeInTheDocument();
+  (getByRole('button', { name: 'Move Home' }).element() as HTMLElement).focus();
+
+  // Act
+  await userEvent.keyboard('{Enter}');
+  await expect.element(getByRole('button', { name: 'Insert between Home and CI/CD watch' })).toHaveFocus();
+  await userEvent.keyboard('{Enter}');
+
+  // Assert
+  await expect.element(getByRole('button', { name: 'Insert between Home and CI/CD watch' })).not.toBeInTheDocument();
+  expect(invokeMock).not.toHaveBeenCalledWith('workspaces:reorder', expect.anything());
+});
+
+test('the shortcut digits follow the new workspace order', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  feedsByWorkspace = { 2: [createFeed({ id: 2, title: 'Pack feed', workspaceId: 2 })] };
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+  await userEvent.dragAndDrop(getByRole('link', { name: 'CI/CD watch' }), getByRole('link', { name: 'Home' }), { targetPosition: { x: 18, y: 2 } });
+  await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('workspaces:reorder', { orderedIds: [2, 1] }));
+
+  // Act
+  await userEvent.keyboard(`{${MOD}>}1{/${MOD}}`);
+
+  // Assert
+  await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
+});
+
+test('pressing Enter on a focused workspace row opens it', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  feedsByWorkspace = { 2: [createFeed({ id: 2, title: 'Pack feed', workspaceId: 2 })] };
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+  await expect.element(getByRole('row', { name: 'CI/CD watch' })).toBeInTheDocument();
+  (getByRole('row', { name: 'CI/CD watch' }).element() as HTMLElement).focus();
+
+  // Act
+  await userEvent.keyboard('{Enter}');
+
+  // Assert
+  await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
+});
+
+test('marks the open workspace as the current page, also while reading one of its articles', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+
+  // Act
+  const workspacePage = await renderApp('/workspace/2');
+  await expect.element(workspacePage.getByRole('link', { name: 'CI/CD watch' })).toHaveAttribute('aria-current', 'page');
+  await expect.element(workspacePage.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
+  await workspacePage.unmount();
+  const readerPage = await renderApp('/workspace/2/reader/5');
+
+  // Assert
+  await expect.element(readerPage.getByRole('link', { name: 'CI/CD watch' })).toHaveAttribute('aria-current', 'page');
+  await expect.element(readerPage.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
+});
+
+test('moves the current page mark to the workspace that was opened', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  const { getByRole } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+
+  // Act
+  await getByRole('link', { name: 'CI/CD watch' }).click();
+
+  // Assert
+  await expect.element(getByRole('link', { name: 'CI/CD watch' })).toHaveAttribute('aria-current', 'page');
+  await expect.element(getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
+  await expect.element(getByRole('link', { name: 'CI/CD watch' })).toHaveClass('ring-2');
+  await expect.element(getByRole('link', { name: 'Home' })).not.toHaveClass('ring-2');
+});
+
+test('only the first nine workspaces get a shortcut', async () => {
+  // Arrange
+  workspaces = Array.from({ length: 10 }, (_, index) => createWorkspace({ id: index + 1, name: `Space ${index + 1}` }));
+  const { getByRole } = await renderApp('/workspace/1');
+  await getByRole('img', { name: 'Monfil' }).click();
+
+  // Act
+  await getByRole('link', { name: 'Space 10' }).hover();
+
+  // Assert
+  await expect.element(getByRole('tooltip')).toBeInTheDocument();
+  expect(getByRole('tooltip').element().textContent).toBe('Space 10');
+});
+
+test('shows the new workspace order before the save finishes', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' }), createWorkspace({ id: 3, name: 'Security' })];
+  reorderResponse = new Promise(() => undefined);
+  const { getByRole, container } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'Security' })).toBeInTheDocument();
+
+  // Act
+  await userEvent.dragAndDrop(getByRole('link', { name: 'Security' }), getByRole('link', { name: 'Home' }), { targetPosition: { x: 18, y: 2 } });
+
+  // Assert
+  await vi.waitFor(() => expect(railNames(container)).toEqual(['Security', 'Home', 'CI/CD watch']));
+});
+
+test('puts the workspaces back in their stored order when the save fails', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  let failSave: (result: Result<void, UpdateWorkspaceError>) => void = () => undefined;
+  reorderResponse = new Promise((resolve) => {
+    failSave = resolve;
+  });
+  const { getByRole, container } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'CI/CD watch' })).toBeInTheDocument();
+  await userEvent.dragAndDrop(getByRole('link', { name: 'CI/CD watch' }), getByRole('link', { name: 'Home' }), { targetPosition: { x: 18, y: 2 } });
+  await vi.waitFor(() => expect(railNames(container)).toEqual(['CI/CD watch', 'Home']));
+
+  const feedListCalls = () => invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:list').length;
+  const feedListCallsBefore = feedListCalls();
+
+  // Act
+  failSave({ success: false, error: { name: 'DB_ERROR', message: 'The database is locked.' } });
+
+  // Assert
+  await vi.waitFor(() => expect(railNames(container)).toEqual(['Home', 'CI/CD watch']));
+  expect(feedListCalls()).toBe(feedListCallsBefore);
+});
+
+test('highlights only the drop line the workspace would land on', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' }), createWorkspace({ id: 3, name: 'Security' })];
+  const { getByRole } = await renderApp('/workspace/1');
+  await expect.element(getByRole('button', { name: 'Move Home' })).toBeInTheDocument();
+  (getByRole('button', { name: 'Move Home' }).element() as HTMLElement).focus();
+
+  // Act
+  await userEvent.keyboard('{Enter}');
+  await userEvent.keyboard('{ArrowDown}');
+
+  // Assert
+  const line = (name: string) => getByRole('button', { name }).element().closest('[role="row"]');
+  await expect.element(getByRole('button', { name: 'Insert between CI/CD watch and Security' })).toHaveFocus();
+  expect(line('Insert between CI/CD watch and Security')).toHaveClass('h-0.5', 'bg-brand-solid');
+  expect(line('Insert after Security')).not.toHaveClass('bg-brand-solid');
+  await userEvent.keyboard('{Escape}');
 });
 
 test('the quick switcher filters workspaces by name and opens the chosen one', async () => {

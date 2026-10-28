@@ -66,7 +66,7 @@ sidebarTest('a long feed title stays inside the sidebar', async ({ page }) => {
   await page.getByRole('button', { name: 'Tech', exact: true }).click();
 
   // Assert
-  const list = await boxOf(page.getByRole('grid'));
+  const list = await boxOf(page.getByRole('grid', { name: 'Feeds' }));
   const row = await boxOf(page.getByRole('button', { name: new RegExp(`^${LONG_FEED_TITLE}`) }));
   expect(row.x + row.width).toBeLessThanOrEqual(list.x + list.width);
 });
@@ -79,7 +79,7 @@ sidebarTest('a long folder name is truncated to one line', async ({ page }) => {
   // Assert
   const longFolder = page.getByRole('button', { name: LONG_FOLDER_NAME, exact: true });
   await expect(longFolder).toBeVisible();
-  const list = await boxOf(page.getByRole('grid'));
+  const list = await boxOf(page.getByRole('grid', { name: 'Feeds' }));
   const longRow = await boxOf(longFolder);
   const shortRow = await boxOf(page.getByRole('button', { name: 'Tech', exact: true }));
   expect(longRow.x + longRow.width).toBeLessThanOrEqual(list.x + list.width);
