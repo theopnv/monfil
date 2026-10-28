@@ -70,6 +70,7 @@ interface MutationCase {
   channel: string;
   payload: unknown;
   invalidates: string[];
+  invalidatesOnFailure: string[];
 }
 
 const MUTATION_CASES: MutationCase[] = [
@@ -79,6 +80,7 @@ const MUTATION_CASES: MutationCase[] = [
     channel: 'workspaces:create',
     payload: { name: 'Work', icon: 'briefcase', color: 'red' },
     invalidates: ['workspaces'],
+    invalidatesOnFailure: [],
   },
   {
     name: 'useUpdateWorkspace',
@@ -86,6 +88,7 @@ const MUTATION_CASES: MutationCase[] = [
     channel: 'workspaces:update',
     payload: { workspaceId: 2, name: 'Play', color: 'green' },
     invalidates: ['workspaces'],
+    invalidatesOnFailure: [],
   },
   {
     name: 'useDeleteWorkspace',
@@ -93,6 +96,7 @@ const MUTATION_CASES: MutationCase[] = [
     channel: 'workspaces:delete',
     payload: { workspaceId: 2 },
     invalidates: ['categories', 'feeds', 'river', 'workspaces'],
+    invalidatesOnFailure: [],
   },
   {
     name: 'useReorderWorkspaces',
@@ -100,6 +104,8 @@ const MUTATION_CASES: MutationCase[] = [
     channel: 'workspaces:reorder',
     payload: { orderedIds: [3, 1, 2] },
     invalidates: ['workspaces'],
+    // The rail shows the new order before the save, so a failed save reloads the stored order.
+    invalidatesOnFailure: ['workspaces'],
   },
   {
     name: 'useMoveFeedToWorkspace',
@@ -107,10 +113,11 @@ const MUTATION_CASES: MutationCase[] = [
     channel: 'feeds:move-to-workspace',
     payload: { feedId: 9, fromWorkspaceId: 1, toWorkspaceId: 2, categoryName: 'Tech' },
     invalidates: ['categories', 'feeds', 'river', 'workspaces'],
+    invalidatesOnFailure: [],
   },
 ];
 
-describe.each(MUTATION_CASES)('$name', ({ run, channel, payload, invalidates }) => {
+describe.each(MUTATION_CASES)('$name', ({ run, channel, payload, invalidates, invalidatesOnFailure }) => {
   test('sends the request and refreshes the queries it changed', async () => {
     // Arrange
     const success = { success: true, data: { id: 2 } };
@@ -125,7 +132,7 @@ describe.each(MUTATION_CASES)('$name', ({ run, channel, payload, invalidates }) 
     expect(invalidatedQueries(queryClient)).toEqual(invalidates);
   });
 
-  test('returns the error and refreshes nothing when the request fails', async () => {
+  test('returns the error and refreshes only what a failure must restore', async () => {
     // Arrange
     invokeImpl = () => Promise.resolve(FAILURE);
 
@@ -134,7 +141,7 @@ describe.each(MUTATION_CASES)('$name', ({ run, channel, payload, invalidates }) 
 
     // Assert
     expect(returned).toEqual(FAILURE);
-    expect(invalidatedQueries(queryClient)).toEqual([]);
+    expect(invalidatedQueries(queryClient)).toEqual(invalidatesOnFailure);
   });
 });
 
