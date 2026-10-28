@@ -4,6 +4,7 @@ import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerMSIX } from '@electron-forge/maker-msix';
 import { MakerZIP } from '@electron-forge/maker-zip';
+import { MakerDMG } from '@electron-forge/maker-dmg';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
@@ -11,10 +12,31 @@ import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-nati
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
+const { APPLE_SIGNING_IDENTITY, APPLE_API_KEY, APPLE_API_KEY_ID, APPLE_API_ISSUER } = process.env;
+
+const notarization =
+  APPLE_API_KEY && APPLE_API_KEY_ID && APPLE_API_ISSUER
+    ? {
+      osxNotarize: {
+        appleApiKey: APPLE_API_KEY,
+        appleApiKeyId: APPLE_API_KEY_ID,
+        appleApiIssuer: APPLE_API_ISSUER,
+      },
+    }
+    : {};
+
+// Builds without a Developer ID identity stay unsigned so contributors can package locally.
+const macSigning = APPLE_SIGNING_IDENTITY
+  ? { osxSign: { identity: APPLE_SIGNING_IDENTITY, continueOnError: false }, ...notarization }
+  : {};
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     icon: 'assets/icons/icon',
+    appBundleId: 'com.theopnv.monfil',
+    appCategoryType: 'public.app-category.news',
+    ...macSigning,
     extraResource: ['assets/icons/icon.png', 'feedpacks', 'LICENSE', 'NOTICE'],
     // The Vite plugin's own `ignore` keeps only `.vite/**`, dropping node_modules entirely.
     // src/main/vite.config.mts marks a few packages (better-sqlite3, jsdom) as Rollup `external`
@@ -60,6 +82,7 @@ const config: ForgeConfig = {
       sign: false,
     }),
     new MakerZIP({}, ['darwin']),
+    new MakerDMG({ name: 'monfil-macos-arm64', title: 'Monfil', icon: 'assets/icons/icon.icns' }),
     new MakerRpm({ options: { icon: 'assets/icons/icon.png' } }),
     new MakerDeb({ options: { icon: 'assets/icons/icon.png' } }),
   ],

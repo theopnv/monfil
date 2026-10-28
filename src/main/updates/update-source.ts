@@ -4,8 +4,8 @@
 
 export const UPDATE_FEED_HOST = 'https://update.electronjs.org/theopnv/monfil';
 
-// macOS needs a signed app before Squirrel.Mac accepts an update, and Electron has no updater for Linux packages.
-const FEED_PLATFORMS: ReadonlySet<NodeJS.Platform> = new Set(['win32']);
+// Electron has no updater for Linux packages.
+const FEED_PLATFORMS: ReadonlySet<NodeJS.Platform> = new Set(['win32', 'darwin']);
 
 export interface UpdateEnvironment {
   platform: NodeJS.Platform;

@@ -31,6 +31,7 @@ jobs:
     with:
       full_matrix: true
       upload_package: true
+    secrets: inherit
 
   build:
     needs: test
@@ -39,6 +40,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    env:
+      APPLE_SIGNING_IDENTITY: ${{ matrix.os == 'macos-latest' && vars.APPLE_SIGNING_IDENTITY || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
@@ -52,7 +55,50 @@ jobs:
         shell: bash
         run: tar -xf packaged-app.tar
 
+      - if: env.APPLE_SIGNING_IDENTITY != ''
+        uses: ./.github/actions/apple-signing
+        with:
+          certificate: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          api-key: ${{ secrets.APPLE_API_KEY_P8 }}
+
+      # The e2e job signs the app but leaves notarization here, so a slow Apple queue does not hold up the tests.
+      - name: Notarize the app
+        if: env.APPLE_SIGNING_IDENTITY != ''
+        shell: bash
+        env:
+          APPLE_API_KEY_ID: ${{ vars.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ vars.APPLE_API_ISSUER }}
+        run: |
+          apps=$(find out -maxdepth 2 -name '*.app' -type d)
+          if [ "$(printf '%s\n' "$apps" | grep -c .)" -ne 1 ]; then
+            echo "::error::Expected one app bundle, found: $apps"
+            exit 1
+          fi
+          ditto -c -k --keepParent "$apps" "$RUNNER_TEMP/notarize-app.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarize-app.zip" --wait \
+            --key "$APPLE_API_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER"
+          xcrun stapler staple "$apps"
+
       - run: npm run make -- --skip-package
+
+      # Apple asks for the outer disk image to be signed and notarized too.
+      - name: Sign and notarize the disk image
+        if: env.APPLE_SIGNING_IDENTITY != ''
+        shell: bash
+        env:
+          APPLE_API_KEY_ID: ${{ vars.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ vars.APPLE_API_ISSUER }}
+        run: |
+          images=$(find out/make -name '*.dmg')
+          if [ "$(printf '%s\n' "$images" | grep -c .)" -ne 1 ]; then
+            echo "::error::Expected one disk image, found: $images"
+            exit 1
+          fi
+          codesign --sign "$APPLE_SIGNING_IDENTITY" --timestamp "$images"
+          xcrun notarytool submit "$images" --wait \
+            --key "$APPLE_API_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER"
+          xcrun stapler staple "$images"
 
       # The unsigned MSIX only installs through the Store, so it stays out of the GitHub release.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
