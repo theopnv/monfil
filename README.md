@@ -77,14 +77,6 @@ You do not need to find a feed URL. Paste the link of the page that you read, an
 | Substack and Google Alerts | The publication, or the alert feed | New posts, or new alerts |
 | Greenhouse, Lever, Ashby and other job postings providers | A company job board, such as `jobs.lever.co/spotify` | New job postings from that company |
 
-## Install
-
-- **macOS** (Apple silicon, macOS 13 or later): download [`monfil-macos-arm64.dmg`](https://github.com/theopnv/monfil/releases/latest/download/monfil-macos-arm64.dmg), open it, and drag Monfil to Applications.
-- **Windows** (10 or 11): get Monfil from the [Microsoft Store](https://apps.microsoft.com/detail/9P4FZNFBR29Q), or download the `Setup.exe` file from the [latest release](https://github.com/theopnv/monfil/releases/latest).
-- **Linux** (64-bit): download the `.deb` or `.rpm` file from the [latest release](https://github.com/theopnv/monfil/releases/latest) and open it with your software center.
-
-The [install guide](doc/src/content/docs/user-guide/install.md) gives each step.
-
 ## Guides
 
 - [Install Monfil](doc/src/content/docs/user-guide/install.md)
