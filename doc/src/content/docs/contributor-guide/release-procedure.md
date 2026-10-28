@@ -44,7 +44,7 @@ If a publish run fails, correct the failure and rerun the failed jobs for that t
 
 A release signs the macOS app with a Developer ID Application certificate and notarizes it with Apple. `forge.config.ts` signs only when `APPLE_SIGNING_IDENTITY` is set, so a local `npm run package` still makes an unsigned app. Notarization also needs `APPLE_API_KEY`, `APPLE_API_KEY_ID`, and `APPLE_API_ISSUER`.
 
-The e2e job in `.github/workflows/test.yml` packages the app, so it signs and notarizes the app during a release run on macOS. The macOS installer job in `.github/workflows/publish.yml` then signs, notarizes, and staples the DMG. The `.github/actions/apple-signing` action imports the certificate into a temporary keychain in both jobs.
+The e2e job in `.github/workflows/test.yml` packages the app, so it signs the app during a release run on macOS. Notarization can take a long time, so the e2e job does not do it. The macOS installer job in `.github/workflows/publish.yml` notarizes and staples the app, makes the ZIP and the DMG, then signs, notarizes, and staples the DMG. If Apple rejects a submission or takes too long, rerun only the failed installer job. The `.github/actions/apple-signing` action imports the certificate into a temporary keychain in both jobs.
 
 Add these repository variables:
 

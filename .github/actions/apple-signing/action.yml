@@ -1,7 +1,7 @@
 name: Apple signing
 description: >
-  Imports the Developer ID Application certificate into a temporary keychain and writes the
-  App Store Connect API key to a file. Sets APPLE_API_KEY to that file's path.
+  Imports the Developer ID Application certificate into a temporary keychain. When an
+  App Store Connect API key is given, writes it to a file and sets APPLE_API_KEY to that path.
 
 inputs:
   certificate:
@@ -11,8 +11,9 @@ inputs:
     description: Password of the .p12 file
     required: true
   api-key:
-    description: Base64 of the App Store Connect API key (.p8)
-    required: true
+    description: Base64 of the App Store Connect API key (.p8), needed only to notarize
+    required: false
+    default: ''
 
 runs:
   using: composite
@@ -35,5 +36,7 @@ runs:
         security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
         rm "$RUNNER_TEMP/certificate.p12"
 
-        echo "$API_KEY" | base64 --decode > "$RUNNER_TEMP/notary-api-key.p8"
-        echo "APPLE_API_KEY=$RUNNER_TEMP/notary-api-key.p8" >> "$GITHUB_ENV"
+        if [ -n "$API_KEY" ]; then
+          echo "$API_KEY" | base64 --decode > "$RUNNER_TEMP/notary-api-key.p8"
+          echo "APPLE_API_KEY=$RUNNER_TEMP/notary-api-key.p8" >> "$GITHUB_ENV"
+        fi
