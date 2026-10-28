@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+// Stryker disable next-line ConditionalExpression: the renderer only runs in a browser, where navigator is always defined
 const IS_MAC = typeof navigator !== 'undefined' && navigator.userAgent.includes('Mac');
 
 /** The label of the platform's shortcut modifier: ⌘ on macOS, Ctrl elsewhere. */
