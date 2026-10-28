@@ -1,48 +1,72 @@
 ---
 title: Install Monfil
-description: Download Monfil for macOS, Windows, or Linux.
+description: Download and install Monfil on macOS, Windows, or Linux.
 ---
 
-On Windows, get Monfil from the [Microsoft Store](https://apps.microsoft.com/detail/9P4FZNFBR29Q). The Store installs Monfil with no security warning and keeps it up to date.
+Monfil is free. Pick your system:
 
-To install the Store version from a terminal, run this command:
+- [macOS](#macos)
+- [Windows](#windows)
+- [Linux](#linux)
 
-```sh
-winget install --id 9P4FZNFBR29Q --source msstore
-```
+## macOS
 
-The Store updates this copy automatically. To update it yourself, run `winget upgrade --id 9P4FZNFBR29Q`.
+You need a Mac with Apple silicon (M1 or later) and macOS 13 Ventura or later. To check, open the Apple menu and select **About This Mac**. The **Chip** line must start with **Apple**.
 
-For macOS, Linux, or the Windows setup file:
+1. Open the [latest Monfil release](https://github.com/theopnv/monfil/releases/latest).
+2. Under **Assets**, download the file that ends in `.dmg`.
+3. Open the downloaded file. A window with the Monfil icon and an Applications folder appears.
+4. Drag the Monfil icon onto the Applications folder.
+5. Close the window, then eject the Monfil disk in the Finder sidebar.
+6. Open Monfil from your Applications folder or from Launchpad.
 
-1. Open the [Monfil releases](https://github.com/theopnv/monfil/releases) and select the latest release.
-2. Download the file for your system:
-    - Choose the DMG for macOS
-    - Choose the setup file for Windows
-    - Choose the DEB package for Debian or Ubuntu
-    - Choose the RPM package for Fedora or RHEL
-3. Install it with your system's usual installer. On macOS, open the DMG and drag Monfil to the Applications folder.
+Apple checked this version of Monfil, so macOS opens it without a security warning.
 
-The macOS app and the Windows setup file install a copy of Monfil that updates itself. On macOS, open Monfil from the Applications folder, not from the DMG, so that it can update. When an update is ready, Monfil shows a message with a **Restart** button.
+Monfil updates itself. When a new version is ready, a message with a **Restart** button appears. Select **Restart** to finish the update. Updates work only when you open Monfil from the Applications folder.
 
-## System warnings
+## Windows
 
-The macOS app is signed with an Apple Developer ID and notarized by Apple, so macOS opens it without a warning.
+Monfil works on Windows 10 and Windows 11.
 
-The Windows setup file isn't code-signed. Windows flags it as coming from an "unidentified developer." This is a warning about the *lack of a paid signature*, not a sign that the app is unsafe: every line of monfil's code is public in this repository for anyone to read, and the [release build](https://github.com/theopnv/monfil/blob/main/.github/workflows/publish.yml) is produced straight from that source, in the open, by GitHub's own servers.
+### Microsoft Store (recommended)
 
-The Microsoft Store version does not show this warning. If you use the Windows setup file, SmartScreen may show **Windows protected your PC**. Select **More info**, then **Run anyway**.
+1. Open [Monfil in the Microsoft Store](https://apps.microsoft.com/detail/9P4FZNFBR29Q).
+2. Select **Get** or **Install**.
+3. Open Monfil from the Start menu.
 
-On Linux, install the package with your package manager. From the folder that holds one Monfil DEB file, run this command on Debian or Ubuntu:
+The Store keeps Monfil up to date.
 
-```sh
-sudo apt install ./monfil_*.deb
-```
+### Setup file
 
-For Fedora or RHEL, run this command from the folder that holds one Monfil RPM file:
+Use this option if you cannot use the Microsoft Store.
 
-```sh
-sudo rpm -i ./monfil-*.rpm
-```
+1. Open the [latest Monfil release](https://github.com/theopnv/monfil/releases/latest).
+2. Under **Assets**, download the file that ends in `Setup.exe`.
+3. Open the downloaded file. Monfil installs and opens.
 
-After installation, follow [Use Monfil](../home/) to add feeds and set up a workspace.
+Windows may show **Windows protected your PC**, because this file has no paid signature. Select **More info**, then **Run anyway**. The Store version does not show this message.
+
+Monfil updates itself. When a new version is ready, a message with a **Restart** button appears. Select **Restart** to finish the update.
+
+## Linux
+
+Monfil works on 64-bit Intel and AMD computers.
+
+1. Open the [latest Monfil release](https://github.com/theopnv/monfil/releases/latest).
+2. Under **Assets**, download the file for your system:
+    - On Debian, Ubuntu, or Linux Mint, the file that ends in `.deb`.
+    - On Fedora, RHEL, or openSUSE, the file that ends in `.rpm`.
+3. Open the downloaded file with your software center, or install it from a terminal in your Downloads folder:
+    - On Debian, Ubuntu, or Linux Mint: `sudo apt install ./monfil_*.deb`
+    - On Fedora or RHEL: `sudo dnf install ./monfil-*.rpm`
+4. Open Monfil from your applications menu.
+
+Monfil does not update itself on Linux. To update, download and install the new file from the latest release.
+
+## Is Monfil safe?
+
+The code of Monfil is public, and anyone can read it. GitHub builds each release from that code with a [public workflow](https://github.com/theopnv/monfil/blob/main/.github/workflows/publish.yml).
+
+## Next step
+
+Follow [Use Monfil](../home/) to add feeds and set up a workspace.
