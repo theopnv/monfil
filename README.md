@@ -6,8 +6,10 @@
 
 <p align="center">Keep track of what matters to you and stay ahead.</p>
 <p align="center">
+  <a href="https://github.com/theopnv/monfil/releases/latest/download/monfil-macos-arm64.dmg"><img src="./assets/badges/macos-download.svg" width="200" alt="Download Monfil for macOS"></a>
   <a href="https://apps.microsoft.com/detail/9P4FZNFBR29Q?mode=direct"><img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" alt="Get Monfil from the Microsoft Store"></a>
 </p>
+<p align="center"><sub>macOS: Apple silicon, macOS 13 or later. Linux and other files: <a href="https://github.com/theopnv/monfil/releases/latest">latest release</a>.</sub></p>
 <p align="center">
   <a href="https://github.com/theopnv/monfil/releases/latest"><img src="https://img.shields.io/github/v/release/theopnv/monfil" alt="Latest release"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-BUSL--1.1-blue" alt="License: BUSL-1.1"></a>
@@ -77,7 +79,7 @@ You do not need to find a feed URL. Paste the link of the page that you read, an
 
 ## Install
 
-- **macOS** (Apple silicon, macOS 13 or later): download the `.dmg` file from the [latest release](https://github.com/theopnv/monfil/releases/latest), open it, and drag Monfil to Applications.
+- **macOS** (Apple silicon, macOS 13 or later): download [`monfil-macos-arm64.dmg`](https://github.com/theopnv/monfil/releases/latest/download/monfil-macos-arm64.dmg), open it, and drag Monfil to Applications.
 - **Windows** (10 or 11): get Monfil from the [Microsoft Store](https://apps.microsoft.com/detail/9P4FZNFBR29Q), or download the `Setup.exe` file from the [latest release](https://github.com/theopnv/monfil/releases/latest).
 - **Linux** (64-bit): download the `.deb` or `.rpm` file from the [latest release](https://github.com/theopnv/monfil/releases/latest) and open it with your software center.
 

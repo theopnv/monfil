@@ -13,12 +13,11 @@ Monfil is free. Pick your system:
 
 You need a Mac with Apple silicon (M1 or later) and macOS 13 Ventura or later. To check, open the Apple menu and select **About This Mac**. The **Chip** line must start with **Apple**.
 
-1. Open the [latest Monfil release](https://github.com/theopnv/monfil/releases/latest).
-2. Under **Assets**, download the file that ends in `.dmg`.
-3. Open the downloaded file. A window with the Monfil icon and an Applications folder appears.
-4. Drag the Monfil icon onto the Applications folder.
-5. Close the window, then eject the Monfil disk in the Finder sidebar.
-6. Open Monfil from your Applications folder or from Launchpad.
+1. Download [`monfil-macos-arm64.dmg`](https://github.com/theopnv/monfil/releases/latest/download/monfil-macos-arm64.dmg) from the latest release.
+2. Open the downloaded file. A window with the Monfil icon and an Applications folder appears.
+3. Drag the Monfil icon onto the Applications folder.
+4. Close the window, then eject the Monfil disk in the Finder sidebar.
+5. Open Monfil from your Applications folder or from Launchpad.
 
 Apple checked this version of Monfil, so macOS opens it without a security warning.
 
