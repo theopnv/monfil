@@ -78,6 +78,22 @@ describe('getReaderNavigation', () => {
     expect(result.nextUnread?.id).toBe(2);
   });
 
+  test('nextUnread is the item after the current one when nothing is read', () => {
+    // Act
+    const result = getReaderNavigation(items, 2, neverRead);
+
+    // Assert
+    expect(result.nextUnread?.id).toBe(3);
+  });
+
+  test('the last item has no nextUnread, even when it is unread', () => {
+    // Act
+    const result = getReaderNavigation(items, 3, neverRead);
+
+    // Assert
+    expect(result.nextUnread).toBeUndefined();
+  });
+
   test('an unknown currentId returns undefined for every field', () => {
     // Act
     const result = getReaderNavigation(items, 999, neverRead);
@@ -113,6 +129,30 @@ describe('deriveStandfirst', () => {
 
     // Assert
     expect(result).toBeUndefined();
+  });
+
+  test('keeps text that is exactly as long as the limit', () => {
+    // Act
+    const result = deriveStandfirst('abcd efgh', 9);
+
+    // Assert
+    expect(result).toBe('abcd efgh');
+  });
+
+  test('cuts a single long word at the limit', () => {
+    // Act
+    const result = deriveStandfirst('abcdefghij', 5);
+
+    // Assert
+    expect(result).toBe('abcde…');
+  });
+
+  test('drops all spaces that precede the cut', () => {
+    // Act
+    const result = deriveStandfirst('aaa  bbbbbbbb', 8);
+
+    // Assert
+    expect(result).toBe('aaa…');
   });
 });
 
