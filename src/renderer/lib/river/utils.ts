@@ -54,6 +54,7 @@ export function describeRiverCard(item: RiverRow, read: boolean): string {
 const WORDS_PER_MINUTE = 200;
 
 export function estimateReadTime(input: string | number): string {
+  // Stryker disable next-line MethodExpression,Regex: blank pieces from edge or repeated whitespace are removed by filter(Boolean), and an empty text rounds up to 1 min anyway
   const wordCount = typeof input === 'number' ? input : input.trim().split(/\s+/).filter(Boolean).length;
   const minutes = Math.max(1, Math.round(wordCount / WORDS_PER_MINUTE));
   return `${minutes} min read`;
