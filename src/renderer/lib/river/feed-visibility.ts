@@ -29,6 +29,7 @@ export function toggleHidden(current: FeedVisibility | "mixed"): FeedVisibility 
 
 /** The shared state of a folder's feeds, or `mixed`. An empty folder is `home`. */
 export function folderVisibility(feeds: FeedSummary[], showOnlyLinks: ReadonlySet<string>): FeedVisibility | "mixed" {
+  // Stryker disable next-line ConditionalExpression,BlockStatement: with no feeds, the guard below returns "home" as well
   if (feeds.length === 0) {
     return "home";
   }
