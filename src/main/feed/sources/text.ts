@@ -11,6 +11,16 @@ export function decodeText(text: string): string {
   return decode(text, EntityLevel.HTML);
 }
 
+const LINE_BREAK_TAG_REGEX = /<br\b[^>]*>/gi;
+// Only known element names, so a title like "Vector<T>" keeps its brackets.
+const TITLE_TAG_REGEX = /<\/?(?:a|abbr|b|big|cite|code|del|div|em|font|h[1-6]|i|img|ins|kbd|mark|p|q|s|samp|small|span|strike|strong|sub|sup|time|tt|u|var|wbr)\b[^>]*>/gi;
+
+/** Decodes a title and removes the HTML tags that some feeds put in it, though titles are plain text. */
+export function decodeTitle(text: string): string {
+  const withoutTags = removeAll(decodeText(text).replace(LINE_BREAK_TAG_REGEX, ' '), TITLE_TAG_REGEX);
+  return withoutTags.replace(/\s+/g, ' ').trim();
+}
+
 export function decodeOptional(text: string | undefined): string | undefined {
   return text === undefined ? undefined : decodeText(text);
 }
