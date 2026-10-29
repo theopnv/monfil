@@ -35,6 +35,7 @@ export function computePublishRate(items: StatItem[]): string {
 }
 
 export function computeFeedContentType(items: StatItem[]): 'Full text' | 'Excerpt' {
+  // Stryker disable next-line ConditionalExpression,BlockStatement: with no items the average is NaN, which is below the threshold, so 'Excerpt' follows anyway
   if (items.length === 0) {
     return 'Excerpt';
   }

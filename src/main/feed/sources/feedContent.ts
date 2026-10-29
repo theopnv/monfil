@@ -4,7 +4,7 @@
 
 import { parseFeed } from 'feedsmith';
 import { extractAtomImageUrl, extractImageUrl, extractJsonImageUrl, extractRdfImageUrl } from './extractImage';
-import { decodeOptional, decodeText, resolveGuid } from './text';
+import { decodeOptional, decodeText, decodeTitle, resolveGuid } from './text';
 import type { ParsedFeedContent } from './types';
 
 /** Parses RSS, Atom, RDF or JSON Feed content. Throws on content that is none of them. */
@@ -18,7 +18,7 @@ export function parseFeedContent(content: string): ParsedFeedContent | null {
         siteLink: feed.link,
         items: feed.items
           ? feed.items.map(item => {
-            const title = decodeText(item.title ?? 'No title');
+            const title = decodeTitle(item.title ?? 'No title');
             const pubDate = item.pubDate ?? 'No publication date';
             return {
               title,
@@ -41,7 +41,7 @@ export function parseFeedContent(content: string): ParsedFeedContent | null {
         siteLink: feed.links?.find(link => link.rel === 'alternate' || !link.rel)?.href,
         items: feed.entries
           ? feed.entries.map(entry => {
-            const title = decodeText(entry.title?.value ?? 'No title');
+            const title = decodeTitle(entry.title?.value ?? 'No title');
             const pubDate = entry.published ?? entry.updated ?? 'No publication date';
             const link = entry.links?.find(link => link.rel === 'alternate' || !link.rel)?.href ?? entry.links?.[0]?.href;
             return {
@@ -65,7 +65,7 @@ export function parseFeedContent(content: string): ParsedFeedContent | null {
         siteLink: feed.link,
         items: feed.items
           ? feed.items.map(item => {
-            const title = decodeText(item.title ?? 'No title');
+            const title = decodeTitle(item.title ?? 'No title');
             const pubDate = item.dc?.dates?.[0] ?? 'No publication date';
             return {
               title,
@@ -88,7 +88,7 @@ export function parseFeedContent(content: string): ParsedFeedContent | null {
         siteLink: feed.home_page_url,
         items: feed.items
           ? feed.items.map(item => {
-            const title = decodeText(item.title ?? 'No title');
+            const title = decodeTitle(item.title ?? 'No title');
             const pubDate = item.date_published ?? 'No publication date';
             return {
               title,

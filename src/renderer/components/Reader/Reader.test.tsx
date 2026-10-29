@@ -63,7 +63,7 @@ function createRow(feed: FeedSummary, overrides: Partial<RiverRow> & { descripti
 
 let allFeeds: FeedSummary[];
 let allRows: RiverRow[];
-let itemBodyOverride: ItemBody | undefined | 'pending';
+let itemBodyOverride: ItemBody | undefined | 'pending' | 'failed';
 
 function computeRiverPage(query: RiverQuery, saved = false): RiverPage {
   let candidates = saved ? allRows.filter((row) => row.savedAt != null) : allRows;
@@ -208,6 +208,9 @@ beforeEach(() => {
       case 'items:get-content': {
         if (itemBodyOverride === 'pending') {
           return new Promise(() => { });
+        }
+        if (itemBodyOverride === 'failed') {
+          return Promise.reject(new Error('offline'));
         }
         if (itemBodyOverride) {
           return Promise.resolve(itemBodyOverride);
@@ -519,6 +522,19 @@ test('shows the feed description and a note when the article is unavailable', as
   // Assert
   await expect.element(getByText('The full article could not be loaded. Read it at the source instead.', { exact: true })).toBeInTheDocument();
   await expect.element(getByTestId('article-body').getByText(`Item ${itemB.id} description`, { exact: true })).toBeInTheDocument();
+});
+
+test('shows a note to read the item at the source when its content cannot be loaded', async () => {
+  // Arrange
+  const { itemB } = setUpThreeItemRiver();
+  itemBodyOverride = 'failed';
+
+  // Act
+  const { getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
+
+  // Assert
+  await expect.element(getByText('This item could not be loaded. Read it at the source instead.', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('The full article could not be loaded. Read it at the source instead.', { exact: true })).not.toBeInTheDocument();
 });
 
 test('shows a linkified description for a youtube item, with no unavailable message or duplicated standfirst', async () => {

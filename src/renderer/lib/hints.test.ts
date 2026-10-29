@@ -76,6 +76,22 @@ describe('readHintsState', () => {
     expect(readHintsState()).toEqual({ initialized: true, seen: ['add-feed'] });
   });
 
+  test('treats a stored null as uninitialized', () => {
+    // Arrange
+    localStorage.setItem(HINTS_STORAGE_KEY, 'null');
+
+    // Assert
+    expect(readHintsState()).toEqual({ initialized: false, seen: [] });
+  });
+
+  test.each([false, 'true', 1])('reads initialized %j as not initialized', (initialized) => {
+    // Arrange
+    localStorage.setItem(HINTS_STORAGE_KEY, JSON.stringify({ initialized, seen: ['add-feed'] }));
+
+    // Assert
+    expect(readHintsState()).toEqual({ initialized: false, seen: ['add-feed'] });
+  });
+
   test('treats a malformed value as uninitialized', () => {
     // Arrange
     localStorage.setItem(HINTS_STORAGE_KEY, JSON.stringify(['add-feed']));

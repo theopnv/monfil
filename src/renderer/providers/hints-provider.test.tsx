@@ -133,6 +133,73 @@ describe('HintsProvider on a fresh profile', () => {
     await expect.element(getByLabelText('workspace state')).toHaveTextContent('closed');
   });
 
+  test('an anchor that unmounts no longer counts as mounted', async () => {
+    // Arrange
+    const renders: boolean[] = [];
+    function Logged() {
+      const { isOpen } = useHint('add-feed', { ready: false });
+      renders.push(isOpen);
+      return null;
+    }
+    function Stages() {
+      const [stage, setStage] = useState<'first' | 'none' | 'second'>('first');
+      return (
+        <>
+          <button type="button" onClick={() => setStage('none')}>Unmount</button>
+          <button type="button" onClick={() => setStage('second')}>Mount other</button>
+          {stage === 'first' && <Probe id="add-feed" />}
+          {stage === 'second' && <Logged />}
+        </>
+      );
+    }
+    const { getByLabelText, getByRole } = await renderWithQueryClient(<HintsProvider><Stages /></HintsProvider>);
+    await expect.element(getByLabelText('add-feed state')).toHaveTextContent('open');
+    await getByRole('button', { name: 'Unmount' }).click();
+    await expect.element(getByLabelText('add-feed state')).not.toBeInTheDocument();
+
+    // Act
+    await getByRole('button', { name: 'Mount other' }).click();
+
+    // Assert
+    expect(renders.length).toBeGreaterThan(0);
+    expect(renders).not.toContain(true);
+  });
+
+  test('the dismiss of a hint follows the id the component gives', async () => {
+    // Arrange
+    localStorage.setItem(HINTS_STORAGE_KEY, JSON.stringify({ initialized: true, seen: ['add-feed'] }));
+    function Switching() {
+      const [id, setId] = useState<HintId>('add-feed');
+      return (
+        <>
+          <button type="button" onClick={() => setId('filter')}>Use filter</button>
+          <Probe id={id} />
+        </>
+      );
+    }
+    const { getByRole } = await renderWithQueryClient(<HintsProvider><Switching /></HintsProvider>);
+    await getByRole('button', { name: 'Use filter' }).click();
+
+    // Act
+    await getByRole('button', { name: 'Got it filter' }).click();
+
+    // Assert
+    await vi.waitFor(() => expect(storedState()?.seen).toEqual(['add-feed', 'filter']));
+  });
+
+  test('a failed first-run check logs a warning and keeps the hints closed', async () => {
+    // Arrange
+    invokeMock.mockImplementation((channel: string) => (channel === 'app:hints-enabled' ? Promise.reject(new Error('offline')) : Promise.resolve(undefined)));
+
+    // Act
+    const { getByLabelText } = await renderWithQueryClient(<HintsProvider><AllProbes /></HintsProvider>);
+
+    // Assert
+    await vi.waitFor(() => expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('log:write', expect.objectContaining({ level: 'warn' })));
+    await expect.element(getByLabelText('add-feed state')).toHaveTextContent('closed');
+    expect(storedState()).toBeNull();
+  });
+
   test('the first run is recorded', async () => {
     // Act
     const { getByLabelText } = await renderWithQueryClient(<HintsProvider><AllProbes /></HintsProvider>);

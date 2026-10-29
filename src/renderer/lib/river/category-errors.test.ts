@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { categoryErrorPolicy } from './category-errors';
+import { categoryErrorMessage, categoryErrorPolicy } from './category-errors';
 
 describe('category error policy', () => {
   test('uses a field for input errors', () => {
@@ -15,6 +15,18 @@ describe('category error policy', () => {
 
     // Assert
     expect(surfaces).toEqual(['field', 'field']);
+  });
+
+  test.each([
+    { name: 'CATEGORY_NOT_FOUND', expected: 'That folder no longer exists.' },
+    { name: 'DUPLICATE_NAME', expected: 'A folder with that name already exists.' },
+    { name: 'DB_ERROR', expected: 'The folder could not be saved.' },
+  ] as const)('shows the folder message for $name, not the raw error text', ({ name, expected }) => {
+    // Act
+    const message = categoryErrorMessage({ name, message: 'SQLITE_CONSTRAINT: raw detail' });
+
+    // Assert
+    expect(message).toBe(expected);
   });
 
   test('uses a safe toast for database errors', () => {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { describeRiverCard, estimateReadTime, formatRelativeTime } from './utils';
 import type { RiverRow } from '../../../shared/contracts';
 
@@ -24,6 +24,42 @@ function createRow(overrides: Partial<RiverRow> = {}): RiverRow {
     ...overrides,
   };
 }
+
+describe('formatRelativeTime boundaries', () => {
+  const NOW = Date.UTC(2026, 5, 15, 12, 0, 0);
+  const MINUTE = 60 * 1000;
+  const HOUR = 60 * MINUTE;
+  const DAY = 24 * HOUR;
+
+  beforeEach(() => {
+    vi.useFakeTimers({ now: NOW });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test.each([
+    { label: 'one minute', age: MINUTE, expected: '1m' },
+    { label: 'one hour', age: HOUR, expected: '1h' },
+    { label: 'one day', age: DAY, expected: '1d' },
+    { label: 'six days and 23 hours', age: 7 * DAY - HOUR, expected: '6d' },
+  ])('$label old reads $expected', ({ age, expected }) => {
+    // Act
+    const result = formatRelativeTime(NOW - age);
+
+    // Assert
+    expect(result).toBe(expected);
+  });
+
+  test('exactly one week old is a locale date', () => {
+    // Act
+    const result = formatRelativeTime(NOW - 7 * DAY);
+
+    // Assert
+    expect(result).toBe(new Date(NOW - 7 * DAY).toLocaleDateString());
+  });
+});
 
 describe('formatRelativeTime', () => {
   test('shows "now" for the current moment', () => {
@@ -80,6 +116,17 @@ describe('describeRiverCard', () => {
 
     // Assert
     expect(result).toBe(`A headline, unread, from Feed A, ${formatRelativeTime(row.publishedAt)}.`);
+  });
+
+  test('says read for a read item', () => {
+    // Arrange
+    const row = createRow({ title: 'A headline', feedTitle: 'Feed A', publishedAt: Date.now() });
+
+    // Act
+    const result = describeRiverCard(row, true);
+
+    // Assert
+    expect(result).toBe(`A headline, read, from Feed A, ${formatRelativeTime(row.publishedAt)}.`);
   });
 });
 

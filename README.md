@@ -15,7 +15,8 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-BUSL--1.1-blue" alt="License: BUSL-1.1"></a>
   <a href="https://lavendercauliflower2001.grafana.net/public-dashboards/9bfc15b30c3e45be9ac40bcb3419c01b"><img src="https://img.shields.io/badge/devanalytics-dashboard-F46800?logo=grafana&amp;logoColor=white" alt="Dev analytics dashboard"></a>
   <a href="https://lavendercauliflower2001.grafana.net/public-dashboards/9bfc15b30c3e45be9ac40bcb3419c01b"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fmonfil-devanalytics.tpenavaire.workers.dev%2Fcoverage%2Fbadge" alt="Test coverage"></a>
-  <a href="https://dashboard.stryker-mutator.io/reports/github.com/theopnv/monfil/main"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Ftheopnv%2Fmonfil%2Fmain" alt="Mutation score"></a>
+  <a href="https://dashboard.stryker-mutator.io/reports/github.com/theopnv/monfil/main?module=unit"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Ftheopnv%2Fmonfil%2Fmain%3Fmodule%3Dunit&amp;label=mutation%20score%20(unit)" alt="Mutation score of the unit suite"></a>
+  <a href="https://dashboard.stryker-mutator.io/reports/github.com/theopnv/monfil/main?module=integration"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Ftheopnv%2Fmonfil%2Fmain%3Fmodule%3Dintegration&amp;label=mutation%20score%20(renderer)" alt="Mutation score of the renderer suite"></a>
 </p>
 <p align="center"><a href="doc/src/content/docs/user-guide/install.md">Install Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="doc/src/content/docs/contributor-guide/home.md">Contribute</a></p>
 

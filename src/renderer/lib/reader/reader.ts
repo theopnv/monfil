@@ -34,6 +34,7 @@ export function deriveStandfirst(strippedDescription: string, maxLength = 200): 
 
   const truncated = trimmed.slice(0, maxLength);
   const lastSpace = truncated.lastIndexOf(' ');
+  // Stryker disable next-line EqualityOperator: the trimmed text never starts with a space, so lastSpace is never 0
   const boundary = lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated;
   return `${boundary.trimEnd()}…`;
 }

@@ -20,6 +20,7 @@ export function notifyWarning(message: string, key = message, action?: { label: 
   }
   activeKeys.add(key);
   const description = descriptionLines?.length ? <>{descriptionLines.map((line) => <div key={line}>{line}</div>)}</> : undefined;
+  // Stryker disable next-line ArrowFunction: the duration is Infinity, so a warning never auto-closes and onAutoClose never runs
   toast.warning(message, { id: key, action, description, closeButton: true, duration: Infinity, onDismiss: () => activeKeys.delete(key), onAutoClose: () => activeKeys.delete(key) });
 }
 
@@ -34,7 +35,6 @@ export function notifyUndo(message: string, onUndo: () => void): void {
 }
 
 export function dismissAllNotifications(): void {
-  activeKeys.clear();
   toast.dismiss();
 }
 

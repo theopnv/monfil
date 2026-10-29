@@ -142,6 +142,18 @@ describe('folderVisibility', () => {
     // Act & Assert
     expect(folderVisibility(feeds, new Set())).toBe('mixed');
   });
+
+  test('a folder is mixed when only one feed differs from the first', () => {
+    // Arrange
+    const feeds = [
+      createFeed({ id: 1 }),
+      createFeed({ id: 2, link: 'https://b.example/feed', showInWorkspace: 0 }),
+      createFeed({ id: 3, link: 'https://c.example/feed' }),
+    ];
+
+    // Act & Assert
+    expect(folderVisibility(feeds, new Set())).toBe('mixed');
+  });
 });
 
 describe('visibleFeedIds', () => {

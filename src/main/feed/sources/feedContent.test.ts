@@ -13,6 +13,14 @@ const rdf = (body: string) => `<?xml version="1.0"?><rdf:RDF xmlns:rdf="http://w
 const json = (feed: object) => JSON.stringify({ version: 'https://jsonfeed.org/version/1.1', ...feed });
 
 describe('parseFeedContent rss', () => {
+  test('removes the HTML tags of an item title in CDATA', () => {
+    // Act
+    const parsed = parseFeedContent(rss('<title>T</title><item><title><![CDATA[<b>First</b> catch]]></title></item>'));
+
+    // Assert
+    expect(parsed?.items[0]?.title).toBe('First catch');
+  });
+
   test('reads the feed and a complete item', () => {
     // Arrange
     const content = rss(`<title><![CDATA[Fish &#038; Chips]]></title><description>All about fish</description><link>https://fish.example/</link>
@@ -75,6 +83,17 @@ describe('parseFeedContent rss', () => {
 });
 
 describe('parseFeedContent atom', () => {
+  test('removes the HTML tags of an escaped entry title', () => {
+    // Arrange
+    const content = atom('<title>T</title><entry><id>x</id><title>&lt;p&gt;Mobile development in Unreal Engine&lt;/p&gt;</title></entry>');
+
+    // Act
+    const parsed = parseFeedContent(content);
+
+    // Assert
+    expect(parsed?.items[0]?.title).toBe('Mobile development in Unreal Engine');
+  });
+
   test('reads the feed and a complete entry', () => {
     // Arrange
     const content = atom(`<title>Fish &amp;amp; Chips</title><subtitle>All about fish</subtitle>
@@ -171,6 +190,14 @@ describe('parseFeedContent atom', () => {
 });
 
 describe('parseFeedContent rdf', () => {
+  test('removes the HTML tags of an escaped item title', () => {
+    // Act
+    const parsed = parseFeedContent(rdf('<channel rdf:about="https://old.example/"><title>T</title></channel><item><title>&lt;i&gt;One&lt;/i&gt;</title></item>'));
+
+    // Assert
+    expect(parsed?.items[0]?.title).toBe('One');
+  });
+
   test('reads the feed and an item', () => {
     // Arrange
     const content = rdf(`<channel rdf:about="https://old.example/"><title>Old news</title><link>https://old.example/</link><description>Very old</description></channel>
@@ -232,6 +259,14 @@ describe('parseFeedContent rdf', () => {
 });
 
 describe('parseFeedContent json', () => {
+  test('removes the HTML tags of an item title', () => {
+    // Act
+    const parsed = parseFeedContent(json({ title: 'T', items: [{ id: '1', title: '<p>First catch</p>' }] }));
+
+    // Assert
+    expect(parsed?.items[0]?.title).toBe('First catch');
+  });
+
   test('reads the feed and a complete item', () => {
     // Arrange
     const content = json({

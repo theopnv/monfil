@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { resolveEmbedUrl, type EmbedDescriptor } from '../../../shared/embeds';
+import { removeFollowAuthorControls } from '../../../shared/follow-author';
 
 function httpUrl(value: string | null, baseUrl?: string): string | undefined {
   if (!value) {
@@ -11,9 +12,18 @@ function httpUrl(value: string | null, baseUrl?: string): string | undefined {
   try {
     const url = new URL(value, baseUrl);
     return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
+    // Stryker disable next-line BlockStatement: an empty catch also returns undefined
   } catch {
     return undefined;
   }
+}
+
+/** The src to keep for an image: resolved when the article URL is known, and none for a scheme other than http or https. */
+function keptSource(current: string, sourceUrl?: string): string | undefined {
+  if (sourceUrl) {
+    return httpUrl(current, sourceUrl);
+  }
+  return /^[a-z][a-z\d+.-]*:/i.test(current) && !httpUrl(current) ? undefined : current;
 }
 
 function marker(document: Document, embed: EmbedDescriptor, title?: string | null): HTMLAnchorElement {
@@ -32,14 +42,17 @@ export function prepareReaderHtml(html: string, sourceUrl?: string): string {
     const lazy = image.getAttribute('data-src') ?? image.getAttribute('data-lazy-src') ?? image.getAttribute('data-original');
     if (!current || current.startsWith('data:') || current === 'about:blank') {
       const lazySet = image.getAttribute('data-srcset');
+      // Stryker disable next-line Regex: an unanchored match still starts at the first non-space run
       const source = httpUrl(lazy, sourceUrl) ?? httpUrl(lazySet?.match(/^\s*(\S+)/)?.[1] ?? null, sourceUrl);
       if (source) {
         image.setAttribute('src', source);
       }
-    } else if (sourceUrl) {
-      const source = httpUrl(current, sourceUrl);
+    } else {
+      const source = keptSource(current, sourceUrl);
       if (source) {
         image.setAttribute('src', source);
+      } else {
+        image.removeAttribute('src');
       }
     }
     const lazySet = image.getAttribute('data-srcset');
@@ -83,9 +96,7 @@ export function prepareReaderHtml(html: string, sourceUrl?: string): string {
     }
   }
 
-  for (const control of document.querySelectorAll('[id^="follow-author-article_footer"]')) {
-    control.closest('ul')?.parentElement?.remove();
-  }
+  removeFollowAuthorControls(document);
   for (const block of document.querySelectorAll('[data-nosnippet]')) {
     if ([...block.querySelectorAll('a[href]')].some((link) => {
       try {

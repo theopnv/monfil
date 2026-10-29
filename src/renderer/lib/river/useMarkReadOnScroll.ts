@@ -73,6 +73,7 @@ export function useMarkReadOnScroll(
     return () => {
       mutationObserver.disconnect();
       intersectionObserver.disconnect();
+      // Stryker disable next-line CallExpression: a timer that fires after the cleanup flush finds an empty buffer
       clearTimeout(flushTimer);
       flush();
     };
