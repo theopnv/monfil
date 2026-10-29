@@ -1,0 +1,9 @@
+<svg width="161" height="44" viewBox="0 0 161 44" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Download for macOS">
+<rect x="1" y="1" width="159" height="42" rx="4" fill="#202020"/>
+<rect x="0.5" y="0.5" width="160" height="43" rx="4.5" stroke="black" stroke-opacity="0.1"/>
+<rect x="12.5" y="12.75" width="19" height="13.5" rx="1.5" stroke="white" stroke-width="1.5"/>
+<rect x="9" y="27.75" width="26" height="2.5" rx="1.25" fill="white"/>
+<path d="M22 15.75V22.25M19.25 19.75L22 22.5L24.75 19.75" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="44" y="18.5" fill="white" font-family="'Segoe UI', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif" font-size="10">Download for</text>
+<text x="44" y="33.5" fill="white" font-family="'Segoe UI', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif" font-size="18" font-weight="500">macOS</text>
+</svg>

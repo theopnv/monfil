@@ -1,0 +1,42 @@
+name: Apple signing
+description: >
+  Imports the Developer ID Application certificate into a temporary keychain. When an
+  App Store Connect API key is given, writes it to a file and sets APPLE_API_KEY to that path.
+
+inputs:
+  certificate:
+    description: Base64 of the Developer ID Application certificate exported as .p12
+    required: true
+  certificate-password:
+    description: Password of the .p12 file
+    required: true
+  api-key:
+    description: Base64 of the App Store Connect API key (.p8), needed only to notarize
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CERTIFICATE: ${{ inputs.certificate }}
+        CERTIFICATE_PASSWORD: ${{ inputs.certificate-password }}
+        API_KEY: ${{ inputs.api-key }}
+      run: |
+        keychain="$RUNNER_TEMP/signing.keychain-db"
+        keychain_password="$(openssl rand -base64 32)"
+        echo "$CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+        security create-keychain -p "$keychain_password" "$keychain"
+        security set-keychain-settings -lut 21600 "$keychain"
+        security unlock-keychain -p "$keychain_password" "$keychain"
+        security import "$RUNNER_TEMP/certificate.p12" -k "$keychain" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+        # Without this partition list, codesign waits for a keychain access prompt that nobody can answer.
+        security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" > /dev/null
+        security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+        rm "$RUNNER_TEMP/certificate.p12"
+
+        if [ -n "$API_KEY" ]; then
+          echo "$API_KEY" | base64 --decode > "$RUNNER_TEMP/notary-api-key.p8"
+          echo "APPLE_API_KEY=$RUNNER_TEMP/notary-api-key.p8" >> "$GITHUB_ENV"
+        fi

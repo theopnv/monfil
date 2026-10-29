@@ -1,7 +1,7 @@
 {
   "name": "monfil",
   "productName": "monfil",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "RSS feed reader and more.",
   "main": ".vite/build/main.cjs",
   "private": true,
@@ -45,6 +45,7 @@
     "@commitlint/config-conventional": "^21.2.4",
     "@electron-forge/cli": "^8.0.1",
     "@electron-forge/maker-deb": "^8.0.1",
+    "@electron-forge/maker-dmg": "^8.0.1",
     "@electron-forge/maker-msix": "^8.0.1",
     "@electron-forge/maker-rpm": "^8.0.1",
     "@electron-forge/maker-squirrel": "^8.0.1",
@@ -133,6 +134,8 @@
     "esbuild@0.21.5": true,
     "fsevents@2.3.3": true,
     "fsevents@2.3.2": true,
+    "fs-xattr@0.3.1": true,
+    "macos-alias@0.2.12": true,
     "better-sqlite3@13.0.3": false
   }
 }
