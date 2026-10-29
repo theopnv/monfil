@@ -35,6 +35,7 @@ function Probe({ item, refreshVersion = 0 }: { item: RiverRow | undefined; refre
       <span data-testid="standfirst">{content.standfirst}</span>
       <span data-testid="loading">{String(content.isLoading)}</span>
       <span data-testid="unavailable">{String(content.isUnavailable)}</span>
+      <span data-testid="failed">{String(content.isFailed)}</span>
     </div>
   );
 }
@@ -151,6 +152,26 @@ describe('useReaderContent', () => {
 
     // Assert
     await expect.element(getByTestId('loading')).toHaveTextContent('false');
+  });
+
+  test.each(['rss', 'youtube'] as const)('a %s item whose content request fails is reported as failed, not as unavailable', async (type) => {
+    // Arrange
+    invokeMock.mockRejectedValue(new Error('offline'));
+
+    // Act
+    const { getByTestId } = await render(<Probe item={createItem({ type })} />);
+
+    // Assert
+    await expect.element(getByTestId('failed')).toHaveTextContent('true');
+    await expect.element(getByTestId('unavailable')).toHaveTextContent('false');
+  });
+
+  test('an item that has not resolved yet is not reported as failed', async () => {
+    // Act
+    const { getByTestId } = await render(<Probe item={undefined} />);
+
+    // Assert
+    await expect.element(getByTestId('failed')).toHaveTextContent('false');
   });
 
   test('a failure for a previous item does not end the loading of the current item', async () => {

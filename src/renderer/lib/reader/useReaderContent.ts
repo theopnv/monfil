@@ -65,12 +65,14 @@ export interface ReaderContent {
   standfirst: string | undefined;
   isLoading: boolean;
   isUnavailable: boolean;
+  isFailed: boolean;
 }
 
 type BodyState =
   | { state: 'loading' }
   | { state: 'ready'; body: ItemBody }
-  | { state: 'unavailable' };
+  | { state: 'unavailable' }
+  | { state: 'failed' };
 
 /**
  * Resolves what the reader should show for the current item's body: the raw description and,
@@ -98,7 +100,7 @@ export function useReaderContent(item: RiverRow | undefined, refreshVersion = 0)
       })
       .catch(() => {
         if (!cancelled) {
-          setBody({ state: 'unavailable' });
+          setBody({ state: 'failed' });
         }
       });
 
@@ -134,5 +136,6 @@ export function useReaderContent(item: RiverRow | undefined, refreshVersion = 0)
     standfirst,
     isLoading: !!strategy?.showStandfirst && body.state === 'loading',
     isUnavailable: !!strategy?.showStandfirst && body.state === 'ready' && !article,
+    isFailed: body.state === 'failed',
   };
 }

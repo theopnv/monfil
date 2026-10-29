@@ -208,6 +208,10 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome, saved
               <p className="mb-4 text-sm text-tertiary">The full article could not be loaded. Read it at the source instead.</p>
             )}
 
+            {content.isFailed && (
+              <p className="mb-4 text-sm text-tertiary">This item could not be loaded. Read it at the source instead.</p>
+            )}
+
             {nextTarget && <NextArticleCard item={nextTarget} label={nextLabel} onClick={() => onNavigateToItem(nextTarget.id)} />}
 
             {preferences.keyboardNavigation && <KeyboardShortcutsHint />}
