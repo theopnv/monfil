@@ -140,12 +140,14 @@ scrollRestorationTest('keeps the Magazine river scroll position after returning 
   await page.reload();
   await subscribe(page, feedServer.url);
   await expect(page.getByText('Article number 0', { exact: true })).toBeAttached();
+  // The Magazine rows get their height from a ResizeObserver after the cards render, so the river can still be too short to scroll.
+  await expect.poll(() => riverScrollContainer(page).evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(1500);
   await riverScrollContainer(page).evaluate((element) => {
     element.scrollTop = 1500;
     element.dispatchEvent(new Event('scroll', { bubbles: true }));
   });
+  await expect.poll(() => riverScrollContainer(page).evaluate((element) => element.scrollTop)).toBeGreaterThan(1000);
   const scrollTopBeforeLeaving = await riverScrollContainer(page).evaluate((element) => element.scrollTop);
-  expect(scrollTopBeforeLeaving).toBeGreaterThan(1000);
 
   // Act
   await page.getByText('Article number 15', { exact: true }).evaluate((element) => (element as HTMLElement).click());

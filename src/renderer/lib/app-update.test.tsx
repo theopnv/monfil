@@ -74,6 +74,7 @@ describe('useUpdateNotification', () => {
     // Act
     const { queryClient } = await renderWithQueryClient(<UpdateHarness />);
     await expect.poll(() => queryClient.getQueryData(['app-update-state'])).toEqual({ name: 'NONE' });
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     // Assert
     await expect.element(page.getByRole('button', { name: 'Restart' })).not.toBeInTheDocument();

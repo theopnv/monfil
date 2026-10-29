@@ -141,10 +141,5 @@
     "@sonarjs/cyclomatic-complexity": {
       "count": 1
     }
-  },
-  "src/renderer/lib/river/useRiverKeyboardNav.ts": {
-    "@sonarjs/cyclomatic-complexity": {
-      "count": 1
-    }
   }
 }

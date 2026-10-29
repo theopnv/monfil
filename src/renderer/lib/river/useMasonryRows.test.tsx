@@ -71,6 +71,37 @@ test('clears row spans when disabled', async () => {
   expect(getByTestId('card-0').element().style.gridRowEnd).toBe('');
 });
 
+test('stops sizing a card that resizes after the layout is disabled', async () => {
+  // Arrange
+  const { getByTestId, rerender } = await render(<Masonry heights={[100, 300, 100]} />);
+  await expect.poll(() => getByTestId('card-0').element().style.gridRowEnd).not.toBe('');
+  await rerender(<Masonry heights={[100, 300, 100]} enabled={false} />);
+
+  // Act
+  getByTestId('card-0').element().style.height = '250px';
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  // Assert
+  expect(getByTestId('card-0').element().style.gridRowEnd).toBe('');
+});
+
+test('stops sizing a card that is added after the layout is disabled', async () => {
+  // Arrange
+  const { getByTestId, rerender } = await render(<Masonry heights={[100, 300, 100]} />);
+  await expect.poll(() => getByTestId('card-0').element().style.gridRowEnd).not.toBe('');
+  await rerender(<Masonry heights={[100, 300, 100]} enabled={false} />);
+  const container = getByTestId('card-0').element().parentElement as HTMLElement;
+  const added = document.createElement('div');
+  added.style.height = '80px';
+
+  // Act
+  container.append(added);
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  // Assert
+  expect(added.style.gridRowEnd).toBe('');
+});
+
 test('sizes the rows before a parent layout effect runs', async () => {
   // Arrange
   let heightSeenByParent = 0;

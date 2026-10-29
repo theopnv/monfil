@@ -58,6 +58,7 @@ export const useCreateWorkspace = (): ((input: { name: string; icon: string; col
     },
   });
   const { mutateAsync } = mutation;
+  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
   return useCallback((input: { name: string; icon: string; color: string }) => mutateAsync(input), [mutateAsync]);
 };
 
@@ -72,6 +73,7 @@ export const useUpdateWorkspace = (): ((workspaceId: number, patch: { name?: str
     },
   });
   const { mutateAsync } = mutation;
+  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
   return useCallback((workspaceId: number, patch: { name?: string; icon?: string; color?: string }) => mutateAsync({ workspaceId, ...patch }), [mutateAsync]);
 };
 
@@ -89,6 +91,7 @@ export const useDeleteWorkspace = (): ((workspaceId: number) => Promise<Result<v
     },
   });
   const { mutateAsync } = mutation;
+  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
   return useCallback((workspaceId: number) => mutateAsync(workspaceId), [mutateAsync]);
 };
 
@@ -103,6 +106,7 @@ export const useReorderWorkspaces = (): ((orderedIds: number[]) => Promise<Resul
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.workspaces }),
   });
   const { mutateAsync } = mutation;
+  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
   return useCallback((orderedIds: number[]) => mutateAsync(orderedIds), [mutateAsync]);
 };
 
@@ -122,6 +126,7 @@ export const useMoveFeedToWorkspace = (): ((feedId: number, fromWorkspaceId: num
   const { mutateAsync } = mutation;
   return useCallback(
     (feedId: number, fromWorkspaceId: number, toWorkspaceId: number, categoryName: string) => mutateAsync({ feedId, fromWorkspaceId, toWorkspaceId, categoryName }),
+    // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
     [mutateAsync],
   );
 };

@@ -35,6 +35,7 @@ function Probe({ item, refreshVersion = 0 }: { item: RiverRow | undefined; refre
       <span data-testid="standfirst">{content.standfirst}</span>
       <span data-testid="loading">{String(content.isLoading)}</span>
       <span data-testid="unavailable">{String(content.isUnavailable)}</span>
+      <span data-testid="failed">{String(content.isFailed)}</span>
     </div>
   );
 }
@@ -114,6 +115,95 @@ describe('useReaderContent', () => {
     expect(invokeMock).toHaveBeenLastCalledWith('items:get-content', second.id);
     await expect.element(screen.getByTestId('html')).toMatchTextContent('Article 20');
     await expect.element(screen.getByTestId('word-count')).toHaveTextContent('20');
+    await expect.element(screen.getByTestId('standfirst')).toHaveTextContent('Second teaser.');
+  });
+
+  test('a slow answer for a previous item does not replace the current item', async () => {
+    // Arrange
+    let resolveFirst: (body: ItemBody) => void = () => { };
+    const first = createItem({ id: 10 });
+    const second = createItem({ id: 20 });
+    invokeMock.mockImplementation((_channel: string, itemId: number) => (
+      itemId === 10
+        ? new Promise<ItemBody>((resolve) => {
+          resolveFirst = resolve; 
+        })
+        : Promise.resolve({ description: 'Second', article: { html: '<p>Second article</p>', wordCount: 2 } } satisfies ItemBody)
+    ));
+    const screen = await render(<Probe item={first} />);
+    await screen.rerender(<Probe item={second} />);
+    await expect.element(screen.getByTestId('html')).toMatchTextContent('Second article');
+
+    // Act
+    resolveFirst({ description: 'First', article: { html: '<p>First article</p>', wordCount: 1 } });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Assert
+    await expect.element(screen.getByTestId('html')).toMatchTextContent('Second article');
+    await expect.element(screen.getByTestId('word-count')).toHaveTextContent('2');
+  });
+
+  test('an rss item stops loading when the article request fails', async () => {
+    // Arrange
+    invokeMock.mockRejectedValue(new Error('offline'));
+
+    // Act
+    const { getByTestId } = await render(<Probe item={createItem()} />);
+
+    // Assert
+    await expect.element(getByTestId('loading')).toHaveTextContent('false');
+  });
+
+  test.each(['rss', 'youtube'] as const)('a %s item whose content request fails is reported as failed, not as unavailable', async (type) => {
+    // Arrange
+    invokeMock.mockRejectedValue(new Error('offline'));
+
+    // Act
+    const { getByTestId } = await render(<Probe item={createItem({ type })} />);
+
+    // Assert
+    await expect.element(getByTestId('failed')).toHaveTextContent('true');
+    await expect.element(getByTestId('unavailable')).toHaveTextContent('false');
+  });
+
+  test('an item that has not resolved yet is not reported as failed', async () => {
+    // Act
+    const { getByTestId } = await render(<Probe item={undefined} />);
+
+    // Assert
+    await expect.element(getByTestId('failed')).toHaveTextContent('false');
+  });
+
+  test('a failure for a previous item does not end the loading of the current item', async () => {
+    // Arrange
+    let rejectFirst: (error: Error) => void = () => { };
+    invokeMock.mockImplementation((_channel: string, itemId: number) => (
+      itemId === 10
+        ? new Promise<ItemBody>((_resolve, reject) => {
+          rejectFirst = reject; 
+        })
+        : new Promise<ItemBody>(() => { })
+    ));
+    const screen = await render(<Probe item={createItem({ id: 10 })} />);
+    await screen.rerender(<Probe item={createItem({ id: 20 })} />);
+
+    // Act
+    rejectFirst(new Error('offline'));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Assert
+    await expect.element(screen.getByTestId('loading')).toHaveTextContent('true');
+  });
+
+  test('an rss item is not reported unavailable while its article is loading', async () => {
+    // Arrange
+    invokeMock.mockReturnValue(new Promise(() => { }));
+
+    // Act
+    const { getByTestId } = await render(<Probe item={createItem()} />);
+
+    // Assert
+    await expect.element(getByTestId('unavailable')).toHaveTextContent('false');
   });
 
   test('an rss item falls back to the raw description when the article is unavailable', async () => {

@@ -32,14 +32,16 @@ export function useRiverKeyboardNav(containerRef: RefObject<HTMLElement | null>,
         return;
       }
       const cards = [...container.querySelectorAll<HTMLElement>('[data-item-id]')];
+      // Stryker disable next-line ConditionalExpression,BlockStatement: with no card, the optional chaining below does nothing either
       if (cards.length === 0) {
         return;
       }
       const activeIndex = cards.findIndex((card) => card === document.activeElement);
       const nextIndex = event.key === 'j'
         ? Math.min(activeIndex + 1, cards.length - 1)
-        : (activeIndex === -1 ? 0 : Math.max(activeIndex - 1, 0));
+        : Math.max(activeIndex - 1, 0);
 
+      // Stryker disable next-line OptionalChaining: nextIndex is always inside the list here
       cards[nextIndex]?.focus();
       cards[nextIndex]?.scrollIntoView({ block: 'nearest' });
     };

@@ -481,6 +481,15 @@ describe('extractArticle site modules', () => {
     expect(document.body.textContent).toContain('AFTERMODULE');
   });
 
+  test('keeps the story when the follow list sits directly in the article', () => {
+    // Act
+    const document = extractBody('<ul><li id="follow-author-article_footer-9">FOLLOWAUTHOR</li></ul><p>AFTERMODULE</p>');
+
+    // Assert
+    expect(document.body.textContent).not.toContain('FOLLOWAUTHOR');
+    expect(document.body.textContent).toContain('AFTERMODULE');
+  });
+
   test('keeps an element whose id only contains the follow prefix', () => {
     // Act
     const document = extractBody('<div><p>KEEPFOLLOW</p><ul><li id="my-follow-author-article_footer-9">Author</li></ul></div>');

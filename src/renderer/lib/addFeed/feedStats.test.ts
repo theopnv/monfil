@@ -69,6 +69,76 @@ describe('computePublishRate', () => {
     // Assert
     expect(result).toBe('~1/month');
   });
+
+  test('ignores items whose date cannot be read', () => {
+    // Arrange
+    const items = [
+      { pubDate: '2024-01-01T00:00:00.000Z', description: '' },
+      { pubDate: 'not a date', description: '' },
+    ];
+
+    // Act
+    const result = computePublishRate(items);
+
+    // Assert
+    expect(result).toBe('2');
+  });
+
+  test('reports exactly one item a day as a per-day rate', () => {
+    // Arrange
+    const items = [
+      { pubDate: '2024-01-01T00:00:00.000Z', description: '' },
+      { pubDate: '2024-01-03T00:00:00.000Z', description: '' },
+    ];
+
+    // Act
+    const result = computePublishRate(items);
+
+    // Assert
+    expect(result).toBe('~1/day');
+  });
+
+  test('reports exactly one item a week as a per-week rate', () => {
+    // Arrange
+    const items = [
+      { pubDate: '2024-01-01T00:00:00.000Z', description: '' },
+      { pubDate: '2024-01-15T00:00:00.000Z', description: '' },
+    ];
+
+    // Act
+    const result = computePublishRate(items);
+
+    // Assert
+    expect(result).toBe('~1/week');
+  });
+
+  test('scales a slow feed to items a month', () => {
+    // Arrange: 7 items over 100 days = 2.1 a month
+    const items = Array.from({ length: 7 }, (_, index) => ({
+      pubDate: new Date(Date.UTC(2024, 0, 1) + index * (100 / 6) * 24 * 60 * 60 * 1000).toISOString(),
+      description: '',
+    }));
+
+    // Act
+    const result = computePublishRate(items);
+
+    // Assert
+    expect(result).toBe('~2/month');
+  });
+
+  test('never reports fewer than one item a month', () => {
+    // Arrange
+    const items = [
+      { pubDate: '2024-01-01T00:00:00.000Z', description: '' },
+      { pubDate: '2025-01-01T00:00:00.000Z', description: '' },
+    ];
+
+    // Act
+    const result = computePublishRate(items);
+
+    // Assert
+    expect(result).toBe('~1/month');
+  });
 });
 
 describe('computeFeedContentType', () => {
@@ -94,6 +164,31 @@ describe('computeFeedContentType', () => {
   test('returns "Full text" when descriptions are long on average', () => {
     // Arrange
     const items = [{ pubDate: '2024-01-01', description: 'x'.repeat(500) }];
+
+    // Act
+    const result = computeFeedContentType(items);
+
+    // Assert
+    expect(result).toBe('Full text');
+  });
+
+  test('uses the average length, not the total', () => {
+    // Arrange
+    const items = [
+      { pubDate: '2024-01-01', description: 'x'.repeat(150) },
+      { pubDate: '2024-01-02', description: 'x'.repeat(150) },
+    ];
+
+    // Act
+    const result = computeFeedContentType(items);
+
+    // Assert
+    expect(result).toBe('Excerpt');
+  });
+
+  test('treats an average of exactly 400 characters as full text', () => {
+    // Arrange
+    const items = [{ pubDate: '2024-01-01', description: 'x'.repeat(400) }];
 
     // Act
     const result = computeFeedContentType(items);

@@ -94,6 +94,7 @@ export const useCreateCategory = (): ((name: string) => Promise<Result<FeedCateg
     },
   });
   const { mutateAsync } = mutation;
+  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
   return useCallback((name: string) => mutateAsync(name), [mutateAsync]);
 };
 
@@ -246,12 +247,14 @@ export const useReadState = (): ReadState => {
   });
 
   const { mutate } = mutation;
+  // Stryker disable next-line ArrayDeclaration: mutate is the same function on every render
   const markRead = useCallback((id: number) => mutate({ itemIds: [id], read: true }), [mutate]);
   const markAllRead = useCallback((ids: number[]) => {
     if (ids.length > 0) {
       mutate({ itemIds: ids, read: true });
     }
   }, [mutate]);
+  // Stryker disable next-line ArrayDeclaration: mutate is the same function on every render
   const toggleRead = useCallback((id: number, currentlyRead: boolean) => mutate({ itemIds: [id], read: !currentlyRead }), [mutate]);
 
   return { markRead, markAllRead, toggleRead };

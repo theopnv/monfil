@@ -34,6 +34,7 @@ export interface SavedSearchActions {
 export const useSavedSearchActions = (): SavedSearchActions => {
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
+  // Stryker disable next-line ArrayDeclaration: the query client is the same object on every render
   const refresh = useCallback(() => queryClient.invalidateQueries({ queryKey: ["feeds", "searches"] }), [queryClient]);
 
   const create = useCallback(async (name: string, query: string) => {

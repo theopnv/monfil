@@ -8,6 +8,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { ActiveWorkspaceIdProvider, useActiveWorkspaceId } from '@/providers/workspace-provider';
 import { ipc } from '@/lib/ipc-client';
+import { parseCollectionSearch } from './route-params';
 import { Route as WorkspaceRoute } from '../routes/workspace.$workspaceId';
 import { Route as ReaderRoute } from '../routes/workspace.$workspaceId_.reader.$itemId';
 
@@ -117,6 +118,18 @@ test.each(['NaN', '0', '1.5'])('the workspace provider uses Home while it has in
   // Assert
   await expect.element(screen.getByText('Home workspace 1')).toBeInTheDocument();
   expect(invoke).toHaveBeenCalledWith('feeds:list', { workspaceId: 1 });
+});
+
+test.each([
+  { search: { view: 'saved' }, expected: { view: 'saved' } },
+  { search: { view: 'other' }, expected: {} },
+  { search: {}, expected: {} },
+])('reads the collection view from search $search', ({ search, expected }) => {
+  // Act
+  const result = parseCollectionSearch(search);
+
+  // Assert
+  expect(result).toEqual(expected);
 });
 
 test('the workspace provider uses Home off a workspace route', async () => {
