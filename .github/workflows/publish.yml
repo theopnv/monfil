@@ -38,10 +38,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, macos-15-intel, windows-latest]
     runs-on: ${{ matrix.os }}
     env:
-      APPLE_SIGNING_IDENTITY: ${{ matrix.os == 'macos-latest' && vars.APPLE_SIGNING_IDENTITY || '' }}
+      APPLE_SIGNING_IDENTITY: ${{ startsWith(matrix.os, 'macos') && vars.APPLE_SIGNING_IDENTITY || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 

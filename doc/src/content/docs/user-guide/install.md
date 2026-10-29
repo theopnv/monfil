@@ -11,9 +11,11 @@ Monfil is free. Pick your system:
 
 ## macOS
 
-You need a Mac with Apple silicon (M1 or later) and macOS 13 Ventura or later. To check, open the Apple menu and select **About This Mac**. The **Chip** line must start with **Apple**.
+You need macOS 13 Ventura or later. To see which chip your Mac has, open the Apple menu and select **About This Mac**. Look at the **Chip** or **Processor** line.
 
-1. Download [`monfil-macos-arm64.dmg`](https://github.com/theopnv/monfil/releases/latest/download/monfil-macos-arm64.dmg) from the latest release.
+1. Download the file for your chip from the latest release:
+   - Apple silicon (the line starts with **Apple**): [`monfil-macos-arm64.dmg`](https://github.com/theopnv/monfil/releases/latest/download/monfil-macos-arm64.dmg)
+   - Intel (the line starts with **Intel**): [`monfil-macos-x64.dmg`](https://github.com/theopnv/monfil/releases/latest/download/monfil-macos-x64.dmg)
 2. Open the downloaded file. A window with the Monfil icon and an Applications folder appears.
 3. Drag the Monfil icon onto the Applications folder.
 4. Close the window, then eject the Monfil disk in the Finder sidebar.
