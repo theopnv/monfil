@@ -20,7 +20,7 @@ import { useReaderContent } from "@/lib/reader/useReaderContent";
 import { isTypingTarget } from "@/lib/river/useRiverKeyboardNav";
 import { useAppliedRefreshVersion } from '@/lib/ipc-bridge';
 import { useRiverScope } from "@/providers/river-scope-provider";
-import { useCategories, useFeeds, useReadState, useRiver } from "@/providers/feeds-provider";
+import { useCategories, useFeeds, useFeedsPending, useReadState, useRiver } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import type { RiverPage } from "../../../shared/contracts";
 
@@ -45,7 +45,8 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome, saved
   // Shares Home's window and cache: same scope, same query key, so navigation follows whatever
   // Home is currently scoped to instead of maintaining its own separate view of the river.
   const { scope } = useRiverScope(feeds, savedView);
-  const { data } = useRiver(scope);
+  const awaitingFeeds = useFeedsPending() && !savedView;
+  const { data } = useRiver(scope, !awaitingFeeds);
   const riverItems = useMemo(() => data?.pages.flatMap((page) => page.rows) ?? [], [data]);
   const currentItem = useMemo(() => riverItems.find((item) => item.id === id), [riverItems, id]);
   const currentItemId = currentItem?.id;

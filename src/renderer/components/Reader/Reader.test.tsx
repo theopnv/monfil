@@ -162,8 +162,8 @@ test('removing a save in the Saved reader returns to Saved', async () => {
 test('saving in the reader keeps the loaded article content', async () => {
   // Arrange
   const { itemA } = setUpThreeItemRiver();
-  const { getByRole, getByText } = await renderReader({ itemId: String(itemA.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
-  await expect.element(getByText(`Item ${itemA.id} description`, { exact: true })).toBeVisible();
+  const { getByRole, getByTestId } = await renderReader({ itemId: String(itemA.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
+  await expect.element(getByTestId('article-body')).toBeVisible();
   invokeMock.mockClear();
 
   // Act
@@ -329,8 +329,8 @@ test('pressing Escape leaves the Reader', async () => {
   // Arrange
   const { itemB } = setUpThreeItemRiver();
   const onNavigateHome = vi.fn();
-  const { getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome });
-  await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
+  const { getByTestId } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome });
+  await expect.element(getByTestId('article-body')).toBeVisible();
 
   // Act
   await userEvent.keyboard('{Escape}');

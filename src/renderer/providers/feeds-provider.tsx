@@ -22,6 +22,13 @@ export const useFeeds = (): FeedSummary[] => {
   return data ?? [];
 };
 
+/** True until the active workspace's feed list has loaded once, so callers can tell "not loaded yet" from "no feeds". */
+export const useFeedsPending = (): boolean => {
+  const workspaceId = useActiveWorkspaceId();
+  const { isPending } = useQuery(feedsQuery(workspaceId));
+  return isPending;
+};
+
 /** Every category in the active workspace, including ones with no feeds in them yet. */
 export const useCategories = (): FeedCategory[] => {
   const workspaceId = useActiveWorkspaceId();
@@ -29,7 +36,7 @@ export const useCategories = (): FeedCategory[] => {
   return data ?? [];
 };
 
-export const useRiver = (scope: RiverScope): UseInfiniteQueryResult<InfiniteData<RiverPage>> => useInfiniteQuery(riverQuery(scope));
+export const useRiver = (scope: RiverScope, enabled = true): UseInfiniteQueryResult<InfiniteData<RiverPage>> => useInfiniteQuery({ ...riverQuery(scope), enabled });
 
 export const useAddFeed = (): ((input: Omit<NewFeedInput, 'workspaceId'>) => Promise<Result<FeedSummary, AddFeedError>>) => {
   const workspaceId = useActiveWorkspaceId();
