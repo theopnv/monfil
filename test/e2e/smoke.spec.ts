@@ -34,6 +34,7 @@ smokeTest('smoke test', async ({ electronApp }) => {
 
   // Assert
   expect(isPackaged).toBe(false);
+  await expect(window.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
   await window.screenshot({ path: 'test-results/intro.png' });
 })
 
