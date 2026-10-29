@@ -7,7 +7,7 @@ import { createServer, type RequestListener, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { lookup } from 'node:dns/promises';
 import type { LookupAddress } from 'node:dns';
-import { fetchConditional, fetchText, setRequestTransport, type RequestTransport } from './fetch';
+import { fetchConditional, fetchText, httpStatusMessage, setRequestTransport, type RequestTransport } from './fetch';
 import { MAX_FETCH_BYTES, MAX_REDIRECTS } from './constants';
 
 vi.mock(import('node:dns/promises'), () => ({ lookup: vi.fn() }));
@@ -136,6 +136,19 @@ describe('fetchText', () => {
   });
 
   test.each([
+    { status: 403, statusMessage: '', expected: 'The server refused access (HTTP 403). It may block automated readers, or your network or VPN.' },
+    { status: 401, statusMessage: 'Unauthorized', expected: 'The server refused access (HTTP 401 Unauthorized). It may block automated readers, or your network or VPN.' },
+    { status: 404, statusMessage: '', expected: 'The feed was not found (HTTP 404).' },
+    { status: 410, statusMessage: 'Gone', expected: 'The feed was not found (HTTP 410 Gone).' },
+    { status: 429, statusMessage: '', expected: 'The server is rate limiting requests (HTTP 429).' },
+    { status: 500, statusMessage: '', expected: 'The server had an error (HTTP 500).' },
+    { status: 502, statusMessage: '', expected: 'The server had an error (HTTP 502).' },
+    { status: 418, statusMessage: '', expected: 'The server answered with HTTP 418.' },
+  ])('words a $status as: $expected', ({ status, statusMessage, expected }) => {
+    expect(httpStatusMessage(status, statusMessage)).toBe(expected);
+  });
+
+  test.each([
     { status: 199, statusMessage: 'Informational' },
     { status: 300, statusMessage: 'Multiple Choices' },
     { status: 404, statusMessage: 'Not Found' },
@@ -147,7 +160,7 @@ describe('fetchText', () => {
     const result = await fetchText('https://example.com');
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: `${status}: ${statusMessage}` } });
+    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(status, statusMessage) } });
     expect(requests.map((request) => request.aborts)).toEqual([1]);
   });
 
@@ -545,7 +558,7 @@ describe('fetchConditional', () => {
     const result = await fetchConditional('https://example.com/feed', { validators: { etag: undefined, last_modified: undefined } });
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: '304: ' } });
+    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'The server answered with HTTP 304.' } });
   });
 
   test('returns the fresh body and its new validators after a full download', async () => {

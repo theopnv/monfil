@@ -118,16 +118,33 @@ afterEach(async () => {
 
 test('a partial refresh failure lets the user reveal the log file', async () => {
   // Arrange
-  invokeImpl = () => Promise.resolve({ perFeed: [], failedFeedIds: [1, 2] } satisfies RefreshSummary);
+  invokeImpl = () => Promise.resolve({ perFeed: [], failedFeeds: [{ feedId: 1, title: 'Alpha', message: 'offline' }, { feedId: 2, title: 'Beta', message: 'The server had an error (HTTP 502).' }] } satisfies RefreshSummary);
   const { getByText, getByRole } = await renderWithQueryClient(<><RefreshButton /><NotificationHost /></>);
 
   // Act
   await getByRole('button', { name: 'Refresh feeds' }).click();
   await expect.element(getByText('2 feeds could not be refreshed.', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Alpha: offline', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Beta: The server had an error (HTTP 502).', { exact: true })).toBeInTheDocument();
   await getByRole('button', { name: 'Show log file' }).click();
 
   // Assert
   expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('app:reveal-log-file', undefined);
+});
+
+test('a refresh with four failures names three feeds and counts the rest', async () => {
+  // Arrange
+  const failedFeeds = [1, 2, 3, 4].map((feedId) => ({ feedId, title: `Feed ${feedId}`, message: 'offline' }));
+  invokeImpl = () => Promise.resolve({ perFeed: [], failedFeeds } satisfies RefreshSummary);
+  const { getByText, getByRole } = await renderWithQueryClient(<><RefreshButton /><NotificationHost /></>);
+
+  // Act
+  await getByRole('button', { name: 'Refresh feeds' }).click();
+
+  // Assert
+  await expect.element(getByText('Feed 3: offline', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('and 1 more', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Feed 4: offline', { exact: true })).not.toBeInTheDocument();
 });
 
 test('loads the first page on mount', async () => {
@@ -709,7 +726,7 @@ describe('useFeedsRefresh', () => {
 
   test('reports a single failed feed in the singular', async () => {
     // Arrange
-    invokeImpl = () => Promise.resolve({ perFeed: [], failedFeedIds: [3] } satisfies RefreshSummary);
+    invokeImpl = () => Promise.resolve({ perFeed: [], failedFeeds: [{ feedId: 3, title: 'Gamma', message: 'offline' }] } satisfies RefreshSummary);
     const { getByText, getByRole } = await renderWithQueryClient(<><RefreshButton /><NotificationHost /></>);
 
     // Act
@@ -720,7 +737,7 @@ describe('useFeedsRefresh', () => {
   });
 
   test.each([
-    ['an empty list of failed feeds', { perFeed: [], failedFeedIds: [] }],
+    ['an empty list of failed feeds', { perFeed: [], failedFeeds: [] }],
     ['no list of failed feeds', { perFeed: [] }],
   ] satisfies [string, RefreshSummary][])('shows no warning for %s', async (_name, summary) => {
     // Arrange

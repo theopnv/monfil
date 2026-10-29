@@ -67,7 +67,7 @@ describe('fetchAndParse', () => {
 
   test('turns an error thrown by the parser into a parse error', async () => {
     // Arrange
-    mockedFetchText.mockResolvedValue(ok('<html></html>'));
+    mockedFetchText.mockResolvedValue(ok('not a feed'));
 
     // Act
     const result = await fetchAndParse('https://example.com/feed', undefined, () => {
@@ -76,6 +76,22 @@ describe('fetchAndParse', () => {
 
     // Assert
     expect(result).toEqual({ success: false, error: { name: 'PARSE_ERROR', message: 'bad feed' } });
+  });
+
+  test('names the web page when the parser throws on an html body', async () => {
+    // Arrange
+    mockedFetchText.mockResolvedValue(ok('<html></html>'));
+
+    // Act
+    const result = await fetchAndParse('https://example.com/feed', undefined, () => {
+      throw new Error('bad feed');
+    });
+
+    // Assert
+    expect(result).toEqual({
+      success: false,
+      error: { name: 'PARSE_ERROR', message: 'The site sent a web page instead of the feed. It may show a bot check to automated readers or to your network or VPN.' },
+    });
   });
 
   test('turns a thrown value that is not an error into an unknown error', async () => {

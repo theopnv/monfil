@@ -42,15 +42,15 @@ async function fillMissingIcon(feed: FeedMetadataRow, siteLink: string | undefin
   }
 }
 
-async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: boolean): Promise<{ items: FeedItem[]; updated: number; failed: boolean }> {
+async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: boolean): Promise<{ items: FeedItem[]; updated: number; failure?: string }> {
   if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
-    return { items: [], updated: 0, failed: false };
+    return { items: [], updated: 0 };
   }
   // A 304 carries no site link, so a feed still owed its icon lookup is fetched in full once.
   const conditional = !force && !needsIconLookup(feed);
   const result = await sourceFor(feed.type).fetch({ link: feed.link, ...(conditional ? { validators: { etag: feed.etag ?? undefined, last_modified: feed.last_modified ?? undefined } } : {}) });
   if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
-    return { items: [], updated: 0, failed: false };
+    return { items: [], updated: 0 };
   }
   if (!result.success) {
     logger.warn('feed.refresh', { outcome: 'failed', feedId: feed.id, errorCode: result.error.name }, result.error);
@@ -58,7 +58,7 @@ async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: bool
     if (!updated.success) {
       logger.error('operation.failure', { operation: 'store-refresh-failure', entityId: feed.id }, updated.error);
     }
-    return { items: [], updated: 0, failed: true };
+    return { items: [], updated: 0, failure: result.error.message };
   }
 
   // A 304 keeps the stored validators as-is; a full fetch replaces them with the ones the server
@@ -69,14 +69,14 @@ async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: bool
     if (!updated.success) {
       logger.error('operation.failure', { operation: 'clear-refresh-failure', entityId: feed.id }, updated.error);
     }
-    return { items: [], updated: 0, failed: false };
+    return { items: [], updated: 0 };
   }
 
   await fillMissingIcon(feed, outcome.parsed.siteLink);
   const inserted = await syncFeedItemsToDatabase(db, feed.id, outcome.parsed.items, cutoff);
   if (!inserted.success) {
     logger.error('operation.failure', { operation: 'store-refreshed-items', entityId: feed.id }, inserted.error);
-    return { items: [], updated: 0, failed: true };
+    return { items: [], updated: 0, failure: 'Could not save the new items.' };
   }
 
   // Advance validators only after the response items are stored, so a 304 cannot hide an insert failure.
@@ -88,21 +88,21 @@ async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: bool
   if (!updated.success) {
     logger.error('operation.failure', { operation: 'clear-refresh-failure', entityId: feed.id }, updated.error);
   }
-  return { items: inserted.data.inserted, updated: inserted.data.updated, failed: false };
+  return { items: inserted.data.inserted, updated: inserted.data.updated };
 }
 
 async function refreshFeedList(feedList: FeedMetadataRow[], retentionDays: RetentionDays, force = false): Promise<RefreshSummary> {
   const insertedByFeedId = new Map<number, FeedItem[]>();
   const updatedByFeedId = new Map<number, number>();
-  const failedFeedIds: number[] = [];
+  const failedFeeds: NonNullable<RefreshSummary['failedFeeds']> = [];
   const cutoff = retentionCutoff(retentionDays);
 
   await runWithConcurrency(feedList, FEED_FETCH_CONCURRENCY, async (feed) => {
     const result = await refreshOneFeed(feed, cutoff, force);
     insertedByFeedId.set(feed.id, result.items);
     updatedByFeedId.set(feed.id, result.updated);
-    if (result.failed) {
-      failedFeedIds.push(feed.id);
+    if (result.failure !== undefined) {
+      failedFeeds.push({ feedId: feed.id, title: feed.title, message: result.failure });
     }
   });
 
@@ -121,7 +121,7 @@ async function refreshFeedList(feedList: FeedMetadataRow[], retentionDays: Reten
       return { feedId, inserted: items.length, ...(updated > 0 ? { updated } : {}) };
     }),
     ...(removed > 0 ? { removed } : {}),
-    ...(failedFeedIds.length > 0 ? { failedFeedIds } : {}),
+    ...(failedFeeds.length > 0 ? { failedFeeds } : {}),
   };
 }
 

@@ -67,7 +67,7 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
       >
         <FeedAvatar title={feed.title} faviconUrl={feed.icon} size="sm" />
         <span className="min-w-0 flex-1 truncate">{feed.title}</span>
-        {feed.last_error && <span role="img" aria-label={`${feed.title} refresh failed`} title="The last refresh failed" className="text-warning-primary">!</span>}
+        {feed.last_error && <span role="img" aria-label={`${feed.title} refresh failed: ${feed.last_error}`} title={`The last refresh failed: ${feed.last_error}`} className="text-warning-primary">!</span>}
       </button>
       <button
         type="button"

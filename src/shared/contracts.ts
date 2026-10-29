@@ -217,7 +217,7 @@ export interface RefreshSummary {
   perFeed: { feedId: number; inserted: number; updated?: number }[];
   removed?: number;
   applyImmediately?: boolean;
-  failedFeedIds?: number[];
+  failedFeeds?: { feedId: number; title: string; message: string }[];
 }
 
 export interface ItemBody {

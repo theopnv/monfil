@@ -175,7 +175,7 @@ describe('refreshAllFeeds', () => {
 
     // Assert
     expect(await db.selectFrom('feedItem').select('id').execute()).toEqual([{ id: saved.id }]);
-    expect(summary.failedFeedIds).toBeUndefined();
+    expect(summary.failedFeeds).toBeUndefined();
   });
 
   test('does not fetch a feed that was removed while an earlier feed was being fetched', async () => {
@@ -199,7 +199,7 @@ describe('refreshAllFeeds', () => {
 
     // Assert
     expect(mockedFetchFeed.mock.calls.map(([input]) => input.link)).not.toContain(linkB);
-    expect(summary.failedFeedIds).toBeUndefined();
+    expect(summary.failedFeeds).toBeUndefined();
   });
 
   test('does not fetch a removed source retained by Saved', async () => {
@@ -392,7 +392,7 @@ describe('refreshAllFeeds', () => {
     const stored = await db.selectFrom('feedMetadata').selectAll().where('id', '=', feedId).executeTakeFirstOrThrow();
 
     // Assert
-    expect(summary.failedFeedIds).toContain(feedId);
+    expect(summary.failedFeeds).toEqual([{ feedId, title: `Feed at ${link}`, message: 'Could not save the new items.' }]);
     expect(stored.etag).toBe('"old"');
   });
 
@@ -409,7 +409,7 @@ describe('refreshAllFeeds', () => {
 
     // Assert
     expect(summary.perFeed).toContainEqual({ feedId, inserted: 0 });
-    expect(summary.failedFeedIds).toBeUndefined();
+    expect(summary.failedFeeds).toBeUndefined();
     expect(stored.etag).toBe('"old"');
     expect(stored.last_error).toBeNull();
     expect(stored.last_fetched_at).toEqual(expect.any(String));
@@ -431,8 +431,8 @@ describe('refreshAllFeeds', () => {
     const recovered = await db.selectFrom('feedMetadata').selectAll().where('id', '=', feedId).executeTakeFirstOrThrow();
 
     // Assert
-    expect(failedSummary.failedFeedIds).toEqual([feedId]);
-    expect(recoveredSummary.failedFeedIds).toBeUndefined();
+    expect(failedSummary.failedFeeds).toEqual([{ feedId, title: `Feed at ${link}`, message: 'offline' }]);
+    expect(recoveredSummary.failedFeeds).toBeUndefined();
     expect(failed.last_error).toBe('offline');
     expect(failed.last_fetched_at).toEqual(expect.any(String));
     expect(recovered.last_error).toBeNull();

@@ -539,7 +539,7 @@ describe('fetchFeed', () => {
     mockedFetchText.mockResolvedValue({
       success: true,
       data: {
-        body: '<html><body>Not a feed</body></html>',
+        body: '<div>Not a feed</div>',
         validators: { etag: undefined, last_modified: undefined },
       },
     });
@@ -549,6 +549,23 @@ describe('fetchFeed', () => {
 
     // Assert
     expect(result).toEqual({ success: false, error: { name: 'PARSE_ERROR', message: 'Unrecognized feed format' } });
+  });
+
+  test.each([
+    { name: 'a doctype page', body: '<!DOCTYPE html><html><head><title>Verifying</title></head><body>Captcha</body></html>' },
+    { name: 'a bare html page behind whitespace', body: '\n  <html><script>location.reload()</script></html>' },
+  ])('names the bot check when the server sends $name instead of the feed', async ({ body }) => {
+    // Arrange
+    mockedFetchText.mockResolvedValue({ success: true, data: { body, validators: { etag: undefined, last_modified: undefined } } });
+
+    // Act
+    const result = await fetchFeed({ link: 'https://example.com/feed' });
+
+    // Assert
+    expect(result).toEqual({
+      success: false,
+      error: { name: 'PARSE_ERROR', message: 'The site sent a web page instead of the feed. It may show a bot check to automated readers or to your network or VPN.' },
+    });
   });
 
   test('returns the link, title, description and items on success for json feed', async () => {

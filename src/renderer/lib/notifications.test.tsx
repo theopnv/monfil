@@ -57,6 +57,21 @@ describe('notifyError', () => {
 });
 
 describe('notifyWarning', () => {
+  test('has a close button that lets the same warning show again', async () => {
+    // Arrange
+    await render(<NotificationHost />);
+    notifyWarning('Something failed.', 'same-key');
+    await expect.element(page.getByText('Something failed.', { exact: true })).toBeVisible();
+
+    // Act
+    await page.getByRole('button', { name: 'Close toast' }).click();
+    await expect.element(page.getByText('Something failed.', { exact: true })).not.toBeInTheDocument();
+    notifyWarning('Something failed.', 'same-key');
+
+    // Assert
+    await expect.element(page.getByText('Something failed.', { exact: true })).toBeVisible();
+  });
+
   test('keeps the first action for a key that is already open', async () => {
     // Arrange
     await render(<NotificationHost />);

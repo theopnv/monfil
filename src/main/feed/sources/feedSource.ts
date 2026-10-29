@@ -45,6 +45,9 @@ export function unsupported(message: string): { success: false; error: FeedFetch
 
 type ContentParser = (content: string) => ParsedFeedContent | null;
 
+const HTML_PAGE = /^\s*(<!doctype html|<html)/i;
+const HTML_INSTEAD_OF_FEED = 'The site sent a web page instead of the feed. It may show a bot check to automated readers or to your network or VPN.';
+
 export type FetchedFeed = { parsed: ParsedFeedContent; body: string; validators: FetchValidators } | NotModified;
 
 /**
@@ -64,11 +67,20 @@ export async function fetchAndParse(link: string, validators: FetchValidators | 
     if ('notModified' in result.data) {
       return { success: true, data: result.data };
     }
-    const parsed = parse(result.data.body);
+    const body = result.data.body;
+    let parsed: ParsedFeedContent | null;
+    try {
+      parsed = parse(body);
+    } catch (error) {
+      if (HTML_PAGE.test(body)) {
+        return { success: false, error: { name: 'PARSE_ERROR', message: HTML_INSTEAD_OF_FEED } };
+      }
+      throw error;
+    }
     if (!parsed) {
       return unsupported("This doesn't look like a supported feed.");
     }
-    return { success: true, data: { parsed, body: result.data.body, validators: result.data.validators } };
+    return { success: true, data: { parsed, body, validators: result.data.validators } };
   } catch (error) {
     if (error instanceof Error) {
       return { success: false, error: { name: 'PARSE_ERROR', message: error.message } };

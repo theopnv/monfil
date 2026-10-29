@@ -289,6 +289,24 @@ function readCappedText(
   });
 }
 
+/** Describes a non-success HTTP status in words a user can act on; HTTP/2 sends no reason phrase. */
+export function httpStatusMessage(status: number, statusMessage: string): string {
+  const code = statusMessage ? `HTTP ${status} ${statusMessage}` : `HTTP ${status}`;
+  if (status === 401 || status === 403) {
+    return `The server refused access (${code}). It may block automated readers, or your network or VPN.`;
+  }
+  if (status === 404 || status === 410) {
+    return `The feed was not found (${code}).`;
+  }
+  if (status === 429) {
+    return `The server is rate limiting requests (${code}).`;
+  }
+  if (status >= 500) {
+    return `The server had an error (${code}).`;
+  }
+  return `The server answered with ${code}.`;
+}
+
 async function fetchResource(
   url: string,
   options: FetchUrlOptions & { validators?: FetchValidators },
@@ -336,11 +354,11 @@ async function fetchResource(
         if (allowNotModified && hasValidator(options.validators ?? { etag: undefined, last_modified: undefined })) {
           return { success: true, data: { notModified: true } };
         }
-        return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: `${hop.status}: ${hop.statusMessage}` } };
+        return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(hop.status, hop.statusMessage) } };
       }
       if (hop.status < 200 || hop.status >= 300) {
         hop.abort();
-        return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: `${hop.status}: ${hop.statusMessage}` } };
+        return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(hop.status, hop.statusMessage) } };
       }
 
       const body = await raceAbort(hop.readBody(), signal, hop.abort);
