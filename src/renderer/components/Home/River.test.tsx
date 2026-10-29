@@ -542,6 +542,20 @@ test('shows an onboarding empty state with zero feeds and opens the Add Feed mod
   await expect.element(getByRole('heading', { name: 'Add a feed' })).toBeInTheDocument();
 });
 
+test('shows no empty state and queries no items while the feeds list is pending', async () => {
+  // Arrange
+  const realInvoke = invokeMock.getMockImplementation() as (channel: string, arg: unknown) => unknown;
+  invokeMock.mockImplementation((channel: string, arg: unknown) => (channel === 'feeds:list' ? new Promise(() => undefined) : realInvoke(channel, arg)));
+
+  // Act
+  const { getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  // Assert
+  await expect.element(getByText('Pick your sources', { exact: true })).not.toBeInTheDocument();
+  expect(invokeMock.mock.calls.some(([channel]) => channel === 'items:query')).toBe(false);
+});
+
 test('an empty non-Home workspace can import OPML, and the summary survives the workspace no longer being empty', async () => {
   // Arrange: the workspace starts with no feeds, so River renders EmptyRiver's "Import OPML" CTA.
   // The import dialog itself must live above EmptyRiver, since a successful import makes the

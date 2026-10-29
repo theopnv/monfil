@@ -22,7 +22,7 @@ import { useLoadMoreOnScroll } from "@/lib/river/useLoadMoreOnScroll";
 import { useMarkReadOnScroll } from "@/lib/river/useMarkReadOnScroll";
 import { useRiverKeyboardNav } from "@/lib/river/useRiverKeyboardNav";
 import { useRiverScope } from "@/providers/river-scope-provider";
-import { useCategories, useFeeds, useReadState, useRiver, useSetShowInWorkspace } from "@/providers/feeds-provider";
+import { useCategories, useFeeds, useFeedsPending, useReadState, useRiver, useSetShowInWorkspace } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import { useSearch } from "@/providers/search-provider";
 import { useActiveWorkspace, useActiveWorkspaceId } from "@/providers/workspace-provider";
@@ -36,6 +36,7 @@ export interface RiverProps {
 
 export default function River({ onOpenItem, savedView = false, onShowFeed }: RiverProps) {
   const feeds = useFeeds();
+  const awaitingFeeds = useFeedsPending() && !savedView;
   const categories = useCategories();
   const { markRead, markAllRead } = useReadState();
   const setShowInWorkspace = useSetShowInWorkspace();
@@ -57,7 +58,7 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
     [feeds, visibleFeedIdsSet],
   );
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, isError, refetch } = useRiver(scope);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, isError, refetch } = useRiver(scope, !awaitingFeeds);
   const visibleItems = useMemo(() => (data?.pages.flatMap((page) => page.rows) ?? []).filter((item) => !savedView || item.savedAt != null), [data, savedView]);
 
   const loadMore = useCallback(() => {
@@ -196,7 +197,7 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
                 : <RiverList items={visibleItems} density={preferences.density} onOpen={handleOpen} />
             ) : !savedView && isFeedpackRefreshing ? (
               <p className="py-20 text-center text-md font-regular text-tertiary">Fetching sources for this feedpack…</p>
-            ) : !savedView && !hasFeeds ? (
+            ) : awaitingFeeds ? null : !savedView && !hasFeeds ? (
               <EmptyRiver onImportOpml={() => setIsImportOpen(true)} onImportFeedpack={() => setIsFeedpackBrowserOpen(true)} />
             ) : debouncedSearch.length > 0 ? (
               visibleItems.length === 0
