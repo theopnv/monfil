@@ -147,6 +147,8 @@ export const useMoveFeeds = (): ((feedIds: number[], categoryId: number) => Prom
   return useCallback((feedIds: number[], categoryId: number) => mutateAsync({ feedIds, categoryId, workspaceId }), [mutateAsync, workspaceId]);
 };
 
+const MAX_FAILURE_LINES = 3;
+
 interface FeedsRefresh {
   refreshNow: () => void;
   isRefreshing: boolean;
@@ -164,12 +166,16 @@ export const useFeedsRefresh = (): FeedsRefresh => {
       void queryClient.invalidateQueries({ queryKey: ['river'] });
       queryClient.setQueryData<number[]>(uiKeys.pendingRefreshFeedIds, []);
       queryClient.setQueryData<number>(uiKeys.appliedRefreshVersion, (version) => (version ?? 0) + 1);
-      if (summary.failedFeedIds?.length) {
-        const count = summary.failedFeedIds.length;
+      if (summary.failedFeeds?.length) {
+        const count = summary.failedFeeds.length;
+        const lines = summary.failedFeeds.slice(0, MAX_FAILURE_LINES).map(({ title, message }) => `${title}: ${message}`);
+        if (count > MAX_FAILURE_LINES) {
+          lines.push(`and ${count - MAX_FAILURE_LINES} more`);
+        }
         notifyWarning(`${count} ${count === 1 ? 'feed' : 'feeds'} could not be refreshed.`, 'manual-refresh-failures', {
           label: 'Show log file',
           onClick: () => ipc.send('app:reveal-log-file', undefined),
-        });
+        }, lines);
       }
     },
     onError: (error: unknown) => {

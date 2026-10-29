@@ -213,6 +213,17 @@ async function renderOpenSidebar(feeds: FeedSummary[], showOnlyLinks: ReadonlySe
   return view;
 }
 
+test('a failed feed shows the reason in the warning tooltip', async () => {
+  // Arrange
+  const failing: FeedSummary = { ...feedA, last_error: 'The server refused access (HTTP 403).' };
+
+  // Act
+  const { getByRole } = await renderOpenSidebar([failing], new Set());
+
+  // Assert
+  await expect.element(getByRole('img', { name: 'Feed A refresh failed: The server refused access (HTTP 403).' })).toHaveAttribute('title', 'The last refresh failed: The server refused access (HTTP 403).');
+});
+
 describe('feed row focus and hide controls', () => {
   test('clicking a home feed row focuses it', async () => {
     // Arrange

@@ -179,5 +179,5 @@ refreshTest('uses Electron networking and accepts an unchanged feed response', a
   expect(requests.some((request) => request.ifNoneMatch === undefined)).toBe(true);
   expect(requests.some((request) => request.ifNoneMatch === '"v1"')).toBe(true);
   expect(summary.perFeed).toContainEqual(expect.objectContaining({ inserted: 0 }));
-  expect(summary.failedFeedIds).toBeUndefined();
+  expect(summary.failedFeeds).toBeUndefined();
 });

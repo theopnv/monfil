@@ -14,12 +14,13 @@ export function notifyError(message: string, key = message): void {
   toast.error(message, { id: key, onDismiss: () => activeKeys.delete(key), onAutoClose: () => activeKeys.delete(key) });
 }
 
-export function notifyWarning(message: string, key = message, action?: { label: string; onClick: () => void }): void {
+export function notifyWarning(message: string, key = message, action?: { label: string; onClick: () => void }, descriptionLines?: string[]): void {
   if (activeKeys.has(key)) {
     return;
   }
   activeKeys.add(key);
-  toast.warning(message, { id: key, action, duration: Infinity, onDismiss: () => activeKeys.delete(key), onAutoClose: () => activeKeys.delete(key) });
+  const description = descriptionLines?.length ? <>{descriptionLines.map((line) => <div key={line}>{line}</div>)}</> : undefined;
+  toast.warning(message, { id: key, action, description, closeButton: true, duration: Infinity, onDismiss: () => activeKeys.delete(key), onAutoClose: () => activeKeys.delete(key) });
 }
 
 /** Shows a message that stays until the user acts on it or closes it. */
@@ -33,6 +34,7 @@ export function notifyUndo(message: string, onUndo: () => void): void {
 }
 
 export function dismissAllNotifications(): void {
+  activeKeys.clear();
   toast.dismiss();
 }
 
