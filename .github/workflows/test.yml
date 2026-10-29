@@ -69,7 +69,7 @@ jobs:
       # on every platform it ships to.
       - id: compute
         run: |
-          full='["ubuntu-latest", "macos-latest", "windows-latest"]'
+          full='["ubuntu-latest", "macos-latest", "macos-15-intel", "windows-latest"]'
           if [ "${{ inputs.full_matrix }}" = "true" ]; then
             echo "os=$full" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ contains(github.event.pull_request.labels.*.name, 'full-ci') }}" = "true" ]; then
@@ -117,7 +117,7 @@ jobs:
       MONFIL_APTABASE_KEY: ${{ inputs.upload_package && vars.MONFIL_APTABASE_KEY || '' }}
       MONFIL_APTABASE_HOST: ${{ inputs.upload_package && vars.MONFIL_APTABASE_HOST || '' }}
       # Packaging signs the release app, so only a release run on macOS gets the Apple identity.
-      APPLE_SIGNING_IDENTITY: ${{ inputs.upload_package && matrix.os == 'macos-latest' && vars.APPLE_SIGNING_IDENTITY || '' }}
+      APPLE_SIGNING_IDENTITY: ${{ inputs.upload_package && startsWith(matrix.os, 'macos') && vars.APPLE_SIGNING_IDENTITY || '' }}
     strategy:
       fail-fast: false
       matrix:
