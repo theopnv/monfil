@@ -24,7 +24,7 @@ test('throws a named error for invalid payloads', async () => {
   await expect(result).rejects.toMatchObject({ name: 'INVALID_PAYLOAD', message: 'Invalid request payload.' });
 });
 
-test('keeps the incident ID on unexpected errors', async () => {
+test('keeps the incident ID on unexpected errors and shows its first 8 characters in the message', async () => {
   // Arrange
   invoke.mockResolvedValue({ success: false, error: { name: 'UNEXPECTED_ERROR', message: 'The operation could not be completed.', incidentId: '12345678-abcd' } });
 
@@ -32,7 +32,7 @@ test('keeps the incident ID on unexpected errors', async () => {
   const result = ipc.invoke('feeds:list', { workspaceId: 1 });
 
   // Assert
-  await expect(result).rejects.toMatchObject({ name: 'UNEXPECTED_ERROR', incidentId: '12345678-abcd', message: 'The operation could not be completed.' });
+  await expect(result).rejects.toMatchObject({ name: 'UNEXPECTED_ERROR', incidentId: '12345678-abcd', message: 'The operation could not be completed. Incident 12345678.' });
 });
 
 test('returns domain failures to the caller', async () => {

@@ -22,7 +22,7 @@ export const ipc = {
         throw Object.assign(new Error(failure.error.message), failure.error);
       }
       if (failure.error.name === 'UNEXPECTED_ERROR' && failure.error.message && failure.error.incidentId) {
-        throw Object.assign(new Error(`${failure.error.message} Incident ${failure.error.incidentId.slice(0, 8)}.`), failure.error);
+        throw Object.assign(new Error(), failure.error, { message: `${failure.error.message} Incident ${failure.error.incidentId.slice(0, 8)}.` });
       }
     }
     return response as TwoWayRendererMainChannelPayloads[C];
