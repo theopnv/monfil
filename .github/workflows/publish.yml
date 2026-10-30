@@ -147,6 +147,15 @@ jobs:
               --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
           fi
 
+  notify_website:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tell the website about the release
+        env:
+          GH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+        run: gh api repos/theopnv/monfil-website/dispatches -f event_type=monfil-release -f "client_payload[tag]=$GITHUB_REF_NAME"
+
   # Every Store submission goes through certification, so only minor and major releases go to the Store.
   store:
     needs: publish

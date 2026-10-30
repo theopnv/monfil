@@ -101,5 +101,5 @@ test('the privacy notice link opens in the browser', async () => {
   await getByRole('button', { name: 'Privacy notice' }).click();
 
   // Assert
-  expect(sendMessage).toHaveBeenCalledWith('link:open', 'https://theopnv.github.io/monfil/user-guide/privacy/');
+  expect(sendMessage).toHaveBeenCalledWith('link:open', 'https://monfil.app/docs/user-guide/privacy/');
 });

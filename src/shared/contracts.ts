@@ -333,7 +333,7 @@ export type FeedpackInstallTarget =
 /** Matches the "Last updated" date of the privacy notice in `doc/src/content/docs/user-guide/privacy.md`. */
 export const USAGE_ANALYTICS_NOTICE_VERSION = '2026-10-23';
 
-export const USAGE_ANALYTICS_NOTICE_URL = 'https://theopnv.github.io/monfil/user-guide/privacy/';
+export const USAGE_ANALYTICS_NOTICE_URL = 'https://monfil.app/docs/user-guide/privacy/';
 
 export type UsageAnalyticsConsent = 'unset' | 'granted' | 'denied';
 

@@ -50,7 +50,7 @@ jobs:
       - name: Prepare site link root
         run: |
           mkdir -p "$RUNNER_TEMP/docs-link-root"
-          ln -s "$GITHUB_WORKSPACE/doc/dist" "$RUNNER_TEMP/docs-link-root/monfil"
+          ln -s "$GITHUB_WORKSPACE/doc/dist" "$RUNNER_TEMP/docs-link-root/docs"
 
       - name: Check links
         id: lychee

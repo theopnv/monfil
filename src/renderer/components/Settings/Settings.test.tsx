@@ -81,11 +81,13 @@ test('renders every section heading', async () => {
   await expect.element(getByRole('heading', { name: 'Privacy' })).toBeInTheDocument();
 });
 
-test('about section lists the changelog, issue and donation links', async () => {
+test('about section lists the website, docs, changelog, issue and donation links', async () => {
   // Arrange
   const { getByRole } = await renderSettings();
 
   // Assert
+  await expect.element(getByRole('button', { name: 'Website' })).toBeInTheDocument();
+  await expect.element(getByRole('button', { name: 'Documentation' })).toBeInTheDocument();
   await expect.element(getByRole('button', { name: 'Changelog' })).toBeInTheDocument();
   await expect.element(getByRole('button', { name: 'Report an issue' })).toBeInTheDocument();
   await expect.element(getByRole('button', { name: 'Buy me a coffee' })).toBeInTheDocument();

@@ -9,7 +9,9 @@ import SettingsSection from "@/components/Settings/SettingsSection";
 import MonfilLogo from "@/components/common/MonfilLogo";
 
 const LINKS = [
-  { label: "Changelog", url: "https://theopnv.github.io/monfil/changelog/" },
+  { label: "Website", url: "https://monfil.app" },
+  { label: "Documentation", url: "https://monfil.app/docs/" },
+  { label: "Changelog", url: "https://monfil.app/docs/changelog/" },
   { label: "Report an issue", url: "https://github.com/theopnv/monfil/issues" },
   { label: "Buy me a coffee", url: "https://buymeacoffee.com/theopnv" },
 ];

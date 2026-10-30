@@ -18,7 +18,7 @@
   <a href="https://dashboard.stryker-mutator.io/reports/github.com/theopnv/monfil/main?module=unit"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Ftheopnv%2Fmonfil%2Fmain%3Fmodule%3Dunit&amp;label=mutation%20score%20(unit)" alt="Mutation score of the unit suite"></a>
   <a href="https://dashboard.stryker-mutator.io/reports/github.com/theopnv/monfil/main?module=integration"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Ftheopnv%2Fmonfil%2Fmain%3Fmodule%3Dintegration&amp;label=mutation%20score%20(renderer)" alt="Mutation score of the renderer suite"></a>
 </p>
-<p align="center"><a href="doc/src/content/docs/user-guide/install.md">Install Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="doc/src/content/docs/contributor-guide/home.md">Contribute</a></p>
+<p align="center"><a href="https://monfil.app">Website</a> · <a href="https://monfil.app/docs/">Docs</a> · <a href="doc/src/content/docs/user-guide/install.md">Install Monfil</a> · <a href="./feedpacks/">Browse feed packs</a> · <a href="doc/src/content/docs/contributor-guide/home.md">Contribute</a></p>
 
 Monfil is a cross-platform desktop feed reader for anyone who wants to stay ahead. Keep track of what's happening in your field across 10 kinds of sources, with more to come: RSS, Substack, Google Alerts, YouTube, GitHub and GitLab releases, Hacker News, arXiv, Bluesky, Mastodon...
 
@@ -115,4 +115,4 @@ BUSL 1.1 permits copying, modification, redistribution, and non-production use. 
 
 Each BUSL-licensed version automatically changes to the MIT License four years after its first release. Read the [full license](LICENSE) for the terms. Third-party code keeps its own licenses, listed in [NOTICE](NOTICE).
 
-All new contributors must sign the [Contributor License Agreement](CLA.md) through CLA Assistant before a pull request can be merged. For licensing questions, contact <support@theopnv.com>.
+All new contributors must sign the [Contributor License Agreement](CLA.md) through CLA Assistant before a pull request can be merged. For licensing questions, contact <hello@monfil.app>.
