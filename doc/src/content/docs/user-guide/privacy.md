@@ -19,7 +19,7 @@ Cloudflare, Inc. is based in the United States. Its [privacy policy](https://www
 
 ### Website hosting and browser storage
 
-GitHub Pages hosts this website. GitHub receives your IP address and request details when you open a page. See the [GitHub privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
+Cloudflare hosts this website. Cloudflare receives your IP address and request details when you open a page. See the [Cloudflare privacy policy](https://www.cloudflare.com/privacypolicy/).
 
 The website stores your selected colour theme in your browser's local storage. This setting stays on your device until you change it or clear the site's stored data. It is separate from Cloudflare's analytics.
 
@@ -27,7 +27,7 @@ You can block the Cloudflare script with your browser or a content blocker and c
 
 ### Privacy questions and rights
 
-The Monfil website maintainer is responsible for this website. For privacy questions or requests about your personal data, email [support@theopnv.com](mailto:support@theopnv.com).
+The Monfil website maintainer is responsible for this website. For privacy questions or requests about your personal data, email [hello@monfil.app](mailto:hello@monfil.app).
 
 ## Desktop app
 
@@ -51,7 +51,7 @@ The event never holds a feed name, a link, article text, search text, or a name 
 
 Aptabase derives an anonymous user ID on its server as a hash of your IP address and user agent with a salt. Aptabase states that the salt is different for each app and is discarded every 24 hours. The ID changes every day, so the maintainer cannot follow one person from one day to the next. Aptabase states that it keeps analytics data for up to 5 years. See the [Aptabase privacy policy](https://aptabase.com/legal/privacy) for details.
 
-The legal basis is your consent. Your choice is stored on your device with its date and the version of this notice. To withdraw, turn off **Share anonymous usage stats** in Settings. Monfil then stops counting, stops sending, and deletes the counts it kept on your device. Events already received cannot be linked back to you. To ask about your data, email [support@theopnv.com](mailto:support@theopnv.com). A build of Monfil that has no analytics key, such as a build you compile yourself, sends nothing.
+The legal basis is your consent. Your choice is stored on your device with its date and the version of this notice. To withdraw, turn off **Share anonymous usage stats** in Settings. Monfil then stops counting, stops sending, and deletes the counts it kept on your device. Events already received cannot be linked back to you. To ask about your data, email [hello@monfil.app](mailto:hello@monfil.app). A build of Monfil that has no analytics key, such as a build you compile yourself, sends nothing.
 
 ### Requests to other sites
 

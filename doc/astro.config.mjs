@@ -1,14 +1,21 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightLlmsTxt from 'starlight-llms-txt';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://theopnv.github.io',
-	base: '/monfil',
+	site: 'https://monfil.app',
+	base: '/docs',
 	integrations: [
 		starlight({
 			title: 'Monfil',
+			plugins: [
+				starlightLlmsTxt({
+					projectName: 'Monfil',
+					description: 'Keep track of what matters to you and stay ahead.',
+				}),
+			],
 			head: [
 				{
 					tag: 'script',

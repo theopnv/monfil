@@ -1,6 +1,6 @@
 # Monfil Contributor License Agreement
 
-Choose the agreement that matches the owner of the contribution. When you open a pull request to the [official Monfil repository](https://github.com/theopnv/monfil), CLA Assistant will comment with a link to sign. For questions, contact support@theopnv.com.
+Choose the agreement that matches the owner of the contribution. When you open a pull request to the [official Monfil repository](https://github.com/theopnv/monfil), CLA Assistant will comment with a link to sign. For questions, contact hello@monfil.app.
 
 “Contribution” means any code, documentation, data, design, or other material that you intentionally submit to the official Monfil repository for inclusion in Monfil. It includes later updates to that material. An issue report or discussion without a proposed change is not a Contribution.
 

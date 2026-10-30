@@ -1,0 +1,11 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "monfil-docs",
+	"compatibility_date": "2026-10-30",
+	"assets": {
+		"directory": "./dist",
+		"base_path": "/docs",
+		"not_found_handling": "404-page"
+	},
+	"routes": [{ "pattern": "monfil.app/docs*", "zone_name": "monfil.app" }]
+}
