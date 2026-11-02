@@ -77,6 +77,7 @@ export type OneWayMainToRendererChannelPayloads = {
   'feeds:item-image-fetched': { feedId: number; itemId: number; image: string };
   'feeds:refreshed': RefreshSummary;
   'feeds:delete-feed-requested': number;
+  'feeds:move-feed-requested': number;
   'feeds:rename-category-requested': number;
   'feeds:delete-category-requested': number;
   'workspaces:edit-requested': number;

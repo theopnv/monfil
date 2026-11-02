@@ -78,6 +78,10 @@ export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayR
       },
     },
     {
+      label: "Move to workspace…",
+      click: () => sendToRenderer(event.sender, "feeds:move-feed-requested", feedId),
+    },
+    {
       label: "Delete feed",
       click: () => sendToRenderer(event.sender, "feeds:delete-feed-requested", feedId),
     },

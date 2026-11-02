@@ -10,6 +10,7 @@ import { patchRiverRows, queryKeys } from './queries';
 
 export const uiKeys = {
   deleteFeedRequestedId: ['ui', 'delete-feed-requested'] as const,
+  moveFeedRequestedId: ['ui', 'move-feed-requested'] as const,
   renameCategoryRequestedId: ['ui', 'rename-category-requested'] as const,
   deleteCategoryRequestedId: ['ui', 'delete-category-requested'] as const,
   editWorkspaceRequestedId: ['ui', 'edit-workspace-requested'] as const,
@@ -62,6 +63,10 @@ export function useIpcBridge(): void {
 
       ipc.on('feeds:delete-feed-requested', (feedId) => {
         queryClient.setQueryData(uiKeys.deleteFeedRequestedId, feedId);
+      }),
+
+      ipc.on('feeds:move-feed-requested', (feedId) => {
+        queryClient.setQueryData(uiKeys.moveFeedRequestedId, feedId);
       }),
 
       ipc.on('feeds:rename-category-requested', (categoryId) => {
@@ -159,6 +164,25 @@ export function useClearDeleteFeedRequest(): () => void {
   const queryClient = useQueryClient();
   return useCallback(() => {
     queryClient.setQueryData(uiKeys.deleteFeedRequestedId, null);
+  }, [queryClient]);
+}
+
+/** The feed id a "Move to workspace" context-menu click asked to move, or `null` when none is pending. */
+export function useMoveFeedRequestedId(): number | null {
+  const { data } = useQuery({
+    queryKey: uiKeys.moveFeedRequestedId,
+    queryFn: (): number | null => null,
+    initialData: null,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+  return data;
+}
+
+export function useClearMoveFeedRequest(): () => void {
+  const queryClient = useQueryClient();
+  return useCallback(() => {
+    queryClient.setQueryData(uiKeys.moveFeedRequestedId, null);
   }, [queryClient]);
 }
 

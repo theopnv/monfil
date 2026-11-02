@@ -120,7 +120,7 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     expect(popup).toHaveBeenCalledWith({ window: fakeWindow });
   });
 
-  test('builds a template holding "Refresh feed" then "Delete feed"', () => {
+  test('builds a template holding Refresh, Move and Delete', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
@@ -130,7 +130,22 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
 
     // Assert
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
-    expect(template?.map((item) => item.label)).toEqual(['Refresh feed', 'Delete feed']);
+    expect(template?.map((item) => item.label)).toEqual(['Refresh feed', 'Move to workspace…', 'Delete feed']);
+  });
+
+  test("the move item's click sends feeds:move-feed-requested with the feed id", () => {
+    // Arrange
+    mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
+    mockedFromWebContents.mockReturnValue(fakeWindow);
+    const event = mockEvent();
+
+    // Act
+    listenToShowFeedContextMenu(event, 42);
+    const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
+    template?.[1]?.click?.(undefined as never, undefined, undefined as never);
+
+    // Assert
+    expect(event.sender.send).toHaveBeenCalledWith('feeds:move-feed-requested', 42);
   });
 
   test('the refresh item force-refreshes that feed and applies the result immediately', async () => {
@@ -158,7 +173,7 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     // Act
     listenToShowFeedContextMenu(event, 42);
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
-    template?.[1]?.click?.(undefined as never, undefined, undefined as never);
+    template?.[2]?.click?.(undefined as never, undefined, undefined as never);
 
     // Assert
     expect(event.sender.send).toHaveBeenCalledWith('feeds:delete-feed-requested', 42);
@@ -173,7 +188,7 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     // Act
     listenToShowFeedContextMenu(event, 42);
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
-    template?.[1]?.click?.(undefined as never, undefined, undefined as never);
+    template?.[2]?.click?.(undefined as never, undefined, undefined as never);
 
     // Assert
     expect(event.sender.send).not.toHaveBeenCalled();
