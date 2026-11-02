@@ -30,16 +30,3 @@
 	--sl-color-bg-nav: #ebddc5;
 	--sl-color-bg-sidebar: #f5ead8;
 }
-
-.monfil-gallery {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
-	gap: 1rem;
-	margin-block: 1.5rem;
-}
-
-.monfil-gallery img {
-	width: 100%;
-	height: auto;
-	border-radius: 0.75rem;
-}
