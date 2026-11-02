@@ -63,7 +63,7 @@ function WorkspaceButton({ workspace, isActive, shortcut }: { workspace: Workspa
 }
 
 // Holding a dragged feed over a workspace this long opens it, so the feed can be dropped into one of its folders.
-const FEED_HOVER_OPEN_MS = 2000;
+const FEED_HOVER_OPEN_MS = 1300;
 
 function WorkspaceRail({ workspaces, activeId, goTo }: { workspaces: WorkspaceSummary[]; activeId: number | undefined; goTo: (workspaceId: number) => void }) {
   const reorderWorkspaces = useReorderWorkspaces();
