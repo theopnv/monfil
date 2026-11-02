@@ -7,6 +7,7 @@ import { Heading } from "react-aria-components";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
+import NativeSelect from "@/components/common/NativeSelect";
 import { categoriesQuery } from "@/lib/queries";
 import { useActiveWorkspaceId, useMoveFeedToWorkspace, useWorkspaces } from "@/providers/workspace-provider";
 import type { FeedSummary } from "../../../shared/contracts";
@@ -64,9 +65,8 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
 
       <div className="flex flex-col gap-1.5 px-6 pb-4.5">
         <label htmlFor="move-feed-workspace" className="text-sm font-medium text-secondary">Workspace</label>
-        <select
+        <NativeSelect
           id="move-feed-workspace"
-          className={FIELD_CLASSES}
           value={destinationId}
           onChange={(event) => {
             setChosenDestinationId(Number(event.target.value));
@@ -76,17 +76,17 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
           {destinations.map((workspace) => (
             <option key={workspace.id} value={workspace.id}>{workspace.name}</option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       <div className="flex flex-col gap-1.5 px-6 pb-4.5">
         <label htmlFor="move-feed-folder" className="text-sm font-medium text-secondary">Folder</label>
-        <select id="move-feed-folder" className={FIELD_CLASSES} value={folder} onChange={(event) => setFolderChoice(event.target.value)}>
+        <NativeSelect id="move-feed-folder" value={folder} onChange={(event) => setFolderChoice(event.target.value)}>
           {folderNames.map((name) => (
             <option key={name} value={name}>{name}</option>
           ))}
           <option value={NEW_FOLDER}>New folder…</option>
-        </select>
+        </NativeSelect>
         {folder === NEW_FOLDER && (
           <input
             aria-label="New folder name"

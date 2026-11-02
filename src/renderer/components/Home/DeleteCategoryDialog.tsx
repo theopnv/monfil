@@ -4,6 +4,7 @@
 
 import { useEffect, useEffectEvent, useState } from "react";
 import { Heading } from "react-aria-components";
+import NativeSelect from "@/components/common/NativeSelect";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useDeleteCategory } from "@/providers/feeds-provider";
@@ -39,16 +40,15 @@ function MoveFeedsOption({ otherCategories, moveFeeds, onMoveFeedsChange, reassi
         Keep its feeds and move them to another folder instead
       </label>
       {moveFeeds && (
-        <select
+        <NativeSelect
           aria-label="Move its feeds to"
-          className="rounded-lg border border-secondary bg-primary px-3 py-2 text-sm text-primary"
           value={reassignTo}
           onChange={(event) => onReassignToChange(Number(event.target.value))}
         >
           {otherCategories.map((other) => (
             <option key={other.id} value={other.id}>{other.name}</option>
           ))}
-        </select>
+        </NativeSelect>
       )}
     </div>
   );

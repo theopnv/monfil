@@ -24,12 +24,11 @@ import {
   useEditWorkspaceRequestedId,
   useExportWorkspaceRequestedId,
 } from "@/lib/ipc-bridge";
-import { FEED_DRAG_TYPE } from "@/lib/feed-drag";
+import { decodeFeedDrag, FEED_DRAG_TYPE } from "@/lib/feed-drag";
 import { notifyError } from "@/lib/notifications";
 import { hasOnlyModKey, MOD_KEY_LABEL } from "@/lib/keyboard";
 import { reorderIds } from "@/lib/reorder";
 import { workspaceIconComponent } from "@/lib/workspace-icons";
-import { useFeeds } from "@/providers/feeds-provider";
 import { useHint } from "@/providers/hints-provider";
 import { useExportOpml } from "@/providers/opml-provider";
 import { useActiveWorkspaceId, useMoveFeedToWorkspace, useReorderWorkspaces, useWorkspaces } from "@/providers/workspace-provider";
@@ -63,27 +62,43 @@ function WorkspaceButton({ workspace, isActive, shortcut }: { workspace: Workspa
   );
 }
 
+// Holding a dragged feed over a workspace this long opens it, so the feed can be dropped into one of its folders.
+const FEED_HOVER_OPEN_MS = 2000;
+
 function WorkspaceRail({ workspaces, activeId, goTo }: { workspaces: WorkspaceSummary[]; activeId: number | undefined; goTo: (workspaceId: number) => void }) {
   const reorderWorkspaces = useReorderWorkspaces();
   const moveFeedToWorkspace = useMoveFeedToWorkspace();
-  const feeds = useFeeds();
+  const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cancelOpen = () => clearTimeout(openTimer.current);
   const { dragAndDropHooks } = useDragAndDrop({
     shouldAcceptItemDrop: (target, types) => types.has(FEED_DRAG_TYPE) && target.key !== activeId,
-    getDropOperation: (target, types) => (types.has(FEED_DRAG_TYPE) && (target.type !== 'item' || target.dropPosition !== 'on') ? 'cancel' : 'move'),
+    getDropOperation: (target, types) => {
+      const isOnItem = target.type === 'item' && target.dropPosition === 'on';
+      if (types.has(FEED_DRAG_TYPE)) {
+        return isOnItem && target.key !== activeId ? 'move' : 'cancel';
+      }
+      return isOnItem ? 'cancel' : 'move';
+    },
+    onDropEnter: (event) => {
+      cancelOpen();
+      if (event.target.type === 'item' && event.target.dropPosition === 'on') {
+        const destinationId = Number(event.target.key);
+        openTimer.current = setTimeout(() => goTo(destinationId), FEED_HOVER_OPEN_MS);
+      }
+    },
+    onDropExit: cancelOpen,
+    onDragEnd: cancelOpen,
     onItemDrop: async (event) => {
+      cancelOpen();
       const destinationId = Number(event.target.key);
       for (const dropItem of event.items) {
-        if (dropItem.kind !== 'text' || !dropItem.types.has(FEED_DRAG_TYPE)) {
+        const payload = dropItem.kind === 'text' && dropItem.types.has(FEED_DRAG_TYPE) ? decodeFeedDrag(await dropItem.getText(FEED_DRAG_TYPE)) : null;
+        if (!payload) {
           continue;
         }
-        const feedId = Number(await dropItem.getText(FEED_DRAG_TYPE));
-        const feed = feeds.find((entry) => entry.id === feedId);
-        if (!feed || activeId === undefined) {
-          continue;
-        }
-        const result = await moveFeedToWorkspace(feed.id, activeId, destinationId, feed.category.name);
+        const result = await moveFeedToWorkspace(payload.feedId, payload.workspaceId, destinationId, payload.categoryName);
         if (!result.success) {
-          notifyError(`${feed.title} could not be moved.`);
+          notifyError("The feed could not be moved.");
           return;
         }
         goTo(destinationId);

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { FEED_DRAG_TYPE } from "@/lib/feed-drag";
+import { decodeFeedDrag, encodeFeedDrag, FEED_DRAG_TYPE } from "@/lib/feed-drag";
 import WorkspaceNavigation from "@/components/Workspace/WorkspaceNavigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ipc } from '@/lib/ipc-client';
@@ -33,7 +33,7 @@ import {
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import { useCreateCategory, useMoveFeeds, useRenameCategory } from "@/providers/feeds-provider";
 import { useHint } from "@/providers/hints-provider";
-import { useActiveWorkspaceId } from '@/providers/workspace-provider';
+import { useActiveWorkspaceId, useMoveFeedToWorkspace } from '@/providers/workspace-provider';
 import type { FeedCategory, FeedSummary } from "../../../shared/contracts";
 
 export interface RiverSidebarProps {
@@ -156,6 +156,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
   const createCategory = useCreateCategory();
   const renameCategory = useRenameCategory();
   const moveFeeds = useMoveFeeds();
+  const moveFeedToWorkspace = useMoveFeedToWorkspace();
 
   useEffect(() => {
     setFolders((prev) => {
@@ -269,7 +270,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: (keys) => [...keys].flatMap((key) => {
       const item = items.find((entry) => entry.key === key);
-      return item?.type === 'feed' ? [{ [FEED_DRAG_TYPE]: String(item.feed.id) }] : [];
+      return item?.type === 'feed' ? [{ [FEED_DRAG_TYPE]: encodeFeedDrag({ feedId: item.feed.id, workspaceId: item.feed.workspaceId, categoryName: item.feed.category.name }) }] : [];
     }),
     shouldAcceptItemDrop: (target) => dropCategoryId(items, target.key.toString()) !== null,
     getDropOperation: (target) => (
@@ -288,13 +289,20 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
       if (categoryId === null) {
         return;
       }
+      const folderName = folders.find((folder) => folder.id === categoryId)?.name;
       const feedIds: number[] = [];
       for (const dropItem of event.items) {
-        if (dropItem.kind === 'text' && dropItem.types.has(FEED_DRAG_TYPE)) {
-          const feedId = Number(await dropItem.getText(FEED_DRAG_TYPE));
-          if (feeds.find((feed) => feed.id === feedId)?.category.id !== categoryId) {
-            feedIds.push(feedId);
+        const payload = dropItem.kind === 'text' && dropItem.types.has(FEED_DRAG_TYPE) ? decodeFeedDrag(await dropItem.getText(FEED_DRAG_TYPE)) : null;
+        if (!payload) {
+          continue;
+        }
+        if (payload.workspaceId !== activeWorkspaceId) {
+          // A feed carried here from another workspace (a rail hover opened this one mid-drag).
+          if (folderName !== undefined) {
+            await moveFeedToWorkspace(payload.feedId, payload.workspaceId, activeWorkspaceId, folderName);
           }
+        } else if (feeds.find((feed) => feed.id === payload.feedId)?.category.id !== categoryId) {
+          feedIds.push(payload.feedId);
         }
       }
       if (feedIds.length > 0) {
