@@ -226,7 +226,7 @@ describe('deleteCategory', () => {
     }
 
     // Act
-    const result = await deleteCategory(inserted.data.category.id, destination.data.id, HOME_WORKSPACE_ID);
+    const result = await deleteCategory(inserted.data.category.id, HOME_WORKSPACE_ID, destination.data.id);
 
     // Assert
     expect(result.success).toBe(true);
@@ -234,6 +234,26 @@ describe('deleteCategory', () => {
     expect(category).toEqual([]);
     const placement = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', inserted.data.id).executeTakeFirstOrThrow();
     expect(placement.category_id).toBe(destination.data.id);
+  });
+
+  test('deletes its feeds when no destination is given', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+
+    // Act
+    const result = await deleteCategory(inserted.data.category.id, HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(result.success).toBe(true);
+    const category = await db.selectFrom('feedCategory').selectAll().where('id', '=', inserted.data.category.id).execute();
+    expect(category).toEqual([]);
+    const placements = await db.selectFrom('feedPlacement').selectAll().where('feed_id', '=', inserted.data.id).execute();
+    expect(placements).toEqual([]);
+    const metadata = await db.selectFrom('feedMetadata').selectAll().where('id', '=', inserted.data.id).execute();
+    expect(metadata).toEqual([]);
   });
 
   test('an empty category still deletes', async () => {
@@ -245,7 +265,7 @@ describe('deleteCategory', () => {
     }
 
     // Act
-    const result = await deleteCategory(empty.data.id, destination.data.id, HOME_WORKSPACE_ID);
+    const result = await deleteCategory(empty.data.id, HOME_WORKSPACE_ID, destination.data.id);
 
     // Assert
     expect(result.success).toBe(true);
@@ -259,7 +279,7 @@ describe('deleteCategory', () => {
     }
 
     // Act
-    const result = await deleteCategory(999999, destination.data.id, HOME_WORKSPACE_ID);
+    const result = await deleteCategory(999999, HOME_WORKSPACE_ID, destination.data.id);
 
     // Assert
     expect(result.success).toBe(false);
@@ -282,7 +302,7 @@ describe('deleteCategory', () => {
     }
 
     // Act
-    const result = await deleteCategory(foreign.data.id, destination.data.id, HOME_WORKSPACE_ID);
+    const result = await deleteCategory(foreign.data.id, HOME_WORKSPACE_ID, destination.data.id);
 
     // Assert
     expect(result.success).toBe(false);
@@ -307,7 +327,7 @@ describe('deleteCategory', () => {
     }
 
     // Act
-    const result = await deleteCategory(inserted.data.category.id, foreign.data.id, HOME_WORKSPACE_ID);
+    const result = await deleteCategory(inserted.data.category.id, HOME_WORKSPACE_ID, foreign.data.id);
 
     // Assert
     expect(result.success).toBe(false);

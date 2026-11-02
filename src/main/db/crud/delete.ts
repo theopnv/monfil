@@ -41,33 +41,41 @@ export async function deleteFeedFromDatabase(feedId: number, workspaceId: number
 class CategoryNotFoundError extends Error {}
 
 /**
- * Deletes a category, first moving every feed it holds into `reassignTo`. A category cannot vanish
- * silently while feeds still point at it, so the caller must name an explicit destination. Both
- * categories have to belong to `workspaceId`: reassigning into another workspace's folder would put
- * the feed in a folder its own sidebar never lists.
+ * Deletes a category together with its feeds, or first moves them into `reassignTo` when given.
+ * Both categories have to belong to `workspaceId`: reassigning into another workspace's folder
+ * would put the feed in a folder its own sidebar never lists. Deleted feeds follow the same
+ * collection rule as `deleteFeedFromDatabase`.
  * @param categoryId the id of the category to delete
- * @param reassignTo the id of the category its feeds move into first
+ * @param reassignTo the id of the category its feeds move into first; omit to delete the feeds
  * @param workspaceId the workspace both categories belong to
  */
-export async function deleteCategory(categoryId: number, reassignTo: number, workspaceId: number): Promise<Result<void, DeleteCategoryError>> {
+export async function deleteCategory(categoryId: number, workspaceId: number, reassignTo?: number): Promise<Result<void, DeleteCategoryError>> {
   await dbReady;
   try {
     const result = await db.transaction().execute(async (trx) => {
-      const destination = await trx.selectFrom('feedCategory')
-        .select('id')
-        .where('id', '=', reassignTo)
-        .where('workspace_id', '=', workspaceId)
-        .executeTakeFirst();
+      if (reassignTo === undefined) {
+        await trx.deleteFrom('feedPlacement')
+          .where('category_id', '=', categoryId)
+          .where('workspace_id', '=', workspaceId)
+          .execute();
+        await collectUnplacedFeeds(trx);
+      } else {
+        const destination = await trx.selectFrom('feedCategory')
+          .select('id')
+          .where('id', '=', reassignTo)
+          .where('workspace_id', '=', workspaceId)
+          .executeTakeFirst();
 
-      if (!destination) {
-        throw new CategoryNotFoundError(`No category found with id ${reassignTo} in workspace ${workspaceId}`);
+        if (!destination) {
+          throw new CategoryNotFoundError(`No category found with id ${reassignTo} in workspace ${workspaceId}`);
+        }
+
+        await trx.updateTable('feedPlacement')
+          .set({ category_id: reassignTo })
+          .where('category_id', '=', categoryId)
+          .where('workspace_id', '=', workspaceId)
+          .execute();
       }
-
-      await trx.updateTable('feedPlacement')
-        .set({ category_id: reassignTo })
-        .where('category_id', '=', categoryId)
-        .where('workspace_id', '=', workspaceId)
-        .execute();
 
       return trx.deleteFrom('feedCategory')
         .where('id', '=', categoryId)

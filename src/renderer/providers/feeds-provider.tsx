@@ -122,11 +122,11 @@ export const useRenameCategory = (): ((categoryId: number, name: string) => Prom
   return useCallback((categoryId: number, name: string) => mutateAsync({ categoryId, name, workspaceId }), [mutateAsync, workspaceId]);
 };
 
-export const useDeleteCategory = (): ((categoryId: number, reassignTo: number) => Promise<Result<void, DeleteCategoryError>>) => {
+export const useDeleteCategory = (): ((categoryId: number, reassignTo?: number) => Promise<Result<void, DeleteCategoryError>>) => {
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: (variables: { categoryId: number; reassignTo: number; workspaceId: number }) => ipc.invoke('feeds:delete-category', variables),
+    mutationFn: (variables: { categoryId: number; reassignTo?: number | undefined; workspaceId: number }) => ipc.invoke('feeds:delete-category', variables),
     onSuccess: (result) => {
       if (result.success) {
         void queryClient.invalidateQueries({ queryKey: ['feeds'] });
@@ -136,7 +136,7 @@ export const useDeleteCategory = (): ((categoryId: number, reassignTo: number) =
     },
   });
   const { mutateAsync } = mutation;
-  return useCallback((categoryId: number, reassignTo: number) => mutateAsync({ categoryId, reassignTo, workspaceId }), [mutateAsync, workspaceId]);
+  return useCallback((categoryId: number, reassignTo?: number) => mutateAsync({ categoryId, reassignTo, workspaceId }), [mutateAsync, workspaceId]);
 };
 
 export const useMoveFeeds = (): ((feedIds: number[], categoryId: number) => Promise<Result<void, UpdateCategoryError>>) => {

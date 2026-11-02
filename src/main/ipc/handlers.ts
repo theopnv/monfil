@@ -150,8 +150,8 @@ export async function handleFeedsRenameCategory(_event: IpcMainInvokeEvent, payl
   return renameCategory(payload.categoryId, payload.name, payload.workspaceId);
 }
 
-export async function handleFeedsDeleteCategory(_event: IpcMainInvokeEvent, payload: { categoryId: number; reassignTo: number; workspaceId: number }): Promise<Result<void, DeleteCategoryError>> {
-  return deleteCategory(payload.categoryId, payload.reassignTo, payload.workspaceId);
+export async function handleFeedsDeleteCategory(_event: IpcMainInvokeEvent, payload: { categoryId: number; reassignTo?: number | undefined; workspaceId: number }): Promise<Result<void, DeleteCategoryError>> {
+  return deleteCategory(payload.categoryId, payload.workspaceId, payload.reassignTo);
 }
 
 export async function handleFeedsMoveFeedsToCategory(_event: IpcMainInvokeEvent, payload: { feedIds: number[]; categoryId: number; workspaceId: number }): Promise<Result<void, UpdateCategoryError>> {

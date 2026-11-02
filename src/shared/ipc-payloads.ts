@@ -143,7 +143,7 @@ export const invokePayloadGuards: { [C in TwoWayRendererMainChannels]: Guard<Two
   'feeds:set-show-in-workspace': object({ feedIds: isIds, showInWorkspace: isBoolean, workspaceId: isPositiveSafeInteger }),
   'feeds:create-category': object({ name: isString, workspaceId: isPositiveSafeInteger }),
   'feeds:rename-category': object({ categoryId: isPositiveSafeInteger, name: isString, workspaceId: isPositiveSafeInteger }),
-  'feeds:delete-category': object({ categoryId: isPositiveSafeInteger, reassignTo: isPositiveSafeInteger, workspaceId: isPositiveSafeInteger }),
+  'feeds:delete-category': object({ categoryId: isPositiveSafeInteger, reassignTo: optional(isPositiveSafeInteger), workspaceId: isPositiveSafeInteger }),
   'feeds:move-feeds-to-category': object({ feedIds: isIds, categoryId: isPositiveSafeInteger, workspaceId: isPositiveSafeInteger }),
   'feeds:move-to-workspace': object({ feedId: isPositiveSafeInteger, fromWorkspaceId: isPositiveSafeInteger, toWorkspaceId: isPositiveSafeInteger, categoryName: isString }),
   'workspaces:list': isUndefined,

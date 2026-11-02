@@ -854,7 +854,7 @@ describe('folder delete', () => {
     await expect.element(getByText('2 feeds', { exact: true })).toBeInTheDocument();
   });
 
-  test('confirm invokes feeds:delete-category with the chosen destination', async () => {
+  test('confirm deletes the folder feeds by default', async () => {
     // Arrange
     stubElectron({ feeds: [feedA, feedC] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
@@ -865,11 +865,27 @@ describe('folder delete', () => {
     await getByRole('button', { name: 'Delete folder' }).click();
 
     // Assert
+    expect(invokeMock).toHaveBeenCalledWith('feeds:delete-category', { categoryId: feedA.category.id, workspaceId: HOME_WORKSPACE_ID });
+    await expect.element(getByRole('heading', { name: 'Delete folder' })).not.toBeInTheDocument();
+  });
+
+  test('confirm invokes feeds:delete-category with the chosen destination when moving feeds', async () => {
+    // Arrange
+    stubElectron({ feeds: [feedA, feedC] });
+    const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
+    deleteCategoryRequestedHandler?.(feedA.category.id);
+    await expect.element(getByRole('heading', { name: 'Delete folder' })).toBeInTheDocument();
+
+    // Act
+    await getByRole('checkbox').click();
+    await getByRole('button', { name: 'Delete folder' }).click();
+
+    // Assert
     expect(invokeMock).toHaveBeenCalledWith('feeds:delete-category', { categoryId: feedA.category.id, reassignTo: feedC.category.id, workspaceId: HOME_WORKSPACE_ID });
     await expect.element(getByRole('heading', { name: 'Delete folder' })).not.toBeInTheDocument();
   });
 
-  test('with no other folder to move feeds into, the confirm button is disabled', async () => {
+  test('with no other folder to move feeds into, the move option is hidden and deleting stays possible', async () => {
     // Arrange
     stubElectron({ feeds: [feedA, feedB] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
@@ -877,7 +893,8 @@ describe('folder delete', () => {
     await expect.element(getByRole('heading', { name: 'Delete folder' })).toBeInTheDocument();
 
     // Assert
-    await expect.element(getByRole('button', { name: 'Delete folder' })).toBeDisabled();
+    await expect.element(getByRole('checkbox')).not.toBeInTheDocument();
+    await expect.element(getByRole('button', { name: 'Delete folder' })).toBeEnabled();
   });
 
   // A category with no feeds in it isn't findable through any feed's `.category` — the dialog's
@@ -908,7 +925,7 @@ describe('folder delete', () => {
     await getByRole('button', { name: 'Delete folder' }).click();
 
     // Assert
-    expect(invokeMock).toHaveBeenCalledWith('feeds:delete-category', { categoryId: empty.id, reassignTo: feedA.category.id, workspaceId: HOME_WORKSPACE_ID });
+    expect(invokeMock).toHaveBeenCalledWith('feeds:delete-category', { categoryId: empty.id, workspaceId: HOME_WORKSPACE_ID });
     await expect.element(getByRole('button', { name: 'Recipes', exact: true })).not.toBeInTheDocument();
   });
 });
