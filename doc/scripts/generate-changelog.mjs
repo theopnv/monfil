@@ -88,6 +88,7 @@ for (const [index, tag] of tags.entries()) {
 
   const notes = (body?.trim() || 'See the release page for details.')
     .replace(/\r\n/g, '\n')
+    .replace(/^#{1,6}\s+What(?:'|’)s Changed\s*\n+/gim, '')
     .replace(/^#{1,5}(?=\s)/gm, (heading) => `${heading}#`);
 
   additions.push({
