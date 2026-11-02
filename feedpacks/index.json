@@ -337,8 +337,8 @@
       "description": "Open jobs at tech companies, scale-ups and AI labs around the world, from public job boards. Filter by place in the search box.",
       "tags": ["jobs", "tech", "engineering", "ai", "careers"],
       "curator": "Monfil",
-      "sourceCount": 52,
-      "updatedAt": "2026-10-23",
+      "sourceCount": 51,
+      "updatedAt": "2026-11-02",
       "opml": "tech-jobs.opml"
     },
     {

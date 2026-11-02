@@ -77,6 +77,7 @@ export type OneWayMainToRendererChannelPayloads = {
   'feeds:item-image-fetched': { feedId: number; itemId: number; image: string };
   'feeds:refreshed': RefreshSummary;
   'feeds:delete-feed-requested': number;
+  'feeds:move-feed-requested': number;
   'feeds:rename-category-requested': number;
   'feeds:delete-category-requested': number;
   'workspaces:edit-requested': number;
@@ -157,7 +158,7 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'feeds:set-show-in-workspace': { feedIds: number[]; showInWorkspace: boolean; workspaceId: number };
   'feeds:create-category': { name: string; workspaceId: number };
   'feeds:rename-category': { categoryId: number; name: string; workspaceId: number };
-  'feeds:delete-category': { categoryId: number; reassignTo: number; workspaceId: number };
+  'feeds:delete-category': { categoryId: number; reassignTo?: number | undefined; workspaceId: number };
   'feeds:move-feeds-to-category': { feedIds: number[]; categoryId: number; workspaceId: number };
   'feeds:move-to-workspace': { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string };
   'workspaces:list': undefined;

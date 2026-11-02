@@ -8,7 +8,6 @@
       <outline text="Back Market" title="Back Market" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/backmarket?includeCompensation=true"/>
       <outline text="Pennylane" title="Pennylane" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/pennylane?includeCompensation=true"/>
       <outline text="Qonto" title="Qonto" type="rss" xmlUrl="https://api.ashbyhq.com/posting-api/job-board/qonto?includeCompensation=true"/>
-      <outline text="Aircall" title="Aircall" type="rss" xmlUrl="https://api.lever.co/v0/postings/aircall?mode=json"/>
       <outline text="Brevo" title="Brevo" type="rss" xmlUrl="https://api.lever.co/v0/postings/brevo?mode=json"/>
       <outline text="Pigment" title="Pigment" type="rss" xmlUrl="https://api.lever.co/v0/postings/pigment?mode=json"/>
       <outline text="BlaBlaCar" title="BlaBlaCar" type="rss" xmlUrl="https://api.lever.co/v0/postings/blablacar?mode=json"/>

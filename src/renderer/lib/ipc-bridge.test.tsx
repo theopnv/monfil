@@ -13,6 +13,8 @@ import {
   useAppliedRefreshVersion,
   useClearDeleteCategoryRequest,
   useClearDeleteFeedRequest,
+  useClearMoveFeedRequest,
+  useMoveFeedRequestedId,
   useClearDeleteWorkspaceRequest,
   useClearEditWorkspaceRequest,
   useClearExportWorkspaceRequest,
@@ -74,7 +76,7 @@ function Bridge() {
 
 async function mountBridge(client: QueryClient) {
   const screen = await render(under(client, <Bridge />));
-  await expect.poll(() => handlers.size).toBe(10);
+  await expect.poll(() => handlers.size).toBe(11);
   return screen;
 }
 
@@ -276,7 +278,7 @@ describe('useIpcBridge', () => {
     await screen.unmount();
 
     // Assert
-    expect([...unsubscribers.values()].map((unsubscribe) => unsubscribe.mock.calls.length)).toEqual(Array(10).fill(1));
+    expect([...unsubscribers.values()].map((unsubscribe) => unsubscribe.mock.calls.length)).toEqual(Array(11).fill(1));
   });
 
   test('listens for the new client when the query client changes', async () => {
@@ -414,6 +416,7 @@ interface RequestCase {
 
 const requestCases: RequestCase[] = [
   { channel: 'feeds:delete-feed-requested', key: uiKeys.deleteFeedRequestedId, useRequestedId: useDeleteFeedRequestedId, useClear: useClearDeleteFeedRequest },
+  { channel: 'feeds:move-feed-requested', key: uiKeys.moveFeedRequestedId, useRequestedId: useMoveFeedRequestedId, useClear: useClearMoveFeedRequest },
   { channel: 'feeds:rename-category-requested', key: uiKeys.renameCategoryRequestedId, useRequestedId: useRenameCategoryRequestedId, useClear: useClearRenameCategoryRequest },
   { channel: 'feeds:delete-category-requested', key: uiKeys.deleteCategoryRequestedId, useRequestedId: useDeleteCategoryRequestedId, useClear: useClearDeleteCategoryRequest },
   { channel: 'workspaces:edit-requested', key: uiKeys.editWorkspaceRequestedId, useRequestedId: useEditWorkspaceRequestedId, useClear: useClearEditWorkspaceRequest },
@@ -437,7 +440,7 @@ describe.each(requestCases)('$channel', ({ channel, key, useRequestedId, useClea
     // Arrange
     const client = createTestQueryClient();
     await render(under(client, <><Bridge /><RequestProbe useRequestedId={useRequestedId} useClear={useClear} /></>));
-    await expect.poll(() => handlers.size).toBe(10);
+    await expect.poll(() => handlers.size).toBe(11);
     await expect.element(page.getByRole('status')).toHaveTextContent('null');
 
     // Act

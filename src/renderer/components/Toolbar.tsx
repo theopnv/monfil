@@ -24,12 +24,14 @@ import {
   useEditWorkspaceRequestedId,
   useExportWorkspaceRequestedId,
 } from "@/lib/ipc-bridge";
+import { decodeFeedDrag, FEED_DRAG_TYPE } from "@/lib/feed-drag";
+import { notifyError } from "@/lib/notifications";
 import { hasOnlyModKey, MOD_KEY_LABEL } from "@/lib/keyboard";
 import { reorderIds } from "@/lib/reorder";
 import { workspaceIconComponent } from "@/lib/workspace-icons";
 import { useHint } from "@/providers/hints-provider";
 import { useExportOpml } from "@/providers/opml-provider";
-import { useActiveWorkspaceId, useReorderWorkspaces, useWorkspaces } from "@/providers/workspace-provider";
+import { useActiveWorkspaceId, useMoveFeedToWorkspace, useReorderWorkspaces, useWorkspaces } from "@/providers/workspace-provider";
 import { HOME_WORKSPACE_ID, type WorkspaceSummary } from "../../shared/contracts";
 
 const activeNavClasses = "rounded-xl bg-brand-secondary *:data-icon:text-fg-brand-secondary hover:bg-brand-secondary hover:*:data-icon:text-fg-brand-secondary";
@@ -60,9 +62,48 @@ function WorkspaceButton({ workspace, isActive, shortcut }: { workspace: Workspa
   );
 }
 
+// Holding a dragged feed over a workspace this long opens it, so the feed can be dropped into one of its folders.
+const FEED_HOVER_OPEN_MS = 1300;
+
 function WorkspaceRail({ workspaces, activeId, goTo }: { workspaces: WorkspaceSummary[]; activeId: number | undefined; goTo: (workspaceId: number) => void }) {
   const reorderWorkspaces = useReorderWorkspaces();
+  const moveFeedToWorkspace = useMoveFeedToWorkspace();
+  const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cancelOpen = () => clearTimeout(openTimer.current);
   const { dragAndDropHooks } = useDragAndDrop({
+    shouldAcceptItemDrop: (target, types) => types.has(FEED_DRAG_TYPE) && target.key !== activeId,
+    getDropOperation: (target, types) => {
+      const isOnItem = target.type === 'item' && target.dropPosition === 'on';
+      if (types.has(FEED_DRAG_TYPE)) {
+        return isOnItem && target.key !== activeId ? 'move' : 'cancel';
+      }
+      return isOnItem ? 'cancel' : 'move';
+    },
+    onDropEnter: (event) => {
+      cancelOpen();
+      if (event.target.type === 'item' && event.target.dropPosition === 'on') {
+        const destinationId = Number(event.target.key);
+        openTimer.current = setTimeout(() => goTo(destinationId), FEED_HOVER_OPEN_MS);
+      }
+    },
+    onDropExit: cancelOpen,
+    onDragEnd: cancelOpen,
+    onItemDrop: async (event) => {
+      cancelOpen();
+      const destinationId = Number(event.target.key);
+      for (const dropItem of event.items) {
+        const payload = dropItem.kind === 'text' && dropItem.types.has(FEED_DRAG_TYPE) ? decodeFeedDrag(await dropItem.getText(FEED_DRAG_TYPE)) : null;
+        if (!payload) {
+          continue;
+        }
+        const result = await moveFeedToWorkspace(payload.feedId, payload.workspaceId, destinationId, payload.categoryName);
+        if (!result.success) {
+          notifyError("The feed could not be moved.");
+          return;
+        }
+        goTo(destinationId);
+      }
+    },
     // Stryker disable next-line ArrowFunction,ObjectLiteral,ArrayDeclaration: the rail only reorders within itself, so nothing reads the drag payload
     getItems: (keys) => [...keys].map((key) => ({ 'text/plain': String(key) })),
     onReorder: (event) => {

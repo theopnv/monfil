@@ -6,7 +6,7 @@ import { app, BrowserWindow, Menu, shell, type IpcMainEvent } from "electron";
 import type { OneWayRendererToMainChannelPayloads } from "../../shared/channels";
 import { HOME_WORKSPACE_ID } from "../../shared/contracts";
 import { dbFilePath, dbStatus } from "../db/database";
-import { sendToRenderer } from "../lib/sendToRenderer";
+import { broadcastToRenderers, sendToRenderer } from "../lib/sendToRenderer";
 import { openExternalLink } from "../app/window-security";
 import { logFilePath } from '../app/main-state';
 import { logger } from '../logging/logger';
@@ -15,6 +15,7 @@ import { incrementCounter } from '../analytics/counters';
 import { setPreferencesSnapshot } from '../analytics/preferences';
 import { isRendererUsageRecord, isUsagePreferences } from '../../shared/ipc-payloads';
 import { installUpdate } from '../updates/auto-updater';
+import { refreshFeeds } from '../feed/refresh';
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {
   openExternalLink(url);
@@ -68,6 +69,18 @@ export function listenToUsagePreferences(_event: IpcMainEvent, payload: OneWayRe
 
 export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayRendererToMainChannelPayloads["feeds:show-feed-context-menu"]) {
   const menu = Menu.buildFromTemplate([
+    {
+      label: "Refresh feed",
+      click: () => {
+        refreshFeeds([feedId], true)
+          .then((summary) => broadcastToRenderers("feeds:refreshed", { ...summary, applyImmediately: true }))
+          .catch((error: unknown) => logger.error("feed.refresh", { outcome: "failed", feedId }, error));
+      },
+    },
+    {
+      label: "Move to workspace…",
+      click: () => sendToRenderer(event.sender, "feeds:move-feed-requested", feedId),
+    },
     {
       label: "Delete feed",
       click: () => sendToRenderer(event.sender, "feeds:delete-feed-requested", feedId),

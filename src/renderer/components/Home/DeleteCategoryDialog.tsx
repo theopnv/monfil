@@ -4,6 +4,7 @@
 
 import { useEffect, useEffectEvent, useState } from "react";
 import { Heading } from "react-aria-components";
+import NativeSelect from "@/components/common/NativeSelect";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useDeleteCategory } from "@/providers/feeds-provider";
@@ -18,12 +19,51 @@ export interface DeleteCategoryDialogProps {
   onDeleted: (categoryId: number) => void;
 }
 
+interface MoveFeedsOptionProps {
+  otherCategories: FeedCategory[];
+  moveFeeds: boolean;
+  onMoveFeedsChange: (moveFeeds: boolean) => void;
+  reassignTo: number | undefined;
+  onReassignToChange: (categoryId: number) => void;
+}
+
+function MoveFeedsOption({ otherCategories, moveFeeds, onMoveFeedsChange, reassignTo, onReassignToChange }: MoveFeedsOptionProps) {
+  return (
+    <div className="flex flex-col gap-2.5 px-6 pb-4.5">
+      <label htmlFor="move-feeds-toggle" className="flex items-center gap-2 text-sm font-medium text-secondary">
+        <input
+          id="move-feeds-toggle"
+          type="checkbox"
+          checked={moveFeeds}
+          onChange={(event) => onMoveFeedsChange(event.target.checked)}
+        />
+        Keep its feeds and move them to another folder instead
+      </label>
+      {moveFeeds && (
+        <NativeSelect
+          aria-label="Move its feeds to"
+          value={reassignTo}
+          onChange={(event) => onReassignToChange(Number(event.target.value))}
+        >
+          {otherCategories.map((other) => (
+            <option key={other.id} value={other.id}>{other.name}</option>
+          ))}
+        </NativeSelect>
+      )}
+    </div>
+  );
+}
+
 export default function DeleteCategoryDialog({ category, feedCount, otherCategories, onOpenChange, onDeleted }: DeleteCategoryDialogProps) {
   const deleteCategory = useDeleteCategory();
   const [reassignTo, setReassignTo] = useState<number | undefined>(otherCategories[0]?.id);
+  const [moveFeeds, setMoveFeeds] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<DeleteCategoryError | null>(null);
-  const resetDestination = useEffectEvent(() => setReassignTo(otherCategories[0]?.id));
+  const resetDestination = useEffectEvent(() => {
+    setReassignTo(otherCategories[0]?.id);
+    setMoveFeeds(false);
+  });
 
   // A fresh dialog target needs its own default destination; refreshing on every `otherCategories`
   // render would stomp a selection the user just made while nothing else about the request changed.
@@ -32,16 +72,16 @@ export default function DeleteCategoryDialog({ category, feedCount, otherCategor
   }, [category?.id]);
 
   const needsReassignment = feedCount > 0;
-  const canDelete = !needsReassignment || otherCategories.length > 0;
+  const shouldMove = needsReassignment && moveFeeds && otherCategories.length > 0;
 
   async function handleConfirm() {
-    if (!category || !canDelete) {
+    if (!category) {
       return;
     }
     setIsLoading(true);
     setError(null);
 
-    const response = await deleteCategory(category.id, reassignTo ?? category.id);
+    const response = await deleteCategory(category.id, shouldMove ? reassignTo : undefined);
 
     setIsLoading(false);
     if (response.success) {
@@ -72,31 +112,21 @@ export default function DeleteCategoryDialog({ category, feedCount, otherCategor
                 This removes the <span className="font-semibold text-secondary">{category.name}</span> folder.
                 {needsReassignment && (
                   <>
-                    {" "}Its <span className="font-semibold text-secondary">{feedCount} {feedCount === 1 ? "feed" : "feeds"}</span> move to the folder below.
+                    {" "}Its <span className="font-semibold text-secondary">{feedCount} {feedCount === 1 ? "feed" : "feeds"}</span> {shouldMove ? "move to the folder below." : "are deleted with it."}
                   </>
                 )}
               </p>
             )}
           </div>
 
-          {needsReassignment && (
-            otherCategories.length > 0 ? (
-              <div className="flex flex-col gap-1.5 px-6 pb-4.5">
-                <label htmlFor="reassign-to-category" className="text-sm font-medium text-secondary">Move its feeds to</label>
-                <select
-                  id="reassign-to-category"
-                  className="rounded-lg border border-secondary bg-primary px-3 py-2 text-sm text-primary"
-                  value={reassignTo}
-                  onChange={(event) => setReassignTo(Number(event.target.value))}
-                >
-                  {otherCategories.map((other) => (
-                    <option key={other.id} value={other.id}>{other.name}</option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <p className="px-6 pb-4.5 text-sm text-error-primary">Create another folder first.</p>
-            )
+          {needsReassignment && otherCategories.length > 0 && (
+            <MoveFeedsOption
+              otherCategories={otherCategories}
+              moveFeeds={moveFeeds}
+              onMoveFeedsChange={setMoveFeeds}
+              reassignTo={reassignTo}
+              onReassignToChange={setReassignTo}
+            />
           )}
 
           {error && <p className="px-6 pb-2 text-sm text-error-primary">{error.message}</p>}
@@ -105,7 +135,7 @@ export default function DeleteCategoryDialog({ category, feedCount, otherCategor
             <Button color="secondary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>
               Cancel
             </Button>
-            <Button color="primary-destructive" size="md" className="rounded-full" isLoading={isLoading} isDisabled={!canDelete} onPress={handleConfirm}>
+            <Button color="primary-destructive" size="md" className="rounded-full" isLoading={isLoading} onPress={handleConfirm}>
               Delete folder
             </Button>
           </div>

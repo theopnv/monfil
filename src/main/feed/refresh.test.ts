@@ -623,4 +623,18 @@ describe('refreshFeeds', () => {
     expect(mockedFetchFeed).toHaveBeenCalledWith({ link, validators: { etag: '"old"', last_modified: undefined } });
     expect(summary.perFeed).toEqual([{ feedId, inserted: 1 }]);
   });
+
+  test('fetches without validators when forced', async () => {
+    // Arrange
+    const link = 'https://a.example/feed';
+    const feedId = await storeFeed(link);
+    await db.updateTable('feedMetadata').set({ etag: '"old"', icon: 'https://a.example/icon.png' }).where('id', '=', feedId).execute();
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, []) });
+
+    // Act
+    await refreshFeeds([feedId], true);
+
+    // Assert
+    expect(mockedFetchFeed).toHaveBeenCalledWith({ link });
+  });
 });
