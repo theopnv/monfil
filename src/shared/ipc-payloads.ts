@@ -157,6 +157,8 @@ export const invokePayloadGuards: { [C in TwoWayRendererMainChannels]: Guard<Two
   'items:get-content': isPositiveSafeInteger,
   'settings:get-refresh-on-launch': isUndefined,
   'settings:set-refresh-on-launch': isBoolean,
+  'settings:get-workspace-rail-expanded': isUndefined,
+  'settings:set-workspace-rail-expanded': isBoolean,
   'settings:get-retention-days': isUndefined,
   'settings:set-retention-days': isRetentionDays,
   'app:back-up-database': isUndefined,

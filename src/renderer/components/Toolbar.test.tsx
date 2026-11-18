@@ -11,6 +11,7 @@ import { RouteProvider } from '@/providers/route-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useFeeds } from '@/providers/feeds-provider';
 import { useFeedpackRefreshing, useIpcBridge } from '@/lib/ipc-bridge';
+import { MOD_KEY_LABEL } from '@/lib/keyboard';
 import { createTestQueryClient } from '@/lib/test/render-with-query-client';
 import Toolbar from './Toolbar';
 import type { DeleteWorkspaceError } from '../../shared/contracts';
@@ -61,6 +62,7 @@ let editWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let exportWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let deleteWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
 let invokeMock: ReturnType<typeof vi.fn>;
+let railExpanded: boolean;
 let reorderResponse: Promise<Result<void, UpdateWorkspaceError>> | undefined;
 let installedCount: number;
 let feedpacks: { slug: string; title: string; description: string; tags: string[]; curator: string; sourceCount: number; updatedAt: string; opml: string }[];
@@ -76,6 +78,7 @@ beforeEach(() => {
   feedpacks = [];
   installedCount = 1;
   reorderResponse = undefined;
+  railExpanded = false;
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
@@ -110,6 +113,11 @@ beforeEach(() => {
         workspaces = orderedIds.flatMap((id) => workspaces.filter((workspace) => workspace.id === id));
         return Promise.resolve({ success: true, data: undefined });
       }
+      case 'settings:get-workspace-rail-expanded':
+        return Promise.resolve(railExpanded);
+      case 'settings:set-workspace-rail-expanded':
+        railExpanded = arg as boolean;
+        return Promise.resolve(railExpanded);
       case 'opml:export':
         return Promise.resolve({ success: true, data: undefined });
       case 'feedpacks:list':
@@ -736,4 +744,80 @@ test('a failed delete keeps the dialog open and shows the error', async () => {
   // Assert
   await expect.element(getByText('Could not delete the workspace.', { exact: true })).toBeInTheDocument();
   await expect.element(getByRole('heading', { name: 'Delete workspace' })).toBeInTheDocument();
+});
+
+test('shows only icons until the rail is expanded', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'Security' })];
+
+  // Act
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+
+  // Assert
+  await expect.element(getByRole('link', { name: 'Security' })).toBeInTheDocument();
+  await expect.element(getByText('Security', { exact: true })).not.toBeInTheDocument();
+  await expect.element(getByRole('button', { name: 'Show workspace names' })).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('shows workspace names, labelled actions and shortcut hints when the stored setting is expanded', async () => {
+  // Arrange
+  railExpanded = true;
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'Security' })];
+
+  // Act
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+
+  // Assert
+  await expect.element(getByText('Security', { exact: true })).toBeVisible();
+  await expect.element(getByText('Settings', { exact: true })).toBeVisible();
+  await expect.element(getByText('New workspace', { exact: true })).toBeVisible();
+  await expect.element(getByText(`${MOD_KEY_LABEL}2`, { exact: true })).toBeVisible();
+  await expect.element(getByRole('button', { name: 'Hide workspace names' })).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('stores the choice when the toggle button is pressed', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' })];
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+
+  // Act
+  await getByRole('button', { name: 'Show workspace names' }).click();
+
+  // Assert
+  await expect.element(getByText('Home', { exact: true })).toBeVisible();
+  expect(invokeMock).toHaveBeenCalledWith('settings:set-workspace-rail-expanded', true);
+
+  // Act
+  await getByRole('button', { name: 'Hide workspace names' }).click();
+
+  // Assert
+  await expect.element(getByRole('button', { name: 'Show workspace names' })).toBeVisible();
+  expect(invokeMock).toHaveBeenCalledWith('settings:set-workspace-rail-expanded', false);
+});
+
+test('toggles the rail with the platform modifier and B', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' })];
+  const { getByRole } = await renderApp('/workspace/1');
+  await expect.element(getByRole('button', { name: 'Show workspace names' })).toBeVisible();
+
+  // Act
+  await userEvent.keyboard(`{${MOD}>}b{/${MOD}}`);
+
+  // Assert
+  await expect.element(getByRole('button', { name: 'Hide workspace names' })).toBeVisible();
+});
+
+test('ignores B without the modifier', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' })];
+  const { getByRole } = await renderApp('/workspace/1');
+  await expect.element(getByRole('button', { name: 'Show workspace names' })).toBeVisible();
+
+  // Act
+  await userEvent.keyboard('b');
+
+  // Assert
+  await expect.element(getByRole('button', { name: 'Show workspace names' })).toBeVisible();
+  expect(invokeMock).not.toHaveBeenCalledWith('settings:set-workspace-rail-expanded', expect.anything());
 });

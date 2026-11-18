@@ -27,6 +27,7 @@ export const queryKeys = {
   feeds: (workspaceId: number) => ['feeds', workspaceId] as const,
   categories: (workspaceId: number) => ['categories', workspaceId] as const,
   workspaces: ['workspaces'] as const,
+  workspaceRailExpanded: ['workspace-rail-expanded'] as const,
   // Nested under 'feeds' on purpose: every refresh, read-state change and feed edit already invalidates that prefix, which keeps the pill counts current.
   searches: (workspaceId: number) => ['feeds', 'searches', workspaceId] as const,
   river: (scope: RiverScope) => ['river', normalizeScope(scope)] as const,
@@ -50,6 +51,13 @@ export function usageAnalyticsQuery() {
   return queryOptions({
     queryKey: queryKeys.usageAnalytics,
     queryFn: (): Promise<UsageAnalyticsState> => ipc.invoke('settings:get-usage-analytics', undefined),
+  });
+}
+
+export function workspaceRailExpandedQuery() {
+  return queryOptions({
+    queryKey: queryKeys.workspaceRailExpanded,
+    queryFn: (): Promise<boolean> => ipc.invoke('settings:get-workspace-rail-expanded', undefined),
   });
 }
 

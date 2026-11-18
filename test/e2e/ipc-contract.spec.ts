@@ -100,3 +100,17 @@ test('opens Home for invalid workspace and Reader URLs', async ({ appPage }) => 
     await expect(appPage.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
   }
 });
+
+test('rejects an invalid workspace rail value without changing it', async ({ appPage }) => {
+  // Arrange
+  const before = await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-workspace-rail-expanded', undefined));
+
+  // Act
+  const response = await appPage.evaluate(() =>
+    window.electron.ipcRenderer.invoke('settings:set-workspace-rail-expanded', 'true' as unknown as boolean));
+  const after = await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-workspace-rail-expanded', undefined));
+
+  // Assert
+  expect(response).toEqual(invalidPayload);
+  expect(after).toEqual(before);
+});

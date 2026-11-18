@@ -56,8 +56,8 @@ vi.mock(import('../feed/extractArticleUtility'), () => ({ extractArticleInUtilit
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
 vi.mock(import('../lib/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broadcastToRenderers: vi.fn() }));
 vi.mock(import('../app/settings'), () => ({
-  getDetailedLogging: vi.fn(), getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn(), getRetentionDays: vi.fn(),
-  setDetailedLogging: vi.fn(), setRefreshInterval: vi.fn(), setRefreshOnLaunch: vi.fn(), setRetentionDays: vi.fn(),
+  getDetailedLogging: vi.fn(), getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn(), getRetentionDays: vi.fn(), getWorkspaceRailExpanded: vi.fn(),
+  setDetailedLogging: vi.fn(), setRefreshInterval: vi.fn(), setRefreshOnLaunch: vi.fn(), setRetentionDays: vi.fn(), setWorkspaceRailExpanded: vi.fn(),
   toRefreshInterval: () => 30, toRetentionDays: () => 30,
 }));
 vi.mock(import('../opml/import'), () => ({ openAndImportOpml: vi.fn() }));
@@ -128,6 +128,8 @@ const fixtures: { [C in TwoWayRendererMainChannels]: Fixture<C> } = {
   'items:get-content': { arg: 4, response: { description: '', article: undefined }, handler: handlers.handleItemsGetContent },
   'settings:get-refresh-on-launch': { arg: undefined, response: false, handler: handlers.handleSettingsGetRefreshOnLaunch },
   'settings:set-refresh-on-launch': { arg: false, response: false, handler: handlers.handleSettingsSetRefreshOnLaunch },
+  'settings:get-workspace-rail-expanded': { arg: undefined, response: false, handler: handlers.handleSettingsGetWorkspaceRailExpanded },
+  'settings:set-workspace-rail-expanded': { arg: true, response: true, handler: handlers.handleSettingsSetWorkspaceRailExpanded },
   'settings:get-retention-days': { arg: undefined, response: 30, handler: handlers.handleSettingsGetRetentionDays },
   'settings:set-retention-days': { arg: 30, response: 30, handler: handlers.handleSettingsSetRetentionDays },
   'app:back-up-database': { arg: undefined, response: { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } }, handler: handlers.handleAppBackUpDatabase },
@@ -190,6 +192,7 @@ beforeEach(() => {
   vi.mocked(settings.getRefreshInterval).mockResolvedValue(30);
   vi.mocked(settings.getRetentionDays).mockResolvedValue(30);
   vi.mocked(settings.getRefreshOnLaunch).mockResolvedValue(false);
+  vi.mocked(settings.getWorkspaceRailExpanded).mockResolvedValue(false);
   vi.mocked(settings.getDetailedLogging).mockResolvedValue(false);
   vi.mocked(resolveSource).mockReturnValue({ discover: vi.fn().mockResolvedValue({ success: true, data: [source] }) } as unknown as ReturnType<typeof resolveSource>);
   vi.mocked(refreshAllFeeds).mockResolvedValue(fixtures['feeds:refresh'].response);

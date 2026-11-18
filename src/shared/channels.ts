@@ -116,6 +116,8 @@ export type TwoWayRendererMainChannelPayloads = {
   'items:get-content': ItemBody;
   'settings:get-refresh-on-launch': boolean;
   'settings:set-refresh-on-launch': boolean;
+  'settings:get-workspace-rail-expanded': boolean;
+  'settings:set-workspace-rail-expanded': boolean;
   'settings:get-retention-days': RetentionDays;
   'settings:set-retention-days': RetentionDays;
   'app:back-up-database': Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string }>;
@@ -172,6 +174,8 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'items:get-content': number;
   'settings:get-refresh-on-launch': undefined;
   'settings:set-refresh-on-launch': boolean;
+  'settings:get-workspace-rail-expanded': undefined;
+  'settings:set-workspace-rail-expanded': boolean;
   'settings:get-retention-days': undefined;
   'settings:set-retention-days': RetentionDays;
   'app:back-up-database': undefined;

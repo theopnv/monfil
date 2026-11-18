@@ -126,6 +126,22 @@ export async function setDetailedLogging(value: boolean): Promise<void> {
     .execute();
 }
 
+export const DEFAULT_WORKSPACE_RAIL_EXPANDED = false;
+const WORKSPACE_RAIL_EXPANDED_KEY = 'workspaceRailExpanded';
+
+export async function getWorkspaceRailExpanded(): Promise<boolean> {
+  const [row] = await querySettings({ key: WORKSPACE_RAIL_EXPANDED_KEY });
+  return toBoolean(row?.value, DEFAULT_WORKSPACE_RAIL_EXPANDED);
+}
+
+export async function setWorkspaceRailExpanded(value: boolean): Promise<void> {
+  await dbReady;
+  await db.insertInto('setting')
+    .values({ key: WORKSPACE_RAIL_EXPANDED_KEY, value: String(value) })
+    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
+    .execute();
+}
+
 export const DEFAULT_USAGE_ANALYTICS_CONSENT: UsageAnalyticsConsent = 'unset';
 const USAGE_ANALYTICS_CONSENT_KEY = 'usageAnalyticsConsent';
 const USAGE_ANALYTICS_CONSENT_AT_KEY = 'usageAnalyticsConsentAt';

@@ -7,6 +7,7 @@ import { db, initializeDatabase } from '../db/database';
 import {
   DEFAULT_DETAILED_LOGGING, DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, DEFAULT_RETENTION_DAYS, getDetailedLogging, getRefreshInterval, getRefreshOnLaunch, getRetentionDays,
   setDetailedLogging, setRefreshInterval, setRefreshOnLaunch, setRetentionDays, toRefreshInterval, toRefreshOnLaunch, toRetentionDays,
+  DEFAULT_WORKSPACE_RAIL_EXPANDED, getWorkspaceRailExpanded, setWorkspaceRailExpanded,
   getUsageAnalyticsConsent, getUsageAnalyticsPromptHistory, recordAppLaunch, recordUsageAnalyticsPromptDismissed, setUsageAnalyticsConsent, toUsageAnalyticsConsent,
 } from './settings';
 
@@ -366,5 +367,55 @@ describe('usage analytics settings', () => {
 
     // Act, Assert
     expect(await getUsageAnalyticsPromptHistory()).toEqual({ launchCount: 0, promptCount: 0, lastShownAt: undefined });
+  });
+});
+
+describe('getWorkspaceRailExpanded', () => {
+  test('is collapsed when nothing is stored', async () => {
+    // Act & Assert
+    expect(await getWorkspaceRailExpanded()).toBe(DEFAULT_WORKSPACE_RAIL_EXPANDED);
+  });
+
+  test.each([['true', true], ['false', false]])('reads the stored text %j as %j', async (stored, expected) => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'workspaceRailExpanded', value: stored }).execute();
+
+    // Act & Assert
+    expect(await getWorkspaceRailExpanded()).toBe(expected);
+  });
+
+  test('ignores the other settings rows', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'detailedLogging', value: 'true' }).execute();
+
+    // Act & Assert
+    expect(await getWorkspaceRailExpanded()).toBe(false);
+  });
+
+  test.each(['yes', '', 'TRUE', '1'])('stays collapsed for the stored text %j, which is not a boolean', async (stored) => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'workspaceRailExpanded', value: stored }).execute();
+
+    // Act & Assert
+    expect(await getWorkspaceRailExpanded()).toBe(false);
+  });
+});
+
+describe('setWorkspaceRailExpanded', () => {
+  test.each([true, false])('stores %j and reads it back', async (value) => {
+    // Act
+    await setWorkspaceRailExpanded(value);
+
+    // Assert
+    expect(await getWorkspaceRailExpanded()).toBe(value);
+  });
+
+  test('overwrites the previous choice instead of adding a row', async () => {
+    // Act
+    await setWorkspaceRailExpanded(true);
+    await setWorkspaceRailExpanded(false);
+
+    // Assert
+    expect(await db.selectFrom('setting').selectAll().execute()).toEqual([{ key: 'workspaceRailExpanded', value: 'false' }]);
   });
 });
