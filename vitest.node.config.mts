@@ -14,6 +14,8 @@ export default defineConfig({
       // Windows CI the per-step time swings from ~1s to over 20s run to run, too wide to cover
       // with a fixed timeout, so the file only runs on Linux/macOS.
       ...(process.platform === 'win32' ? ['**/src/main/db/migrations/migrations.test.ts'] : []),
+      // These check ESLint rules, which behave the same on every OS; the CI lint job runs them once.
+      ...(process.env['SKIP_LINT_RULE_TESTS'] === 'true' ? ['**/eslint.config.test.ts'] : []),
     ],
     restoreMocks: true,
   },

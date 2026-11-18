@@ -3,11 +3,16 @@
 // See LICENSE in the repository root for full terms.
 
 import { ESLint } from 'eslint';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-vi.setConfig({ testTimeout: 15_000 });
+// The first lintText call builds the type-aware TypeScript program, which a cold CI runner can take over 15 s to do.
+vi.setConfig({ testTimeout: 15_000, hookTimeout: 120_000 });
 
 const eslint = new ESLint({ overrideConfigFile: 'eslint.config.ts' });
+
+beforeAll(async () => {
+  await eslint.lintText('export {};', { filePath: 'src/main/boundary-test.ts' });
+});
 
 async function restrictedImports(code: string, filePath: string): Promise<number> {
   const [result] = await eslint.lintText(code, { filePath });

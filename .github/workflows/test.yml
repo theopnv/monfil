@@ -45,6 +45,8 @@ jobs:
 
       - run: npm run lint
 
+      - run: npx vitest --run --project node eslint.config.test.ts
+
       # Check that pack metadata matches its OPML sources.
       - run: npm run check:feedpacks
 
@@ -95,6 +97,8 @@ jobs:
           electron: 'true'
 
       - run: npm run test:unit
+        env:
+          SKIP_LINT_RULE_TESTS: 'true'
 
   integration:
     runs-on: ubuntu-latest
