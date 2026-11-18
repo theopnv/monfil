@@ -217,8 +217,10 @@ function RailToggle({ expanded, onToggle }: { expanded: boolean; onToggle: () =>
   if (expanded) {
     return (
       <Button aria-label={label} aria-expanded size="md" color="tertiary" className="w-full justify-start rounded-xl" iconLeading={<LayoutLeft />} onPress={onToggle}>
-        <span className="flex-1 text-left">Collapse</span>
-        <kbd className="font-sans text-xs font-normal text-tertiary">{MOD_KEY_LABEL}B</kbd>
+        <span className="flex w-full items-center justify-between gap-3">
+          Collapse
+          <kbd className="font-sans text-xs font-normal text-tertiary">{MOD_KEY_LABEL}B</kbd>
+        </span>
       </Button>
     );
   }
@@ -328,16 +330,18 @@ export default function Toolbar() {
 
       <div className="mt-auto" />
 
-      <Button
-        href="/settings"
-        aria-label="Settings"
-        size="md"
-        color="tertiary"
-        className={cx(pathname === "/settings" ? activeNavClasses : "rounded-xl", railExpanded && "w-full justify-start")}
-        iconLeading={<Sliders01 />}
-      >
-        {railExpanded ? "Settings" : undefined}
-      </Button>
+      <Tooltip title="Settings" placement="right" delay={200} isDisabled={railExpanded}>
+        <Button
+          href="/settings"
+          aria-label="Settings"
+          size="md"
+          color="tertiary"
+          className={cx(pathname === "/settings" ? activeNavClasses : "rounded-xl", railExpanded && "w-full justify-start")}
+          iconLeading={<Sliders01 />}
+        >
+          {railExpanded ? "Settings" : undefined}
+        </Button>
+      </Tooltip>
 
       <RailToggle expanded={railExpanded} onToggle={toggleRail} />
 
