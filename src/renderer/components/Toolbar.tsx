@@ -81,15 +81,15 @@ function ExpandedWorkspaceButton({ workspace, isActive, shortcut }: WorkspaceBut
       aria-label={workspace.name}
       {...(isActive && { 'aria-current': 'page' as const })}
       onContextMenu={showWorkspaceMenu(workspace.id)}
-      className={cx(
-        "group relative flex h-9 w-full items-center gap-2.5 rounded-xl outline-brand transition duration-100 ease-linear focus-visible:outline-2 focus-visible:outline-offset-2",
-        isActive && "ring-2 ring-inset ring-brand",
-      )}
+      className="group relative flex h-9 w-full items-center gap-2.5 rounded-xl outline-brand transition duration-100 ease-linear focus-visible:outline-2 focus-visible:outline-offset-2"
     >
-      <span className="flex size-9 flex-none items-center justify-center rounded-xl" style={workspaceTint(workspace.color)}>
+      <span
+        className={cx("flex size-9 flex-none items-center justify-center rounded-xl", isActive && "ring-2 ring-inset ring-brand")}
+        style={workspaceTint(workspace.color)}
+      >
         <Icon aria-hidden className="size-4.5 stroke-[2.25px]" />
       </span>
-      <span title={workspace.name} className="min-w-0 flex-1 truncate text-sm font-medium text-primary">{workspace.name}</span>
+      <span title={workspace.name} className={cx("min-w-0 flex-1 truncate text-sm text-primary", isActive ? "font-semibold" : "font-medium")}>{workspace.name}</span>
       {shortcut && <kbd className="mr-2.5 flex-none font-sans text-xs text-tertiary">{shortcut}</kbd>}
     </Link>
   );
