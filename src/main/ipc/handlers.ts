@@ -17,7 +17,17 @@ import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from "../db/c
 import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace } from "../db/crud/update";
 import { queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedSummaries, queryRiverPage, queryWorkspaceSummaries } from "../db/crud/query";
 import { createSavedSearch, deleteSavedSearch, dismissSearchHint, listSavedSearches, updateSavedSearch } from '../db/crud/searches';
-import { getDetailedLogging, getRefreshInterval, getRefreshOnLaunch, setDetailedLogging, setRefreshInterval, setRefreshOnLaunch, toRefreshInterval } from "../app/settings";
+import {
+  getDetailedLogging,
+  getRefreshInterval,
+  getRefreshOnLaunch,
+  getWorkspaceRailExpanded,
+  setDetailedLogging,
+  setRefreshInterval,
+  setRefreshOnLaunch,
+  setWorkspaceRailExpanded,
+  toRefreshInterval,
+} from "../app/settings";
 import { getAppInfo } from "../app/app-info";
 import { getUpdateState } from "../updates/auto-updater";
 import { sendToRenderer } from "../lib/sendToRenderer";
@@ -258,6 +268,15 @@ export function handleSettingsGetRefreshOnLaunch(): Promise<boolean> {
 
 export async function handleSettingsSetRefreshOnLaunch(_event: IpcMainInvokeEvent, payload: boolean): Promise<boolean> {
   await setRefreshOnLaunch(payload);
+  return payload;
+}
+
+export function handleSettingsGetWorkspaceRailExpanded(): Promise<boolean> {
+  return getWorkspaceRailExpanded();
+}
+
+export async function handleSettingsSetWorkspaceRailExpanded(_event: IpcMainInvokeEvent, payload: boolean): Promise<boolean> {
+  await setWorkspaceRailExpanded(payload);
   return payload;
 }
 

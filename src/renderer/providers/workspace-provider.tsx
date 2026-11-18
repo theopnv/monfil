@@ -10,7 +10,7 @@ import type { DeleteWorkspaceError } from "../../shared/contracts";
 import type { CreateWorkspaceError } from "../../shared/contracts";
 import type { MoveFeedError, UpdateWorkspaceError } from "../../shared/contracts";
 import type { Result } from "../../shared/result";
-import { queryKeys, workspacesQuery } from "../lib/queries";
+import { queryKeys, workspaceRailExpandedQuery, workspacesQuery } from "../lib/queries";
 import { HOME_WORKSPACE_ID, type Workspace, type WorkspaceSummary } from "../../shared/contracts";
 import { parseRouteId } from '@/lib/route-params';
 
@@ -41,7 +41,19 @@ export const useWorkspaces = (): WorkspaceSummary[] => {
   return data ?? [];
 };
 
-export const useActiveWorkspace = (): WorkspaceSummary | undefined => {
+/** Whether the rail shows workspace names. It reads as collapsed until the stored value arrives. */
+export const useWorkspaceRailExpanded = (): [boolean, (expanded: boolean) => void] => {
+  const queryClient = useQueryClient();
+  const { data } = useQuery(workspaceRailExpandedQuery());
+  const { mutate } = useMutation({
+    mutationFn: (expanded: boolean) => ipc.invoke('settings:set-workspace-rail-expanded', expanded),
+    onMutate: (expanded) => queryClient.setQueryData(queryKeys.workspaceRailExpanded, expanded),
+    onSettled: () => void queryClient.invalidateQueries({ queryKey: queryKeys.workspaceRailExpanded }),
+  });
+  return [data ?? false, mutate];
+};
+
+export const useActiveWorkspace =(): WorkspaceSummary | undefined => {
   const workspaces = useWorkspaces();
   const activeWorkspaceId = useActiveWorkspaceId();
   return workspaces.find((workspace) => workspace.id === activeWorkspaceId);

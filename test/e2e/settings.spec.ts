@@ -129,3 +129,29 @@ base('should keep "Refresh on launch" after a restart', async () => {
     await rm(userDataDir, { recursive: true })
   }
 })
+
+base('should keep the expanded workspace rail after a restart', async () => {
+  // Arrange
+  const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'))
+
+  try {
+    const first = await openSettings(userDataDir)
+    try {
+      // Act
+      await first.page.getByRole('button', { name: 'Show workspace names' }).click()
+      await expect(first.page.getByRole('button', { name: 'Hide workspace names' })).toBeVisible()
+    } finally {
+      await first.electronApp.close()
+    }
+
+    const second = await openSettings(userDataDir)
+    try {
+      // Assert
+      await expect(second.page.getByRole('button', { name: 'Hide workspace names' })).toBeVisible()
+    } finally {
+      await second.electronApp.close()
+    }
+  } finally {
+    await rm(userDataDir, { recursive: true })
+  }
+})
