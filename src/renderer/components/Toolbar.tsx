@@ -214,19 +214,18 @@ function useWorkspaceShortcuts(workspaces: WorkspaceSummary[], goTo: (workspaceI
 function RailToggle({ expanded, onToggle }: { expanded: boolean; onToggle: () => void }) {
   const label = expanded ? "Hide workspace names" : "Show workspace names";
 
+  if (expanded) {
+    return (
+      <Button aria-label={label} aria-expanded size="md" color="tertiary" className="w-full justify-start rounded-xl" iconLeading={<LayoutLeft />} onPress={onToggle}>
+        <span className="flex-1 text-left">Collapse</span>
+        <kbd className="font-sans text-xs font-normal text-tertiary">{MOD_KEY_LABEL}B</kbd>
+      </Button>
+    );
+  }
+
   return (
     <Tooltip title={<>{label} <kbd className="ml-1 font-sans font-normal opacity-70">{MOD_KEY_LABEL}B</kbd></>} placement="right" delay={200}>
-      <Button
-        aria-label={label}
-        aria-expanded={expanded}
-        size="md"
-        color="tertiary"
-        className={cx("rounded-xl", expanded && "w-full justify-start")}
-        iconLeading={<LayoutLeft />}
-        onPress={onToggle}
-      >
-        {expanded ? "Collapse" : undefined}
-      </Button>
+      <Button aria-label={label} aria-expanded={false} size="md" color="tertiary" className="rounded-xl" iconLeading={<LayoutLeft />} onPress={onToggle} />
     </Tooltip>
   );
 }
