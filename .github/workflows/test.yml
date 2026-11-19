@@ -71,7 +71,7 @@ jobs:
       # on every platform it ships to.
       - id: compute
         run: |
-          full='["ubuntu-latest", "macos-latest", "macos-15-intel", "windows-latest"]'
+          full='["ubuntu-24.04", "macos-latest", "macos-15-intel", "windows-latest"]'
           if [ "${{ inputs.full_matrix }}" = "true" ]; then
             echo "os=$full" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ contains(github.event.pull_request.labels.*.name, 'full-ci') }}" = "true" ]; then

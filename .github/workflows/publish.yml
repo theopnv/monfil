@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-15-intel, windows-latest]
+        os: [ubuntu-24.04, macos-latest, macos-15-intel, windows-latest]
     runs-on: ${{ matrix.os }}
     env:
       APPLE_SIGNING_IDENTITY: ${{ startsWith(matrix.os, 'macos') && vars.APPLE_SIGNING_IDENTITY || '' }}
