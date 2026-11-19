@@ -35,7 +35,7 @@ El mantenedor del sitio web de Monfil es responsable de este sitio. Para pregunt
 
 ## Aplicación de escritorio
 
-Monfil es un lector de fuentes de escritorio. No tiene cuenta ni servidor de Monfil. Guarda tus fuentes, artículos guardados y estado de lectura en tu dispositivo. Algunas configuraciones de visualización usan almacenamiento local. Puedes buscar y hacer una copia de seguridad de la base de datos en Configuración.
+Monfil es un lector de fuentes RSS que se instala en tu equipo. No tiene cuenta ni servidor de Monfil. Guarda tus fuentes, artículos guardados y estado de lectura en tu dispositivo. Algunas configuraciones de visualización usan almacenamiento local. Puedes buscar y hacer una copia de seguridad de la base de datos en Configuración.
 
 ### Estadísticas de uso anónimas (opcional)
 
