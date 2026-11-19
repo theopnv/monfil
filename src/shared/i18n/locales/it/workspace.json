@@ -1,0 +1,78 @@
+{
+  "navigation": {
+    "label": "Viste dello spazio di lavoro",
+    "all": "Tutti gli elementi",
+    "saved": "Salvati",
+    "saveHint": "Salva un articolo con il segnalibro. Trovi qui i tuoi articoli salvati."
+  },
+  "switcher": {
+    "dialog": "Cambia spazio di lavoro",
+    "field": "Nome dello spazio di lavoro",
+    "placeholder": "Vai allo spazio di lavoro…",
+    "list": "Spazi di lavoro",
+    "empty": "Nessuno spazio di lavoro corrisponde."
+  },
+  "rail": {
+    "moveFailed": "Impossibile spostare il feed.",
+    "list": "Spazi di lavoro",
+    "move": "Sposta {{name}}",
+    "hideNames": "Nascondi i nomi degli spazi di lavoro",
+    "showNames": "Mostra i nomi degli spazi di lavoro",
+    "collapse": "Comprimi",
+    "new": "Nuovo spazio di lavoro",
+    "newHint": "Crea uno spazio di lavoro per raggruppare i feed. Clic destro su uno spazio di lavoro per modificarlo o eliminarlo.",
+    "settings": "Impostazioni"
+  },
+  "dialog": {
+    "editTitle": "Modifica spazio di lavoro",
+    "newTitle": "Nuovo spazio di lavoro",
+    "editBody": "Rinominalo, oppure scegli un'altra icona e un altro colore.",
+    "newBody": "Una scheda nella barra, con le sue fonti e il suo flusso.",
+    "name": "Nome",
+    "namePlaceholder": "Monitoraggio CI/CD",
+    "icon": "Icona",
+    "colour": "Colore",
+    "colourOption": "Colore {{value}}",
+    "browse": "Sfoglia i pacchetti di feed",
+    "save": "Salva modifiche",
+    "create": "Crea spazio di lavoro"
+  },
+  "delete": {
+    "title": "Elimina spazio di lavoro",
+    "body": "Questo elimina lo spazio di lavoro <bold>{{name}}</bold>, le sue cartelle e il suo elenco Salvati. Anche i feed collocati solo qui vengono rimossi. Esporta prima come OPML per conservare una copia da reimportare in seguito.",
+    "export": "Esporta come OPML",
+    "confirm": "Elimina spazio di lavoro"
+  },
+  "importOpml": {
+    "doneTitle": "Importazione completata",
+    "imported_one": "Importato {{count}} feed.",
+    "imported_many": "Importati {{count}} feed.",
+    "imported_other": "Importati {{count}} feed.",
+    "skipped": "{{count}} saltati.",
+    "failed": "{{count}} non recuperati.",
+    "titleInto": "Importa OPML in {{name}}",
+    "title": "Importa OPML",
+    "choose": "Scegli un file dalla finestra che si apre subito dopo.",
+    "newWorkspace": "Nuovo spazio di lavoro",
+    "mergeHome": "Unisci a Home",
+    "name": "Nome",
+    "namePlaceholder": "Lascia vuoto per usare il titolo del file"
+  },
+  "feedpacks": {
+    "sources_one": "{{count}} fonte",
+    "sources_many": "{{count}} fonti",
+    "sources_other": "{{count}} fonti",
+    "packSources": "Fonti del pacchetto",
+    "search": "Cerca pacchetti di feed",
+    "loading": "Caricamento dei pacchetti di feed…",
+    "none": "Nessun pacchetto di feed disponibile.",
+    "noMatch": "Nessun pacchetto di feed corrisponde a \"{{query}}\".",
+    "loadingSources": "Caricamento delle fonti…"
+  },
+  "feedpackDialog": {
+    "title": "Pacchetti di feed",
+    "body": "Installa un insieme selezionato di fonti.",
+    "back": "Torna ai pacchetti di feed",
+    "install": "Installa"
+  }
+}

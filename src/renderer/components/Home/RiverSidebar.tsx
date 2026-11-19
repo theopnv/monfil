@@ -466,7 +466,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                       }}
                       className="flex min-w-0 flex-1 items-center gap-1.5 text-start"
                     >
-                      <ChevronRight className={cx("size-3.25 flex-none text-quaternary transition-transform", folder.open && "rotate-90")} />
+                      <ChevronRight className={cx("size-3.25 flex-none text-quaternary transition-transform", folder.open ? "rotate-90" : "rtl:-scale-x-100")} />
                       <span className="min-w-0 flex-1 truncate">{folder.name}</span>
                     </button>
                   )}

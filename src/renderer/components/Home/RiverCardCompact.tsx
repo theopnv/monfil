@@ -38,7 +38,7 @@ export default function RiverCardCompact({ item, read, onOpen }: RiverCardProps)
       <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
       <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="sm" />
       <span className="w-33 flex-none overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-primary">{item.feedTitle}</span>
-      <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-secondary">{item.title}{item.job && <span className="text-tertiary">{jobSuffix(item.job)}</span>}</span>
+      <span dir="auto" className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-secondary">{item.title}{item.job && <span className="text-tertiary">{jobSuffix(item.job)}</span>}</span>
       {item.categoryName && <span className="flex-none rounded-full bg-sage-200 px-2 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>}
       <span className="flex-none text-xs font-bold tracking-wide text-tertiary">{sourceTypeLabel(item.type, t)}</span>
       <span className="w-13 flex-none text-end text-xs text-tertiary tabular-nums">{formatRelativeTime(item.publishedAt, locale)}</span>

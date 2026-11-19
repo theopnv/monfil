@@ -196,9 +196,9 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome, saved
           <article className="mx-auto max-w-[700px] pt-11">
             <ArticleMeta item={currentItem} wordCount={content.wordCount} />
 
-            <h1 className="mb-4.5 text-4xl leading-tight text-pretty text-primary">{currentItem.title}</h1>
+            <h1 dir="auto" className="mb-4.5 text-4xl leading-tight text-pretty text-primary">{currentItem.title}</h1>
 
-            {content.standfirst && <p className="mb-6.5 text-lg leading-relaxed text-pretty text-secondary">{content.standfirst}</p>}
+            {content.standfirst && <p dir="auto" className="mb-6.5 text-lg leading-relaxed text-pretty text-secondary">{content.standfirst}</p>}
 
             <ArticleHeroImage src={currentItem.image} />
 

@@ -22,6 +22,9 @@ export type LanguageSetting = 'system' | LanguageCode;
 
 export const DEFAULT_LANGUAGE: LanguageCode = 'en';
 
+/** The command-line argument that carries the interface language from main to the preload script. */
+export const LANGUAGE_ARGUMENT = '--language=';
+
 export const LANGUAGE_CODES: readonly LanguageCode[] = LANGUAGES.map((language) => language.code);
 
 export function isLanguageCode(value: unknown): value is LanguageCode {

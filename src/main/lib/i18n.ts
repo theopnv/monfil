@@ -14,6 +14,11 @@ export async function setMainLanguage(language: LanguageCode): Promise<void> {
   await mainI18n.changeLanguage(language);
 }
 
+/** The language the main process speaks now. */
+export function mainLanguage(): LanguageCode {
+  return isLanguageCode(mainI18n.language) ? mainI18n.language : DEFAULT_LANGUAGE;
+}
+
 let systemLocale: string | undefined;
 
 /** Records the operating system locale. Electron gives it only once the app is ready, so main.ts calls this then. */
@@ -23,8 +28,7 @@ export function setMainSystemLocale(locale: string): void {
 
 /** The locale for the dates and numbers that main writes into stored text, such as a salary label. */
 export function mainFormatLocale(): string {
-  const language = isLanguageCode(mainI18n.language) ? mainI18n.language : DEFAULT_LANGUAGE;
-  return resolveFormatLocale(language, systemLocale);
+  return resolveFormatLocale(mainLanguage(), systemLocale);
 }
 
 /** The text of the dialog that the fatal handler shows. The handler lives in the logging folder, which may not import this one, so main.ts passes this function in. */

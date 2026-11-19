@@ -1,0 +1,109 @@
+{
+  "section": {
+    "appearance": "外観",
+    "reading": "閲覧",
+    "refreshing": "更新",
+    "data": "データ",
+    "privacy": "プライバシー",
+    "diagnostics": "診断",
+    "about": "情報"
+  },
+  "title": "設定",
+  "about": {
+    "tagline": "RSSフィードリーダーなど。",
+    "link": {
+      "website": "Webサイト",
+      "documentation": "ドキュメント",
+      "changelog": "変更履歴",
+      "reportIssue": "問題を報告",
+      "buyCoffee": "コーヒーをおごる"
+    }
+  },
+  "appearance": {
+    "theme": "テーマ",
+    "density": "既定の表示密度",
+    "densityHint": "ホームでカードの配置方法を決めます。",
+    "themes": {
+      "light": "ライト",
+      "dark": "ダーク",
+      "system": "システム"
+    },
+    "themeHints": {
+      "light": "常にライトの外観を使用します。",
+      "dark": "常にダークの外観を使用します。",
+      "system": "OSの設定に合わせ、設定が変わると自動で切り替えます。"
+    },
+    "densities": {
+      "cards": "カード",
+      "magazine": "マガジン",
+      "compact": "コンパクト"
+    },
+    "language": "言語",
+    "languageHint": "メニュー、ダイアログ、メッセージの言語です。フィードの本文は変わりません。",
+    "languageSystem": "システム（{{language}}）",
+    "languageBeta": "{{language}}（ベータ）",
+    "languageBetaHint": "この翻訳は機械で作成されたもので、まだネイティブスピーカーによる確認を受けていません。プルリクエストで修正できます。"
+  },
+  "reading": {
+    "markScroll": "スクロールしながら既読にする",
+    "markScrollHint": "項目がリストの上端より上にスクロールすると、既読になります。",
+    "hideRead": "ホームで既読の項目を非表示",
+    "hideReadHint": "既読の項目は、薄く表示される代わりにタイムラインから消えます。",
+    "keyboard": "キーボード操作",
+    "keyboardHint": "j / k で項目を移動し、Esc で閲覧画面を閉じます。",
+    "external": "リンクを自分のブラウザで開く",
+    "externalHint": "項目をクリックすると、内蔵リーダーではなく配信元のリンクを開きます。"
+  },
+  "refreshing": {
+    "interval": {
+      "m15": "15分",
+      "m30": "30分",
+      "h1": "1時間",
+      "h6": "6時間",
+      "manual": "手動"
+    },
+    "refresh": "フィードを更新",
+    "refreshHint": "Monfilが新しい項目を確認する頻度です。",
+    "onLaunch": "起動時に更新",
+    "onLaunchHint": "Monfilの起動時にも、すぐに一度更新します。",
+    "keep": "記事を保存する期間",
+    "keepHint": "この日数を過ぎた古い記事を削除します。フィードごとに少なくとも10件は残します。",
+    "days_other": "{{count}} 日"
+  },
+  "data": {
+    "feeds": "フィード",
+    "articles": "記事",
+    "size": "データベースのサイズ",
+    "backedUp": "データベースのバックアップを保存しました。",
+    "backupFailed": "バックアップに失敗しました。{{message}}",
+    "backUp": "データベースをバックアップ…",
+    "reveal": "データベースファイルを表示",
+    "importOpml": "OPMLをインポート"
+  },
+  "privacy": {
+    "share": "匿名の利用統計を送信",
+    "unavailable": "このバージョンのMonfilは利用統計を収集しません。",
+    "shareHint": "使用した機能の1日ごとの件数を1回送信します。フィード、記事、検索語が端末外に送られることはありません。いつでもオフにして、送信を止め、この端末に保存された件数を削除できます。",
+    "preview": "送信される内容を見る",
+    "notice": "プライバシーに関するお知らせ"
+  },
+  "diagnostics": {
+    "detailed": "詳細なログ記録",
+    "detailedHint": "デバッグの詳細をローカルのログファイルに記録します。フィード名、完全なリンク、記事の本文、認証情報、ファイルパスは削除されます。",
+    "showLog": "ログファイルを表示"
+  },
+  "analyticsCard": {
+    "label": "匿名の利用統計",
+    "later": "後で確認",
+    "title": "Monfilの改善に協力する",
+    "body": "匿名の利用統計を送信します。使用した機能の1日ごとの件数だけです。フィード、記事、検索語が端末外に送られることはありません。設定でいつでも変更できます。",
+    "share": "利用統計を送信",
+    "decline": "いいえ、結構です"
+  },
+  "analyticsPreview": {
+    "title": "送信される内容",
+    "body": "Monfilは、使用した日ごとに次のような概要を1件送信します。送信されるのは件数と設定だけです。フィード、記事、検索語、名前は含まれません。",
+    "preview": "利用統計のプレビュー",
+    "loading": "読み込んでいます…"
+  }
+}

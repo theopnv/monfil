@@ -67,6 +67,9 @@ function EmbedCard({ embed, title }: { embed: EmbedDescriptor; title: string }) 
   );
 }
 
+// Each block picks its own direction from its text, so an Arabic quote can sit in an English article and the reverse.
+const AUTO_DIRECTION_TAGS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'figcaption', 'td', 'th']);
+
 function renderNode(node: Node, key: string): ReactNode {
   if (node.nodeType === Node.TEXT_NODE) {
     return node.textContent;
@@ -90,6 +93,9 @@ function renderNode(node: Node, key: string): ReactNode {
       continue;
     }
     props[attribute.name === 'srcset' ? 'srcSet' : attribute.name] = attribute.value;
+  }
+  if (AUTO_DIRECTION_TAGS.has(tag)) {
+    props['dir'] = 'auto';
   }
   if (tag === 'img' || tag === 'br' || tag === 'hr' || tag === 'source') {
     return createElement(tag, { ...props, key });

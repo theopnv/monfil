@@ -5,6 +5,7 @@
 import { db, dbReady } from '../db/database';
 import { querySettings } from '../db/crud/query';
 import type { RefreshInterval, RetentionDays, UsageAnalyticsConsent } from '../../shared/contracts';
+import { isLanguageSetting, type LanguageSetting } from '../../shared/i18n/languages';
 
 export const REFRESH_INTERVALS: readonly RefreshInterval[] = [15, 30, 60, 360, 'manual'];
 
@@ -138,6 +139,36 @@ export async function setWorkspaceRailExpanded(value: boolean): Promise<void> {
   await dbReady;
   await db.insertInto('setting')
     .values({ key: WORKSPACE_RAIL_EXPANDED_KEY, value: String(value) })
+    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
+    .execute();
+}
+
+export const DEFAULT_LANGUAGE_SETTING: LanguageSetting = 'system';
+const LANGUAGE_KEY = 'language';
+
+/**
+ * Narrows an untrusted value, such as a hand-edited database row, to a language choice.
+ * @param value anything that is meant to be a language choice
+ * @returns the matching choice, or `DEFAULT_LANGUAGE_SETTING` when there is no match
+ */
+export function toLanguageSetting(value: unknown): LanguageSetting {
+  return isLanguageSetting(value) ? value : DEFAULT_LANGUAGE_SETTING;
+}
+
+/** Reads the interface language choice: `system`, or one language. */
+export async function getLanguageSetting(): Promise<LanguageSetting> {
+  const [row] = await querySettings({ key: LANGUAGE_KEY });
+  return toLanguageSetting(row?.value);
+}
+
+/**
+ * Stores the interface language choice.
+ * @param value the choice to store
+ */
+export async function setLanguageSetting(value: LanguageSetting): Promise<void> {
+  await dbReady;
+  await db.insertInto('setting')
+    .values({ key: LANGUAGE_KEY, value: toLanguageSetting(value) })
     .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
     .execute();
 }

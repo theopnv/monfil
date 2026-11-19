@@ -16,6 +16,24 @@ const feed: NewFeedInput = {
   categoryName: '', workspaceId: 1, showInWorkspace: true,
 };
 
+describe('language payloads', () => {
+  test.each(['system', 'en', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'])('accepts the choice %j', (choice) => {
+    // Act & Assert
+    expect(invokePayloadGuards['settings:set-language'](choice)).toBe(true);
+  });
+
+  test.each(['pt-BR', 'zh-Hans', 'klingon', '', null, undefined, 3, { language: 'fr' }])('rejects the choice %j', (choice) => {
+    // Act & Assert
+    expect(invokePayloadGuards['settings:set-language'](choice)).toBe(false);
+  });
+
+  test('reads the language with no argument', () => {
+    // Act & Assert
+    expect(invokePayloadGuards['settings:get-language'](undefined)).toBe(true);
+    expect(invokePayloadGuards['settings:get-language']('fr')).toBe(false);
+  });
+});
+
 describe('IPC payload guards', () => {
   test.each([
     { workspaceId: 1, itemId: 0, saved: true },

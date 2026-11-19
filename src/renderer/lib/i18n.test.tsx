@@ -5,7 +5,7 @@
 import { act } from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 import { renderHook } from 'vitest-browser-react';
-import { i18n, useFormatLocale } from './i18n';
+import { applyDocumentLanguage, i18n, INITIAL_LANGUAGE, initialLanguage, useFormatLocale } from './i18n';
 
 afterEach(async () => {
   await i18n.changeLanguage('en');
@@ -44,5 +44,45 @@ describe('useFormatLocale', () => {
 
     // Assert
     expect(result.current).toBe('fr');
+  });
+});
+
+describe('initialLanguage', () => {
+  test('is English when the window has no preload bridge', () => {
+    // Act & Assert
+    expect(initialLanguage({})).toBe('en');
+    expect(INITIAL_LANGUAGE).toBe('en');
+  });
+
+  test.each(['fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar', 'en'] as const)('is %s when main resolved it, so the first render needs no switch', (language) => {
+    // Act & Assert
+    expect(initialLanguage({ electron: { language } })).toBe(language);
+  });
+
+  test.each(['tlh', 'pt-BR', '', null, 3])('is English when the bridge carries %j, which Monfil does not list', (language) => {
+    // Act & Assert
+    expect(initialLanguage({ electron: { language } })).toBe('en');
+  });
+
+  test('starts the shared instance in the language of the bridge', () => {
+    // Act & Assert
+    expect(i18n.language).toBe(INITIAL_LANGUAGE);
+  });
+});
+
+describe('applyDocumentLanguage', () => {
+  afterEach(() => {
+    document.documentElement.lang = 'en';
+    document.documentElement.dir = 'ltr';
+  });
+
+  test.each([['ar', 'rtl'], ['fr', 'ltr'], ['ja', 'ltr']] as const)('tags the page %s as %s', (language, dir) => {
+    // Arrange
+    // Act
+    applyDocumentLanguage(language);
+
+    // Assert
+    expect(document.documentElement.lang).toBe(language);
+    expect(document.documentElement.dir).toBe(dir);
   });
 });

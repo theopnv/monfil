@@ -1,0 +1,121 @@
+{
+  "match": {
+    "found": "已找到订阅源",
+    "notFound": "未找到",
+    "checking": "检查中…"
+  },
+  "wizard": {
+    "step": {
+      "find": "查找",
+      "configure": "配置",
+      "done": "完成"
+    },
+    "titles": {
+      "find": "添加订阅源",
+      "configure": "调整设置",
+      "done": "已添加到 Monfil"
+    },
+    "blurbs": {
+      "find": "一个输入框，即可关注你想看的所有内容。",
+      "configure": "设置它的位置，以及是否显示在首页。",
+      "done": "已开始抓取，无需其他操作。"
+    },
+    "close": "关闭",
+    "goToStep": "前往第 {{step}} 步：{{name}}"
+  },
+  "stats": {
+    "new": "新增",
+    "perDay": "约 {{count}} 条/天",
+    "perWeek": "约 {{count}} 条/周",
+    "perMonth": "约 {{count}} 条/月",
+    "fullText": "全文",
+    "excerpt": "摘要"
+  },
+  "find": {
+    "kind": {
+      "anything": "全部",
+      "conferences": "会议",
+      "jobs": "招聘"
+    },
+    "copy": {
+      "anything": {
+        "placeholder": "粘贴网站、订阅源、代码仓库或主页的链接…",
+        "hint": "Monfil 会找到链接背后的订阅源。输入账号名时，按回车键。"
+      },
+      "rss": {
+        "placeholder": "粘贴 RSS 订阅源的链接…",
+        "hint": "Monfil 会检查该链接中的 RSS 订阅源。"
+      },
+      "youtube": {
+        "placeholder": "粘贴频道、账号名或视频链接…",
+        "hint": "粘贴链接，或输入频道或账号名后按回车键。"
+      },
+      "github": {
+        "placeholder": "粘贴代码仓库或用户链接，或 owner/repo…",
+        "hint": "代码仓库会提供其发布版本。用户或组织会提供其公开动态。输入 owner/repo 后，按回车键。"
+      },
+      "gitlab": {
+        "placeholder": "粘贴 GitLab 项目链接…",
+        "hint": "Monfil 会跟踪该项目的发布版本。也支持自托管的 GitLab。"
+      },
+      "hackernews": {
+        "placeholder": "粘贴 Hacker News 链接…",
+        "hint": "news.ycombinator.com 提供首页，以及按得分筛选的订阅源。"
+      },
+      "arxiv": {
+        "placeholder": "粘贴 arXiv 列表链接…",
+        "hint": "例如 arxiv.org/list/cs.AI/recent。Monfil 会隐藏已被替换的论文。"
+      },
+      "bluesky": {
+        "placeholder": "粘贴主页链接或账号名…",
+        "hint": "输入账号名，例如 @name.bsky.social，然后按回车键。"
+      },
+      "mastodon": {
+        "placeholder": "粘贴主页或标签链接，或 @user@host…",
+        "hint": "输入账号名，例如 @user@mastodon.social，然后按回车键。"
+      },
+      "conference": {
+        "placeholder": "输入主题，然后输入 in 和地点…",
+        "hint": "格式：主题 in 地点，然后按回车键。多个项目之间用逗号分隔。地点可省略，线上也算一个地点。示例：devops · kubernetes，cloud in France · java in Belgium, online。developers.events 链接同样可用。"
+      },
+      "ats": {
+        "placeholder": "粘贴公司的招聘板或招聘页面…",
+        "hint": "支持 Greenhouse、Lever、Ashby、Workable、SmartRecruiters、Recruitee、Teamtailor 和 Personio 的招聘板。覆盖范围尚不完整，其他招聘系统暂不支持。Monfil 会列出该公司所有在招职位。"
+      }
+    },
+    "feedUrl": "订阅源地址",
+    "searching": "搜索中…",
+    "candidates_other": "找到 {{count}} 个订阅源。请选择一个。",
+    "notFound": "未找到订阅源",
+    "notFoundDetail": "该地址没有找到订阅源。",
+    "conferenceEmpty": "当前没有匹配的会议。出现匹配的会议公告时，Monfil 会添加一张卡片。",
+    "detail_other": "{{link}}——{{count}} 条内容"
+  },
+  "configure": {
+    "publishes": "更新频率",
+    "contains": "订阅源包含",
+    "notFound": "未找到订阅源",
+    "notFoundDetail": "返回第 1 步，尝试其他链接。",
+    "show": "在工作区中显示",
+    "showHint": "对于你更愿意有目的地访问的高流量来源，请取消勾选。"
+  },
+  "done": {
+    "title": "{{title}} 已放入{{category}}",
+    "backfilled_other": "已补充 {{count}} 条内容。所有内容都保留在本机。",
+    "jobs": "{{company}} 的全部职位现已出现在你的订阅源中。要筛选，请搜索你想要的每个职位，并保存搜索。"
+  },
+  "category": {
+    "putIn": "放入",
+    "newName": "新文件夹名称",
+    "example": "例如：设计",
+    "add": "添加",
+    "new": "+ 新建文件夹",
+    "unlisted": "新文件夹：{{name}}"
+  },
+  "footer": {
+    "continue": "继续",
+    "add": "添加订阅源",
+    "goToFeed": "前往订阅源",
+    "addAnother": "再添加一个"
+  }
+}

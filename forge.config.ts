@@ -11,6 +11,7 @@ import { VitePlugin } from '@electron-forge/plugin-vite';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import { BARE_LOCALE } from './src/shared/i18n/format-locale';
 
 const { APPLE_SIGNING_IDENTITY, APPLE_API_KEY, APPLE_API_KEY_ID, APPLE_API_ISSUER } = process.env;
 
@@ -36,6 +37,8 @@ const config: ForgeConfig = {
     icon: 'assets/icons/icon',
     appBundleId: 'com.theopnv.monfil',
     appCategoryType: 'public.app-category.news',
+    // Without these, macOS reports the app as English only, so native dialogs and `app.getLocale()` ignore the OS language.
+    extendInfo: { CFBundleLocalizations: Object.values(BARE_LOCALE) },
     ...macSigning,
     extraResource: ['assets/icons/icon.png', 'feedpacks', 'LICENSE', 'NOTICE'],
     // The Vite plugin's own `ignore` keeps only `.vite/**`, dropping node_modules entirely.

@@ -1,0 +1,39 @@
+{
+  "sourceLink": "Bei {{source}} lesen",
+  "header": {
+    "home": "Start",
+    "saved": "Gespeichert",
+    "markUnread": "Als ungelesen markieren",
+    "previous": "Vorheriger Artikel",
+    "next": "Nächster Artikel"
+  },
+  "next": {
+    "unread": "Nächster ungelesener",
+    "article": "Nächster Artikel"
+  },
+  "notFound": "Dieser Artikel wurde nicht gefunden.",
+  "backToSaved": "Zurück zu Gespeichert",
+  "backToHome": "Zurück zu Start",
+  "loadingFull": "Vollständiger Artikel wird geladen…",
+  "unavailable": "Der vollständige Artikel konnte nicht geladen werden. Lesen Sie ihn stattdessen an der Quelle.",
+  "failed": "Dieser Eintrag konnte nicht geladen werden. Lesen Sie ihn stattdessen an der Quelle.",
+  "announce": {
+    "read": "Als gelesen markiert",
+    "unread": "Als ungelesen markiert"
+  },
+  "shortcuts": {
+    "next": "weiter",
+    "previous": "zurück",
+    "back": "zurück zu Start"
+  },
+  "embed": {
+    "defaultTitle": "{{name}}-Einbettung",
+    "consent": "Beim Laden dieser Einbettung wird eine Verbindung zu {{name}} hergestellt. Der Anbieter kann Cookies verwenden.",
+    "load": "{{name}} laden",
+    "open": "Bei {{name}} öffnen",
+    "privacy": "Datenschutzerklärung des Anbieters",
+    "openEmbedded": "Eingebetteten Inhalt öffnen"
+  },
+  "saveFailed": "Der Eintrag konnte nicht gespeichert werden. Versuchen Sie es erneut.",
+  "unsaveFailed": "Der Eintrag konnte nicht aus Gespeichert entfernt werden. Versuchen Sie es erneut."
+}

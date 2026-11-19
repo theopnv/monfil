@@ -35,12 +35,25 @@ describe('createI18n', () => {
     expect(text).toBe('Hi <b>Tom & Jerry</b>');
   });
 
-  test('falls back to English for a language with no resources', () => {
+  test('falls back to English for a key that a language lacks', () => {
+    // Arrange
+    const i18n = createI18n('fr');
+    i18n.addResourceBundle('en', 'common', { onlyEnglish: 'Only English' });
+
     // Act
-    const i18n = createI18n('ar');
+    const text = i18n.t('onlyEnglish' as never);
 
     // Assert
-    expect(i18n.t('action.undo')).toBe('Undo');
+    expect(text).toBe('Only English');
+  });
+
+  test.each(['fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'] as const)('ships a %s translation in the bundle, not the English fallback', (language) => {
+    // Act
+    const i18n = createI18n(language);
+
+    // Assert
+    expect(i18n.t('action.undo')).not.toBe('Undo');
+    expect(i18n.getFixedT('en')('action.undo')).toBe('Undo');
   });
 
   test('changes language in place', async () => {

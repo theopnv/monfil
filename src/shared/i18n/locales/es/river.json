@@ -1,0 +1,184 @@
+{
+  "feed": {
+    "dragToFolder": "Arrastrar a una carpeta",
+    "state": {
+      "home": "Se muestra con otras",
+      "only": "Se muestra sola",
+      "hidden": "Oculta"
+    },
+    "rowTitle_focus": "{{title}} — {{state}}. Clic para enfocar.",
+    "rowTitle_unfocus": "{{title}} — {{state}}. Clic para quitar el enfoque.",
+    "rowLabel_focus": "{{title}}, {{state}}. Clic para enfocar.",
+    "rowLabel_unfocus": "{{title}}, {{state}}. Clic para quitar el enfoque.",
+    "refreshFailedLabel": "Falló la actualización de {{title}}: {{error}}",
+    "refreshFailedTitle": "La última actualización falló: {{error}}",
+    "visibility_hide": "Ocultar {{title}}",
+    "visibility_show": "Mostrar {{title}}"
+  },
+  "folder": {
+    "focus_focus": "Enfocar {{name}}",
+    "focus_unfocus": "Quitar el enfoque de {{name}}",
+    "visibility_hide": "Ocultar {{name}}",
+    "visibility_show": "Mostrar {{name}}"
+  },
+  "source": {
+    "conference": "CONF",
+    "job": "EMPLEO"
+  },
+  "card": {
+    "label_read": "{{title}}, leído, de {{feed}}, {{time}}.",
+    "label_unread": "{{title}}, no leído, de {{feed}}, {{time}}."
+  },
+  "search": {
+    "syntax": {
+      "all": "Cada palabra debe coincidir",
+      "phrase": "Una frase exacta. También coincide dentro de palabras más largas.",
+      "either": "Cualquiera de las dos palabras (OR en mayúsculas)",
+      "exclude": "Excluir una palabra o una frase",
+      "title": "Coincidir solo con el título",
+      "short": "Una palabra de 3 letras o menos coincide solo como palabra completa"
+    },
+    "clear": "Borrar búsqueda",
+    "syntaxRegion": "Sintaxis de búsqueda",
+    "closeHint": "Pulsa Enter para cerrar la búsqueda y conservar el filtro."
+  },
+  "pills": {
+    "rename": "Cambiar nombre de la búsqueda guardada {{name}}",
+    "label": "{{name}}, {{count}} no leídos",
+    "renameHint": "Clic derecho o F2 para cambiar el nombre",
+    "delete": "Eliminar la búsqueda guardada {{name}}",
+    "hint": "Guarda una búsqueda para cada puesto que quieras, por ejemplo <code>{{example}}</code>",
+    "dismissHint": "Ocultar la sugerencia de búsquedas guardadas",
+    "toolbar": "Búsquedas guardadas",
+    "all": "Todas las búsquedas guardadas",
+    "menu": "Búsquedas guardadas",
+    "announce": {
+      "cleared": "Se borró la búsqueda guardada {{name}}.",
+      "showing": "Mostrando la búsqueda guardada {{name}}.",
+      "created": "Se creó la búsqueda guardada {{name}}.",
+      "updated": "Se actualizó la búsqueda guardada {{name}}.",
+      "renamed": "Se cambió el nombre de la búsqueda guardada a {{name}}.",
+      "deleted": "Se eliminó la búsqueda guardada {{name}}. Deshacer está disponible.",
+      "restored": "Se restauró la búsqueda guardada {{name}}.",
+      "deletedToast": "Eliminado \"{{name}}\""
+    }
+  },
+  "saveControl": {
+    "dialog": "Nombra esta búsqueda",
+    "nameField": "Nombre de la búsqueda guardada",
+    "update": "Actualizar",
+    "saveAsNew": "Guardar como nueva",
+    "saveSearch": "Guardar búsqueda"
+  },
+  "strip": {
+    "focused_one": "Mostrando {{focused}} de {{count}} fuente",
+    "focused_many": "Mostrando {{focused}} de {{count}} fuentes",
+    "focused_other": "Mostrando {{focused}} de {{count}} fuentes",
+    "hidden_one": "{{count}} fuente oculta",
+    "hidden_many": "{{count}} fuentes ocultas",
+    "hidden_other": "{{count}} fuentes ocultas",
+    "showAllLabel": "Mostrar todas las fuentes",
+    "showAll": "Mostrar todas",
+    "showAnnounce": "Mostrando todas las fuentes.",
+    "showHiddenLabel": "Mostrar fuentes ocultas",
+    "showHidden": "Mostrar",
+    "hiddenAnnounce": "Las fuentes ocultas se muestran de nuevo."
+  },
+  "empty": {
+    "homeTitle": "Elegir las fuentes",
+    "homeBody": "Añadir un blog, un boletín o cualquier cosa que tenga una fuente. Monfil trae lo que publica y nunca decide qué se muestra.",
+    "addFirst": "Añadir la primera fuente",
+    "otherTitle": "Todavía no hay nada aquí",
+    "otherBody": "Este espacio de trabajo aún no tiene fuentes. Importar un archivo OPML para llenarlo de una vez.",
+    "importOpml": "Importar OPML",
+    "importFeedpack": "Importar paquete de fuentes"
+  },
+  "job": {
+    "remote": "Remoto",
+    "hybrid": "Híbrido",
+    "onSite": "Presencial",
+    "salaryNotShown": "salario no mostrado"
+  },
+  "header": {
+    "itemsToShow": "Elementos a mostrar",
+    "all": "Todos",
+    "unread": "No leídos",
+    "home": "Inicio",
+    "saved": "Guardados",
+    "searchSaved": "Buscar en elementos guardados",
+    "search": "Buscar",
+    "refreshNew": "Actualizar, hay artículos nuevos",
+    "refresh": "Actualizar",
+    "refreshFeeds": "Actualizar fuentes",
+    "refreshFailed": "No se pudieron actualizar las fuentes. Comprobar la conexión e intentar de nuevo.",
+    "announceNew": "Hay artículos nuevos.",
+    "announceRefreshed": "Fuentes actualizadas."
+  },
+  "results": {
+    "none": "Sin resultados para \"{{query}}\"",
+    "count_one": "{{count}} resultado para \"{{query}}\"",
+    "count_many": "{{count}} resultados para \"{{query}}\"",
+    "count_other": "{{count}} resultados para \"{{query}}\""
+  },
+  "saved": {
+    "loading": "Cargando elementos guardados…",
+    "loadFailed": "No se pudieron cargar los elementos guardados.",
+    "empty": "Guardar elementos de las fuentes para encontrarlos aquí."
+  },
+  "feedpackFetching": "Obteniendo fuentes de este paquete…",
+  "deleteFeed": {
+    "thisWorkspace": "este espacio de trabajo",
+    "confirmRemove": "Quitar de {{workspace}}",
+    "confirmDelete": "Eliminar fuente",
+    "titleRemove": "Quitar fuente",
+    "titleDelete": "Eliminar fuente",
+    "removeBody_one": "Esto quita <bold>{{title}}</bold> de {{workspace}}. Sigue en {{count}} espacio de trabajo más con sus elementos.",
+    "removeBody_many": "Esto quita <bold>{{title}}</bold> de {{workspace}}. Sigue en {{count}} espacios de trabajo más con sus elementos.",
+    "removeBody_other": "Esto quita <bold>{{title}}</bold> de {{workspace}}. Sigue en {{count}} espacios de trabajo más con sus elementos.",
+    "deleteBody_one": "Esto elimina <bold>{{title}}</bold> y sus <bold>{{count}} elemento</bold>. Los elementos guardados siguen disponibles. No se puede deshacer.",
+    "deleteBody_many": "Esto elimina <bold>{{title}}</bold> y sus <bold>{{count}} elementos</bold>. Los elementos guardados siguen disponibles. No se puede deshacer.",
+    "deleteBody_other": "Esto elimina <bold>{{title}}</bold> y sus <bold>{{count}} elementos</bold>. Los elementos guardados siguen disponibles. No se puede deshacer."
+  },
+  "deleteCategory": {
+    "keepFeeds": "Conservar sus fuentes y moverlas a otra carpeta",
+    "moveTo": "Mover sus fuentes a",
+    "title": "Eliminar carpeta",
+    "confirm": "Eliminar carpeta",
+    "body": "Esto elimina la carpeta <bold>{{name}}</bold>.",
+    "feeds_move_one": "Su <bold>{{count}} fuente</bold> se mueve a la carpeta de abajo.",
+    "feeds_move_many": "Sus <bold>{{count}} fuentes</bold> se mueven a la carpeta de abajo.",
+    "feeds_move_other": "Sus <bold>{{count}} fuentes</bold> se mueven a la carpeta de abajo.",
+    "feeds_delete_one": "Su <bold>{{count}} fuente</bold> se elimina con ella.",
+    "feeds_delete_many": "Sus <bold>{{count}} fuentes</bold> se eliminan con ella.",
+    "feeds_delete_other": "Sus <bold>{{count}} fuentes</bold> se eliminan con ella."
+  },
+  "moveFeed": {
+    "title": "Mover fuente",
+    "body": "Mover <bold>{{title}}</bold> a otro espacio de trabajo.",
+    "workspace": "Espacio de trabajo",
+    "folder": "Carpeta",
+    "newFolder": "Nueva carpeta…",
+    "newFolderName": "Nombre de la nueva carpeta",
+    "confirm": "Mover fuente"
+  },
+  "caughtUp": "Todo al día",
+  "sidebar": {
+    "feeds": "Fuentes",
+    "newFolder": "Nueva carpeta",
+    "addFeed": "Añadir fuente",
+    "addFeedpack": "Añadir paquete de fuentes",
+    "folderName": "Nombre de la carpeta",
+    "newFolderName": "Nombre de la nueva carpeta",
+    "drag": "Arrastrar",
+    "renameFolder": "Cambiar nombre de {{name}}",
+    "addFeedHint": "Añadir una fuente aquí. Para eliminar una fuente, hacer clic derecho sobre ella.",
+    "filterHint": "Clic en una fuente para mostrar solo sus artículos. Clic en el ojo para ocultar una fuente."
+  },
+  "refresh": {
+    "failed_one": "{{count}} fuente no se pudo actualizar.",
+    "failed_many": "{{count}} fuentes no se pudieron actualizar.",
+    "failed_other": "{{count}} fuentes no se pudieron actualizar.",
+    "more": "y {{count}} más"
+  },
+  "readTime": "{{count, number}} min de lectura"
+}

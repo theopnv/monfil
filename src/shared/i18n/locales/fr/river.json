@@ -1,0 +1,184 @@
+{
+  "feed": {
+    "dragToFolder": "Glisser vers un dossier",
+    "state": {
+      "home": "Affiché avec les autres",
+      "only": "Affiché seul",
+      "hidden": "Masqué"
+    },
+    "rowTitle_focus": "{{title}} — {{state}}. Cliquez pour n'afficher que celui-ci.",
+    "rowTitle_unfocus": "{{title}} — {{state}}. Cliquez pour annuler ce filtre.",
+    "rowLabel_focus": "{{title}}, {{state}}. Cliquez pour n'afficher que celui-ci.",
+    "rowLabel_unfocus": "{{title}}, {{state}}. Cliquez pour annuler ce filtre.",
+    "refreshFailedLabel": "Échec de l'actualisation de {{title}} : {{error}}",
+    "refreshFailedTitle": "La dernière actualisation a échoué : {{error}}",
+    "visibility_hide": "Masquer {{title}}",
+    "visibility_show": "Afficher {{title}}"
+  },
+  "folder": {
+    "focus_focus": "N'afficher que {{name}}",
+    "focus_unfocus": "Annuler le filtre {{name}}",
+    "visibility_hide": "Masquer {{name}}",
+    "visibility_show": "Afficher {{name}}"
+  },
+  "source": {
+    "conference": "CONF",
+    "job": "EMPL"
+  },
+  "card": {
+    "label_read": "{{title}}, lu, de {{feed}}, {{time}}.",
+    "label_unread": "{{title}}, non lu, de {{feed}}, {{time}}."
+  },
+  "search": {
+    "syntax": {
+      "all": "Chaque mot doit correspondre",
+      "phrase": "Une expression exacte. Correspond aussi à l'intérieur de mots plus longs.",
+      "either": "L'un des deux mots (OR en majuscules)",
+      "exclude": "Exclure un mot ou une expression",
+      "title": "Correspond au titre uniquement",
+      "short": "Un mot de 3 lettres ou moins ne correspond qu'à des mots entiers"
+    },
+    "clear": "Effacer la recherche",
+    "syntaxRegion": "Syntaxe de recherche",
+    "closeHint": "Appuyez sur Entrée pour fermer la recherche et garder le filtre."
+  },
+  "pills": {
+    "rename": "Renommer la recherche enregistrée {{name}}",
+    "label": "{{name}}, {{count}} non lu(s)",
+    "renameHint": "Clic droit ou F2 pour renommer",
+    "delete": "Supprimer la recherche enregistrée {{name}}",
+    "hint": "Enregistrez une recherche pour chaque poste voulu, par exemple <code>{{example}}</code>",
+    "dismissHint": "Masquer le conseil sur les recherches enregistrées",
+    "toolbar": "Recherches enregistrées",
+    "all": "Toutes les recherches enregistrées",
+    "menu": "Recherches enregistrées",
+    "announce": {
+      "cleared": "Recherche enregistrée {{name}} effacée.",
+      "showing": "Affichage de la recherche enregistrée {{name}}.",
+      "created": "Recherche enregistrée {{name}} créée.",
+      "updated": "Recherche enregistrée {{name}} mise à jour.",
+      "renamed": "Recherche enregistrée renommée en {{name}}.",
+      "deleted": "Recherche enregistrée {{name}} supprimée. Vous pouvez annuler.",
+      "restored": "Recherche enregistrée {{name}} restaurée.",
+      "deletedToast": "« {{name}} » supprimé"
+    }
+  },
+  "saveControl": {
+    "dialog": "Nommer cette recherche",
+    "nameField": "Nom de la recherche enregistrée",
+    "update": "Mettre à jour",
+    "saveAsNew": "Enregistrer comme nouvelle",
+    "saveSearch": "Enregistrer la recherche"
+  },
+  "strip": {
+    "focused_one": "Affichage de {{focused}} flux sur {{count}}",
+    "focused_many": "Affichage de {{focused}} flux sur {{count}}",
+    "focused_other": "Affichage de {{focused}} flux sur {{count}}",
+    "hidden_one": "{{count}} flux masqué",
+    "hidden_many": "{{count}} flux masqués",
+    "hidden_other": "{{count}} flux masqués",
+    "showAllLabel": "Afficher tous les flux",
+    "showAll": "Tout afficher",
+    "showAnnounce": "Affichage de tous les flux.",
+    "showHiddenLabel": "Afficher les flux masqués",
+    "showHidden": "Afficher",
+    "hiddenAnnounce": "Les flux masqués sont de nouveau affichés."
+  },
+  "empty": {
+    "homeTitle": "Choisissez vos sources",
+    "homeBody": "Ajoutez un blog, une lettre d'information, n'importe quelle source qui a un flux. Monfil récupère ce qui est publié et ne décide jamais de ce que vous voyez.",
+    "addFirst": "Ajoutez votre premier flux",
+    "otherTitle": "Rien ici pour le moment",
+    "otherBody": "Cet espace de travail n'a pas encore de sources. Importez un fichier OPML pour le remplir d'un coup.",
+    "importOpml": "Importer un OPML",
+    "importFeedpack": "Importer un pack de flux"
+  },
+  "job": {
+    "remote": "À distance",
+    "hybrid": "Hybride",
+    "onSite": "Sur site",
+    "salaryNotShown": "salaire non affiché"
+  },
+  "header": {
+    "itemsToShow": "Éléments à afficher",
+    "all": "Tous",
+    "unread": "Non lus",
+    "home": "Accueil",
+    "saved": "Enregistrés",
+    "searchSaved": "Rechercher dans les éléments enregistrés",
+    "search": "Rechercher",
+    "refreshNew": "Actualiser, de nouveaux articles sont disponibles",
+    "refresh": "Actualiser",
+    "refreshFeeds": "Actualiser les flux",
+    "refreshFailed": "Impossible d'actualiser les flux. Vérifiez votre connexion et réessayez.",
+    "announceNew": "De nouveaux articles sont disponibles.",
+    "announceRefreshed": "Flux actualisés."
+  },
+  "results": {
+    "none": "Aucun résultat pour « {{query}} »",
+    "count_one": "{{count}} résultat pour « {{query}} »",
+    "count_many": "{{count}} résultats pour « {{query}} »",
+    "count_other": "{{count}} résultats pour « {{query}} »"
+  },
+  "saved": {
+    "loading": "Chargement des éléments enregistrés…",
+    "loadFailed": "Les éléments enregistrés n'ont pas pu être chargés.",
+    "empty": "Enregistrez des éléments de vos flux pour les retrouver ici."
+  },
+  "feedpackFetching": "Récupération des sources de ce pack de flux…",
+  "deleteFeed": {
+    "thisWorkspace": "cet espace de travail",
+    "confirmRemove": "Retirer de {{workspace}}",
+    "confirmDelete": "Supprimer le flux",
+    "titleRemove": "Retirer le flux",
+    "titleDelete": "Supprimer le flux",
+    "removeBody_one": "Cela retire <bold>{{title}}</bold> de {{workspace}}. Il reste dans {{count}} autre espace de travail avec ses éléments.",
+    "removeBody_many": "Cela retire <bold>{{title}}</bold> de {{workspace}}. Il reste dans {{count}} autres espaces de travail avec ses éléments.",
+    "removeBody_other": "Cela retire <bold>{{title}}</bold> de {{workspace}}. Il reste dans {{count}} autres espaces de travail avec ses éléments.",
+    "deleteBody_one": "Cela supprime <bold>{{title}}</bold> et son <bold>{{count}} élément</bold>. Les éléments enregistrés restent disponibles. Cette action est définitive.",
+    "deleteBody_many": "Cela supprime <bold>{{title}}</bold> et ses <bold>{{count}} éléments</bold>. Les éléments enregistrés restent disponibles. Cette action est définitive.",
+    "deleteBody_other": "Cela supprime <bold>{{title}}</bold> et ses <bold>{{count}} éléments</bold>. Les éléments enregistrés restent disponibles. Cette action est définitive."
+  },
+  "deleteCategory": {
+    "keepFeeds": "Conserver ses flux et les déplacer vers un autre dossier",
+    "moveTo": "Déplacer ses flux vers",
+    "title": "Supprimer le dossier",
+    "confirm": "Supprimer le dossier",
+    "body": "Cela supprime le dossier <bold>{{name}}</bold>.",
+    "feeds_move_one": "Son <bold>{{count}} flux</bold> est déplacé vers le dossier ci-dessous.",
+    "feeds_move_many": "Ses <bold>{{count}} flux</bold> sont déplacés vers le dossier ci-dessous.",
+    "feeds_move_other": "Ses <bold>{{count}} flux</bold> sont déplacés vers le dossier ci-dessous.",
+    "feeds_delete_one": "Son <bold>{{count}} flux</bold> est supprimé avec lui.",
+    "feeds_delete_many": "Ses <bold>{{count}} flux</bold> sont supprimés avec lui.",
+    "feeds_delete_other": "Ses <bold>{{count}} flux</bold> sont supprimés avec lui."
+  },
+  "moveFeed": {
+    "title": "Déplacer le flux",
+    "body": "Déplacer <bold>{{title}}</bold> vers un autre espace de travail.",
+    "workspace": "Espace de travail",
+    "folder": "Dossier",
+    "newFolder": "Nouveau dossier…",
+    "newFolderName": "Nom du nouveau dossier",
+    "confirm": "Déplacer le flux"
+  },
+  "caughtUp": "Vous êtes à jour",
+  "sidebar": {
+    "feeds": "Flux",
+    "newFolder": "Nouveau dossier",
+    "addFeed": "Ajouter un flux",
+    "addFeedpack": "Ajouter un pack de flux",
+    "folderName": "Nom du dossier",
+    "newFolderName": "Nom du nouveau dossier",
+    "drag": "Glisser",
+    "renameFolder": "Renommer {{name}}",
+    "addFeedHint": "Ajoutez un flux ici. Pour supprimer un flux, faites un clic droit dessus.",
+    "filterHint": "Cliquez sur un flux pour n'afficher que ses articles. Cliquez sur l'œil pour masquer un flux."
+  },
+  "refresh": {
+    "failed_one": "{{count}} flux n'a pas pu être actualisé.",
+    "failed_many": "{{count}} flux n'ont pas pu être actualisés.",
+    "failed_other": "{{count}} flux n'ont pas pu être actualisés.",
+    "more": "et {{count}} de plus"
+  },
+  "readTime": "{{count, number}} min de lecture"
+}

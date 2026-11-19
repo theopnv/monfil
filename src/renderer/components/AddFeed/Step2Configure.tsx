@@ -44,7 +44,7 @@ export default function Step2Configure({
             <div className="min-w-0 flex-1">
               <div className="text-lg leading-tight font-bold text-primary">{feed.title || feed.link}</div>
               <div className="mb-1.75 text-xs text-tertiary">{feed.link}</div>
-              {feed.description && <p className="text-sm leading-relaxed text-tertiary text-pretty">{feed.description}</p>}
+              {feed.description && <p dir="auto" className="text-sm leading-relaxed text-tertiary text-pretty">{feed.description}</p>}
             </div>
           </div>
 

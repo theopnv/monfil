@@ -5,6 +5,8 @@
 import { fetchText } from '../lib/fetch';
 import type { Feedpack, FeedpackError, FeedpackInstallTarget, FeedpackPreview, ImportOpmlTarget, ImportSummary, InstallFeedpackError } from '../../shared/contracts';
 import { broadcastToRenderers } from '../lib/sendToRenderer';
+import { mainLanguage } from '../lib/i18n';
+import { feedpackText } from '../../shared/i18n/feedpack-text';
 import type { Result } from '../../shared/result';
 import { startOpmlImport } from '../opml/import';
 import { parseOpmlDocument } from '../opml/parse';
@@ -23,7 +25,7 @@ async function loadFeedpack(slug: string): Promise<Result<{ pack: Feedpack; xml:
     try {
       return { success: true, data: { pack, xml: await readBundledFeedpack(pack) } };
     } catch {
-      return { success: false, error: { name: 'FETCH_ERROR', message: `Could not read local ${pack.title}.`, params: { reason: 'local', title: pack.title } } };
+      return { success: false, error: { name: 'FETCH_ERROR', message: `Could not read local ${pack.title}.`, params: { reason: 'local', title: feedpackText(pack, mainLanguage()).title } } };
     }
   }
   const fetched = await fetchText(feedpackOpmlUrl(pack));
@@ -33,7 +35,7 @@ async function loadFeedpack(slug: string): Promise<Result<{ pack: Feedpack; xml:
   try {
     return { success: true, data: { pack, xml: await readBundledFeedpack(pack) } };
   } catch {
-    return { success: false, error: { name: 'FETCH_ERROR', message: `Could not fetch ${pack.title}.`, params: { reason: 'remote', title: pack.title } } };
+    return { success: false, error: { name: 'FETCH_ERROR', message: `Could not fetch ${pack.title}.`, params: { reason: 'remote', title: feedpackText(pack, mainLanguage()).title } } };
   }
 }
 
@@ -62,7 +64,7 @@ export async function installFeedpack(
     ? target
     : {
       kind: 'new-workspace',
-      name: target.name.trim() || loaded.data.pack.title,
+      name: target.name.trim() || feedpackText(loaded.data.pack, mainLanguage()).title,
       icon: target.icon,
       color: target.color,
       sourceSlug: loaded.data.pack.slug,
@@ -82,7 +84,7 @@ export async function installFeedpack(
     (error: unknown) => broadcastToRenderers('feedpacks:install-finished', {
       workspaceId: started.data.summary.workspaceId,
       imported: started.data.summary.imported,
-      failed: [{ title: loaded.data.pack.title, message: error instanceof Error ? error.message : 'Could not refresh the imported feeds.' }],
+      failed: [{ title: feedpackText(loaded.data.pack, mainLanguage()).title, message: error instanceof Error ? error.message : 'Could not refresh the imported feeds.' }],
     }),
   );
   return { success: true, data: started.data.summary };

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { useLocale } from 'react-aria-components';
 import { i18n, setRendererLanguage } from '@/lib/i18n';
@@ -62,5 +62,31 @@ describe('LanguageProvider', () => {
     // Assert
     await expect.element(getByTestId('locale')).toHaveTextContent('en ltr');
     expect(document.documentElement.lang).toBe('en');
+  });
+
+  test('moves to the language that main holds when a reload left the window with an older one', async () => {
+    // Arrange
+    window.electron = { ipcRenderer: { invoke: vi.fn(() => Promise.resolve({ setting: 'ja', language: 'ja', systemLanguage: 'en' })) } } as unknown as typeof window.electron;
+
+    // Act
+    await render(<LanguageProvider><ReactAriaLocale /></LanguageProvider>);
+
+    // Assert
+    await vi.waitFor(() => expect(i18n.language).toBe('ja'));
+    expect(document.documentElement.lang).toBe('ja');
+    delete (window as { electron?: unknown }).electron;
+  });
+
+  test('keeps the language of the window when main cannot answer', async () => {
+    // Arrange
+    window.electron = { ipcRenderer: { invoke: vi.fn(() => Promise.reject(new Error('gone'))) } } as unknown as typeof window.electron;
+
+    // Act
+    await render(<LanguageProvider><ReactAriaLocale /></LanguageProvider>);
+
+    // Assert
+    await vi.waitFor(() => expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:get-language', undefined));
+    expect(i18n.language).toBe('en');
+    delete (window as { electron?: unknown }).electron;
   });
 });

@@ -1,0 +1,74 @@
+{
+  "navigation": {
+    "label": "工作区视图",
+    "all": "所有内容",
+    "saved": "已保存",
+    "saveHint": "用书签按钮保存文章。在这里找到你已保存的文章。"
+  },
+  "switcher": {
+    "dialog": "切换工作区",
+    "field": "工作区名称",
+    "placeholder": "前往工作区…",
+    "list": "工作区",
+    "empty": "没有匹配的工作区。"
+  },
+  "rail": {
+    "moveFailed": "无法移动该订阅源。",
+    "list": "工作区",
+    "move": "移动{{name}}",
+    "hideNames": "隐藏工作区名称",
+    "showNames": "显示工作区名称",
+    "collapse": "收起",
+    "new": "新建工作区",
+    "newHint": "创建工作区以分组订阅源。右键单击工作区即可编辑或删除。",
+    "settings": "设置"
+  },
+  "dialog": {
+    "editTitle": "编辑工作区",
+    "newTitle": "新建工作区",
+    "editBody": "重命名，或设置其他图标和颜色。",
+    "newBody": "侧边栏中的一个标签，拥有自己的订阅源和信息流。",
+    "name": "名称",
+    "namePlaceholder": "CI/CD 监控",
+    "icon": "图标",
+    "colour": "颜色",
+    "colourOption": "颜色 {{value}}",
+    "browse": "浏览订阅包",
+    "save": "保存更改",
+    "create": "创建工作区"
+  },
+  "delete": {
+    "title": "删除工作区",
+    "body": "这将删除 <bold>{{name}}</bold> 工作区、其文件夹及其“已保存”列表。仅位于此工作区的订阅源也会被删除。请先导出为 OPML，以保留一份可日后重新导入的副本。",
+    "export": "导出为 OPML",
+    "confirm": "删除工作区"
+  },
+  "importOpml": {
+    "doneTitle": "导入完成",
+    "imported_other": "已导入 {{count}} 个订阅源。",
+    "skipped": "已跳过 {{count}} 个。",
+    "failed": "{{count}} 个获取失败。",
+    "titleInto": "将 OPML 导入到{{name}}",
+    "title": "导入 OPML",
+    "choose": "在随后打开的选择器中选择文件。",
+    "newWorkspace": "新建工作区",
+    "mergeHome": "合并到首页",
+    "name": "名称",
+    "namePlaceholder": "留空则使用文件的标题"
+  },
+  "feedpacks": {
+    "sources_other": "{{count}} 个来源",
+    "packSources": "订阅包来源",
+    "search": "搜索订阅包",
+    "loading": "正在加载订阅包…",
+    "none": "没有可用的订阅包。",
+    "noMatch": "没有与“{{query}}”匹配的订阅包。",
+    "loadingSources": "正在加载来源…"
+  },
+  "feedpackDialog": {
+    "title": "订阅包",
+    "body": "安装一组精选来源。",
+    "back": "返回订阅包",
+    "install": "安装"
+  }
+}

@@ -26,6 +26,7 @@ import type {
   ImportSummary,
   InstallFeedpackError,
   ItemBody,
+  LanguageState,
   MoveFeedError,
   NewFeedInput,
   ParsedSource,
@@ -53,6 +54,7 @@ import type {
   WorkspaceSummary,
 } from './contracts';
 import type { ErrorParams } from './errors';
+import type { LanguageCode, LanguageSetting } from './i18n/languages';
 import type { IpcFailure, Result } from './result';
 import type { LogEventMap, LogEventName, LogLevel } from './logging';
 
@@ -121,6 +123,8 @@ export type TwoWayRendererMainChannelPayloads = {
   'settings:set-workspace-rail-expanded': boolean;
   'settings:get-retention-days': RetentionDays;
   'settings:set-retention-days': RetentionDays;
+  'settings:get-language': LanguageState;
+  'settings:set-language': LanguageState;
   'app:back-up-database': Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string; params?: ErrorParams }>;
   'app:get-info': AppInfo;
   'app:hints-enabled': boolean;
@@ -179,6 +183,8 @@ export type TwoWayRendererMainChannelsInvokeArgs = {
   'settings:set-workspace-rail-expanded': boolean;
   'settings:get-retention-days': undefined;
   'settings:set-retention-days': RetentionDays;
+  'settings:get-language': undefined;
+  'settings:set-language': LanguageSetting;
   'app:back-up-database': undefined;
   'app:get-info': undefined;
   'app:hints-enabled': undefined;
@@ -211,6 +217,8 @@ export type Channels = keyof ChannelPayloads;
 export interface ElectronHandler {
   /** The operating system locale, read at startup. Absent when the window did not get one. */
   systemLocale?: string;
+  /** The interface language that main resolved when it made the window. Absent when the window did not get one. */
+  language?: LanguageCode;
   ipcRenderer: {
     sendMessage<C extends OneWayRendererToMainChannels>(channel: C, payload: OneWayRendererToMainChannelPayloads[C]): void;
     on<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void): () => void;

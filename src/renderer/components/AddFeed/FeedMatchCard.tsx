@@ -38,7 +38,7 @@ export default function FeedMatchCard({ title, detail, status, selected, favicon
     >
       <FeedAvatar title={title} faviconUrl={faviconUrl} size="md" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-primary">{title}</p>
+        <p dir="auto" className="truncate text-sm font-semibold text-primary">{title}</p>
         <p className="truncate text-xs text-tertiary">{detail}</p>
       </div>
       {status === "loading" && <span className="text-xs text-tertiary">{t('match.checking')}</span>}

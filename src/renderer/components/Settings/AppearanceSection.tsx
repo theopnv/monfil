@@ -4,6 +4,7 @@
 
 import { useTranslation } from 'react-i18next';
 import SegmentedControl from "@/components/common/SegmentedControl";
+import LanguageRow from "@/components/Settings/LanguageRow";
 import SettingsRow from "@/components/Settings/SettingsRow";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import { DENSITIES } from "@/lib/preferences";
@@ -29,6 +30,8 @@ export default function AppearanceSection() {
       <SettingsRow label={t('appearance.density')} hint={t('appearance.densityHint')}>
         <SegmentedControl options={DENSITIES} value={preferences.density} onChange={(density) => setPreference("density", density)} getLabel={(density) => t(`appearance.densities.${DENSITY_KEYS[density]}`)} />
       </SettingsRow>
+
+      <LanguageRow />
     </SettingsSection>
   );
 }

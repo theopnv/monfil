@@ -245,11 +245,11 @@ test('renders the matched item title, byline and body', async () => {
   const { itemB } = setUpThreeItemRiver();
 
   // Act
-  const { getByText, getByTestId } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
+  const { getByText, getByTestId, getByRole } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
 
   // Assert
   await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('Feed B', { exact: true })).toBeInTheDocument();
+  await expect.element(getByRole('banner').getByText('Feed B', { exact: true })).toBeInTheDocument();
   await expect.element(getByTestId('article-body').getByText(`Item ${itemB.id} description`, { exact: true })).toBeInTheDocument();
 });
 

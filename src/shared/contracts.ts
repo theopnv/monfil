@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import type { ErrorParams } from './errors';
+import type { LanguageCode, LanguageSetting } from './i18n/languages';
 
 // Home is inserted as the first row by the migration that creates this table, and it can never be
 // deleted, so its id is permanently 1.
@@ -298,10 +299,17 @@ export type ExportOpmlError =
   | { name: 'CANCELLED'; message: string; params?: ErrorParams }
   | { name: 'FS_ERROR'; message: string; params?: ErrorParams };
 
+export interface FeedpackText {
+  title: string;
+  description: string;
+}
+
 export interface Feedpack {
   slug: string;
   title: string;
   description: string;
+  /** The title and description in other interface languages. English is the `title` and `description` above. */
+  i18n?: Partial<Record<LanguageCode, FeedpackText>> | undefined;
   tags: string[];
   curator: string;
   sourceCount: number;
@@ -373,3 +381,10 @@ export interface UsagePreferences {
 }
 
 export type DailySummaryProps = Record<string, string | number>;
+
+/** The language choice, the language it resolves to now, and the language the operating system asks for. */
+export interface LanguageState {
+  setting: LanguageSetting;
+  language: LanguageCode;
+  systemLanguage: LanguageCode;
+}

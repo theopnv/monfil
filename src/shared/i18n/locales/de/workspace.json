@@ -1,0 +1,76 @@
+{
+  "navigation": {
+    "label": "Arbeitsbereichsansichten",
+    "all": "Alle Einträge",
+    "saved": "Gespeichert",
+    "saveHint": "Speichern Sie einen Artikel mit dem Lesezeichen. Ihre gespeicherten Artikel finden Sie hier."
+  },
+  "switcher": {
+    "dialog": "Arbeitsbereich wechseln",
+    "field": "Name des Arbeitsbereichs",
+    "placeholder": "Zu Arbeitsbereich wechseln…",
+    "list": "Arbeitsbereiche",
+    "empty": "Kein Arbeitsbereich passt."
+  },
+  "rail": {
+    "moveFailed": "Der Feed konnte nicht verschoben werden.",
+    "list": "Arbeitsbereiche",
+    "move": "{{name}} verschieben",
+    "hideNames": "Namen der Arbeitsbereiche ausblenden",
+    "showNames": "Namen der Arbeitsbereiche anzeigen",
+    "collapse": "Einklappen",
+    "new": "Neuer Arbeitsbereich",
+    "newHint": "Legen Sie einen Arbeitsbereich an, um Feeds zu gruppieren. Mit der rechten Maustaste auf einen Arbeitsbereich können Sie ihn bearbeiten oder löschen.",
+    "settings": "Einstellungen"
+  },
+  "dialog": {
+    "editTitle": "Arbeitsbereich bearbeiten",
+    "newTitle": "Neuer Arbeitsbereich",
+    "editBody": "Benennen Sie ihn um oder wählen Sie ein anderes Symbol und eine andere Farbe.",
+    "newBody": "Ein Tab in der Leiste, mit eigenen Quellen und eigenem Stream.",
+    "name": "Name",
+    "namePlaceholder": "CI/CD-Überwachung",
+    "icon": "Symbol",
+    "colour": "Farbe",
+    "colourOption": "Farbe {{value}}",
+    "browse": "Feedpacks durchsuchen",
+    "save": "Änderungen speichern",
+    "create": "Arbeitsbereich anlegen"
+  },
+  "delete": {
+    "title": "Arbeitsbereich löschen",
+    "body": "Dies löscht den Arbeitsbereich <bold>{{name}}</bold>, seine Ordner und seine Liste „Gespeichert“. Feeds, die nur hier liegen, werden ebenfalls entfernt. Exportieren Sie vorher als OPML, um eine Kopie zu behalten, die Sie später erneut importieren können.",
+    "export": "Als OPML exportieren",
+    "confirm": "Arbeitsbereich löschen"
+  },
+  "importOpml": {
+    "doneTitle": "Import abgeschlossen",
+    "imported_one": "{{count}} Feed importiert.",
+    "imported_other": "{{count}} Feeds importiert.",
+    "skipped": "{{count}} übersprungen.",
+    "failed": "{{count}} konnten nicht abgerufen werden.",
+    "titleInto": "OPML in {{name}} importieren",
+    "title": "OPML importieren",
+    "choose": "Wählen Sie im nächsten Fenster eine Datei aus.",
+    "newWorkspace": "Neuer Arbeitsbereich",
+    "mergeHome": "In Start zusammenführen",
+    "name": "Name",
+    "namePlaceholder": "Leer lassen, um den Titel der Datei zu verwenden"
+  },
+  "feedpacks": {
+    "sources_one": "{{count}} Quelle",
+    "sources_other": "{{count}} Quellen",
+    "packSources": "Quellen des Feedpacks",
+    "search": "Feedpacks durchsuchen",
+    "loading": "Feedpacks werden geladen…",
+    "none": "Keine Feedpacks verfügbar.",
+    "noMatch": "Kein Feedpack passt zu „{{query}}“.",
+    "loadingSources": "Quellen werden geladen…"
+  },
+  "feedpackDialog": {
+    "title": "Feedpacks",
+    "body": "Installieren Sie eine ausgewählte Gruppe von Quellen.",
+    "back": "Zurück zu den Feedpacks",
+    "install": "Installieren"
+  }
+}

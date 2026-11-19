@@ -31,6 +31,40 @@ function service(overrides: Partial<Parameters<typeof createCatalogService>[0]> 
   });
 }
 
+describe('catalog translations', () => {
+  const pack = JSON.parse(bundledCatalog).packs[0];
+
+  function catalogWith(i18n: unknown) {
+    return service({ readFile: vi.fn(async () => JSON.stringify({ version: 1, packs: [{ ...pack, i18n }] })), preferBundled: true });
+  }
+
+  test('keeps the translated titles and descriptions of a pack', async () => {
+    // Arrange
+    const i18n = { fr: { title: 'Livraison logicielle moderne', description: 'Suivre les outils de livraison.' } };
+
+    // Act
+    const result = await catalogWith(i18n).get();
+
+    // Assert
+    expect(result).toMatchObject({ success: true, data: { packs: [{ i18n }] } });
+  });
+
+  test.each([
+    ['a language that is not an object', { fr: 'Livraison' }],
+    ['a translation with no description', { fr: { title: 'Livraison' } }],
+    ['a translation with a title that is not text', { fr: { title: 3, description: 'x' } }],
+    ['a null translation', { fr: null }],
+    ['a map that is not an object', 'fr'],
+    ['a null map', null],
+  ])('rejects %s', async (_name, i18n) => {
+    // Act
+    const result = await catalogWith(i18n).get();
+
+    // Assert
+    expect(result).toMatchObject({ success: false, error: { name: 'INVALID_CATALOG' } });
+  });
+});
+
 describe('catalog', () => {
   test('returns and caches a fetched catalog', async () => {
     // Arrange

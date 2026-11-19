@@ -1,0 +1,47 @@
+{
+  "menu": {
+    "feed": {
+      "refreshFeed": "フィードを更新",
+      "moveFeed": "ワークスペースに移動…",
+      "deleteFeed": "フィードを削除"
+    },
+    "category": {
+      "rename": "名前を変更",
+      "delete": "削除"
+    },
+    "workspace": {
+      "edit": "ワークスペースを編集",
+      "export": "OPMLとしてエクスポート",
+      "delete": "ワークスペースを削除"
+    }
+  },
+  "fatal": {
+    "title": "Monfilを続行できません",
+    "message": "Monfilでシステムエラーが発生しました。インシデント {{incident}}。",
+    "restart": "再起動",
+    "showLog": "ログファイルを表示",
+    "quit": "終了"
+  },
+  "dialog": {
+    "sqliteFilter": "SQLiteデータベース"
+  },
+  "source": {
+    "hackernews": {
+      "frontPage": "トップページ",
+      "points100": "100ポイント以上",
+      "points300": "300ポイント以上",
+      "newest": "新着",
+      "best": "ベスト"
+    },
+    "releases": "リリース",
+    "publicActivity": "公開アクティビティ"
+  },
+  "salary": {
+    "withInterval": "{{label}} / {{interval}}",
+    "interval": {
+      "hour": "時間",
+      "month": "月",
+      "year": "年"
+    }
+  }
+}

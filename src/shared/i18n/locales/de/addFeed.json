@@ -1,0 +1,124 @@
+{
+  "match": {
+    "found": "Feed gefunden",
+    "notFound": "Nicht gefunden",
+    "checking": "Wird geprüft…"
+  },
+  "wizard": {
+    "step": {
+      "find": "Suchen",
+      "configure": "Einrichten",
+      "done": "Fertig"
+    },
+    "titles": {
+      "find": "Feed hinzufügen",
+      "configure": "Anpassen",
+      "done": "Zu Monfil hinzugefügt"
+    },
+    "blurbs": {
+      "find": "Ein Feld für alle Quellen, denen Sie folgen möchten.",
+      "configure": "Wo der Feed einsortiert wird und ob er auf Start erscheint.",
+      "done": "Der Abruf läuft bereits. Sie müssen nichts weiter tun."
+    },
+    "close": "Schließen",
+    "goToStep": "Zu Schritt {{step}} wechseln: {{name}}"
+  },
+  "stats": {
+    "new": "Neu",
+    "perDay": "~{{count}}/Tag",
+    "perWeek": "~{{count}}/Woche",
+    "perMonth": "~{{count}}/Monat",
+    "fullText": "Volltext",
+    "excerpt": "Auszug"
+  },
+  "find": {
+    "kind": {
+      "anything": "Alles",
+      "conferences": "Konferenzen",
+      "jobs": "Stellen"
+    },
+    "copy": {
+      "anything": {
+        "placeholder": "Link zu einer Website, einem Feed, Repository oder Profil einfügen…",
+        "hint": "Monfil findet den Feed hinter dem Link. Bei einem Handle drücken Sie die Eingabetaste."
+      },
+      "rss": {
+        "placeholder": "Link zu einem RSS-Feed einfügen…",
+        "hint": "Monfil prüft den Link auf einen RSS-Feed."
+      },
+      "youtube": {
+        "placeholder": "Kanal, Handle oder Videolink einfügen…",
+        "hint": "Link einfügen oder Kanal bzw. Handle eingeben und die Eingabetaste drücken."
+      },
+      "github": {
+        "placeholder": "Link zu Repository oder Benutzer einfügen oder owner/repo…",
+        "hint": "Ein Repository liefert seine Releases. Ein Benutzer oder eine Organisation liefert die öffentlichen Aktivitäten. Nach owner/repo die Eingabetaste drücken."
+      },
+      "gitlab": {
+        "placeholder": "Link zu einem GitLab-Projekt einfügen…",
+        "hint": "Monfil folgt den Releases des Projekts. Selbst gehostetes GitLab funktioniert auch."
+      },
+      "hackernews": {
+        "placeholder": "Hacker-News-Link einfügen…",
+        "hint": "news.ycombinator.com bietet die Startseite und Feeds, gefiltert nach Punkten."
+      },
+      "arxiv": {
+        "placeholder": "arXiv-Listenlink einfügen…",
+        "hint": "Zum Beispiel arxiv.org/list/cs.AI/recent. Monfil blendet ersetzte Arbeiten aus."
+      },
+      "bluesky": {
+        "placeholder": "Profillink oder Handle einfügen…",
+        "hint": "Handle wie @name.bsky.social eingeben und die Eingabetaste drücken."
+      },
+      "mastodon": {
+        "placeholder": "Profil- oder Tag-Link einfügen oder @user@host…",
+        "hint": "Handle wie @user@mastodon.social eingeben und die Eingabetaste drücken."
+      },
+      "conference": {
+        "placeholder": "Themen eingeben, dann „in“ und Orte…",
+        "hint": "Format: Themen in Orten, dann die Eingabetaste drücken. Einträge mit Kommas trennen. Orte sind optional, und online zählt als Ort. Beispiele: devops · kubernetes, cloud in France · java in Belgium, online. Ein developers.events-Link funktioniert ebenfalls."
+      },
+      "ats": {
+        "placeholder": "Job-Board oder Karriereseite eines Unternehmens einfügen…",
+        "hint": "Funktioniert mit den Job-Boards von Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor und Personio. Die Abdeckung ist nicht vollständig: Andere Jobsysteme werden noch nicht unterstützt. Monfil listet jede offene Stelle des Unternehmens auf."
+      }
+    },
+    "feedUrl": "Feed-URL",
+    "searching": "Suche läuft…",
+    "candidates_one": "{{count}} Feed gefunden. Einen auswählen.",
+    "candidates_other": "{{count}} Feeds gefunden. Einen auswählen.",
+    "notFound": "Kein Feed gefunden",
+    "notFoundDetail": "Unter dieser Adresse wurde kein Feed gefunden.",
+    "conferenceEmpty": "Derzeit passt keine Konferenz. Monfil legt eine Karte an, sobald eine passende Konferenz angekündigt wird.",
+    "detail_one": "{{link}} — {{count}} Eintrag",
+    "detail_other": "{{link}} — {{count}} Einträge"
+  },
+  "configure": {
+    "publishes": "Veröffentlicht",
+    "contains": "Feed enthält",
+    "notFound": "Kein Feed gefunden",
+    "notFoundDetail": "Zurück zu Schritt 1 und einen anderen Link versuchen.",
+    "show": "Im Arbeitsbereich anzeigen",
+    "showHint": "Abwählen bei Quellen mit hohem Volumen, die Sie lieber bewusst besuchen."
+  },
+  "done": {
+    "title": "{{title}} ist in {{category}}",
+    "backfilled_one": "{{count}} Eintrag nachgeladen. Alles bleibt auf diesem Gerät.",
+    "backfilled_other": "{{count}} Einträge nachgeladen. Alles bleibt auf diesem Gerät.",
+    "jobs": "Alle Stellen von {{company}} erscheinen jetzt in Ihrem Feed. Zum Filtern suchen Sie nach jeder gewünschten Rolle und speichern die Suche."
+  },
+  "category": {
+    "putIn": "Einordnen in",
+    "newName": "Name des neuen Ordners",
+    "example": "z. B. Design",
+    "add": "Hinzufügen",
+    "new": "+ Neuer Ordner",
+    "unlisted": "Neuer Ordner: {{name}}"
+  },
+  "footer": {
+    "continue": "Weiter",
+    "add": "Quelle hinzufügen",
+    "goToFeed": "Zum Feed",
+    "addAnother": "Weitere hinzufügen"
+  }
+}

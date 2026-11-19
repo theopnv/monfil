@@ -39,13 +39,13 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
         <div className="mb-2 flex items-center gap-1.75 pe-7">
           <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
           <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="sm" />
-          <span className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
+          <span dir="auto" className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
           <span className="ms-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt, locale)}</span>
         </div>
 
-        <h4 className="mb-1.75 text-base leading-snug font-bold text-pretty text-primary">{item.title}</h4>
+        <h4 dir="auto" className="mb-1.75 text-base leading-snug font-bold text-pretty text-primary">{item.title}</h4>
         {item.job && <JobFacts job={item.job} className="mb-1.75" />}
-        {item.excerpt && <p className="text-sm leading-snug text-pretty text-tertiary">{item.excerpt}</p>}
+        {item.excerpt && <p dir="auto" className="text-sm leading-snug text-pretty text-tertiary">{item.excerpt}</p>}
 
         <div className="mt-auto flex items-center gap-2 pt-3">
           {item.categoryName && <span className="rounded-full bg-sage-200 px-2.25 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>}

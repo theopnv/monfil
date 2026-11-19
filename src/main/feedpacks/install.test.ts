@@ -9,6 +9,7 @@ import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { startOpmlImport } from '../opml/import';
 import { feedpackOpmlUrl, getFeedpackCatalog, readBundledFeedpack, usesBundledFeedpacks } from './catalog';
 import { installFeedpack, previewFeedpack } from './install';
+import { setMainLanguage } from '../lib/i18n';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
 vi.mock(import('../lib/sendToRenderer'), () => ({ broadcastToRenderers: vi.fn() }));
@@ -249,6 +250,25 @@ describe('installFeedpack', () => {
       sourceSlug: 'devsecops-watch',
       sourceVersion: '1',
     });
+  });
+
+  test('names a new workspace after the title in the interface language when the name is blank', async () => {
+    // Arrange
+    await setMainLanguage('fr');
+    vi.mocked(getFeedpackCatalog).mockResolvedValue({ success: true, data: { version: 1, packs: [{ ...pack, i18n: { fr: { title: 'Veille DevSecOps', description: 'Sources de test.' } } }] } });
+    vi.mocked(usesBundledFeedpacks).mockReturnValue(true);
+    vi.mocked(readBundledFeedpack).mockResolvedValue(feedXml);
+    vi.mocked(startOpmlImport).mockResolvedValue({ success: true, data: { summary, completion: Promise.resolve(summary) } });
+
+    try {
+      // Act
+      await installFeedpack(pack.slug, { kind: 'new-workspace', name: '', icon: 'Code01', color: '#d67f48' });
+
+      // Assert
+      expect(startOpmlImport).toHaveBeenCalledWith(feedXml, expect.objectContaining({ name: 'Veille DevSecOps' }));
+    } finally {
+      await setMainLanguage('en');
+    }
   });
 
   test('passes on a failed import and announces nothing', async () => {
