@@ -26,15 +26,21 @@ function keptSource(current: string, sourceUrl?: string): string | undefined {
   return /^[a-z][a-z\d+.-]*:/i.test(current) && !httpUrl(current) ? undefined : current;
 }
 
-function marker(document: Document, embed: EmbedDescriptor, title?: string | null): HTMLAnchorElement {
+/** The words that the rewritten markup shows. The caller owns the language. */
+export interface ReaderHtmlLabels {
+  embedTitle: (provider: string) => string;
+  openEmbedded: string;
+}
+
+function marker(document: Document, embed: EmbedDescriptor, labels: ReaderHtmlLabels, title?: string | null): HTMLAnchorElement {
   const anchor = document.createElement('a');
   anchor.href = embed.sourceUrl;
   anchor.setAttribute('data-monfil-embed', embed.provider);
-  anchor.textContent = title?.trim() || `${embed.provider} embed`;
+  anchor.textContent = title?.trim() || labels.embedTitle(embed.provider);
   return anchor;
 }
 
-export function prepareReaderHtml(html: string, sourceUrl?: string): string {
+export function prepareReaderHtml(html: string, labels: ReaderHtmlLabels, sourceUrl?: string): string {
   const document = new DOMParser().parseFromString(html, 'text/html');
 
   for (const image of document.querySelectorAll('img')) {
@@ -71,14 +77,14 @@ export function prepareReaderHtml(html: string, sourceUrl?: string): string {
     const rawUrl = frame.getAttribute('data-src') ?? frame.getAttribute('src');
     const embed = rawUrl ? resolveEmbedUrl(rawUrl, sourceUrl) : undefined;
     if (embed) {
-      frame.replaceWith(marker(document, embed, frame.getAttribute('title')));
+      frame.replaceWith(marker(document, embed, labels, frame.getAttribute('title')));
       continue;
     }
     const source = httpUrl(rawUrl, sourceUrl);
     if (source) {
       const link = document.createElement('a');
       link.href = source;
-      link.textContent = frame.getAttribute('title')?.trim() || 'Open embedded content';
+      link.textContent = frame.getAttribute('title')?.trim() || labels.openEmbedded;
       frame.replaceWith(link);
     } else {
       frame.remove();
@@ -92,7 +98,7 @@ export function prepareReaderHtml(html: string, sourceUrl?: string): string {
     const isEmbed = quote.classList.contains('twitter-tweet') || quote.classList.contains('instagram-media')
       || quote.textContent?.trim() === '' || (embed?.provider === 'x' && quote.closest('figure') !== null);
     if (embed && isEmbed) {
-      quote.replaceWith(marker(document, embed));
+      quote.replaceWith(marker(document, embed, labels));
     }
   }
 

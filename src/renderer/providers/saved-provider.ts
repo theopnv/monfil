@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient, type InfiniteData, type QueryKey } from '@tanstack/react-query';
 import { ipc } from '@/lib/ipc-client';
 import { notifyError } from '@/lib/notifications';
@@ -10,6 +11,7 @@ import { useActiveWorkspaceId } from './workspace-provider';
 import type { RiverPage, SetSavedItemInput } from '../../shared/contracts';
 
 export function useSavedState() {
+  const { t } = useTranslation('reader');
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   const mutation = useMutation({
@@ -47,7 +49,7 @@ export function useSavedState() {
           ? patchRiverRows(data, new Set([input.itemId]), (item) => ({ ...item, savedAt }))
           : data);
       }
-      notifyError(input.saved ? 'The item could not be saved. Try again.' : 'The item could not be removed from Saved. Try again.');
+      notifyError(input.saved ? t('saveFailed') : t('unsaveFailed'));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ['river'] });

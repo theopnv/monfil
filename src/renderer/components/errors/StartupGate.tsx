@@ -4,7 +4,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useEffect, type PropsWithChildren } from 'react';
+import { useEffect, useEffectEvent, type PropsWithChildren } from 'react';
 import { ipc } from '@/lib/ipc-client';
 import { ErrorRecovery } from './ErrorRecovery';
 import { notifyWarning } from '@/lib/notifications';
@@ -13,14 +13,15 @@ export function StartupGate({ children }: PropsWithChildren) {
   const { t } = useTranslation('errors');
   const queryClient = useQueryClient();
   const health = useQuery({ queryKey: ['startup-health'], queryFn: () => ipc.invoke('app:get-startup-health', undefined), retry: false });
+  const warnAboutRecovery = useEffectEvent(() => notifyWarning(t('startup.databaseRecovered'), 'database-recovered', {
+    label: t('startup.revealBackup'),
+    onClick: () => ipc.send('app:reveal-database-backup', undefined),
+  }));
   useEffect(() => {
     if (health.data?.name === 'RESET') {
-      notifyWarning(t('startup.databaseRecovered'), 'database-recovered', {
-        label: t('startup.revealBackup'),
-        onClick: () => ipc.send('app:reveal-database-backup', undefined),
-      });
+      warnAboutRecovery();
     }
-  }, [health.data, t]);
+  }, [health.data]);
   if (health.isPending) {
     return <div className="flex h-screen items-center justify-center bg-primary text-primary">{t('startup.starting')}</div>;
   }

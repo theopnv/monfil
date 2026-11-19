@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { Trans, useTranslation } from 'react-i18next';
 import { useState } from "react";
 import { Heading } from "react-aria-components";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
@@ -17,6 +18,7 @@ export interface DeleteWorkspaceDialogProps {
 }
 
 export default function DeleteWorkspaceDialog({ workspace, onOpenChange, onDeleted }: DeleteWorkspaceDialogProps) {
+  const { t } = useTranslation(['workspace', 'common']);
   const exportOpml = useExportOpml();
   const deleteWorkspace = useDeleteWorkspace();
   const [isExporting, setIsExporting] = useState(false);
@@ -69,12 +71,11 @@ export default function DeleteWorkspaceDialog({ workspace, onOpenChange, onDelet
         <Dialog>
           <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
             <Heading slot="title" className="font-display text-lg font-semibold text-primary">
-              Delete workspace
+              {t('workspace:delete.title')}
             </Heading>
             {workspace && (
               <p className="text-sm text-tertiary">
-                This deletes the <span className="font-semibold text-secondary">{workspace.name}</span> workspace, its folders, and its Saved list.
-                Feeds placed only here are removed too. Export as OPML first to keep a copy you can re-import later.
+                <Trans t={t} i18nKey="workspace:delete.body" values={{ name: workspace.name }} components={{ bold: <span className="font-semibold text-secondary" /> }} />
               </p>
             )}
           </div>
@@ -83,14 +84,14 @@ export default function DeleteWorkspaceDialog({ workspace, onOpenChange, onDelet
 
           <div className="flex items-center justify-between gap-2.5 border-t border-secondary px-6 py-4">
             <Button color="secondary" size="md" className="rounded-full" isLoading={isExporting} onPress={handleExport}>
-              Export as OPML
+              {t('workspace:delete.export')}
             </Button>
             <div className="flex items-center gap-2.5">
               <Button color="secondary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>
-                Cancel
+                {t('common:action.cancel')}
               </Button>
               <Button color="primary-destructive" size="md" className="rounded-full" isLoading={isDeleting} onPress={handleDelete}>
-                Delete workspace
+                {t('workspace:delete.confirm')}
               </Button>
             </div>
           </div>

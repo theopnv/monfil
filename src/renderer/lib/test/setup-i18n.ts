@@ -3,9 +3,11 @@
 // See LICENSE in the repository root for full terms.
 
 import { afterEach } from 'vitest';
-import { setRendererLanguage } from '@/lib/i18n';
+import { i18n, setRendererLanguage } from '@/lib/i18n';
 
 // Every test starts in English, whatever language the test before it left behind.
 afterEach(async () => {
-  await setRendererLanguage('en');
+  if (i18n.language !== 'en') {
+    await setRendererLanguage('en');
+  }
 });

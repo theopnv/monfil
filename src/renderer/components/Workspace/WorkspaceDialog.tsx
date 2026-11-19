@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useEffect, useEffectEvent, useState } from "react";
 import { Heading } from "react-aria-components";
 import { useNavigate } from "@tanstack/react-router";
@@ -27,6 +28,7 @@ export interface WorkspaceDialogProps {
 }
 
 export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBrowseFeedpacks }: WorkspaceDialogProps) {
+  const { t } = useTranslation(['workspace', 'common']);
   const createWorkspace = useCreateWorkspace();
   const updateWorkspace = useUpdateWorkspace();
   const navigate = useNavigate();
@@ -81,16 +83,16 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
         <Dialog>
           <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
             <Heading slot="title" className="font-display text-lg font-semibold text-primary">
-              {isEditing ? 'Edit workspace' : 'New workspace'}
+              {isEditing ? t('workspace:dialog.editTitle') : t('workspace:dialog.newTitle')}
             </Heading>
             <p className="text-sm text-tertiary">
-              {isEditing ? 'Rename it, or give it a different icon and colour.' : 'A tab in the rail, with its own sources and its own river.'}
+              {isEditing ? t('workspace:dialog.editBody') : t('workspace:dialog.newBody')}
             </p>
           </div>
 
           <div className="flex flex-col gap-4 px-6 pb-4.5">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="workspace-name" className="text-sm font-medium text-secondary">Name</label>
+              <label htmlFor="workspace-name" className="text-sm font-medium text-secondary">{t('workspace:dialog.name')}</label>
               <input
                 id="workspace-name"
                 autoFocus
@@ -101,13 +103,13 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
                     void handleSubmit();
                   }
                 }}
-                placeholder="CI/CD watch"
+                placeholder={t('workspace:dialog.namePlaceholder')}
                 className="rounded-lg border border-secondary bg-primary px-3 py-2 text-sm text-primary outline-none"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-secondary">Icon</span>
+              <span className="text-sm font-medium text-secondary">{t('workspace:dialog.icon')}</span>
               <div className="grid grid-cols-8 gap-1.5">
                 {WORKSPACE_ICONS.map((candidate) => {
                   const Icon = workspaceIconComponent(candidate);
@@ -132,13 +134,13 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-secondary">Colour</span>
+              <span className="text-sm font-medium text-secondary">{t('workspace:dialog.colour')}</span>
               <div className="grid grid-cols-8 gap-2">
                 {WORKSPACE_COLORS.map((candidate) => (
                   <button
                     key={candidate}
                     type="button"
-                    aria-label={`Colour ${candidate}`}
+                    aria-label={t('workspace:dialog.colourOption', { value: candidate })}
                     aria-pressed={color === candidate}
                     onClick={() => setColor(candidate)}
                     style={{ backgroundColor: candidate }}
@@ -154,14 +156,14 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
             {!isEditing && onBrowseFeedpacks && (
               <Button color="secondary" size="md" className="rounded-full" onPress={() => onBrowseFeedpacks({ name, icon, color })}>
-                Browse feedpacks
+                {t('workspace:dialog.browse')}
               </Button>
             )}
             <Button color="secondary" size="md" className="rounded-full" onPress={() => onOpenChange(false)}>
-              Cancel
+              {t('common:action.cancel')}
             </Button>
             <Button color="primary" size="md" className="rounded-full" isLoading={isLoading} isDisabled={!name.trim()} onPress={handleSubmit}>
-              {isEditing ? 'Save changes' : 'Create workspace'}
+              {isEditing ? t('workspace:dialog.save') : t('workspace:dialog.create')}
             </Button>
           </div>
         </Dialog>
