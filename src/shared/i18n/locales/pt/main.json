@@ -2,7 +2,7 @@
   "menu": {
     "feed": {
       "refreshFeed": "Atualizar feed",
-      "moveFeed": "Mover para espaço de trabalho…",
+      "moveFeed": "Mover para workspace…",
       "deleteFeed": "Excluir feed"
     },
     "category": {
@@ -10,9 +10,9 @@
       "delete": "Excluir"
     },
     "workspace": {
-      "edit": "Editar espaço de trabalho",
+      "edit": "Editar workspace",
       "export": "Exportar como OPML",
-      "delete": "Excluir espaço de trabalho"
+      "delete": "Excluir workspace"
     }
   },
   "fatal": {

@@ -2,7 +2,7 @@
   "menu": {
     "feed": {
       "refreshFeed": "Actualizar fuente",
-      "moveFeed": "Mover a espacio de trabajo…",
+      "moveFeed": "Mover a workspace…",
       "deleteFeed": "Eliminar fuente"
     },
     "category": {
@@ -10,9 +10,9 @@
       "delete": "Eliminar"
     },
     "workspace": {
-      "edit": "Editar espacio de trabajo",
+      "edit": "Editar workspace",
       "export": "Exportar como OPML",
-      "delete": "Eliminar espacio de trabajo"
+      "delete": "Eliminar workspace"
     }
   },
   "fatal": {

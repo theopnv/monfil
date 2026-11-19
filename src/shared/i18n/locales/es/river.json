@@ -89,9 +89,9 @@
     "homeBody": "Añadir un blog, un boletín o cualquier cosa que tenga una fuente. Monfil trae lo que publica y nunca decide qué se muestra.",
     "addFirst": "Añadir la primera fuente",
     "otherTitle": "Todavía no hay nada aquí",
-    "otherBody": "Este espacio de trabajo aún no tiene fuentes. Importar un archivo OPML para llenarlo de una vez.",
+    "otherBody": "Este workspace aún no tiene fuentes. Importar un archivo OPML para llenarlo de una vez.",
     "importOpml": "Importar OPML",
-    "importFeedpack": "Importar paquete de fuentes"
+    "importFeedpack": "Importar feedpack"
   },
   "job": {
     "remote": "Remoto",
@@ -125,16 +125,16 @@
     "loadFailed": "No se pudieron cargar los elementos guardados.",
     "empty": "Guardar elementos de las fuentes para encontrarlos aquí."
   },
-  "feedpackFetching": "Obteniendo fuentes de este paquete…",
+  "feedpackFetching": "Obteniendo fuentes de este feedpack…",
   "deleteFeed": {
-    "thisWorkspace": "este espacio de trabajo",
+    "thisWorkspace": "este workspace",
     "confirmRemove": "Quitar de {{workspace}}",
     "confirmDelete": "Eliminar fuente",
     "titleRemove": "Quitar fuente",
     "titleDelete": "Eliminar fuente",
-    "removeBody_one": "Esto quita <bold>{{title}}</bold> de {{workspace}}. Sigue en {{count}} espacio de trabajo más con sus elementos.",
-    "removeBody_many": "Esto quita <bold>{{title}}</bold> de {{workspace}}. Sigue en {{count}} espacios de trabajo más con sus elementos.",
-    "removeBody_other": "Esto quita <bold>{{title}}</bold> de {{workspace}}. Sigue en {{count}} espacios de trabajo más con sus elementos.",
+    "removeBody_one": "Esto quita <bold>{{title}}</bold> de {{workspace}}. Sigue en {{count}} workspace más con sus elementos.",
+    "removeBody_many": "Esto quita <bold>{{title}}</bold> de {{workspace}}. Sigue en {{count}} workspaces más con sus elementos.",
+    "removeBody_other": "Esto quita <bold>{{title}}</bold> de {{workspace}}. Sigue en {{count}} workspaces más con sus elementos.",
     "deleteBody_one": "Esto elimina <bold>{{title}}</bold> y sus <bold>{{count}} elemento</bold>. Los elementos guardados siguen disponibles. No se puede deshacer.",
     "deleteBody_many": "Esto elimina <bold>{{title}}</bold> y sus <bold>{{count}} elementos</bold>. Los elementos guardados siguen disponibles. No se puede deshacer.",
     "deleteBody_other": "Esto elimina <bold>{{title}}</bold> y sus <bold>{{count}} elementos</bold>. Los elementos guardados siguen disponibles. No se puede deshacer."
@@ -154,8 +154,8 @@
   },
   "moveFeed": {
     "title": "Mover fuente",
-    "body": "Mover <bold>{{title}}</bold> a otro espacio de trabajo.",
-    "workspace": "Espacio de trabajo",
+    "body": "Mover <bold>{{title}}</bold> a otro workspace.",
+    "workspace": "Workspace",
     "folder": "Carpeta",
     "newFolder": "Nueva carpeta…",
     "newFolderName": "Nombre de la nueva carpeta",
@@ -166,7 +166,7 @@
     "feeds": "Fuentes",
     "newFolder": "Nueva carpeta",
     "addFeed": "Añadir fuente",
-    "addFeedpack": "Añadir paquete de fuentes",
+    "addFeedpack": "Añadir feedpack",
     "folderName": "Nombre de la carpeta",
     "newFolderName": "Nombre de la nueva carpeta",
     "drag": "Arrastrar",

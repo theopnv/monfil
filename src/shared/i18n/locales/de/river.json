@@ -87,7 +87,7 @@
     "homeBody": "Fügen Sie einen Blog, einen Newsletter oder etwas mit einem Feed hinzu. Monfil übernimmt, was veröffentlicht wird, und entscheidet nie, was Sie sehen.",
     "addFirst": "Ersten Feed hinzufügen",
     "otherTitle": "Noch nichts hier",
-    "otherBody": "Dieser Arbeitsbereich hat noch keine Quellen. Importieren Sie eine OPML-Datei, um ihn auf einmal zu füllen.",
+    "otherBody": "Dieser Workspace hat noch keine Quellen. Importieren Sie eine OPML-Datei, um ihn auf einmal zu füllen.",
     "importOpml": "OPML importieren",
     "importFeedpack": "Feedpack importieren"
   },
@@ -124,13 +124,13 @@
   },
   "feedpackFetching": "Quellen für dieses Feedpack werden abgerufen…",
   "deleteFeed": {
-    "thisWorkspace": "diesem Arbeitsbereich",
+    "thisWorkspace": "diesem Workspace",
     "confirmRemove": "Aus {{workspace}} entfernen",
     "confirmDelete": "Feed löschen",
     "titleRemove": "Feed entfernen",
     "titleDelete": "Feed löschen",
-    "removeBody_one": "Dies entfernt <bold>{{title}}</bold> aus {{workspace}}. Der Feed bleibt mit seinem Eintrag in {{count}} anderem Arbeitsbereich erhalten.",
-    "removeBody_other": "Dies entfernt <bold>{{title}}</bold> aus {{workspace}}. Der Feed bleibt mit seinen Einträgen in {{count}} anderen Arbeitsbereichen erhalten.",
+    "removeBody_one": "Dies entfernt <bold>{{title}}</bold> aus {{workspace}}. Der Feed bleibt mit seinem Eintrag in {{count}} anderem Workspace erhalten.",
+    "removeBody_other": "Dies entfernt <bold>{{title}}</bold> aus {{workspace}}. Der Feed bleibt mit seinen Einträgen in {{count}} anderen Workspaces erhalten.",
     "deleteBody_one": "Dies entfernt <bold>{{title}}</bold> und seinen <bold>{{count}} Eintrag</bold>. Gespeicherte Einträge bleiben verfügbar. Das lässt sich nicht rückgängig machen.",
     "deleteBody_other": "Dies entfernt <bold>{{title}}</bold> und seine <bold>{{count}} Einträge</bold>. Gespeicherte Einträge bleiben verfügbar. Das lässt sich nicht rückgängig machen."
   },
@@ -147,8 +147,8 @@
   },
   "moveFeed": {
     "title": "Feed verschieben",
-    "body": "<bold>{{title}}</bold> in einen anderen Arbeitsbereich verschieben.",
-    "workspace": "Arbeitsbereich",
+    "body": "<bold>{{title}}</bold> in einen anderen Workspace verschieben.",
+    "workspace": "Workspace",
     "folder": "Ordner",
     "newFolder": "Neuer Ordner…",
     "newFolderName": "Name des neuen Ordners",

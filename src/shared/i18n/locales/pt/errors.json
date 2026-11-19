@@ -23,7 +23,7 @@
     "unknown": "O Monfil não conseguiu ler este feed."
   },
   "importSkipped": {
-    "ALREADY_IN_WORKSPACE": "Já está neste espaço de trabalho"
+    "ALREADY_IN_WORKSPACE": "Já está neste workspace"
   },
   "codes": {
     "UNKNOWN": "Algo deu errado.",
@@ -33,7 +33,7 @@
     "BACKUP_FAILED": "O arquivo do banco de dados não pôde ser copiado.",
     "FEED_NOT_FOUND": "Este feed não existe mais.",
     "CATEGORY_NOT_FOUND": "Esta pasta não existe mais.",
-    "WORKSPACE_NOT_FOUND": "Este espaço de trabalho não existe mais.",
+    "WORKSPACE_NOT_FOUND": "Este workspace não existe mais.",
     "ITEM_NOT_FOUND": "Este item não existe mais.",
     "SEARCH_NOT_FOUND": "Esta busca salva não existe mais.",
     "DUPLICATE_NAME": "Já existe um item com esse nome.",
@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "O nome precisa ter de 1 a {{max}} caracteres.",
     "INVALID_INPUT_query": "A busca precisa ter de 1 a {{max}} caracteres.",
     "INVALID_INPUT": "Este valor não é válido.",
-    "HOME_NOT_DELETABLE": "O espaço de trabalho Início não pode ser excluído.",
+    "HOME_NOT_DELETABLE": "O workspace Início não pode ser excluído.",
     "GENERIC_FETCH_ERROR": "O servidor respondeu com um erro.",
     "GENERIC_FETCH_ERROR_refused": "O servidor recusou o acesso (HTTP {{status}}). Ele pode bloquear leitores automáticos, ou a sua rede ou VPN.",
     "GENERIC_FETCH_ERROR_notFound": "O feed não foi encontrado (HTTP {{status}}).",
@@ -90,12 +90,12 @@
     "UNSUPPORTED_FORMAT_mismatchHackernews": "Isto não é um link do Hacker News.",
     "MALFORMED_XML": "Este arquivo não é um documento OPML válido.",
     "NO_FEEDS": "Não há feeds para importar ou exportar.",
-    "UNSUPPORTED_VERSION": "Esta versão do Monfil não consegue ler o catálogo de pacotes de feeds versão {{version}}.",
-    "INVALID_CATALOG": "O catálogo de pacotes de feeds não é válido.",
-    "UNAVAILABLE": "O catálogo de pacotes de feeds não está disponível.",
-    "PACK_NOT_FOUND": "Este pacote de feeds não existe.",
-    "FETCH_ERROR": "O Monfil não conseguiu obter este pacote de feeds.",
-    "FETCH_ERROR_local": "O Monfil não conseguiu ler o pacote de feeds {{title}}.",
-    "FETCH_ERROR_remote": "O Monfil não conseguiu baixar o pacote de feeds {{title}}."
+    "UNSUPPORTED_VERSION": "Esta versão do Monfil não consegue ler o catálogo de feedpacks versão {{version}}.",
+    "INVALID_CATALOG": "O catálogo de feedpacks não é válido.",
+    "UNAVAILABLE": "O catálogo de feedpacks não está disponível.",
+    "PACK_NOT_FOUND": "Este feedpack não existe.",
+    "FETCH_ERROR": "O Monfil não conseguiu obter este feedpack.",
+    "FETCH_ERROR_local": "O Monfil não conseguiu ler o feedpack {{title}}.",
+    "FETCH_ERROR_remote": "O Monfil não conseguiu baixar o feedpack {{title}}."
   }
 }

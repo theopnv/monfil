@@ -23,7 +23,7 @@
     "unknown": "Monfil 无法读取此订阅源。"
   },
   "importSkipped": {
-    "ALREADY_IN_WORKSPACE": "已在此工作区中"
+    "ALREADY_IN_WORKSPACE": "已在此Workspace中"
   },
   "codes": {
     "UNKNOWN": "出了点问题。",
@@ -33,7 +33,7 @@
     "BACKUP_FAILED": "无法复制数据库文件。",
     "FEED_NOT_FOUND": "该订阅源已不存在。",
     "CATEGORY_NOT_FOUND": "该文件夹已不存在。",
-    "WORKSPACE_NOT_FOUND": "该工作区已不存在。",
+    "WORKSPACE_NOT_FOUND": "该Workspace已不存在。",
     "ITEM_NOT_FOUND": "该内容已不存在。",
     "SEARCH_NOT_FOUND": "该已保存的搜索已不存在。",
     "DUPLICATE_NAME": "已存在同名项目。",
@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "名称需要 1 到 {{max}} 个字符。",
     "INVALID_INPUT_query": "搜索内容需要 1 到 {{max}} 个字符。",
     "INVALID_INPUT": "该值无效。",
-    "HOME_NOT_DELETABLE": "无法删除“首页”工作区。",
+    "HOME_NOT_DELETABLE": "无法删除“首页”Workspace。",
     "GENERIC_FETCH_ERROR": "服务器返回了错误。",
     "GENERIC_FETCH_ERROR_refused": "服务器拒绝访问（HTTP {{status}}）。它可能会阻止自动阅读器，也可能是你的网络或 VPN 造成的。",
     "GENERIC_FETCH_ERROR_notFound": "未找到该订阅源（HTTP {{status}}）。",
@@ -88,12 +88,12 @@
     "UNSUPPORTED_FORMAT_mismatchHackernews": "这不是 Hacker News 链接。",
     "MALFORMED_XML": "此文件不是有效的 OPML 文档。",
     "NO_FEEDS": "没有可导入或导出的订阅源。",
-    "UNSUPPORTED_VERSION": "此版本的 Monfil 无法读取版本 {{version}} 的订阅包目录。",
-    "INVALID_CATALOG": "订阅包目录无效。",
-    "UNAVAILABLE": "订阅包目录不可用。",
-    "PACK_NOT_FOUND": "该订阅包不存在。",
-    "FETCH_ERROR": "Monfil 无法获取此订阅包。",
-    "FETCH_ERROR_local": "Monfil 无法读取“{{title}}”订阅包。",
-    "FETCH_ERROR_remote": "Monfil 无法获取“{{title}}”订阅包。"
+    "UNSUPPORTED_VERSION": "此版本的 Monfil 无法读取版本 {{version}} 的Feedpack目录。",
+    "INVALID_CATALOG": "Feedpack目录无效。",
+    "UNAVAILABLE": "Feedpack目录不可用。",
+    "PACK_NOT_FOUND": "该Feedpack不存在。",
+    "FETCH_ERROR": "Monfil 无法获取此Feedpack。",
+    "FETCH_ERROR_local": "Monfil 无法读取“{{title}}”Feedpack。",
+    "FETCH_ERROR_remote": "Monfil 无法获取“{{title}}”Feedpack。"
   }
 }

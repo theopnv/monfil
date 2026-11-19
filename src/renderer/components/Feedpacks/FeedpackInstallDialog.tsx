@@ -77,7 +77,7 @@ export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceI
           <FeedpackBrowser isActive={isOpen} selected={selected} onSelect={select} />
 
           {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
-          <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+          <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
             {selected && <Button color="secondary" size="md" className="me-auto" onPress={() => select(null)}>{t('workspace:feedpackDialog.back')}</Button>}
             <Button color="secondary" size="md" onPress={() => onOpenChange(false)}>{t('common:action.close')}</Button>
             {selected && <Button color="primary" size="md" isLoading={isInstalling} onPress={installSelected}>{t('workspace:feedpackDialog.install')}</Button>}

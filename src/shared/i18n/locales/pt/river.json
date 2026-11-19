@@ -89,9 +89,9 @@
     "homeBody": "Adicione um blog, uma newsletter ou qualquer coisa com feed. O Monfil traz o que é publicado e nunca decide o que é mostrado.",
     "addFirst": "Adicionar seu primeiro feed",
     "otherTitle": "Nada aqui ainda",
-    "otherBody": "Este espaço de trabalho ainda não tem fontes. Importe um arquivo OPML para preenchê-lo de uma vez.",
+    "otherBody": "Este workspace ainda não tem fontes. Importe um arquivo OPML para preenchê-lo de uma vez.",
     "importOpml": "Importar OPML",
-    "importFeedpack": "Importar pacote de feeds"
+    "importFeedpack": "Importar feedpack"
   },
   "job": {
     "remote": "Remoto",
@@ -125,16 +125,16 @@
     "loadFailed": "Não foi possível carregar os itens salvos.",
     "empty": "Salve itens dos seus feeds para encontrá-los aqui."
   },
-  "feedpackFetching": "Buscando fontes deste pacote de feeds…",
+  "feedpackFetching": "Buscando fontes deste feedpack…",
   "deleteFeed": {
-    "thisWorkspace": "este espaço de trabalho",
+    "thisWorkspace": "este workspace",
     "confirmRemove": "Remover de {{workspace}}",
     "confirmDelete": "Excluir feed",
     "titleRemove": "Remover feed",
     "titleDelete": "Excluir feed",
-    "removeBody_one": "Isto remove <bold>{{title}}</bold> de {{workspace}}. Ele continua em {{count}} outro espaço de trabalho, com os seus itens.",
-    "removeBody_many": "Isto remove <bold>{{title}}</bold> de {{workspace}}. Ele continua em {{count}} outros espaços de trabalho, com os seus itens.",
-    "removeBody_other": "Isto remove <bold>{{title}}</bold> de {{workspace}}. Ele continua em {{count}} outros espaços de trabalho, com os seus itens.",
+    "removeBody_one": "Isto remove <bold>{{title}}</bold> de {{workspace}}. Ele continua em {{count}} outro workspace, com os seus itens.",
+    "removeBody_many": "Isto remove <bold>{{title}}</bold> de {{workspace}}. Ele continua em {{count}} outros workspaces, com os seus itens.",
+    "removeBody_other": "Isto remove <bold>{{title}}</bold> de {{workspace}}. Ele continua em {{count}} outros workspaces, com os seus itens.",
     "deleteBody_one": "Isto remove <bold>{{title}}</bold> e o seu <bold>{{count}} item</bold>. Os itens salvos continuam disponíveis. Não é possível desfazer.",
     "deleteBody_many": "Isto remove <bold>{{title}}</bold> e os seus <bold>{{count}} itens</bold>. Os itens salvos continuam disponíveis. Não é possível desfazer.",
     "deleteBody_other": "Isto remove <bold>{{title}}</bold> e os seus <bold>{{count}} itens</bold>. Os itens salvos continuam disponíveis. Não é possível desfazer."
@@ -154,8 +154,8 @@
   },
   "moveFeed": {
     "title": "Mover feed",
-    "body": "Mover <bold>{{title}}</bold> para outro espaço de trabalho.",
-    "workspace": "Espaço de trabalho",
+    "body": "Mover <bold>{{title}}</bold> para outro workspace.",
+    "workspace": "Workspace",
     "folder": "Pasta",
     "newFolder": "Nova pasta…",
     "newFolderName": "Nome da nova pasta",
@@ -166,7 +166,7 @@
     "feeds": "Feeds",
     "newFolder": "Nova pasta",
     "addFeed": "Adicionar feed",
-    "addFeedpack": "Adicionar pacote de feeds",
+    "addFeedpack": "Adicionar feedpack",
     "folderName": "Nome da pasta",
     "newFolderName": "Nome da nova pasta",
     "drag": "Arrastar",

@@ -23,7 +23,7 @@
     "unknown": "Monfil no pudo leer esta fuente."
   },
   "importSkipped": {
-    "ALREADY_IN_WORKSPACE": "Ya está en este espacio de trabajo"
+    "ALREADY_IN_WORKSPACE": "Ya está en este workspace"
   },
   "codes": {
     "UNKNOWN": "Algo salió mal.",
@@ -33,7 +33,7 @@
     "BACKUP_FAILED": "No se pudo copiar el archivo de la base de datos.",
     "FEED_NOT_FOUND": "Esa fuente ya no existe.",
     "CATEGORY_NOT_FOUND": "Esa carpeta ya no existe.",
-    "WORKSPACE_NOT_FOUND": "Ese espacio de trabajo ya no existe.",
+    "WORKSPACE_NOT_FOUND": "Ese workspace ya no existe.",
     "ITEM_NOT_FOUND": "Ese elemento ya no existe.",
     "SEARCH_NOT_FOUND": "Esa búsqueda guardada ya no existe.",
     "DUPLICATE_NAME": "Ya existe un elemento con ese nombre.",
@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "Un nombre necesita entre 1 y {{max}} caracteres.",
     "INVALID_INPUT_query": "Una búsqueda necesita entre 1 y {{max}} caracteres.",
     "INVALID_INPUT": "Ese valor no es válido.",
-    "HOME_NOT_DELETABLE": "El espacio de trabajo Inicio no se puede eliminar.",
+    "HOME_NOT_DELETABLE": "El workspace Inicio no se puede eliminar.",
     "GENERIC_FETCH_ERROR": "El servidor respondió con un error.",
     "GENERIC_FETCH_ERROR_refused": "El servidor rechazó el acceso (HTTP {{status}}). Puede bloquear a los lectores automáticos, o la red o la VPN.",
     "GENERIC_FETCH_ERROR_notFound": "No se encontró la fuente (HTTP {{status}}).",
@@ -90,12 +90,12 @@
     "UNSUPPORTED_FORMAT_mismatchHackernews": "Esto no es un enlace de Hacker News.",
     "MALFORMED_XML": "Este archivo no es un documento OPML válido.",
     "NO_FEEDS": "No hay fuentes para importar ni exportar.",
-    "UNSUPPORTED_VERSION": "Esta versión de Monfil no puede leer el catálogo de paquetes de fuentes versión {{version}}.",
-    "INVALID_CATALOG": "El catálogo de paquetes de fuentes no es válido.",
-    "UNAVAILABLE": "El catálogo de paquetes de fuentes no está disponible.",
-    "PACK_NOT_FOUND": "Ese paquete de fuentes no existe.",
-    "FETCH_ERROR": "Monfil no pudo obtener este paquete de fuentes.",
-    "FETCH_ERROR_local": "Monfil no pudo leer el paquete de fuentes {{title}}.",
-    "FETCH_ERROR_remote": "Monfil no pudo descargar el paquete de fuentes {{title}}."
+    "UNSUPPORTED_VERSION": "Esta versión de Monfil no puede leer el catálogo de feedpacks versión {{version}}.",
+    "INVALID_CATALOG": "El catálogo de feedpacks no es válido.",
+    "UNAVAILABLE": "El catálogo de feedpacks no está disponible.",
+    "PACK_NOT_FOUND": "Ese feedpack no existe.",
+    "FETCH_ERROR": "Monfil no pudo obtener este feedpack.",
+    "FETCH_ERROR_local": "Monfil no pudo leer el feedpack {{title}}.",
+    "FETCH_ERROR_remote": "Monfil no pudo descargar el feedpack {{title}}."
   }
 }

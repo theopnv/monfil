@@ -2,7 +2,7 @@
   "menu": {
     "feed": {
       "refreshFeed": "刷新订阅源",
-      "moveFeed": "移到工作区…",
+      "moveFeed": "移到Workspace…",
       "deleteFeed": "删除订阅源"
     },
     "category": {
@@ -10,9 +10,9 @@
       "delete": "删除"
     },
     "workspace": {
-      "edit": "编辑工作区",
+      "edit": "编辑Workspace",
       "export": "导出为 OPML",
-      "delete": "删除工作区"
+      "delete": "删除Workspace"
     }
   },
   "fatal": {

@@ -58,7 +58,7 @@
   },
   "feedpacks": {
     "sources_other": "{{count}} 件のソース",
-    "packSources": "パックのソース",
+    "packSources": "フィードパックのソース",
     "search": "フィードパックを検索",
     "loading": "フィードパックを読み込んでいます…",
     "none": "利用できるフィードパックはありません。",

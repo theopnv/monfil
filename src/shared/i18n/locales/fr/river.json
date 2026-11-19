@@ -89,9 +89,9 @@
     "homeBody": "Ajoutez un blog, une lettre d'information, n'importe quelle source qui a un flux. Monfil récupère ce qui est publié et ne décide jamais de ce que vous voyez.",
     "addFirst": "Ajoutez votre premier flux",
     "otherTitle": "Rien ici pour le moment",
-    "otherBody": "Cet espace de travail n'a pas encore de sources. Importez un fichier OPML pour le remplir d'un coup.",
+    "otherBody": "Ce workspace n'a pas encore de sources. Importez un fichier OPML pour le remplir d'un coup.",
     "importOpml": "Importer un OPML",
-    "importFeedpack": "Importer un pack de flux"
+    "importFeedpack": "Importer un feedpack"
   },
   "job": {
     "remote": "À distance",
@@ -125,16 +125,16 @@
     "loadFailed": "Les éléments enregistrés n'ont pas pu être chargés.",
     "empty": "Enregistrez des éléments de vos flux pour les retrouver ici."
   },
-  "feedpackFetching": "Récupération des sources de ce pack de flux…",
+  "feedpackFetching": "Récupération des sources de ce feedpack…",
   "deleteFeed": {
-    "thisWorkspace": "cet espace de travail",
+    "thisWorkspace": "ce workspace",
     "confirmRemove": "Retirer de {{workspace}}",
     "confirmDelete": "Supprimer le flux",
     "titleRemove": "Retirer le flux",
     "titleDelete": "Supprimer le flux",
-    "removeBody_one": "Cela retire <bold>{{title}}</bold> de {{workspace}}. Il reste dans {{count}} autre espace de travail avec ses éléments.",
-    "removeBody_many": "Cela retire <bold>{{title}}</bold> de {{workspace}}. Il reste dans {{count}} autres espaces de travail avec ses éléments.",
-    "removeBody_other": "Cela retire <bold>{{title}}</bold> de {{workspace}}. Il reste dans {{count}} autres espaces de travail avec ses éléments.",
+    "removeBody_one": "Cela retire <bold>{{title}}</bold> de {{workspace}}. Il reste dans {{count}} autre workspace avec ses éléments.",
+    "removeBody_many": "Cela retire <bold>{{title}}</bold> de {{workspace}}. Il reste dans {{count}} autres workspaces avec ses éléments.",
+    "removeBody_other": "Cela retire <bold>{{title}}</bold> de {{workspace}}. Il reste dans {{count}} autres workspaces avec ses éléments.",
     "deleteBody_one": "Cela supprime <bold>{{title}}</bold> et son <bold>{{count}} élément</bold>. Les éléments enregistrés restent disponibles. Cette action est définitive.",
     "deleteBody_many": "Cela supprime <bold>{{title}}</bold> et ses <bold>{{count}} éléments</bold>. Les éléments enregistrés restent disponibles. Cette action est définitive.",
     "deleteBody_other": "Cela supprime <bold>{{title}}</bold> et ses <bold>{{count}} éléments</bold>. Les éléments enregistrés restent disponibles. Cette action est définitive."
@@ -154,8 +154,8 @@
   },
   "moveFeed": {
     "title": "Déplacer le flux",
-    "body": "Déplacer <bold>{{title}}</bold> vers un autre espace de travail.",
-    "workspace": "Espace de travail",
+    "body": "Déplacer <bold>{{title}}</bold> vers un autre workspace.",
+    "workspace": "Workspace",
     "folder": "Dossier",
     "newFolder": "Nouveau dossier…",
     "newFolderName": "Nom du nouveau dossier",
@@ -166,7 +166,7 @@
     "feeds": "Flux",
     "newFolder": "Nouveau dossier",
     "addFeed": "Ajouter un flux",
-    "addFeedpack": "Ajouter un pack de flux",
+    "addFeedpack": "Ajouter un feedpack",
     "folderName": "Nom du dossier",
     "newFolderName": "Nom du nouveau dossier",
     "drag": "Glisser",

@@ -23,7 +23,7 @@
     "unknown": "Monfil n'a pas pu lire ce flux."
   },
   "importSkipped": {
-    "ALREADY_IN_WORKSPACE": "Déjà dans cet espace de travail"
+    "ALREADY_IN_WORKSPACE": "Déjà dans ce workspace"
   },
   "codes": {
     "UNKNOWN": "Une erreur s'est produite.",
@@ -33,7 +33,7 @@
     "BACKUP_FAILED": "Le fichier de base de données n'a pas pu être copié.",
     "FEED_NOT_FOUND": "Ce flux n'existe plus.",
     "CATEGORY_NOT_FOUND": "Ce dossier n'existe plus.",
-    "WORKSPACE_NOT_FOUND": "Cet espace de travail n'existe plus.",
+    "WORKSPACE_NOT_FOUND": "Ce workspace n'existe plus.",
     "ITEM_NOT_FOUND": "Cet élément n'existe plus.",
     "SEARCH_NOT_FOUND": "Cette recherche enregistrée n'existe plus.",
     "DUPLICATE_NAME": "Un élément portant ce nom existe déjà.",
@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "Un nom doit comporter de 1 à {{max}} caractères.",
     "INVALID_INPUT_query": "Une recherche doit comporter de 1 à {{max}} caractères.",
     "INVALID_INPUT": "Cette valeur n'est pas valide.",
-    "HOME_NOT_DELETABLE": "L'espace de travail Accueil ne peut pas être supprimé.",
+    "HOME_NOT_DELETABLE": "Le workspace Accueil ne peut pas être supprimé.",
     "GENERIC_FETCH_ERROR": "Le serveur a répondu par une erreur.",
     "GENERIC_FETCH_ERROR_refused": "Le serveur a refusé l'accès (HTTP {{status}}). Il bloque peut-être les lecteurs automatisés, ou votre réseau ou votre VPN.",
     "GENERIC_FETCH_ERROR_notFound": "Le flux est introuvable (HTTP {{status}}).",
@@ -90,12 +90,12 @@
     "UNSUPPORTED_FORMAT_mismatchHackernews": "Ce n'est pas un lien vers Hacker News.",
     "MALFORMED_XML": "Ce fichier n'est pas un document OPML valide.",
     "NO_FEEDS": "Il n'y a aucun flux à importer ou à exporter.",
-    "UNSUPPORTED_VERSION": "Cette version de Monfil ne peut pas lire le catalogue de packs de flux version {{version}}.",
-    "INVALID_CATALOG": "Le catalogue de packs de flux n'est pas valide.",
-    "UNAVAILABLE": "Le catalogue de packs de flux n'est pas disponible.",
-    "PACK_NOT_FOUND": "Ce pack de flux n'existe pas.",
-    "FETCH_ERROR": "Monfil n'a pas pu obtenir ce pack de flux.",
-    "FETCH_ERROR_local": "Monfil n'a pas pu lire le pack de flux {{title}}.",
-    "FETCH_ERROR_remote": "Monfil n'a pas pu récupérer le pack de flux {{title}}."
+    "UNSUPPORTED_VERSION": "Cette version de Monfil ne peut pas lire le catalogue de feedpacks version {{version}}.",
+    "INVALID_CATALOG": "Le catalogue de feedpacks n'est pas valide.",
+    "UNAVAILABLE": "Le catalogue de feedpacks n'est pas disponible.",
+    "PACK_NOT_FOUND": "Ce feedpack n'existe pas.",
+    "FETCH_ERROR": "Monfil n'a pas pu obtenir ce feedpack.",
+    "FETCH_ERROR_local": "Monfil n'a pas pu lire le feedpack {{title}}.",
+    "FETCH_ERROR_remote": "Monfil n'a pas pu récupérer le feedpack {{title}}."
   }
 }
