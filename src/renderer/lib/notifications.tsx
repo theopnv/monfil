@@ -3,6 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import { Toaster, toast } from 'sonner';
+import { i18n, useActiveLanguage } from '@/lib/i18n';
+import { directionOf } from '../../shared/i18n/languages';
 
 const activeKeys = new Set<string>();
 
@@ -31,7 +33,7 @@ export function notifyAction(message: string, key: string, action: { label: stri
 
 /** Shows a short-lived message with an Undo button. */
 export function notifyUndo(message: string, onUndo: () => void): void {
-  toast(message, { action: { label: 'Undo', onClick: onUndo }, duration: 8000 });
+  toast(message, { action: { label: i18n.t('action.undo'), onClick: onUndo }, duration: 8000 });
 }
 
 export function dismissAllNotifications(): void {
@@ -39,5 +41,6 @@ export function dismissAllNotifications(): void {
 }
 
 export function NotificationHost() {
-  return <Toaster richColors position="bottom-right" />;
+  const language = useActiveLanguage();
+  return <Toaster richColors position="bottom-right" dir={directionOf(language)} />;
 }
