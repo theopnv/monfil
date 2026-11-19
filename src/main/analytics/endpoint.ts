@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-export const EVENTS_PATH = '/api/v0/events';
+const EVENTS_PATH = '/api/v0/events';
 
 const REGION_HOSTS: Record<string, string> = {
   EU: 'https://eu.aptabase.com',

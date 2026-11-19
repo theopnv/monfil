@@ -13,7 +13,7 @@ import type { DailySummaryProps } from '../../shared/contracts';
  * Builds the summary of one day from the tallies, the library, and the last reported preferences.
  * @param day the day as `YYYY-MM-DD`
  */
-export async function summarizeDay(day: string): Promise<DailySummaryProps> {
+async function summarizeDay(day: string): Promise<DailySummaryProps> {
   const [counters, library] = await Promise.all([readDay(day), readLibraryState()]);
   return buildDailySummary({ day, counters, library, preferences: getPreferencesSnapshot(), language: mainLanguage() });
 }

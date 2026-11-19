@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-export const UPDATE_FEED_HOST = 'https://update.electronjs.org/theopnv/monfil';
+const UPDATE_FEED_HOST = 'https://update.electronjs.org/theopnv/monfil';
 
 // Electron has no updater for Linux packages.
 const FEED_PLATFORMS: ReadonlySet<NodeJS.Platform> = new Set(['win32', 'darwin']);

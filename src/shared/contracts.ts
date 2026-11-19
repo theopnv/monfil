@@ -354,7 +354,7 @@ export type UsageAnalyticsConsent = 'unset' | 'granted' | 'denied';
 export const RENDERER_USAGE_COUNTERS = ['searches', 'embeds_loaded', 'workspaces_switched'] as const;
 export type RendererUsageCounter = typeof RENDERER_USAGE_COUNTERS[number];
 
-export const MAIN_USAGE_COUNTERS = [
+const MAIN_USAGE_COUNTERS = [
   'articles_opened', 'fulltext_extracted', 'feeds_added', 'feeds_removed', 'manual_refreshes', 'items_saved',
   'feedpacks_installed', 'opml_imported', 'opml_exported', 'backups_made', 'workspaces_created',
   'refresh_failures', 'extraction_failures', 'ipc_failures', 'renderer_failures',

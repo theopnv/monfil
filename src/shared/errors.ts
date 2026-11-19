@@ -2,20 +2,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import type { ParseKeys } from 'i18next';
-import type { LogLevel } from './logging';
-
-export type ErrorSurface = 'field' | 'toast' | 'section' | 'fatal';
-
-export type ErrorPolicy<E extends { name: string }> = {
-  [Name in E['name']]: {
-    surface: ErrorSurface;
-    level: LogLevel | 'none';
-    messageKey: ParseKeys<'errors'>;
-    retry: 'safe' | 'none';
-  };
-};
-
 /** Values an error carries so the renderer can fill a translated sentence. Stored as JSON, so keep them plain. */
 export type ErrorParams = Record<string, string | number | string[]>;
 
