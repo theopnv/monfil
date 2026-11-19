@@ -1,0 +1,26 @@
+{
+  "match": {
+    "found": "Feed found",
+    "notFound": "Not found",
+    "checking": "Checking…"
+  },
+  "wizard": {
+    "step": {
+      "find": "Find",
+      "configure": "Configure",
+      "done": "Done"
+    },
+    "titles": {
+      "find": "Add a feed",
+      "configure": "Make it yours",
+      "done": "Added to Monfil"
+    },
+    "blurbs": {
+      "find": "One box for everything you want to follow.",
+      "configure": "Where it lives and whether it shows up in Home.",
+      "done": "It's already fetching. Nothing else to do."
+    },
+    "close": "Close",
+    "goToStep": "Go to step {{step}}: {{name}}"
+  }
+}

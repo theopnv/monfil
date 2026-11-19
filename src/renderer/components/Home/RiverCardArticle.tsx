@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import FeedAvatar from "@/components/common/FeedAvatar";
 import JobFacts from "@/components/Home/JobFacts";
 import RiverCardImage from "@/components/Home/RiverCardImage";
@@ -9,12 +10,13 @@ import { cx } from "@/components/untitled-ui/utils/cx";
 import { describeRiverCard, estimateReadTime, formatRelativeTime, type RiverCardProps } from "@/lib/river/utils";
 
 export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps) {
+  const { t } = useTranslation('river');
   return (
     <article
       data-item-id={item.id}
       role="button"
       tabIndex={0}
-      aria-label={describeRiverCard(item, read)}
+      aria-label={describeRiverCard(item, read, t)}
       onClick={() => onOpen(item.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {

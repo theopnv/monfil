@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EmptyRiver from "@/components/Home/EmptyRiver";
@@ -35,6 +36,7 @@ export interface RiverProps {
 }
 
 export default function River({ onOpenItem, savedView = false, onShowFeed }: RiverProps) {
+  const { t } = useTranslation(['river', 'common']);
   const feeds = useFeeds();
   const awaitingFeeds = useFeedsPending() && !savedView;
   const categories = useCategories();
@@ -73,8 +75,8 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
       return;
     }
     const count = visibleItems.length;
-    announce(count === 0 ? `No results for "${debouncedSearch}"` : `${count} result${count === 1 ? '' : 's'} for "${debouncedSearch}"`);
-  }, [debouncedSearch, visibleItems.length]);
+    announce(count === 0 ? t('river:results.none', { query: debouncedSearch }) : t('river:results.count', { count, query: debouncedSearch }));
+  }, [debouncedSearch, visibleItems.length, t]);
 
   useEffect(() => {
     if (debouncedSearch.length > 0) {
@@ -183,28 +185,28 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-8.5 py-6.5 pb-20">
           <div className="mx-auto max-w-[860px]">
             {savedView && isPending ? (
-              <p className="py-20 text-center text-tertiary">Loading saved items…</p>
+              <p className="py-20 text-center text-tertiary">{t('river:saved.loading')}</p>
             ) : savedView && isError ? (
               <div className="py-20 text-center">
-                <p className="mb-3 text-tertiary">Saved items could not be loaded.</p>
+                <p className="mb-3 text-tertiary">{t('river:saved.loadFailed')}</p>
                 <Button color="secondary" onPress={() => {
                   void refetch();
-                }}>Try again</Button>
+                }}>{t('common:action.tryAgain')}</Button>
               </div>
             ) : savedView && debouncedSearch.length === 0 ? (
               visibleItems.length === 0
-                ? <p className="py-20 text-center text-md text-tertiary">Save items from your feeds to find them here.</p>
+                ? <p className="py-20 text-center text-md text-tertiary">{t('river:saved.empty')}</p>
                 : <RiverList items={visibleItems} density={preferences.density} onOpen={handleOpen} />
             ) : !savedView && isFeedpackRefreshing ? (
-              <p className="py-20 text-center text-md font-regular text-tertiary">Fetching sources for this feedpack…</p>
+              <p className="py-20 text-center text-md font-regular text-tertiary">{t('river:feedpackFetching')}</p>
             ) : awaitingFeeds ? null : !savedView && !hasFeeds ? (
               <EmptyRiver onImportOpml={() => setIsImportOpen(true)} onImportFeedpack={() => setIsFeedpackBrowserOpen(true)} />
             ) : debouncedSearch.length > 0 ? (
               visibleItems.length === 0
-                ? <p className="py-20 text-center text-md font-regular text-tertiary">No results for &quot;{debouncedSearch}&quot;</p>
+                ? <p className="py-20 text-center text-md font-regular text-tertiary">{t('river:results.none', { query: debouncedSearch })}</p>
                 : <RiverList items={visibleItems} density={preferences.density} onOpen={handleOpen} />
             ) : !savedView && unreadCount === 0 ? (
-              <p className="py-20 text-center text-md font-regular text-tertiary">You&apos;re all caught up</p>
+              <p className="py-20 text-center text-md font-regular text-tertiary">{t('river:caughtUp')}</p>
             ) : (
               <RiverList items={visibleItems} density={preferences.density} onOpen={handleOpen} />
             )}

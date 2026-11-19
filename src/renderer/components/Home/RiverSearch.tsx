@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { SearchLg, XClose } from "@untitledui/icons";
 import { Input } from "@/components/untitled-ui/base/input/input";
@@ -39,6 +40,7 @@ interface Placement {
  * so nothing around it moves.
  */
 export default function RiverSearch({ value, onChange, placeholder, saveControl }: RiverSearchProps) {
+  const { t } = useTranslation('river');
   const slotRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -118,7 +120,7 @@ export default function RiverSearch({ value, onChange, placeholder, saveControl 
             {value.length > 0 && (
               <button
                 type="button"
-                aria-label="Clear search"
+                aria-label={t('search.clear')}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => onChange("")}
                 className="absolute end-2.5 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-fg-quaternary transition duration-100 ease-linear hover:text-fg-quaternary_hover focus:outline-hidden"
@@ -129,17 +131,17 @@ export default function RiverSearch({ value, onChange, placeholder, saveControl 
           </div>
 
           {expanded && (
-            <div role="region" aria-label="Search syntax" className="absolute top-full end-0 start-0 mt-2 animate-in rounded-2xl bg-primary p-5 shadow-xl ring-1 ring-secondary duration-200 fade-in slide-in-from-top-1">
+            <div role="region" aria-label={t('search.syntaxRegion')} className="absolute top-full end-0 start-0 mt-2 animate-in rounded-2xl bg-primary p-5 shadow-xl ring-1 ring-secondary duration-200 fade-in slide-in-from-top-1">
               <dl className="grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
                 {SEARCH_SYNTAX.map(({ example, meaning }) => (
                   <div key={example} className="flex flex-col">
                     <dt><code className="font-mono font-semibold text-primary">{example}</code></dt>
-                    <dd className="text-tertiary">{meaning}</dd>
+                    <dd className="text-tertiary">{t(`search.syntax.${meaning}`)}</dd>
                   </div>
                 ))}
               </dl>
               <div className="mt-4 flex items-center justify-between gap-3 border-t border-secondary pt-3">
-                <span className="text-xs text-tertiary">Press Enter to close the search and keep the filter.</span>
+                <span className="text-xs text-tertiary">{t('search.closeHint')}</span>
                 {saveControl}
               </div>
             </div>

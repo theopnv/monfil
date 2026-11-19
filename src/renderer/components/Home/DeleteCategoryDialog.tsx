@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { Trans, useTranslation } from 'react-i18next';
 import { useEffect, useEffectEvent, useState } from "react";
 import { Heading } from "react-aria-components";
 import NativeSelect from "@/components/common/NativeSelect";
@@ -28,6 +29,7 @@ interface MoveFeedsOptionProps {
 }
 
 function MoveFeedsOption({ otherCategories, moveFeeds, onMoveFeedsChange, reassignTo, onReassignToChange }: MoveFeedsOptionProps) {
+  const { t } = useTranslation('river');
   return (
     <div className="flex flex-col gap-2.5 px-6 pb-4.5">
       <label htmlFor="move-feeds-toggle" className="flex items-center gap-2 text-sm font-medium text-secondary">
@@ -37,11 +39,11 @@ function MoveFeedsOption({ otherCategories, moveFeeds, onMoveFeedsChange, reassi
           checked={moveFeeds}
           onChange={(event) => onMoveFeedsChange(event.target.checked)}
         />
-        Keep its feeds and move them to another folder instead
+        {t('deleteCategory.keepFeeds')}
       </label>
       {moveFeeds && (
         <NativeSelect
-          aria-label="Move its feeds to"
+          aria-label={t('deleteCategory.moveTo')}
           value={reassignTo}
           onChange={(event) => onReassignToChange(Number(event.target.value))}
         >
@@ -55,6 +57,7 @@ function MoveFeedsOption({ otherCategories, moveFeeds, onMoveFeedsChange, reassi
 }
 
 export default function DeleteCategoryDialog({ category, feedCount, otherCategories, onOpenChange, onDeleted }: DeleteCategoryDialogProps) {
+  const { t } = useTranslation(['river', 'common']);
   const deleteCategory = useDeleteCategory();
   const [reassignTo, setReassignTo] = useState<number | undefined>(otherCategories[0]?.id);
   const [moveFeeds, setMoveFeeds] = useState(false);
@@ -105,14 +108,15 @@ export default function DeleteCategoryDialog({ category, feedCount, otherCategor
         <Dialog>
           <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
             <Heading slot="title" className="font-display text-lg font-semibold text-primary">
-              Delete folder
+              {t('river:deleteCategory.title')}
             </Heading>
             {category && (
               <p className="text-sm text-tertiary">
-                This removes the <span className="font-semibold text-secondary">{category.name}</span> folder.
+                <Trans t={t} i18nKey="river:deleteCategory.body" values={{ name: category.name }} components={{ bold: <span className="font-semibold text-secondary" /> }} />
                 {needsReassignment && (
                   <>
-                    {" "}Its <span className="font-semibold text-secondary">{feedCount} {feedCount === 1 ? "feed" : "feeds"}</span> {shouldMove ? "move to the folder below." : "are deleted with it."}
+                    {" "}
+                    <Trans t={t} i18nKey="river:deleteCategory.feeds" context={shouldMove ? "move" : "delete"} count={feedCount} components={{ bold: <span className="font-semibold text-secondary" /> }} />
                   </>
                 )}
               </p>
@@ -133,10 +137,10 @@ export default function DeleteCategoryDialog({ category, feedCount, otherCategor
 
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
             <Button color="secondary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>
-              Cancel
+              {t('common:action.cancel')}
             </Button>
             <Button color="primary-destructive" size="md" className="rounded-full" isLoading={isLoading} onPress={handleConfirm}>
-              Delete folder
+              {t('river:deleteCategory.confirm')}
             </Button>
           </div>
         </Dialog>

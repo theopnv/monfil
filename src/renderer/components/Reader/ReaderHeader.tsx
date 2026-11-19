@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ChevronDown, ChevronUp, Circle } from "@untitledui/icons";
 import SaveButton from "@/components/common/SaveButton";
 import FeedAvatar from "@/components/common/FeedAvatar";
@@ -22,10 +23,11 @@ export interface ReaderHeaderProps {
 }
 
 export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPrevious, onNext, hasPrevious, hasNext, savedView }: ReaderHeaderProps) {
+  const { t } = useTranslation('reader');
   return (
     <header className="flex flex-none items-center gap-3 border-b border-secondary px-6.5 py-3.5">
       <Button color="secondary" size="sm" iconLeading={ArrowLeft} className="flex-none rounded-full" onPress={onNavigateHome}>
-        {savedView ? "Saved" : "Home"}
+        {savedView ? t('header.saved') : t('header.home')}
       </Button>
 
       <div className="flex min-w-0 items-center gap-2">
@@ -42,15 +44,15 @@ export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPre
           </>
         )}
 
-        <Tooltip title="Mark unread">
-          <Button aria-label="Mark unread" color="tertiary" size="sm" className="rounded-full" iconLeading={Circle} onPress={onToggleRead} />
+        <Tooltip title={t('header.markUnread')}>
+          <Button aria-label={t('header.markUnread')} color="tertiary" size="sm" className="rounded-full" iconLeading={Circle} onPress={onToggleRead} />
         </Tooltip>
         <SaveButton item={item} {...(savedView ? { onRemoved: onNavigateHome } : {})} />
 
         <span className="mx-1.5 h-5.5 flex-none border-s border-secondary" />
 
-        <Button aria-label="Previous article" color="tertiary" size="sm" className="rounded-full" iconLeading={ChevronUp} isDisabled={!hasPrevious} onPress={onPrevious} />
-        <Button aria-label="Next article" color="tertiary" size="sm" className="rounded-full" iconLeading={ChevronDown} isDisabled={!hasNext} onPress={onNext} />
+        <Button aria-label={t('header.previous')} color="tertiary" size="sm" className="rounded-full" iconLeading={ChevronUp} isDisabled={!hasPrevious} onPress={onPrevious} />
+        <Button aria-label={t('header.next')} color="tertiary" size="sm" className="rounded-full" iconLeading={ChevronDown} isDisabled={!hasNext} onPress={onNext} />
       </div>
     </header>
   );

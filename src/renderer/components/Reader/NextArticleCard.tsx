@@ -2,17 +2,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { ArrowRight } from "@untitledui/icons";
 import { estimateReadTime, formatRelativeTime } from "@/lib/river/utils";
 import type { RiverRow } from "../../../shared/contracts";
 
 export interface NextArticleCardProps {
   item: RiverRow;
-  label: "Next unread" | "Next article";
+  kind: "unread" | "article";
   onClick: () => void;
 }
 
-export default function NextArticleCard({ item, label, onClick }: NextArticleCardProps) {
+export default function NextArticleCard({ item, kind, onClick }: NextArticleCardProps) {
+  const { t } = useTranslation('reader');
   return (
     <button
       type="button"
@@ -20,7 +22,7 @@ export default function NextArticleCard({ item, label, onClick }: NextArticleCar
       className="mb-8.5 flex w-full items-center gap-4.5 rounded-xl border border-secondary p-5.5 text-start transition hover:border-brand hover:shadow-md"
     >
       <div className="min-w-0 flex-1">
-        <div className="mb-1.75 text-xs font-bold tracking-wide text-tertiary uppercase">{label}</div>
+        <div className="mb-1.75 text-xs font-bold tracking-wide text-tertiary uppercase">{t(`next.${kind}`)}</div>
         <div className="mb-1.25 text-lg leading-tight font-bold text-pretty text-primary">{item.title}</div>
         <div className="text-sm text-tertiary">
           {item.feedTitle} · {estimateReadTime(item.excerpt)} · {formatRelativeTime(item.publishedAt)}

@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
-import { estimateReadTime, formatRelativeTime, SOURCE_TYPE_LABEL } from "@/lib/river/utils";
+import { estimateReadTime, formatRelativeTime, sourceTypeLabel } from "@/lib/river/utils";
 import type { RiverRow } from "../../../shared/contracts";
 
 export interface ArticleMetaProps {
@@ -12,12 +13,13 @@ export interface ArticleMetaProps {
 }
 
 export default function ArticleMeta({ item, wordCount }: ArticleMetaProps) {
+  const { t } = useTranslation('river');
   const readTime = wordCount === undefined ? undefined : estimateReadTime(wordCount);
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2.25">
       <Badge color="brand" size="sm">
-        {SOURCE_TYPE_LABEL[item.type]}
+        {sourceTypeLabel(item.type, t)}
       </Badge>
       <span className="text-sm text-tertiary">
         {item.feedTitle} · {formatRelativeTime(item.publishedAt)}

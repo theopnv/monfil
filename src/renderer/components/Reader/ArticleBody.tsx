@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { createElement, useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import { openLink } from "@/lib/river/utils";
 import { recordUsage } from "@/lib/usage";
@@ -31,19 +32,20 @@ const PROVIDER_PRIVACY_URLS = {
 } as const;
 
 function EmbedCard({ embed, title }: { embed: EmbedDescriptor; title: string }) {
+  const { t } = useTranslation('reader');
   const [loaded, setLoaded] = useState(false);
   const name = PROVIDER_NAMES[embed.provider];
   const frameHeight = embed.provider === 'spotify' ? 'h-64' : embed.provider === 'x' || embed.provider === 'instagram' ? 'h-[560px]' : 'aspect-video';
 
   return (
     <span className="block w-full rounded-lg border border-secondary bg-secondary p-4">
-      <span className="mb-3 block text-sm font-semibold">{title || `${name} embed`}</span>
-      <span className="mb-3 block text-xs text-tertiary">Loading this embed connects to {name}. The provider may use cookies.</span>
+      <span className="mb-3 block text-sm font-semibold">{title || t('embed.defaultTitle', { name })}</span>
+      <span className="mb-3 block text-xs text-tertiary">{t('embed.consent', { name })}</span>
       {loaded ? (
         <iframe
           className={`block w-full rounded-md border-0 ${frameHeight}`}
           src={embed.frameUrl}
-          title={`${name} embed`}
+          title={t('embed.defaultTitle', { name })}
           sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
           allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
           allowFullScreen
@@ -53,13 +55,13 @@ function EmbedCard({ embed, title }: { embed: EmbedDescriptor; title: string }) 
           recordUsage('embeds_loaded');
           setLoaded(true);
         }}>
-          Load {name}
+          {t('embed.load', { name })}
         </button>
       )}
       <span className="mt-3 block text-xs text-tertiary">
-        <a href={embed.sourceUrl}>Open on {name}</a>
+        <a href={embed.sourceUrl}>{t('embed.open', { name })}</a>
         <span aria-hidden="true"> · </span>
-        <a href={PROVIDER_PRIVACY_URLS[embed.provider]}>Provider privacy policy</a>
+        <a href={PROVIDER_PRIVACY_URLS[embed.provider]}>{t('embed.privacy')}</a>
       </span>
     </span>
   );

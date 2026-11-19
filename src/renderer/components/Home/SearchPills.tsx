@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { Trans, useTranslation } from 'react-i18next';
 import { useRef, useState } from "react";
 import { DotsHorizontal, XClose } from "@untitledui/icons";
 import { Button as AriaButton, Menu, MenuItem, MenuTrigger, Popover } from "react-aria-components";
@@ -24,6 +25,7 @@ export interface SearchPillsProps {
 const pillClasses = "inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold whitespace-nowrap outline-brand transition duration-100 ease-linear focus-visible:outline-2";
 
 function RenameField({ search, onRename, onDone }: { search: SavedSearchSummary; onRename: SearchPillsProps["onRename"]; onDone: () => void }) {
+  const { t } = useTranslation('river');
   const [name, setName] = useState(search.name);
   const [error, setError] = useState<string>();
   const submitted = useRef(false);
@@ -54,7 +56,7 @@ function RenameField({ search, onRename, onDone }: { search: SavedSearchSummary;
     }}>
       <input
         autoFocus
-        aria-label={`Rename saved search ${search.name}`}
+        aria-label={t('pills.rename', { name: search.name })}
         aria-invalid={error !== undefined}
         title={error}
         value={name}
@@ -74,6 +76,7 @@ function RenameField({ search, onRename, onDone }: { search: SavedSearchSummary;
 }
 
 function Pill({ search, isActive, onToggle, onDelete, onRename }: { search: SavedSearchSummary; isActive: boolean } & Pick<SearchPillsProps, "onRename"> & { onToggle: () => void; onDelete: () => void }) {
+  const { t } = useTranslation('river');
   const [isRenaming, setIsRenaming] = useState(false);
 
   if (isRenaming) {
@@ -85,8 +88,8 @@ function Pill({ search, isActive, onToggle, onDelete, onRename }: { search: Save
       <button
         type="button"
         aria-pressed={isActive}
-        aria-label={`${search.name}, ${search.unreadCount} unread`}
-        title="Right-click or press F2 to rename"
+        aria-label={t('pills.label', { name: search.name, count: search.unreadCount })}
+        title={t('pills.renameHint')}
         onClick={onToggle}
         onContextMenu={(event) => {
           event.preventDefault();
@@ -111,7 +114,7 @@ function Pill({ search, isActive, onToggle, onDelete, onRename }: { search: Save
       </button>
       <button
         type="button"
-        aria-label={`Delete saved search ${search.name}`}
+        aria-label={t('pills.delete', { name: search.name })}
         onClick={onDelete}
         className={cx(
           "absolute top-1/2 end-1.5 flex size-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full opacity-0 outline-brand transition duration-100 ease-linear group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:outline-2",
@@ -125,14 +128,15 @@ function Pill({ search, isActive, onToggle, onDelete, onRename }: { search: Save
 }
 
 function HintPill({ example, onUse, onDismiss }: { example: string; onUse: () => void; onDismiss: () => void }) {
+  const { t } = useTranslation('river');
   return (
     <div className="flex flex-none items-center rounded-full border border-dashed border-primary pe-1">
       <button type="button" onClick={onUse} className="cursor-pointer rounded-full py-1 pe-1.5 ps-3 text-start text-sm text-tertiary outline-brand focus-visible:outline-2">
-        Save a search for each role you want, e.g. <code className="font-mono text-secondary">{example}</code>
+        <Trans t={t} i18nKey="pills.hint" values={{ example }} components={{ code: <code className="font-mono text-secondary" /> }} />
       </button>
       <button
         type="button"
-        aria-label="Dismiss the saved search hint"
+        aria-label={t('pills.dismissHint')}
         onClick={onDismiss}
         className="flex size-5 cursor-pointer items-center justify-center rounded-full text-fg-quaternary outline-brand hover:text-fg-quaternary_hover focus-visible:outline-2"
       >
@@ -144,13 +148,14 @@ function HintPill({ example, onUse, onDismiss }: { example: string; onUse: () =>
 
 /** The row of saved searches above the river, with the onboarding hint when no search exists yet. */
 export default function SearchPills({ searches, activeId, hintExample, onToggle, onDelete, onRename, onUseExample, onDismissHint }: SearchPillsProps) {
+  const { t } = useTranslation('river');
   if (searches.length === 0 && hintExample === undefined) {
     return null;
   }
 
   return (
     <div className="flex flex-none items-center gap-2 border-b border-secondary px-8.5 py-2.5">
-      <div role="toolbar" aria-label="Saved searches" className="mx-auto flex w-full max-w-[860px] min-w-0 items-center gap-2">
+      <div role="toolbar" aria-label={t('pills.toolbar')} className="mx-auto flex w-full max-w-[860px] min-w-0 items-center gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-0.5">
           {searches.map((search) => (
             <Pill
@@ -169,13 +174,13 @@ export default function SearchPills({ searches, activeId, hintExample, onToggle,
         {searches.length > 1 && (
           <MenuTrigger>
             <AriaButton
-              aria-label="All saved searches"
+              aria-label={t('pills.all')}
               className="flex size-7 flex-none cursor-pointer items-center justify-center rounded-full text-fg-quaternary outline-brand hover:bg-secondary focus-visible:outline-2"
             >
               <DotsHorizontal className="size-5" />
             </AriaButton>
             <Popover placement="bottom end" className="z-50 min-w-44 rounded-lg bg-primary p-1 shadow-lg ring-1 ring-secondary">
-              <Menu aria-label="Saved searches" className="outline-hidden" onAction={(key) => {
+              <Menu aria-label={t('pills.menu')} className="outline-hidden" onAction={(key) => {
                 const search = searches.find((candidate) => candidate.id === Number(key));
                 if (search) {
                   onToggle(search);
