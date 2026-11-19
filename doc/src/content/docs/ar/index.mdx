@@ -1,0 +1,36 @@
+---
+title: توثيق Monfil
+description: أدلة لاستخدام Monfil، وهو قارئ موجزات لسطح المكتب متاح المصدر، والمساهمة فيه.
+hero:
+  tagline: توثيق Monfil، قارئ الموجزات لسطح المكتب الذي يتتبع ما يهمك.
+  image:
+    file: ../../../assets/icon.png
+  actions:
+    - text: تثبيت Monfil
+      link: ./user-guide/install/
+      icon: download
+    - text: زيارة monfil.app
+      link: https://monfil.app
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid>
+  <Card title="دليل المستخدم" icon="open-book">
+    ثبّت Monfil، وأضف مصادر، واستخدم الووركسبيسات والبحث، واعثر على فيدباك يناسب مجالك.
+
+    [ابدأ مع دليل المستخدم](./user-guide/home/)
+  </Card>
+  <Card title="دليل المساهمين" icon="pencil">
+    تعرّف على طريقة تنظيم الكود، وأعدّ جهازك، وأرسل طلب سحب.
+
+    [ابدأ مع دليل المساهمين](./contributor-guide/home/)
+  </Card>
+  <Card title="سجل التغييرات" icon="list-format">
+    اطلع على ما تغيّر في كل إصدار.
+
+    [اقرأ سجل التغييرات](./changelog/)
+  </Card>
+</CardGrid>
