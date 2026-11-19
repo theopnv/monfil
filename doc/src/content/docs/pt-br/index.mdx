@@ -1,0 +1,36 @@
+---
+title: Documentação do Monfil
+description: Guias para usar e contribuir com o Monfil, um leitor de feeds para desktop de código-fonte disponível.
+hero:
+  tagline: Documentação do Monfil, o leitor de feeds para desktop que acompanha o que importa para você.
+  image:
+    file: ../../../assets/icon.png
+  actions:
+    - text: Instalar o Monfil
+      link: ./user-guide/install/
+      icon: download
+    - text: Visitar monfil.app
+      link: https://monfil.app
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid>
+  <Card title="Guia do usuário" icon="open-book">
+    Instale o Monfil, adicione fontes, use workspaces e busca, e encontre um feedpack para a sua área.
+
+    [Comece pelo guia do usuário](./user-guide/home/)
+  </Card>
+  <Card title="Guia do contribuidor" icon="pencil">
+    Saiba como o código é organizado, configure a sua máquina e envie um pull request.
+
+    [Comece pelo guia do contribuidor](./contributor-guide/home/)
+  </Card>
+  <Card title="Registro de alterações" icon="list-format">
+    Veja o que mudou em cada versão.
+
+    [Leia o registro de alterações](./changelog/)
+  </Card>
+</CardGrid>

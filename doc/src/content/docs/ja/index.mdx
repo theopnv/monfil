@@ -1,0 +1,36 @@
+---
+title: Monfil ドキュメント
+description: デスクトップのフィードリーダー Monfil の使い方と、開発への参加方法を説明するガイドです。
+hero:
+  tagline: Monfilのドキュメントです。大切な情報を追い続けるデスクトップのフィードリーダーです。
+  image:
+    file: ../../../assets/icon.png
+  actions:
+    - text: Monfilをインストール
+      link: ./user-guide/install/
+      icon: download
+    - text: monfil.app を開く
+      link: https://monfil.app
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid>
+  <Card title="ユーザーガイド" icon="open-book">
+    Monfilのインストール、ソースの追加、ワークスペースと検索の使い方、分野に合うフィードパックの探し方を説明します。
+
+    [ユーザーガイドを読む](./user-guide/home/)
+  </Card>
+  <Card title="コントリビューターガイド" icon="pencil">
+    コードの構成、開発環境の準備、プルリクエストの送り方を説明します。
+
+    [コントリビューターガイドを読む](./contributor-guide/home/)
+  </Card>
+  <Card title="変更履歴" icon="list-format">
+    各リリースで何が変わったかを確認できます。
+
+    [変更履歴を読む](./changelog/)
+  </Card>
+</CardGrid>

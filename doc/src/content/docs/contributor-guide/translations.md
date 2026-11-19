@@ -42,3 +42,15 @@ The file `src/shared/i18n/locales/translations.lock.json` holds a digest of the 
 ## Fix a translation
 
 Edit the JSON file of the language and open a pull request. Keep the `{{values}}` and `<tags>` of the English text, then run `npm run i18n:check -- --update-lock`. A translation that a native speaker has checked can lose its "beta" tag: set `reviewed` to `true` for the language in `languages.ts`.
+
+## Translate the docs
+
+The docs site has the same nine languages. English pages live in `doc/src/content/docs/`. A translation lives in a folder named for its language: `fr`, `de`, `es`, `it`, `pt-br`, `zh-cn`, `ja`, and `ar`. Only `index.mdx` and `user-guide/` are translated. The contributor guide and the changelog stay in English, and a locale shows the English page with a notice for them.
+
+- Keep the path of the page under the language folder: `user-guide/home.md` becomes `fr/user-guide/home.md`.
+- A page one folder deeper needs one more `../` in image paths.
+- Use the same terms as the app, and the same labels for buttons. Both come from `src/shared/i18n/glossary.json` and `src/shared/i18n/locales/<language>/`.
+- A heading translation changes its anchor. Update links that point to it.
+- The privacy notice carries a note that the English text is the reference.
+
+`npm run check:translations --prefix doc` fails when a page is missing or older than the English page it came from. Lunaria reads the git history for this, so it needs a full clone and committed files. Put `lunaria-ignore` in a commit message for a change that needs no translation, such as a typo fix.
