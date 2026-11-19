@@ -35,5 +35,13 @@
     },
     "releases": "Releases",
     "publicActivity": "Public activity"
+  },
+  "salary": {
+    "withInterval": "{{label}} / {{interval}}",
+    "interval": {
+      "hour": "hour",
+      "month": "month",
+      "year": "year"
+    }
   }
 }

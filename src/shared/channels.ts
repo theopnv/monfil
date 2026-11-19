@@ -209,6 +209,8 @@ export type ChannelPayloads = OneWayRendererToMainChannelPayloads
 export type Channels = keyof ChannelPayloads;
 
 export interface ElectronHandler {
+  /** The operating system locale, read at startup. Absent when the window did not get one. */
+  systemLocale?: string;
   ipcRenderer: {
     sendMessage<C extends OneWayRendererToMainChannels>(channel: C, payload: OneWayRendererToMainChannelPayloads[C]): void;
     on<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void): () => void;

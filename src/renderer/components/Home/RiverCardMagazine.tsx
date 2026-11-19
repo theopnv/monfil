@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { useFormatLocale } from "@/lib/i18n";
 import FeedAvatar from "@/components/common/FeedAvatar";
 import JobFacts from "@/components/Home/JobFacts";
 import RiverCardImage from "@/components/Home/RiverCardImage";
@@ -12,12 +13,13 @@ import { describeRiverCard, formatRelativeTime, sourceTypeLabel, type RiverCardP
 
 export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps) {
   const { t } = useTranslation('river');
+  const locale = useFormatLocale();
   return (
     <article
       data-item-id={item.id}
       role="button"
       tabIndex={0}
-      aria-label={describeRiverCard(item, read, t)}
+      aria-label={describeRiverCard(item, read, t, locale)}
       onClick={() => onOpen(item.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -38,7 +40,7 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
           <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
           <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="sm" />
           <span className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
-          <span className="ms-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
+          <span className="ms-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt, locale)}</span>
         </div>
 
         <h4 className="mb-1.75 text-base leading-snug font-bold text-pretty text-primary">{item.title}</h4>

@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { useFormatLocale } from "@/lib/i18n";
 import { ArrowRight } from "@untitledui/icons";
 import { estimateReadTime, formatRelativeTime } from "@/lib/river/utils";
 import type { RiverRow } from "../../../shared/contracts";
@@ -15,6 +16,8 @@ export interface NextArticleCardProps {
 
 export default function NextArticleCard({ item, kind, onClick }: NextArticleCardProps) {
   const { t } = useTranslation('reader');
+  const { t: tRiver } = useTranslation('river');
+  const locale = useFormatLocale();
   return (
     <button
       type="button"
@@ -25,7 +28,7 @@ export default function NextArticleCard({ item, kind, onClick }: NextArticleCard
         <div className="mb-1.75 text-xs font-bold tracking-wide text-tertiary uppercase">{t(`next.${kind}`)}</div>
         <div className="mb-1.25 text-lg leading-tight font-bold text-pretty text-primary">{item.title}</div>
         <div className="text-sm text-tertiary">
-          {item.feedTitle} · {estimateReadTime(item.excerpt)} · {formatRelativeTime(item.publishedAt)}
+          {item.feedTitle} · {estimateReadTime(item.excerpt, tRiver)} · {formatRelativeTime(item.publishedAt, locale)}
         </div>
       </div>
       <span className="flex size-10 flex-none items-center justify-center rounded-full bg-brand-secondary text-brand-tertiary">

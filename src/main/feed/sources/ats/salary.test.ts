@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { mainFormatLocale, setMainLanguage, setMainSystemLocale } from '../../../lib/i18n';
 import { intervalFromProvider, salaryFromRange, salaryFromText } from './salary';
 
 vi.mock(import('../../../lib/fetch'), () => ({ fetchText: vi.fn(), fetchConditional: vi.fn() }));
@@ -80,10 +81,60 @@ describe('salaryFromRange', () => {
     // Act / Assert
     expect(salaryFromRange(150000, 190000, 'USD', 'year')).toBe('$150,000–$190,000 / year');
     expect(salaryFromRange(45000, 55000, 'eur', undefined)).toBe('€45,000–€55,000');
-    expect(salaryFromRange(700000, 900000, 'NOK', 'year')).toBe('NOK 700,000–NOK 900,000 / year');
+    expect(salaryFromRange(700000, 900000, 'NOK', 'year')).toBe('NOK\u00a0700,000–NOK\u00a0900,000 / year');
     expect(salaryFromRange(30, 30, 'GBP', 'hour')).toBe('£30 / hour');
     expect(salaryFromRange(undefined, 90000, 'USD', 'year')).toBe('$90,000 / year');
     expect(salaryFromRange(60000, undefined, 'USD', 'year')).toBe('$60,000 / year');
+  });
+
+  describe('in another interface language', () => {
+    afterEach(async () => {
+      await setMainLanguage('en');
+      setMainSystemLocale('');
+    });
+
+    test('groups digits and places the symbol by the language', async () => {
+      // Arrange
+      await setMainLanguage('fr');
+
+      // Act
+      const label = salaryFromRange(45000, 55000, 'EUR', undefined);
+
+      // Assert
+      expect(label).toBe('45\u202f000\u00a0€–55\u202f000\u00a0€');
+    });
+
+    test('follows the regional system locale of the same language', async () => {
+      // Arrange
+      setMainSystemLocale('de-CH');
+      await setMainLanguage('de');
+
+      // Act
+      const label = salaryFromRange(80000, 80000, 'USD', undefined);
+
+      // Assert
+      expect(mainFormatLocale()).toBe('de-CH');
+      expect(label).toBe("$\u00a080'000");
+    });
+
+    test('shows the code of a currency without a shared symbol', async () => {
+      // Arrange
+      await setMainLanguage('de');
+
+      // Act
+      const label = salaryFromRange(700000, 900000, 'NOK', undefined);
+
+      // Assert
+      expect(label).toBe('700.000\u00a0NOK–900.000\u00a0NOK');
+    });
+  });
+
+  test('still gives a label for a currency code that Intl rejects', () => {
+    // Act
+    const label = salaryFromRange(1000, 2000, 'euros', 'year');
+
+    // Assert
+    expect(label).toBe('EUROS 1,000–EUROS 2,000 / year');
   });
 
   test('gives no label without a currency or without an amount', () => {

@@ -5,7 +5,7 @@
 import { DEFAULT_LANGUAGE, isLanguageCode, type LanguageCode, type LanguageSetting } from './languages';
 
 /** Maps one BCP 47 tag to a supported language, or null. Only Simplified Chinese is supported, so zh-TW and zh-Hant give null. */
-function languageOfTag(tag: string): LanguageCode | null {
+export function languageOfTag(tag: string): LanguageCode | null {
   let locale: Intl.Locale;
   try {
     locale = new Intl.Locale(tag.replaceAll('_', '-'));
