@@ -23,6 +23,7 @@
     "mutate:worklist": "node scripts/mutation/worklist-cli.mts",
     "mutate:upload": "node --env-file-if-exists=.env scripts/mutation/dashboard-cli.mts",
     "check:feedpacks": "node scripts/check-feedpacks.mjs",
+    "i18n:check": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/i18n/check-cli.mts",
     "complexity": "node scripts/complexity/index.mts",
     "complexity:report": "node scripts/complexity/report.mts",
     "complexity:ingest": "node scripts/complexity/ingest.mts",
