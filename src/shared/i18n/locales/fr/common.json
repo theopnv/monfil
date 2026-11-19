@@ -1,0 +1,24 @@
+{
+  "action": {
+    "undo": "Annuler",
+    "gotIt": "Compris",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "tryAgain": "Réessayer",
+    "done": "Terminé",
+    "import": "Importer",
+    "close": "Fermer",
+    "back": "Retour",
+    "showLog": "Afficher le fichier journal",
+    "restart": "Redémarrer"
+  },
+  "item": {
+    "action": {
+      "save": "Enregistrer",
+      "removeFromSaved": "Retirer des enregistrés"
+    }
+  },
+  "update": {
+    "ready": "Une nouvelle version de Monfil est prête."
+  }
+}

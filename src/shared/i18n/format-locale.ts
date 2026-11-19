@@ -8,7 +8,8 @@ import { languageOfTag } from './resolve-language';
 /** The command-line argument that carries the system locale from main to the preload script. */
 export const SYSTEM_LOCALE_ARGUMENT = '--system-locale=';
 
-const BARE_LOCALE: Record<LanguageCode, string> = {
+/** The BCP 47 tag that stands for each language when no system locale narrows it down. */
+export const BARE_LOCALE: Record<LanguageCode, string> = {
   en: 'en',
   fr: 'fr',
   de: 'de',

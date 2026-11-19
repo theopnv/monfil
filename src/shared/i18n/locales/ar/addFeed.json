@@ -1,0 +1,136 @@
+{
+  "match": {
+    "found": "تم العثور على موجز",
+    "notFound": "غير موجود",
+    "checking": "جارٍ التحقق…"
+  },
+  "wizard": {
+    "step": {
+      "find": "البحث",
+      "configure": "الإعداد",
+      "done": "تم"
+    },
+    "titles": {
+      "find": "أضف موجزًا",
+      "configure": "خصّصه لك",
+      "done": "أُضيف إلى Monfil"
+    },
+    "blurbs": {
+      "find": "خانة واحدة لكل ما تريد متابعته.",
+      "configure": "مكانه، وهل يظهر في الصفحة الرئيسية.",
+      "done": "بدأ الجلب بالفعل. لا شيء آخر يلزم."
+    },
+    "close": "إغلاق",
+    "goToStep": "الانتقال إلى الخطوة {{step}}: {{name}}"
+  },
+  "stats": {
+    "new": "جديد",
+    "perDay": "~{{count}}/يوم",
+    "perWeek": "~{{count}}/أسبوع",
+    "perMonth": "~{{count}}/شهر",
+    "fullText": "النص الكامل",
+    "excerpt": "مقتطف"
+  },
+  "find": {
+    "kind": {
+      "anything": "أي شيء",
+      "conferences": "المؤتمرات",
+      "jobs": "الوظائف"
+    },
+    "copy": {
+      "anything": {
+        "placeholder": "ألصق رابطًا لموقع أو موجز أو مستودع أو ملف شخصي…",
+        "hint": "يجد Monfil الموجز الذي يقف خلف الرابط. لاسم مستخدم، اضغط Enter."
+      },
+      "rss": {
+        "placeholder": "ألصق رابطًا لموجز RSS…",
+        "hint": "يفحص Monfil الرابط بحثًا عن موجز RSS."
+      },
+      "youtube": {
+        "placeholder": "ألصق رابط قناة أو اسم مستخدم أو فيديو…",
+        "hint": "ألصق رابطًا، أو أدخل قناة أو اسم مستخدم ثم اضغط Enter."
+      },
+      "github": {
+        "placeholder": "ألصق رابط مستودع أو مستخدم، أو owner/repo…",
+        "hint": "يمنحك المستودع إصداراته، ويمنحك المستخدم أو المنظمة نشاطها العام. بعد owner/repo، اضغط Enter."
+      },
+      "gitlab": {
+        "placeholder": "ألصق رابط مشروع GitLab…",
+        "hint": "يتابع Monfil إصدارات المشروع. ويعمل GitLab المستضاف ذاتيًا أيضًا."
+      },
+      "hackernews": {
+        "placeholder": "ألصق رابط Hacker News…",
+        "hint": "يقدّم news.ycombinator.com الصفحة الأولى، وموجزات مصفاة حسب عدد النقاط."
+      },
+      "arxiv": {
+        "placeholder": "ألصق رابط قائمة arXiv…",
+        "hint": "مثال: arxiv.org/list/cs.AI/recent. يخفي Monfil الأوراق البحثية المستبدلة."
+      },
+      "bluesky": {
+        "placeholder": "ألصق رابط الملف الشخصي أو اسم المستخدم…",
+        "hint": "أدخل اسم مستخدم مثل @name.bsky.social ثم اضغط Enter."
+      },
+      "mastodon": {
+        "placeholder": "ألصق رابط ملف شخصي أو وسم، أو @user@host…",
+        "hint": "أدخل اسم مستخدم مثل @user@mastodon.social ثم اضغط Enter."
+      },
+      "conference": {
+        "placeholder": "اكتب المواضيع، ثم \"in\" ثم الأماكن…",
+        "hint": "الصيغة: المواضيع in الأماكن، ثم اضغط Enter. افصل بين العناصر بفواصل، والأماكن اختيارية، وتُعد \"online\" مكانًا أيضًا. أمثلة: devops · kubernetes، cloud in France · java in Belgium، online. يعمل رابط developers.events أيضًا."
+      },
+      "ats": {
+        "placeholder": "ألصق صفحة الوظائف أو صفحة التوظيف لشركة…",
+        "hint": "يعمل مع لوحات Greenhouse وLever وAshby وWorkable وSmartRecruiters وRecruitee وTeamtailor وPersonio. التغطية ليست كاملة، فأنظمة الوظائف الأخرى غير مدعومة بعد. يعرض Monfil كل وظيفة شاغرة لدى الشركة."
+      }
+    },
+    "feedUrl": "عنوان URL للموجز",
+    "searching": "جارٍ البحث…",
+    "candidates_zero": "لم يُعثر على {{count}} موجز. اختر واحدًا.",
+    "candidates_one": "عُثر على موجز واحد. اختر واحدًا.",
+    "candidates_two": "عُثر على موجزين. اختر واحدًا.",
+    "candidates_few": "عُثر على {{count}} موجزات. اختر واحدًا.",
+    "candidates_many": "عُثر على {{count}} موجزًا. اختر واحدًا.",
+    "candidates_other": "عُثر على {{count}} موجزًا. اختر واحدًا.",
+    "notFound": "لم يُعثر على موجز",
+    "notFoundDetail": "تعذّر العثور على موجز في هذا العنوان.",
+    "conferenceEmpty": "لا يوجد مؤتمر مطابق الآن. يضيف Monfil بطاقة عند الإعلان عن مؤتمر مطابق.",
+    "detail_zero": "{{link}} — {{count}} عنصرًا",
+    "detail_one": "{{link}} — عنصر واحد",
+    "detail_two": "{{link}} — عنصران",
+    "detail_few": "{{link}} — {{count}} عناصر",
+    "detail_many": "{{link}} — {{count}} عنصرًا",
+    "detail_other": "{{link}} — {{count}} عنصرًا"
+  },
+  "configure": {
+    "publishes": "ينشر",
+    "contains": "يحتوي الموجز على",
+    "notFound": "لم يُعثر على موجز",
+    "notFoundDetail": "ارجع إلى الخطوة 1 وجرّب رابطًا آخر.",
+    "show": "إظهار في مساحة العمل",
+    "showHint": "ألغِ تحديد المصادر كثيفة النشر التي تفضّل زيارتها عمدًا."
+  },
+  "done": {
+    "title": "{{title}} موجود في {{category}}",
+    "backfilled_zero": "جرى استرجاع {{count}} عنصرًا. كل شيء يبقى على هذا الجهاز.",
+    "backfilled_one": "جرى استرجاع عنصر واحد. كل شيء يبقى على هذا الجهاز.",
+    "backfilled_two": "جرى استرجاع عنصرين. كل شيء يبقى على هذا الجهاز.",
+    "backfilled_few": "جرى استرجاع {{count}} عناصر. كل شيء يبقى على هذا الجهاز.",
+    "backfilled_many": "جرى استرجاع {{count}} عنصرًا. كل شيء يبقى على هذا الجهاز.",
+    "backfilled_other": "جرى استرجاع {{count}} عنصرًا. كل شيء يبقى على هذا الجهاز.",
+    "jobs": "أصبحت كل وظائف {{company}} تظهر الآن في موجزك. لتصفيتها، ابحث عن كل دور تريده واحفظ البحث."
+  },
+  "category": {
+    "putIn": "ضعه في",
+    "newName": "اسم المجلد الجديد",
+    "example": "مثال: التصميم",
+    "add": "إضافة",
+    "new": "+ مجلد جديد",
+    "unlisted": "مجلد جديد: {{name}}"
+  },
+  "footer": {
+    "continue": "متابعة",
+    "add": "إضافة مصدر",
+    "goToFeed": "الانتقال إلى الموجز",
+    "addAnother": "إضافة آخر"
+  }
+}

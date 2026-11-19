@@ -1,0 +1,74 @@
+{
+  "navigation": {
+    "label": "ワークスペースの表示",
+    "all": "すべての項目",
+    "saved": "保存済み",
+    "saveHint": "ブックマークで記事を保存します。保存した記事はここで見つかります。"
+  },
+  "switcher": {
+    "dialog": "ワークスペースを切り替え",
+    "field": "ワークスペース名",
+    "placeholder": "ワークスペースへ移動…",
+    "list": "ワークスペース",
+    "empty": "一致するワークスペースはありません。"
+  },
+  "rail": {
+    "moveFailed": "フィードを移動できませんでした。",
+    "list": "ワークスペース",
+    "move": "{{name}} を移動",
+    "hideNames": "ワークスペース名を非表示",
+    "showNames": "ワークスペース名を表示",
+    "collapse": "折りたたむ",
+    "new": "新しいワークスペース",
+    "newHint": "フィードをまとめるワークスペースを作成します。ワークスペースを右クリックすると、編集や削除ができます。",
+    "settings": "設定"
+  },
+  "dialog": {
+    "editTitle": "ワークスペースを編集",
+    "newTitle": "新しいワークスペース",
+    "editBody": "名前を変更するか、別のアイコンと色を設定します。",
+    "newBody": "レールのタブです。独自のソースと独自のタイムラインを持ちます。",
+    "name": "名前",
+    "namePlaceholder": "CI/CD 監視",
+    "icon": "アイコン",
+    "colour": "色",
+    "colourOption": "色 {{value}}",
+    "browse": "フィードパックを探す",
+    "save": "変更を保存",
+    "create": "ワークスペースを作成"
+  },
+  "delete": {
+    "title": "ワークスペースを削除",
+    "body": "<bold>{{name}}</bold> ワークスペース、そのフォルダ、保存済みリストを削除します。ここにのみ配置されているフィードも削除されます。後で再インポートできるコピーを残すには、先にOPMLとしてエクスポートしてください。",
+    "export": "OPMLとしてエクスポート",
+    "confirm": "ワークスペースを削除"
+  },
+  "importOpml": {
+    "doneTitle": "インポートが完了しました",
+    "imported_other": "{{count}} 件のフィードをインポートしました。",
+    "skipped": "{{count}} 件をスキップしました。",
+    "failed": "{{count}} 件を取得できませんでした。",
+    "titleInto": "{{name}} にOPMLをインポート",
+    "title": "OPMLをインポート",
+    "choose": "次に開くファイル選択画面でファイルを選んでください。",
+    "newWorkspace": "新しいワークスペース",
+    "mergeHome": "ホームに統合",
+    "name": "名前",
+    "namePlaceholder": "空欄の場合はファイルのタイトルを使用します"
+  },
+  "feedpacks": {
+    "sources_other": "{{count}} 件のソース",
+    "packSources": "パックのソース",
+    "search": "フィードパックを検索",
+    "loading": "フィードパックを読み込んでいます…",
+    "none": "利用できるフィードパックはありません。",
+    "noMatch": "「{{query}}」に一致するフィードパックはありません。",
+    "loadingSources": "ソースを読み込んでいます…"
+  },
+  "feedpackDialog": {
+    "title": "フィードパック",
+    "body": "厳選されたソースのセットをインストールします。",
+    "back": "フィードパックに戻る",
+    "install": "インストール"
+  }
+}

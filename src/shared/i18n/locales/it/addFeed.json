@@ -1,0 +1,127 @@
+{
+  "match": {
+    "found": "Feed trovato",
+    "notFound": "Non trovato",
+    "checking": "Verifica in corso…"
+  },
+  "wizard": {
+    "step": {
+      "find": "Trova",
+      "configure": "Configura",
+      "done": "Fatto"
+    },
+    "titles": {
+      "find": "Aggiungi un feed",
+      "configure": "Personalizzalo",
+      "done": "Aggiunto a Monfil"
+    },
+    "blurbs": {
+      "find": "Un solo campo per tutto ciò che vuoi seguire.",
+      "configure": "Dove si trova e se compare in Home.",
+      "done": "Sta già scaricando i contenuti. Non serve altro."
+    },
+    "close": "Chiudi",
+    "goToStep": "Vai al passaggio {{step}}: {{name}}"
+  },
+  "stats": {
+    "new": "Nuovo",
+    "perDay": "~{{count}}/giorno",
+    "perWeek": "~{{count}}/settimana",
+    "perMonth": "~{{count}}/mese",
+    "fullText": "Testo completo",
+    "excerpt": "Estratto"
+  },
+  "find": {
+    "kind": {
+      "anything": "Tutto",
+      "conferences": "Conferenze",
+      "jobs": "Offerte di lavoro"
+    },
+    "copy": {
+      "anything": {
+        "placeholder": "Incolla il link di un sito, feed, repository o profilo…",
+        "hint": "Monfil trova il feed collegato al link. Per un nome utente, premi Invio."
+      },
+      "rss": {
+        "placeholder": "Incolla il link di un feed RSS…",
+        "hint": "Monfil cerca un feed RSS nel link."
+      },
+      "youtube": {
+        "placeholder": "Incolla il link di un canale, di un nome utente o di un video…",
+        "hint": "Incolla un link, oppure inserisci un canale o un nome utente e premi Invio."
+      },
+      "github": {
+        "placeholder": "Incolla il link di un repository o di un utente, oppure owner/repo…",
+        "hint": "Un repository fornisce le sue release. Un utente o un'organizzazione fornisce la sua attività pubblica. Dopo owner/repo, premi Invio."
+      },
+      "gitlab": {
+        "placeholder": "Incolla il link di un progetto GitLab…",
+        "hint": "Monfil segue le release del progetto. Funziona anche con GitLab self-hosted."
+      },
+      "hackernews": {
+        "placeholder": "Incolla un link di Hacker News…",
+        "hint": "news.ycombinator.com offre la prima pagina e feed filtrati per punteggio."
+      },
+      "arxiv": {
+        "placeholder": "Incolla il link di un elenco arXiv…",
+        "hint": "Per esempio arxiv.org/list/cs.AI/recent. Monfil nasconde gli articoli sostituiti."
+      },
+      "bluesky": {
+        "placeholder": "Incolla il link di un profilo o un nome utente…",
+        "hint": "Inserisci un nome utente come @nome.bsky.social e premi Invio."
+      },
+      "mastodon": {
+        "placeholder": "Incolla il link di un profilo o di un tag, oppure @utente@host…",
+        "hint": "Inserisci un nome utente come @utente@mastodon.social e premi Invio."
+      },
+      "conference": {
+        "placeholder": "Scrivi gli argomenti, poi \"in\" e i luoghi…",
+        "hint": "Formato: argomenti in luoghi, poi premi Invio. Separa le voci con virgole. I luoghi sono facoltativi, e online conta come luogo. Esempi: devops · kubernetes, cloud in Francia · java in Belgio, online. Funziona anche un link di developers.events."
+      },
+      "ats": {
+        "placeholder": "Incolla la pagina lavori o carriere di un'azienda…",
+        "hint": "Funziona con le bacheche di Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor e Personio. La copertura non è completa: gli altri sistemi di lavoro non sono ancora supportati. Monfil elenca tutte le offerte aperte dell'azienda."
+      }
+    },
+    "feedUrl": "URL del feed",
+    "searching": "Ricerca in corso…",
+    "candidates_one": "{{count}} feed trovato. Scegline uno.",
+    "candidates_many": "{{count}} feed trovati. Scegline uno.",
+    "candidates_other": "{{count}} feed trovati. Scegline uno.",
+    "notFound": "Nessun feed trovato",
+    "notFoundDetail": "Nessun feed trovato a quell'indirizzo.",
+    "conferenceEmpty": "Nessuna conferenza corrisponde ora. Monfil aggiunge una scheda quando viene annunciata una conferenza corrispondente.",
+    "detail_one": "{{link}} — {{count}} voce",
+    "detail_many": "{{link}} — {{count}} voci",
+    "detail_other": "{{link}} — {{count}} voci"
+  },
+  "configure": {
+    "publishes": "Pubblica",
+    "contains": "Il feed contiene",
+    "notFound": "Nessun feed trovato",
+    "notFoundDetail": "Torna al passaggio 1 e prova un altro link.",
+    "show": "Mostra nello spazio di lavoro",
+    "showHint": "Deseleziona per le fonti con molto volume che preferisci visitare di proposito."
+  },
+  "done": {
+    "title": "{{title}} è in {{category}}",
+    "backfilled_one": "Recuperato {{count}} elemento. Tutto resta su questo computer.",
+    "backfilled_many": "Recuperati {{count}} elementi. Tutto resta su questo computer.",
+    "backfilled_other": "Recuperati {{count}} elementi. Tutto resta su questo computer.",
+    "jobs": "Tutte le offerte di {{company}} ora compaiono nel tuo feed. Per filtrarle, cerca ciascun ruolo che ti interessa e salva la ricerca."
+  },
+  "category": {
+    "putIn": "Inserisci in",
+    "newName": "Nome della nuova cartella",
+    "example": "es. Design",
+    "add": "Aggiungi",
+    "new": "+ Nuova cartella",
+    "unlisted": "Nuova cartella: {{name}}"
+  },
+  "footer": {
+    "continue": "Continua",
+    "add": "Aggiungi fonte",
+    "goToFeed": "Vai al feed",
+    "addAnother": "Aggiungi un'altra"
+  }
+}

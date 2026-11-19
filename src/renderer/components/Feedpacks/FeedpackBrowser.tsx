@@ -9,7 +9,10 @@ import { useEffect, useState } from 'react';
 import { SearchLg } from '@untitledui/icons';
 import { Button } from '@/components/untitled-ui/base/buttons/button';
 import { useFeedpackCatalog, useFeedpackPreview } from '@/providers/feedpacks-provider';
+import { useActiveLanguage } from '@/lib/i18n';
 import type { Feedpack } from '../../../shared/contracts';
+import { feedpackText } from '../../../shared/i18n/feedpack-text';
+import type { LanguageCode } from '../../../shared/i18n/languages';
 import type { FeedpackPreview } from '../../../shared/contracts';
 
 export interface FeedpackBrowserProps {
@@ -18,14 +21,16 @@ export interface FeedpackBrowserProps {
   onSelect: (selection: FeedpackPreview) => void;
 }
 
-function matchesQuery(pack: Feedpack, query: string): boolean {
+function matchesQuery(pack: Feedpack, query: string, language: LanguageCode): boolean {
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-  const haystack = [pack.title, pack.description, pack.curator, ...pack.tags].join(' ').toLowerCase();
+  const text = feedpackText(pack, language);
+  const haystack = [text.title, text.description, pack.title, pack.description, pack.curator, ...pack.tags].join(' ').toLowerCase();
   return terms.every((term) => haystack.includes(term));
 }
 
 export default function FeedpackBrowser({ isActive, selected, onSelect }: FeedpackBrowserProps) {
   const { t } = useTranslation('workspace');
+  const language = useActiveLanguage();
   const catalog = useFeedpackCatalog(isActive);
   const preview = useFeedpackPreview();
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
@@ -54,14 +59,14 @@ export default function FeedpackBrowser({ isActive, selected, onSelect }: Feedpa
   const catalogError = catalog.data && !catalog.data.success ? catalog.data.error : null;
   const shownError = catalogError ?? error;
   const packs = catalog.data?.success ? catalog.data.data.packs : [];
-  const visiblePacks = packs.filter((pack) => matchesQuery(pack, query));
+  const visiblePacks = packs.filter((pack) => matchesQuery(pack, query, language));
 
   if (selected) {
     return (
       <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4.5">
         <div className="flex flex-col gap-1.5 pb-4">
-          <h3 className="font-medium text-primary">{selected.pack.title}</h3>
-          <p className="text-sm text-tertiary">{selected.pack.description}</p>
+          <h3 className="font-medium text-primary">{feedpackText(selected.pack, language).title}</h3>
+          <p className="text-sm text-tertiary">{feedpackText(selected.pack, language).description}</p>
           <p className="text-sm text-secondary">{t('feedpacks.sources', { count: selected.sources.categories.reduce((total, category) => total + category.feeds.length, 0) })}</p>
         </div>
 
@@ -104,10 +109,10 @@ export default function FeedpackBrowser({ isActive, selected, onSelect }: Feedpa
             <Button key={pack.slug} color="secondary" size="md" className="h-auto justify-start py-3 text-start" onPress={() => void showPack(pack)}>
               <span className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="flex min-w-0 items-baseline gap-2">
-                  <span className="min-w-0 truncate font-medium">{pack.title}</span>
+                  <span className="min-w-0 truncate font-medium">{feedpackText(pack, language).title}</span>
                   <span className="flex-none text-tertiary">{t('feedpacks.sources', { count: pack.sourceCount })}</span>
                 </span>
-                <span className="whitespace-normal break-words text-tertiary">{pack.description}</span>
+                <span className="whitespace-normal break-words text-tertiary">{feedpackText(pack, language).description}</span>
               </span>
             </Button>
           ))}

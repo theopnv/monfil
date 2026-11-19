@@ -1,0 +1,111 @@
+{
+  "section": {
+    "appearance": "Apparence",
+    "reading": "Lecture",
+    "refreshing": "Actualisation",
+    "data": "Vos données",
+    "privacy": "Confidentialité",
+    "diagnostics": "Diagnostic",
+    "about": "À propos"
+  },
+  "title": "Paramètres",
+  "about": {
+    "tagline": "Lecteur de flux RSS et plus encore.",
+    "link": {
+      "website": "Site web",
+      "documentation": "Documentation",
+      "changelog": "Journal des modifications",
+      "reportIssue": "Signaler un problème",
+      "buyCoffee": "Offrez-moi un café"
+    }
+  },
+  "appearance": {
+    "theme": "Thème",
+    "density": "Densité par défaut",
+    "densityHint": "Disposition des cartes du fil sur Accueil.",
+    "themes": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    },
+    "themeHints": {
+      "light": "Utilise toujours l'apparence claire.",
+      "dark": "Utilise toujours l'apparence sombre.",
+      "system": "Suit le réglage de votre système, et change automatiquement quand celui-ci change."
+    },
+    "densities": {
+      "cards": "Cartes",
+      "magazine": "Magazine",
+      "compact": "Compact"
+    },
+    "language": "Langue",
+    "languageHint": "La langue des menus, des boîtes de dialogue et des messages. Le texte des flux reste inchangé.",
+    "languageSystem": "Système ({{language}})",
+    "languageBeta": "{{language}} (bêta)",
+    "languageBetaHint": "Une machine a rédigé cette traduction, et aucun locuteur natif ne l'a encore vérifiée. Vous pouvez la corriger avec une pull request."
+  },
+  "reading": {
+    "markScroll": "Marquer comme lu en faisant défiler",
+    "markScrollHint": "Un élément est marqué comme lu lorsqu'il passe au-dessus du haut de la liste.",
+    "hideRead": "Masquer les éléments lus dans Accueil",
+    "hideReadHint": "Les éléments lus quittent le fil au lieu de rester estompés.",
+    "keyboard": "Navigation au clavier",
+    "keyboardHint": "j / k pour passer d'un élément à l'autre, Échap pour quitter le lecteur.",
+    "external": "Ouvrir les liens dans mon navigateur",
+    "externalHint": "Un clic sur un élément ouvre son lien source au lieu du lecteur intégré."
+  },
+  "refreshing": {
+    "interval": {
+      "m15": "15 min",
+      "m30": "30 min",
+      "h1": "1 h",
+      "h6": "6 h",
+      "manual": "Manuelle"
+    },
+    "refresh": "Actualiser les flux",
+    "refreshHint": "Fréquence à laquelle Monfil vérifie vos flux pour de nouveaux éléments.",
+    "onLaunch": "Actualiser au lancement",
+    "onLaunchHint": "Actualise aussi une fois immédiatement au démarrage de Monfil.",
+    "keep": "Conserver les articles pendant",
+    "keepHint": "Supprime les articles plus anciens après ce nombre de jours. Conserve au moins 10 articles par flux.",
+    "days_one": "{{count}} jour",
+    "days_many": "{{count}} jours",
+    "days_other": "{{count}} jours"
+  },
+  "data": {
+    "feeds": "Flux",
+    "articles": "Articles",
+    "size": "Taille de la base de données",
+    "backedUp": "Sauvegarde de la base de données enregistrée.",
+    "backupFailed": "La sauvegarde a échoué. {{message}}",
+    "backUp": "Sauvegarder la base de données…",
+    "reveal": "Afficher le fichier de base de données",
+    "importOpml": "Importer un OPML"
+  },
+  "privacy": {
+    "share": "Partager des statistiques d'utilisation anonymes",
+    "unavailable": "Cette version de Monfil ne collecte pas de statistiques d'utilisation.",
+    "shareHint": "Envoie un décompte quotidien des fonctions que vous utilisez. Aucun texte de flux, d'article ou de recherche ne quitte votre appareil. Désactivez l'option à tout moment pour arrêter l'envoi et supprimer les décomptes conservés sur cet appareil.",
+    "preview": "Voir ce qui est envoyé",
+    "notice": "Avis de confidentialité"
+  },
+  "diagnostics": {
+    "detailed": "Journalisation détaillée",
+    "detailedHint": "Enregistre les détails de débogage dans le fichier journal local. Les noms de flux, les liens complets, le texte des articles, les identifiants et les chemins de fichiers sont supprimés.",
+    "showLog": "Afficher le fichier journal"
+  },
+  "analyticsCard": {
+    "label": "Statistiques d'utilisation anonymes",
+    "later": "Me demander plus tard",
+    "title": "Aidez à améliorer Monfil",
+    "body": "Partagez des statistiques d'utilisation anonymes : un décompte quotidien des fonctions que vous utilisez. Aucun texte de flux, d'article ou de recherche ne quitte votre appareil. Vous pouvez modifier ce choix à tout moment dans les paramètres.",
+    "share": "Partager les statistiques",
+    "decline": "Non merci"
+  },
+  "analyticsPreview": {
+    "title": "Ce qui est envoyé",
+    "body": "Monfil envoie un résumé de ce type pour chaque jour où vous l'utilisez. Il contient des décomptes et des réglages. Il ne contient ni flux, ni article, ni texte de recherche, ni nom.",
+    "preview": "Aperçu des statistiques d'utilisation",
+    "loading": "Chargement…"
+  }
+}

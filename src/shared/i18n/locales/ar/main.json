@@ -1,0 +1,47 @@
+{
+  "menu": {
+    "feed": {
+      "refreshFeed": "تحديث الموجز",
+      "moveFeed": "نقل إلى مساحة عمل…",
+      "deleteFeed": "حذف الموجز"
+    },
+    "category": {
+      "rename": "إعادة تسمية",
+      "delete": "حذف"
+    },
+    "workspace": {
+      "edit": "تعديل مساحة العمل",
+      "export": "تصدير كملف OPML",
+      "delete": "حذف مساحة العمل"
+    }
+  },
+  "fatal": {
+    "title": "تعذّر على Monfil المتابعة",
+    "message": "واجه Monfil خطأ في النظام. المعرّف {{incident}}.",
+    "restart": "إعادة التشغيل",
+    "showLog": "عرض ملف السجل",
+    "quit": "إنهاء"
+  },
+  "dialog": {
+    "sqliteFilter": "قاعدة بيانات SQLite"
+  },
+  "source": {
+    "hackernews": {
+      "frontPage": "الصفحة الأولى",
+      "points100": "أكثر من 100 نقطة",
+      "points300": "أكثر من 300 نقطة",
+      "newest": "الأحدث",
+      "best": "الأفضل"
+    },
+    "releases": "الإصدارات",
+    "publicActivity": "النشاط العام"
+  },
+  "salary": {
+    "withInterval": "{{label}} / {{interval}}",
+    "interval": {
+      "hour": "ساعة",
+      "month": "شهر",
+      "year": "سنة"
+    }
+  }
+}

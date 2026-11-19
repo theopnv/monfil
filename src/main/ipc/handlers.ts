@@ -29,6 +29,7 @@ import {
   toRefreshInterval,
 } from "../app/settings";
 import { getAppInfo } from "../app/app-info";
+import { changeLanguage, readLanguageState } from '../app/language';
 import { getUpdateState } from "../updates/auto-updater";
 import { sendToRenderer } from "../lib/sendToRenderer";
 import { changeUsageAnalyticsConsent, dismissUsageAnalyticsPrompt, getUsageAnalyticsState } from '../analytics/consent';
@@ -84,7 +85,8 @@ import type {
   Workspace,
   WorkspaceSummary,
 } from "../../shared/contracts";
-import type { DailySummaryProps, UsageAnalyticsState } from '../../shared/contracts';
+import type { DailySummaryProps, LanguageState, UsageAnalyticsState } from '../../shared/contracts';
+import type { LanguageSetting } from '../../shared/i18n/languages';
 import type { Result } from "../../shared/result";
 import { dbReady, dbStatus } from '../db/database';
 import type { StartupHealth } from '../../shared/contracts';
@@ -279,6 +281,14 @@ export function handleSettingsGetWorkspaceRailExpanded(): Promise<boolean> {
 export async function handleSettingsSetWorkspaceRailExpanded(_event: IpcMainInvokeEvent, payload: boolean): Promise<boolean> {
   await setWorkspaceRailExpanded(payload);
   return payload;
+}
+
+export function handleSettingsGetLanguage(): Promise<LanguageState> {
+  return readLanguageState();
+}
+
+export function handleSettingsSetLanguage(_event: IpcMainInvokeEvent, payload: LanguageSetting): Promise<LanguageState> {
+  return changeLanguage(payload);
 }
 
 export function handleAppGetInfo(): Promise<AppInfo> {

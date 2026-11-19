@@ -1,0 +1,24 @@
+{
+  "action": {
+    "undo": "Desfazer",
+    "gotIt": "Entendi",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "tryAgain": "Tentar novamente",
+    "done": "Concluído",
+    "import": "Importar",
+    "close": "Fechar",
+    "back": "Voltar",
+    "showLog": "Mostrar arquivo de log",
+    "restart": "Reiniciar"
+  },
+  "item": {
+    "action": {
+      "save": "Salvar",
+      "removeFromSaved": "Remover dos Salvos"
+    }
+  },
+  "update": {
+    "ready": "Uma nova versão do Monfil está pronta."
+  }
+}

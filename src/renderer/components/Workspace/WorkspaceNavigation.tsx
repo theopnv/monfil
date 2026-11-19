@@ -28,7 +28,7 @@ export default function WorkspaceNavigation({ saved = false, hasFeeds = false }:
           {t(`navigation.${id}`)}
         </Link>
       ))}
-      <Hint triggerRef={savedLinkRef} isOpen={saveHint.isOpen} onDismiss={saveHint.dismiss} placement="right">
+      <Hint triggerRef={savedLinkRef} isOpen={saveHint.isOpen} onDismiss={saveHint.dismiss} placement="end">
         {t('navigation.saveHint')}
       </Hint>
     </nav>

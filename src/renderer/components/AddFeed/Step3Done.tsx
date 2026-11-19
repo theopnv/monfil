@@ -48,7 +48,7 @@ export default function Step3Done({ feed }: Step3DoneProps) {
               className={`flex items-center gap-2.75 px-3.75 py-2.75 text-sm ${index !== all.length - 1 ? "border-b border-secondary" : ""}`}
             >
               <span className="size-1.75 flex-none rounded-full bg-brand-solid" />
-              <span className="min-w-0 flex-1 truncate text-secondary">{item.title}</span>
+              <span dir="auto" className="min-w-0 flex-1 truncate text-secondary">{item.title}</span>
               <span className="flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt, locale)}</span>
             </div>
           ))}

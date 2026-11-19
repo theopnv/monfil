@@ -1,0 +1,39 @@
+{
+  "sourceLink": "{{source}} で読む",
+  "header": {
+    "home": "ホーム",
+    "saved": "保存済み",
+    "markUnread": "未読にする",
+    "previous": "前の記事",
+    "next": "次の記事"
+  },
+  "next": {
+    "unread": "次の未読",
+    "article": "次の記事"
+  },
+  "notFound": "この記事は見つかりませんでした。",
+  "backToSaved": "保存済みに戻る",
+  "backToHome": "ホームに戻る",
+  "loadingFull": "全文を読み込んでいます…",
+  "unavailable": "全文を読み込めませんでした。代わりに配信元で読んでください。",
+  "failed": "この項目を読み込めませんでした。代わりに配信元で読んでください。",
+  "announce": {
+    "read": "既読にしました",
+    "unread": "未読にしました"
+  },
+  "shortcuts": {
+    "next": "次",
+    "previous": "前",
+    "back": "ホームに戻る"
+  },
+  "embed": {
+    "defaultTitle": "{{name}} の埋め込み",
+    "consent": "この埋め込みを読み込むと {{name}} に接続します。提供元がCookieを使用する場合があります。",
+    "load": "{{name}} を読み込む",
+    "open": "{{name}} で開く",
+    "privacy": "提供元のプライバシーポリシー",
+    "openEmbedded": "埋め込みコンテンツを開く"
+  },
+  "saveFailed": "項目を保存できませんでした。もう一度お試しください。",
+  "unsaveFailed": "項目を保存済みから削除できませんでした。もう一度お試しください。"
+}

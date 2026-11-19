@@ -109,7 +109,7 @@ function Pill({ search, isActive, onToggle, onDelete, onRename }: { search: Save
           isActive ? "bg-brand-solid text-white" : "bg-secondary text-secondary ring-1 ring-secondary ring-inset hover:bg-secondary_hover",
         )}
       >
-        <span>{search.name}</span>
+        <span dir="auto">{search.name}</span>
         <span className={cx("text-xs tabular-nums", isActive ? "text-white" : "text-tertiary")}>{search.unreadCount}</span>
       </button>
       <button

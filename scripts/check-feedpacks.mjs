@@ -5,6 +5,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseOpml } from 'feedsmith';
+import { LANGUAGE_CODES } from '../src/shared/i18n/languages.ts';
 
 // The catalog is user-facing metadata, so its source count must stay aligned with the OPML file.
 const directory = 'feedpacks';
@@ -26,6 +27,20 @@ function xmlUrls(outlines) {
 for (const pack of index.packs) {
   if (!files.includes(pack.opml)) {
     throw new Error(`${pack.slug} references missing ${pack.opml}.`);
+  }
+  const translated = Object.keys(pack.i18n ?? {});
+  const wanted = LANGUAGE_CODES.filter((code) => code !== 'en');
+  for (const code of wanted.filter((candidate) => !translated.includes(candidate))) {
+    throw new Error(`${pack.slug} has no ${code} title and description in i18n.`);
+  }
+  for (const code of translated) {
+    const text = pack.i18n[code];
+    if (!wanted.includes(code)) {
+      throw new Error(`${pack.slug} has i18n text for ${code}, which Monfil does not offer.`);
+    }
+    if (typeof text?.title !== 'string' || !text.title.trim() || typeof text.description !== 'string' || !text.description.trim()) {
+      throw new Error(`${pack.slug} has an empty ${code} title or description.`);
+    }
   }
   const document = parseOpml(await readFile(join(directory, pack.opml), 'utf8'));
   const urls = xmlUrls(document.body?.outlines ?? []);

@@ -37,7 +37,12 @@
       "cards": "Cards",
       "magazine": "Magazine",
       "compact": "Compact"
-    }
+    },
+    "language": "Language",
+    "languageHint": "The language of menus, dialogs, and messages. Feed text stays as it is.",
+    "languageSystem": "System ({{language}})",
+    "languageBeta": "{{language}} (beta)",
+    "languageBetaHint": "A machine drafted this translation and no native speaker has checked it yet. You can fix it with a pull request."
   },
   "reading": {
     "markScroll": "Mark as read while scrolling",

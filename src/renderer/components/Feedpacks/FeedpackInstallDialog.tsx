@@ -11,8 +11,10 @@ import { Heading } from 'react-aria-components';
 import { Dialog, Modal, ModalOverlay } from '@/components/untitled-ui/application/modals/modal';
 import { Button } from '@/components/untitled-ui/base/buttons/button';
 import { WORKSPACE_COLORS, WORKSPACE_ICONS } from '@/lib/workspace-icons';
+import { useActiveLanguage } from '@/lib/i18n';
 import { useInstallFeedpack } from '@/providers/feedpacks-provider';
 import type { FeedpackInstallTarget, FeedpackPreview } from '../../../shared/contracts';
+import { feedpackText } from '../../../shared/i18n/feedpack-text';
 import FeedpackBrowser from './FeedpackBrowser';
 
 export interface FeedpackInstallDialogProps {
@@ -25,6 +27,7 @@ export interface FeedpackInstallDialogProps {
 
 export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceId, newWorkspaceDraft }: FeedpackInstallDialogProps) {
   const { t } = useTranslation(['workspace', 'common']);
+  const language = useActiveLanguage();
   const install = useInstallFeedpack();
   const navigate = useNavigate();
   const [selected, setSelected] = useState<FeedpackPreview | null>(null);
@@ -50,7 +53,7 @@ export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceI
     setIsInstalling(true);
     setError(null);
     const target: FeedpackInstallTarget = workspaceId === undefined
-      ? { kind: 'new-workspace', name: newWorkspaceDraft?.name.trim() || selected.pack.title, icon: newWorkspaceDraft?.icon ?? WORKSPACE_ICONS[0], color: newWorkspaceDraft?.color ?? WORKSPACE_COLORS[0] }
+      ? { kind: 'new-workspace', name: newWorkspaceDraft?.name.trim() || feedpackText(selected.pack, language).title, icon: newWorkspaceDraft?.icon ?? WORKSPACE_ICONS[0], color: newWorkspaceDraft?.color ?? WORKSPACE_COLORS[0] }
       : { kind: 'merge-workspace', workspaceId };
     const result = await install(selected.pack.slug, target);
     setIsInstalling(false);

@@ -1,0 +1,176 @@
+{
+  "feed": {
+    "dragToFolder": "In einen Ordner ziehen",
+    "state": {
+      "home": "Zusammen mit anderen angezeigt",
+      "only": "Nur angezeigt",
+      "hidden": "Ausgeblendet"
+    },
+    "rowTitle_focus": "{{title}} — {{state}}. Klicken zum Fokussieren.",
+    "rowTitle_unfocus": "{{title}} — {{state}}. Klicken zum Aufheben des Fokus.",
+    "rowLabel_focus": "{{title}}, {{state}}. Klicken zum Fokussieren.",
+    "rowLabel_unfocus": "{{title}}, {{state}}. Klicken zum Aufheben des Fokus.",
+    "refreshFailedLabel": "Aktualisierung von {{title}} fehlgeschlagen: {{error}}",
+    "refreshFailedTitle": "Die letzte Aktualisierung ist fehlgeschlagen: {{error}}",
+    "visibility_hide": "{{title}} ausblenden",
+    "visibility_show": "{{title}} anzeigen"
+  },
+  "folder": {
+    "focus_focus": "{{name}} fokussieren",
+    "focus_unfocus": "Fokus von {{name}} aufheben",
+    "visibility_hide": "{{name}} ausblenden",
+    "visibility_show": "{{name}} anzeigen"
+  },
+  "source": {
+    "conference": "KONF",
+    "job": "JOB"
+  },
+  "card": {
+    "label_read": "{{title}}, gelesen, von {{feed}}, {{time}}.",
+    "label_unread": "{{title}}, ungelesen, von {{feed}}, {{time}}."
+  },
+  "search": {
+    "syntax": {
+      "all": "Jedes Wort muss passen",
+      "phrase": "Eine genaue Wortgruppe. Findet auch Treffer in längeren Wörtern.",
+      "either": "Eines der Wörter (OR in Großbuchstaben)",
+      "exclude": "Ein Wort oder eine Wortgruppe ausschließen",
+      "title": "Nur im Titel suchen",
+      "short": "Ein Wort mit höchstens 3 Buchstaben findet nur ganze Wörter"
+    },
+    "clear": "Suche löschen",
+    "syntaxRegion": "Suchsyntax",
+    "closeHint": "Drücken Sie die Eingabetaste, um die Suche zu schließen und den Filter zu behalten."
+  },
+  "pills": {
+    "rename": "Gespeicherte Suche {{name}} umbenennen",
+    "label": "{{name}}, {{count}} ungelesen",
+    "renameHint": "Rechtsklick oder F2 zum Umbenennen",
+    "delete": "Gespeicherte Suche {{name}} löschen",
+    "hint": "Speichern Sie für jede gewünschte Rolle eine Suche, z. B. <code>{{example}}</code>",
+    "dismissHint": "Hinweis zu gespeicherten Suchen ausblenden",
+    "toolbar": "Gespeicherte Suchen",
+    "all": "Alle gespeicherten Suchen",
+    "menu": "Gespeicherte Suchen",
+    "announce": {
+      "cleared": "Gespeicherte Suche {{name}} aufgehoben.",
+      "showing": "Gespeicherte Suche {{name}} wird angezeigt.",
+      "created": "Gespeicherte Suche {{name}} angelegt.",
+      "updated": "Gespeicherte Suche {{name}} aktualisiert.",
+      "renamed": "Gespeicherte Suche umbenannt in {{name}}.",
+      "deleted": "Gespeicherte Suche {{name}} gelöscht. Rückgängig ist möglich.",
+      "restored": "Gespeicherte Suche {{name}} wiederhergestellt.",
+      "deletedToast": "„{{name}}“ gelöscht"
+    }
+  },
+  "saveControl": {
+    "dialog": "Suche benennen",
+    "nameField": "Name der gespeicherten Suche",
+    "update": "Aktualisieren",
+    "saveAsNew": "Als neue speichern",
+    "saveSearch": "Suche speichern"
+  },
+  "strip": {
+    "focused_one": "{{focused}} von {{count}} Feed wird angezeigt",
+    "focused_other": "{{focused}} von {{count}} Feeds werden angezeigt",
+    "hidden_one": "{{count}} ausgeblendeter Feed",
+    "hidden_other": "{{count}} ausgeblendete Feeds",
+    "showAllLabel": "Alle Feeds anzeigen",
+    "showAll": "Alle anzeigen",
+    "showAnnounce": "Alle Feeds werden angezeigt.",
+    "showHiddenLabel": "Ausgeblendete Feeds anzeigen",
+    "showHidden": "Anzeigen",
+    "hiddenAnnounce": "Ausgeblendete Feeds werden wieder angezeigt."
+  },
+  "empty": {
+    "homeTitle": "Wählen Sie Ihre Quellen",
+    "homeBody": "Fügen Sie einen Blog, einen Newsletter oder etwas mit einem Feed hinzu. Monfil übernimmt, was veröffentlicht wird, und entscheidet nie, was Sie sehen.",
+    "addFirst": "Ersten Feed hinzufügen",
+    "otherTitle": "Noch nichts hier",
+    "otherBody": "Dieser Arbeitsbereich hat noch keine Quellen. Importieren Sie eine OPML-Datei, um ihn auf einmal zu füllen.",
+    "importOpml": "OPML importieren",
+    "importFeedpack": "Feedpack importieren"
+  },
+  "job": {
+    "remote": "Remote",
+    "hybrid": "Hybrid",
+    "onSite": "Vor Ort",
+    "salaryNotShown": "Gehalt nicht angegeben"
+  },
+  "header": {
+    "itemsToShow": "Anzuzeigende Einträge",
+    "all": "Alle",
+    "unread": "Ungelesen",
+    "home": "Start",
+    "saved": "Gespeichert",
+    "searchSaved": "Gespeicherte Einträge durchsuchen",
+    "search": "Suchen",
+    "refreshNew": "Aktualisieren, neue Artikel verfügbar",
+    "refresh": "Aktualisieren",
+    "refreshFeeds": "Feeds aktualisieren",
+    "refreshFailed": "Feeds konnten nicht aktualisiert werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "announceNew": "Neue Artikel verfügbar.",
+    "announceRefreshed": "Feeds aktualisiert."
+  },
+  "results": {
+    "none": "Keine Ergebnisse für „{{query}}“",
+    "count_one": "{{count}} Ergebnis für „{{query}}“",
+    "count_other": "{{count}} Ergebnisse für „{{query}}“"
+  },
+  "saved": {
+    "loading": "Gespeicherte Einträge werden geladen…",
+    "loadFailed": "Gespeicherte Einträge konnten nicht geladen werden.",
+    "empty": "Speichern Sie Einträge aus Ihren Feeds, um sie hier zu finden."
+  },
+  "feedpackFetching": "Quellen für dieses Feedpack werden abgerufen…",
+  "deleteFeed": {
+    "thisWorkspace": "diesem Arbeitsbereich",
+    "confirmRemove": "Aus {{workspace}} entfernen",
+    "confirmDelete": "Feed löschen",
+    "titleRemove": "Feed entfernen",
+    "titleDelete": "Feed löschen",
+    "removeBody_one": "Dies entfernt <bold>{{title}}</bold> aus {{workspace}}. Der Feed bleibt mit seinem Eintrag in {{count}} anderem Arbeitsbereich erhalten.",
+    "removeBody_other": "Dies entfernt <bold>{{title}}</bold> aus {{workspace}}. Der Feed bleibt mit seinen Einträgen in {{count}} anderen Arbeitsbereichen erhalten.",
+    "deleteBody_one": "Dies entfernt <bold>{{title}}</bold> und seinen <bold>{{count}} Eintrag</bold>. Gespeicherte Einträge bleiben verfügbar. Das lässt sich nicht rückgängig machen.",
+    "deleteBody_other": "Dies entfernt <bold>{{title}}</bold> und seine <bold>{{count}} Einträge</bold>. Gespeicherte Einträge bleiben verfügbar. Das lässt sich nicht rückgängig machen."
+  },
+  "deleteCategory": {
+    "keepFeeds": "Feeds behalten und stattdessen in einen anderen Ordner verschieben",
+    "moveTo": "Feeds verschieben nach",
+    "title": "Ordner löschen",
+    "confirm": "Ordner löschen",
+    "body": "Dies entfernt den Ordner <bold>{{name}}</bold>.",
+    "feeds_move_one": "Sein <bold>{{count}} Feed</bold> wird in den unten gewählten Ordner verschoben.",
+    "feeds_move_other": "Seine <bold>{{count}} Feeds</bold> werden in den unten gewählten Ordner verschoben.",
+    "feeds_delete_one": "Sein <bold>{{count}} Feed</bold> wird mit ihm gelöscht.",
+    "feeds_delete_other": "Seine <bold>{{count}} Feeds</bold> werden mit ihm gelöscht."
+  },
+  "moveFeed": {
+    "title": "Feed verschieben",
+    "body": "<bold>{{title}}</bold> in einen anderen Arbeitsbereich verschieben.",
+    "workspace": "Arbeitsbereich",
+    "folder": "Ordner",
+    "newFolder": "Neuer Ordner…",
+    "newFolderName": "Name des neuen Ordners",
+    "confirm": "Feed verschieben"
+  },
+  "caughtUp": "Sie sind auf dem neuesten Stand",
+  "sidebar": {
+    "feeds": "Feeds",
+    "newFolder": "Neuer Ordner",
+    "addFeed": "Feed hinzufügen",
+    "addFeedpack": "Feedpack hinzufügen",
+    "folderName": "Ordnername",
+    "newFolderName": "Name des neuen Ordners",
+    "drag": "Ziehen",
+    "renameFolder": "{{name}} umbenennen",
+    "addFeedHint": "Fügen Sie hier einen Feed hinzu. Zum Löschen eines Feeds klicken Sie mit der rechten Maustaste darauf.",
+    "filterHint": "Klicken Sie auf einen Feed, um nur seine Artikel anzuzeigen. Klicken Sie auf das Auge, um einen Feed auszublenden."
+  },
+  "refresh": {
+    "failed_one": "{{count}} Feed konnte nicht aktualisiert werden.",
+    "failed_other": "{{count}} Feeds konnten nicht aktualisiert werden.",
+    "more": "und {{count}} weitere"
+  },
+  "readTime": "{{count, number}} Min. Lesezeit"
+}

@@ -26,13 +26,13 @@ export default function NextArticleCard({ item, kind, onClick }: NextArticleCard
     >
       <div className="min-w-0 flex-1">
         <div className="mb-1.75 text-xs font-bold tracking-wide text-tertiary uppercase">{t(`next.${kind}`)}</div>
-        <div className="mb-1.25 text-lg leading-tight font-bold text-pretty text-primary">{item.title}</div>
+        <div dir="auto" className="mb-1.25 text-lg leading-tight font-bold text-pretty text-primary">{item.title}</div>
         <div className="text-sm text-tertiary">
-          {item.feedTitle} · {estimateReadTime(item.excerpt, tRiver)} · {formatRelativeTime(item.publishedAt, locale)}
+          <bdi>{item.feedTitle}</bdi> · {estimateReadTime(item.excerpt, tRiver)} · {formatRelativeTime(item.publishedAt, locale)}
         </div>
       </div>
       <span className="flex size-10 flex-none items-center justify-center rounded-full bg-brand-secondary text-brand-tertiary">
-        <ArrowRight className="size-4.5" />
+        <ArrowRight className="size-4.5 rtl:-scale-x-100" />
       </span>
     </button>
   );

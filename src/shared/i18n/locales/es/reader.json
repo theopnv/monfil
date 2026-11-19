@@ -1,0 +1,39 @@
+{
+  "sourceLink": "Leer en {{source}}",
+  "header": {
+    "home": "Inicio",
+    "saved": "Guardados",
+    "markUnread": "Marcar como no leído",
+    "previous": "Artículo anterior",
+    "next": "Artículo siguiente"
+  },
+  "next": {
+    "unread": "Siguiente no leído",
+    "article": "Artículo siguiente"
+  },
+  "notFound": "No se encontró este artículo.",
+  "backToSaved": "Volver a Guardados",
+  "backToHome": "Volver a Inicio",
+  "loadingFull": "Cargando el artículo completo…",
+  "unavailable": "No se pudo cargar el artículo completo. Leerlo en el sitio de origen.",
+  "failed": "No se pudo cargar este elemento. Leerlo en el sitio de origen.",
+  "announce": {
+    "read": "Marcado como leído",
+    "unread": "Marcado como no leído"
+  },
+  "shortcuts": {
+    "next": "siguiente",
+    "previous": "anterior",
+    "back": "volver a Inicio"
+  },
+  "embed": {
+    "defaultTitle": "Contenido incrustado de {{name}}",
+    "consent": "Al cargar este contenido incrustado se conecta con {{name}}. El proveedor puede usar cookies.",
+    "load": "Cargar {{name}}",
+    "open": "Abrir en {{name}}",
+    "privacy": "Política de privacidad del proveedor",
+    "openEmbedded": "Abrir contenido incrustado"
+  },
+  "saveFailed": "No se pudo guardar el elemento. Se puede volver a intentar.",
+  "unsaveFailed": "No se pudo quitar el elemento de Guardados. Se puede volver a intentar."
+}

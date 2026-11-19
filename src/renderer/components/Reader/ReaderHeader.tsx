@@ -8,6 +8,7 @@ import SaveButton from "@/components/common/SaveButton";
 import FeedAvatar from "@/components/common/FeedAvatar";
 import ArticleSourceLink from "@/components/Reader/ArticleSourceLink";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
+import { mirrored } from "@/components/common/mirrored-icon";
 import { Tooltip } from "@/components/untitled-ui/base/tooltip/tooltip";
 import type { RiverRow } from "../../../shared/contracts";
 
@@ -22,17 +23,19 @@ export interface ReaderHeaderProps {
   savedView?: boolean;
 }
 
+const BackArrow = mirrored(ArrowLeft);
+
 export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPrevious, onNext, hasPrevious, hasNext, savedView }: ReaderHeaderProps) {
   const { t } = useTranslation('reader');
   return (
     <header className="flex flex-none items-center gap-3 border-b border-secondary px-6.5 py-3.5">
-      <Button color="secondary" size="sm" iconLeading={ArrowLeft} className="flex-none rounded-full" onPress={onNavigateHome}>
+      <Button color="secondary" size="sm" iconLeading={BackArrow} className="flex-none rounded-full" onPress={onNavigateHome}>
         {savedView ? t('header.saved') : t('header.home')}
       </Button>
 
       <div className="flex min-w-0 items-center gap-2">
         <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="sm" />
-        <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-primary">{item.feedTitle}</span>
+        <span dir="auto" className="overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-primary">{item.feedTitle}</span>
         {item.categoryName && <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-tertiary">{item.categoryName}</span>}
       </div>
 

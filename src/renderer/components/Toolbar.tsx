@@ -55,7 +55,7 @@ function WorkspaceButton({ workspace, isActive, shortcut }: WorkspaceButtonProps
   const title = shortcut ? <>{workspace.name} <kbd className="ms-1 font-sans font-normal opacity-70">{shortcut}</kbd></> : workspace.name;
 
   return (
-    <Tooltip title={title} placement="right" delay={200}>
+    <Tooltip title={title} placement="end" delay={200}>
       <Link
         href={`/workspace/${workspace.id}`}
         aria-label={workspace.name}
@@ -90,7 +90,7 @@ function ExpandedWorkspaceButton({ workspace, isActive, shortcut }: WorkspaceBut
       >
         <Icon aria-hidden className="size-4.5 stroke-[2.25px]" />
       </span>
-      <span title={workspace.name} className={cx("min-w-0 flex-1 truncate text-sm text-primary", isActive ? "font-semibold" : "font-medium")}>{workspace.name}</span>
+      <span dir="auto" title={workspace.name} className={cx("min-w-0 flex-1 truncate text-sm text-primary", isActive ? "font-semibold" : "font-medium")}>{workspace.name}</span>
       {shortcut && <kbd className="me-2.5 flex-none font-sans text-xs text-tertiary">{shortcut}</kbd>}
     </Link>
   );
@@ -230,7 +230,7 @@ function RailToggle({ expanded, onToggle }: { expanded: boolean; onToggle: () =>
   }
 
   return (
-    <Tooltip title={<>{label} <kbd className="ms-1 font-sans font-normal opacity-70">{MOD_KEY_LABEL}B</kbd></>} placement="right" delay={200}>
+    <Tooltip title={<>{label} <kbd className="ms-1 font-sans font-normal opacity-70">{MOD_KEY_LABEL}B</kbd></>} placement="end" delay={200}>
       <Button aria-label={label} aria-expanded={false} size="md" color="tertiary" className="rounded-xl" iconLeading={<LayoutLeft />} onPress={onToggle} />
     </Tooltip>
   );
@@ -329,13 +329,13 @@ export default function Toolbar() {
           {railExpanded ? t('rail.new') : undefined}
         </Button>
       </div>
-      <Hint triggerRef={newWorkspaceAnchorRef} isOpen={workspaceHint.isOpen} onDismiss={workspaceHint.dismiss} placement="right">
+      <Hint triggerRef={newWorkspaceAnchorRef} isOpen={workspaceHint.isOpen} onDismiss={workspaceHint.dismiss} placement="end">
         {t('rail.newHint')}
       </Hint>
 
       <div className="mt-auto" />
 
-      <Tooltip title={t('rail.settings')} placement="right" delay={200} isDisabled={railExpanded}>
+      <Tooltip title={t('rail.settings')} placement="end" delay={200} isDisabled={railExpanded}>
         <Button
           href="/settings"
           aria-label={t('rail.settings')}

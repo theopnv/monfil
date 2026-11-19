@@ -5,7 +5,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { app } from 'electron';
-import type { CatalogError, Feedpack, FeedpackCatalog, FetchUrlError } from '../../shared/contracts';
+import type { CatalogError, Feedpack, FeedpackCatalog, FeedpackText, FetchUrlError } from '../../shared/contracts';
 import { fetchText } from '../lib/fetch';
 import type { Result } from '../../shared/result';
 
@@ -22,6 +22,15 @@ export interface CatalogDependencies {
   preferBundled?: boolean;
 }
 
+function isFeedpackText(value: unknown): value is FeedpackText {
+  const text = value as Record<string, unknown> | null;
+  return typeof text === 'object' && text !== null && typeof text['title'] === 'string' && typeof text['description'] === 'string';
+}
+
+function isFeedpackTranslations(value: unknown): value is NonNullable<Feedpack['i18n']> {
+  return value === undefined || (typeof value === 'object' && value !== null && Object.values(value).every(isFeedpackText));
+}
+
 function isFeedpack(value: unknown): value is Feedpack {
   // Stryker disable next-line ConditionalExpression: a primitive has no own fields, so the field checks below reject it anyway
   if (typeof value !== 'object' || value === null) {
@@ -31,6 +40,7 @@ function isFeedpack(value: unknown): value is Feedpack {
   return typeof pack['slug'] === 'string'
     && typeof pack['title'] === 'string'
     && typeof pack['description'] === 'string'
+    && isFeedpackTranslations(pack['i18n'])
     && Array.isArray(pack['tags'])
     && pack['tags'].every((tag) => typeof tag === 'string')
     && typeof pack['curator'] === 'string'

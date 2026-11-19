@@ -91,6 +91,10 @@ vi.mock(import('./app/settings'), () => ({
   getDetailedLogging: vi.fn().mockResolvedValue(false),
 }));
 
+vi.mock(import('./app/language'), () => ({
+  initializeLanguage: vi.fn().mockResolvedValue({ setting: 'system', language: 'en', systemLanguage: 'en' }),
+}));
+
 vi.mock(import('./logging/logger'), () => ({
   configureLogging: vi.fn(),
   logger: {
@@ -146,6 +150,8 @@ describe('main', () => {
     await import('./main');
     const ready = mockOn.mock.calls.find(([event]) => event === 'ready')?.[1] as () => void;
     ready();
+    // The window opens once the stored language is in.
+    await vi.waitFor(() => expect(BrowserWindow).toHaveBeenCalled());
     return vi.mocked(BrowserWindow).mock.results[0]?.value as Electron.BrowserWindow;
   }
 
@@ -177,12 +183,9 @@ describe('main', () => {
   test('loads the preload bundle with the extension emitted by Forge 8', async () => {
     // Arrange
     const { BrowserWindow } = await import('electron');
-    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
-    await import('./main');
-    const ready = mockOn.mock.calls.find(([event]) => event === 'ready')?.[1] as () => void;
 
     // Act
-    ready();
+    await launchAndGetWindow();
 
     // Assert
     expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
@@ -223,11 +226,7 @@ describe('main', () => {
   test.each([false, true])('focuses the existing window on a second launch (minimized: %s)', async (minimized) => {
     // Arrange
     const { BrowserWindow } = await import('electron');
-    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
-    await import('./main');
-    const ready = mockOn.mock.calls.find(([event]) => event === 'ready')?.[1] as () => void;
-    ready();
-    const window = vi.mocked(BrowserWindow).mock.results[0]?.value as Electron.BrowserWindow;
+    const window = await launchAndGetWindow();
     vi.mocked(window.isMinimized).mockReturnValue(minimized);
     mockGetAllWindows.mockReturnValue([window]);
     const handler = mockOn.mock.calls.find(([event]) => event === 'second-instance')?.[1] as () => void;
@@ -250,10 +249,7 @@ describe('main', () => {
   test('creates a window on a second launch when all windows were closed', async () => {
     // Arrange
     const { BrowserWindow } = await import('electron');
-    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
-    await import('./main');
-    const ready = mockOn.mock.calls.find(([event]) => event === 'ready')?.[1] as () => void;
-    ready();
+    await launchAndGetWindow();
     const handler = mockOn.mock.calls.find(([event]) => event === 'second-instance')?.[1] as () => void;
 
     // Act
@@ -378,9 +374,29 @@ describe('main', () => {
 
     // Assert
     expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
-      webPreferences: expect.objectContaining({ additionalArguments: ['--system-locale=fr-CA'] }),
+      webPreferences: expect.objectContaining({ additionalArguments: ['--system-locale=fr-CA', '--language=en'] }),
     }));
     expect(mainFormatLocale()).toBe('fr-CA');
+  });
+
+  test('applies the stored language before it opens the window, and hands it to the preload script', async () => {
+    // Arrange
+    const { BrowserWindow } = await import('electron');
+    const { initializeLanguage } = await import('./app/language');
+    const { setMainLanguage } = await import('./lib/i18n');
+    vi.mocked(initializeLanguage).mockImplementationOnce(async () => {
+      await setMainLanguage('ar');
+      return { setting: 'ar', language: 'ar', systemLanguage: 'en' };
+    });
+
+    // Act
+    await launchAndGetWindow();
+
+    // Assert
+    expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
+      webPreferences: expect.objectContaining({ additionalArguments: ['--system-locale=fr-CA', '--language=ar'] }),
+    }));
+    expect(vi.mocked(initializeLanguage).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(BrowserWindow).mock.invocationCallOrder[0] ?? 0);
   });
 
   test('keeps the renderer isolated from Node and hardens its web contents', async () => {

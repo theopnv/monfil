@@ -8,6 +8,7 @@ import {
   DEFAULT_DETAILED_LOGGING, DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, DEFAULT_RETENTION_DAYS, getDetailedLogging, getRefreshInterval, getRefreshOnLaunch, getRetentionDays,
   setDetailedLogging, setRefreshInterval, setRefreshOnLaunch, setRetentionDays, toRefreshInterval, toRefreshOnLaunch, toRetentionDays,
   DEFAULT_WORKSPACE_RAIL_EXPANDED, getWorkspaceRailExpanded, setWorkspaceRailExpanded,
+  DEFAULT_LANGUAGE_SETTING, getLanguageSetting, setLanguageSetting, toLanguageSetting,
   getUsageAnalyticsConsent, getUsageAnalyticsPromptHistory, recordAppLaunch, recordUsageAnalyticsPromptDismissed, setUsageAnalyticsConsent, toUsageAnalyticsConsent,
 } from './settings';
 
@@ -417,5 +418,57 @@ describe('setWorkspaceRailExpanded', () => {
 
     // Assert
     expect(await db.selectFrom('setting').selectAll().execute()).toEqual([{ key: 'workspaceRailExpanded', value: 'false' }]);
+  });
+});
+
+describe('toLanguageSetting', () => {
+  test.each(['system', 'en', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'])('keeps the supported choice %j', (value) => {
+    // Act & Assert
+    expect(toLanguageSetting(value)).toBe(value);
+  });
+
+  test.each([['pt-BR'], ['zh-Hans'], ['EN'], [''], [null], [undefined], [1], [['fr']]])('gives the default for the value %j that is not a choice', (value) => {
+    // Act & Assert
+    expect(toLanguageSetting(value)).toBe(DEFAULT_LANGUAGE_SETTING);
+  });
+
+  test('follows the system by default', () => {
+    // Act & Assert
+    expect(DEFAULT_LANGUAGE_SETTING).toBe('system');
+  });
+});
+
+describe('getLanguageSetting and setLanguageSetting', () => {
+  test('gives the default when nothing is stored', async () => {
+    // Act & Assert
+    expect(await getLanguageSetting()).toBe('system');
+  });
+
+  test('stores a choice and reads it back', async () => {
+    // Act
+    await setLanguageSetting('ja');
+
+    // Assert
+    expect(await getLanguageSetting()).toBe('ja');
+  });
+
+  test('replaces the earlier choice instead of adding a row', async () => {
+    // Arrange
+    await setLanguageSetting('ja');
+
+    // Act
+    await setLanguageSetting('system');
+
+    // Assert
+    expect(await getLanguageSetting()).toBe('system');
+    expect(await db.selectFrom('setting').select('key').where('key', '=', 'language').execute()).toHaveLength(1);
+  });
+
+  test('ignores a stored value that is not a language, such as a hand-edited row', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'language', value: 'klingon' }).execute();
+
+    // Act & Assert
+    expect(await getLanguageSetting()).toBe('system');
   });
 });

@@ -1,0 +1,111 @@
+{
+  "section": {
+    "appearance": "Aspetto",
+    "reading": "Lettura",
+    "refreshing": "Aggiornamento",
+    "data": "I tuoi dati",
+    "privacy": "Privacy",
+    "diagnostics": "Diagnostica",
+    "about": "Info"
+  },
+  "title": "Impostazioni",
+  "about": {
+    "tagline": "Lettore di feed RSS e non solo.",
+    "link": {
+      "website": "Sito web",
+      "documentation": "Documentazione",
+      "changelog": "Registro delle modifiche",
+      "reportIssue": "Segnala un problema",
+      "buyCoffee": "Offrimi un caffè"
+    }
+  },
+  "appearance": {
+    "theme": "Tema",
+    "density": "Densità predefinita",
+    "densityHint": "Come sono disposte le schede del flusso su Home.",
+    "themes": {
+      "light": "Chiaro",
+      "dark": "Scuro",
+      "system": "Sistema"
+    },
+    "themeHints": {
+      "light": "Usa sempre l'aspetto chiaro.",
+      "dark": "Usa sempre l'aspetto scuro.",
+      "system": "Segue l'impostazione del sistema e cambia automaticamente quando questa cambia."
+    },
+    "densities": {
+      "cards": "Schede",
+      "magazine": "Rivista",
+      "compact": "Compatta"
+    },
+    "language": "Lingua",
+    "languageHint": "La lingua di menu, finestre di dialogo e messaggi. Il testo dei feed resta com'è.",
+    "languageSystem": "Sistema ({{language}})",
+    "languageBeta": "{{language}} (beta)",
+    "languageBetaHint": "Una macchina ha tradotto questo testo e nessun madrelingua lo ha ancora verificato. Puoi correggerlo con una pull request."
+  },
+  "reading": {
+    "markScroll": "Segna come letto scorrendo",
+    "markScrollHint": "Un elemento viene segnato come letto quando scorre sopra la parte alta dell'elenco.",
+    "hideRead": "Nascondi gli elementi letti in Home",
+    "hideReadHint": "Gli elementi letti escono dal flusso invece di restare attenuati.",
+    "keyboard": "Navigazione da tastiera",
+    "keyboardHint": "j / k per spostarsi tra gli elementi, Esc per uscire dal lettore.",
+    "external": "Apri i link nel browser",
+    "externalHint": "Facendo clic su un elemento si apre il suo link alla fonte invece del lettore integrato."
+  },
+  "refreshing": {
+    "interval": {
+      "m15": "15 min",
+      "m30": "30 min",
+      "h1": "1 h",
+      "h6": "6 h",
+      "manual": "Manuale"
+    },
+    "refresh": "Aggiorna feed",
+    "refreshHint": "Ogni quanto Monfil controlla i feed per nuovi elementi.",
+    "onLaunch": "Aggiorna all'avvio",
+    "onLaunchHint": "Aggiorna anche una volta subito all'avvio di Monfil.",
+    "keep": "Conserva gli articoli per",
+    "keepHint": "Rimuovi gli articoli più vecchi dopo questo numero di giorni. Conserva almeno 10 articoli per feed.",
+    "days_one": "{{count}} giorno",
+    "days_many": "{{count}} giorni",
+    "days_other": "{{count}} giorni"
+  },
+  "data": {
+    "feeds": "Feed",
+    "articles": "Articoli",
+    "size": "Dimensione del database",
+    "backedUp": "Backup del database salvato.",
+    "backupFailed": "Backup non riuscito. {{message}}",
+    "backUp": "Esegui backup del database…",
+    "reveal": "Mostra file del database",
+    "importOpml": "Importa OPML"
+  },
+  "privacy": {
+    "share": "Condividi statistiche anonime sull'uso",
+    "unavailable": "Questa versione di Monfil non raccoglie statistiche sull'uso.",
+    "shareHint": "Invia un conteggio giornaliero delle funzioni che usi. Nessun testo di feed, articolo o ricerca lascia il tuo dispositivo. Puoi disattivarlo in qualsiasi momento per smettere di inviare e per eliminare i conteggi conservati su questo dispositivo.",
+    "preview": "Vedi cosa viene inviato",
+    "notice": "Informativa sulla privacy"
+  },
+  "diagnostics": {
+    "detailed": "Registrazione dettagliata",
+    "detailedHint": "Registra i dettagli di debug nel file di log locale. Nomi dei feed, link completi, testo degli articoli, credenziali e percorsi dei file vengono rimossi.",
+    "showLog": "Mostra file di log"
+  },
+  "analyticsCard": {
+    "label": "Statistiche anonime sull'uso",
+    "later": "Chiedimelo più tardi",
+    "title": "Aiuta a migliorare Monfil",
+    "body": "Condividi statistiche anonime sull'uso: un conteggio giornaliero delle funzioni che usi. Nessun testo di feed, articolo o ricerca lascia il tuo dispositivo. Puoi cambiarlo in Impostazioni in qualsiasi momento.",
+    "share": "Condividi statistiche",
+    "decline": "No, grazie"
+  },
+  "analyticsPreview": {
+    "title": "Cosa viene inviato",
+    "body": "Monfil invia un riepilogo come questo per ogni giorno in cui lo usi. Contiene conteggi e impostazioni. Non contiene testo di feed, articoli, ricerche o nomi.",
+    "preview": "Anteprima delle statistiche sull'uso",
+    "loading": "Caricamento…"
+  }
+}

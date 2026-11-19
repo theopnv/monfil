@@ -23,6 +23,7 @@ import { installFeedpack, previewFeedpack } from '../feedpacks/install';
 import { changeUsageAnalyticsConsent, dismissUsageAnalyticsPrompt, getUsageAnalyticsState } from '../analytics/consent';
 import { previewSummary } from '../analytics/report';
 import { getAppInfo } from '../app/app-info';
+import { changeLanguage, readLanguageState } from '../app/language';
 import { logger } from '../logging/logger';
 import { incrementCounter } from '../analytics/counters';
 import { registerIpcHandlers } from './registerIpcHandlers';
@@ -65,6 +66,7 @@ vi.mock(import('../opml/export'), () => ({ exportWorkspaceOpml: vi.fn() }));
 vi.mock(import('../feedpacks/catalog'), () => ({ getFeedpackCatalog: vi.fn() }));
 vi.mock(import('../feedpacks/install'), () => ({ installFeedpack: vi.fn(), previewFeedpack: vi.fn() }));
 vi.mock(import('../app/app-info'), () => ({ getAppInfo: vi.fn() }));
+vi.mock(import('../app/language'), () => ({ changeLanguage: vi.fn(), readLanguageState: vi.fn() }));
 vi.mock(import('../analytics/counters'), () => ({ incrementCounter: vi.fn() }));
 vi.mock(import('../analytics/consent'), () => ({ changeUsageAnalyticsConsent: vi.fn(), dismissUsageAnalyticsPrompt: vi.fn(), getUsageAnalyticsState: vi.fn() }));
 vi.mock(import('../analytics/report'), () => ({ previewSummary: vi.fn() }));
@@ -132,6 +134,8 @@ const fixtures: { [C in TwoWayRendererMainChannels]: Fixture<C> } = {
   'settings:set-workspace-rail-expanded': { arg: true, response: true, handler: handlers.handleSettingsSetWorkspaceRailExpanded },
   'settings:get-retention-days': { arg: undefined, response: 30, handler: handlers.handleSettingsGetRetentionDays },
   'settings:set-retention-days': { arg: 30, response: 30, handler: handlers.handleSettingsSetRetentionDays },
+  'settings:get-language': { arg: undefined, response: { setting: 'system', language: 'en', systemLanguage: 'en' }, handler: handlers.handleSettingsGetLanguage },
+  'settings:set-language': { arg: 'fr', response: { setting: 'fr', language: 'fr', systemLanguage: 'en' }, handler: handlers.handleSettingsSetLanguage },
   'app:back-up-database': { arg: undefined, response: { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } }, handler: handlers.handleAppBackUpDatabase },
   'app:get-info': { arg: undefined, response: { version: '1', feedCount: 1, itemCount: 0, databaseSizeBytes: 0 }, handler: handlers.handleAppGetInfo },
   'app:hints-enabled': { arg: undefined, response: true, handler: handlers.handleAppHintsEnabled },
@@ -206,6 +210,8 @@ beforeEach(() => {
   vi.mocked(dismissUsageAnalyticsPrompt).mockResolvedValue(usageState);
   vi.mocked(previewSummary).mockResolvedValue(summary);
   vi.mocked(getAppInfo).mockResolvedValue(fixtures['app:get-info'].response);
+  vi.mocked(readLanguageState).mockResolvedValue(fixtures['settings:get-language'].response);
+  vi.mocked(changeLanguage).mockResolvedValue(fixtures['settings:set-language'].response);
   vi.mocked(dialog.showSaveDialog).mockResolvedValue({ canceled: true, filePath: '' });
   registerIpcHandlers();
 });

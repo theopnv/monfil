@@ -42,7 +42,7 @@ If you agree, Monfil counts on your device what you do. Once a day it sends one 
 - Counts for the day: articles opened, full-text extractions, feeds added, feeds removed, manual refreshes, items saved, feedpacks installed, OPML files imported, OPML files exported, backups made, workspaces created, workspaces switched, searches, and embeds loaded.
 - Counts of failures for the day: feed refresh failures, article extraction failures, internal request failures, and interface failures. These are numbers only. They carry no error text.
 - The state of your library: a size range for your feeds (`0`, `1-5`, `6-20`, `21-100`, or `100+`), the number of workspaces, the number of folders, and the types of feed you use, such as `rss+youtube`.
-- Your display settings: density, theme, whether read items are hidden, whether items are marked read on scroll, whether links open in your browser, and whether keyboard navigation is on.
+- Your display settings: density, theme, the language of the Monfil interface, whether read items are hidden, whether items are marked read on scroll, whether links open in your browser, and whether keyboard navigation is on.
 - The day it covers, the Monfil version, your operating system and its version, your language setting, and the version of the web engine in Monfil.
 
 The event never holds a feed name, a link, article text, search text, or a name for you. Monfil sends no identifier that lasts. Each request uses a new random session ID.

@@ -53,7 +53,7 @@ export default function WorkspaceSwitcher({ isOpen, onOpenChange, workspaces, on
                     <span className="flex size-6 flex-none items-center justify-center rounded-md" style={{ backgroundColor: `color-mix(in srgb, ${workspace.color} 18%, transparent)`, color: workspace.color }}>
                       <Icon aria-hidden className="size-3.5" />
                     </span>
-                    <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
+                    <span dir="auto" className="min-w-0 flex-1 truncate">{workspace.name}</span>
                     {shortcuts.has(workspace.id) && <kbd className="font-sans text-xs text-tertiary">{shortcuts.get(workspace.id)}</kbd>}
                   </ListBoxItem>
                 );

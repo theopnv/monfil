@@ -1,0 +1,78 @@
+{
+  "navigation": {
+    "label": "Vues de l'espace de travail",
+    "all": "Tous les éléments",
+    "saved": "Enregistrés",
+    "saveHint": "Enregistrez un article avec le marque-page. Retrouvez ici vos articles enregistrés."
+  },
+  "switcher": {
+    "dialog": "Changer d'espace de travail",
+    "field": "Nom de l'espace de travail",
+    "placeholder": "Aller à l'espace de travail…",
+    "list": "Espaces de travail",
+    "empty": "Aucun espace de travail ne correspond."
+  },
+  "rail": {
+    "moveFailed": "Le flux n'a pas pu être déplacé.",
+    "list": "Espaces de travail",
+    "move": "Déplacer {{name}}",
+    "hideNames": "Masquer les noms des espaces de travail",
+    "showNames": "Afficher les noms des espaces de travail",
+    "collapse": "Réduire",
+    "new": "Nouvel espace de travail",
+    "newHint": "Créez un espace de travail pour regrouper des flux. Faites un clic droit sur un espace de travail pour le modifier ou le supprimer.",
+    "settings": "Paramètres"
+  },
+  "dialog": {
+    "editTitle": "Modifier l'espace de travail",
+    "newTitle": "Nouvel espace de travail",
+    "editBody": "Renommez-le, ou choisissez une autre icône et une autre couleur.",
+    "newBody": "Un onglet dans la barre, avec ses propres sources et son propre fil.",
+    "name": "Nom",
+    "namePlaceholder": "Veille CI/CD",
+    "icon": "Icône",
+    "colour": "Couleur",
+    "colourOption": "Couleur {{value}}",
+    "browse": "Parcourir les packs de flux",
+    "save": "Enregistrer les modifications",
+    "create": "Créer l'espace de travail"
+  },
+  "delete": {
+    "title": "Supprimer l'espace de travail",
+    "body": "Cela supprime l'espace de travail <bold>{{name}}</bold>, ses dossiers et sa liste d'enregistrés. Les flux placés uniquement ici sont supprimés aussi. Exportez d'abord au format OPML pour garder une copie que vous pourrez réimporter plus tard.",
+    "export": "Exporter au format OPML",
+    "confirm": "Supprimer l'espace de travail"
+  },
+  "importOpml": {
+    "doneTitle": "Importation terminée",
+    "imported_one": "{{count}} flux importé.",
+    "imported_many": "{{count}} flux importés.",
+    "imported_other": "{{count}} flux importés.",
+    "skipped": "{{count}} ignoré(s).",
+    "failed": "{{count}} récupération(s) échouée(s).",
+    "titleInto": "Importer un OPML dans {{name}}",
+    "title": "Importer un OPML",
+    "choose": "Choisissez un fichier dans le sélecteur qui s'ouvre ensuite.",
+    "newWorkspace": "Nouvel espace de travail",
+    "mergeHome": "Fusionner dans Accueil",
+    "name": "Nom",
+    "namePlaceholder": "Laisser vide pour utiliser le titre du fichier"
+  },
+  "feedpacks": {
+    "sources_one": "{{count}} source",
+    "sources_many": "{{count}} sources",
+    "sources_other": "{{count}} sources",
+    "packSources": "Sources du pack",
+    "search": "Rechercher des packs de flux",
+    "loading": "Chargement des packs de flux…",
+    "none": "Aucun pack de flux n'est disponible.",
+    "noMatch": "Aucun pack de flux ne correspond à « {{query}} ».",
+    "loadingSources": "Chargement des sources…"
+  },
+  "feedpackDialog": {
+    "title": "Packs de flux",
+    "body": "Installez un ensemble de sources sélectionnées.",
+    "back": "Retour aux packs de flux",
+    "install": "Installer"
+  }
+}

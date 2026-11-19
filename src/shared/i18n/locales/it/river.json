@@ -1,0 +1,184 @@
+{
+  "feed": {
+    "dragToFolder": "Trascina in una cartella",
+    "state": {
+      "home": "Mostrato con gli altri",
+      "only": "Mostrato da solo",
+      "hidden": "Nascosto"
+    },
+    "rowTitle_focus": "{{title}} — {{state}}. Clicca per mostrare solo questo feed.",
+    "rowTitle_unfocus": "{{title}} — {{state}}. Clicca per annullare il filtro.",
+    "rowLabel_focus": "{{title}}, {{state}}. Clicca per mostrare solo questo feed.",
+    "rowLabel_unfocus": "{{title}}, {{state}}. Clicca per annullare il filtro.",
+    "refreshFailedLabel": "Aggiornamento di {{title}} non riuscito: {{error}}",
+    "refreshFailedTitle": "L'ultimo aggiornamento non è riuscito: {{error}}",
+    "visibility_hide": "Nascondi {{title}}",
+    "visibility_show": "Mostra {{title}}"
+  },
+  "folder": {
+    "focus_focus": "Mostra solo {{name}}",
+    "focus_unfocus": "Annulla il filtro su {{name}}",
+    "visibility_hide": "Nascondi {{name}}",
+    "visibility_show": "Mostra {{name}}"
+  },
+  "source": {
+    "conference": "CONF",
+    "job": "LAV"
+  },
+  "card": {
+    "label_read": "{{title}}, letto, da {{feed}}, {{time}}.",
+    "label_unread": "{{title}}, non letto, da {{feed}}, {{time}}."
+  },
+  "search": {
+    "syntax": {
+      "all": "Ogni parola deve corrispondere",
+      "phrase": "Una frase esatta. Trova anche dentro parole più lunghe.",
+      "either": "Una delle due parole (OR in maiuscolo)",
+      "exclude": "Escludi una parola o una frase",
+      "title": "Cerca solo nel titolo",
+      "short": "Una parola di 3 lettere o meno trova solo parole intere"
+    },
+    "clear": "Cancella ricerca",
+    "syntaxRegion": "Sintassi di ricerca",
+    "closeHint": "Premi Invio per chiudere la ricerca e mantenere il filtro."
+  },
+  "pills": {
+    "rename": "Rinomina la ricerca salvata {{name}}",
+    "label": "{{name}}, {{count}} non letti",
+    "renameHint": "Clic destro o F2 per rinominare",
+    "delete": "Elimina la ricerca salvata {{name}}",
+    "hint": "Salva una ricerca per ogni ruolo che ti interessa, per esempio <code>{{example}}</code>",
+    "dismissHint": "Chiudi il suggerimento sulle ricerche salvate",
+    "toolbar": "Ricerche salvate",
+    "all": "Tutte le ricerche salvate",
+    "menu": "Ricerche salvate",
+    "announce": {
+      "cleared": "Filtro della ricerca salvata {{name}} annullato.",
+      "showing": "Mostrata la ricerca salvata {{name}}.",
+      "created": "Ricerca salvata {{name}} creata.",
+      "updated": "Ricerca salvata {{name}} aggiornata.",
+      "renamed": "Ricerca salvata rinominata in {{name}}.",
+      "deleted": "Ricerca salvata {{name}} eliminata. È possibile annullare.",
+      "restored": "Ricerca salvata {{name}} ripristinata.",
+      "deletedToast": "Eliminata \"{{name}}\""
+    }
+  },
+  "saveControl": {
+    "dialog": "Dai un nome a questa ricerca",
+    "nameField": "Nome della ricerca salvata",
+    "update": "Aggiorna",
+    "saveAsNew": "Salva come nuova",
+    "saveSearch": "Salva ricerca"
+  },
+  "strip": {
+    "focused_one": "{{focused}} di {{count}} feed visualizzato",
+    "focused_many": "{{focused}} di {{count}} feed visualizzati",
+    "focused_other": "{{focused}} di {{count}} feed visualizzati",
+    "hidden_one": "{{count}} feed nascosto",
+    "hidden_many": "{{count}} feed nascosti",
+    "hidden_other": "{{count}} feed nascosti",
+    "showAllLabel": "Mostra tutti i feed",
+    "showAll": "Mostra tutti",
+    "showAnnounce": "Tutti i feed sono mostrati.",
+    "showHiddenLabel": "Mostra i feed nascosti",
+    "showHidden": "Mostra",
+    "hiddenAnnounce": "I feed nascosti sono di nuovo mostrati."
+  },
+  "empty": {
+    "homeTitle": "Scegli le tue fonti",
+    "homeBody": "Aggiungi un blog, una newsletter, qualunque cosa abbia un feed. Monfil scarica ciò che pubblica e non decide mai che cosa vedi.",
+    "addFirst": "Aggiungi il primo feed",
+    "otherTitle": "Ancora niente qui",
+    "otherBody": "Questo spazio di lavoro non ha ancora fonti. Importa un file OPML per riempirlo in una volta sola.",
+    "importOpml": "Importa OPML",
+    "importFeedpack": "Importa pacchetto di feed"
+  },
+  "job": {
+    "remote": "Da remoto",
+    "hybrid": "Ibrido",
+    "onSite": "In sede",
+    "salaryNotShown": "stipendio non indicato"
+  },
+  "header": {
+    "itemsToShow": "Elementi da mostrare",
+    "all": "Tutti",
+    "unread": "Non letti",
+    "home": "Home",
+    "saved": "Salvati",
+    "searchSaved": "Cerca tra gli elementi salvati",
+    "search": "Cerca",
+    "refreshNew": "Aggiorna, ci sono nuovi articoli",
+    "refresh": "Aggiorna",
+    "refreshFeeds": "Aggiorna feed",
+    "refreshFailed": "Impossibile aggiornare i feed. Controlla la connessione e riprova.",
+    "announceNew": "Ci sono nuovi articoli.",
+    "announceRefreshed": "Feed aggiornati."
+  },
+  "results": {
+    "none": "Nessun risultato per \"{{query}}\"",
+    "count_one": "{{count}} risultato per \"{{query}}\"",
+    "count_many": "{{count}} risultati per \"{{query}}\"",
+    "count_other": "{{count}} risultati per \"{{query}}\""
+  },
+  "saved": {
+    "loading": "Caricamento degli elementi salvati…",
+    "loadFailed": "Impossibile caricare gli elementi salvati.",
+    "empty": "Salva elementi dai tuoi feed per trovarli qui."
+  },
+  "feedpackFetching": "Recupero delle fonti per questo pacchetto di feed…",
+  "deleteFeed": {
+    "thisWorkspace": "questo spazio di lavoro",
+    "confirmRemove": "Rimuovi da {{workspace}}",
+    "confirmDelete": "Elimina feed",
+    "titleRemove": "Rimuovi feed",
+    "titleDelete": "Elimina feed",
+    "removeBody_one": "Questo rimuove <bold>{{title}}</bold> da {{workspace}}. Resta in {{count}} altro spazio di lavoro con i suoi elementi.",
+    "removeBody_many": "Questo rimuove <bold>{{title}}</bold> da {{workspace}}. Resta in {{count}} altri spazi di lavoro con i suoi elementi.",
+    "removeBody_other": "Questo rimuove <bold>{{title}}</bold> da {{workspace}}. Resta in {{count}} altri spazi di lavoro con i suoi elementi.",
+    "deleteBody_one": "Questo elimina <bold>{{title}}</bold> e il suo <bold>{{count}} elemento</bold>. Gli elementi salvati restano disponibili. Non è possibile annullare.",
+    "deleteBody_many": "Questo elimina <bold>{{title}}</bold> e i suoi <bold>{{count}} elementi</bold>. Gli elementi salvati restano disponibili. Non è possibile annullare.",
+    "deleteBody_other": "Questo elimina <bold>{{title}}</bold> e i suoi <bold>{{count}} elementi</bold>. Gli elementi salvati restano disponibili. Non è possibile annullare."
+  },
+  "deleteCategory": {
+    "keepFeeds": "Conserva i suoi feed e spostali in un'altra cartella",
+    "moveTo": "Sposta i suoi feed in",
+    "title": "Elimina cartella",
+    "confirm": "Elimina cartella",
+    "body": "Questo elimina la cartella <bold>{{name}}</bold>.",
+    "feeds_move_one": "Il suo <bold>{{count}} feed</bold> viene spostato nella cartella qui sotto.",
+    "feeds_move_many": "I suoi <bold>{{count}} feed</bold> vengono spostati nella cartella qui sotto.",
+    "feeds_move_other": "I suoi <bold>{{count}} feed</bold> vengono spostati nella cartella qui sotto.",
+    "feeds_delete_one": "Il suo <bold>{{count}} feed</bold> viene eliminato insieme alla cartella.",
+    "feeds_delete_many": "I suoi <bold>{{count}} feed</bold> vengono eliminati insieme alla cartella.",
+    "feeds_delete_other": "I suoi <bold>{{count}} feed</bold> vengono eliminati insieme alla cartella."
+  },
+  "moveFeed": {
+    "title": "Sposta feed",
+    "body": "Sposta <bold>{{title}}</bold> in un altro spazio di lavoro.",
+    "workspace": "Spazio di lavoro",
+    "folder": "Cartella",
+    "newFolder": "Nuova cartella…",
+    "newFolderName": "Nome della nuova cartella",
+    "confirm": "Sposta feed"
+  },
+  "caughtUp": "Non c'è altro da leggere",
+  "sidebar": {
+    "feeds": "Feed",
+    "newFolder": "Nuova cartella",
+    "addFeed": "Aggiungi feed",
+    "addFeedpack": "Aggiungi pacchetto di feed",
+    "folderName": "Nome della cartella",
+    "newFolderName": "Nome della nuova cartella",
+    "drag": "Trascina",
+    "renameFolder": "Rinomina {{name}}",
+    "addFeedHint": "Aggiungi un feed qui. Per eliminare un feed, fai clic destro su di esso.",
+    "filterHint": "Clicca un feed per mostrare solo i suoi articoli. Clicca l'occhio per nascondere un feed."
+  },
+  "refresh": {
+    "failed_one": "{{count}} feed non ha potuto essere aggiornato.",
+    "failed_many": "{{count}} feed non hanno potuto essere aggiornati.",
+    "failed_other": "{{count}} feed non hanno potuto essere aggiornati.",
+    "more": "e altri {{count}}"
+  },
+  "readTime": "{{count, number}} min di lettura"
+}

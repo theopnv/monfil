@@ -1,0 +1,111 @@
+{
+  "section": {
+    "appearance": "Apariencia",
+    "reading": "Lectura",
+    "refreshing": "Actualización",
+    "data": "Datos",
+    "privacy": "Privacidad",
+    "diagnostics": "Diagnóstico",
+    "about": "Acerca de"
+  },
+  "title": "Configuración",
+  "about": {
+    "tagline": "Lector de fuentes RSS y más.",
+    "link": {
+      "website": "Sitio web",
+      "documentation": "Documentación",
+      "changelog": "Registro de cambios",
+      "reportIssue": "Notificar un problema",
+      "buyCoffee": "Invitar un café"
+    }
+  },
+  "appearance": {
+    "theme": "Tema",
+    "density": "Densidad predeterminada",
+    "densityHint": "Cómo se distribuyen las tarjetas del flujo en Inicio.",
+    "themes": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "themeHints": {
+      "light": "Usar siempre el aspecto claro.",
+      "dark": "Usar siempre el aspecto oscuro.",
+      "system": "Seguir la configuración del sistema operativo y cambiar automáticamente cuando esta cambie."
+    },
+    "densities": {
+      "cards": "Tarjetas",
+      "magazine": "Revista",
+      "compact": "Compacta"
+    },
+    "language": "Idioma",
+    "languageHint": "El idioma de los menús, diálogos y mensajes. El texto de las fuentes no cambia.",
+    "languageSystem": "Sistema ({{language}})",
+    "languageBeta": "{{language}} (beta)",
+    "languageBetaHint": "Una máquina tradujo esta versión y ningún hablante nativo la ha revisado todavía. Se puede corregir con una solicitud de cambios (pull request)."
+  },
+  "reading": {
+    "markScroll": "Marcar como leído al desplazarse",
+    "markScrollHint": "Un elemento se marca como leído cuando pasa por encima de la parte superior de la lista.",
+    "hideRead": "Ocultar los elementos leídos en Inicio",
+    "hideReadHint": "Los elementos leídos salen del flujo en lugar de quedar atenuados.",
+    "keyboard": "Navegación con el teclado",
+    "keyboardHint": "j / k para moverse entre elementos, Esc para salir del lector.",
+    "external": "Abrir enlaces en mi navegador",
+    "externalHint": "Al hacer clic en un elemento se abre su enlace de origen en lugar del lector integrado."
+  },
+  "refreshing": {
+    "interval": {
+      "m15": "15 min",
+      "m30": "30 min",
+      "h1": "1 h",
+      "h6": "6 h",
+      "manual": "Manual"
+    },
+    "refresh": "Actualizar fuentes",
+    "refreshHint": "Cada cuánto Monfil busca elementos nuevos en las fuentes.",
+    "onLaunch": "Actualizar al iniciar",
+    "onLaunchHint": "Actualizar también una vez de inmediato cuando Monfil se inicia.",
+    "keep": "Conservar artículos durante",
+    "keepHint": "Eliminar los artículos más antiguos después de estos días. Conservar al menos 10 por fuente.",
+    "days_one": "{{count}} día",
+    "days_many": "{{count}} días",
+    "days_other": "{{count}} días"
+  },
+  "data": {
+    "feeds": "Fuentes",
+    "articles": "Artículos",
+    "size": "Tamaño de la base de datos",
+    "backedUp": "Copia de seguridad de la base de datos guardada.",
+    "backupFailed": "Falló la copia de seguridad. {{message}}",
+    "backUp": "Hacer copia de seguridad de la base de datos…",
+    "reveal": "Mostrar archivo de la base de datos",
+    "importOpml": "Importar OPML"
+  },
+  "privacy": {
+    "share": "Compartir estadísticas de uso anónimas",
+    "unavailable": "Esta versión de Monfil no recopila estadísticas de uso.",
+    "shareHint": "Envía un recuento diario de las funciones que se usan. Ningún texto de fuentes, artículos ni búsquedas sale del dispositivo. Desactivar en cualquier momento para dejar de enviar y eliminar los recuentos guardados en este dispositivo.",
+    "preview": "Ver qué se envía",
+    "notice": "Aviso de privacidad"
+  },
+  "diagnostics": {
+    "detailed": "Registro detallado",
+    "detailedHint": "Guardar detalles de depuración en el archivo de registro local. Se eliminan los nombres de fuentes, los enlaces completos, el texto de los artículos, las credenciales y las rutas de archivo.",
+    "showLog": "Mostrar archivo de registro"
+  },
+  "analyticsCard": {
+    "label": "Estadísticas de uso anónimas",
+    "later": "Preguntar más tarde",
+    "title": "Ayuda a mejorar Monfil",
+    "body": "Comparte estadísticas de uso anónimas: un recuento diario de las funciones que se usan. Ningún texto de fuentes, artículos ni búsquedas sale del dispositivo. Se puede cambiar en Configuración en cualquier momento.",
+    "share": "Compartir estadísticas de uso",
+    "decline": "No, gracias"
+  },
+  "analyticsPreview": {
+    "title": "Qué se envía",
+    "body": "Monfil envía un resumen como este cada día que se usa. Contiene recuentos y configuración. No contiene texto de fuentes, artículos, búsquedas ni nombres.",
+    "preview": "Vista previa de estadísticas de uso",
+    "loading": "Cargando…"
+  }
+}

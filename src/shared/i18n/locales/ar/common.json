@@ -1,0 +1,24 @@
+{
+  "action": {
+    "undo": "تراجع",
+    "gotIt": "حسنًا",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "tryAgain": "حاول مرة أخرى",
+    "done": "تم",
+    "import": "استيراد",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "showLog": "عرض ملف السجل",
+    "restart": "إعادة التشغيل"
+  },
+  "item": {
+    "action": {
+      "save": "حفظ",
+      "removeFromSaved": "إزالة من المحفوظات"
+    }
+  },
+  "update": {
+    "ready": "إصدار جديد من Monfil جاهز."
+  }
+}

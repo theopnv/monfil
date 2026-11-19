@@ -1,0 +1,168 @@
+{
+  "feed": {
+    "dragToFolder": "フォルダにドラッグ",
+    "state": {
+      "home": "他と一緒に表示",
+      "only": "このフィードのみ表示",
+      "hidden": "非表示"
+    },
+    "rowTitle_focus": "{{title}} — {{state}}。クリックで絞り込みます。",
+    "rowTitle_unfocus": "{{title}} — {{state}}。クリックで絞り込みを解除します。",
+    "rowLabel_focus": "{{title}}、{{state}}。クリックで絞り込みます。",
+    "rowLabel_unfocus": "{{title}}、{{state}}。クリックで絞り込みを解除します。",
+    "refreshFailedLabel": "{{title}} の更新に失敗しました: {{error}}",
+    "refreshFailedTitle": "前回の更新に失敗しました: {{error}}",
+    "visibility_hide": "{{title}} を非表示",
+    "visibility_show": "{{title}} を表示"
+  },
+  "folder": {
+    "focus_focus": "{{name}} を絞り込む",
+    "focus_unfocus": "{{name}} の絞り込みを解除",
+    "visibility_hide": "{{name}} を非表示",
+    "visibility_show": "{{name}} を表示"
+  },
+  "source": {
+    "conference": "CONF",
+    "job": "JOB"
+  },
+  "card": {
+    "label_read": "{{title}}、既読、{{feed}} から、{{time}}。",
+    "label_unread": "{{title}}、未読、{{feed}} から、{{time}}。"
+  },
+  "search": {
+    "syntax": {
+      "all": "すべての単語に一致する必要があります",
+      "phrase": "完全一致のフレーズです。長い単語の中の一致も含みます。",
+      "either": "いずれかの単語（大文字の OR）",
+      "exclude": "単語またはフレーズを除外",
+      "title": "タイトルのみに一致",
+      "short": "3文字以下の単語は、単語単位でのみ一致します"
+    },
+    "clear": "検索をクリア",
+    "syntaxRegion": "検索構文",
+    "closeHint": "Enter を押すと、検索を閉じてフィルターを残します。"
+  },
+  "pills": {
+    "rename": "保存済み検索 {{name}} の名前を変更",
+    "label": "{{name}}、未読 {{count}} 件",
+    "renameHint": "右クリックまたは F2 キーで名前を変更",
+    "delete": "保存済み検索 {{name}} を削除",
+    "hint": "役割ごとに検索を保存します。例: <code>{{example}}</code>",
+    "dismissHint": "保存済み検索のヒントを閉じる",
+    "toolbar": "保存済み検索",
+    "all": "すべての保存済み検索",
+    "menu": "保存済み検索",
+    "announce": {
+      "cleared": "保存済み検索 {{name}} を解除しました。",
+      "showing": "保存済み検索 {{name}} を表示しています。",
+      "created": "保存済み検索 {{name}} を作成しました。",
+      "updated": "保存済み検索 {{name}} を更新しました。",
+      "renamed": "保存済み検索の名前を {{name}} に変更しました。",
+      "deleted": "保存済み検索 {{name}} を削除しました。元に戻せます。",
+      "restored": "保存済み検索 {{name}} を復元しました。",
+      "deletedToast": "「{{name}}」を削除しました"
+    }
+  },
+  "saveControl": {
+    "dialog": "この検索に名前を付ける",
+    "nameField": "保存済み検索の名前",
+    "update": "更新",
+    "saveAsNew": "新規保存",
+    "saveSearch": "検索を保存"
+  },
+  "strip": {
+    "focused_other": "{{count}} 件のフィードのうち {{focused}} 件を表示しています",
+    "hidden_other": "非表示のフィード {{count}} 件",
+    "showAllLabel": "すべてのフィードを表示",
+    "showAll": "すべて表示",
+    "showAnnounce": "すべてのフィードを表示しています。",
+    "showHiddenLabel": "非表示のフィードを表示",
+    "showHidden": "表示",
+    "hiddenAnnounce": "非表示のフィードを再表示しました。"
+  },
+  "empty": {
+    "homeTitle": "ソースを選びましょう",
+    "homeBody": "ブログ、ニュースレター、フィードのあるものなら何でも追加できます。Monfilは配信された内容を取り込みますが、何を表示するかは決めません。",
+    "addFirst": "最初のフィードを追加",
+    "otherTitle": "まだ何もありません",
+    "otherBody": "このワークスペースにはまだソースがありません。OPMLファイルをインポートすると、一度にまとめて追加できます。",
+    "importOpml": "OPMLをインポート",
+    "importFeedpack": "フィードパックをインポート"
+  },
+  "job": {
+    "remote": "リモート",
+    "hybrid": "ハイブリッド",
+    "onSite": "オフィス勤務",
+    "salaryNotShown": "給与は表示されていません"
+  },
+  "header": {
+    "itemsToShow": "表示する項目",
+    "all": "すべて",
+    "unread": "未読",
+    "home": "ホーム",
+    "saved": "保存済み",
+    "searchSaved": "保存済みの項目を検索",
+    "search": "検索",
+    "refreshNew": "更新（新しい記事があります）",
+    "refresh": "更新",
+    "refreshFeeds": "フィードを更新",
+    "refreshFailed": "フィードを更新できませんでした。接続を確認して、もう一度お試しください。",
+    "announceNew": "新しい記事があります。",
+    "announceRefreshed": "フィードを更新しました。"
+  },
+  "results": {
+    "none": "「{{query}}」の結果はありません",
+    "count_other": "「{{query}}」の結果 {{count}} 件"
+  },
+  "saved": {
+    "loading": "保存済みの項目を読み込んでいます…",
+    "loadFailed": "保存済みの項目を読み込めませんでした。",
+    "empty": "フィードから項目を保存すると、ここに表示されます。"
+  },
+  "feedpackFetching": "このフィードパックのソースを取得しています…",
+  "deleteFeed": {
+    "thisWorkspace": "このワークスペース",
+    "confirmRemove": "{{workspace}} から削除",
+    "confirmDelete": "フィードを削除",
+    "titleRemove": "フィードを削除",
+    "titleDelete": "フィードを削除",
+    "removeBody_other": "<bold>{{title}}</bold> を {{workspace}} から削除します。このフィードは、その項目とともに他の {{count}} 件のワークスペースに残ります。",
+    "deleteBody_other": "<bold>{{title}}</bold> と、その <bold>{{count}} 件の項目</bold> を削除します。保存済みの項目は残ります。元に戻すことはできません。"
+  },
+  "deleteCategory": {
+    "keepFeeds": "フィードは残し、代わりに別のフォルダへ移動する",
+    "moveTo": "フィードの移動先",
+    "title": "フォルダを削除",
+    "confirm": "フォルダを削除",
+    "body": "<bold>{{name}}</bold> フォルダを削除します。",
+    "feeds_move_other": "その <bold>{{count}} 件のフィード</bold> は、下のフォルダに移動します。",
+    "feeds_delete_other": "その <bold>{{count}} 件のフィード</bold> も一緒に削除されます。"
+  },
+  "moveFeed": {
+    "title": "フィードを移動",
+    "body": "<bold>{{title}}</bold> を別のワークスペースに移動します。",
+    "workspace": "ワークスペース",
+    "folder": "フォルダ",
+    "newFolder": "新しいフォルダ…",
+    "newFolderName": "新しいフォルダ名",
+    "confirm": "フィードを移動"
+  },
+  "caughtUp": "すべて確認しました",
+  "sidebar": {
+    "feeds": "フィード",
+    "newFolder": "新しいフォルダ",
+    "addFeed": "フィードを追加",
+    "addFeedpack": "フィードパックを追加",
+    "folderName": "フォルダ名",
+    "newFolderName": "新しいフォルダ名",
+    "drag": "ドラッグ",
+    "renameFolder": "{{name}} の名前を変更",
+    "addFeedHint": "ここにフィードを追加できます。フィードを削除するには、右クリックします。",
+    "filterHint": "フィードをクリックすると、そのフィードの記事だけを表示します。目のアイコンをクリックすると、フィードを非表示にします。"
+  },
+  "refresh": {
+    "failed_other": "{{count}} 件のフィードを更新できませんでした。",
+    "more": "ほか {{count}} 件"
+  },
+  "readTime": "{{count, number}} 分で読めます"
+}

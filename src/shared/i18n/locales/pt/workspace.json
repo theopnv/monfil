@@ -1,0 +1,78 @@
+{
+  "navigation": {
+    "label": "Visões do espaço de trabalho",
+    "all": "Todos os itens",
+    "saved": "Salvos",
+    "saveHint": "Salve um artigo com o marcador. Encontre aqui os seus artigos salvos."
+  },
+  "switcher": {
+    "dialog": "Trocar de espaço de trabalho",
+    "field": "Nome do espaço de trabalho",
+    "placeholder": "Ir para espaço de trabalho…",
+    "list": "Espaços de trabalho",
+    "empty": "Nenhum espaço de trabalho corresponde."
+  },
+  "rail": {
+    "moveFailed": "Não foi possível mover o feed.",
+    "list": "Espaços de trabalho",
+    "move": "Mover {{name}}",
+    "hideNames": "Ocultar nomes dos espaços de trabalho",
+    "showNames": "Mostrar nomes dos espaços de trabalho",
+    "collapse": "Recolher",
+    "new": "Novo espaço de trabalho",
+    "newHint": "Crie um espaço de trabalho para agrupar feeds. Clique com o botão direito em um espaço de trabalho para editá-lo ou excluí-lo.",
+    "settings": "Configurações"
+  },
+  "dialog": {
+    "editTitle": "Editar espaço de trabalho",
+    "newTitle": "Novo espaço de trabalho",
+    "editBody": "Renomeie, ou dê outro ícone e outra cor.",
+    "newBody": "Uma aba na barra lateral, com fontes e fluxo próprios.",
+    "name": "Nome",
+    "namePlaceholder": "Vigilância de CI/CD",
+    "icon": "Ícone",
+    "colour": "Cor",
+    "colourOption": "Cor {{value}}",
+    "browse": "Explorar pacotes de feeds",
+    "save": "Salvar alterações",
+    "create": "Criar espaço de trabalho"
+  },
+  "delete": {
+    "title": "Excluir espaço de trabalho",
+    "body": "Isto exclui o espaço de trabalho <bold>{{name}}</bold>, as suas pastas e a sua lista de Salvos. Os feeds que estão só aqui também são removidos. Exporte como OPML antes para guardar uma cópia que possa ser importada de novo depois.",
+    "export": "Exportar como OPML",
+    "confirm": "Excluir espaço de trabalho"
+  },
+  "importOpml": {
+    "doneTitle": "Importação concluída",
+    "imported_one": "{{count}} feed importado.",
+    "imported_many": "{{count}} feeds importados.",
+    "imported_other": "{{count}} feeds importados.",
+    "skipped": "{{count}} ignorado(s).",
+    "failed": "Falha ao baixar {{count}}.",
+    "titleInto": "Importar OPML para {{name}}",
+    "title": "Importar OPML",
+    "choose": "Escolha um arquivo no seletor que será aberto em seguida.",
+    "newWorkspace": "Novo espaço de trabalho",
+    "mergeHome": "Mesclar com o Início",
+    "name": "Nome",
+    "namePlaceholder": "Deixe em branco para usar o título do arquivo"
+  },
+  "feedpacks": {
+    "sources_one": "{{count}} fonte",
+    "sources_many": "{{count}} fontes",
+    "sources_other": "{{count}} fontes",
+    "packSources": "Fontes do pacote",
+    "search": "Buscar pacotes de feeds",
+    "loading": "Carregando pacotes de feeds…",
+    "none": "Nenhum pacote de feeds disponível.",
+    "noMatch": "Nenhum pacote de feeds corresponde a \"{{query}}\".",
+    "loadingSources": "Carregando fontes…"
+  },
+  "feedpackDialog": {
+    "title": "Pacotes de feeds",
+    "body": "Instale um conjunto selecionado de fontes.",
+    "back": "Voltar aos pacotes de feeds",
+    "install": "Instalar"
+  }
+}

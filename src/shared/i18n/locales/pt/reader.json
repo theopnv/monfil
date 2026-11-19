@@ -1,0 +1,39 @@
+{
+  "sourceLink": "Ler em {{source}}",
+  "header": {
+    "home": "Início",
+    "saved": "Salvos",
+    "markUnread": "Marcar como não lido",
+    "previous": "Artigo anterior",
+    "next": "Próximo artigo"
+  },
+  "next": {
+    "unread": "Próximo não lido",
+    "article": "Próximo artigo"
+  },
+  "notFound": "Este artigo não foi encontrado.",
+  "backToSaved": "Voltar aos Salvos",
+  "backToHome": "Voltar ao Início",
+  "loadingFull": "Carregando o artigo completo…",
+  "unavailable": "Não foi possível carregar o artigo completo. Leia-o na fonte.",
+  "failed": "Não foi possível carregar este item. Leia-o na fonte.",
+  "announce": {
+    "read": "Marcado como lido",
+    "unread": "Marcado como não lido"
+  },
+  "shortcuts": {
+    "next": "próximo",
+    "previous": "anterior",
+    "back": "voltar ao Início"
+  },
+  "embed": {
+    "defaultTitle": "Conteúdo incorporado de {{name}}",
+    "consent": "Carregar este conteúdo incorporado conecta a {{name}}. O provedor pode usar cookies.",
+    "load": "Carregar {{name}}",
+    "open": "Abrir em {{name}}",
+    "privacy": "Política de privacidade do provedor",
+    "openEmbedded": "Abrir conteúdo incorporado"
+  },
+  "saveFailed": "Não foi possível salvar o item. Tente novamente.",
+  "unsaveFailed": "Não foi possível remover o item dos Salvos. Tente novamente."
+}

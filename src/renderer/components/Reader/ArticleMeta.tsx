@@ -24,7 +24,7 @@ export default function ArticleMeta({ item, wordCount }: ArticleMetaProps) {
         {sourceTypeLabel(item.type, t)}
       </Badge>
       <span className="text-sm text-tertiary">
-        {item.feedTitle} · {formatRelativeTime(item.publishedAt, locale)}
+        <bdi>{item.feedTitle}</bdi> · {formatRelativeTime(item.publishedAt, locale)}
         {readTime && <> · {readTime}</>}
       </span>
     </div>

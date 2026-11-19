@@ -70,7 +70,7 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
         )}
       >
         <FeedAvatar title={feed.title} faviconUrl={feed.icon} size="sm" />
-        <span className="min-w-0 flex-1 truncate">{feed.title}</span>
+        <span dir="auto" className="min-w-0 flex-1 truncate">{feed.title}</span>
         {feed.last_error && <span role="img" aria-label={t('feed.refreshFailedLabel', { title: feed.title, error: translateFeedFailure(tErrors, { code: feed.last_error_code, params: feed.last_error_params }) })} title={t('feed.refreshFailedTitle', { error: translateFeedFailure(tErrors, { code: feed.last_error_code, params: feed.last_error_params }) })} className="text-warning-primary">!</span>}
       </button>
       <button

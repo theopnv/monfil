@@ -23,7 +23,7 @@ describe('feedsBucket', () => {
 describe('buildDailySummary', () => {
   test('sends every counter, with zero for the ones that have no tally', () => {
     // Act
-    const props = buildDailySummary({ day: '2026-10-22', counters: { articles_opened: 4 }, library, preferences });
+    const props = buildDailySummary({ day: '2026-10-22', counters: { articles_opened: 4 }, library, preferences, language: 'en' });
 
     // Assert
     expect(props['day']).toBe('2026-10-22');
@@ -35,7 +35,7 @@ describe('buildDailySummary', () => {
 
   test('buckets the library and lists the kinds of feed', () => {
     // Act
-    const props = buildDailySummary({ day: '2026-10-22', counters: {}, library, preferences });
+    const props = buildDailySummary({ day: '2026-10-22', counters: {}, library, preferences, language: 'en' });
 
     // Assert
     expect(props).toMatchObject({ feeds_bucket: '6-20', workspaces_count: 2, categories_count: 4, feed_kinds: 'rss+youtube' });
@@ -44,7 +44,7 @@ describe('buildDailySummary', () => {
 
   test('reports an empty library', () => {
     // Act
-    const props = buildDailySummary({ day: '2026-10-22', counters: {}, library: { feeds: 0, workspaces: 1, categories: 0, feedKinds: [] }, preferences });
+    const props = buildDailySummary({ day: '2026-10-22', counters: {}, library: { feeds: 0, workspaces: 1, categories: 0, feedKinds: [] }, preferences, language: 'en' });
 
     // Assert
     expect(props).toMatchObject({ feeds_bucket: '0', feed_kinds: 'none' });
@@ -52,7 +52,7 @@ describe('buildDailySummary', () => {
 
   test('states the preferences as text', () => {
     // Act
-    const props = buildDailySummary({ day: '2026-10-22', counters: {}, library, preferences });
+    const props = buildDailySummary({ day: '2026-10-22', counters: {}, library, preferences, language: 'en' });
 
     // Assert
     expect(props).toMatchObject({
@@ -61,9 +61,17 @@ describe('buildDailySummary', () => {
     });
   });
 
+  test('states the interface language, whatever the operating system asks for', () => {
+    // Act
+    const props = buildDailySummary({ day: '2026-10-22', counters: {}, library, preferences, language: 'ar' });
+
+    // Assert
+    expect(props['pref_language']).toBe('ar');
+  });
+
   test('marks the preferences unknown before the renderer reported them', () => {
     // Act
-    const props = buildDailySummary({ day: '2026-10-22', counters: {}, library, preferences: undefined });
+    const props = buildDailySummary({ day: '2026-10-22', counters: {}, library, preferences: undefined, language: 'en' });
 
     // Assert
     expect(props).toMatchObject({
@@ -75,7 +83,7 @@ describe('buildDailySummary', () => {
   test('stays inside the limits of the server', () => {
     // Act
     const props = buildDailySummary({
-      day: '2026-10-22', counters: {}, preferences,
+      day: '2026-10-22', counters: {}, preferences, language: 'en',
       library: { ...library, feedKinds: Array.from({ length: 40 }, () => 'conference') },
     });
 

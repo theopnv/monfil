@@ -42,6 +42,27 @@ body {
     font-kerning: normal;
 }
 
+/* Figtree and Caprasimo have no CJK or Arabic glyphs, so each script gets the system font that its platform ships. Headings drop the display face, which exists in Latin only. */
+:lang(zh) {
+    --font-body: -apple-system, "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+    --font-display: var(--font-body);
+}
+
+:lang(ja) {
+    --font-body: -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", Meiryo, "Noto Sans CJK JP", "Noto Sans JP", sans-serif;
+    --font-display: var(--font-body);
+}
+
+:lang(ar) {
+    --font-body: -apple-system, "Geeza Pro", "Segoe UI", "Noto Sans Arabic", "Noto Naskh Arabic", Tahoma, sans-serif;
+    --font-display: var(--font-body);
+}
+
+/* Letter spacing breaks the joins between Arabic letters. */
+:lang(ar) * {
+    letter-spacing: normal;
+}
+
 /* Hide the default expand arrow on Safari.  */
 details summary::-webkit-details-marker {
     display: none;

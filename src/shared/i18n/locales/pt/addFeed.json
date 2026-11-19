@@ -1,0 +1,127 @@
+{
+  "match": {
+    "found": "Feed encontrado",
+    "notFound": "Não encontrado",
+    "checking": "Verificando…"
+  },
+  "wizard": {
+    "step": {
+      "find": "Buscar",
+      "configure": "Configurar",
+      "done": "Concluído"
+    },
+    "titles": {
+      "find": "Adicionar um feed",
+      "configure": "Personalize",
+      "done": "Adicionado ao Monfil"
+    },
+    "blurbs": {
+      "find": "Uma caixa para acompanhar tudo o que interessa.",
+      "configure": "Onde ele fica e se aparece no Início.",
+      "done": "Já está buscando conteúdo. Não há mais nada a fazer."
+    },
+    "close": "Fechar",
+    "goToStep": "Ir para a etapa {{step}}: {{name}}"
+  },
+  "stats": {
+    "new": "Novo",
+    "perDay": "~{{count}}/dia",
+    "perWeek": "~{{count}}/semana",
+    "perMonth": "~{{count}}/mês",
+    "fullText": "Texto completo",
+    "excerpt": "Trecho"
+  },
+  "find": {
+    "kind": {
+      "anything": "Qualquer coisa",
+      "conferences": "Conferências",
+      "jobs": "Vagas"
+    },
+    "copy": {
+      "anything": {
+        "placeholder": "Cole um link de site, feed, repositório ou perfil…",
+        "hint": "O Monfil encontra o feed por trás do link. Para um identificador, pressione Enter."
+      },
+      "rss": {
+        "placeholder": "Cole um link de feed RSS…",
+        "hint": "O Monfil verifica o link em busca de um feed RSS."
+      },
+      "youtube": {
+        "placeholder": "Cole um link de canal, identificador ou vídeo…",
+        "hint": "Cole um link, ou digite um canal ou identificador e pressione Enter."
+      },
+      "github": {
+        "placeholder": "Cole um link de repositório ou usuário, ou owner/repo…",
+        "hint": "Um repositório fornece as suas versões. Um usuário ou organização fornece a atividade pública. Depois de owner/repo, pressione Enter."
+      },
+      "gitlab": {
+        "placeholder": "Cole um link de projeto do GitLab…",
+        "hint": "O Monfil acompanha as versões do projeto. O GitLab auto-hospedado também funciona."
+      },
+      "hackernews": {
+        "placeholder": "Cole um link do Hacker News…",
+        "hint": "news.ycombinator.com oferece a página inicial e feeds filtrados por pontos."
+      },
+      "arxiv": {
+        "placeholder": "Cole um link de listagem do arXiv…",
+        "hint": "Por exemplo, arxiv.org/list/cs.AI/recent. O Monfil oculta os artigos substituídos."
+      },
+      "bluesky": {
+        "placeholder": "Cole um link de perfil ou identificador…",
+        "hint": "Digite um identificador como @nome.bsky.social e pressione Enter."
+      },
+      "mastodon": {
+        "placeholder": "Cole um link de perfil ou hashtag, ou @usuario@host…",
+        "hint": "Digite um identificador como @usuario@mastodon.social e pressione Enter."
+      },
+      "conference": {
+        "placeholder": "Digite temas, depois \"in\" e lugares…",
+        "hint": "Formato: temas in lugares, depois pressione Enter. Separe os itens com vírgulas. Os lugares são opcionais, e online conta como lugar. Exemplos: devops · kubernetes, cloud in France · java in Belgium, online. Um link do developers.events também funciona."
+      },
+      "ats": {
+        "placeholder": "Cole a página de vagas ou de carreiras de uma empresa…",
+        "hint": "Funciona com os quadros de vagas da Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor e Personio. A cobertura não é completa: outros sistemas de vagas ainda não são compatíveis. O Monfil lista todas as vagas abertas da empresa."
+      }
+    },
+    "feedUrl": "URL do feed",
+    "searching": "Buscando…",
+    "candidates_one": "{{count}} feed encontrado. Escolha um.",
+    "candidates_many": "{{count}} feeds encontrados. Escolha um.",
+    "candidates_other": "{{count}} feeds encontrados. Escolha um.",
+    "notFound": "Nenhum feed encontrado",
+    "notFoundDetail": "Não foi possível encontrar um feed nesse endereço.",
+    "conferenceEmpty": "Nenhuma conferência corresponde agora. O Monfil adiciona um cartão quando uma conferência correspondente é anunciada.",
+    "detail_one": "{{link}} — {{count}} item",
+    "detail_many": "{{link}} — {{count}} itens",
+    "detail_other": "{{link}} — {{count}} itens"
+  },
+  "configure": {
+    "publishes": "Publica",
+    "contains": "O feed contém",
+    "notFound": "Nenhum feed encontrado",
+    "notFoundDetail": "Volte à etapa 1 e tente outro link.",
+    "show": "Mostrar no espaço de trabalho",
+    "showHint": "Desmarque as fontes de alto volume que prefira visitar de propósito."
+  },
+  "done": {
+    "title": "{{title}} está em {{category}}",
+    "backfilled_one": "{{count}} item recuperado. Tudo fica nesta máquina.",
+    "backfilled_many": "{{count}} itens recuperados. Tudo fica nesta máquina.",
+    "backfilled_other": "{{count}} itens recuperados. Tudo fica nesta máquina.",
+    "jobs": "Todas as vagas de {{company}} agora aparecem no seu feed. Para filtrá-las, busque cada cargo que quiser e salve a busca."
+  },
+  "category": {
+    "putIn": "Colocar em",
+    "newName": "Nome da nova pasta",
+    "example": "ex.: Design",
+    "add": "Adicionar",
+    "new": "+ Nova pasta",
+    "unlisted": "Nova pasta: {{name}}"
+  },
+  "footer": {
+    "continue": "Continuar",
+    "add": "Adicionar fonte",
+    "goToFeed": "Ir para o feed",
+    "addAnother": "Adicionar outra"
+  }
+}
