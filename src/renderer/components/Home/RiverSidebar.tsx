@@ -32,6 +32,7 @@ import {
 } from "@/lib/ipc-bridge";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import { useCreateCategory, useMoveFeeds, useRenameCategory } from "@/providers/feeds-provider";
+import { isComposing } from "@/lib/keyboard";
 import { useHint } from "@/providers/hints-provider";
 import { useActiveWorkspaceId, useMoveFeedToWorkspace } from '@/providers/workspace-provider';
 import type { FeedCategory, FeedSummary } from "../../../shared/contracts";
@@ -348,6 +349,9 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
               value={newFolderName}
               onChange={(event) => setNewFolderName(event.target.value)}
               onKeyDown={(event) => {
+                if (isComposing(event.nativeEvent)) {
+                  return;
+                }
                 if (event.key === 'Enter') {
                   void submitNewFolder(event.currentTarget.value);
                 } else if (event.key === 'Escape') {
@@ -441,9 +445,9 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                       onKeyDown={(event) => {
                         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
                           event.stopPropagation();
-                        } else if (event.key === 'Enter') {
+                        } else if (event.key === 'Enter' && !isComposing(event.nativeEvent)) {
                           void submitRename(event.currentTarget.value);
-                        } else if (event.key === 'Escape') {
+                        } else if (event.key === 'Escape' && !isComposing(event.nativeEvent)) {
                           cancelRename();
                         }
                       }}

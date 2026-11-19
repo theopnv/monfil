@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import AddFeedModal from './AddFeedModal';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
+import { pressComposing } from '@/lib/test/press-composing';
 import type { Result } from '../../../shared/result';
 import type { AddFeedError } from '../../../shared/contracts';
 import { HOME_WORKSPACE_ID, type FeedCategory, type FeedFetchError, type FeedSummary, type ParsedSource, type RiverPage, type RiverQuery } from '../../../shared/contracts';
@@ -138,6 +139,43 @@ describe('AddFeedModal', () => {
     // Assert: Step 3 shows the real, post-insert feed with its backfilled items.
     await expect.element(getByText(/is in Tech/)).toBeInTheDocument();
     await expect.element(getByText('Item 1')).toBeInTheDocument();
+  });
+
+  test('an Enter that belongs to an IME composition does not validate the feed URL', async () => {
+    // Arrange
+    const { getByLabelText, getByRole } = await renderWithQueryClient(
+      <AddFeedModal isOpen onOpenChange={vi.fn()} />,
+    );
+    await getByRole('button', { name: 'YouTube' }).click();
+    await getByLabelText('Feed URL').fill('Underscore_');
+
+    // Act
+    pressComposing(getByLabelText('Feed URL').element(), 'Enter');
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    // Assert
+    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:validate-feed-url')).toHaveLength(0);
+  });
+
+  test('Enter and Escape that belong to an IME composition leave the new category field alone', async () => {
+    // Arrange
+    const { getByLabelText, getByRole, getByText } = await renderWithQueryClient(
+      <AddFeedModal isOpen onOpenChange={vi.fn()} />,
+    );
+    await getByLabelText('Feed URL').fill('example.com/feed');
+    await expect.element(getByText('Feed found', { exact: true })).toBeInTheDocument();
+    await getByRole('button', { name: 'Continue' }).click();
+    await getByRole('button', { name: '+ New category' }).click();
+    const input = getByLabelText('New category name');
+    await input.fill('デザイン');
+
+    // Act
+    pressComposing(input.element(), 'Enter');
+    pressComposing(input.element(), 'Escape');
+
+    // Assert
+    await expect.element(input).toHaveValue('デザイン');
+    await expect.element(getByText('New category: デザイン', { exact: true })).not.toBeInTheDocument();
   });
 
   test.each(['Enter', 'Tab'])('validates a YouTube handle on %s with the selected type', async (key) => {

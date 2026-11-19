@@ -10,6 +10,7 @@ import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { WORKSPACE_COLORS, WORKSPACE_ICONS, workspaceIconComponent, type WorkspaceIconName } from "@/lib/workspace-icons";
 import { useCreateWorkspace, useUpdateWorkspace } from "@/providers/workspace-provider";
+import { isComposing } from "@/lib/keyboard";
 import type { CreateWorkspaceError } from "../../../shared/contracts";
 import type { UpdateWorkspaceError } from "../../../shared/contracts";
 import type { WorkspaceSummary } from "../../../shared/contracts";
@@ -96,7 +97,7 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
+                  if (event.key === 'Enter' && !isComposing(event.nativeEvent)) {
                     void handleSubmit();
                   }
                 }}

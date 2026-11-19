@@ -27,7 +27,8 @@ function Harness({ enabled = true, cardCount = 3 }: { enabled?: boolean; cardCou
 }
 
 function press(key: string, init: KeyboardEventInit = {}, target: EventTarget = window) {
-  target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...init }));
+  const code = /^[a-z]$/.test(key) ? `Key${key.toUpperCase()}` : key;
+  target.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true, ...init }));
 }
 
 const card = (n: number) => document.querySelector<HTMLElement>(`[data-item-id="${n}"]`);
@@ -54,6 +55,38 @@ test('j focuses the first card when no card has focus, then each next card, and 
 
   // Assert
   expect(document.activeElement).toBe(card(3));
+});
+
+test.each([
+  { layout: 'Arabic', jKey: 'ا', kKey: 'ن' },
+  { layout: 'Russian', jKey: 'о', kKey: 'л' },
+])('j and k follow the physical key on a $layout layout', async ({ jKey, kKey }) => {
+  // Arrange
+  await render(<Harness />);
+
+  // Act
+  press(jKey, { code: 'KeyJ' });
+  press(jKey, { code: 'KeyJ' });
+
+  // Assert
+  expect(document.activeElement).toBe(card(2));
+
+  // Act
+  press(kKey, { code: 'KeyK' });
+
+  // Assert
+  expect(document.activeElement).toBe(card(1));
+});
+
+test('a Latin j typed with another physical key does nothing', async () => {
+  // Arrange
+  await render(<Harness />);
+
+  // Act
+  press('j', { code: 'KeyH' });
+
+  // Assert
+  expect(document.activeElement).toBe(document.body);
 });
 
 test('k focuses the first card when no card has focus', async () => {

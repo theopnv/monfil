@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { DotsHorizontal, XClose } from "@untitledui/icons";
 import { Button as AriaButton, Menu, MenuItem, MenuTrigger, Popover } from "react-aria-components";
 import { cx } from "@/components/untitled-ui/utils/cx";
+import { isComposing } from "@/lib/keyboard";
 import type { SavedSearchSummary } from "../../../shared/contracts";
 
 export interface SearchPillsProps {
@@ -61,7 +62,7 @@ function RenameField({ search, onRename, onDone }: { search: SavedSearchSummary;
         onChange={(event) => setName(event.target.value)}
         onBlur={() => void submit()}
         onKeyDown={(event) => {
-          if (event.key === "Escape") {
+          if (event.key === "Escape" && !isComposing(event.nativeEvent)) {
             submitted.current = true;
             onDone();
           }

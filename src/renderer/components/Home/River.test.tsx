@@ -12,6 +12,7 @@ import { SearchProvider } from '@/providers/search-provider';
 import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
+import { pressComposing } from '@/lib/test/press-composing';
 import { useIpcBridge } from '@/lib/ipc-bridge';
 import { NotificationHost } from '@/lib/notifications';
 import River from './River';
@@ -688,6 +689,19 @@ test('search requires every word to match', async () => {
   await expect.element(getByText('Item A1', { exact: true })).not.toBeInTheDocument();
 });
 
+test('an Escape that belongs to an IME composition leaves the query alone', async () => {
+  // Arrange
+  const { getByRole } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+  const search = getByRole('textbox', { name: 'Search' });
+  await search.fill('量子');
+
+  // Act
+  pressComposing(search.element(), 'Escape');
+
+  // Assert
+  await expect.element(search).toHaveValue('量子');
+});
+
 test('shows a no-results message and Escape restores every item', async () => {
   // Arrange
   const { getByRole, getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
@@ -983,6 +997,22 @@ describe('saved search pills', () => {
     // Assert
     await expect.element(getByRole('button', { name: 'Bs, 1 unread' })).toBeVisible();
     expect(invokeMock).toHaveBeenCalledWith('searches:update', { searchId: 1, name: 'Bs' });
+  });
+
+  test('an Escape that belongs to an IME composition keeps the pill rename open', async () => {
+    // Arrange
+    addSearch('B items', 'item b');
+    const { getByRole } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+    await expect.element(getByRole('button', { name: 'B items, 1 unread' })).toBeVisible();
+    getByRole('button', { name: 'B items, 1 unread' }).element().focus();
+    await userEvent.keyboard('{F2}');
+    const input = getByRole('textbox', { name: 'Rename saved search B items' });
+
+    // Act
+    pressComposing(input.element(), 'Escape');
+
+    // Assert
+    await expect.element(input).toBeInTheDocument();
   });
 
   test('lists every pill in the overflow menu and selects from it', async () => {

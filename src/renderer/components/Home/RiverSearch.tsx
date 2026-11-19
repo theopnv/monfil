@@ -5,6 +5,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { SearchLg, XClose } from "@untitledui/icons";
 import { Input } from "@/components/untitled-ui/base/input/input";
+import { isComposing } from "@/lib/keyboard";
 import { SEARCH_SYNTAX } from "@/components/Home/searchSyntax";
 
 const EXPANDED_MAX_WIDTH = 640;
@@ -77,6 +78,9 @@ export default function RiverSearch({ value, onChange, placeholder, saveControl 
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (isComposing(event.nativeEvent)) {
+      return;
+    }
     if (event.key === "Enter") {
       inputRef.current?.blur();
     } else if (event.key === "Escape") {

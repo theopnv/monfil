@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
+import { isComposing } from "@/lib/keyboard";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import type { FeedCategory } from "../../../shared/contracts";
 
@@ -59,6 +60,9 @@ export default function CategoryPicker({ categories, selectedName, onSelect, new
               value={newName}
               onChange={onNewNameChange}
               onKeyDown={(event) => {
+                if (isComposing(event.nativeEvent)) {
+                  return;
+                }
                 if (event.key === "Enter") {
                   commitNewCategory();
                 }

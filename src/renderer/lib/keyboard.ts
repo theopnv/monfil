@@ -13,3 +13,20 @@ export function hasOnlyModKey(event: Pick<KeyboardEvent, 'metaKey' | 'ctrlKey' |
   const mod = IS_MAC ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey;
   return mod && !event.altKey && !event.shiftKey;
 }
+
+/** Whether the physical key is the given letter, whatever the keyboard layout types for it. */
+export function isLetterCode(event: Pick<KeyboardEvent, 'code'>, letter: string): boolean {
+  return event.code === `Key${letter.toUpperCase()}`;
+}
+
+/** The digit 1 to 9 of the physical digit-row key, or null for any other key. */
+export function digitFromCode(event: Pick<KeyboardEvent, 'code'>): number | null {
+  const match = /^Digit([1-9])$/.exec(event.code);
+  return match ? Number(match[1]) : null;
+}
+
+/** Whether an IME is composing text. Enter and Escape then belong to the IME, so handlers must skip them. */
+export function isComposing(event: Pick<KeyboardEvent, 'isComposing' | 'keyCode'>): boolean {
+  // Safari sends keyCode 229 for the Enter that ends a composition, after isComposing is already false.
+  return event.isComposing || event.keyCode === 229;
+}

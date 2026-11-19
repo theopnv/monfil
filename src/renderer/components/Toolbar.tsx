@@ -26,7 +26,7 @@ import {
 } from "@/lib/ipc-bridge";
 import { decodeFeedDrag, FEED_DRAG_TYPE } from "@/lib/feed-drag";
 import { notifyError } from "@/lib/notifications";
-import { hasOnlyModKey, MOD_KEY_LABEL } from "@/lib/keyboard";
+import { digitFromCode, hasOnlyModKey, isLetterCode, MOD_KEY_LABEL } from "@/lib/keyboard";
 import { reorderIds } from "@/lib/reorder";
 import { workspaceIconComponent } from "@/lib/workspace-icons";
 import { useHint } from "@/providers/hints-provider";
@@ -180,21 +180,22 @@ function WorkspaceRail({ workspaces, activeId, goTo, expanded }: { workspaces: W
 }
 
 function workspaceShortcutIndex(event: KeyboardEvent): number | null {
-  if (!hasOnlyModKey(event) || !/^[1-9]$/.test(event.key)) {
+  const digit = digitFromCode(event);
+  if (!hasOnlyModKey(event) || digit === null) {
     return null;
   }
-  return Number(event.key) - 1;
+  return digit - 1;
 }
 
 function useWorkspaceShortcuts(workspaces: WorkspaceSummary[], goTo: (workspaceId: number) => void, openSwitcher: () => void, toggleRail: () => void) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (hasOnlyModKey(event) && event.key.toLowerCase() === 'k') {
+      if (hasOnlyModKey(event) && isLetterCode(event, 'k')) {
         event.preventDefault();
         openSwitcher();
         return;
       }
-      if (hasOnlyModKey(event) && event.key.toLowerCase() === 'b') {
+      if (hasOnlyModKey(event) && isLetterCode(event, 'b')) {
         event.preventDefault();
         toggleRail();
         return;

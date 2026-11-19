@@ -6,6 +6,7 @@ import { Link02 } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
 import FeedMatchCard from "./FeedMatchCard";
+import { isComposing } from "@/lib/keyboard";
 import type { FeedValidationStatus } from "./useFeedValidation";
 import type { ParsedSource, FeedFetchError, SourceType } from "../../../shared/contracts";
 
@@ -114,7 +115,7 @@ export default function Step1Find({ query, onQueryChange, onValidate, type, onTy
         onChange={onQueryChange}
         onBlur={onValidate}
         onKeyDown={(event) => {
-          if (event.key === 'Enter') {
+          if (event.key === 'Enter' && !isComposing(event.nativeEvent)) {
             event.preventDefault();
             onValidate();
           }

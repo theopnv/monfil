@@ -13,6 +13,7 @@ import { useFeeds } from '@/providers/feeds-provider';
 import { useFeedpackRefreshing, useIpcBridge } from '@/lib/ipc-bridge';
 import { MOD_KEY_LABEL } from '@/lib/keyboard';
 import { createTestQueryClient } from '@/lib/test/render-with-query-client';
+import { pressComposing } from '@/lib/test/press-composing';
 import Toolbar from './Toolbar';
 import type { DeleteWorkspaceError } from '../../shared/contracts';
 import type { UpdateWorkspaceError } from '../../shared/contracts';
@@ -396,6 +397,51 @@ test('the modifier and a digit open the workspace at that position', async () =>
   await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
 });
 
+function pressModified(key: string, code: string) {
+  const isMac = navigator.userAgent.includes('Mac');
+  window.dispatchEvent(new KeyboardEvent('keydown', { key, code, metaKey: isMac, ctrlKey: !isMac, bubbles: true, cancelable: true }));
+}
+
+test('the modifier and a digit key open the workspace on a layout whose digit row types symbols', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  feedsByWorkspace = { 2: [createFeed({ id: 2, title: 'Pack feed', workspaceId: 2 })] };
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'CI/CD watch' })).toBeInTheDocument();
+
+  // Act
+  pressModified('é', 'Digit2');
+
+  // Assert
+  await expect.element(getByText('Pack feed', { exact: true })).toBeInTheDocument();
+});
+
+test('the modifier and the physical K key open the quick switcher on a non-Latin layout', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'Security' })];
+  const { getByRole } = await renderApp('/workspace/1');
+  await expect.element(getByRole('link', { name: 'Security' })).toBeInTheDocument();
+
+  // Act
+  pressModified('ل', 'KeyK');
+
+  // Assert
+  await expect.element(getByRole('dialog', { name: 'Switch workspace' })).toBeInTheDocument();
+});
+
+test('the modifier and the physical B key toggle the rail on a non-Latin layout', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' })];
+  const { getByRole } = await renderApp('/workspace/1');
+  await expect.element(getByRole('button', { name: 'Show workspace names' })).toBeVisible();
+
+  // Act
+  pressModified('ن', 'KeyB');
+
+  // Assert
+  await expect.element(getByRole('button', { name: 'Hide workspace names' })).toBeVisible();
+});
+
 function railNames(container: HTMLElement): string[] {
   return [...container.querySelectorAll('[aria-label="Workspaces"] a')].map((link) => link.getAttribute('aria-label') ?? '');
 }
@@ -659,6 +705,23 @@ test('saving the edit dialog renames the workspace and updates its icon and colo
   expect(invokeMock).toHaveBeenCalledWith('workspaces:update', { workspaceId: 2, name: 'Infra watch', icon: 'Rocket02', color: '#ef4444' });
   await expect.element(getByRole('heading', { name: 'Edit workspace' })).not.toBeInTheDocument();
   await expect.element(getByRole('link', { name: 'Infra watch' })).toBeInTheDocument();
+});
+
+test('an Enter that belongs to an IME composition does not save the workspace dialog', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  const { getByRole } = await renderApp('/workspace/2');
+  editWorkspaceRequestedHandler?.(2);
+  const name = getByRole('textbox', { name: 'Name' });
+  await name.fill('インフラ');
+
+  // Act
+  pressComposing(name.element(), 'Enter');
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  // Assert
+  expect(invokeMock).not.toHaveBeenCalledWith('workspaces:update', expect.anything());
+  await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
 });
 
 test('firing workspaces:export-requested invokes opml:export with the workspace id', async () => {

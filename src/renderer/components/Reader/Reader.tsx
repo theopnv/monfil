@@ -14,6 +14,7 @@ import ReaderHeader from "@/components/Reader/ReaderHeader";
 import ReadingProgressBar from "@/components/common/ReadingProgressBar";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { announce } from "@/lib/announcer";
+import { isLetterCode } from "@/lib/keyboard";
 import { queryKeys, mergeRiverRows, queryItemPage } from "@/lib/queries";
 import { getReaderNavigation } from "@/lib/reader/reader";
 import { useReaderContent } from "@/lib/reader/useReaderContent";
@@ -116,9 +117,9 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome, saved
       }
       if (event.key === "Escape") {
         onNavigateHome();
-      } else if (event.key === "j" && navigation.next) {
+      } else if (isLetterCode(event, "j") && navigation.next) {
         onNavigateToItem(navigation.next.id);
-      } else if (event.key === "k" && navigation.previous) {
+      } else if (isLetterCode(event, "k") && navigation.previous) {
         onNavigateToItem(navigation.previous.id);
       }
     };
