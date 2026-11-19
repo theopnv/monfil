@@ -88,11 +88,6 @@
       "count": 1
     }
   },
-  "src/renderer/components/Home/DeleteFeedDialog.tsx": {
-    "@sonarjs/cyclomatic-complexity": {
-      "count": 1
-    }
-  },
   "src/renderer/components/Home/River.tsx": {
     "@sonarjs/cognitive-complexity": {
       "count": 1

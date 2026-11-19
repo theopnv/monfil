@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useState } from "react";
 import { Rss01 } from "@untitledui/icons";
 import AddFeedModal from "@/components/AddFeed/AddFeedModal";
@@ -20,6 +21,7 @@ export interface EmptyRiverProps {
 }
 
 export default function EmptyRiver({ onImportOpml, onImportFeedpack }: EmptyRiverProps) {
+  const { t } = useTranslation('river');
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
   const isHome = useActiveWorkspaceId() === HOME_WORKSPACE_ID;
 
@@ -30,24 +32,24 @@ export default function EmptyRiver({ onImportOpml, onImportFeedpack }: EmptyRive
       </span>
       {isHome ? (
         <>
-          <h2 className="mb-1.75 text-lg leading-tight font-bold text-primary">Pick your sources</h2>
+          <h2 className="mb-1.75 text-lg leading-tight font-bold text-primary">{t('empty.homeTitle')}</h2>
           <p className="mb-5.5 max-w-[44ch] text-sm leading-relaxed text-tertiary text-pretty">
-            Add a blog, a newsletter, anything with a feed. Monfil pulls in what it publishes and never decides what you see.
+            {t('empty.homeBody')}
           </p>
           <Button color="primary" className="rounded-full" onPress={() => setIsAddFeedOpen(true)}>
-            Add your first feed
+            {t('empty.addFirst')}
           </Button>
           <AddFeedModal isOpen={isAddFeedOpen} onOpenChange={setIsAddFeedOpen} />
         </>
       ) : (
         <>
-          <h2 className="mb-1.75 text-lg leading-tight font-bold text-primary">Nothing here yet</h2>
+          <h2 className="mb-1.75 text-lg leading-tight font-bold text-primary">{t('empty.otherTitle')}</h2>
           <p className="mb-5.5 max-w-[44ch] text-sm leading-relaxed text-tertiary text-pretty">
-            This workspace has no sources yet. Import an OPML file to fill it in one go.
+            {t('empty.otherBody')}
           </p>
           <div className="flex gap-2.5">
-            <Button color="primary" className="rounded-full" onPress={onImportOpml}>Import OPML</Button>
-            <Button color="secondary" className="rounded-full" onPress={onImportFeedpack}>Import feedpack</Button>
+            <Button color="primary" className="rounded-full" onPress={onImportOpml}>{t('empty.importOpml')}</Button>
+            <Button color="secondary" className="rounded-full" onPress={onImportFeedpack}>{t('empty.importFeedpack')}</Button>
           </div>
         </>
       )}

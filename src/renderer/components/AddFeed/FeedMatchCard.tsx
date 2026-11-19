@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import FeedAvatar from "@/components/common/FeedAvatar";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx } from "@/components/untitled-ui/utils/cx";
@@ -17,12 +18,13 @@ export interface FeedMatchCardProps {
   faviconUrl?: string | undefined;
 }
 
-const badgeLabel: Record<Exclude<FeedMatchStatus, "loading">, string> = {
-  found: "Feed found",
-  "not-found": "Not found",
-};
+const BADGE_KEY = {
+  found: "match.found",
+  "not-found": "match.notFound",
+} as const satisfies Record<Exclude<FeedMatchStatus, "loading">, string>;
 
 export default function FeedMatchCard({ title, detail, status, selected, faviconUrl }: FeedMatchCardProps) {
+  const { t } = useTranslation('addFeed');
   const highlighted = status === "found" && selected !== false;
   return (
     <div
@@ -39,10 +41,10 @@ export default function FeedMatchCard({ title, detail, status, selected, favicon
         <p className="truncate text-sm font-semibold text-primary">{title}</p>
         <p className="truncate text-xs text-tertiary">{detail}</p>
       </div>
-      {status === "loading" && <span className="text-xs text-tertiary">Checking…</span>}
+      {status === "loading" && <span className="text-xs text-tertiary">{t('match.checking')}</span>}
       {status !== "loading" && selected !== false && (
         <Badge color={status === "found" ? "success" : "error"} size="sm" className="tracking-wide uppercase">
-          {badgeLabel[status]}
+          {t(BADGE_KEY[status])}
         </Badge>
       )}
     </div>

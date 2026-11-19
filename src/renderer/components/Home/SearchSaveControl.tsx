@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useState } from "react";
 import { Dialog, DialogTrigger, Popover } from "react-aria-components";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
@@ -20,6 +21,7 @@ export interface SearchSaveControlProps {
 }
 
 function NameButton({ label, defaultName, onSubmit }: { label: string; defaultName: string; onSubmit: (name: string) => Promise<string | undefined> }) {
+  const { t } = useTranslation(['river', 'common']);
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState(defaultName);
   const [error, setError] = useState<string>();
@@ -43,14 +45,14 @@ function NameButton({ label, defaultName, onSubmit }: { label: string; defaultNa
     }}>
       <Button size="sm" color="secondary" className="flex-none rounded-full" onPress={() => setIsOpen(true)}>{label}</Button>
       <Popover data-search-area placement="bottom end" className="z-50 w-72 rounded-lg bg-primary p-3 shadow-lg ring-1 ring-secondary">
-        <Dialog aria-label="Name this search" className="flex flex-col gap-2 outline-hidden">
+        <Dialog aria-label={t('river:saveControl.dialog')} className="flex flex-col gap-2 outline-hidden">
           <form className="flex flex-col gap-2" onSubmit={(event) => {
             event.preventDefault();
             void submit();
           }}>
             <Input
               autoFocus
-              aria-label="Name of the saved search"
+              aria-label={t('river:saveControl.nameField')}
               value={name}
               onChange={(value) => {
                 setName(value);
@@ -61,8 +63,8 @@ function NameButton({ label, defaultName, onSubmit }: { label: string; defaultNa
               maxLength={MAX_NAME_LENGTH}
             />
             <div className="flex justify-end gap-2">
-              <Button size="sm" color="secondary" onPress={() => setIsOpen(false)}>Cancel</Button>
-              <Button size="sm" color="primary" type="submit" isDisabled={name.trim() === ""}>Save</Button>
+              <Button size="sm" color="secondary" onPress={() => setIsOpen(false)}>{t('common:action.cancel')}</Button>
+              <Button size="sm" color="primary" type="submit" isDisabled={name.trim() === ""}>{t('common:action.save')}</Button>
             </div>
           </form>
         </Dialog>
@@ -76,6 +78,7 @@ function NameButton({ label, defaultName, onSubmit }: { label: string; defaultNa
  * pill's query has been edited.
  */
 export default function SearchSaveControl({ query, searches, activeSearch, onCreate, onUpdate }: SearchSaveControlProps) {
+  const { t } = useTranslation('river');
   const trimmed = query.trim();
   if (trimmed === "") {
     return null;
@@ -84,8 +87,8 @@ export default function SearchSaveControl({ query, searches, activeSearch, onCre
   if (activeSearch && trimmed !== activeSearch.query) {
     return (
       <>
-        <Button size="sm" color="secondary" className="flex-none rounded-full" onPress={() => void onUpdate()}>Update</Button>
-        <NameButton label="Save as new" defaultName={trimmed} onSubmit={onCreate} />
+        <Button size="sm" color="secondary" className="flex-none rounded-full" onPress={() => void onUpdate()}>{t('saveControl.update')}</Button>
+        <NameButton label={t('saveControl.saveAsNew')} defaultName={trimmed} onSubmit={onCreate} />
       </>
     );
   }
@@ -94,5 +97,5 @@ export default function SearchSaveControl({ query, searches, activeSearch, onCre
     return null;
   }
 
-  return <NameButton label="Save search" defaultName={trimmed} onSubmit={onCreate} />;
+  return <NameButton label={t('saveControl.saveSearch')} defaultName={trimmed} onSubmit={onCreate} />;
 }

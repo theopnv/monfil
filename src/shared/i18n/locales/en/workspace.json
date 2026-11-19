@@ -1,0 +1,26 @@
+{
+  "navigation": {
+    "label": "Workspace views",
+    "all": "All items",
+    "saved": "Saved",
+    "saveHint": "Save an article with the bookmark. Find your saved articles here."
+  },
+  "switcher": {
+    "dialog": "Switch workspace",
+    "field": "Workspace name",
+    "placeholder": "Go to workspace…",
+    "list": "Workspaces",
+    "empty": "No workspace matches."
+  },
+  "rail": {
+    "moveFailed": "The feed could not be moved.",
+    "list": "Workspaces",
+    "move": "Move {{name}}",
+    "hideNames": "Hide workspace names",
+    "showNames": "Show workspace names",
+    "collapse": "Collapse",
+    "new": "New workspace",
+    "newHint": "Create a workspace to group feeds. Right-click a workspace to edit or delete it.",
+    "settings": "Settings"
+  }
+}
