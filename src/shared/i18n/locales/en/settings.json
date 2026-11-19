@@ -1,0 +1,110 @@
+{
+  "section": {
+    "appearance": "Appearance",
+    "reading": "Reading",
+    "refreshing": "Refreshing",
+    "data": "Your data",
+    "privacy": "Privacy",
+    "diagnostics": "Diagnostics",
+    "about": "About"
+  },
+  "title": "Settings",
+  "about": {
+    "tagline": "RSS feed reader and more.",
+    "link": {
+      "website": "Website",
+      "documentation": "Documentation",
+      "changelog": "Changelog",
+      "reportIssue": "Report an issue",
+      "buyCoffee": "Buy me a coffee"
+    }
+  },
+  "appearance": {
+    "theme": "Theme",
+    "density": "Default density",
+    "densityHint": "How river cards are laid out on Home.",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "themeHints": {
+      "light": "Always use the light appearance.",
+      "dark": "Always use the dark appearance.",
+      "system": "Match your OS setting, and switch automatically when it changes."
+    },
+    "densities": {
+      "cards": "Cards",
+      "magazine": "Magazine",
+      "compact": "Compact"
+    },
+    "language": "Language",
+    "languageHint": "The language of menus, dialogs, and messages. Feed text stays as it is.",
+    "languageSystem": "System ({{language}})",
+    "languageBeta": "{{language}} (beta)",
+    "languageBetaHint": "A machine drafted this translation and no native speaker has checked it yet. You can fix it with a pull request."
+  },
+  "reading": {
+    "markScroll": "Mark as read while scrolling",
+    "markScrollHint": "An item is marked read once it scrolls above the top of the list.",
+    "hideRead": "Hide read items in Home",
+    "hideReadHint": "Read items leave the river instead of staying dimmed.",
+    "keyboard": "Keyboard navigation",
+    "keyboardHint": "j / k to move between items, Esc to leave the reader.",
+    "external": "Open links in my browser",
+    "externalHint": "Clicking an item opens its source link instead of the built-in reader."
+  },
+  "refreshing": {
+    "interval": {
+      "m15": "15 min",
+      "m30": "30 min",
+      "h1": "1 h",
+      "h6": "6 h",
+      "manual": "Manual"
+    },
+    "refresh": "Refresh feeds",
+    "refreshHint": "How often Monfil checks your feeds for new items.",
+    "onLaunch": "Refresh on launch",
+    "onLaunchHint": "Also refresh once immediately when Monfil starts.",
+    "keep": "Keep articles for",
+    "keepHint": "Remove older articles after this many days. Keep at least 10 per feed.",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days"
+  },
+  "data": {
+    "feeds": "Feeds",
+    "articles": "Articles",
+    "size": "Database size",
+    "backedUp": "Database backup saved.",
+    "backupFailed": "Backup failed. {{message}}",
+    "backUp": "Back up database…",
+    "reveal": "Reveal database file",
+    "importOpml": "Import OPML"
+  },
+  "privacy": {
+    "share": "Share anonymous usage stats",
+    "unavailable": "This build of Monfil does not collect usage stats.",
+    "shareHint": "Send one daily count of the features you use. No feed, article, or search text leaves your device. Turn it off at any time to stop sending and delete the counts kept on this device.",
+    "preview": "See what is sent",
+    "notice": "Privacy notice"
+  },
+  "diagnostics": {
+    "detailed": "Detailed logging",
+    "detailedHint": "Record debug details in the local log file. Feed names, full links, article text, credentials, and file paths are removed.",
+    "showLog": "Show log file"
+  },
+  "analyticsCard": {
+    "label": "Anonymous usage stats",
+    "later": "Ask me later",
+    "title": "Help improve Monfil",
+    "body": "Share anonymous usage stats: one daily count of the features you use. No feed, article, or search text leaves your device. You can change this in Settings at any time.",
+    "share": "Share usage stats",
+    "decline": "No thanks"
+  },
+  "analyticsPreview": {
+    "title": "What is sent",
+    "body": "Monfil sends one summary like this for each day you use it. It holds counts and settings. It holds no feed, article, search text, or name.",
+    "preview": "Usage stats preview",
+    "loading": "Loading…"
+  }
+}

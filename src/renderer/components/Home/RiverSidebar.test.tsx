@@ -7,6 +7,7 @@ import { userEvent } from 'vitest/browser';
 import { useCategories, useFeeds } from '@/providers/feeds-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
+import { pressComposing } from '@/lib/test/press-composing';
 import RiverSidebar from './RiverSidebar';
 import type { DeleteCategoryError } from '../../../shared/contracts';
 import type { DeleteFeedError } from '../../../shared/contracts';
@@ -215,13 +216,25 @@ async function renderOpenSidebar(feeds: FeedSummary[], showOnlyLinks: ReadonlySe
 
 test('a failed feed shows the reason in the warning tooltip', async () => {
   // Arrange
-  const failing: FeedSummary = { ...feedA, last_error: 'The server refused access (HTTP 403).' };
+  const failing: FeedSummary = { ...feedA, last_error: 'The server refused access (HTTP 403).', last_error_code: 'GENERIC_FETCH_ERROR', last_error_params: { reason: 'refused', status: 403 } };
 
   // Act
   const { getByRole } = await renderOpenSidebar([failing], new Set());
 
   // Assert
-  await expect.element(getByRole('img', { name: 'Feed A refresh failed: The server refused access (HTTP 403).' })).toHaveAttribute('title', 'The last refresh failed: The server refused access (HTTP 403).');
+  const sentence = 'The server refused access (HTTP 403). It may block automated readers, or your network or VPN.';
+  await expect.element(getByRole('img', { name: `Feed A refresh failed: ${sentence}` })).toHaveAttribute('title', `The last refresh failed: ${sentence}`);
+});
+
+test('a feed that failed before error codes existed gets a generic reason, not the stored English text', async () => {
+  // Arrange
+  const legacy: FeedSummary = { ...feedA, last_error: 'The server refused access (HTTP 403).', last_error_code: null, last_error_params: null };
+
+  // Act
+  const { getByRole } = await renderOpenSidebar([legacy], new Set());
+
+  // Assert
+  await expect.element(getByRole('img', { name: 'Feed A refresh failed: Monfil could not read this feed.' })).toHaveAttribute('title', 'The last refresh failed: Monfil could not read this feed.');
 });
 
 describe('feed row focus and hide controls', () => {
@@ -584,7 +597,8 @@ describe('feed row context menu and delete', () => {
     await getByRole('button', { name: 'Delete feed' }).click();
 
     // Assert
-    await expect.element(getByText('Could not delete the feed.', { exact: true })).toBeInTheDocument();
+    await expect.element(getByText('The database could not complete this change.', { exact: true })).toBeInTheDocument();
+    await expect.element(getByText('Details: Could not delete the feed.', { exact: true })).toBeInTheDocument();
     await expect.element(getByRole('heading', { name: 'Delete feed' })).toBeInTheDocument();
     await expect.element(getByText('1 item', { exact: true })).toBeInTheDocument();
   });
@@ -750,6 +764,24 @@ describe('folder context menu and rename', () => {
     expect(invokeMock).not.toHaveBeenCalledWith('feeds:rename-category', expect.anything());
   });
 
+  test('Enter and Escape that belong to an IME composition do not submit or cancel the rename', async () => {
+    // Arrange
+    stubElectron({ feeds: [feedA] });
+    const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
+    renameCategoryRequestedHandler?.(feedA.category.id);
+    const input = getByRole('textbox');
+    await input.fill('技術');
+    invokeMock.mockClear();
+
+    // Act
+    pressComposing(input.element(), 'Enter');
+    pressComposing(input.element(), 'Escape');
+
+    // Assert
+    await expect.element(input).toHaveValue('技術');
+    expect(invokeMock).not.toHaveBeenCalledWith('feeds:rename-category', expect.anything());
+  });
+
   test('a duplicate name reply keeps the field open and shows the message', async () => {
     // Arrange
     stubElectron({ feeds: [feedA], renameCategory: { success: false, error: { name: 'DUPLICATE_NAME', message: 'nope' } } });
@@ -795,6 +827,24 @@ describe('folder create', () => {
       expect(invokeMock).toHaveBeenCalledWith('feeds:create-category', { name: 'Recipes', workspaceId: HOME_WORKSPACE_ID });
     });
     await expect.element(getByRole('textbox', { name: 'New folder name' })).not.toBeInTheDocument();
+  });
+
+  test('Enter and Escape that belong to an IME composition do not submit or cancel', async () => {
+    // Arrange
+    stubElectron();
+    const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
+    await getByRole('button', { name: 'New folder' }).click();
+    const input = getByRole('textbox', { name: 'New folder name' });
+    await input.fill('レシピ');
+    invokeMock.mockClear();
+
+    // Act
+    pressComposing(input.element(), 'Enter');
+    pressComposing(input.element(), 'Escape');
+
+    // Assert
+    await expect.element(input).toHaveValue('レシピ');
+    expect(invokeMock).not.toHaveBeenCalledWith('feeds:create-category', expect.anything());
   });
 
   test('the new folder appears in the sidebar with no feeds in it', async () => {

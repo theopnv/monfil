@@ -2,20 +2,24 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
+import { useFormatLocale } from "@/lib/i18n";
 import FeedAvatar from "@/components/common/FeedAvatar";
 import JobFacts from "@/components/Home/JobFacts";
 import RiverCardImage from "@/components/Home/RiverCardImage";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx } from "@/components/untitled-ui/utils/cx";
-import { describeRiverCard, formatRelativeTime, SOURCE_TYPE_LABEL, type RiverCardProps } from "@/lib/river/utils";
+import { describeRiverCard, formatRelativeTime, sourceTypeLabel, type RiverCardProps } from "@/lib/river/utils";
 
 export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps) {
+  const { t } = useTranslation('river');
+  const locale = useFormatLocale();
   return (
     <article
       data-item-id={item.id}
       role="button"
       tabIndex={0}
-      aria-label={describeRiverCard(item, read)}
+      aria-label={describeRiverCard(item, read, t, locale)}
       onClick={() => onOpen(item.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -32,21 +36,21 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
 
       <div className="flex flex-1 flex-col p-4.25">
         {/* Keeps the time clear of the save button RiverList overlays, which an absent or failed image leaves over this row. */}
-        <div className="mb-2 flex items-center gap-1.75 pr-7">
+        <div className="mb-2 flex items-center gap-1.75 pe-7">
           <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
           <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="sm" />
-          <span className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
-          <span className="ml-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
+          <span dir="auto" className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
+          <span className="ms-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt, locale)}</span>
         </div>
 
-        <h4 className="mb-1.75 text-base leading-snug font-bold text-pretty text-primary">{item.title}</h4>
+        <h4 dir="auto" className="mb-1.75 text-base leading-snug font-bold text-pretty text-primary">{item.title}</h4>
         {item.job && <JobFacts job={item.job} className="mb-1.75" />}
-        {item.excerpt && <p className="text-sm leading-snug text-pretty text-tertiary">{item.excerpt}</p>}
+        {item.excerpt && <p dir="auto" className="text-sm leading-snug text-pretty text-tertiary">{item.excerpt}</p>}
 
         <div className="mt-auto flex items-center gap-2 pt-3">
           {item.categoryName && <span className="rounded-full bg-sage-200 px-2.25 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>}
           <Badge color="brand" size="sm">
-            {SOURCE_TYPE_LABEL[item.type]}
+            {sourceTypeLabel(item.type, t)}
           </Badge>
         </div>
       </div>

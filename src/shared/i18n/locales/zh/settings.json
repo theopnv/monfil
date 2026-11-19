@@ -1,0 +1,109 @@
+{
+  "section": {
+    "appearance": "外观",
+    "reading": "阅读",
+    "refreshing": "刷新",
+    "data": "你的数据",
+    "privacy": "隐私",
+    "diagnostics": "诊断",
+    "about": "关于"
+  },
+  "title": "设置",
+  "about": {
+    "tagline": "RSS 订阅阅读器，以及更多功能。",
+    "link": {
+      "website": "官网",
+      "documentation": "文档",
+      "changelog": "更新日志",
+      "reportIssue": "报告问题",
+      "buyCoffee": "请我喝杯咖啡"
+    }
+  },
+  "appearance": {
+    "theme": "主题",
+    "density": "默认密度",
+    "densityHint": "信息流卡片在首页上的排版方式。",
+    "themes": {
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统"
+    },
+    "themeHints": {
+      "light": "始终使用浅色外观。",
+      "dark": "始终使用深色外观。",
+      "system": "跟随系统设置，并在系统设置变化时自动切换。"
+    },
+    "densities": {
+      "cards": "卡片",
+      "magazine": "杂志",
+      "compact": "紧凑"
+    },
+    "language": "语言",
+    "languageHint": "菜单、对话框和消息的语言。订阅源内容保持原样。",
+    "languageSystem": "跟随系统（{{language}}）",
+    "languageBeta": "{{language}}（测试版）",
+    "languageBetaHint": "此译文由机器生成，尚未经过母语者审校。你可以通过拉取请求进行修正。"
+  },
+  "reading": {
+    "markScroll": "滚动时标为已读",
+    "markScrollHint": "内容滚动到列表顶部上方后，会被标为已读。",
+    "hideRead": "在首页隐藏已读内容",
+    "hideReadHint": "已读内容将离开信息流，而不是以灰色显示。",
+    "keyboard": "键盘导航",
+    "keyboardHint": "j / k 在内容之间移动，Esc 键退出阅读器。",
+    "external": "在浏览器中打开链接",
+    "externalHint": "单击内容会打开其来源链接，而不是应用内阅读器。"
+  },
+  "refreshing": {
+    "interval": {
+      "m15": "15 分钟",
+      "m30": "30 分钟",
+      "h1": "1 小时",
+      "h6": "6 小时",
+      "manual": "手动"
+    },
+    "refresh": "刷新订阅源",
+    "refreshHint": "Monfil 检查订阅源新内容的频率。",
+    "onLaunch": "启动时刷新",
+    "onLaunchHint": "Monfil 启动时也立即刷新一次。",
+    "keep": "保留文章时长",
+    "keepHint": "超过此天数的旧文章将被删除。每个订阅源至少保留 10 篇。",
+    "days_other": "{{count}} 天"
+  },
+  "data": {
+    "feeds": "订阅源",
+    "articles": "文章",
+    "size": "数据库大小",
+    "backedUp": "数据库备份已保存。",
+    "backupFailed": "备份失败。{{message}}",
+    "backUp": "备份数据库…",
+    "reveal": "显示数据库文件",
+    "importOpml": "导入 OPML"
+  },
+  "privacy": {
+    "share": "分享匿名使用统计",
+    "unavailable": "此版本的 Monfil 不收集使用统计。",
+    "shareHint": "每天发送一次你所用功能的计数。订阅源、文章或搜索文本都不会离开你的设备。随时可关闭，以停止发送，并删除保存在本机上的计数。",
+    "preview": "查看发送内容",
+    "notice": "隐私声明"
+  },
+  "diagnostics": {
+    "detailed": "详细日志",
+    "detailedHint": "在本地日志文件中记录调试详情。订阅源名称、完整链接、文章文本、凭据和文件路径都会被删除。",
+    "showLog": "显示日志文件"
+  },
+  "analyticsCard": {
+    "label": "匿名使用统计",
+    "later": "稍后再说",
+    "title": "帮助改进 Monfil",
+    "body": "分享匿名使用统计：每天一次你所用功能的计数。订阅源、文章或搜索文本都不会离开你的设备。你可以随时在设置中更改。",
+    "share": "分享使用统计",
+    "decline": "不用了，谢谢"
+  },
+  "analyticsPreview": {
+    "title": "发送的内容",
+    "body": "每天你使用 Monfil 时，它会发送一条如下的摘要。摘要只包含计数和设置，不包含订阅源、文章、搜索文本或名称。",
+    "preview": "使用统计预览",
+    "loading": "正在加载…"
+  }
+}

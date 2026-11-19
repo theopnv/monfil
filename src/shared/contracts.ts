@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import type { ErrorParams } from './errors';
+import type { LanguageCode, LanguageSetting } from './i18n/languages';
+
 // Home is inserted as the first row by the migration that creates this table, and it can never be
 // deleted, so its id is permanently 1.
 export const HOME_WORKSPACE_ID = 1;
@@ -45,11 +48,11 @@ export interface SavedSearchList {
 }
 
 export type SavedSearchError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'WORKSPACE_NOT_FOUND'; message: string }
-  | { name: 'SEARCH_NOT_FOUND'; message: string }
-  | { name: 'DUPLICATE_NAME'; message: string }
-  | { name: 'INVALID_INPUT'; message: string };
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'WORKSPACE_NOT_FOUND'; message: string; params?: ErrorParams }
+  | { name: 'SEARCH_NOT_FOUND'; message: string; params?: ErrorParams }
+  | { name: 'DUPLICATE_NAME'; message: string; params?: ErrorParams }
+  | { name: 'INVALID_INPUT'; message: string; params?: ErrorParams };
 
 export interface FeedCategory {
   id: number;
@@ -64,6 +67,8 @@ export interface FeedMetadata {
   type: SourceType;
   last_fetched_at: string | undefined;
   last_error: string | undefined | null;
+  last_error_code?: string | undefined | null;
+  last_error_params?: ErrorParams | undefined | null;
   icon: string | undefined;
 }
 
@@ -79,7 +84,7 @@ export interface SourceItem {
   read_at: string | undefined;
 }
 
-export type ParsedSource = Omit<FeedMetadata, 'id' | 'last_fetched_at' | 'last_error'> & {
+export type ParsedSource = Omit<FeedMetadata, 'id' | 'last_fetched_at' | 'last_error' | 'last_error_code' | 'last_error_params'> & {
   description: string;
   items: SourceItem[];
   /** Names this feed among the candidates one link offers, e.g. "Releases" or "100+ points". */
@@ -89,15 +94,15 @@ export type ParsedSource = Omit<FeedMetadata, 'id' | 'last_fetched_at' | 'last_e
 };
 
 export type FetchUrlError =
-  | { name: 'GENERIC_FETCH_ERROR'; message: string }
-  | { name: 'NETWORK_ERROR'; message: string }
-  | { name: 'NOT_ALLOWED_OR_ABORTED_ERROR'; message: string }
-  | { name: 'RESPONSE_TOO_LARGE_ERROR'; message: string }
-  | { name: 'BLOCKED_URL_ERROR'; message: string };
+  | { name: 'GENERIC_FETCH_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'NETWORK_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'NOT_ALLOWED_OR_ABORTED_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'RESPONSE_TOO_LARGE_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'BLOCKED_URL_ERROR'; message: string; params?: ErrorParams };
 
 export type FeedFetchError =
   | FetchUrlError
-  | { name: 'PARSE_ERROR' | 'UNKNOWN_ERROR' | 'UNSUPPORTED_FORMAT'; message: string };
+  | { name: 'PARSE_ERROR' | 'UNKNOWN_ERROR' | 'UNSUPPORTED_FORMAT'; message: string; params?: ErrorParams };
 
 export interface NewFeedInput {
   link: string;
@@ -110,31 +115,31 @@ export interface NewFeedInput {
   icon?: string;
 }
 
-export type AddFeedError = { name: 'DB_ERROR'; message: string };
+export type AddFeedError = { name: 'DB_ERROR'; message: string; params?: ErrorParams };
 export type CreateCategoryError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'DUPLICATE_NAME'; message: string };
-export type CreateWorkspaceError = { name: 'DB_ERROR'; message: string };
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'DUPLICATE_NAME'; message: string; params?: ErrorParams };
+export type CreateWorkspaceError = { name: 'DB_ERROR'; message: string; params?: ErrorParams };
 export type DeleteFeedError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'FEED_NOT_FOUND'; message: string };
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'FEED_NOT_FOUND'; message: string; params?: ErrorParams };
 export type DeleteCategoryError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'CATEGORY_NOT_FOUND'; message: string };
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'CATEGORY_NOT_FOUND'; message: string; params?: ErrorParams };
 export type DeleteWorkspaceError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'WORKSPACE_NOT_FOUND'; message: string }
-  | { name: 'HOME_NOT_DELETABLE'; message: string };
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'WORKSPACE_NOT_FOUND'; message: string; params?: ErrorParams }
+  | { name: 'HOME_NOT_DELETABLE'; message: string; params?: ErrorParams };
 export type UpdateFeedError = DeleteFeedError;
 export type MoveFeedError = DeleteFeedError;
 export type UpdateWorkspaceError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'WORKSPACE_NOT_FOUND'; message: string };
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'WORKSPACE_NOT_FOUND'; message: string; params?: ErrorParams };
 export type UpdateItemError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'ITEM_NOT_FOUND'; message: string };
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'ITEM_NOT_FOUND'; message: string; params?: ErrorParams };
 
-export type UpdateSavedItemError = UpdateItemError | { name: 'WORKSPACE_NOT_FOUND'; message: string };
+export type UpdateSavedItemError = UpdateItemError | { name: 'WORKSPACE_NOT_FOUND'; message: string; params?: ErrorParams };
 
 export interface SetSavedItemInput {
   workspaceId: number;
@@ -142,9 +147,9 @@ export interface SetSavedItemInput {
   saved: boolean;
 }
 export type UpdateCategoryError =
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'CATEGORY_NOT_FOUND'; message: string }
-  | { name: 'DUPLICATE_NAME'; message: string };
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'CATEGORY_NOT_FOUND'; message: string; params?: ErrorParams }
+  | { name: 'DUPLICATE_NAME'; message: string; params?: ErrorParams };
 
 export type FeedSummary = FeedMetadata & {
   showInWorkspace: number;
@@ -217,7 +222,7 @@ export interface RefreshSummary {
   perFeed: { feedId: number; inserted: number; updated?: number }[];
   removed?: number;
   applyImmediately?: boolean;
-  failedFeeds?: { feedId: number; title: string; message: string }[];
+  failedFeeds?: { feedId: number; title: string; message: string; code: string; params?: ErrorParams }[];
 }
 
 export interface ItemBody {
@@ -256,17 +261,19 @@ export interface ParsedOpml {
 }
 
 export type ParseOpmlError =
-  | { name: 'MALFORMED_XML'; message: string }
-  | { name: 'NO_FEEDS'; message: string };
+  | { name: 'MALFORMED_XML'; message: string; params?: ErrorParams }
+  | { name: 'NO_FEEDS'; message: string; params?: ErrorParams };
 
 export interface ImportSkipped {
   title: string;
-  reason: string;
+  reason: 'ALREADY_IN_WORKSPACE';
 }
 
 export interface ImportFailed {
   title: string;
   message: string;
+  code: string | undefined;
+  params?: ErrorParams | undefined;
 }
 
 export interface ImportSummary {
@@ -282,20 +289,27 @@ export type ImportOpmlTarget =
 
 export type ImportOpmlError =
   | ParseOpmlError
-  | { name: 'DB_ERROR'; message: string }
-  | { name: 'FS_ERROR'; message: string }
-  | { name: 'CANCELLED'; message: string };
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'FS_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'CANCELLED'; message: string; params?: ErrorParams };
 
 export type ExportOpmlError =
-  | { name: 'WORKSPACE_NOT_FOUND'; message: string }
-  | { name: 'NO_FEEDS'; message: string }
-  | { name: 'CANCELLED'; message: string }
-  | { name: 'FS_ERROR'; message: string };
+  | { name: 'WORKSPACE_NOT_FOUND'; message: string; params?: ErrorParams }
+  | { name: 'NO_FEEDS'; message: string; params?: ErrorParams }
+  | { name: 'CANCELLED'; message: string; params?: ErrorParams }
+  | { name: 'FS_ERROR'; message: string; params?: ErrorParams };
+
+export interface FeedpackText {
+  title: string;
+  description: string;
+}
 
 export interface Feedpack {
   slug: string;
   title: string;
   description: string;
+  /** The title and description in other interface languages. English is the `title` and `description` above. */
+  i18n?: Partial<Record<LanguageCode, FeedpackText>> | undefined;
   tags: string[];
   curator: string;
   sourceCount: number;
@@ -309,15 +323,15 @@ export interface FeedpackCatalog {
 }
 
 export type CatalogError =
-  | { name: 'UNSUPPORTED_VERSION'; message: string }
-  | { name: 'INVALID_CATALOG'; message: string }
-  | { name: 'UNAVAILABLE'; message: string };
+  | { name: 'UNSUPPORTED_VERSION'; message: string; params?: ErrorParams }
+  | { name: 'INVALID_CATALOG'; message: string; params?: ErrorParams }
+  | { name: 'UNAVAILABLE'; message: string; params?: ErrorParams };
 
 export type FeedpackError =
   | CatalogError
   | ParseOpmlError
-  | { name: 'PACK_NOT_FOUND'; message: string }
-  | { name: 'FETCH_ERROR'; message: string };
+  | { name: 'PACK_NOT_FOUND'; message: string; params?: ErrorParams }
+  | { name: 'FETCH_ERROR'; message: string; params?: ErrorParams };
 
 export type InstallFeedpackError = FeedpackError | ImportOpmlError;
 
@@ -367,3 +381,10 @@ export interface UsagePreferences {
 }
 
 export type DailySummaryProps = Record<string, string | number>;
+
+/** The language choice, the language it resolves to now, and the language the operating system asks for. */
+export interface LanguageState {
+  setting: LanguageSetting;
+  language: LanguageCode;
+  systemLanguage: LanguageCode;
+}

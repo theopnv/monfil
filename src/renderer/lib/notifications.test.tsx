@@ -5,9 +5,11 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import { render } from 'vitest-browser-react';
-import { dismissAllNotifications, notifyError, notifyWarning, NotificationHost } from './notifications';
+import { setRendererLanguage } from '@/lib/i18n';
+import { dismissAllNotifications, notifyError, notifyUndo, notifyWarning, NotificationHost } from './notifications';
 
 afterEach(async () => {
+  await setRendererLanguage('en');
   dismissAllNotifications();
   await expect.element(page.getByRole('listitem')).not.toBeInTheDocument();
 });
@@ -53,6 +55,46 @@ describe('notifyError', () => {
 
     // Assert
     await expect.element(page.getByText('Could not save', { exact: true })).toBeVisible();
+  });
+});
+
+describe('notifyUndo', () => {
+  test('runs the callback when the user presses the translated Undo button', async () => {
+    // Arrange
+    const onUndo = vi.fn();
+    await render(<NotificationHost />);
+    notifyUndo('Feed removed', onUndo);
+
+    // Act
+    await page.getByRole('button', { name: 'Undo' }).click();
+
+    // Assert
+    expect(onUndo).toHaveBeenCalledOnce();
+  });
+});
+
+describe('NotificationHost', () => {
+  test('lays out left to right in English', async () => {
+    // Act
+    await render(<NotificationHost />);
+    notifyError('Could not save');
+
+    // Assert
+    await expect.element(page.getByText('Could not save', { exact: true })).toBeVisible();
+    expect(document.querySelector('[data-sonner-toaster]')?.getAttribute('dir')).toBe('ltr');
+  });
+
+  test('lays out right to left in Arabic', async () => {
+    // Arrange
+    await setRendererLanguage('ar');
+
+    // Act
+    await render(<NotificationHost />);
+    notifyError('Could not save');
+
+    // Assert
+    await expect.element(page.getByText('Could not save', { exact: true })).toBeVisible();
+    expect(document.querySelector('[data-sonner-toaster]')?.getAttribute('dir')).toBe('rtl');
   });
 });
 

@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { Trans, useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
+import type { CodedError } from "../../../shared/errors";
 import { useState } from "react";
 import { Heading } from "react-aria-components";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +24,7 @@ export interface MoveFeedDialogProps {
 }
 
 function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => void }) {
+  const { t } = useTranslation(['river', 'common']);
   const activeId = useActiveWorkspaceId();
   const moveFeedToWorkspace = useMoveFeedToWorkspace();
   const destinations = useWorkspaces().filter((workspace) => workspace.id !== activeId);
@@ -29,7 +33,7 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
   const [folderChoice, setFolderChoice] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState(feed.category.name);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<CodedError | null>(null);
   const { data: categories = [] } = useQuery({ ...categoriesQuery(destinationId ?? 0), enabled: destinationId !== undefined });
 
   const folderNames = categories.map((category) => category.name);
@@ -48,7 +52,7 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
     if (result.success) {
       onClose();
     } else {
-      setError(result.error.message);
+      setError(result.error);
     }
   }
 
@@ -56,15 +60,15 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
     <>
       <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
         <Heading slot="title" className="font-display text-lg font-semibold text-primary">
-          Move feed
+          {t('river:moveFeed.title')}
         </Heading>
         <p className="text-sm text-tertiary">
-          Move <span className="font-semibold text-secondary">{feed.title}</span> to another workspace.
+          <Trans t={t} i18nKey="river:moveFeed.body" values={{ title: feed.title }} components={{ bold: <span className="font-semibold text-secondary" /> }} />
         </p>
       </div>
 
       <div className="flex flex-col gap-1.5 px-6 pb-4.5">
-        <label htmlFor="move-feed-workspace" className="text-sm font-medium text-secondary">Workspace</label>
+        <label htmlFor="move-feed-workspace" className="text-sm font-medium text-secondary">{t('river:moveFeed.workspace')}</label>
         <NativeSelect
           id="move-feed-workspace"
           value={destinationId}
@@ -80,16 +84,16 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
       </div>
 
       <div className="flex flex-col gap-1.5 px-6 pb-4.5">
-        <label htmlFor="move-feed-folder" className="text-sm font-medium text-secondary">Folder</label>
+        <label htmlFor="move-feed-folder" className="text-sm font-medium text-secondary">{t('river:moveFeed.folder')}</label>
         <NativeSelect id="move-feed-folder" value={folder} onChange={(event) => setFolderChoice(event.target.value)}>
           {folderNames.map((name) => (
             <option key={name} value={name}>{name}</option>
           ))}
-          <option value={NEW_FOLDER}>New folder…</option>
+          <option value={NEW_FOLDER}>{t('river:moveFeed.newFolder')}</option>
         </NativeSelect>
         {folder === NEW_FOLDER && (
           <input
-            aria-label="New folder name"
+            aria-label={t('river:moveFeed.newFolderName')}
             className={FIELD_CLASSES}
             value={newFolderName}
             onChange={(event) => setNewFolderName(event.target.value)}
@@ -97,14 +101,14 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
         )}
       </div>
 
-      {error && <p className="px-6 pb-2 text-sm text-error-primary">{error}</p>}
+      {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
       <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
         <Button color="secondary" size="md" className="rounded-full" onPress={onClose}>
-          Cancel
+          {t('common:action.cancel')}
         </Button>
         <Button color="primary" size="md" className="rounded-full" isLoading={isLoading} isDisabled={!canMove} onPress={handleConfirm}>
-          Move feed
+          {t('river:moveFeed.confirm')}
         </Button>
       </div>
     </>

@@ -4,6 +4,7 @@
 
 import type { DailySummaryProps, UsageCounter, UsagePreferences } from '../../shared/contracts';
 import { USAGE_COUNTERS } from '../../shared/contracts';
+import type { LanguageCode } from '../../shared/i18n/languages';
 import type { LibraryState } from './library';
 
 const MAX_STRING_LENGTH = 180;
@@ -30,6 +31,8 @@ export interface SummaryInput {
   counters: Partial<Record<UsageCounter, number>>;
   library: LibraryState;
   preferences: UsagePreferences | undefined;
+  /** The interface language in use, not the operating system locale that the event already carries. */
+  language: LanguageCode;
 }
 
 function cut(value: string): string {
@@ -40,7 +43,7 @@ function cut(value: string): string {
  * Builds the props of one `daily_summary` event. It holds counts, buckets, and settings, and no feed, article, or person.
  * @param input the day, its tallies, and the state of the library and preferences
  */
-export function buildDailySummary({ day, counters, library, preferences }: SummaryInput): DailySummaryProps {
+export function buildDailySummary({ day, counters, library, preferences, language }: SummaryInput): DailySummaryProps {
   const props: DailySummaryProps = { day };
   for (const name of USAGE_COUNTERS) {
     props[name] = counters[name] ?? 0;
@@ -51,6 +54,7 @@ export function buildDailySummary({ day, counters, library, preferences }: Summa
   props['feed_kinds'] = cut(library.feedKinds.join('+') || 'none');
   props['pref_density'] = preferences?.density ?? 'unknown';
   props['pref_theme'] = preferences?.theme ?? 'unknown';
+  props['pref_language'] = language;
   props['pref_hide_read_items'] = preferences ? String(preferences.hideReadItems) : 'unknown';
   props['pref_mark_read_on_scroll'] = preferences ? String(preferences.markReadOnScroll) : 'unknown';
   props['pref_open_links_externally'] = preferences ? String(preferences.openLinksExternally) : 'unknown';

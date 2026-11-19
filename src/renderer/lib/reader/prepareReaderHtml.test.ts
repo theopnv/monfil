@@ -9,8 +9,10 @@ const PAGE = 'https://example.com/posts/one';
 const YOUTUBE_ID = 'dQw4w9WgXcQ';
 const TWEET_URL = 'https://x.com/someone/status/1234567890';
 
+const LABELS = { embedTitle: (provider: string) => `${provider} embed`, openEmbedded: 'Open embedded content' };
+
 function prepare(html: string, sourceUrl?: string): Document {
-  return new DOMParser().parseFromString(prepareReaderHtml(html, sourceUrl), 'text/html');
+  return new DOMParser().parseFromString(prepareReaderHtml(html, LABELS, sourceUrl), 'text/html');
 }
 
 describe('images', () => {
@@ -420,7 +422,7 @@ describe('site chrome', () => {
     const html = '<h2>Title</h2><p>Some <em>text</em> and a <a href="https://example.com/a">link</a>.</p>';
 
     // Act
-    const result = prepareReaderHtml(html, PAGE);
+    const result = prepareReaderHtml(html, LABELS, PAGE);
 
     // Assert
     expect(result).toBe(html);

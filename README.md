@@ -26,6 +26,8 @@ Stay ahead of your competitors, search for your next job and learn about new tre
 
 Start with one of the many curated feedpacks, from Software Engineering, Cybersecurity, and AI to Sports, Science, Finance, and Video Games. Or submit your own!
 
+Monfil speaks your language: the app and the docs come in English, French, German, Spanish, Italian, Brazilian Portuguese, Simplified Chinese, Japanese, and Arabic.
+
 "Mon fil" means "My feed" in French.
 
 ➡️ ["We should bring back RSS" - Andrej Karpathy](https://x.com/karpathy/status/2018043254986703167?s=20)
@@ -60,6 +62,7 @@ Monfil combines:
 - Advanced search and queries
 - Keyboard shortcuts
 - OPML import/export support
+- Nine interface languages: English, Français, Deutsch, Español, Italiano, Português (Brasil), 简体中文, 日本語 and العربية (with right-to-left layout).
 
 ## Paste a link, Monfil finds the feed
 

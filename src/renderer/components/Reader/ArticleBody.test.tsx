@@ -151,3 +151,18 @@ test('does not load an unsafe marker as a frame', async () => {
   expect(getByTestId('article-body').element().querySelector('iframe')).toBeNull();
   expect(getByTestId('article-body').element().querySelector('button')).toBeNull();
 });
+
+test('lets each block pick its own direction, so an Arabic quote can sit in an English article', async () => {
+  // Arrange
+  const html = '<h2>Title</h2><p>English text</p><blockquote>نص عربي</blockquote><ul><li>one</li></ul><pre>code</pre>';
+
+  // Act
+  const { getByTestId } = await render(<ArticleBody html={html} />);
+
+  // Assert
+  const body = getByTestId('article-body').element();
+  for (const selector of ['h2', 'p', 'blockquote', 'ul', 'li']) {
+    expect(body.querySelector(selector)?.getAttribute('dir')).toBe('auto');
+  }
+  expect(body.querySelector('pre')?.hasAttribute('dir')).toBe(false);
+});

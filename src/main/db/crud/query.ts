@@ -6,6 +6,7 @@ import { sql, type SelectQueryBuilder } from 'kysely';
 import { type ArticleContent, type Database, type FeedItem, type FeedMetadataRow, type Setting } from '../types';
 import { db, dbReady } from '../database';
 import { searchCondition } from '../search';
+import { parseErrorParams } from '../error-params';
 import type { FeedCategory, FeedSummary, JobDetails, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from '../../../shared/contracts';
 
 // Criteria handlers force us to explicitly add any new field of a table to the query layer.
@@ -62,6 +63,8 @@ const feedMetadataHandlers = {
   type: (q, v) => q.where('type', '=', v),
   last_fetched_at: (q, v) => q.where('last_fetched_at', '=', v),
   last_error: (q, v) => q.where('last_error', '=', v),
+  last_error_code: (q, v) => q.where('last_error_code', '=', v),
+  last_error_params: (q, v) => q.where('last_error_params', '=', v),
   icon: (q, v) => q.where('icon', '=', v),
   etag: (q, v) => q.where('etag', '=', v),
   last_modified: (q, v) => q.where('last_modified', '=', v),
@@ -180,6 +183,8 @@ export async function queryFeedSummaries(workspaceId: number): Promise<FeedSumma
       'f.type as type',
       'f.last_fetched_at as last_fetched_at',
       'f.last_error as last_error',
+      'f.last_error_code as last_error_code',
+      'f.last_error_params as last_error_params',
       'f.icon as icon',
       'c.id as categoryId',
       'c.name as categoryName',
@@ -198,6 +203,8 @@ export async function queryFeedSummaries(workspaceId: number): Promise<FeedSumma
     type: row.type,
     last_fetched_at: row.last_fetched_at,
     last_error: row.last_error,
+    last_error_code: row.last_error_code,
+    last_error_params: parseErrorParams(row.last_error_params),
     icon: row.icon,
     category: { id: row.categoryId, name: row.categoryName, workspace_id: row.categoryWorkspaceId },
     itemCount: row.itemCount ?? 0,

@@ -8,6 +8,8 @@ import { RouterProvider, createHashHistory, createRouter } from '@tanstack/react
 import { routeTree } from './routeTree.gen.ts';
 import '@/styles/globals.css';
 import { RootErrorBoundary } from '@/components/errors/RootErrorBoundary';
+import { LanguageProvider } from '@/providers/language-provider';
+import { applyDocumentLanguage, INITIAL_LANGUAGE } from '@/lib/i18n';
 
 // The renderer is loaded via the `file://` protocol in production, so browser
 // history (path-based routing) can't resolve routes against the filesystem path.
@@ -27,12 +29,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+// Before the first render, so a right-to-left language never paints left-to-right first.
+applyDocumentLanguage(INITIAL_LANGUAGE);
+
 const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
 root.render(
   <StrictMode>
-    <RootErrorBoundary>
-      <RouterProvider router={router} />
-    </RootErrorBoundary>
+    <LanguageProvider>
+      <RootErrorBoundary>
+        <RouterProvider router={router} />
+      </RootErrorBoundary>
+    </LanguageProvider>
   </StrictMode>
 );

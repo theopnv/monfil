@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useState } from "react";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
+import { isComposing } from "@/lib/keyboard";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import type { FeedCategory } from "../../../shared/contracts";
 
@@ -18,6 +20,7 @@ export interface CategoryPickerProps {
 }
 
 export default function CategoryPicker({ categories, selectedName, onSelect, newName, onNewNameChange, onAddNew }: CategoryPickerProps) {
+  const { t } = useTranslation('addFeed');
   const [isAddingNew, setIsAddingNew] = useState(false);
 
   function commitNewCategory() {
@@ -32,7 +35,7 @@ export default function CategoryPicker({ categories, selectedName, onSelect, new
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-xs font-semibold text-secondary">Put it in</div>
+      <div className="text-xs font-semibold text-secondary">{t('category.putIn')}</div>
       <div className="flex flex-wrap items-center gap-1.75">
         {categories.map((category) => (
           <button
@@ -53,12 +56,15 @@ export default function CategoryPicker({ categories, selectedName, onSelect, new
         {isAddingNew ? (
           <div className="flex items-center gap-1.5">
             <Input
-              aria-label="New category name"
+              aria-label={t('category.newName')}
               size="sm"
-              placeholder="e.g. Design"
+              placeholder={t('category.example')}
               value={newName}
               onChange={onNewNameChange}
               onKeyDown={(event) => {
+                if (isComposing(event.nativeEvent)) {
+                  return;
+                }
                 if (event.key === "Enter") {
                   commitNewCategory();
                 }
@@ -68,7 +74,7 @@ export default function CategoryPicker({ categories, selectedName, onSelect, new
               }}
             />
             <Button size="sm" color="secondary" isDisabled={newName.trim().length === 0} onPress={commitNewCategory}>
-              Add
+              {t('category.add')}
             </Button>
           </div>
         ) : (
@@ -77,12 +83,12 @@ export default function CategoryPicker({ categories, selectedName, onSelect, new
             onClick={() => setIsAddingNew(true)}
             className="rounded-full border border-dashed border-tertiary px-3.75 py-1.75 text-sm font-semibold text-tertiary hover:bg-primary_hover"
           >
-            + New category
+            {t('category.new')}
           </button>
         )}
       </div>
 
-      {selectedIsUnlisted && <p className="text-xs text-tertiary">New category: {selectedName}</p>}
+      {selectedIsUnlisted && <p className="text-xs text-tertiary">{t('category.unlisted', { name: selectedName })}</p>}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useEffect, type RefObject } from 'react';
+import { isLetterCode } from '@/lib/keyboard';
 
 export function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
@@ -21,7 +22,8 @@ export function useRiverKeyboardNav(containerRef: RefObject<HTMLElement | null>,
       return;
     }
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'j' && event.key !== 'k') {
+      const isNext = isLetterCode(event, 'j');
+      if (!isNext && !isLetterCode(event, 'k')) {
         return;
       }
       if (event.metaKey || event.ctrlKey || event.altKey || isTypingTarget(event.target)) {
@@ -37,7 +39,7 @@ export function useRiverKeyboardNav(containerRef: RefObject<HTMLElement | null>,
         return;
       }
       const activeIndex = cards.findIndex((card) => card === document.activeElement);
-      const nextIndex = event.key === 'j'
+      const nextIndex = isNext
         ? Math.min(activeIndex + 1, cards.length - 1)
         : Math.max(activeIndex - 1, 0);
 

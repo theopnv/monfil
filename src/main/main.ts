@@ -17,6 +17,10 @@ import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents } 
 import { allowPrivateHosts } from './lib/fetch';
 import { configureLogging, logger } from './logging/logger';
 import { installFatalHandlers } from './logging/fatal';
+import { fatalDialogText, mainLanguage, setMainSystemLocale } from './lib/i18n';
+import { initializeLanguage } from './app/language';
+import { SYSTEM_LOCALE_ARGUMENT } from '../shared/i18n/format-locale';
+import { LANGUAGE_ARGUMENT } from '../shared/i18n/languages';
 import { setLogFilePath } from './app/main-state';
 import { getDetailedLogging } from './app/settings';
 import { titleBarOverlayForTheme } from './app/window-chrome';
@@ -52,7 +56,7 @@ function bootstrap() {
   const logFilePath = path.join(app.getPath('userData'), 'monfil.log');
   setLogFilePath(logFilePath);
   configureLogging(logFilePath, false);
-  installFatalHandlers(logger, logFilePath);
+  installFatalHandlers(logger, logFilePath, fatalDialogText);
 
   initializeDatabase(path.join(app.getPath('userData'), DB_FILE_NAME))
     .then(async () => configureLogging(logFilePath, await getDetailedLogging()))
@@ -88,6 +92,7 @@ function bootstrap() {
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true,
+        additionalArguments: [`${SYSTEM_LOCALE_ARGUMENT}${app.getSystemLocale()}`, `${LANGUAGE_ARGUMENT}${mainLanguage()}`],
       },
     });
     hardenWebContents(mainWindow.webContents);
@@ -118,11 +123,14 @@ function bootstrap() {
     mainWindow.focus();
   });
 
-  const main = () => {
+  const main = async () => {
+    setMainSystemLocale(app.getSystemLocale());
     denyWebPermissions(session.defaultSession);
     configureYouTubeEmbedReferrer(session.defaultSession);
     registerIpcListeners();
     registerIpcHandlers();
+    // The window reads the language at creation, so the stored choice must be in before it opens.
+    await initializeLanguage();
     createWindow();
     startRefreshScheduler().catch((error: unknown) => {
       logger.error('feed.refresh', { outcome: 'failed' }, error);
@@ -135,7 +143,9 @@ function bootstrap() {
 
   // This method will be called when Electron has finished initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
-  app.on('ready', main);
+  app.on('ready', () => {
+    void main();
+  });
 
   // On macOS, BrowserWindow's `icon` option is a no-op; the packaged app gets its icon from the
   // bundle's Info.plist, but in dev there's no bundle, so the dock icon needs setting explicitly.

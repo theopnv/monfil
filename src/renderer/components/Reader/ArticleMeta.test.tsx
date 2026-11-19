@@ -32,7 +32,7 @@ test('renders no read time while the real word count is still loading', async ()
 
   // Assert: the excerpt has enough words for a multi-minute estimate, so "min read" showing up
   // here would prove it leaked in as a fallback instead of staying hidden until the real count arrives.
-  const meta = getByText(/Feed/, { exact: false }).element();
+  const meta = getByText(/·/, { exact: false }).element();
   expect(meta.textContent).not.toContain('min read');
 });
 
@@ -41,6 +41,6 @@ test('renders the read time once the real word count arrives', async () => {
   const { getByText } = await render(<ArticleMeta item={createItem()} wordCount={200} />);
 
   // Assert
-  const meta = getByText(/Feed/, { exact: false }).element();
+  const meta = getByText(/·/, { exact: false }).element();
   expect(meta.textContent).toContain('1 min read');
 });

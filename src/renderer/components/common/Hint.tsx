@@ -4,6 +4,7 @@
 
 import { useEffect, type ReactNode, type RefObject } from 'react';
 import { Button as AriaButton, OverlayArrow as AriaOverlayArrow, Popover as AriaPopover, type PopoverProps } from 'react-aria-components';
+import { useTranslation } from 'react-i18next';
 import { cx } from '@/components/untitled-ui/utils/cx';
 
 export interface HintProps extends Pick<PopoverProps, 'placement'> {
@@ -16,6 +17,7 @@ export interface HintProps extends Pick<PopoverProps, 'placement'> {
 
 /** A first-run pointer: a short text beside one control, closed with "Got it" or Escape. */
 export default function Hint({ triggerRef, isOpen, onDismiss, placement = 'bottom', children }: HintProps) {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -57,7 +59,7 @@ export default function Hint({ triggerRef, isOpen, onDismiss, placement = 'botto
           onPress={onDismiss}
           className="cursor-pointer rounded-sm text-xs font-semibold text-white underline outline-white focus-visible:outline-2 focus-visible:outline-offset-2"
         >
-          Got it
+          {t('action.gotIt')}
         </AriaButton>
       </div>
     </AriaPopover>

@@ -1,0 +1,24 @@
+{
+  "action": {
+    "undo": "撤销",
+    "gotIt": "知道了",
+    "cancel": "取消",
+    "save": "保存",
+    "tryAgain": "重试",
+    "done": "完成",
+    "import": "导入",
+    "close": "关闭",
+    "back": "返回",
+    "showLog": "显示日志文件",
+    "restart": "重新启动"
+  },
+  "item": {
+    "action": {
+      "save": "保存",
+      "removeFromSaved": "从已保存中移除"
+    }
+  },
+  "update": {
+    "ready": "Monfil 的新版本已准备好。"
+  }
+}

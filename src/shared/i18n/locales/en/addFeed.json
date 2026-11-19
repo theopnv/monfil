@@ -1,0 +1,124 @@
+{
+  "match": {
+    "found": "Feed found",
+    "notFound": "Not found",
+    "checking": "Checking…"
+  },
+  "wizard": {
+    "step": {
+      "find": "Find",
+      "configure": "Configure",
+      "done": "Done"
+    },
+    "titles": {
+      "find": "Add a feed",
+      "configure": "Make it yours",
+      "done": "Added to Monfil"
+    },
+    "blurbs": {
+      "find": "One box for everything you want to follow.",
+      "configure": "Where it lives and whether it shows up in Home.",
+      "done": "It's already fetching. Nothing else to do."
+    },
+    "close": "Close",
+    "goToStep": "Go to step {{step}}: {{name}}"
+  },
+  "stats": {
+    "new": "New",
+    "perDay": "~{{count}}/day",
+    "perWeek": "~{{count}}/week",
+    "perMonth": "~{{count}}/month",
+    "fullText": "Full text",
+    "excerpt": "Excerpt"
+  },
+  "find": {
+    "kind": {
+      "anything": "Anything",
+      "conferences": "Conferences",
+      "jobs": "Jobs"
+    },
+    "copy": {
+      "anything": {
+        "placeholder": "Paste a link to a website, feed, repository, or profile…",
+        "hint": "Monfil finds the feed behind the link. For a handle, press Enter."
+      },
+      "rss": {
+        "placeholder": "Paste a link to an RSS feed…",
+        "hint": "Monfil checks the link for an RSS feed."
+      },
+      "youtube": {
+        "placeholder": "Paste a channel, handle, or video link…",
+        "hint": "Paste a link, or enter a channel or handle and press Enter."
+      },
+      "github": {
+        "placeholder": "Paste a repository or user link, or owner/repo…",
+        "hint": "A repository gives its releases. A user or org gives its public activity. After owner/repo, press Enter."
+      },
+      "gitlab": {
+        "placeholder": "Paste a GitLab project link…",
+        "hint": "Monfil follows the project's releases. Self-hosted GitLab works too."
+      },
+      "hackernews": {
+        "placeholder": "Paste a Hacker News link…",
+        "hint": "news.ycombinator.com offers the front page and feeds filtered by points."
+      },
+      "arxiv": {
+        "placeholder": "Paste an arXiv listing link…",
+        "hint": "For example arxiv.org/list/cs.AI/recent. Monfil hides replaced papers."
+      },
+      "bluesky": {
+        "placeholder": "Paste a profile link or handle…",
+        "hint": "Enter a handle such as @name.bsky.social and press Enter."
+      },
+      "mastodon": {
+        "placeholder": "Paste a profile or tag link, or @user@host…",
+        "hint": "Enter a handle such as @user@mastodon.social and press Enter."
+      },
+      "conference": {
+        "placeholder": "Type topics, then \"in\" and places…",
+        "hint": "Format: topics in places, then press Enter. Separate items with commas. Places are optional, and online counts as a place. Examples: devops · kubernetes, cloud in France · java in Belgium, online. A developers.events link also works."
+      },
+      "ats": {
+        "placeholder": "Paste a company's job board or careers page…",
+        "hint": "Works with Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor and Personio boards. Coverage is not complete: other job systems are not supported yet. Monfil lists every open job of the company."
+      }
+    },
+    "feedUrl": "Feed URL",
+    "searching": "Searching…",
+    "candidates_one": "{{count}} feed found. Pick one.",
+    "candidates_other": "{{count}} feeds found. Pick one.",
+    "notFound": "No feed found",
+    "notFoundDetail": "Couldn't find a feed at that address.",
+    "conferenceEmpty": "No conference matches now. Monfil adds a card when a matching conference is announced.",
+    "detail_one": "{{link}} — {{count}} item",
+    "detail_other": "{{link}} — {{count}} items"
+  },
+  "configure": {
+    "publishes": "Publishes",
+    "contains": "Feed contains",
+    "notFound": "No feed found",
+    "notFoundDetail": "Go back to step 1 and try a different link.",
+    "show": "Show in Workspace",
+    "showHint": "Uncheck for high-volume sources you'd rather visit on purpose."
+  },
+  "done": {
+    "title": "{{title}} is in {{category}}",
+    "backfilled_one": "Backfilled {{count}} item. Everything stays on this machine.",
+    "backfilled_other": "Backfilled {{count}} items. Everything stays on this machine.",
+    "jobs": "All of {{company}}'s jobs now appear in your feed. To filter them, search for each role you want and save the search."
+  },
+  "category": {
+    "putIn": "Put it in",
+    "newName": "New category name",
+    "example": "e.g. Design",
+    "add": "Add",
+    "new": "+ New category",
+    "unlisted": "New category: {{name}}"
+  },
+  "footer": {
+    "continue": "Continue",
+    "add": "Add source",
+    "goToFeed": "Go to feed",
+    "addAnother": "Add another"
+  }
+}

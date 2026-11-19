@@ -88,11 +88,6 @@
       "count": 1
     }
   },
-  "src/renderer/components/Home/DeleteFeedDialog.tsx": {
-    "@sonarjs/cyclomatic-complexity": {
-      "count": 1
-    }
-  },
   "src/renderer/components/Home/River.tsx": {
     "@sonarjs/cognitive-complexity": {
       "count": 1
@@ -114,11 +109,6 @@
   "src/renderer/components/Reader/Reader.tsx": {
     "@sonarjs/cyclomatic-complexity": {
       "count": 2
-    }
-  },
-  "src/renderer/components/Workspace/ImportOpmlDialog.tsx": {
-    "@sonarjs/cyclomatic-complexity": {
-      "count": 1
     }
   },
   "src/renderer/lib/ipc-client.ts": {

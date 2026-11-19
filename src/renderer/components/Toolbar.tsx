@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ipc } from '@/lib/ipc-client';
 import { useLocation, useNavigate } from "@tanstack/react-router";
@@ -26,7 +27,7 @@ import {
 } from "@/lib/ipc-bridge";
 import { decodeFeedDrag, FEED_DRAG_TYPE } from "@/lib/feed-drag";
 import { notifyError } from "@/lib/notifications";
-import { hasOnlyModKey, MOD_KEY_LABEL } from "@/lib/keyboard";
+import { digitFromCode, hasOnlyModKey, isLetterCode, MOD_KEY_LABEL } from "@/lib/keyboard";
 import { reorderIds } from "@/lib/reorder";
 import { workspaceIconComponent } from "@/lib/workspace-icons";
 import { useHint } from "@/providers/hints-provider";
@@ -51,10 +52,10 @@ function showWorkspaceMenu(workspaceId: number) {
 
 function WorkspaceButton({ workspace, isActive, shortcut }: WorkspaceButtonProps) {
   const Icon = workspaceIconComponent(workspace.icon);
-  const title = shortcut ? <>{workspace.name} <kbd className="ml-1 font-sans font-normal opacity-70">{shortcut}</kbd></> : workspace.name;
+  const title = shortcut ? <>{workspace.name} <kbd className="ms-1 font-sans font-normal opacity-70">{shortcut}</kbd></> : workspace.name;
 
   return (
-    <Tooltip title={title} placement="right" delay={200}>
+    <Tooltip title={title} placement="end" delay={200}>
       <Link
         href={`/workspace/${workspace.id}`}
         aria-label={workspace.name}
@@ -89,8 +90,8 @@ function ExpandedWorkspaceButton({ workspace, isActive, shortcut }: WorkspaceBut
       >
         <Icon aria-hidden className="size-4.5 stroke-[2.25px]" />
       </span>
-      <span title={workspace.name} className={cx("min-w-0 flex-1 truncate text-sm text-primary", isActive ? "font-semibold" : "font-medium")}>{workspace.name}</span>
-      {shortcut && <kbd className="mr-2.5 flex-none font-sans text-xs text-tertiary">{shortcut}</kbd>}
+      <span dir="auto" title={workspace.name} className={cx("min-w-0 flex-1 truncate text-sm text-primary", isActive ? "font-semibold" : "font-medium")}>{workspace.name}</span>
+      {shortcut && <kbd className="me-2.5 flex-none font-sans text-xs text-tertiary">{shortcut}</kbd>}
     </Link>
   );
 }
@@ -99,6 +100,7 @@ function ExpandedWorkspaceButton({ workspace, isActive, shortcut }: WorkspaceBut
 const FEED_HOVER_OPEN_MS = 1300;
 
 function WorkspaceRail({ workspaces, activeId, goTo, expanded }: { workspaces: WorkspaceSummary[]; activeId: number | undefined; goTo: (workspaceId: number) => void; expanded: boolean }) {
+  const { t } = useTranslation('workspace');
   const reorderWorkspaces = useReorderWorkspaces();
   const moveFeedToWorkspace = useMoveFeedToWorkspace();
   const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -131,7 +133,7 @@ function WorkspaceRail({ workspaces, activeId, goTo, expanded }: { workspaces: W
         }
         const result = await moveFeedToWorkspace(payload.feedId, payload.workspaceId, destinationId, payload.categoryName);
         if (!result.success) {
-          notifyError("The feed could not be moved.");
+          notifyError(t('rail.moveFailed'));
           return;
         }
         goTo(destinationId);
@@ -153,7 +155,7 @@ function WorkspaceRail({ workspaces, activeId, goTo, expanded }: { workspaces: W
 
   return (
     <GridList
-      aria-label="Workspaces"
+      aria-label={t('rail.list')}
       items={workspaces}
       selectionMode="none"
       onAction={(key) => goTo(Number(key))}
@@ -166,7 +168,7 @@ function WorkspaceRail({ workspaces, activeId, goTo, expanded }: { workspaces: W
         const ButtonComponent = expanded ? ExpandedWorkspaceButton : WorkspaceButton;
         return (
           <GridListItem id={workspace.id} textValue={workspace.name} className="rounded-xl outline-brand data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-dragging:opacity-50">
-            <DragHandleButton slot="drag" aria-label={`Move ${workspace.name}`} className="sr-only" />
+            <DragHandleButton slot="drag" aria-label={t('rail.move', { name: workspace.name })} className="sr-only" />
             <ButtonComponent
               workspace={workspace}
               shortcut={index < 9 ? `${MOD_KEY_LABEL}${index + 1}` : undefined}
@@ -180,21 +182,22 @@ function WorkspaceRail({ workspaces, activeId, goTo, expanded }: { workspaces: W
 }
 
 function workspaceShortcutIndex(event: KeyboardEvent): number | null {
-  if (!hasOnlyModKey(event) || !/^[1-9]$/.test(event.key)) {
+  const digit = digitFromCode(event);
+  if (!hasOnlyModKey(event) || digit === null) {
     return null;
   }
-  return Number(event.key) - 1;
+  return digit - 1;
 }
 
 function useWorkspaceShortcuts(workspaces: WorkspaceSummary[], goTo: (workspaceId: number) => void, openSwitcher: () => void, toggleRail: () => void) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (hasOnlyModKey(event) && event.key.toLowerCase() === 'k') {
+      if (hasOnlyModKey(event) && isLetterCode(event, 'k')) {
         event.preventDefault();
         openSwitcher();
         return;
       }
-      if (hasOnlyModKey(event) && event.key.toLowerCase() === 'b') {
+      if (hasOnlyModKey(event) && isLetterCode(event, 'b')) {
         event.preventDefault();
         toggleRail();
         return;
@@ -212,13 +215,14 @@ function useWorkspaceShortcuts(workspaces: WorkspaceSummary[], goTo: (workspaceI
 }
 
 function RailToggle({ expanded, onToggle }: { expanded: boolean; onToggle: () => void }) {
-  const label = expanded ? "Hide workspace names" : "Show workspace names";
+  const { t } = useTranslation('workspace');
+  const label = expanded ? t('rail.hideNames') : t('rail.showNames');
 
   if (expanded) {
     return (
       <Button aria-label={label} aria-expanded size="md" color="tertiary" className="w-full justify-start rounded-xl" iconLeading={<LayoutLeft />} onPress={onToggle}>
         <span className="flex w-full items-center justify-between gap-3">
-          Collapse
+          {t('rail.collapse')}
           <kbd className="font-sans text-xs font-normal text-tertiary">{MOD_KEY_LABEL}B</kbd>
         </span>
       </Button>
@@ -226,13 +230,14 @@ function RailToggle({ expanded, onToggle }: { expanded: boolean; onToggle: () =>
   }
 
   return (
-    <Tooltip title={<>{label} <kbd className="ml-1 font-sans font-normal opacity-70">{MOD_KEY_LABEL}B</kbd></>} placement="right" delay={200}>
+    <Tooltip title={<>{label} <kbd className="ms-1 font-sans font-normal opacity-70">{MOD_KEY_LABEL}B</kbd></>} placement="end" delay={200}>
       <Button aria-label={label} aria-expanded={false} size="md" color="tertiary" className="rounded-xl" iconLeading={<LayoutLeft />} onPress={onToggle} />
     </Tooltip>
   );
 }
 
 export default function Toolbar() {
+  const { t } = useTranslation('workspace');
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const activeWorkspaceId = useActiveWorkspaceId();
@@ -305,7 +310,7 @@ export default function Toolbar() {
   }
 
   return (
-    <nav className={cx("flex h-full flex-none flex-col gap-1.5 border-r border-secondary bg-secondary py-4.5", railExpanded ? "w-50 items-stretch px-3.5" : "w-16 items-center")}>
+    <nav className={cx("flex h-full flex-none flex-col gap-1.5 border-e border-secondary bg-secondary py-4.5", railExpanded ? "w-50 items-stretch px-3.5" : "w-16 items-center")}>
       <div className={cx("flex flex-col gap-3.5", railExpanded ? "items-stretch" : "items-center")}>
         <MonfilLogo className={cx("size-8.5", railExpanded && "self-start")} />
 
@@ -318,28 +323,28 @@ export default function Toolbar() {
       </div>
 
       <div ref={newWorkspaceAnchorRef} className="flex">
-        <Button aria-label="New workspace" size="md" color="tertiary" className={cx("rounded-xl", railExpanded && "w-full justify-start")} iconLeading={<Plus />} onPress={() => {
+        <Button aria-label={t('rail.new')} size="md" color="tertiary" className={cx("rounded-xl", railExpanded && "w-full justify-start")} iconLeading={<Plus />} onPress={() => {
           setIsCreateOpen(true);
         }}>
-          {railExpanded ? "New workspace" : undefined}
+          {railExpanded ? t('rail.new') : undefined}
         </Button>
       </div>
-      <Hint triggerRef={newWorkspaceAnchorRef} isOpen={workspaceHint.isOpen} onDismiss={workspaceHint.dismiss} placement="right">
-        Create a workspace to group feeds. Right-click a workspace to edit or delete it.
+      <Hint triggerRef={newWorkspaceAnchorRef} isOpen={workspaceHint.isOpen} onDismiss={workspaceHint.dismiss} placement="end">
+        {t('rail.newHint')}
       </Hint>
 
       <div className="mt-auto" />
 
-      <Tooltip title="Settings" placement="right" delay={200} isDisabled={railExpanded}>
+      <Tooltip title={t('rail.settings')} placement="end" delay={200} isDisabled={railExpanded}>
         <Button
           href="/settings"
-          aria-label="Settings"
+          aria-label={t('rail.settings')}
           size="md"
           color="tertiary"
           className={cx(pathname === "/settings" ? activeNavClasses : "rounded-xl", railExpanded && "w-full justify-start")}
           iconLeading={<Sliders01 />}
         >
-          {railExpanded ? "Settings" : undefined}
+          {railExpanded ? t('rail.settings') : undefined}
         </Button>
       </Tooltip>
 

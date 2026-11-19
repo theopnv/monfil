@@ -1,0 +1,39 @@
+{
+  "sourceLink": "在 {{source}} 上阅读",
+  "header": {
+    "home": "首页",
+    "saved": "已保存",
+    "markUnread": "标为未读",
+    "previous": "上一篇",
+    "next": "下一篇"
+  },
+  "next": {
+    "unread": "下一条未读",
+    "article": "下一篇"
+  },
+  "notFound": "找不到这篇文章。",
+  "backToSaved": "返回已保存",
+  "backToHome": "返回首页",
+  "loadingFull": "正在加载全文…",
+  "unavailable": "无法加载全文。请前往来源网站阅读。",
+  "failed": "无法加载此内容。请前往来源网站阅读。",
+  "announce": {
+    "read": "已标为已读",
+    "unread": "已标为未读"
+  },
+  "shortcuts": {
+    "next": "下一条",
+    "previous": "上一条",
+    "back": "返回首页"
+  },
+  "embed": {
+    "defaultTitle": "{{name}} 嵌入内容",
+    "consent": "加载此嵌入内容会连接到 {{name}}。提供方可能会使用 Cookie。",
+    "load": "加载 {{name}}",
+    "open": "在 {{name}} 上打开",
+    "privacy": "提供方隐私政策",
+    "openEmbedded": "打开嵌入内容"
+  },
+  "saveFailed": "无法保存此内容。请重试。",
+  "unsaveFailed": "无法将此内容从“已保存”中移除。请重试。"
+}

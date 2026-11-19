@@ -20,14 +20,14 @@ export const InputPrefix = ({ children, ...props }: InputPrefixProps) => (
     className={cx(
       "flex text-tertiary shadow-xs ring-1 ring-border-primary ring-inset",
       // Styles when the prefix is within an `InputGroup`
-      "in-data-input-wrapper:in-data-leading:-mr-px in-data-input-wrapper:in-data-leading:rounded-l-lg",
-      "in-data-input-wrapper:in-data-trailing:-ml-px in-data-input-wrapper:in-data-trailing:rounded-r-lg",
+      "in-data-input-wrapper:in-data-leading:-me-px in-data-input-wrapper:in-data-leading:rounded-s-lg",
+      "in-data-input-wrapper:in-data-trailing:-ms-px in-data-input-wrapper:in-data-trailing:rounded-e-lg",
       // Default size styles
       "px-3 py-2 text-md",
       // Small size styles
       "in-data-input-wrapper:in-data-[input-size=sm]:px-3 in-data-input-wrapper:in-data-[input-size=sm]:py-2 in-data-input-wrapper:in-data-[input-size=sm]:text-sm",
       // Large size styles
-      "in-data-input-wrapper:in-data-[input-size=lg]:py-2.5 in-data-input-wrapper:in-data-[input-size=lg]:pr-3 in-data-input-wrapper:in-data-[input-size=lg]:pl-3.5",
+      "in-data-input-wrapper:in-data-[input-size=lg]:py-2.5 in-data-input-wrapper:in-data-[input-size=lg]:pe-3 in-data-input-wrapper:in-data-[input-size=lg]:ps-3.5",
 
       props.className,
     )}
@@ -67,7 +67,7 @@ export const InputGroup = ({ size = "md", prefix, leadingAddon, trailingAddon, l
         hasLeading && "group-has-[&>select]:pr-9 group-has-[&>select]:pl-2",
         hasTrailing && (prefix ? "group-has-[&>select]:pr-6 group-has-[&>select]:pl-0" : "group-has-[&>select]:pr-6 group-has-[&>select]:pl-3"),
       ),
-      leadingText: "pr-1.5 pl-3",
+      leadingText: "pe-1.5 ps-3",
     },
     md: {
       input: cx(
@@ -75,7 +75,7 @@ export const InputGroup = ({ size = "md", prefix, leadingAddon, trailingAddon, l
         hasLeading && "group-has-[&>select]:pr-9 group-has-[&>select]:pl-2.5",
         hasTrailing && (prefix ? "group-has-[&>select]:pr-6 group-has-[&>select]:pl-0" : "group-has-[&>select]:pr-6 group-has-[&>select]:pl-3"),
       ),
-      leadingText: "pr-2 pl-3",
+      leadingText: "pe-2 ps-3",
     },
     lg: {
       input: cx(
@@ -83,7 +83,7 @@ export const InputGroup = ({ size = "md", prefix, leadingAddon, trailingAddon, l
         hasLeading && "group-has-[&>select]:pr-9.5 group-has-[&>select]:pl-3",
         hasTrailing && (prefix ? "group-has-[&>select]:pr-6 group-has-[&>select]:pl-0" : "group-has-[&>select]:pr-6 group-has-[&>select]:pl-3"),
       ),
-      leadingText: "pr-2 pl-3.5",
+      leadingText: "pe-2 ps-3.5",
     },
   });
 
@@ -96,8 +96,8 @@ export const InputGroup = ({ size = "md", prefix, leadingAddon, trailingAddon, l
       wrapperClassName={cx(
         "z-10",
         // Apply styles based on the presence of leading or trailing elements
-        hasLeading && "rounded-l-none",
-        hasTrailing && "rounded-r-none",
+        hasLeading && "rounded-s-none",
+        hasTrailing && "rounded-e-none",
         // When select element is passed as a child
         "group-has-[&>select]:bg-transparent group-has-[&>select]:shadow-none group-has-[&>select]:ring-0 group-has-[&>select]:focus-within:ring-0",
       )}

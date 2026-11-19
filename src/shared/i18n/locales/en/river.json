@@ -1,0 +1,176 @@
+{
+  "feed": {
+    "dragToFolder": "Drag to a folder",
+    "state": {
+      "home": "Shown with others",
+      "only": "Shown only",
+      "hidden": "Hidden"
+    },
+    "rowTitle_focus": "{{title}} — {{state}}. Click to focus.",
+    "rowTitle_unfocus": "{{title}} — {{state}}. Click to unfocus.",
+    "rowLabel_focus": "{{title}}, {{state}}. Click to focus.",
+    "rowLabel_unfocus": "{{title}}, {{state}}. Click to unfocus.",
+    "refreshFailedLabel": "{{title}} refresh failed: {{error}}",
+    "refreshFailedTitle": "The last refresh failed: {{error}}",
+    "visibility_hide": "Hide {{title}}",
+    "visibility_show": "Show {{title}}"
+  },
+  "folder": {
+    "focus_focus": "Focus {{name}}",
+    "focus_unfocus": "Unfocus {{name}}",
+    "visibility_hide": "Hide {{name}}",
+    "visibility_show": "Show {{name}}"
+  },
+  "source": {
+    "conference": "CONF",
+    "job": "JOB"
+  },
+  "card": {
+    "label_read": "{{title}}, read, from {{feed}}, {{time}}.",
+    "label_unread": "{{title}}, unread, from {{feed}}, {{time}}."
+  },
+  "search": {
+    "syntax": {
+      "all": "Every word must match",
+      "phrase": "An exact phrase. Also matches inside longer words.",
+      "either": "Either word (OR in capitals)",
+      "exclude": "Leave out a word or a phrase",
+      "title": "Match the title only",
+      "short": "A word of 3 letters or fewer matches whole words only"
+    },
+    "clear": "Clear search",
+    "syntaxRegion": "Search syntax",
+    "closeHint": "Press Enter to close the search and keep the filter."
+  },
+  "pills": {
+    "rename": "Rename saved search {{name}}",
+    "label": "{{name}}, {{count}} unread",
+    "renameHint": "Right-click or press F2 to rename",
+    "delete": "Delete saved search {{name}}",
+    "hint": "Save a search for each role you want, e.g. <code>{{example}}</code>",
+    "dismissHint": "Dismiss the saved search hint",
+    "toolbar": "Saved searches",
+    "all": "All saved searches",
+    "menu": "Saved searches",
+    "announce": {
+      "cleared": "Cleared saved search {{name}}.",
+      "showing": "Showing saved search {{name}}.",
+      "created": "Saved search {{name}} created.",
+      "updated": "Saved search {{name}} updated.",
+      "renamed": "Saved search renamed to {{name}}.",
+      "deleted": "Saved search {{name}} deleted. Undo is available.",
+      "restored": "Saved search {{name}} restored.",
+      "deletedToast": "Deleted \"{{name}}\""
+    }
+  },
+  "saveControl": {
+    "dialog": "Name this search",
+    "nameField": "Name of the saved search",
+    "update": "Update",
+    "saveAsNew": "Save as new",
+    "saveSearch": "Save search"
+  },
+  "strip": {
+    "focused_one": "Showing {{focused}} of {{count}} feed",
+    "focused_other": "Showing {{focused}} of {{count}} feeds",
+    "hidden_one": "{{count}} hidden feed",
+    "hidden_other": "{{count}} hidden feeds",
+    "showAllLabel": "Show all feeds",
+    "showAll": "Show all",
+    "showAnnounce": "Showing all feeds.",
+    "showHiddenLabel": "Show hidden feeds",
+    "showHidden": "Show",
+    "hiddenAnnounce": "Hidden feeds are shown again."
+  },
+  "empty": {
+    "homeTitle": "Pick your sources",
+    "homeBody": "Add a blog, a newsletter, anything with a feed. Monfil pulls in what it publishes and never decides what you see.",
+    "addFirst": "Add your first feed",
+    "otherTitle": "Nothing here yet",
+    "otherBody": "This workspace has no sources yet. Import an OPML file to fill it in one go.",
+    "importOpml": "Import OPML",
+    "importFeedpack": "Import feedpack"
+  },
+  "job": {
+    "remote": "Remote",
+    "hybrid": "Hybrid",
+    "onSite": "On-site",
+    "salaryNotShown": "salary not shown"
+  },
+  "header": {
+    "itemsToShow": "Items to show",
+    "all": "All",
+    "unread": "Unread",
+    "home": "Home",
+    "saved": "Saved",
+    "searchSaved": "Search saved items",
+    "search": "Search",
+    "refreshNew": "Refresh, new articles available",
+    "refresh": "Refresh",
+    "refreshFeeds": "Refresh feeds",
+    "refreshFailed": "Couldn't refresh feeds. Check your connection and try again.",
+    "announceNew": "New articles available.",
+    "announceRefreshed": "Feeds refreshed."
+  },
+  "results": {
+    "none": "No results for \"{{query}}\"",
+    "count_one": "{{count}} result for \"{{query}}\"",
+    "count_other": "{{count}} results for \"{{query}}\""
+  },
+  "saved": {
+    "loading": "Loading saved items…",
+    "loadFailed": "Saved items could not be loaded.",
+    "empty": "Save items from your feeds to find them here."
+  },
+  "feedpackFetching": "Fetching sources for this feedpack…",
+  "deleteFeed": {
+    "thisWorkspace": "this workspace",
+    "confirmRemove": "Remove from {{workspace}}",
+    "confirmDelete": "Delete feed",
+    "titleRemove": "Remove feed",
+    "titleDelete": "Delete feed",
+    "removeBody_one": "This removes <bold>{{title}}</bold> from {{workspace}}. It stays in {{count}} other workspace with its items.",
+    "removeBody_other": "This removes <bold>{{title}}</bold> from {{workspace}}. It stays in {{count}} other workspaces with its items.",
+    "deleteBody_one": "This removes <bold>{{title}}</bold> and its <bold>{{count}} item</bold>. Saved items remain available. There is no undo.",
+    "deleteBody_other": "This removes <bold>{{title}}</bold> and its <bold>{{count}} items</bold>. Saved items remain available. There is no undo."
+  },
+  "deleteCategory": {
+    "keepFeeds": "Keep its feeds and move them to another folder instead",
+    "moveTo": "Move its feeds to",
+    "title": "Delete folder",
+    "confirm": "Delete folder",
+    "body": "This removes the <bold>{{name}}</bold> folder.",
+    "feeds_move_one": "Its <bold>{{count}} feed</bold> moves to the folder below.",
+    "feeds_move_other": "Its <bold>{{count}} feeds</bold> move to the folder below.",
+    "feeds_delete_one": "Its <bold>{{count}} feed</bold> is deleted with it.",
+    "feeds_delete_other": "Its <bold>{{count}} feeds</bold> are deleted with it."
+  },
+  "moveFeed": {
+    "title": "Move feed",
+    "body": "Move <bold>{{title}}</bold> to another workspace.",
+    "workspace": "Workspace",
+    "folder": "Folder",
+    "newFolder": "New folder…",
+    "newFolderName": "New folder name",
+    "confirm": "Move feed"
+  },
+  "caughtUp": "You're all caught up",
+  "sidebar": {
+    "feeds": "Feeds",
+    "newFolder": "New folder",
+    "addFeed": "Add feed",
+    "addFeedpack": "Add feedpack",
+    "folderName": "Folder name",
+    "newFolderName": "New folder name",
+    "drag": "Drag",
+    "renameFolder": "Rename {{name}}",
+    "addFeedHint": "Add a feed here. To delete a feed, right-click it.",
+    "filterHint": "Click a feed to show only its articles. Click the eye to hide a feed."
+  },
+  "refresh": {
+    "failed_one": "{{count}} feed could not be refreshed.",
+    "failed_other": "{{count}} feeds could not be refreshed.",
+    "more": "and {{count}} more"
+  },
+  "readTime": "{{count, number}} min read"
+}

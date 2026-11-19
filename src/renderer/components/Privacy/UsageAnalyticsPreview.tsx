@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { Heading } from 'react-aria-components';
 import { Dialog, Modal, ModalOverlay } from '@/components/untitled-ui/application/modals/modal';
@@ -15,6 +16,7 @@ export interface UsageAnalyticsPreviewProps {
 }
 
 export default function UsageAnalyticsPreview({ isOpen, onOpenChange }: UsageAnalyticsPreviewProps) {
+  const { t } = useTranslation(['settings', 'common']);
   const [summary, setSummary] = useState<DailySummaryProps>();
 
   useEffect(() => {
@@ -31,16 +33,16 @@ export default function UsageAnalyticsPreview({ isOpen, onOpenChange }: UsageAna
       <Modal className="w-full max-w-[520px]">
         <Dialog>
           <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
-            <Heading slot="title" className="font-display text-lg font-semibold text-primary">What is sent</Heading>
+            <Heading slot="title" className="font-display text-lg font-semibold text-primary">{t('settings:analyticsPreview.title')}</Heading>
             <p className="text-sm text-tertiary">
-              Monfil sends one summary like this for each day you use it. It holds counts and settings. It holds no feed, article, search text, or name.
+              {t('settings:analyticsPreview.body')}
             </p>
           </div>
-          <pre aria-label="Usage stats preview" className="mx-6 max-h-[320px] overflow-auto rounded-lg bg-secondary p-3 text-xs text-secondary">
-            {summary ? JSON.stringify(summary, null, 2) : 'Loading…'}
+          <pre aria-label={t('settings:analyticsPreview.preview')} className="mx-6 max-h-[320px] overflow-auto rounded-lg bg-secondary p-3 text-xs text-secondary">
+            {summary ? JSON.stringify(summary, null, 2) : t('settings:analyticsPreview.loading')}
           </pre>
           <div className="flex justify-end border-t border-secondary px-6 py-4 mt-4">
-            <Button color="secondary" size="md" className="rounded-full" onPress={() => onOpenChange(false)}>Close</Button>
+            <Button color="secondary" size="md" className="rounded-full" onPress={() => onOpenChange(false)}>{t('common:action.close')}</Button>
           </div>
         </Dialog>
       </Modal>

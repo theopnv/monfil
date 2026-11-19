@@ -1,0 +1,208 @@
+{
+  "feed": {
+    "dragToFolder": "اسحب إلى مجلد",
+    "state": {
+      "home": "معروض مع غيره",
+      "only": "معروض وحده",
+      "hidden": "مخفي"
+    },
+    "rowTitle_focus": "{{title}} — {{state}}. انقر للتركيز.",
+    "rowTitle_unfocus": "{{title}} — {{state}}. انقر لإلغاء التركيز.",
+    "rowLabel_focus": "{{title}}، {{state}}. انقر للتركيز.",
+    "rowLabel_unfocus": "{{title}}، {{state}}. انقر لإلغاء التركيز.",
+    "refreshFailedLabel": "فشل تحديث {{title}}: {{error}}",
+    "refreshFailedTitle": "فشل آخر تحديث: {{error}}",
+    "visibility_hide": "إخفاء {{title}}",
+    "visibility_show": "إظهار {{title}}"
+  },
+  "folder": {
+    "focus_focus": "تركيز {{name}}",
+    "focus_unfocus": "إلغاء تركيز {{name}}",
+    "visibility_hide": "إخفاء {{name}}",
+    "visibility_show": "إظهار {{name}}"
+  },
+  "source": {
+    "conference": "مؤتمر",
+    "job": "وظيفة"
+  },
+  "card": {
+    "label_read": "{{title}}، مقروء، من {{feed}}، {{time}}.",
+    "label_unread": "{{title}}، غير مقروء، من {{feed}}، {{time}}."
+  },
+  "search": {
+    "syntax": {
+      "all": "يجب أن تطابق كل الكلمات",
+      "phrase": "عبارة دقيقة. تطابق أيضًا داخل الكلمات الأطول.",
+      "either": "إحدى الكلمتين (OR بأحرف كبيرة)",
+      "exclude": "استبعاد كلمة أو عبارة",
+      "title": "المطابقة مع العنوان فقط",
+      "short": "الكلمة المكونة من 3 أحرف أو أقل تطابق الكلمات كاملة فقط"
+    },
+    "clear": "مسح البحث",
+    "syntaxRegion": "صيغة البحث",
+    "closeHint": "اضغط Enter لإغلاق البحث والاحتفاظ بالمرشح."
+  },
+  "pills": {
+    "rename": "إعادة تسمية البحث المحفوظ {{name}}",
+    "label": "{{name}}، {{count}} غير مقروء",
+    "renameHint": "انقر بالزر الأيمن أو اضغط F2 لإعادة التسمية",
+    "delete": "حذف البحث المحفوظ {{name}}",
+    "hint": "احفظ بحثًا لكل دور تريده، مثلًا <code>{{example}}</code>",
+    "dismissHint": "إخفاء تلميح البحث المحفوظ",
+    "toolbar": "عمليات البحث المحفوظة",
+    "all": "كل عمليات البحث المحفوظة",
+    "menu": "عمليات البحث المحفوظة",
+    "announce": {
+      "cleared": "مُسح البحث المحفوظ {{name}}.",
+      "showing": "يُعرض البحث المحفوظ {{name}}.",
+      "created": "تم إنشاء البحث المحفوظ {{name}}.",
+      "updated": "تم تحديث البحث المحفوظ {{name}}.",
+      "renamed": "أُعيدت تسمية البحث المحفوظ إلى {{name}}.",
+      "deleted": "حُذف البحث المحفوظ {{name}}. التراجع متاح.",
+      "restored": "استُعيد البحث المحفوظ {{name}}.",
+      "deletedToast": "حُذف \"{{name}}\""
+    }
+  },
+  "saveControl": {
+    "dialog": "سمِّ هذا البحث",
+    "nameField": "اسم البحث المحفوظ",
+    "update": "تحديث",
+    "saveAsNew": "حفظ كبحث جديد",
+    "saveSearch": "حفظ البحث"
+  },
+  "strip": {
+    "focused_zero": "يُعرض {{focused}} من أصل {{count}} موجزات",
+    "focused_one": "يُعرض {{focused}} من موجز واحد",
+    "focused_two": "يُعرض {{focused}} من موجزين",
+    "focused_few": "يُعرض {{focused}} من {{count}} موجزات",
+    "focused_many": "يُعرض {{focused}} من {{count}} موجزًا",
+    "focused_other": "يُعرض {{focused}} من {{count}} موجزًا",
+    "hidden_zero": "{{count}} موجزًا مخفيًا",
+    "hidden_one": "موجز مخفي واحد",
+    "hidden_two": "موجزان مخفيان",
+    "hidden_few": "{{count}} موجزات مخفية",
+    "hidden_many": "{{count}} موجزًا مخفيًا",
+    "hidden_other": "{{count}} موجزًا مخفيًا",
+    "showAllLabel": "عرض كل الموجزات",
+    "showAll": "عرض الكل",
+    "showAnnounce": "يُعرض كل الموجزات.",
+    "showHiddenLabel": "عرض الموجزات المخفية",
+    "showHidden": "عرض",
+    "hiddenAnnounce": "أُعيد عرض الموجزات المخفية."
+  },
+  "empty": {
+    "homeTitle": "اختر مصادرك",
+    "homeBody": "أضف مدونة أو نشرة بريدية أو أي شيء له موجز. يجلب Monfil ما يُنشر فيه، ولا يقرر أبدًا ما تراه.",
+    "addFirst": "أضف أول موجز لك",
+    "otherTitle": "لا شيء هنا بعد",
+    "otherBody": "ليس لهذا الووركسبيس مصادر بعد. استورد ملف OPML لتملأها دفعة واحدة.",
+    "importOpml": "استيراد OPML",
+    "importFeedpack": "استيراد فيدباك"
+  },
+  "job": {
+    "remote": "عن بُعد",
+    "hybrid": "مختلط",
+    "onSite": "في الموقع",
+    "salaryNotShown": "الراتب غير معروض"
+  },
+  "header": {
+    "itemsToShow": "عناصر للعرض",
+    "all": "الكل",
+    "unread": "غير مقروء",
+    "home": "الرئيسية",
+    "saved": "المحفوظات",
+    "searchSaved": "البحث في العناصر المحفوظة",
+    "search": "بحث",
+    "refreshNew": "تحديث، توجد مقالات جديدة",
+    "refresh": "تحديث",
+    "refreshFeeds": "تحديث الموجزات",
+    "refreshFailed": "تعذّر تحديث الموجزات. تحقق من اتصالك وحاول مرة أخرى.",
+    "announceNew": "توجد مقالات جديدة.",
+    "announceRefreshed": "حُدّثت الموجزات."
+  },
+  "results": {
+    "none": "لا نتائج لـ \"{{query}}\"",
+    "count_zero": "{{count}} نتيجة لـ \"{{query}}\"",
+    "count_one": "نتيجة واحدة لـ \"{{query}}\"",
+    "count_two": "نتيجتان لـ \"{{query}}\"",
+    "count_few": "{{count}} نتائج لـ \"{{query}}\"",
+    "count_many": "{{count}} نتيجةً لـ \"{{query}}\"",
+    "count_other": "{{count}} نتيجةً لـ \"{{query}}\""
+  },
+  "saved": {
+    "loading": "جارٍ تحميل العناصر المحفوظة…",
+    "loadFailed": "تعذّر تحميل العناصر المحفوظة.",
+    "empty": "احفظ عناصر من موجزاتك لتجدها هنا."
+  },
+  "feedpackFetching": "جارٍ جلب المصادر لهذا الفيدباك…",
+  "deleteFeed": {
+    "thisWorkspace": "هذا الووركسبيس",
+    "confirmRemove": "إزالة من {{workspace}}",
+    "confirmDelete": "حذف الموجز",
+    "titleRemove": "إزالة الموجز",
+    "titleDelete": "حذف الموجز",
+    "removeBody_zero": "ستُزال <bold>{{title}}</bold> من {{workspace}}. تبقى في {{count}} ووركسبيس آخر مع عناصرها.",
+    "removeBody_one": "ستُزال <bold>{{title}}</bold> من {{workspace}}. تبقى في ووركسبيس آخر مع عناصرها.",
+    "removeBody_two": "ستُزال <bold>{{title}}</bold> من {{workspace}}. تبقى في ووركسبيسين آخرين مع عناصرها.",
+    "removeBody_few": "ستُزال <bold>{{title}}</bold> من {{workspace}}. تبقى في {{count}} ووركسبيسات أخرى مع عناصرها.",
+    "removeBody_many": "ستُزال <bold>{{title}}</bold> من {{workspace}}. تبقى في {{count}} ووركسبيس آخر مع عناصرها.",
+    "removeBody_other": "ستُزال <bold>{{title}}</bold> من {{workspace}}. تبقى في {{count}} ووركسبيس آخر مع عناصرها.",
+    "deleteBody_zero": "ستُحذف <bold>{{title}}</bold> وعناصرها <bold>{{count}} عنصرًا</bold>. تبقى العناصر المحفوظة متاحة. لا يمكن التراجع.",
+    "deleteBody_one": "ستُحذف <bold>{{title}}</bold> مع <bold>عنصر واحد</bold> منها. تبقى العناصر المحفوظة متاحة. لا يمكن التراجع.",
+    "deleteBody_two": "ستُحذف <bold>{{title}}</bold> مع <bold>عنصرين</bold> منها. تبقى العناصر المحفوظة متاحة. لا يمكن التراجع.",
+    "deleteBody_few": "ستُحذف <bold>{{title}}</bold> مع <bold>{{count}} عناصر</bold> منها. تبقى العناصر المحفوظة متاحة. لا يمكن التراجع.",
+    "deleteBody_many": "ستُحذف <bold>{{title}}</bold> مع <bold>{{count}} عنصرًا</bold> منها. تبقى العناصر المحفوظة متاحة. لا يمكن التراجع.",
+    "deleteBody_other": "ستُحذف <bold>{{title}}</bold> مع <bold>{{count}} عنصرًا</bold> منها. تبقى العناصر المحفوظة متاحة. لا يمكن التراجع."
+  },
+  "deleteCategory": {
+    "keepFeeds": "أبقِ موجزاتها وانقلها إلى مجلد آخر بدلًا من ذلك",
+    "moveTo": "انقل موجزاتها إلى",
+    "title": "حذف المجلد",
+    "confirm": "حذف المجلد",
+    "body": "سيُحذف مجلد <bold>{{name}}</bold>.",
+    "feeds_move_zero": "ستنتقل <bold>{{count}} موجزًا</bold> إلى المجلد أدناه.",
+    "feeds_move_one": "سينتقل <bold>موجز واحد</bold> إلى المجلد أدناه.",
+    "feeds_move_two": "سينتقل <bold>موجزان</bold> إلى المجلد أدناه.",
+    "feeds_move_few": "ستنتقل <bold>{{count}} موجزات</bold> إلى المجلد أدناه.",
+    "feeds_move_many": "ستنتقل <bold>{{count}} موجزًا</bold> إلى المجلد أدناه.",
+    "feeds_move_other": "ستنتقل <bold>{{count}} موجزًا</bold> إلى المجلد أدناه.",
+    "feeds_delete_zero": "سيُحذف معه <bold>{{count}} موجزًا</bold>.",
+    "feeds_delete_one": "سيُحذف معه <bold>موجز واحد</bold>.",
+    "feeds_delete_two": "سيُحذف معه <bold>موجزان</bold>.",
+    "feeds_delete_few": "سيُحذف معه <bold>{{count}} موجزات</bold>.",
+    "feeds_delete_many": "سيُحذف معه <bold>{{count}} موجزًا</bold>.",
+    "feeds_delete_other": "سيُحذف معه <bold>{{count}} موجزًا</bold>."
+  },
+  "moveFeed": {
+    "title": "نقل الموجز",
+    "body": "انقل <bold>{{title}}</bold> إلى ووركسبيس آخر.",
+    "workspace": "الووركسبيس",
+    "folder": "المجلد",
+    "newFolder": "مجلد جديد…",
+    "newFolderName": "اسم المجلد الجديد",
+    "confirm": "نقل الموجز"
+  },
+  "caughtUp": "لقد اطلعت على كل شيء",
+  "sidebar": {
+    "feeds": "الموجزات",
+    "newFolder": "مجلد جديد",
+    "addFeed": "إضافة موجز",
+    "addFeedpack": "إضافة فيدباك",
+    "folderName": "اسم المجلد",
+    "newFolderName": "اسم المجلد الجديد",
+    "drag": "سحب",
+    "renameFolder": "إعادة تسمية {{name}}",
+    "addFeedHint": "أضف موجزًا هنا. لحذف موجز، انقر عليه بالزر الأيمن.",
+    "filterHint": "انقر على موجز لعرض مقالاته فقط. انقر على العين لإخفاء موجز."
+  },
+  "refresh": {
+    "failed_zero": "تعذّر تحديث {{count}} موجزًا.",
+    "failed_one": "تعذّر تحديث موجز واحد.",
+    "failed_two": "تعذّر تحديث موجزين.",
+    "failed_few": "تعذّر تحديث {{count}} موجزات.",
+    "failed_many": "تعذّر تحديث {{count}} موجزًا.",
+    "failed_other": "تعذّر تحديث {{count}} موجزًا.",
+    "more": "و{{count}} أخرى"
+  },
+  "readTime": "{{count, number}} دقيقة للقراءة"
+}

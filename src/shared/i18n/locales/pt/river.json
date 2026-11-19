@@ -1,0 +1,184 @@
+{
+  "feed": {
+    "dragToFolder": "Arraste para uma pasta",
+    "state": {
+      "home": "Mostrado com os outros",
+      "only": "Mostrado sozinho",
+      "hidden": "Oculto"
+    },
+    "rowTitle_focus": "{{title}} — {{state}}. Clique para focar.",
+    "rowTitle_unfocus": "{{title}} — {{state}}. Clique para tirar o foco.",
+    "rowLabel_focus": "{{title}}, {{state}}. Clique para focar.",
+    "rowLabel_unfocus": "{{title}}, {{state}}. Clique para tirar o foco.",
+    "refreshFailedLabel": "Falha ao atualizar {{title}}: {{error}}",
+    "refreshFailedTitle": "A última atualização falhou: {{error}}",
+    "visibility_hide": "Ocultar {{title}}",
+    "visibility_show": "Mostrar {{title}}"
+  },
+  "folder": {
+    "focus_focus": "Focar {{name}}",
+    "focus_unfocus": "Tirar o foco de {{name}}",
+    "visibility_hide": "Ocultar {{name}}",
+    "visibility_show": "Mostrar {{name}}"
+  },
+  "source": {
+    "conference": "CONF",
+    "job": "VAGA"
+  },
+  "card": {
+    "label_read": "{{title}}, lido, de {{feed}}, {{time}}.",
+    "label_unread": "{{title}}, não lido, de {{feed}}, {{time}}."
+  },
+  "search": {
+    "syntax": {
+      "all": "Todas as palavras devem corresponder",
+      "phrase": "Uma frase exata. Também corresponde dentro de palavras maiores.",
+      "either": "Uma das palavras (OR em maiúsculas)",
+      "exclude": "Deixe de fora uma palavra ou uma frase",
+      "title": "Corresponder só ao título",
+      "short": "Uma palavra de 3 letras ou menos corresponde apenas a palavras inteiras"
+    },
+    "clear": "Limpar busca",
+    "syntaxRegion": "Sintaxe da busca",
+    "closeHint": "Pressione Enter para fechar a busca e manter o filtro."
+  },
+  "pills": {
+    "rename": "Renomear busca salva {{name}}",
+    "label": "{{name}}, {{count}} não lidos",
+    "renameHint": "Clique com o botão direito ou pressione F2 para renomear",
+    "delete": "Excluir busca salva {{name}}",
+    "hint": "Salve uma busca para cada cargo que quiser, por exemplo <code>{{example}}</code>",
+    "dismissHint": "Dispensar a dica de busca salva",
+    "toolbar": "Buscas salvas",
+    "all": "Todas as buscas salvas",
+    "menu": "Buscas salvas",
+    "announce": {
+      "cleared": "Busca salva {{name}} limpa.",
+      "showing": "Mostrando a busca salva {{name}}.",
+      "created": "Busca salva {{name}} criada.",
+      "updated": "Busca salva {{name}} atualizada.",
+      "renamed": "Busca salva renomeada para {{name}}.",
+      "deleted": "Busca salva {{name}} excluída. Desfazer está disponível.",
+      "restored": "Busca salva {{name}} restaurada.",
+      "deletedToast": "Excluído \"{{name}}\""
+    }
+  },
+  "saveControl": {
+    "dialog": "Dê um nome a esta busca",
+    "nameField": "Nome da busca salva",
+    "update": "Atualizar",
+    "saveAsNew": "Salvar como nova",
+    "saveSearch": "Salvar busca"
+  },
+  "strip": {
+    "focused_one": "Mostrando {{focused}} de {{count}} feed",
+    "focused_many": "Mostrando {{focused}} de {{count}} feeds",
+    "focused_other": "Mostrando {{focused}} de {{count}} feeds",
+    "hidden_one": "{{count}} feed oculto",
+    "hidden_many": "{{count}} feeds ocultos",
+    "hidden_other": "{{count}} feeds ocultos",
+    "showAllLabel": "Mostrar todos os feeds",
+    "showAll": "Mostrar todos",
+    "showAnnounce": "Mostrando todos os feeds.",
+    "showHiddenLabel": "Mostrar feeds ocultos",
+    "showHidden": "Mostrar",
+    "hiddenAnnounce": "Os feeds ocultos voltaram a ser mostrados."
+  },
+  "empty": {
+    "homeTitle": "Escolha suas fontes",
+    "homeBody": "Adicione um blog, uma newsletter ou qualquer coisa com feed. O Monfil traz o que é publicado e nunca decide o que é mostrado.",
+    "addFirst": "Adicionar seu primeiro feed",
+    "otherTitle": "Nada aqui ainda",
+    "otherBody": "Este workspace ainda não tem fontes. Importe um arquivo OPML para preenchê-lo de uma vez.",
+    "importOpml": "Importar OPML",
+    "importFeedpack": "Importar feedpack"
+  },
+  "job": {
+    "remote": "Remoto",
+    "hybrid": "Híbrido",
+    "onSite": "Presencial",
+    "salaryNotShown": "salário não informado"
+  },
+  "header": {
+    "itemsToShow": "Itens a mostrar",
+    "all": "Todos",
+    "unread": "Não lidos",
+    "home": "Início",
+    "saved": "Salvos",
+    "searchSaved": "Buscar itens salvos",
+    "search": "Buscar",
+    "refreshNew": "Atualizar, há novos artigos",
+    "refresh": "Atualizar",
+    "refreshFeeds": "Atualizar feeds",
+    "refreshFailed": "Não foi possível atualizar os feeds. Verifique sua conexão e tente novamente.",
+    "announceNew": "Há novos artigos.",
+    "announceRefreshed": "Feeds atualizados."
+  },
+  "results": {
+    "none": "Nenhum resultado para \"{{query}}\"",
+    "count_one": "{{count}} resultado para \"{{query}}\"",
+    "count_many": "{{count}} resultados para \"{{query}}\"",
+    "count_other": "{{count}} resultados para \"{{query}}\""
+  },
+  "saved": {
+    "loading": "Carregando itens salvos…",
+    "loadFailed": "Não foi possível carregar os itens salvos.",
+    "empty": "Salve itens dos seus feeds para encontrá-los aqui."
+  },
+  "feedpackFetching": "Buscando fontes deste feedpack…",
+  "deleteFeed": {
+    "thisWorkspace": "este workspace",
+    "confirmRemove": "Remover de {{workspace}}",
+    "confirmDelete": "Excluir feed",
+    "titleRemove": "Remover feed",
+    "titleDelete": "Excluir feed",
+    "removeBody_one": "Isto remove <bold>{{title}}</bold> de {{workspace}}. Ele continua em {{count}} outro workspace, com os seus itens.",
+    "removeBody_many": "Isto remove <bold>{{title}}</bold> de {{workspace}}. Ele continua em {{count}} outros workspaces, com os seus itens.",
+    "removeBody_other": "Isto remove <bold>{{title}}</bold> de {{workspace}}. Ele continua em {{count}} outros workspaces, com os seus itens.",
+    "deleteBody_one": "Isto remove <bold>{{title}}</bold> e o seu <bold>{{count}} item</bold>. Os itens salvos continuam disponíveis. Não é possível desfazer.",
+    "deleteBody_many": "Isto remove <bold>{{title}}</bold> e os seus <bold>{{count}} itens</bold>. Os itens salvos continuam disponíveis. Não é possível desfazer.",
+    "deleteBody_other": "Isto remove <bold>{{title}}</bold> e os seus <bold>{{count}} itens</bold>. Os itens salvos continuam disponíveis. Não é possível desfazer."
+  },
+  "deleteCategory": {
+    "keepFeeds": "Manter os feeds e movê-los para outra pasta",
+    "moveTo": "Mover os feeds para",
+    "title": "Excluir pasta",
+    "confirm": "Excluir pasta",
+    "body": "Isto remove a pasta <bold>{{name}}</bold>.",
+    "feeds_move_one": "O seu <bold>{{count}} feed</bold> é movido para a pasta abaixo.",
+    "feeds_move_many": "Os seus <bold>{{count}} feeds</bold> são movidos para a pasta abaixo.",
+    "feeds_move_other": "Os seus <bold>{{count}} feeds</bold> são movidos para a pasta abaixo.",
+    "feeds_delete_one": "O seu <bold>{{count}} feed</bold> é excluído junto.",
+    "feeds_delete_many": "Os seus <bold>{{count}} feeds</bold> são excluídos junto.",
+    "feeds_delete_other": "Os seus <bold>{{count}} feeds</bold> são excluídos junto."
+  },
+  "moveFeed": {
+    "title": "Mover feed",
+    "body": "Mover <bold>{{title}}</bold> para outro workspace.",
+    "workspace": "Workspace",
+    "folder": "Pasta",
+    "newFolder": "Nova pasta…",
+    "newFolderName": "Nome da nova pasta",
+    "confirm": "Mover feed"
+  },
+  "caughtUp": "Tudo em dia",
+  "sidebar": {
+    "feeds": "Feeds",
+    "newFolder": "Nova pasta",
+    "addFeed": "Adicionar feed",
+    "addFeedpack": "Adicionar feedpack",
+    "folderName": "Nome da pasta",
+    "newFolderName": "Nome da nova pasta",
+    "drag": "Arrastar",
+    "renameFolder": "Renomear {{name}}",
+    "addFeedHint": "Adicione um feed aqui. Para excluir um feed, clique com o botão direito nele.",
+    "filterHint": "Clique em um feed para mostrar só os artigos dele. Clique no olho para ocultar um feed."
+  },
+  "refresh": {
+    "failed_one": "{{count}} feed não pôde ser atualizado.",
+    "failed_many": "{{count}} feeds não puderam ser atualizados.",
+    "failed_other": "{{count}} feeds não puderam ser atualizados.",
+    "more": "e mais {{count}}"
+  },
+  "readTime": "{{count, number}} min de leitura"
+}

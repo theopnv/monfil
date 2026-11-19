@@ -1,0 +1,110 @@
+{
+  "section": {
+    "appearance": "Darstellung",
+    "reading": "Lesen",
+    "refreshing": "Aktualisierung",
+    "data": "Ihre Daten",
+    "privacy": "Datenschutz",
+    "diagnostics": "Diagnose",
+    "about": "Über"
+  },
+  "title": "Einstellungen",
+  "about": {
+    "tagline": "RSS-Feed-Reader und mehr.",
+    "link": {
+      "website": "Website",
+      "documentation": "Dokumentation",
+      "changelog": "Changelog",
+      "reportIssue": "Problem melden",
+      "buyCoffee": "Einen Kaffee spendieren"
+    }
+  },
+  "appearance": {
+    "theme": "Design",
+    "density": "Standarddichte",
+    "densityHint": "So werden die Karten im Stream auf Start angeordnet.",
+    "themes": {
+      "light": "Hell",
+      "dark": "Dunkel",
+      "system": "System"
+    },
+    "themeHints": {
+      "light": "Immer das helle Erscheinungsbild verwenden.",
+      "dark": "Immer das dunkle Erscheinungsbild verwenden.",
+      "system": "An die Einstellung Ihres Betriebssystems anpassen und bei Änderung automatisch wechseln."
+    },
+    "densities": {
+      "cards": "Karten",
+      "magazine": "Magazin",
+      "compact": "Kompakt"
+    },
+    "language": "Sprache",
+    "languageHint": "Die Sprache von Menüs, Dialogen und Meldungen. Der Text der Feeds bleibt unverändert.",
+    "languageSystem": "System ({{language}})",
+    "languageBeta": "{{language}} (Beta)",
+    "languageBetaHint": "Eine Maschine hat diese Übersetzung erstellt. Noch hat kein Muttersprachler sie geprüft. Verbesserungen sind per Pull Request möglich."
+  },
+  "reading": {
+    "markScroll": "Beim Scrollen als gelesen markieren",
+    "markScrollHint": "Ein Eintrag wird als gelesen markiert, sobald er oben aus der Liste scrollt.",
+    "hideRead": "Gelesene Einträge auf Start ausblenden",
+    "hideReadHint": "Gelesene Einträge verschwinden aus dem Stream, statt abgedunkelt zu bleiben.",
+    "keyboard": "Tastaturnavigation",
+    "keyboardHint": "j / k wechselt zwischen Einträgen, Esc verlässt den Reader.",
+    "external": "Links im Browser öffnen",
+    "externalHint": "Ein Klick auf einen Eintrag öffnet seinen Quelllink statt des integrierten Readers."
+  },
+  "refreshing": {
+    "interval": {
+      "m15": "15 Min.",
+      "m30": "30 Min.",
+      "h1": "1 Std.",
+      "h6": "6 Std.",
+      "manual": "Manuell"
+    },
+    "refresh": "Feeds aktualisieren",
+    "refreshHint": "Wie oft Monfil Ihre Feeds auf neue Einträge prüft.",
+    "onLaunch": "Beim Start aktualisieren",
+    "onLaunchHint": "Zusätzlich einmal sofort aktualisieren, wenn Monfil startet.",
+    "keep": "Artikel aufbewahren für",
+    "keepHint": "Ältere Artikel nach dieser Anzahl Tage entfernen. Mindestens 10 pro Feed bleiben erhalten.",
+    "days_one": "{{count}} Tag",
+    "days_other": "{{count}} Tage"
+  },
+  "data": {
+    "feeds": "Feeds",
+    "articles": "Artikel",
+    "size": "Datenbankgröße",
+    "backedUp": "Datenbanksicherung gespeichert.",
+    "backupFailed": "Sicherung fehlgeschlagen. {{message}}",
+    "backUp": "Datenbank sichern…",
+    "reveal": "Datenbankdatei anzeigen",
+    "importOpml": "OPML importieren"
+  },
+  "privacy": {
+    "share": "Anonyme Nutzungsstatistiken teilen",
+    "unavailable": "Diese Version von Monfil erfasst keine Nutzungsstatistiken.",
+    "shareHint": "Senden Sie täglich eine Zählung der genutzten Funktionen. Kein Text aus Feeds, Artikeln oder Suchen verlässt Ihr Gerät. Sie können das jederzeit ausschalten, um das Senden zu beenden und die auf diesem Gerät gespeicherten Zählungen zu löschen.",
+    "preview": "Gesendete Daten ansehen",
+    "notice": "Datenschutzhinweis"
+  },
+  "diagnostics": {
+    "detailed": "Ausführliche Protokollierung",
+    "detailedHint": "Debug-Details in der lokalen Protokolldatei festhalten. Feednamen, vollständige Links, Artikeltexte, Zugangsdaten und Dateipfade werden entfernt.",
+    "showLog": "Protokolldatei anzeigen"
+  },
+  "analyticsCard": {
+    "label": "Anonyme Nutzungsstatistiken",
+    "later": "Später fragen",
+    "title": "Helfen Sie, Monfil zu verbessern",
+    "body": "Teilen Sie anonyme Nutzungsstatistiken: täglich eine Zählung der genutzten Funktionen. Kein Text aus Feeds, Artikeln oder Suchen verlässt Ihr Gerät. Sie können dies jederzeit in den Einstellungen ändern.",
+    "share": "Nutzungsstatistiken teilen",
+    "decline": "Nein danke"
+  },
+  "analyticsPreview": {
+    "title": "Was gesendet wird",
+    "body": "Monfil sendet an jedem Tag der Nutzung eine Zusammenfassung wie diese. Sie enthält Zählungen und Einstellungen. Sie enthält keinen Text aus Feeds oder Artikeln, keine Suchbegriffe und keinen Namen.",
+    "preview": "Vorschau der Nutzungsstatistiken",
+    "loading": "Wird geladen…"
+  }
+}

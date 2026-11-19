@@ -56,7 +56,7 @@ async function discover(query: string): Promise<Result<ParsedSource[], FeedFetch
   try {
     pageUrl = new URL(link);
   } catch {
-    return unsupported("This doesn't look like a link.");
+    return unsupported("This doesn't look like a link.", 'notLink');
   }
 
   // Stryker disable next-line ConditionalExpression: a link that is not Mastodon-shaped makes mastodonSource.discover refuse it without a request
@@ -87,7 +87,7 @@ async function discover(query: string): Promise<Result<ParsedSource[], FeedFetch
   }
 
   const probed = await probe(pageUrl.href);
-  return probed ? { success: true, data: [probed] } : unsupported("Couldn't find a feed at that address.");
+  return probed ? { success: true, data: [probed] } : unsupported("Couldn't find a feed at that address.", 'noFeedAtAddress');
 }
 
 export const rssSource: SourceAdapter = {

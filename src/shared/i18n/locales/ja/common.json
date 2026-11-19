@@ -1,0 +1,24 @@
+{
+  "action": {
+    "undo": "元に戻す",
+    "gotIt": "わかりました",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "tryAgain": "再試行",
+    "done": "完了",
+    "import": "インポート",
+    "close": "閉じる",
+    "back": "戻る",
+    "showLog": "ログファイルを表示",
+    "restart": "再起動"
+  },
+  "item": {
+    "action": {
+      "save": "保存",
+      "removeFromSaved": "保存済みから削除"
+    }
+  },
+  "update": {
+    "ready": "Monfilの新しいバージョンが利用可能です。"
+  }
+}

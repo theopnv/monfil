@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { mainI18n } from '../../lib/i18n';
 import { createFeedSource, toUrl } from './feedSource';
 import { escapeText, removeAll } from './text';
 import type { FeedCandidate, NewSourceItem, ParsedFeedContent } from './types';
@@ -19,11 +20,11 @@ const RESERVED = new Set([
 
 function repoCandidate(owner: string, repo: string): FeedCandidate {
   const name = repo.replace(/\.git$/, '');
-  return { link: `https://github.com/${owner}/${name}/releases.atom`, label: 'Releases', icon: `https://github.com/${owner}.png` };
+  return { link: `https://github.com/${owner}/${name}/releases.atom`, label: mainI18n.t('main:source.releases'), icon: `https://github.com/${owner}.png` };
 }
 
 function userCandidate(user: string): FeedCandidate {
-  return { link: `https://github.com/${user}.atom`, label: 'Public activity', icon: `https://github.com/${user}.png` };
+  return { link: `https://github.com/${user}.atom`, label: mainI18n.t('main:source.publicActivity'), icon: `https://github.com/${user}.png` };
 }
 
 /**
@@ -168,5 +169,6 @@ export const githubSource = createFeedSource({
   fetchesFullArticle: false,
   toCandidates: githubCandidates,
   mismatchMessage: 'This is not a GitHub repository or user link.',
+  mismatchReason: 'mismatchGithub',
   transform: cleanEntries,
 });

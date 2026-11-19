@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { Autocomplete, Input, ListBox, ListBoxItem, SearchField, useFilter } from "react-aria-components";
 import { SearchLg } from "@untitledui/icons";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
@@ -18,26 +19,27 @@ export interface WorkspaceSwitcherProps {
 }
 
 export default function WorkspaceSwitcher({ isOpen, onOpenChange, workspaces, onSelect }: WorkspaceSwitcherProps) {
+  const { t } = useTranslation('workspace');
   const { contains } = useFilter({ sensitivity: 'base' });
   const shortcuts = new Map(workspaces.slice(0, 9).map((workspace, index) => [workspace.id, `${MOD_KEY_LABEL}${index + 1}`]));
 
   return (
     <ModalOverlay isOpen={isOpen} onOpenChange={onOpenChange} isDismissable className="sm:items-start sm:pt-[15vh]">
       <Modal className="w-full max-w-md">
-        <Dialog aria-label="Switch workspace">
+        <Dialog aria-label={t('switcher.dialog')}>
           <Autocomplete filter={contains}>
-            <SearchField aria-label="Workspace name" autoFocus className="flex items-center gap-2 border-b border-secondary px-4 py-3">
+            <SearchField aria-label={t('switcher.field')} autoFocus className="flex items-center gap-2 border-b border-secondary px-4 py-3">
               <SearchLg aria-hidden className="size-4 text-fg-quaternary" />
-              <Input placeholder="Go to workspace…" className="min-w-0 flex-1 bg-transparent text-md text-primary outline-none placeholder:text-placeholder" />
+              <Input placeholder={t('switcher.placeholder')} className="min-w-0 flex-1 bg-transparent text-md text-primary outline-none placeholder:text-placeholder" />
             </SearchField>
             <ListBox
-              aria-label="Workspaces"
+              aria-label={t('switcher.list')}
               items={workspaces}
               onAction={(key) => {
                 onSelect(Number(key));
                 onOpenChange(false);
               }}
-              renderEmptyState={() => <p className="px-4 py-3 text-sm text-tertiary">No workspace matches.</p>}
+              renderEmptyState={() => <p className="px-4 py-3 text-sm text-tertiary">{t('switcher.empty')}</p>}
               className="max-h-80 overflow-y-auto p-1.5 outline-none"
             >
               {(workspace) => {
@@ -51,7 +53,7 @@ export default function WorkspaceSwitcher({ isOpen, onOpenChange, workspaces, on
                     <span className="flex size-6 flex-none items-center justify-center rounded-md" style={{ backgroundColor: `color-mix(in srgb, ${workspace.color} 18%, transparent)`, color: workspace.color }}>
                       <Icon aria-hidden className="size-3.5" />
                     </span>
-                    <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
+                    <span dir="auto" className="min-w-0 flex-1 truncate">{workspace.name}</span>
                     {shortcuts.has(workspace.id) && <kbd className="font-sans text-xs text-tertiary">{shortcuts.get(workspace.id)}</kbd>}
                   </ListBoxItem>
                 );

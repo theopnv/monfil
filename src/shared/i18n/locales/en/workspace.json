@@ -1,0 +1,76 @@
+{
+  "navigation": {
+    "label": "Workspace views",
+    "all": "All items",
+    "saved": "Saved",
+    "saveHint": "Save an article with the bookmark. Find your saved articles here."
+  },
+  "switcher": {
+    "dialog": "Switch workspace",
+    "field": "Workspace name",
+    "placeholder": "Go to workspace…",
+    "list": "Workspaces",
+    "empty": "No workspace matches."
+  },
+  "rail": {
+    "moveFailed": "The feed could not be moved.",
+    "list": "Workspaces",
+    "move": "Move {{name}}",
+    "hideNames": "Hide workspace names",
+    "showNames": "Show workspace names",
+    "collapse": "Collapse",
+    "new": "New workspace",
+    "newHint": "Create a workspace to group feeds. Right-click a workspace to edit or delete it.",
+    "settings": "Settings"
+  },
+  "dialog": {
+    "editTitle": "Edit workspace",
+    "newTitle": "New workspace",
+    "editBody": "Rename it, or give it a different icon and colour.",
+    "newBody": "A tab in the rail, with its own sources and its own river.",
+    "name": "Name",
+    "namePlaceholder": "CI/CD watch",
+    "icon": "Icon",
+    "colour": "Colour",
+    "colourOption": "Colour {{value}}",
+    "browse": "Browse feedpacks",
+    "save": "Save changes",
+    "create": "Create workspace"
+  },
+  "delete": {
+    "title": "Delete workspace",
+    "body": "This deletes the <bold>{{name}}</bold> workspace, its folders, and its Saved list. Feeds placed only here are removed too. Export as OPML first to keep a copy you can re-import later.",
+    "export": "Export as OPML",
+    "confirm": "Delete workspace"
+  },
+  "importOpml": {
+    "doneTitle": "Import complete",
+    "imported_one": "Imported {{count}} feed.",
+    "imported_other": "Imported {{count}} feeds.",
+    "skipped": "{{count}} skipped.",
+    "failed": "{{count}} failed to fetch.",
+    "titleInto": "Import OPML into {{name}}",
+    "title": "Import OPML",
+    "choose": "Choose a file from the picker that opens next.",
+    "newWorkspace": "New workspace",
+    "mergeHome": "Merge into Home",
+    "name": "Name",
+    "namePlaceholder": "Leave blank to use the file's title"
+  },
+  "feedpacks": {
+    "sources_one": "{{count}} source",
+    "sources_other": "{{count}} sources",
+    "packSources": "Pack sources",
+    "search": "Search feedpacks",
+    "loading": "Loading feedpacks…",
+    "none": "No feedpacks are available.",
+    "noMatch": "No feedpacks match \"{{query}}\".",
+    "loadingSources": "Loading sources…"
+  },
+  "feedpackDialog": {
+    "title": "Feedpacks",
+    "body": "Install a curated set of sources.",
+    "back": "Back to feedpacks",
+    "install": "Install"
+  }
+}

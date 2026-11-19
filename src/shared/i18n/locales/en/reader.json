@@ -1,0 +1,39 @@
+{
+  "sourceLink": "Read on {{source}}",
+  "header": {
+    "home": "Home",
+    "saved": "Saved",
+    "markUnread": "Mark unread",
+    "previous": "Previous article",
+    "next": "Next article"
+  },
+  "next": {
+    "unread": "Next unread",
+    "article": "Next article"
+  },
+  "notFound": "This article could not be found.",
+  "backToSaved": "Back to Saved",
+  "backToHome": "Back to Home",
+  "loadingFull": "Loading full article…",
+  "unavailable": "The full article could not be loaded. Read it at the source instead.",
+  "failed": "This item could not be loaded. Read it at the source instead.",
+  "announce": {
+    "read": "Marked as read",
+    "unread": "Marked as unread"
+  },
+  "shortcuts": {
+    "next": "next",
+    "previous": "previous",
+    "back": "back to Home"
+  },
+  "embed": {
+    "defaultTitle": "{{name}} embed",
+    "consent": "Loading this embed connects to {{name}}. The provider may use cookies.",
+    "load": "Load {{name}}",
+    "open": "Open on {{name}}",
+    "privacy": "Provider privacy policy",
+    "openEmbedded": "Open embedded content"
+  },
+  "saveFailed": "The item could not be saved. Try again.",
+  "unsaveFailed": "The item could not be removed from Saved. Try again."
+}

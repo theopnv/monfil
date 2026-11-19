@@ -1,0 +1,47 @@
+{
+  "menu": {
+    "feed": {
+      "refreshFeed": "Atualizar feed",
+      "moveFeed": "Mover para workspace…",
+      "deleteFeed": "Excluir feed"
+    },
+    "category": {
+      "rename": "Renomear",
+      "delete": "Excluir"
+    },
+    "workspace": {
+      "edit": "Editar workspace",
+      "export": "Exportar como OPML",
+      "delete": "Excluir workspace"
+    }
+  },
+  "fatal": {
+    "title": "O Monfil não pôde continuar",
+    "message": "O Monfil encontrou um erro do sistema. Incidente {{incident}}.",
+    "restart": "Reiniciar",
+    "showLog": "Mostrar arquivo de log",
+    "quit": "Sair"
+  },
+  "dialog": {
+    "sqliteFilter": "Banco de dados SQLite"
+  },
+  "source": {
+    "hackernews": {
+      "frontPage": "Página inicial",
+      "points100": "100+ pontos",
+      "points300": "300+ pontos",
+      "newest": "Mais recentes",
+      "best": "Melhores"
+    },
+    "releases": "Versões",
+    "publicActivity": "Atividade pública"
+  },
+  "salary": {
+    "withInterval": "{{label}} / {{interval}}",
+    "interval": {
+      "hour": "hora",
+      "month": "mês",
+      "year": "ano"
+    }
+  }
+}

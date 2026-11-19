@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { Folder } from '@untitledui/icons';
 import SettingsSection from '@/components/Settings/SettingsSection';
@@ -10,6 +11,7 @@ import { Toggle } from '@/components/untitled-ui/base/toggle/toggle';
 import { ipc, rendererLogger } from '@/lib/ipc-client';
 
 export default function DiagnosticsSection() {
+  const { t } = useTranslation('settings');
   const [detailed, setDetailed] = useState<boolean>();
 
   useEffect(() => {
@@ -26,17 +28,17 @@ export default function DiagnosticsSection() {
   };
 
   return (
-    <SettingsSection id="diagnostics" title="Diagnostics">
+    <SettingsSection id="diagnostics" title={t('section.diagnostics')}>
       <Toggle
         className="w-full"
-        label="Detailed logging"
-        hint="Record debug details in the local log file. Feed names, full links, article text, credentials, and file paths are removed."
+        label={t('diagnostics.detailed')}
+        hint={t('diagnostics.detailedHint')}
         isSelected={detailed ?? false}
         isDisabled={detailed === undefined}
         onChange={changeDetailed}
       />
       <Button color="secondary" iconLeading={Folder} className="self-start" onPress={() => ipc.send('app:reveal-log-file', undefined)}>
-        Show log file
+        {t('diagnostics.showLog')}
       </Button>
     </SettingsSection>
   );

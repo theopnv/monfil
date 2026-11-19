@@ -6,6 +6,7 @@ import { type Kysely } from 'kysely';
 import { logger } from '../../logging/logger';
 import { db, dbReady } from '../database';
 import { queryFeedItems } from './query';
+import { parseErrorParams } from '../error-params';
 import { type Database, type FeedItem, type NewArticleContent } from '../types';
 import type { AddFeedError, CreateCategoryError, CreateWorkspaceError, FeedCategory, FeedMetadata, NewFeedInput, SourceType, Workspace } from '../../../shared/contracts';
 import type { Result } from '../../../shared/result';
@@ -63,7 +64,7 @@ export async function createCategory(name: string, workspaceId: number): Promise
     return { success: true, data: category };
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return { success: false, error: { name: 'DUPLICATE_NAME', message: `A category named "${name}" already exists.` } };
+      return { success: false, error: { name: 'DUPLICATE_NAME', message: `A category named "${name}" already exists.`, params: { name } } };
     }
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
   }
@@ -287,6 +288,8 @@ export async function addFeedToDatabase(input: NewFeedInput, cutoff = Number.NEG
         type: metadata.type,
         last_fetched_at: metadata.last_fetched_at,
         last_error: metadata.last_error,
+        last_error_code: metadata.last_error_code,
+        last_error_params: parseErrorParams(metadata.last_error_params),
         icon: metadata.icon,
         items,
         category,

@@ -61,18 +61,11 @@ export function toggleFolderHidden(feeds: FeedSummary[], showOnlyLinks: Readonly
 }
 
 /** Names the action of the focus control, which flips with the state it would clear. */
-export function focusActionLabel(current: FeedVisibility | "mixed"): "Focus" | "Unfocus" {
-  return current === "only" ? "Unfocus" : "Focus";
+export function focusAction(current: FeedVisibility | "mixed"): "focus" | "unfocus" {
+  return current === "only" ? "unfocus" : "focus";
 }
 
 /** Names the action of the eye control. */
-export function hideActionLabel(current: FeedVisibility | "mixed"): "Hide" | "Show" {
-  return current === "hidden" ? "Show" : "Hide";
+export function hideAction(current: FeedVisibility | "mixed"): "hide" | "show" {
+  return current === "hidden" ? "show" : "hide";
 }
-
-/** Describes the current state, unlike the action labels, which name what a control does next. */
-export const VISIBILITY_STATE_LABEL: Record<FeedVisibility, string> = {
-  home: "Shown with others",
-  only: "Shown only",
-  hidden: "Hidden",
-};

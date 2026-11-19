@@ -4,24 +4,26 @@
 
 import { createFeedSource, toUrl } from './feedSource';
 import type { FeedCandidate } from './types';
+import { mainI18n } from '../../lib/i18n';
 
 const SITE_HOST = 'news.ycombinator.com';
 const HNRSS_HOST = 'hnrss.org';
 
-const PRESETS: FeedCandidate[] = [
-  { link: `https://${SITE_HOST}/rss`, label: 'Front page' },
-  { link: `https://${HNRSS_HOST}/newest?points=100`, label: '100+ points' },
-  { link: `https://${HNRSS_HOST}/newest?points=300`, label: '300+ points' },
+// "Show HN" and "Ask HN" are the names of the site's own sections, so they stay as they are.
+const presets = (): FeedCandidate[] => [
+  { link: `https://${SITE_HOST}/rss`, label: mainI18n.t('main:source.hackernews.frontPage') },
+  { link: `https://${HNRSS_HOST}/newest?points=100`, label: mainI18n.t('main:source.hackernews.points100') },
+  { link: `https://${HNRSS_HOST}/newest?points=300`, label: mainI18n.t('main:source.hackernews.points300') },
   { link: `https://${HNRSS_HOST}/show`, label: 'Show HN' },
   { link: `https://${HNRSS_HOST}/ask`, label: 'Ask HN' },
 ];
 
-const SECTIONS: Record<string, FeedCandidate> = {
-  '/newest': { link: `https://${HNRSS_HOST}/newest`, label: 'Newest' },
-  '/best': { link: `https://${HNRSS_HOST}/best`, label: 'Best' },
+const sections = (): Record<string, FeedCandidate> => ({
+  '/newest': { link: `https://${HNRSS_HOST}/newest`, label: mainI18n.t('main:source.hackernews.newest') },
+  '/best': { link: `https://${HNRSS_HOST}/best`, label: mainI18n.t('main:source.hackernews.best') },
   '/show': { link: `https://${HNRSS_HOST}/show`, label: 'Show HN' },
   '/ask': { link: `https://${HNRSS_HOST}/ask`, label: 'Ask HN' },
-};
+});
 
 /** The Hacker News feeds a link leads to: the presets for the site itself, one feed for a section or a feed URL. */
 export function hackernewsCandidates(raw: string): FeedCandidate[] | null {
@@ -33,8 +35,8 @@ export function hackernewsCandidates(raw: string): FeedCandidate[] | null {
   if (host === HNRSS_HOST || url.pathname === '/rss') {
     return [{ link: `https://${host}${url.pathname}${url.search}` }];
   }
-  const section = SECTIONS[url.pathname];
-  return section ? [section] : PRESETS;
+  const section = sections()[url.pathname];
+  return section ? [section] : presets();
 }
 
 export function isHackernewsLink(raw: string): boolean {
@@ -46,4 +48,5 @@ export const hackernewsSource = createFeedSource({
   fetchesFullArticle: true,
   toCandidates: hackernewsCandidates,
   mismatchMessage: 'This is not a Hacker News link.',
+  mismatchReason: 'mismatchHackernews',
 });

@@ -2,17 +2,21 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
+import { translateErrorWithDetails } from "@/lib/error-text";
 import { Link02 } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
 import FeedMatchCard from "./FeedMatchCard";
+import { isComposing } from "@/lib/keyboard";
 import type { FeedValidationStatus } from "./useFeedValidation";
+import type { TFunction } from "i18next";
 import type { ParsedSource, FeedFetchError, SourceType } from "../../../shared/contracts";
 
 export type FeedType = SourceType | undefined;
 
-const KINDS: { id: FeedType; label: string }[] = [
-  { id: undefined, label: "Anything" },
+const KINDS: { id: FeedType; label: string | undefined; labelKey?: "find.kind.anything" | "find.kind.conferences" | "find.kind.jobs" }[] = [
+  { id: undefined, label: undefined, labelKey: "find.kind.anything" },
   { id: "rss", label: "RSS" },
   { id: "youtube", label: "YouTube" },
   { id: "github", label: "GitHub" },
@@ -21,60 +25,10 @@ const KINDS: { id: FeedType; label: string }[] = [
   { id: "arxiv", label: "arXiv" },
   { id: "bluesky", label: "Bluesky" },
   { id: "mastodon", label: "Mastodon" },
-  { id: "conference", label: "Conferences" },
-  { id: "ats", label: "Jobs" },
+  { id: "conference", label: undefined, labelKey: "find.kind.conferences" },
+  { id: "ats", label: undefined, labelKey: "find.kind.jobs" },
 ];
 
-const COPY: Record<"anything" | SourceType, { placeholder: string; hint: string }> = {
-  anything: {
-    placeholder: "Paste a link to a website, feed, repository, or profile…",
-    hint: "Monfil finds the feed behind the link. For a handle, press Enter.",
-  },
-  rss: {
-    placeholder: "Paste a link to an RSS feed…",
-    hint: "Monfil checks the link for an RSS feed.",
-  },
-  youtube: {
-    placeholder: "Paste a channel, handle, or video link…",
-    hint: "Paste a link, or enter a channel or handle and press Enter.",
-  },
-  github: {
-    placeholder: "Paste a repository or user link, or owner/repo…",
-    hint: "A repository gives its releases. A user or org gives its public activity. After owner/repo, press Enter.",
-  },
-  gitlab: {
-    placeholder: "Paste a GitLab project link…",
-    hint: "Monfil follows the project's releases. Self-hosted GitLab works too.",
-  },
-  hackernews: {
-    placeholder: "Paste a Hacker News link…",
-    hint: "news.ycombinator.com offers the front page and feeds filtered by points.",
-  },
-  arxiv: {
-    placeholder: "Paste an arXiv listing link…",
-    hint: "For example arxiv.org/list/cs.AI/recent. Monfil hides replaced papers.",
-  },
-  bluesky: {
-    placeholder: "Paste a profile link or handle…",
-    hint: "Enter a handle such as @name.bsky.social and press Enter.",
-  },
-  mastodon: {
-    placeholder: "Paste a profile or tag link, or @user@host…",
-    hint: "Enter a handle such as @user@mastodon.social and press Enter.",
-  },
-  conference: {
-    placeholder: "Type topics, then \"in\" and places…",
-    hint: "Format: topics in places, then press Enter. Separate items with commas. Places are optional, and online counts as a place. Examples: devops · kubernetes, cloud in France · java in Belgium, online. A developers.events link also works.",
-  },
-  ats: {
-    placeholder: "Paste a company's job board or careers page…",
-    hint: "Works with Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor and Personio boards. Coverage is not complete: other job systems are not supported yet. Monfil lists every open job of the company.",
-  },
-};
-
-// Input's `icon` prop is typed as ComponentType<HTMLAttributes<HTMLOrSVGElement>>,
-// but @untitledui/icons components are typed against SVGProps. InputBase only
-// ever passes `className`, so this wrapper narrows to what's actually used.
 function LinkIcon({ className }: { className?: string | undefined }) {
   return <Link02 className={className} />;
 }
@@ -92,63 +46,65 @@ export interface Step1FindProps {
   error: FeedFetchError | null;
 }
 
-function candidateDetail(feed: ParsedSource): string {
+function candidateDetail(feed: ParsedSource, t: TFunction<"addFeed">): string {
   if (feed.type === "conference" && feed.items.length === 0) {
-    return "No conference matches now. Monfil adds a card when a matching conference is announced.";
+    return t("find.conferenceEmpty");
   }
-  return `${feed.link} — ${feed.items.length} items`;
+  return t("find.detail", { link: feed.link, count: feed.items.length });
 }
 
 export default function Step1Find({ query, onQueryChange, onValidate, type, onTypeChange, status, candidates, selectedIndex, onSelect, error }: Step1FindProps) {
+  const { t } = useTranslation('addFeed');
+  const { t: tErrors } = useTranslation('errors');
   const feed = candidates[selectedIndex] ?? null;
-  const copy = COPY[type ?? "anything"];
+  const kind = type ?? "anything";
 
   return (
     <div className="flex flex-col gap-1 px-7.5 py-5.5">
       <Input
-        aria-label="Feed URL"
+        aria-label={t('find.feedUrl')}
         size="lg"
         icon={LinkIcon}
-        placeholder={copy.placeholder}
+        placeholder={t(`find.copy.${kind}.placeholder`)}
         value={query}
         onChange={onQueryChange}
         onBlur={onValidate}
         onKeyDown={(event) => {
-          if (event.key === 'Enter') {
+          if (event.key === 'Enter' && !isComposing(event.nativeEvent)) {
             event.preventDefault();
             onValidate();
           }
         }}
         wrapperClassName="rounded-full"
       />
-      <p className="mb-4.5 px-1.5 text-xs text-tertiary text-pretty">{copy.hint}</p>
+      <p className="mb-4.5 px-1.5 text-xs text-tertiary text-pretty">{t(`find.copy.${kind}.hint`)}</p>
 
       <div className="mb-5.5 flex flex-wrap gap-0.5 self-start rounded-3xl bg-primary_hover p-0.75">
         {KINDS.map((option) => (
           <Button
-            key={option.label}
+            key={option.id ?? "anything"}
             size="sm"
             color={option.id === type ? "secondary" : "tertiary"}
             className="rounded-full"
             onPress={() => onTypeChange(option.id)}
           >
-            {option.label}
+            {option.label ?? (option.labelKey && t(option.labelKey))}
           </Button>
         ))}
       </div>
 
-      {status === "loading" && <FeedMatchCard title="Searching…" detail={query} status="loading" />}
+      {status === "loading" && <FeedMatchCard title={t('find.searching')} detail={query} status="loading" />}
       {status === "found" && candidates.length === 1 && feed && (
         <FeedMatchCard
           title={feed.title || feed.link}
-          detail={candidateDetail(feed)}
+          detail={candidateDetail(feed, t)}
           status="found"
           faviconUrl={feed.icon}
         />
       )}
       {status === "found" && candidates.length > 1 && (
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 px-1.5 text-xs text-tertiary">{candidates.length} feeds found. Pick one.</legend>
+          <legend className="mb-2 px-1.5 text-xs text-tertiary">{t('find.candidates', { count: candidates.length })}</legend>
           {candidates.map((candidate, index) => (
             <label key={candidate.link} className="block cursor-pointer rounded-xl has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus-ring">
               <input
@@ -160,7 +116,7 @@ export default function Step1Find({ query, onQueryChange, onValidate, type, onTy
               />
               <FeedMatchCard
                 title={candidate.label ? `${candidate.label} · ${candidate.title || candidate.link}` : candidate.title || candidate.link}
-                detail={candidateDetail(candidate)}
+                detail={candidateDetail(candidate, t)}
                 status="found"
                 selected={index === selectedIndex}
                 faviconUrl={candidate.icon}
@@ -170,7 +126,7 @@ export default function Step1Find({ query, onQueryChange, onValidate, type, onTy
         </fieldset>
       )}
       {status === "not-found" && (
-        <FeedMatchCard title="No feed found" detail={error?.message ?? "Couldn't find a feed at that address."} status="not-found" />
+        <FeedMatchCard title={t('find.notFound')} detail={error ? translateErrorWithDetails(tErrors, error) : t('find.notFoundDetail')} status="not-found" />
       )}
     </div>
   );

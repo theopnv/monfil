@@ -7,7 +7,8 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "check:translations": "node scripts/check-translations.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.4",
@@ -19,6 +20,7 @@
     "esbuild": true
   },
   "devDependencies": {
+    "@lunariajs/core": "^0.3.0",
     "wrangler": "^4.156.0"
   }
 }

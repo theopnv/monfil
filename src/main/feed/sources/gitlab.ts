@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { mainI18n } from '../../lib/i18n';
 import { fetchText } from '../../lib/fetch';
 import { createFeedSource, toUrl } from './feedSource';
 import type { FeedCandidate } from './types';
@@ -27,7 +28,7 @@ export function gitlabCandidates(raw: string, lenient: boolean): FeedCandidate[]
   if (segments.length < 2 || !segments.every((segment) => SEGMENT_REGEX.test(segment))) {
     return null;
   }
-  return [{ link: `${url.origin}/${segments.join('/').replace(/\.git$/, '')}${RELEASES_SUFFIX}`, label: 'Releases' }];
+  return [{ link: `${url.origin}/${segments.join('/').replace(/\.git$/, '')}${RELEASES_SUFFIX}`, label: mainI18n.t('main:source.releases') }];
 }
 
 export function isGitlabLink(raw: string): boolean {
@@ -52,5 +53,6 @@ export const gitlabSource = createFeedSource({
   fetchesFullArticle: false,
   toCandidates: gitlabCandidates,
   mismatchMessage: 'This is not a GitLab project link.',
+  mismatchReason: 'mismatchGitlab',
   resolveIcon: projectAvatar,
 });

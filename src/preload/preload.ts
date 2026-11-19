@@ -14,8 +14,17 @@ import type {
   TwoWayRendererMainChannels,
   TwoWayRendererMainChannelsInvokeArgs,
 } from "../shared/channels";
+import { SYSTEM_LOCALE_ARGUMENT } from "../shared/i18n/format-locale";
+import { isLanguageCode, LANGUAGE_ARGUMENT } from "../shared/i18n/languages";
+
+const systemLocale = process.argv.find((argument) => argument.startsWith(SYSTEM_LOCALE_ARGUMENT))?.slice(SYSTEM_LOCALE_ARGUMENT.length);
+
+const argumentLanguage = process.argv.find((argument) => argument.startsWith(LANGUAGE_ARGUMENT))?.slice(LANGUAGE_ARGUMENT.length);
+const language = isLanguageCode(argumentLanguage) ? argumentLanguage : undefined;
 
 const electronHandler: ElectronHandler = {
+  ...(systemLocale ? { systemLocale } : {}),
+  ...(language ? { language } : {}),
   ipcRenderer: {
     sendMessage<C extends OneWayRendererToMainChannels>(channel: C, payload: OneWayRendererToMainChannelPayloads[C]) {
       ipcRenderer.send(channel, payload);

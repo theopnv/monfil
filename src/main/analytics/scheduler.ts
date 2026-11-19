@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { logger } from '../logging/logger';
+import { mainLanguage } from '../lib/i18n';
 import { getAnalyticsEndpoint } from './config';
 import { sendEvents, type AnalyticsEvent } from './client';
 import { deleteDays, isCountingEnabled, listDays, readDay, setCountingEnabled, utcDay } from './counters';
@@ -70,7 +71,7 @@ export async function flushUsageAnalytics({ now = new Date(), includeToday = fal
       events.push({
         timestamp: summaryTimestamp(day, now).toISOString(),
         eventName: 'daily_summary',
-        props: buildDailySummary({ day, counters: await readDay(day), library, preferences }),
+        props: buildDailySummary({ day, counters: await readDay(day), library, preferences, language: mainLanguage() }),
       });
     }
     if (!isCountingEnabled()) {

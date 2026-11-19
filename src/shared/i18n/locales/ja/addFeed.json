@@ -1,0 +1,121 @@
+{
+  "match": {
+    "found": "フィードが見つかりました",
+    "notFound": "見つかりません",
+    "checking": "確認しています…"
+  },
+  "wizard": {
+    "step": {
+      "find": "検索",
+      "configure": "設定",
+      "done": "完了"
+    },
+    "titles": {
+      "find": "フィードを追加",
+      "configure": "好みに設定",
+      "done": "Monfilに追加しました"
+    },
+    "blurbs": {
+      "find": "フォローしたいものを、ここにまとめて入力します。",
+      "configure": "保存先と、ホームに表示するかどうかを設定します。",
+      "done": "すでに取得を開始しています。ほかに操作は必要ありません。"
+    },
+    "close": "閉じる",
+    "goToStep": "ステップ {{step}} に移動: {{name}}"
+  },
+  "stats": {
+    "new": "新規",
+    "perDay": "約 {{count}} 件/日",
+    "perWeek": "約 {{count}} 件/週",
+    "perMonth": "約 {{count}} 件/月",
+    "fullText": "全文",
+    "excerpt": "抜粋"
+  },
+  "find": {
+    "kind": {
+      "anything": "すべて",
+      "conferences": "カンファレンス",
+      "jobs": "求人"
+    },
+    "copy": {
+      "anything": {
+        "placeholder": "Webサイト、フィード、リポジトリ、プロフィールのリンクを貼り付け…",
+        "hint": "Monfilがリンクの先にあるフィードを探します。ハンドルの場合は Enter を押してください。"
+      },
+      "rss": {
+        "placeholder": "RSSフィードのリンクを貼り付け…",
+        "hint": "Monfilがリンク先でRSSフィードを探します。"
+      },
+      "youtube": {
+        "placeholder": "チャンネル、ハンドル、動画のリンクを貼り付け…",
+        "hint": "リンクを貼り付けるか、チャンネルまたはハンドルを入力して Enter を押してください。"
+      },
+      "github": {
+        "placeholder": "リポジトリまたはユーザーのリンク、owner/repo を貼り付け…",
+        "hint": "リポジトリではリリースを取得します。ユーザーまたは組織では公開アクティビティを取得します。owner/repo を入力したあとで Enter を押してください。"
+      },
+      "gitlab": {
+        "placeholder": "GitLabプロジェクトのリンクを貼り付け…",
+        "hint": "Monfilはプロジェクトのリリースを追跡します。セルフホストのGitLabにも対応しています。"
+      },
+      "hackernews": {
+        "placeholder": "Hacker Newsのリンクを貼り付け…",
+        "hint": "news.ycombinator.com では、トップページや、ポイントで絞り込んだフィードを利用できます。"
+      },
+      "arxiv": {
+        "placeholder": "arXivのリスティングのリンクを貼り付け…",
+        "hint": "例: arxiv.org/list/cs.AI/recent。Monfilは差し替えられた論文を非表示にします。"
+      },
+      "bluesky": {
+        "placeholder": "プロフィールのリンクまたはハンドルを貼り付け…",
+        "hint": "@name.bsky.social などのハンドルを入力して Enter を押してください。"
+      },
+      "mastodon": {
+        "placeholder": "プロフィールまたはタグのリンク、@user@host を貼り付け…",
+        "hint": "@user@mastodon.social などのハンドルを入力して Enter を押してください。"
+      },
+      "conference": {
+        "placeholder": "トピックを入力し、「in」の後に場所を入力…",
+        "hint": "形式: トピック in 場所 の後で Enter を押します。項目はカンマで区切ります。場所は省略できます。online も場所として扱います。例: devops · kubernetes、cloud in France · java in Belgium, online。developers.events のリンクも使えます。"
+      },
+      "ats": {
+        "placeholder": "企業の求人ボードまたは採用ページを貼り付け…",
+        "hint": "Greenhouse、Lever、Ashby、Workable、SmartRecruiters、Recruitee、Teamtailor、Personio の求人ボードに対応しています。対応範囲は完全ではありません。ほかの求人システムにはまだ対応していません。Monfilは、その企業の募集中の求人をすべて一覧にします。"
+      }
+    },
+    "feedUrl": "フィードのURL",
+    "searching": "検索しています…",
+    "candidates_other": "{{count}} 件のフィードが見つかりました。1つ選んでください。",
+    "notFound": "フィードが見つかりません",
+    "notFoundDetail": "そのアドレスにフィードが見つかりませんでした。",
+    "conferenceEmpty": "現在一致するカンファレンスはありません。一致するカンファレンスが発表されると、Monfilがカードを追加します。",
+    "detail_other": "{{link}} — {{count}} 件の項目"
+  },
+  "configure": {
+    "publishes": "公開頻度",
+    "contains": "フィードの内容",
+    "notFound": "フィードが見つかりません",
+    "notFoundDetail": "手順1に戻って、別のリンクをお試しください。",
+    "show": "ワークスペースに表示",
+    "showHint": "頻度の高いソースで、意図的に見たいものはチェックを外してください。"
+  },
+  "done": {
+    "title": "{{title}} は {{category}} にあります",
+    "backfilled_other": "{{count}} 件の項目を取り込みました。すべてこの端末に保存されます。",
+    "jobs": "{{company}} のすべての求人がフィードに表示されるようになりました。絞り込むには、見たい職種を検索して、検索を保存してください。"
+  },
+  "category": {
+    "putIn": "保存先",
+    "newName": "新しいフォルダ名",
+    "example": "例: デザイン",
+    "add": "追加",
+    "new": "+ 新しいフォルダ",
+    "unlisted": "新しいフォルダ: {{name}}"
+  },
+  "footer": {
+    "continue": "続ける",
+    "add": "ソースを追加",
+    "goToFeed": "フィードへ移動",
+    "addAnother": "もう1つ追加"
+  }
+}

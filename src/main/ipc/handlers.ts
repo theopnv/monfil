@@ -29,6 +29,7 @@ import {
   toRefreshInterval,
 } from "../app/settings";
 import { getAppInfo } from "../app/app-info";
+import { changeLanguage, readLanguageState } from '../app/language';
 import { getUpdateState } from "../updates/auto-updater";
 import { sendToRenderer } from "../lib/sendToRenderer";
 import { changeUsageAnalyticsConsent, dismissUsageAnalyticsPrompt, getUsageAnalyticsState } from '../analytics/consent';
@@ -37,6 +38,7 @@ import { previewSummary } from '../analytics/report';
 import { openAndImportOpml } from "../opml/import";
 import { exportWorkspaceOpml } from "../opml/export";
 import { getFeedpackCatalog } from '../feedpacks/catalog';
+import { mainI18n } from '../lib/i18n';
 import { installFeedpack, previewFeedpack } from '../feedpacks/install';
 import type { IpcMainInvokeEvent } from "electron";
 import type {
@@ -83,7 +85,8 @@ import type {
   Workspace,
   WorkspaceSummary,
 } from "../../shared/contracts";
-import type { DailySummaryProps, UsageAnalyticsState } from '../../shared/contracts';
+import type { DailySummaryProps, LanguageState, UsageAnalyticsState } from '../../shared/contracts';
+import type { LanguageSetting } from '../../shared/i18n/languages';
 import type { Result } from "../../shared/result";
 import { dbReady, dbStatus } from '../db/database';
 import type { StartupHealth } from '../../shared/contracts';
@@ -280,6 +283,14 @@ export async function handleSettingsSetWorkspaceRailExpanded(_event: IpcMainInvo
   return payload;
 }
 
+export function handleSettingsGetLanguage(): Promise<LanguageState> {
+  return readLanguageState();
+}
+
+export function handleSettingsSetLanguage(_event: IpcMainInvokeEvent, payload: LanguageSetting): Promise<LanguageState> {
+  return changeLanguage(payload);
+}
+
 export function handleAppGetInfo(): Promise<AppInfo> {
   return getAppInfo();
 }
@@ -313,7 +324,7 @@ export async function handleSettingsSetRetentionDays(_event: IpcMainInvokeEvent,
 export async function handleAppBackUpDatabase(): Promise<Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string }>> {
   const { canceled, filePath } = await dialog.showSaveDialog({
     defaultPath: `monfil-backup-${new Date().toISOString().slice(0, 10)}.db`,
-    filters: [{ name: 'SQLite database', extensions: ['db'] }],
+    filters: [{ name: mainI18n.t('main:dialog.sqliteFilter'), extensions: ['db'] }],
   });
   if (canceled || !filePath) {
     return { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } };

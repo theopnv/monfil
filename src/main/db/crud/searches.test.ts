@@ -60,14 +60,14 @@ describe('saved search CRUD', () => {
     const elsewhere = await createSavedSearch(other.id, 'Engineers', 'engineer');
 
     // Assert
-    expect(duplicate).toMatchObject({ success: false, error: { name: 'DUPLICATE_NAME' } });
+    expect(duplicate).toMatchObject({ success: false, error: { name: 'DUPLICATE_NAME', params: { reason: 'search', name: 'Engineers' } } });
     expect(elsewhere.success).toBe(true);
   });
 
   test('rejects an empty name, an empty query and an unknown workspace', async () => {
     // Act / Assert
-    expect(await createSavedSearch(HOME_WORKSPACE_ID, '  ', 'q')).toMatchObject({ error: { name: 'INVALID_INPUT' } });
-    expect(await createSavedSearch(HOME_WORKSPACE_ID, 'n', ' ')).toMatchObject({ error: { name: 'INVALID_INPUT' } });
+    expect(await createSavedSearch(HOME_WORKSPACE_ID, '  ', 'q')).toMatchObject({ error: { name: 'INVALID_INPUT', params: { reason: 'name', max: expect.any(Number) } } });
+    expect(await createSavedSearch(HOME_WORKSPACE_ID, 'n', ' ')).toMatchObject({ error: { name: 'INVALID_INPUT', params: { reason: 'query', max: expect.any(Number) } } });
     expect(await createSavedSearch(9999, 'n', 'q')).toMatchObject({ error: { name: 'WORKSPACE_NOT_FOUND' } });
   });
 

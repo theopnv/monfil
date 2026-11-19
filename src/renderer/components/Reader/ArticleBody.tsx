@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { createElement, useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import { openLink } from "@/lib/river/utils";
 import { recordUsage } from "@/lib/usage";
@@ -31,19 +32,20 @@ const PROVIDER_PRIVACY_URLS = {
 } as const;
 
 function EmbedCard({ embed, title }: { embed: EmbedDescriptor; title: string }) {
+  const { t } = useTranslation('reader');
   const [loaded, setLoaded] = useState(false);
   const name = PROVIDER_NAMES[embed.provider];
   const frameHeight = embed.provider === 'spotify' ? 'h-64' : embed.provider === 'x' || embed.provider === 'instagram' ? 'h-[560px]' : 'aspect-video';
 
   return (
     <span className="block w-full rounded-lg border border-secondary bg-secondary p-4">
-      <span className="mb-3 block text-sm font-semibold">{title || `${name} embed`}</span>
-      <span className="mb-3 block text-xs text-tertiary">Loading this embed connects to {name}. The provider may use cookies.</span>
+      <span className="mb-3 block text-sm font-semibold">{title || t('embed.defaultTitle', { name })}</span>
+      <span className="mb-3 block text-xs text-tertiary">{t('embed.consent', { name })}</span>
       {loaded ? (
         <iframe
           className={`block w-full rounded-md border-0 ${frameHeight}`}
           src={embed.frameUrl}
-          title={`${name} embed`}
+          title={t('embed.defaultTitle', { name })}
           sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
           allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
           allowFullScreen
@@ -53,17 +55,20 @@ function EmbedCard({ embed, title }: { embed: EmbedDescriptor; title: string }) 
           recordUsage('embeds_loaded');
           setLoaded(true);
         }}>
-          Load {name}
+          {t('embed.load', { name })}
         </button>
       )}
       <span className="mt-3 block text-xs text-tertiary">
-        <a href={embed.sourceUrl}>Open on {name}</a>
+        <a href={embed.sourceUrl}>{t('embed.open', { name })}</a>
         <span aria-hidden="true"> · </span>
-        <a href={PROVIDER_PRIVACY_URLS[embed.provider]}>Provider privacy policy</a>
+        <a href={PROVIDER_PRIVACY_URLS[embed.provider]}>{t('embed.privacy')}</a>
       </span>
     </span>
   );
 }
+
+// Each block picks its own direction from its text, so an Arabic quote can sit in an English article and the reverse.
+const AUTO_DIRECTION_TAGS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'figcaption', 'td', 'th']);
 
 function renderNode(node: Node, key: string): ReactNode {
   if (node.nodeType === Node.TEXT_NODE) {
@@ -89,6 +94,9 @@ function renderNode(node: Node, key: string): ReactNode {
     }
     props[attribute.name === 'srcset' ? 'srcSet' : attribute.name] = attribute.value;
   }
+  if (AUTO_DIRECTION_TAGS.has(tag)) {
+    props['dir'] = 'auto';
+  }
   if (tag === 'img' || tag === 'br' || tag === 'hr' || tag === 'source') {
     return createElement(tag, { ...props, key });
   }
@@ -101,22 +109,24 @@ const PROSE_CLASSES = [
   "[&_p]:text-base [&_p]:leading-relaxed",
   "[&_a]:text-brand-secondary [&_a]:underline",
   "[&_strong]:font-bold [&_em]:italic",
-  "[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:leading-relaxed",
-  "[&_blockquote]:border-l-2 [&_blockquote]:border-brand [&_blockquote]:pl-4.5 [&_blockquote]:text-lg",
+  "[&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_li]:leading-relaxed",
+  "[&_blockquote]:border-s-2 [&_blockquote]:border-brand [&_blockquote]:ps-4.5 [&_blockquote]:text-lg",
   "[&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-bold [&_h4]:text-base [&_h4]:font-bold",
   "[&_img]:max-w-full [&_img]:rounded-lg",
   "[&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-secondary [&_pre]:p-3 [&_code]:font-mono [&_code]:text-sm",
   "[&_figcaption]:text-xs [&_figcaption]:text-tertiary",
-  "[&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-secondary [&_th]:p-2 [&_th]:text-left [&_td]:border [&_td]:border-secondary [&_td]:p-2",
+  "[&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-secondary [&_th]:p-2 [&_th]:text-start [&_td]:border [&_td]:border-secondary [&_td]:p-2",
   "[&_hr]:my-6 [&_hr]:border-secondary",
 ].join(" ");
 
 export default function ArticleBody({ html: rawHtml, sourceUrl }: ArticleBodyProps) {
+  const { t } = useTranslation('reader');
   const nodes = useMemo(() => {
-    const html = sanitizeArticleHtml(prepareReaderHtml(rawHtml, sourceUrl));
+    const labels = { embedTitle: (provider: string) => t('embed.defaultTitle', { name: provider }), openEmbedded: t('embed.openEmbedded') };
+    const html = sanitizeArticleHtml(prepareReaderHtml(rawHtml, labels, sourceUrl));
     const document = new DOMParser().parseFromString(html, 'text/html');
     return [...document.body.childNodes].map((node, index) => renderNode(node, String(index)));
-  }, [rawHtml, sourceUrl]);
+  }, [rawHtml, sourceUrl, t]);
 
   const handleClick = (event: MouseEvent<HTMLDivElement>) => {
     const anchor = (event.target as HTMLElement).closest("a");

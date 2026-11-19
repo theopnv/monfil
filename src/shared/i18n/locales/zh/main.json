@@ -1,0 +1,47 @@
+{
+  "menu": {
+    "feed": {
+      "refreshFeed": "刷新订阅源",
+      "moveFeed": "移到Workspace…",
+      "deleteFeed": "删除订阅源"
+    },
+    "category": {
+      "rename": "重命名",
+      "delete": "删除"
+    },
+    "workspace": {
+      "edit": "编辑Workspace",
+      "export": "导出为 OPML",
+      "delete": "删除Workspace"
+    }
+  },
+  "fatal": {
+    "title": "Monfil 无法继续运行",
+    "message": "Monfil 遇到了系统错误。事件编号 {{incident}}。",
+    "restart": "重新启动",
+    "showLog": "显示日志文件",
+    "quit": "退出"
+  },
+  "dialog": {
+    "sqliteFilter": "SQLite 数据库"
+  },
+  "source": {
+    "hackernews": {
+      "frontPage": "首页",
+      "points100": "100 分以上",
+      "points300": "300 分以上",
+      "newest": "最新",
+      "best": "最佳"
+    },
+    "releases": "发布版本",
+    "publicActivity": "公开动态"
+  },
+  "salary": {
+    "withInterval": "{{label}} / {{interval}}",
+    "interval": {
+      "hour": "小时",
+      "month": "月",
+      "year": "年"
+    }
+  }
+}

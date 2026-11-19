@@ -51,11 +51,17 @@ jobs:
       # Check that pack metadata matches its OPML sources.
       - run: npm run check:feedpacks
 
+      # Check that every translation matches the English text it was made from.
+      - run: npm run i18n:check
+
       - run: npm run lint:docs
 
       - run: npm ci --prefix doc
 
       - run: npm --prefix doc run build
+
+      # Check that no translated docs page is missing or older than its English source.
+      - run: npm --prefix doc run check:translations
 
   os_matrix:
     runs-on: ubuntu-latest

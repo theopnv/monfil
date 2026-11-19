@@ -1,0 +1,78 @@
+{
+  "navigation": {
+    "label": "Viste del workspace",
+    "all": "Tutti gli elementi",
+    "saved": "Salvati",
+    "saveHint": "Salva un articolo con il segnalibro. Trovi qui i tuoi articoli salvati."
+  },
+  "switcher": {
+    "dialog": "Cambia workspace",
+    "field": "Nome del workspace",
+    "placeholder": "Vai al workspace…",
+    "list": "Workspace",
+    "empty": "Nessun workspace corrisponde."
+  },
+  "rail": {
+    "moveFailed": "Impossibile spostare il feed.",
+    "list": "Workspace",
+    "move": "Sposta {{name}}",
+    "hideNames": "Nascondi i nomi dei workspace",
+    "showNames": "Mostra i nomi dei workspace",
+    "collapse": "Comprimi",
+    "new": "Nuovo workspace",
+    "newHint": "Crea un workspace per raggruppare i feed. Clic destro su un workspace per modificarlo o eliminarlo.",
+    "settings": "Impostazioni"
+  },
+  "dialog": {
+    "editTitle": "Modifica workspace",
+    "newTitle": "Nuovo workspace",
+    "editBody": "Rinominalo, oppure scegli un'altra icona e un altro colore.",
+    "newBody": "Una scheda nella barra, con le sue fonti e il suo flusso.",
+    "name": "Nome",
+    "namePlaceholder": "Monitoraggio CI/CD",
+    "icon": "Icona",
+    "colour": "Colore",
+    "colourOption": "Colore {{value}}",
+    "browse": "Sfoglia i feedpack",
+    "save": "Salva modifiche",
+    "create": "Crea workspace"
+  },
+  "delete": {
+    "title": "Elimina workspace",
+    "body": "Questo elimina il workspace <bold>{{name}}</bold>, le sue cartelle e il suo elenco Salvati. Anche i feed collocati solo qui vengono rimossi. Esporta prima come OPML per conservare una copia da reimportare in seguito.",
+    "export": "Esporta come OPML",
+    "confirm": "Elimina workspace"
+  },
+  "importOpml": {
+    "doneTitle": "Importazione completata",
+    "imported_one": "Importato {{count}} feed.",
+    "imported_many": "Importati {{count}} feed.",
+    "imported_other": "Importati {{count}} feed.",
+    "skipped": "{{count}} saltati.",
+    "failed": "{{count}} non recuperati.",
+    "titleInto": "Importa OPML in {{name}}",
+    "title": "Importa OPML",
+    "choose": "Scegli un file dalla finestra che si apre subito dopo.",
+    "newWorkspace": "Nuovo workspace",
+    "mergeHome": "Unisci a Home",
+    "name": "Nome",
+    "namePlaceholder": "Lascia vuoto per usare il titolo del file"
+  },
+  "feedpacks": {
+    "sources_one": "{{count}} fonte",
+    "sources_many": "{{count}} fonti",
+    "sources_other": "{{count}} fonti",
+    "packSources": "Fonti del feedpack",
+    "search": "Cerca feedpack",
+    "loading": "Caricamento dei feedpack…",
+    "none": "Nessun feedpack disponibile.",
+    "noMatch": "Nessun feedpack corrisponde a \"{{query}}\".",
+    "loadingSources": "Caricamento delle fonti…"
+  },
+  "feedpackDialog": {
+    "title": "Feedpack",
+    "body": "Installa un insieme selezionato di fonti.",
+    "back": "Torna ai feedpack",
+    "install": "Installa"
+  }
+}

@@ -245,11 +245,11 @@ test('renders the matched item title, byline and body', async () => {
   const { itemB } = setUpThreeItemRiver();
 
   // Act
-  const { getByText, getByTestId } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
+  const { getByText, getByTestId, getByRole } = await renderReader({ itemId: String(itemB.id), onNavigateToItem: vi.fn(), onNavigateHome: vi.fn() });
 
   // Assert
   await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('Feed B', { exact: true })).toBeInTheDocument();
+  await expect.element(getByRole('banner').getByText('Feed B', { exact: true })).toBeInTheDocument();
   await expect.element(getByTestId('article-body').getByText(`Item ${itemB.id} description`, { exact: true })).toBeInTheDocument();
 });
 
@@ -359,6 +359,22 @@ test('pressing j and k navigates to the next and previous neighbor', async () =>
   expect(onNavigateToItem).toHaveBeenCalledWith(itemA.id);
 });
 
+test('j and k navigate by physical key on a non-Latin layout', async () => {
+  // Arrange
+  const { itemA, itemB, itemC } = setUpThreeItemRiver();
+  const onNavigateToItem = vi.fn();
+  const { getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem, onNavigateHome: vi.fn() });
+  await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
+
+  // Act
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ا', code: 'KeyJ', bubbles: true }));
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ن', code: 'KeyK', bubbles: true }));
+
+  // Assert
+  expect(onNavigateToItem).toHaveBeenCalledWith(itemC.id);
+  expect(onNavigateToItem).toHaveBeenCalledWith(itemA.id);
+});
+
 test('Reader shortcuts ignore modifier keys', async () => {
   // Arrange
   const { itemB } = setUpThreeItemRiver();
@@ -368,10 +384,10 @@ test('Reader shortcuts ignore modifier keys', async () => {
   await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
 
   // Act
-  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j', ctrlKey: true, bubbles: true }));
-  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }));
-  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', altKey: true, bubbles: true }));
-  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', shiftKey: true, bubbles: true }));
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j', code: 'KeyJ', ctrlKey: true, bubbles: true }));
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', code: 'KeyK', metaKey: true, bubbles: true }));
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', altKey: true, bubbles: true }));
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', shiftKey: true, bubbles: true }));
 
   // Assert
   expect(onNavigateHome).not.toHaveBeenCalled();

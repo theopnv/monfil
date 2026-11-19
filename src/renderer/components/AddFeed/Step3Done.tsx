@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
+import { useFormatLocale } from "@/lib/i18n";
 import { useMemo } from "react";
 import { Check } from "@untitledui/icons";
 import { formatRelativeTime } from "@/lib/river/utils";
@@ -15,6 +17,8 @@ export interface Step3DoneProps {
 const PREVIEW_COUNT = 5;
 
 export default function Step3Done({ feed }: Step3DoneProps) {
+  const { t } = useTranslation('addFeed');
+  const locale = useFormatLocale();
   const scope = useMemo(() => ({ workspaceId: HOME_WORKSPACE_ID, feedIds: [feed.id] }), [feed.id]);
   const { data } = useRiver(scope);
   const items = useMemo(() => (data?.pages.flatMap((page) => page.rows) ?? []).slice(0, PREVIEW_COUNT), [data]);
@@ -25,27 +29,27 @@ export default function Step3Done({ feed }: Step3DoneProps) {
         <Check className="size-7.5 stroke-[2.75px]" />
       </span>
       <h3 className="font-display text-display-xs leading-tight text-primary">
-        {feed.title} is in {feed.category.name}
+        {t('done.title', { title: feed.title, category: feed.category.name })}
       </h3>
       <p className="mt-2 mb-5.5 max-w-[44ch] text-sm leading-relaxed text-tertiary text-pretty">
-        Backfilled {feed.itemCount} item{feed.itemCount === 1 ? "" : "s"}. Everything stays on this machine.
+        {t('done.backfilled', { count: feed.itemCount })}
       </p>
       {feed.type === "ats" && (
         <p className="mb-5.5 max-w-[44ch] text-sm leading-relaxed text-secondary text-pretty">
-          All of {feed.title.replace(/ · Jobs$/, "")}&apos;s jobs now appear in your feed. To filter them, search for each role you want and save the search.
+          {t('done.jobs', { company: feed.title.replace(/ · Jobs$/, "") })}
         </p>
       )}
 
       {items.length > 0 && (
-        <div className="w-full overflow-hidden rounded-xl border border-secondary text-left">
+        <div className="w-full overflow-hidden rounded-xl border border-secondary text-start">
           {items.map((item, index, all) => (
             <div
               key={item.id}
               className={`flex items-center gap-2.75 px-3.75 py-2.75 text-sm ${index !== all.length - 1 ? "border-b border-secondary" : ""}`}
             >
               <span className="size-1.75 flex-none rounded-full bg-brand-solid" />
-              <span className="min-w-0 flex-1 truncate text-secondary">{item.title}</span>
-              <span className="flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
+              <span dir="auto" className="min-w-0 flex-1 truncate text-secondary">{item.title}</span>
+              <span className="flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt, locale)}</span>
             </div>
           ))}
         </div>

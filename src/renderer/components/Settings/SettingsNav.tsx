@@ -20,14 +20,14 @@ export default function SettingsNav({ items }: SettingsNavProps) {
   const activeId = useActiveSection(items.map((item) => item.id));
 
   return (
-    <nav className="flex w-63 flex-none flex-col gap-0.5 border-r border-secondary px-4 py-8">
+    <nav className="flex w-63 flex-none flex-col gap-0.5 border-e border-secondary px-4 py-8">
       {items.map((item) => (
         <button
           key={item.id}
           type="button"
           onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
           className={cx(
-            "rounded-lg px-3 py-2 text-left text-sm font-medium text-tertiary hover:bg-primary_hover hover:text-secondary",
+            "rounded-lg px-3 py-2 text-start text-sm font-medium text-tertiary hover:bg-primary_hover hover:text-secondary",
             activeId === item.id && "bg-brand-secondary text-brand-secondary hover:bg-brand-secondary hover:text-brand-secondary",
           )}
         >

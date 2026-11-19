@@ -11,11 +11,11 @@ export default function NativeSelect({ children, ...props }: ComponentProps<"sel
     <div className="relative">
       <select
         {...props}
-        className="w-full appearance-none rounded-lg border border-secondary bg-primary py-2 pr-10 pl-3 text-sm text-primary"
+        className="w-full appearance-none rounded-lg border border-secondary bg-primary py-2 pe-10 ps-3 text-sm text-primary"
       >
         {children}
       </select>
-      <ChevronDown aria-hidden className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-quaternary" />
+      <ChevronDown aria-hidden className="pointer-events-none absolute top-1/2 end-4 size-4 -translate-y-1/2 text-quaternary" />
     </div>
   );
 }

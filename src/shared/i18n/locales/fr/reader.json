@@ -1,0 +1,39 @@
+{
+  "sourceLink": "Lire sur {{source}}",
+  "header": {
+    "home": "Accueil",
+    "saved": "Enregistrés",
+    "markUnread": "Marquer comme non lu",
+    "previous": "Article précédent",
+    "next": "Article suivant"
+  },
+  "next": {
+    "unread": "Non lu suivant",
+    "article": "Article suivant"
+  },
+  "notFound": "Cet article est introuvable.",
+  "backToSaved": "Retour aux enregistrés",
+  "backToHome": "Retour à l'accueil",
+  "loadingFull": "Chargement de l'article complet…",
+  "unavailable": "L'article complet n'a pas pu être chargé. Lisez-le plutôt à la source.",
+  "failed": "Cet élément n'a pas pu être chargé. Lisez-le plutôt à la source.",
+  "announce": {
+    "read": "Marqué comme lu",
+    "unread": "Marqué comme non lu"
+  },
+  "shortcuts": {
+    "next": "suivant",
+    "previous": "précédent",
+    "back": "retour à l'accueil"
+  },
+  "embed": {
+    "defaultTitle": "Contenu intégré {{name}}",
+    "consent": "Charger ce contenu intégré établit une connexion avec {{name}}. Le fournisseur peut utiliser des cookies.",
+    "load": "Charger {{name}}",
+    "open": "Ouvrir sur {{name}}",
+    "privacy": "Politique de confidentialité du fournisseur",
+    "openEmbedded": "Ouvrir le contenu intégré"
+  },
+  "saveFailed": "L'élément n'a pas pu être enregistré. Réessayez.",
+  "unsaveFailed": "L'élément n'a pas pu être retiré des enregistrés. Réessayez."
+}

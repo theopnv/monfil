@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
+import { translateErrorWithDetails } from "@/lib/error-text";
 import { useCallback, useEffect } from "react";
 import { announce } from "@/lib/announcer";
 import { notifyUndo } from "@/lib/notifications";
@@ -28,6 +30,8 @@ export interface SearchPillsState {
  * river; a pill only fills it in and remembers which pill did.
  */
 export function useSearchPills(searchQuery: string, setSearchQuery: (query: string) => void): SearchPillsState {
+  const { t } = useTranslation('river');
+  const { t: tErrors } = useTranslation('errors');
   const { searches, hintExample } = useSavedSearches();
   const actions = useSavedSearchActions();
   const { setPreference } = usePreferences();
@@ -44,26 +48,26 @@ export function useSearchPills(searchQuery: string, setSearchQuery: (query: stri
     if (search.id === activeId) {
       setActiveId(undefined);
       setSearchQuery("");
-      announce(`Cleared saved search ${search.name}.`);
+      announce(t('pills.announce.cleared', { name: search.name }));
       return;
     }
     setActiveId(search.id);
     setSearchQuery(search.query);
     // A job must stay in its search on the days after it was read, so a pill shows read and unread matches.
     setPreference("hideReadItems", false);
-    announce(`Showing saved search ${search.name}.`);
-  }, [activeId, setActiveId, setSearchQuery, setPreference]);
+    announce(t('pills.announce.showing', { name: search.name }));
+  }, [activeId, setActiveId, setSearchQuery, setPreference, t]);
 
   const create = useCallback(async (name: string) => {
     const query = searchQuery.trim();
     const result = await actions.create(name, query);
     if (!result.success) {
-      return result.error.message;
+      return translateErrorWithDetails(tErrors, result.error);
     }
     setActiveId(result.data.id);
-    announce(`Saved search ${result.data.name} created.`);
+    announce(t('pills.announce.created', { name: result.data.name }));
     return undefined;
-  }, [actions, searchQuery, setActiveId]);
+  }, [actions, searchQuery, setActiveId, t, tErrors]);
 
   const update = useCallback(async () => {
     if (!activeSearch) {
@@ -71,20 +75,20 @@ export function useSearchPills(searchQuery: string, setSearchQuery: (query: stri
     }
     const result = await actions.update(activeSearch.id, { query: searchQuery.trim() });
     if (!result.success) {
-      return result.error.message;
+      return translateErrorWithDetails(tErrors, result.error);
     }
-    announce(`Saved search ${activeSearch.name} updated.`);
+    announce(t('pills.announce.updated', { name: activeSearch.name }));
     return undefined;
-  }, [actions, activeSearch, searchQuery]);
+  }, [actions, activeSearch, searchQuery, t, tErrors]);
 
   const rename = useCallback(async (search: SavedSearchSummary, name: string) => {
     const result = await actions.update(search.id, { name });
     if (!result.success) {
-      return result.error.message;
+      return translateErrorWithDetails(tErrors, result.error);
     }
-    announce(`Saved search renamed to ${result.data.name}.`);
+    announce(t('pills.announce.renamed', { name: result.data.name }));
     return undefined;
-  }, [actions]);
+  }, [actions, t, tErrors]);
 
   const remove = useCallback((search: SavedSearchSummary) => {
     void actions.remove(search.id).then((result) => {
@@ -95,16 +99,16 @@ export function useSearchPills(searchQuery: string, setSearchQuery: (query: stri
         setActiveId(undefined);
         setSearchQuery("");
       }
-      announce(`Saved search ${search.name} deleted. Undo is available.`);
-      notifyUndo(`Deleted "${search.name}"`, () => {
+      announce(t('pills.announce.deleted', { name: search.name }));
+      notifyUndo(t('pills.announce.deletedToast', { name: search.name }), () => {
         void actions.create(search.name, search.query).then((restored) => {
           if (restored.success) {
-            announce(`Saved search ${search.name} restored.`);
+            announce(t('pills.announce.restored', { name: search.name }));
           }
         });
       });
     });
-  }, [actions, activeId, setActiveId, setSearchQuery]);
+  }, [actions, activeId, setActiveId, setSearchQuery, t]);
 
   const applyExample = useCallback((example: string) => {
     setSearchQuery(example);

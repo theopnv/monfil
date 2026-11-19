@@ -373,6 +373,33 @@ describe('queryFeedSummaries', () => {
     expect(summary).toMatchObject({ itemCount: 0, unreadCount: 0 });
   });
 
+  test('returns the error code and the parsed params of the last failed refresh', async () => {
+    // Arrange
+    const feedId = await seedFeed();
+    await db.updateTable('feedMetadata')
+      .set({ last_error: 'The server had an error (HTTP 502).', last_error_code: 'GENERIC_FETCH_ERROR', last_error_params: '{"reason":"serverError","status":502}' })
+      .where('id', '=', feedId)
+      .execute();
+
+    // Act
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(summary).toMatchObject({ last_error: 'The server had an error (HTTP 502).', last_error_code: 'GENERIC_FETCH_ERROR', last_error_params: { reason: 'serverError', status: 502 } });
+  });
+
+  test('gives a feed that failed before error codes existed a raw error and no code', async () => {
+    // Arrange
+    const feedId = await seedFeed();
+    await db.updateTable('feedMetadata').set({ last_error: 'offline' }).where('id', '=', feedId).execute();
+
+    // Act
+    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(summary).toMatchObject({ last_error: 'offline', last_error_code: null, last_error_params: null });
+  });
+
   test('separates the item count from the unread count', async () => {
     // Arrange
     const feedId = await seedFeed();

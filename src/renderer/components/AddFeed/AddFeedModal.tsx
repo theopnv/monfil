@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
 import { useEffect, useState } from "react";
 import { ipc } from '@/lib/ipc-client';
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
@@ -22,6 +24,7 @@ export interface AddFeedModalProps {
 }
 
 export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps) {
+  const { t } = useTranslation(['addFeed', 'common']);
   const addFeed = useAddFeed();
   const workspaceId = useActiveWorkspaceId();
 
@@ -150,31 +153,31 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
 
           {step === 3 && result && <Step3Done feed={result} />}
 
-          {submitStatus === "error" && submitError && <p className="px-6 pb-2 text-sm text-error-primary">{submitError.message}</p>}
+          {submitStatus === "error" && submitError && <ErrorText error={submitError} className="px-6 pb-2 text-sm text-error-primary" />}
 
           {step === 1 && (
             <WizardFooter
-              primaryLabel="Continue"
+              primaryLabel={t('addFeed:footer.continue')}
               onPrimary={handleContinueFromStep1}
               primaryDisabled={validation.status !== "found"}
-              secondaryLabel="Cancel"
+              secondaryLabel={t('common:action.cancel')}
               onSecondary={() => onOpenChange(false)}
             />
           )}
 
           {step === 2 && (
             <WizardFooter
-              primaryLabel="Add source"
+              primaryLabel={t('addFeed:footer.add')}
               onPrimary={handleSubmit}
               primaryDisabled={selectedCategoryName === null}
               primaryLoading={submitStatus === "loading"}
-              secondaryLabel="Back"
+              secondaryLabel={t('common:action.back')}
               onSecondary={() => setStep(1)}
             />
           )}
 
           {step === 3 && (
-            <WizardFooter primaryLabel="Go to feed" onPrimary={() => onOpenChange(false)} secondaryLabel="Add another" onSecondary={resetWizard} />
+            <WizardFooter primaryLabel={t('addFeed:footer.goToFeed')} onPrimary={() => onOpenChange(false)} secondaryLabel={t('addFeed:footer.addAnother')} onSecondary={resetWizard} />
           )}
         </Dialog>
       </Modal>

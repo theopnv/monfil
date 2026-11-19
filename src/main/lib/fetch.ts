@@ -5,6 +5,7 @@
 import { app, net } from 'electron';
 import type { Result } from '../../shared/result.ts';
 import type { FetchUrlError } from '../../shared/contracts.ts';
+import type { ErrorParams } from '../../shared/errors.ts';
 import { FETCH_TIMEOUT_MS, MAX_FETCH_BYTES, MAX_REDIRECTS } from './constants.ts';
 import { classifyHost } from './private-network.ts';
 import { decodeBody } from './decode-body.ts';
@@ -42,7 +43,7 @@ export type FetchedResource = FetchedText | NotModified;
 export type FetchTextResult = Result<FetchedText, FetchUrlError>;
 export type ConditionalFetchResult = Result<FetchedResource, FetchUrlError>;
 
-const REDIRECT_ERROR: FetchTextResult = { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'Too many redirects.' } };
+const REDIRECT_ERROR: FetchTextResult = { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'Too many redirects.', params: { reason: 'redirects' } } };
 
 function userAgent(): string {
   return `monfil/${app.getVersion()} (+https://github.com/theopnv/monfil)`;
@@ -62,13 +63,13 @@ function tooLarge(): Result<string, Extract<FetchUrlError, { name: 'RESPONSE_TOO
   return { success: false, error: { name: 'RESPONSE_TOO_LARGE_ERROR', message: 'This feed is too large to read.' } };
 }
 
-function blocked(message: string): Extract<FetchUrlError, { name: 'BLOCKED_URL_ERROR' }> {
-  return { name: 'BLOCKED_URL_ERROR', message };
+function blocked(message: string, reason: 'protocol' | 'private'): Extract<FetchUrlError, { name: 'BLOCKED_URL_ERROR' }> {
+  return { name: 'BLOCKED_URL_ERROR', message, params: { reason } };
 }
 
 async function findRefusal(target: URL, blockPrivateHosts: boolean): Promise<FetchUrlError | undefined> {
   if (target.protocol !== 'http:' && target.protocol !== 'https:') {
-    return blocked('Only http and https addresses can be fetched.');
+    return blocked('Only http and https addresses can be fetched.', 'protocol');
   }
   if (!blockPrivateHosts || privateHostsAllowed) {
     return undefined;
@@ -79,9 +80,9 @@ async function findRefusal(target: URL, blockPrivateHosts: boolean): Promise<Fet
     case 'public':
       return undefined;
     case 'private':
-      return blocked('This address is not on the public internet.');
+      return blocked('This address is not on the public internet.', 'private');
     case 'unresolvable':
-      return { name: 'NETWORK_ERROR', message: `Could not resolve ${target.hostname}.` };
+      return { name: 'NETWORK_ERROR', message: `Could not resolve ${target.hostname}.`, params: { reason: 'unresolvable', host: target.hostname } };
     default: {
       const exhaustiveCheck: never = hostClass;
       return exhaustiveCheck;
@@ -284,9 +285,27 @@ function readCappedText(
     response.on('end', () => finish({ success: true, data: decodeBody(Buffer.concat(chunks), contentType) }));
     response.on('error', () => {
       request.abort();
-      finish({ success: false, error: { name: 'NETWORK_ERROR', message: 'The connection dropped while reading the response.' } });
+      finish({ success: false, error: { name: 'NETWORK_ERROR', message: 'The connection dropped while reading the response.', params: { reason: 'dropped' } } });
     });
   });
+}
+
+function httpStatusReason(status: number): 'refused' | 'notFound' | 'rateLimited' | 'serverError' | 'other' {
+  if (status === 401 || status === 403) {
+    return 'refused';
+  }
+  if (status === 404 || status === 410) {
+    return 'notFound';
+  }
+  if (status === 429) {
+    return 'rateLimited';
+  }
+  return status >= 500 ? 'serverError' : 'other';
+}
+
+/** The parts of {@link httpStatusMessage} that the renderer translates. */
+export function httpStatusParams(status: number): ErrorParams {
+  return { reason: httpStatusReason(status), status };
 }
 
 /** Describes a non-success HTTP status in words a user can act on; HTTP/2 sends no reason phrase. */
@@ -354,11 +373,11 @@ async function fetchResource(
         if (allowNotModified && hasValidator(options.validators ?? { etag: undefined, last_modified: undefined })) {
           return { success: true, data: { notModified: true } };
         }
-        return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(hop.status, hop.statusMessage) } };
+        return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(hop.status, hop.statusMessage), params: httpStatusParams(hop.status) } };
       }
       if (hop.status < 200 || hop.status >= 300) {
         hop.abort();
-        return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(hop.status, hop.statusMessage) } };
+        return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(hop.status, hop.statusMessage), params: httpStatusParams(hop.status) } };
       }
 
       const body = await raceAbort(hop.readBody(), signal, hop.abort);

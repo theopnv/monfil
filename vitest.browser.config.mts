@@ -17,13 +17,16 @@ export default defineConfig({
       '@tanstack/react-router-devtools',
       '@tanstack/react-router',
       '@tanstack/react-query',
-      'react-dom/client'],
+      'react-dom/client',
+      'react-i18next',
+      'i18next'],
   },
   test: {
     name: 'browser',
     include: [
       'src/renderer/**/*.{test,spec}.?(c|m)[jt]s?(x)',
     ],
+    setupFiles: ['./src/renderer/lib/test/setup-i18n.ts'],
     // Concurrent instances hitting one dev server cause flaky "failed to import" and "failed to find the runner" errors in CI: vitest-dev/vitest#9509, #9473, #8447
     fileParallelism: false,
     browser: {

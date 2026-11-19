@@ -1,0 +1,74 @@
+{
+  "navigation": {
+    "label": "Workspace视图",
+    "all": "所有内容",
+    "saved": "已保存",
+    "saveHint": "用书签按钮保存文章。在这里找到你已保存的文章。"
+  },
+  "switcher": {
+    "dialog": "切换Workspace",
+    "field": "Workspace名称",
+    "placeholder": "前往Workspace…",
+    "list": "Workspace",
+    "empty": "没有匹配的Workspace。"
+  },
+  "rail": {
+    "moveFailed": "无法移动该订阅源。",
+    "list": "Workspace",
+    "move": "移动{{name}}",
+    "hideNames": "隐藏Workspace名称",
+    "showNames": "显示Workspace名称",
+    "collapse": "收起",
+    "new": "新建Workspace",
+    "newHint": "创建Workspace以分组订阅源。右键单击Workspace即可编辑或删除。",
+    "settings": "设置"
+  },
+  "dialog": {
+    "editTitle": "编辑Workspace",
+    "newTitle": "新建Workspace",
+    "editBody": "重命名，或设置其他图标和颜色。",
+    "newBody": "侧边栏中的一个标签，拥有自己的订阅源和信息流。",
+    "name": "名称",
+    "namePlaceholder": "CI/CD 监控",
+    "icon": "图标",
+    "colour": "颜色",
+    "colourOption": "颜色 {{value}}",
+    "browse": "浏览Feedpack",
+    "save": "保存更改",
+    "create": "创建Workspace"
+  },
+  "delete": {
+    "title": "删除Workspace",
+    "body": "这将删除 <bold>{{name}}</bold> Workspace、其文件夹及其“已保存”列表。仅位于此Workspace的订阅源也会被删除。请先导出为 OPML，以保留一份可日后重新导入的副本。",
+    "export": "导出为 OPML",
+    "confirm": "删除Workspace"
+  },
+  "importOpml": {
+    "doneTitle": "导入完成",
+    "imported_other": "已导入 {{count}} 个订阅源。",
+    "skipped": "已跳过 {{count}} 个。",
+    "failed": "{{count}} 个获取失败。",
+    "titleInto": "将 OPML 导入到{{name}}",
+    "title": "导入 OPML",
+    "choose": "在随后打开的选择器中选择文件。",
+    "newWorkspace": "新建Workspace",
+    "mergeHome": "合并到首页",
+    "name": "名称",
+    "namePlaceholder": "留空则使用文件的标题"
+  },
+  "feedpacks": {
+    "sources_other": "{{count}} 个来源",
+    "packSources": "Feedpack来源",
+    "search": "搜索Feedpack",
+    "loading": "正在加载Feedpack…",
+    "none": "没有可用的Feedpack。",
+    "noMatch": "没有与“{{query}}”匹配的Feedpack。",
+    "loadingSources": "正在加载来源…"
+  },
+  "feedpackDialog": {
+    "title": "Feedpack",
+    "body": "安装一组精选来源。",
+    "back": "返回Feedpack",
+    "install": "安装"
+  }
+}

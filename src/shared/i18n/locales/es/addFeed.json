@@ -1,0 +1,127 @@
+{
+  "match": {
+    "found": "Fuente encontrada",
+    "notFound": "No encontrada",
+    "checking": "Comprobando…"
+  },
+  "wizard": {
+    "step": {
+      "find": "Buscar",
+      "configure": "Configurar",
+      "done": "Listo"
+    },
+    "titles": {
+      "find": "Añadir una fuente",
+      "configure": "Personalizar la fuente",
+      "done": "Añadida a Monfil"
+    },
+    "blurbs": {
+      "find": "Un solo campo para todo lo que quieras seguir.",
+      "configure": "Dónde se guarda y si aparece en Inicio.",
+      "done": "Ya se está actualizando. No queda nada más por hacer."
+    },
+    "close": "Cerrar",
+    "goToStep": "Ir al paso {{step}}: {{name}}"
+  },
+  "stats": {
+    "new": "Nuevas",
+    "perDay": "~{{count}}/día",
+    "perWeek": "~{{count}}/semana",
+    "perMonth": "~{{count}}/mes",
+    "fullText": "Texto completo",
+    "excerpt": "Extracto"
+  },
+  "find": {
+    "kind": {
+      "anything": "Cualquiera",
+      "conferences": "Conferencias",
+      "jobs": "Empleos"
+    },
+    "copy": {
+      "anything": {
+        "placeholder": "Pega un enlace a un sitio web, una fuente, un repositorio o un perfil…",
+        "hint": "Monfil encuentra la fuente detrás del enlace. Para un nombre de usuario, pulsa Enter."
+      },
+      "rss": {
+        "placeholder": "Pega un enlace a una fuente RSS…",
+        "hint": "Monfil busca una fuente RSS en el enlace."
+      },
+      "youtube": {
+        "placeholder": "Pega un enlace a un canal, un nombre de usuario o un video…",
+        "hint": "Pega un enlace, o escribe un canal o un nombre de usuario y pulsa Enter."
+      },
+      "github": {
+        "placeholder": "Pega un enlace a un repositorio o a un usuario, o escribe propietario/repositorio…",
+        "hint": "Un repositorio da sus versiones. Un usuario u organización da su actividad pública. Después de propietario/repositorio, pulsa Enter."
+      },
+      "gitlab": {
+        "placeholder": "Pega un enlace a un proyecto de GitLab…",
+        "hint": "Monfil sigue las versiones del proyecto. GitLab autoalojado también funciona."
+      },
+      "hackernews": {
+        "placeholder": "Pega un enlace de Hacker News…",
+        "hint": "news.ycombinator.com ofrece la portada y fuentes filtradas por puntos."
+      },
+      "arxiv": {
+        "placeholder": "Pega un enlace a un listado de arXiv…",
+        "hint": "Por ejemplo, arxiv.org/list/cs.AI/recent. Monfil oculta los artículos sustituidos."
+      },
+      "bluesky": {
+        "placeholder": "Pega un enlace a un perfil o un nombre de usuario…",
+        "hint": "Escribe un nombre como @nombre.bsky.social y pulsa Enter."
+      },
+      "mastodon": {
+        "placeholder": "Pega un enlace a un perfil o a una etiqueta, o escribe @usuario@servidor…",
+        "hint": "Escribe un nombre como @usuario@mastodon.social y pulsa Enter."
+      },
+      "conference": {
+        "placeholder": "Escribe temas, luego \"in\" y lugares…",
+        "hint": "Formato: temas in lugares, y luego pulsa Enter. Separa los elementos con comas. Los lugares son opcionales, y online cuenta como lugar. Ejemplos: devops · kubernetes, cloud in Francia · java in Bélgica, online. También funciona un enlace de developers.events."
+      },
+      "ats": {
+        "placeholder": "Pega la página de empleos o de carreras de una empresa…",
+        "hint": "Funciona con los portales de Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor y Personio. La cobertura no es completa: otros sistemas de empleo aún no son compatibles. Monfil muestra todas las ofertas abiertas de la empresa."
+      }
+    },
+    "feedUrl": "URL de la fuente",
+    "searching": "Buscando…",
+    "candidates_one": "{{count}} fuente encontrada. Elige una.",
+    "candidates_many": "{{count}} fuentes encontradas. Elige una.",
+    "candidates_other": "{{count}} fuentes encontradas. Elige una.",
+    "notFound": "No se encontró ninguna fuente",
+    "notFoundDetail": "No se encontró una fuente en esa dirección.",
+    "conferenceEmpty": "Ninguna conferencia coincide ahora. Monfil añade una tarjeta cuando se anuncia una conferencia que coincide.",
+    "detail_one": "{{link}} — {{count}} elemento",
+    "detail_many": "{{link}} — {{count}} elementos",
+    "detail_other": "{{link}} — {{count}} elementos"
+  },
+  "configure": {
+    "publishes": "Publica",
+    "contains": "La fuente contiene",
+    "notFound": "No se encontró ninguna fuente",
+    "notFoundDetail": "Vuelve al paso 1 y prueba con otro enlace.",
+    "show": "Mostrar en el workspace",
+    "showHint": "Desmarca esta casilla en fuentes de mucho volumen que prefieras visitar a propósito."
+  },
+  "done": {
+    "title": "{{title}} está en {{category}}",
+    "backfilled_one": "Se cargó {{count}} elemento anterior. Todo se queda en este equipo.",
+    "backfilled_many": "Se cargaron {{count}} elementos anteriores. Todo se queda en este equipo.",
+    "backfilled_other": "Se cargaron {{count}} elementos anteriores. Todo se queda en este equipo.",
+    "jobs": "Todas las ofertas de {{company}} aparecen ahora en la fuente. Para filtrarlas, busca cada puesto que quieras y guarda la búsqueda."
+  },
+  "category": {
+    "putIn": "Añadir a",
+    "newName": "Nombre de la nueva carpeta",
+    "example": "p. ej. Diseño",
+    "add": "Añadir",
+    "new": "+ Nueva carpeta",
+    "unlisted": "Nueva carpeta: {{name}}"
+  },
+  "footer": {
+    "continue": "Continuar",
+    "add": "Añadir fuente",
+    "goToFeed": "Ir a la fuente",
+    "addAnother": "Añadir otra"
+  }
+}

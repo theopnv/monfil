@@ -80,3 +80,55 @@ describe('on other platforms', () => {
     expect(result).toBe(expected);
   });
 });
+
+describe('physical key helpers', () => {
+  test.each([
+    { code: 'KeyJ', letter: 'j', expected: true },
+    { code: 'KeyJ', letter: 'J', expected: true },
+    { code: 'KeyK', letter: 'j', expected: false },
+    { code: 'Digit1', letter: 'j', expected: false },
+  ])('isLetterCode is $expected for $code and "$letter"', async ({ code, letter, expected }) => {
+    // Arrange
+    const { isLetterCode } = await loadKeyboard('Mozilla/5.0 (X11; Linux x86_64)');
+
+    // Act
+    const result = isLetterCode({ code }, letter);
+
+    // Assert
+    expect(result).toBe(expected);
+  });
+
+  test.each([
+    { code: 'Digit1', expected: 1 },
+    { code: 'Digit9', expected: 9 },
+    { code: 'Digit0', expected: null },
+    { code: 'Numpad1', expected: null },
+    { code: 'KeyA', expected: null },
+    { code: 'Digit12', expected: null },
+    { code: 'XDigit1', expected: null },
+  ])('digitFromCode is $expected for $code', async ({ code, expected }) => {
+    // Arrange
+    const { digitFromCode } = await loadKeyboard('Mozilla/5.0 (X11; Linux x86_64)');
+
+    // Act
+    const result = digitFromCode({ code });
+
+    // Assert
+    expect(result).toBe(expected);
+  });
+
+  test.each([
+    { isComposing: true, keyCode: 13, expected: true },
+    { isComposing: false, keyCode: 229, expected: true },
+    { isComposing: false, keyCode: 13, expected: false },
+  ])('isComposing is $expected for isComposing $isComposing and keyCode $keyCode', async ({ isComposing: composing, keyCode, expected }) => {
+    // Arrange
+    const { isComposing } = await loadKeyboard('Mozilla/5.0 (X11; Linux x86_64)');
+
+    // Act
+    const result = isComposing({ isComposing: composing, keyCode });
+
+    // Assert
+    expect(result).toBe(expected);
+  });
+});

@@ -93,7 +93,7 @@ async function discoverBoard(board: AtsBoard, blockPrivateHosts: boolean): Promi
     return fetched;
   }
   if ('notModified' in fetched.data) {
-    return unsupported('The job board did not change since it was last fetched.');
+    return unsupported('The job board did not change since it was last fetched.', 'notModified');
   }
   const { parsed } = fetched.data;
   const icon = parsed.siteLink ? await resolveSiteIcon(parsed.siteLink).catch(() => undefined) : undefined;
@@ -118,16 +118,16 @@ export function boardsInPage(html: string): AtsBoard[] {
 async function discoverFromPage(query: string): Promise<Result<ParsedSource[], FeedFetchError>> {
   const url = toUrl(query);
   if (!url) {
-    return unsupported(NOT_FOUND);
+    return unsupported(NOT_FOUND, 'atsNotFound');
   }
   const page = await fetchText(url.href, { blockPrivateHosts: true });
   if (!page.success) {
-    return unsupported(NOT_FOUND);
+    return unsupported(NOT_FOUND, 'atsNotFound');
   }
   const boards = boardsInPage(page.data.body).slice(0, MAX_CANDIDATES);
   const results = await Promise.all(boards.map((board) => discoverBoard(board, true)));
   const found = results.flatMap((result) => (result.success ? [result.data] : []));
-  return found.length > 0 ? { success: true, data: found } : unsupported(NOT_FOUND);
+  return found.length > 0 ? { success: true, data: found } : unsupported(NOT_FOUND, 'atsNotFound');
 }
 
 async function discover(query: string): Promise<Result<ParsedSource[], FeedFetchError>> {
@@ -142,7 +142,7 @@ async function discover(query: string): Promise<Result<ParsedSource[], FeedFetch
 async function fetchJobs(input: SourceFetchInput): Promise<Result<SourceFetchResult, FeedFetchError>> {
   const board = toBoard(input.link);
   if (!board) {
-    return unsupported("This doesn't look like a supported job board.");
+    return unsupported("This doesn't look like a supported job board.", 'atsNotBoard');
   }
   const fetched = await fetchBoard(board, input.validators, false);
   if (!fetched.success) {

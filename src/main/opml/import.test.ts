@@ -169,7 +169,7 @@ describe('importOpml', () => {
     }
     expect(result.data.workspaceId).toBe(HOME_WORKSPACE_ID);
     expect(result.data.imported).toBe(1);
-    expect(result.data.skipped).toEqual([{ title: 'Feed A', reason: 'Already in this workspace' }]);
+    expect(result.data.skipped).toEqual([{ title: 'Feed A', reason: 'ALREADY_IN_WORKSPACE' }]);
   });
 
   test('merging into a workspace reuses an existing category with the same name instead of duplicating it', async () => {
@@ -243,7 +243,7 @@ describe('importOpml', () => {
     if (!result.success) {
       return;
     }
-    expect(result.data.failed).toEqual([{ title: 'Feed A', message: 'offline' }]);
+    expect(result.data.failed).toEqual([{ title: 'Feed A', message: 'offline', code: 'NETWORK_ERROR' }]);
   });
 });
 

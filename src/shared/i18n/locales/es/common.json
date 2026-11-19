@@ -1,0 +1,24 @@
+{
+  "action": {
+    "undo": "Deshacer",
+    "gotIt": "Entendido",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "tryAgain": "Intentar de nuevo",
+    "done": "Listo",
+    "import": "Importar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "showLog": "Mostrar archivo de registro",
+    "restart": "Reiniciar"
+  },
+  "item": {
+    "action": {
+      "save": "Guardar",
+      "removeFromSaved": "Quitar de Guardados"
+    }
+  },
+  "update": {
+    "ready": "Hay una nueva versión de Monfil lista."
+  }
+}

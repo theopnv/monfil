@@ -20,6 +20,11 @@ function dependencies(response: number) {
     shell: {
       showItemInFolder: vi.fn(),
     },
+    text: (incident: string) => ({
+      title: 'Monfil could not continue',
+      message: `Monfil encountered a system error. Incident ${incident}.`,
+      buttons: ['Restart', 'Show log file', 'Quit'] as [string, string, string],
+    }),
   };
 }
 

@@ -1,0 +1,127 @@
+{
+  "match": {
+    "found": "Flux trouvé",
+    "notFound": "Introuvable",
+    "checking": "Vérification…"
+  },
+  "wizard": {
+    "step": {
+      "find": "Rechercher",
+      "configure": "Configurer",
+      "done": "Terminé"
+    },
+    "titles": {
+      "find": "Ajouter un flux",
+      "configure": "Personnalisez-le",
+      "done": "Ajouté à Monfil"
+    },
+    "blurbs": {
+      "find": "Une seule zone pour tout ce que vous voulez suivre.",
+      "configure": "Où il se trouve et s'il apparaît dans Accueil.",
+      "done": "La récupération a déjà commencé. Il n'y a rien d'autre à faire."
+    },
+    "close": "Fermer",
+    "goToStep": "Aller à l'étape {{step}} : {{name}}"
+  },
+  "stats": {
+    "new": "Nouveau",
+    "perDay": "~{{count}}/jour",
+    "perWeek": "~{{count}}/semaine",
+    "perMonth": "~{{count}}/mois",
+    "fullText": "Texte intégral",
+    "excerpt": "Extrait"
+  },
+  "find": {
+    "kind": {
+      "anything": "Tout",
+      "conferences": "Conférences",
+      "jobs": "Emplois"
+    },
+    "copy": {
+      "anything": {
+        "placeholder": "Collez un lien vers un site, un flux, un dépôt ou un profil…",
+        "hint": "Monfil trouve le flux derrière le lien. Pour un identifiant, appuyez sur Entrée."
+      },
+      "rss": {
+        "placeholder": "Collez un lien vers un flux RSS…",
+        "hint": "Monfil vérifie si le lien contient un flux RSS."
+      },
+      "youtube": {
+        "placeholder": "Collez un lien vers une chaîne, un identifiant ou une vidéo…",
+        "hint": "Collez un lien, ou saisissez une chaîne ou un identifiant, puis appuyez sur Entrée."
+      },
+      "github": {
+        "placeholder": "Collez un lien vers un dépôt ou un utilisateur, ou owner/repo…",
+        "hint": "Un dépôt donne ses publications. Un utilisateur ou une organisation donne son activité publique. Après owner/repo, appuyez sur Entrée."
+      },
+      "gitlab": {
+        "placeholder": "Collez un lien vers un projet GitLab…",
+        "hint": "Monfil suit les publications du projet. GitLab auto-hébergé fonctionne aussi."
+      },
+      "hackernews": {
+        "placeholder": "Collez un lien vers Hacker News…",
+        "hint": "news.ycombinator.com propose la page d'accueil et des flux filtrés par points."
+      },
+      "arxiv": {
+        "placeholder": "Collez un lien vers une liste arXiv…",
+        "hint": "Par exemple arxiv.org/list/cs.AI/recent. Monfil masque les articles remplacés."
+      },
+      "bluesky": {
+        "placeholder": "Collez un lien vers un profil ou un identifiant…",
+        "hint": "Saisissez un identifiant comme @nom.bsky.social, puis appuyez sur Entrée."
+      },
+      "mastodon": {
+        "placeholder": "Collez un lien vers un profil ou un mot-clé, ou @utilisateur@hôte…",
+        "hint": "Saisissez un identifiant comme @utilisateur@mastodon.social, puis appuyez sur Entrée."
+      },
+      "conference": {
+        "placeholder": "Saisissez des thèmes, puis « in » et des lieux…",
+        "hint": "Format : thèmes in lieux, puis appuyez sur Entrée. Séparez les éléments par des virgules. Les lieux sont facultatifs, et online compte comme un lieu. Exemples : devops · kubernetes, cloud in France · java in Belgium, online. Un lien developers.events fonctionne aussi."
+      },
+      "ats": {
+        "placeholder": "Collez la page emplois ou carrières d'une entreprise…",
+        "hint": "Fonctionne avec les tableaux Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor et Personio. La couverture n'est pas complète : les autres systèmes d'emploi ne sont pas encore pris en charge. Monfil liste chaque offre ouverte de l'entreprise."
+      }
+    },
+    "feedUrl": "URL du flux",
+    "searching": "Recherche…",
+    "candidates_one": "{{count}} flux trouvé. Choisissez-le.",
+    "candidates_many": "{{count}} flux trouvés. Choisissez-en un.",
+    "candidates_other": "{{count}} flux trouvés. Choisissez-en un.",
+    "notFound": "Aucun flux trouvé",
+    "notFoundDetail": "Impossible de trouver un flux à cette adresse.",
+    "conferenceEmpty": "Aucune conférence ne correspond pour le moment. Monfil ajoute une carte quand une conférence correspondante est annoncée.",
+    "detail_one": "{{link}} — {{count}} élément",
+    "detail_many": "{{link}} — {{count}} éléments",
+    "detail_other": "{{link}} — {{count}} éléments"
+  },
+  "configure": {
+    "publishes": "Publie",
+    "contains": "Le flux contient",
+    "notFound": "Aucun flux trouvé",
+    "notFoundDetail": "Revenez à l'étape 1 et essayez un autre lien.",
+    "show": "Afficher dans le workspace",
+    "showHint": "Décochez cette case pour les sources à fort volume que vous préférez consulter volontairement."
+  },
+  "done": {
+    "title": "{{title}} est dans {{category}}",
+    "backfilled_one": "{{count}} élément récupéré. Tout reste sur cet ordinateur.",
+    "backfilled_many": "{{count}} éléments récupérés. Tout reste sur cet ordinateur.",
+    "backfilled_other": "{{count}} éléments récupérés. Tout reste sur cet ordinateur.",
+    "jobs": "Toutes les offres de {{company}} apparaissent maintenant dans votre flux. Pour les filtrer, recherchez chaque poste voulu et enregistrez la recherche."
+  },
+  "category": {
+    "putIn": "Placer dans",
+    "newName": "Nom du nouveau dossier",
+    "example": "ex. Design",
+    "add": "Ajouter",
+    "new": "+ Nouveau dossier",
+    "unlisted": "Nouveau dossier : {{name}}"
+  },
+  "footer": {
+    "continue": "Continuer",
+    "add": "Ajouter la source",
+    "goToFeed": "Aller au flux",
+    "addAnother": "Ajouter une autre"
+  }
+}

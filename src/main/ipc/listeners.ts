@@ -16,6 +16,7 @@ import { setPreferencesSnapshot } from '../analytics/preferences';
 import { isRendererUsageRecord, isUsagePreferences } from '../../shared/ipc-payloads';
 import { installUpdate } from '../updates/auto-updater';
 import { refreshFeeds } from '../feed/refresh';
+import { mainI18n } from '../lib/i18n';
 
 export function listenToLinkOpen(_event: IpcMainEvent, url: OneWayRendererToMainChannelPayloads["link:open"]) {
   openExternalLink(url);
@@ -70,7 +71,7 @@ export function listenToUsagePreferences(_event: IpcMainEvent, payload: OneWayRe
 export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayRendererToMainChannelPayloads["feeds:show-feed-context-menu"]) {
   const menu = Menu.buildFromTemplate([
     {
-      label: "Refresh feed",
+      label: mainI18n.t("main:menu.feed.refreshFeed"),
       click: () => {
         refreshFeeds([feedId], true)
           .then((summary) => broadcastToRenderers("feeds:refreshed", { ...summary, applyImmediately: true }))
@@ -78,11 +79,11 @@ export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayR
       },
     },
     {
-      label: "Move to workspace…",
+      label: mainI18n.t("main:menu.feed.moveFeed"),
       click: () => sendToRenderer(event.sender, "feeds:move-feed-requested", feedId),
     },
     {
-      label: "Delete feed",
+      label: mainI18n.t("main:menu.feed.deleteFeed"),
       click: () => sendToRenderer(event.sender, "feeds:delete-feed-requested", feedId),
     },
   ]);
@@ -95,11 +96,11 @@ export function listenToShowFeedContextMenu(event: IpcMainEvent, feedId: OneWayR
 export function listenToShowCategoryContextMenu(event: IpcMainEvent, categoryId: OneWayRendererToMainChannelPayloads["feeds:show-category-context-menu"]) {
   const menu = Menu.buildFromTemplate([
     {
-      label: "Rename",
+      label: mainI18n.t("main:menu.category.rename"),
       click: () => sendToRenderer(event.sender, "feeds:rename-category-requested", categoryId),
     },
     {
-      label: "Delete",
+      label: mainI18n.t("main:menu.category.delete"),
       click: () => sendToRenderer(event.sender, "feeds:delete-category-requested", categoryId),
     },
   ]);
@@ -112,16 +113,16 @@ export function listenToShowCategoryContextMenu(event: IpcMainEvent, categoryId:
 export function listenToShowWorkspaceContextMenu(event: IpcMainEvent, workspaceId: OneWayRendererToMainChannelPayloads["workspaces:show-context-menu"]) {
   const menu = Menu.buildFromTemplate([
     {
-      label: "Edit workspace",
+      label: mainI18n.t("main:menu.workspace.edit"),
       click: () => sendToRenderer(event.sender, "workspaces:edit-requested", workspaceId),
     },
     {
-      label: "Export as OPML",
+      label: mainI18n.t("main:menu.workspace.export"),
       click: () => sendToRenderer(event.sender, "workspaces:export-requested", workspaceId),
     },
     // Home is the one workspace every install always has; it cannot be deleted.
     ...(workspaceId === HOME_WORKSPACE_ID ? [] : [{
-      label: "Delete workspace",
+      label: mainI18n.t("main:menu.workspace.delete"),
       click: () => sendToRenderer(event.sender, "workspaces:delete-requested", workspaceId),
     }]),
   ]);

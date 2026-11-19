@@ -5,6 +5,7 @@
 import { readLibraryState } from './library';
 import { readDay, utcDay } from './counters';
 import { getPreferencesSnapshot } from './preferences';
+import { mainLanguage } from '../lib/i18n';
 import { buildDailySummary } from './summary';
 import type { DailySummaryProps } from '../../shared/contracts';
 
@@ -14,7 +15,7 @@ import type { DailySummaryProps } from '../../shared/contracts';
  */
 export async function summarizeDay(day: string): Promise<DailySummaryProps> {
   const [counters, library] = await Promise.all([readDay(day), readLibraryState()]);
-  return buildDailySummary({ day, counters, library, preferences: getPreferencesSnapshot() });
+  return buildDailySummary({ day, counters, library, preferences: getPreferencesSnapshot(), language: mainLanguage() });
 }
 
 /**

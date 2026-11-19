@@ -1,0 +1,78 @@
+{
+  "navigation": {
+    "label": "Vistas del workspace",
+    "all": "Todos los elementos",
+    "saved": "Guardados",
+    "saveHint": "Guardar un artículo con el marcador. Aquí se encuentran los artículos guardados."
+  },
+  "switcher": {
+    "dialog": "Cambiar de workspace",
+    "field": "Nombre del workspace",
+    "placeholder": "Ir al workspace…",
+    "list": "Workspaces",
+    "empty": "Ningún workspace coincide."
+  },
+  "rail": {
+    "moveFailed": "No se pudo mover la fuente.",
+    "list": "Workspaces",
+    "move": "Mover {{name}}",
+    "hideNames": "Ocultar nombres de workspaces",
+    "showNames": "Mostrar nombres de workspaces",
+    "collapse": "Contraer",
+    "new": "Nuevo workspace",
+    "newHint": "Crear un workspace para agrupar fuentes. Clic derecho sobre un workspace para editarlo o eliminarlo.",
+    "settings": "Configuración"
+  },
+  "dialog": {
+    "editTitle": "Editar workspace",
+    "newTitle": "Nuevo workspace",
+    "editBody": "Cambiar el nombre, o asignar otro icono y otro color.",
+    "newBody": "Una pestaña en la barra, con sus propias fuentes y su propio flujo.",
+    "name": "Nombre",
+    "namePlaceholder": "Vigilancia CI/CD",
+    "icon": "Icono",
+    "colour": "Color",
+    "colourOption": "Color {{value}}",
+    "browse": "Explorar feedpacks",
+    "save": "Guardar cambios",
+    "create": "Crear workspace"
+  },
+  "delete": {
+    "title": "Eliminar workspace",
+    "body": "Esto elimina el workspace <bold>{{name}}</bold>, sus carpetas y su lista de Guardados. También se eliminan las fuentes que solo están aquí. Exportar como OPML primero para conservar una copia que se pueda volver a importar más tarde.",
+    "export": "Exportar como OPML",
+    "confirm": "Eliminar workspace"
+  },
+  "importOpml": {
+    "doneTitle": "Importación completada",
+    "imported_one": "Se importó {{count}} fuente.",
+    "imported_many": "Se importaron {{count}} fuentes.",
+    "imported_other": "Se importaron {{count}} fuentes.",
+    "skipped": "{{count}} omitidas.",
+    "failed": "{{count}} no se pudieron obtener.",
+    "titleInto": "Importar OPML en {{name}}",
+    "title": "Importar OPML",
+    "choose": "Elegir un archivo en el selector que se abre a continuación.",
+    "newWorkspace": "Nuevo workspace",
+    "mergeHome": "Combinar con Inicio",
+    "name": "Nombre",
+    "namePlaceholder": "Dejar en blanco para usar el título del archivo"
+  },
+  "feedpacks": {
+    "sources_one": "{{count}} fuente",
+    "sources_many": "{{count}} fuentes",
+    "sources_other": "{{count}} fuentes",
+    "packSources": "Fuentes del feedpack",
+    "search": "Buscar feedpacks",
+    "loading": "Cargando feedpacks…",
+    "none": "No hay feedpacks disponibles.",
+    "noMatch": "Ningún feedpack coincide con \"{{query}}\".",
+    "loadingSources": "Cargando fuentes…"
+  },
+  "feedpackDialog": {
+    "title": "Feedpacks",
+    "body": "Instalar un conjunto seleccionado de fuentes.",
+    "back": "Volver a feedpacks",
+    "install": "Instalar"
+  }
+}

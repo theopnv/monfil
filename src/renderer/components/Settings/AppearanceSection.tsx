@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import SegmentedControl from "@/components/common/SegmentedControl";
+import LanguageRow from "@/components/Settings/LanguageRow";
 import SettingsRow from "@/components/Settings/SettingsRow";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import { DENSITIES } from "@/lib/preferences";
@@ -11,31 +13,25 @@ import { useTheme } from "@/providers/theme-provider";
 
 const THEMES = ["light", "dark", "system"] as const;
 
-const THEME_LABELS: Record<(typeof THEMES)[number], string> = {
-  light: "Light",
-  dark: "Dark",
-  system: "System",
-};
-
-const THEME_HINTS: Record<(typeof THEMES)[number], string> = {
-  light: "Always use the light appearance.",
-  dark: "Always use the dark appearance.",
-  system: "Match your OS setting, and switch automatically when it changes.",
-};
+// The stored density values double as the labels today, so the keys are kept apart from them.
+const DENSITY_KEYS = { Cards: "cards", Magazine: "magazine", Compact: "compact" } as const;
 
 export default function AppearanceSection() {
+  const { t } = useTranslation('settings');
   const { theme, setTheme } = useTheme();
   const { preferences, setPreference } = usePreferences();
 
   return (
-    <SettingsSection id="appearance" title="Appearance">
-      <SettingsRow label="Theme" hint={THEME_HINTS[theme]}>
-        <SegmentedControl options={THEMES} value={theme} onChange={setTheme} getLabel={(option) => THEME_LABELS[option]} />
+    <SettingsSection id="appearance" title={t('section.appearance')}>
+      <SettingsRow label={t('appearance.theme')} hint={t(`appearance.themeHints.${theme}`)}>
+        <SegmentedControl options={THEMES} value={theme} onChange={setTheme} getLabel={(option) => t(`appearance.themes.${option}`)} />
       </SettingsRow>
 
-      <SettingsRow label="Default density" hint="How river cards are laid out on Home.">
-        <SegmentedControl options={DENSITIES} value={preferences.density} onChange={(density) => setPreference("density", density)} />
+      <SettingsRow label={t('appearance.density')} hint={t('appearance.densityHint')}>
+        <SegmentedControl options={DENSITIES} value={preferences.density} onChange={(density) => setPreference("density", density)} getLabel={(density) => t(`appearance.densities.${DENSITY_KEYS[density]}`)} />
       </SettingsRow>
+
+      <LanguageRow />
     </SettingsSection>
   );
 }

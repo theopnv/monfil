@@ -5,6 +5,7 @@
 import type { TwoWayRendererMainChannels, TwoWayRendererMainChannelsInvokeArgs } from './channels';
 import { RENDERER_USAGE_COUNTERS, SOURCE_TYPES } from './contracts';
 import type { FeedpackInstallTarget, ImportOpmlTarget, NewFeedInput, RefreshInterval, RendererUsageCounter, RetentionDays, RiverCursor, RiverQuery, SavedCursor, SavedQuery, SourceItem, SourceType, UsagePreferences } from './contracts';
+import { isLanguageSetting } from './i18n/languages';
 import { isPositiveSafeInteger } from './validation';
 
 type Guard<T> = (value: unknown) => value is T;
@@ -161,6 +162,8 @@ export const invokePayloadGuards: { [C in TwoWayRendererMainChannels]: Guard<Two
   'settings:set-workspace-rail-expanded': isBoolean,
   'settings:get-retention-days': isUndefined,
   'settings:set-retention-days': isRetentionDays,
+  'settings:get-language': isUndefined,
+  'settings:set-language': isLanguageSetting,
   'app:back-up-database': isUndefined,
   'app:get-info': isUndefined,
   'app:hints-enabled': isUndefined,

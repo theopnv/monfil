@@ -1,0 +1,76 @@
+{
+  "navigation": {
+    "label": "Workspace-Ansichten",
+    "all": "Alle Einträge",
+    "saved": "Gespeichert",
+    "saveHint": "Speichern Sie einen Artikel mit dem Lesezeichen. Ihre gespeicherten Artikel finden Sie hier."
+  },
+  "switcher": {
+    "dialog": "Workspace wechseln",
+    "field": "Name des Workspaces",
+    "placeholder": "Zu Workspace wechseln…",
+    "list": "Workspaces",
+    "empty": "Kein Workspace passt."
+  },
+  "rail": {
+    "moveFailed": "Der Feed konnte nicht verschoben werden.",
+    "list": "Workspaces",
+    "move": "{{name}} verschieben",
+    "hideNames": "Namen der Workspaces ausblenden",
+    "showNames": "Namen der Workspaces anzeigen",
+    "collapse": "Einklappen",
+    "new": "Neuer Workspace",
+    "newHint": "Legen Sie einen Workspace an, um Feeds zu gruppieren. Mit der rechten Maustaste auf einen Workspace können Sie ihn bearbeiten oder löschen.",
+    "settings": "Einstellungen"
+  },
+  "dialog": {
+    "editTitle": "Workspace bearbeiten",
+    "newTitle": "Neuer Workspace",
+    "editBody": "Benennen Sie ihn um oder wählen Sie ein anderes Symbol und eine andere Farbe.",
+    "newBody": "Ein Tab in der Leiste, mit eigenen Quellen und eigenem Stream.",
+    "name": "Name",
+    "namePlaceholder": "CI/CD-Überwachung",
+    "icon": "Symbol",
+    "colour": "Farbe",
+    "colourOption": "Farbe {{value}}",
+    "browse": "Feedpacks durchsuchen",
+    "save": "Änderungen speichern",
+    "create": "Workspace anlegen"
+  },
+  "delete": {
+    "title": "Workspace löschen",
+    "body": "Dies löscht den Workspace <bold>{{name}}</bold>, seine Ordner und seine Liste „Gespeichert“. Feeds, die nur hier liegen, werden ebenfalls entfernt. Exportieren Sie vorher als OPML, um eine Kopie zu behalten, die Sie später erneut importieren können.",
+    "export": "Als OPML exportieren",
+    "confirm": "Workspace löschen"
+  },
+  "importOpml": {
+    "doneTitle": "Import abgeschlossen",
+    "imported_one": "{{count}} Feed importiert.",
+    "imported_other": "{{count}} Feeds importiert.",
+    "skipped": "{{count}} übersprungen.",
+    "failed": "{{count}} konnten nicht abgerufen werden.",
+    "titleInto": "OPML in {{name}} importieren",
+    "title": "OPML importieren",
+    "choose": "Wählen Sie im nächsten Fenster eine Datei aus.",
+    "newWorkspace": "Neuer Workspace",
+    "mergeHome": "In Start zusammenführen",
+    "name": "Name",
+    "namePlaceholder": "Leer lassen, um den Titel der Datei zu verwenden"
+  },
+  "feedpacks": {
+    "sources_one": "{{count}} Quelle",
+    "sources_other": "{{count}} Quellen",
+    "packSources": "Quellen des Feedpacks",
+    "search": "Feedpacks durchsuchen",
+    "loading": "Feedpacks werden geladen…",
+    "none": "Keine Feedpacks verfügbar.",
+    "noMatch": "Kein Feedpack passt zu „{{query}}“.",
+    "loadingSources": "Quellen werden geladen…"
+  },
+  "feedpackDialog": {
+    "title": "Feedpacks",
+    "body": "Installieren Sie eine ausgewählte Gruppe von Quellen.",
+    "back": "Zurück zu den Feedpacks",
+    "install": "Installieren"
+  }
+}
