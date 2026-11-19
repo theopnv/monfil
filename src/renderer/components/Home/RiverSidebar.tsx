@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { decodeFeedDrag, encodeFeedDrag, FEED_DRAG_TYPE } from "@/lib/feed-drag";
 import WorkspaceNavigation from "@/components/Workspace/WorkspaceNavigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -124,6 +125,7 @@ function dropCategoryId(items: SidebarItem[], key: string): number | null {
 }
 
 export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVisibility, onFeedDeleted, savedView = false }: RiverSidebarProps) {
+  const { t } = useTranslation('river');
   const activeWorkspaceId = useActiveWorkspaceId();
   const [folders, setFolders] = useState(() => groupByCategory(categories, feeds));
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
@@ -321,21 +323,21 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
     <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-e border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
       <WorkspaceNavigation saved={savedView} hasFeeds={hasFeeds} />
       <div className="flex items-center justify-between px-4.5 pb-2">
-        <span className="text-xs font-bold tracking-wide text-tertiary uppercase">Feeds</span>
+        <span className="text-xs font-bold tracking-wide text-tertiary uppercase">{t('sidebar.feeds')}</span>
         <div className="flex items-center gap-1">
-          <Tooltip title="New folder" placement="top">
-            <Button aria-label="New folder" size="xs" color="tertiary" iconLeading={FolderPlus} onPress={startCreatingFolder} />
+          <Tooltip title={t('sidebar.newFolder')} placement="top">
+            <Button aria-label={t('sidebar.newFolder')} size="xs" color="tertiary" iconLeading={FolderPlus} onPress={startCreatingFolder} />
           </Tooltip>
           <div ref={addFeedAnchorRef} className="flex">
-            <Tooltip title="Add feed" placement="top">
-              <Button aria-label="Add feed" size="xs" color="tertiary" iconLeading={Plus} onPress={() => setIsAddFeedOpen(true)} />
+            <Tooltip title={t('sidebar.addFeed')} placement="top">
+              <Button aria-label={t('sidebar.addFeed')} size="xs" color="tertiary" iconLeading={Plus} onPress={() => setIsAddFeedOpen(true)} />
             </Tooltip>
           </div>
           <Hint triggerRef={addFeedAnchorRef} isOpen={addFeedHint.isOpen} onDismiss={addFeedHint.dismiss} placement="bottom end">
-            Add a feed here. To delete a feed, right-click it.
+            {t('sidebar.addFeedHint')}
           </Hint>
-          <Tooltip title="Add feedpack" placement="top">
-            <Button aria-label="Add feedpack" size="xs" color="tertiary" iconLeading={LayersTwo01} onPress={() => setIsFeedpackBrowserOpen(true)} />
+          <Tooltip title={t('sidebar.addFeedpack')} placement="top">
+            <Button aria-label={t('sidebar.addFeedpack')} size="xs" color="tertiary" iconLeading={LayersTwo01} onPress={() => setIsFeedpackBrowserOpen(true)} />
           </Tooltip>
         </div>
       </div>
@@ -344,8 +346,8 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
           <div className="flex items-center gap-1.5 rounded-xl px-2.25 py-1.75 text-sm font-semibold text-primary">
             <input
               autoFocus
-              aria-label="New folder name"
-              placeholder="Folder name"
+              aria-label={t('sidebar.newFolderName')}
+              placeholder={t('sidebar.folderName')}
               value={newFolderName}
               onChange={(event) => setNewFolderName(event.target.value)}
               onKeyDown={(event) => {
@@ -397,7 +399,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
       />
       <GridList
         ref={feedListRef}
-        aria-label="Feeds"
+        aria-label={t('sidebar.feeds')}
         items={items}
         selectionMode="none"
         // The rename input needs horizontal arrows for its text caret.
@@ -431,11 +433,11 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                   )}
                 >
                   {/* Folders never drag (getItems returns nothing for a folder key); this satisfies react-aria's requirement that every item in a draggable collection expose a drag handle. */}
-                  <DragHandleButton slot="drag" aria-label="Drag" className="hidden" />
+                  <DragHandleButton slot="drag" aria-label={t('sidebar.drag')} className="hidden" />
                   {isEditing ? (
                     <input
                       autoFocus
-                      aria-label={`Rename ${folder.name}`}
+                      aria-label={t('sidebar.renameFolder', { name: folder.name })}
                       value={editingName}
                       // A GridList with no focused key yet claims its first row when focus enters
                       // it, then pulls DOM focus onto that row — which blurs this input and submits
@@ -486,7 +488,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
         }}
       </GridList>
       <Hint triggerRef={feedListRef} isOpen={filterHint.isOpen} onDismiss={filterHint.dismiss} placement="right top">
-        Click a feed to show only its articles. Click the eye to hide a feed.
+        {t('sidebar.filterHint')}
       </Hint>
     </div>
   );

@@ -1,8 +1,8 @@
-import type common from './locales/en/common.json';
+import type { resources } from './resources';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
     defaultNS: 'common';
-    resources: { common: typeof common };
+    resources: (typeof resources)['en'];
   }
 }

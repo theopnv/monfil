@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import type { TFunction } from 'i18next';
 import type { RiverRow, SourceType } from '../../../shared/contracts';
 import { ipc } from '@/lib/ipc-client';
 
-/** The uppercase badge word for a source type, e.g. "RSS" / "YOUTUBE". */
-export const SOURCE_TYPE_LABEL: Record<SourceType, string> = {
+// Brand and protocol names stay as they are in every language.
+const BRAND_SOURCE_LABEL: Record<Exclude<SourceType, 'conference' | 'ats'>, string> = {
   rss: 'RSS',
   youtube: 'YOUTUBE',
   github: 'GITHUB',
@@ -15,9 +16,15 @@ export const SOURCE_TYPE_LABEL: Record<SourceType, string> = {
   arxiv: 'ARXIV',
   bluesky: 'BLUESKY',
   mastodon: 'MASTODON',
-  conference: 'CONF',
-  ats: 'JOB',
 };
+
+/** The uppercase badge word for a source type, e.g. "RSS" / "YOUTUBE". Only conference and job get translated. */
+export function sourceTypeLabel(type: SourceType, t: TFunction<'river'>): string {
+  if (type === 'conference') {
+    return t('source.conference');
+  }
+  return type === 'ats' ? t('source.job') : BRAND_SOURCE_LABEL[type];
+}
 
 export interface RiverCardProps {
   item: RiverRow;
@@ -47,8 +54,8 @@ export function formatRelativeTime(publishedAt: number): string {
 }
 
 /** Screen-reader label for a river card: state isn't conveyed by opacity alone. */
-export function describeRiverCard(item: RiverRow, read: boolean): string {
-  return `${item.title}, ${read ? "read" : "unread"}, from ${item.feedTitle}, ${formatRelativeTime(item.publishedAt)}.`;
+export function describeRiverCard(item: RiverRow, read: boolean, t: TFunction<'river'>): string {
+  return t('card.label', { context: read ? 'read' : 'unread', title: item.title, feed: item.feedTitle, time: formatRelativeTime(item.publishedAt) });
 }
 
 const WORDS_PER_MINUTE = 200;

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { Trans, useTranslation } from 'react-i18next';
 import { useState } from "react";
 import { Heading } from "react-aria-components";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
@@ -18,12 +19,13 @@ export interface DeleteFeedDialogProps {
 }
 
 export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: DeleteFeedDialogProps) {
+  const { t } = useTranslation(['river', 'common']);
   const deleteFeed = useDeleteFeed();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<DeleteFeedError | null>(null);
-  const workspaceName = useActiveWorkspace()?.name ?? "this workspace";
+  const workspaceName = useActiveWorkspace()?.name ?? t('river:deleteFeed.thisWorkspace');
   const keepsItems = (feed?.otherWorkspaceCount ?? 0) > 0;
-  const confirmLabel = keepsItems ? `Remove from ${workspaceName}` : "Delete feed";
+  const confirmLabel = keepsItems ? t('river:deleteFeed.confirmRemove', { workspace: workspaceName }) : t('river:deleteFeed.confirmDelete');
 
   async function handleConfirm() {
     if (!feed) {
@@ -56,21 +58,16 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
         <Dialog>
           <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
             <Heading slot="title" className="font-display text-lg font-semibold text-primary">
-              {keepsItems ? "Remove feed" : "Delete feed"}
+              {keepsItems ? t('river:deleteFeed.titleRemove') : t('river:deleteFeed.titleDelete')}
             </Heading>
             {feed && keepsItems && (
               <p className="text-sm text-tertiary">
-                This removes <span className="font-semibold text-secondary">{feed.title}</span> from {workspaceName}. It stays in{" "}
-                {feed.otherWorkspaceCount} other {feed.otherWorkspaceCount === 1 ? "workspace" : "workspaces"} with its items.
+                <Trans t={t} i18nKey="river:deleteFeed.removeBody" count={feed.otherWorkspaceCount} values={{ title: feed.title, workspace: workspaceName }} components={{ bold: <span className="font-semibold text-secondary" /> }} />
               </p>
             )}
             {feed && !keepsItems && (
               <p className="text-sm text-tertiary">
-                This removes <span className="font-semibold text-secondary">{feed.title}</span> and its{" "}
-                <span className="font-semibold text-secondary">
-                  {feed.itemCount} {feed.itemCount === 1 ? "item" : "items"}
-                </span>
-                . Saved items remain available. There is no undo.
+                <Trans t={t} i18nKey="river:deleteFeed.deleteBody" count={feed.itemCount} values={{ title: feed.title }} components={{ bold: <span className="font-semibold text-secondary" /> }} />
               </p>
             )}
           </div>
@@ -79,7 +76,7 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
 
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
             <Button color="secondary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>
-              Cancel
+              {t('common:action.cancel')}
             </Button>
             <Button color="primary-destructive" size="md" className="rounded-full" isLoading={isLoading} onPress={handleConfirm}>
               {confirmLabel}

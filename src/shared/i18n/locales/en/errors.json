@@ -1,0 +1,16 @@
+{
+  "startup": {
+    "databaseRecovered": "Monfil recovered from a damaged database. A backup was kept.",
+    "revealBackup": "Reveal backup",
+    "starting": "Starting Monfil…"
+  },
+  "recovery": {
+    "rootTitle": "Monfil ran into a problem",
+    "pageTitle": "This page could not be shown",
+    "hint": "Try the action again. If the problem continues, open the log file and include incident {{incident}} in your report.",
+    "unknownIncident": "unknown",
+    "tryAgain": "Try again",
+    "restart": "Restart app",
+    "showLog": "Show log file"
+  }
+}

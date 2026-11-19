@@ -3,15 +3,17 @@
 // See LICENSE in the repository root for full terms.
 
 import { Bookmark } from '@untitledui/icons';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/untitled-ui/base/buttons/button';
 import { Tooltip } from '@/components/untitled-ui/base/tooltip/tooltip';
 import { useSavedState } from '@/providers/saved-provider';
 import type { RiverRow } from '../../../shared/contracts';
 
 export default function SaveButton({ item, onRemoved }: { item: RiverRow; onRemoved?: () => void }) {
+  const { t } = useTranslation();
   const { setSaved, isPending } = useSavedState();
   const saved = item.savedAt != null;
-  const label = saved ? 'Remove from Saved' : 'Save';
+  const label = saved ? t('item.action.removeFromSaved') : t('item.action.save');
   return (
     <Tooltip title={label}>
       <Button

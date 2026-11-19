@@ -1,0 +1,22 @@
+{
+  "section": {
+    "appearance": "Appearance",
+    "reading": "Reading",
+    "refreshing": "Refreshing",
+    "data": "Your data",
+    "privacy": "Privacy",
+    "diagnostics": "Diagnostics",
+    "about": "About"
+  },
+  "title": "Settings",
+  "about": {
+    "tagline": "RSS feed reader and more.",
+    "link": {
+      "website": "Website",
+      "documentation": "Documentation",
+      "changelog": "Changelog",
+      "reportIssue": "Report an issue",
+      "buyCoffee": "Buy me a coffee"
+    }
+  }
+}

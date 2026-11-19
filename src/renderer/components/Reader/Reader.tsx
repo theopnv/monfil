@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import RiverSidebar from "@/components/Home/RiverSidebar";
@@ -34,6 +35,7 @@ export interface ReaderProps {
 }
 
 export default function Reader({ itemId, onNavigateToItem, onNavigateHome, savedView = false, onShowFeed }: ReaderProps) {
+  const { t } = useTranslation('reader');
   const id = Number(itemId);
   const feeds = useFeeds();
   const categories = useCategories();
@@ -148,9 +150,9 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome, saved
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="text-center">
-          <p className="mb-4 text-tertiary">This article could not be found.</p>
+          <p className="mb-4 text-tertiary">{t('notFound')}</p>
           <Button color="secondary" onPress={onNavigateHome}>
-            {scope.saved ? "Back to Saved" : "Back to Home"}
+            {scope.saved ? t('backToSaved') : t('backToHome')}
           </Button>
         </div>
       </div>
@@ -158,12 +160,12 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome, saved
   }
 
   const nextTarget = scope.saved ? navigation.next : navigation.nextUnread;
-  const nextLabel = !scope.saved && nextTarget && !nextTarget.readAt ? "Next unread" : "Next article";
+  const nextKind = !scope.saved && nextTarget && !nextTarget.readAt ? "unread" : "article";
 
   const handleToggleRead = () => {
     const willBeRead = !currentItem.readAt;
     toggleRead(currentItem.id, !!currentItem.readAt);
-    announce(willBeRead ? "Marked as read" : "Marked as unread");
+    announce(willBeRead ? t('announce.read') : t('announce.unread'));
   };
 
   return (
@@ -201,20 +203,20 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome, saved
             <ArticleHeroImage src={currentItem.image} />
 
             {content.isLoading && (
-              <p className="mb-4 text-sm text-tertiary">Loading full article…</p>
+              <p className="mb-4 text-sm text-tertiary">{t('loadingFull')}</p>
             )}
 
             <ArticleBody key={currentItemId} html={content.html} sourceUrl={currentItem.link ?? undefined} />
 
             {content.isUnavailable && (
-              <p className="mb-4 text-sm text-tertiary">The full article could not be loaded. Read it at the source instead.</p>
+              <p className="mb-4 text-sm text-tertiary">{t('unavailable')}</p>
             )}
 
             {content.isFailed && (
-              <p className="mb-4 text-sm text-tertiary">This item could not be loaded. Read it at the source instead.</p>
+              <p className="mb-4 text-sm text-tertiary">{t('failed')}</p>
             )}
 
-            {nextTarget && <NextArticleCard item={nextTarget} label={nextLabel} onClick={() => onNavigateToItem(nextTarget.id)} />}
+            {nextTarget && <NextArticleCard item={nextTarget} kind={nextKind} onClick={() => onNavigateToItem(nextTarget.id)} />}
 
             {preferences.keyboardNavigation && <KeyboardShortcutsHint />}
           </article>

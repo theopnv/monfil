@@ -3,7 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { describeRiverCard, estimateReadTime, formatRelativeTime } from './utils';
+import { i18n } from '@/lib/i18n';
+import { describeRiverCard, estimateReadTime, formatRelativeTime, sourceTypeLabel } from './utils';
 import type { RiverRow } from '../../../shared/contracts';
 
 function createRow(overrides: Partial<RiverRow> = {}): RiverRow {
@@ -106,13 +107,31 @@ describe('formatRelativeTime', () => {
   });
 });
 
+const t = i18n.getFixedT('en', 'river');
+
+describe('sourceTypeLabel', () => {
+  test.each([
+    ['rss', 'RSS'],
+    ['youtube', 'YOUTUBE'],
+    ['hackernews', 'HN'],
+    ['conference', 'CONF'],
+    ['ats', 'JOB'],
+  ] as const)('labels %s as %s', (type, expected) => {
+    // Act
+    const result = sourceTypeLabel(type, t);
+
+    // Assert
+    expect(result).toBe(expected);
+  });
+});
+
 describe('describeRiverCard', () => {
   test('mentions the title, read state and feed', () => {
     // Arrange
     const row = createRow({ title: 'A headline', feedTitle: 'Feed A', publishedAt: Date.now() });
 
     // Act
-    const result = describeRiverCard(row, false);
+    const result = describeRiverCard(row, false, t);
 
     // Assert
     expect(result).toBe(`A headline, unread, from Feed A, ${formatRelativeTime(row.publishedAt)}.`);
@@ -123,7 +142,7 @@ describe('describeRiverCard', () => {
     const row = createRow({ title: 'A headline', feedTitle: 'Feed A', publishedAt: Date.now() });
 
     // Act
-    const result = describeRiverCard(row, true);
+    const result = describeRiverCard(row, true, t);
 
     // Assert
     expect(result).toBe(`A headline, read, from Feed A, ${formatRelativeTime(row.publishedAt)}.`);
