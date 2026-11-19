@@ -1,0 +1,92 @@
+{
+  "keep": [
+    "Monfil",
+    "RSS",
+    "Atom",
+    "JSON Feed",
+    "OPML",
+    "YouTube",
+    "GitHub",
+    "GitLab",
+    "Hacker News",
+    "Bluesky",
+    "Mastodon",
+    "arXiv",
+    "developers.events",
+    "Greenhouse",
+    "Lever",
+    "Ashby",
+    "Workable",
+    "SmartRecruiters",
+    "Recruitee",
+    "Teamtailor",
+    "Personio"
+  ],
+  "terms": {
+    "feed": {
+      "meaning": "One subscribed source of articles, such as a blog, a YouTube channel, or a GitHub releases page.",
+      "translations": {
+        "fr": "flux",
+        "de": "Feed",
+        "es": "fuente",
+        "it": "feed",
+        "pt": "feed",
+        "zh": "订阅源",
+        "ja": "フィード",
+        "ar": "موجز"
+      }
+    },
+    "river": {
+      "meaning": "The single stream of new articles from all feeds, newest first. Not a body of water.",
+      "translations": {
+        "fr": "fil",
+        "de": "Stream",
+        "es": "flujo",
+        "it": "flusso",
+        "pt": "fluxo",
+        "zh": "信息流",
+        "ja": "タイムライン",
+        "ar": "التدفق"
+      }
+    },
+    "workspace": {
+      "meaning": "A named set of feeds with its own river, such as Work or News.",
+      "translations": {
+        "fr": "espace de travail",
+        "de": "Arbeitsbereich",
+        "es": "espacio de trabajo",
+        "it": "spazio di lavoro",
+        "pt": "espaço de trabalho",
+        "zh": "工作区",
+        "ja": "ワークスペース",
+        "ar": "مساحة عمل"
+      }
+    },
+    "feedpack": {
+      "meaning": "A curated bundle of feeds that a user installs into a workspace in one step.",
+      "translations": {
+        "fr": "pack de flux",
+        "de": "Feedpack",
+        "es": "paquete de fuentes",
+        "it": "pacchetto di feed",
+        "pt": "pacote de feeds",
+        "zh": "订阅包",
+        "ja": "フィードパック",
+        "ar": "حزمة موجزات"
+      }
+    },
+    "folder": {
+      "meaning": "A group of feeds inside a workspace. Called a category in the code.",
+      "translations": {
+        "fr": "dossier",
+        "de": "Ordner",
+        "es": "carpeta",
+        "it": "cartella",
+        "pt": "pasta",
+        "zh": "文件夹",
+        "ja": "フォルダ",
+        "ar": "مجلد"
+      }
+    }
+  }
+}
