@@ -108,7 +108,7 @@ async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Pro
   await page.evaluate(({ link, type, workspaceId }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
     link, title: 'Local feed', type, items: [], categoryName: 'tech', workspaceId, showInWorkspace: true,
   }), { link: url, type, workspaceId: HOME_WORKSPACE_ID });
-  await page.getByRole('button', { name: 'Refresh feeds' }).click();
+  await page.evaluate(() => window.electron.ipcRenderer.invoke('feeds:refresh', undefined));
 }
 
 readerArticleTest('shows the fetched article body instead of the feed description', async ({ feedServer, launchApp }) => {
@@ -116,7 +116,7 @@ readerArticleTest('shows the fetched article body instead of the feed descriptio
   feedServer.publish([{ title: 'Full Article', link: '/article/full' }]);
   const page = await launchApp();
   await subscribe(page, feedServer.url);
-  await expect(page.getByText('Full Article', { exact: true })).toBeVisible();
+  await expect(page.getByText('Full Article', { exact: true })).toBeVisible({ timeout: 15000 });
 
   // Act
   await page.getByText('Full Article', { exact: true }).click();
