@@ -4,12 +4,21 @@
     "gotIt": "Got it",
     "cancel": "Cancel",
     "save": "Save",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "done": "Done",
+    "import": "Import",
+    "close": "Close",
+    "back": "Back",
+    "showLog": "Show log file",
+    "restart": "Restart"
   },
   "item": {
     "action": {
       "save": "Save",
       "removeFromSaved": "Remove from Saved"
     }
+  },
+  "update": {
+    "ready": "A new version of Monfil is ready."
   }
 }

@@ -21,15 +21,22 @@ interface FatalShell {
   showItemInFolder(path: string): void | Promise<void>;
 }
 
+export interface FatalDialogText {
+  title: string;
+  message: string;
+  buttons: [restart: string, showLog: string, quit: string];
+}
+
 interface FatalDependencies {
   app: FatalApp;
   dialog: FatalDialog;
   shell: FatalShell;
+  text: (incident: string) => FatalDialogText;
 }
 
-const electronDependencies: FatalDependencies = { app, dialog, shell };
+const electronDependencies = { app, dialog, shell };
 
-export function createFatalHandler(log: Logger, logFilePath: string, dependencies: FatalDependencies = electronDependencies): (source: string, error: unknown) => Promise<void> {
+export function createFatalHandler(log: Logger, logFilePath: string, dependencies: FatalDependencies): (source: string, error: unknown) => Promise<void> {
   let showingDialog = false;
 
   return async (source: string, error: unknown) => {
@@ -44,11 +51,12 @@ export function createFatalHandler(log: Logger, logFilePath: string, dependencie
         showingDialog = false;
         return;
       }
+      const text = dependencies.text(shortIncidentId(incidentId));
       const result = await dependencies.dialog.showMessageBox({
         type: 'error',
-        title: 'Monfil could not continue',
-        message: `Monfil encountered a system error. Incident ${shortIncidentId(incidentId)}.`,
-        buttons: ['Restart', 'Show log file', 'Quit'],
+        title: text.title,
+        message: text.message,
+        buttons: text.buttons,
         defaultId: 0,
         cancelId: 2,
       });
@@ -67,8 +75,8 @@ export function createFatalHandler(log: Logger, logFilePath: string, dependencie
   };
 }
 
-export function installFatalHandlers(log: Logger, logFilePath: string): void {
-  const handle = createFatalHandler(log, logFilePath);
+export function installFatalHandlers(log: Logger, logFilePath: string, text: FatalDependencies['text']): void {
+  const handle = createFatalHandler(log, logFilePath, { ...electronDependencies, text });
 
   process.on('uncaughtException', (error) => void handle('uncaughtException', error));
   process.on('unhandledRejection', (error) => void handle('unhandledRejection', error));

@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { afterEach, expect, test } from 'vitest';
-import { mainI18n, setMainLanguage } from './i18n';
+import { fatalDialogText, mainI18n, setMainLanguage } from './i18n';
 
 afterEach(async () => {
   await setMainLanguage('en');
@@ -21,4 +21,16 @@ test('uses the new language for the next call after a switch', async () => {
 
   // Assert
   expect(mainI18n.language).toBe('fr');
+});
+
+test('builds the fatal dialog text with the incident id and three buttons', () => {
+  // Act
+  const text = fatalDialogText('ab12cd34');
+
+  // Assert
+  expect(text).toEqual({
+    title: 'Monfil could not continue',
+    message: 'Monfil encountered a system error. Incident ab12cd34.',
+    buttons: ['Restart', 'Show log file', 'Quit'],
+  });
 });

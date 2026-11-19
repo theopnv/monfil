@@ -332,7 +332,7 @@ describe('main', () => {
     // Assert
     expect(configureLogging).toHaveBeenNthCalledWith(1, logFilePath, false);
     expect(setLogFilePath).toHaveBeenCalledWith(logFilePath);
-    expect(installFatalHandlers).toHaveBeenCalledWith(logger, logFilePath);
+    expect(installFatalHandlers).toHaveBeenCalledWith(logger, logFilePath, expect.any(Function));
   });
 
   test('turns on detailed logging once the database is open when the user enabled it', async () => {
