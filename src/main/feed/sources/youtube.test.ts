@@ -504,7 +504,7 @@ describe('fetchFeed', () => {
   test('returns UNSUPPORTED_FORMAT for an input with no recognizable shape', async () => {
     const result = await fetchFeed({ link: 'https://example.com/nothing' });
 
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel, playlist or video." } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel, playlist or video.", params: { reason: 'youtubeNotRecognized' } } });
     expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
@@ -542,7 +542,7 @@ describe('fetchFeed', () => {
     const result = await fetchFeed({ link: '@Nobody' });
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find a YouTube channel at that address." } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find a YouTube channel at that address.", params: { reason: 'youtubeNoChannel' } } });
   });
 
   test('a video page with no channel id is refused', async () => {
@@ -553,7 +553,7 @@ describe('fetchFeed', () => {
     const result = await fetchFeed({ link: 'https://www.youtube.com/watch?v=abc123' });
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel for that video." } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel for that video.", params: { reason: 'youtubeNoVideoChannel' } } });
   });
 
   test('a playlist feed with no owner is refused', async () => {
@@ -565,7 +565,7 @@ describe('fetchFeed', () => {
     const result = await fetchFeed({ link: 'https://www.youtube.com/playlist?list=PL1' });
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel that owns that playlist." } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel that owns that playlist.", params: { reason: 'youtubeNoPlaylistChannel' } } });
   });
 
   test('a feed body that is not atom is refused', async () => {
@@ -579,7 +579,7 @@ describe('fetchFeed', () => {
     const result = await fetchFeed({ link: CHANNEL_ID });
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel feed." } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel feed.", params: { reason: 'youtubeNotChannelFeed' } } });
   });
 
   test('an error thrown while fetching becomes a parse error, and a value that is not an error an unknown one', async () => {

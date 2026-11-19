@@ -719,7 +719,7 @@ describe('createCategory', () => {
     if (result.success) {
       return;
     }
-    expect(result.error).toEqual({ name: 'DUPLICATE_NAME', message: 'A category named "Newsletters" already exists.' });
+    expect(result.error).toEqual({ name: 'DUPLICATE_NAME', message: 'A category named "Newsletters" already exists.', params: { name: 'Newsletters' } });
     const stored = await db.selectFrom('feedCategory').selectAll().where('name', '=', 'Newsletters').execute();
     expect(stored).toHaveLength(1);
   });

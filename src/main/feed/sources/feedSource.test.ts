@@ -62,7 +62,7 @@ describe('fetchAndParse', () => {
     const result = await fetchAndParse('https://example.com/feed', undefined, () => null);
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported feed." } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported feed.", params: { reason: 'notSupportedFeed' } } });
   });
 
   test('turns an error thrown by the parser into a parse error', async () => {
@@ -90,7 +90,7 @@ describe('fetchAndParse', () => {
     // Assert
     expect(result).toEqual({
       success: false,
-      error: { name: 'PARSE_ERROR', message: 'The site sent a web page instead of the feed. It may show a bot check to automated readers or to your network or VPN.' },
+      error: { name: 'PARSE_ERROR', message: 'The site sent a web page instead of the feed. It may show a bot check to automated readers or to your network or VPN.', params: { reason: 'htmlPage' } },
     });
   });
 
@@ -108,7 +108,7 @@ describe('fetchAndParse', () => {
 
 describe('createFeedSource fetch', () => {
   const atomFeed = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Releases</title><subtitle>All releases</subtitle><link rel="alternate" href="https://site.example/"/><id>feed</id></feed>';
-  const source = createFeedSource({ type: 'github', fetchesFullArticle: false, toCandidates: () => null, mismatchMessage: 'Not for this source.' });
+  const source = createFeedSource({ type: 'github', fetchesFullArticle: false, toCandidates: () => null, mismatchMessage: 'Not for this source.', mismatchReason: 'mismatchGithub' });
 
   test('reads a stored link with no scheme as https and returns the feed with the validators of the response', async () => {
     // Arrange
@@ -157,13 +157,13 @@ describe('createFeedSource fetch', () => {
 describe('createFeedSource discover', () => {
   test('refuses text that the source cannot read, with its own message and without a request', async () => {
     // Arrange
-    const source = createFeedSource({ type: 'github', fetchesFullArticle: false, toCandidates: () => null, mismatchMessage: 'Not for this source.' });
+    const source = createFeedSource({ type: 'github', fetchesFullArticle: false, toCandidates: () => null, mismatchMessage: 'Not for this source.', mismatchReason: 'mismatchGithub' });
 
     // Act
     const result = await source.discover('anything');
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: 'Not for this source.' } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: 'Not for this source.', params: { reason: 'mismatchGithub' } } });
     expect(mockedFetchText).not.toHaveBeenCalled();
   });
 });
@@ -187,6 +187,6 @@ describe('fetchCandidates', () => {
     const result = await fetchCandidates('rss', [], parseAlways);
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported feed." } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a supported feed.", params: { reason: 'notSupportedFeed' } } });
   });
 });

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useCallback } from "react";
 import { ipc, rendererLogger } from '@/lib/ipc-client';
 import { notifyWarning } from '@/lib/notifications';
+import { translateFeedFailure } from '@/lib/error-text';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData, type UseInfiniteQueryResult } from "@tanstack/react-query";
 import type { FeedCategory, FeedSummary, RiverPage } from "../../shared/contracts";
 import type { DeleteCategoryError, DeleteFeedError } from "../../shared/contracts";
@@ -166,6 +167,7 @@ interface FeedsRefresh {
 
 export const useFeedsRefresh = (): FeedsRefresh => {
   const { t } = useTranslation(['river', 'common']);
+  const { t: tErrors } = useTranslation('errors');
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: () => ipc.invoke('feeds:refresh', undefined),
@@ -178,7 +180,7 @@ export const useFeedsRefresh = (): FeedsRefresh => {
       queryClient.setQueryData<number>(uiKeys.appliedRefreshVersion, (version) => (version ?? 0) + 1);
       if (summary.failedFeeds?.length) {
         const count = summary.failedFeeds.length;
-        const lines = summary.failedFeeds.slice(0, MAX_FAILURE_LINES).map(({ title, message }) => `${title}: ${message}`);
+        const lines = summary.failedFeeds.slice(0, MAX_FAILURE_LINES).map((failure) => `${failure.title}: ${translateFeedFailure(tErrors, failure)}`);
         if (count > MAX_FAILURE_LINES) {
           lines.push(t('river:refresh.more', { count: count - MAX_FAILURE_LINES }));
         }

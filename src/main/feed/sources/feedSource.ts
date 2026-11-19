@@ -4,6 +4,7 @@
 
 import { fetchConditional, fetchText, type FetchValidators, type NotModified } from '../../lib/fetch';
 import type { FeedFetchError, FetchUrlError, ParsedSource, SourceType } from '../../../shared/contracts';
+import type { ErrorParams, UnsupportedReason } from '../../../shared/errors';
 import type { Result } from '../../../shared/result';
 import { parseFeedContent } from './feedContent';
 import { resolveSiteIcon } from './siteIcon';
@@ -39,8 +40,8 @@ export function toUrl(raw: string): URL | null {
   }
 }
 
-export function unsupported(message: string): { success: false; error: FeedFetchError } {
-  return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message } };
+export function unsupported(message: string, reason: UnsupportedReason, params?: ErrorParams): { success: false; error: FeedFetchError } {
+  return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message, params: { ...params, reason } } };
 }
 
 type ContentParser = (content: string) => ParsedFeedContent | null;
@@ -73,12 +74,12 @@ export async function fetchAndParse(link: string, validators: FetchValidators | 
       parsed = parse(body);
     } catch (error) {
       if (HTML_PAGE.test(body)) {
-        return { success: false, error: { name: 'PARSE_ERROR', message: HTML_INSTEAD_OF_FEED } };
+        return { success: false, error: { name: 'PARSE_ERROR', message: HTML_INSTEAD_OF_FEED, params: { reason: 'htmlPage' } } };
       }
       throw error;
     }
     if (!parsed) {
-      return unsupported("This doesn't look like a supported feed.");
+      return unsupported("This doesn't look like a supported feed.", 'notSupportedFeed');
     }
     return { success: true, data: { parsed, body, validators: result.data.validators } };
   } catch (error) {
@@ -107,7 +108,7 @@ export async function fetchCandidates(
       return fetched;
     }
     if ('notModified' in fetched.data) {
-      return unsupported('The feed did not change since it was last fetched.');
+      return unsupported('The feed did not change since it was last fetched.', 'notModified');
     }
     const { parsed, body } = fetched.data;
     const icon = candidate.icon
@@ -124,7 +125,7 @@ export async function fetchCandidates(
     return { success: true, data: found };
   }
   const firstFailure = results.find((result) => !result.success);
-  return firstFailure ?? unsupported("This doesn't look like a supported feed.");
+  return firstFailure ?? unsupported("This doesn't look like a supported feed.", 'notSupportedFeed');
 }
 
 export interface FeedSourceSpec {
@@ -138,6 +139,7 @@ export interface FeedSourceSpec {
   toCandidates(query: string, lenient: boolean): FeedCandidate[] | null;
   /** Shown when the user picks this source's chip for a link it cannot read. */
   mismatchMessage: string;
+  mismatchReason: UnsupportedReason;
   /** Platform parse rules applied on top of the generic RSS, Atom and JSON Feed parse. */
   transform?(content: ParsedFeedContent): ParsedFeedContent;
   resolveIcon?: IconResolver;
@@ -157,7 +159,7 @@ export function createFeedSource(spec: FeedSourceSpec): SourceAdapter {
     async discover(query) {
       const candidates = spec.toCandidates(query, true);
       if (!candidates?.length) {
-        return unsupported(spec.mismatchMessage);
+        return unsupported(spec.mismatchMessage, spec.mismatchReason);
       }
       return fetchCandidates(spec.type, candidates, parse, spec.resolveIcon);
     },

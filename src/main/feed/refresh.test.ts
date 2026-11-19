@@ -392,7 +392,7 @@ describe('refreshAllFeeds', () => {
     const stored = await db.selectFrom('feedMetadata').selectAll().where('id', '=', feedId).executeTakeFirstOrThrow();
 
     // Assert
-    expect(summary.failedFeeds).toEqual([{ feedId, title: `Feed at ${link}`, message: 'Could not save the new items.' }]);
+    expect(summary.failedFeeds).toEqual([{ feedId, title: `Feed at ${link}`, message: 'Could not save the new items.', code: 'DB_ERROR' }]);
     expect(stored.etag).toBe('"old"');
   });
 
@@ -415,6 +415,24 @@ describe('refreshAllFeeds', () => {
     expect(stored.last_fetched_at).toEqual(expect.any(String));
   });
 
+  test('stores the params of a failure with the error name, and passes them on in the summary', async () => {
+    // Arrange
+    const link = 'https://a.example/feed';
+    const feedId = await storeFeed(link);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const params = { reason: 'serverError', status: 502 };
+    mockedFetchFeed.mockResolvedValue({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'The server had an error (HTTP 502).', params } });
+
+    // Act
+    const summary = await refreshAllFeeds();
+    const stored = await db.selectFrom('feedMetadata').selectAll().where('id', '=', feedId).executeTakeFirstOrThrow();
+
+    // Assert
+    expect(summary.failedFeeds).toEqual([{ feedId, title: `Feed at ${link}`, message: 'The server had an error (HTTP 502).', code: 'GENERIC_FETCH_ERROR', params }]);
+    expect(stored.last_error_code).toBe('GENERIC_FETCH_ERROR');
+    expect(JSON.parse(stored.last_error_params ?? 'null')).toEqual(params);
+  });
+
   test('records the failure on the feed row, then clears it once the fetch works again', async () => {
     // Arrange
     const link = 'https://a.example/feed';
@@ -431,11 +449,14 @@ describe('refreshAllFeeds', () => {
     const recovered = await db.selectFrom('feedMetadata').selectAll().where('id', '=', feedId).executeTakeFirstOrThrow();
 
     // Assert
-    expect(failedSummary.failedFeeds).toEqual([{ feedId, title: `Feed at ${link}`, message: 'offline' }]);
+    expect(failedSummary.failedFeeds).toEqual([{ feedId, title: `Feed at ${link}`, message: 'offline', code: 'NETWORK_ERROR' }]);
     expect(recoveredSummary.failedFeeds).toBeUndefined();
     expect(failed.last_error).toBe('offline');
+    expect(failed.last_error_code).toBe('NETWORK_ERROR');
+    expect(failed.last_error_params).toBeNull();
     expect(failed.last_fetched_at).toEqual(expect.any(String));
     expect(recovered.last_error).toBeNull();
+    expect(recovered.last_error_code).toBeNull();
     expect(recovered.last_fetched_at).toEqual(expect.any(String));
   });
 

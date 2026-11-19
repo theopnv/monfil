@@ -68,6 +68,7 @@ export const blueskySource = createFeedSource({
   fetchesFullArticle: false,
   toCandidates: blueskyCandidates,
   mismatchMessage: 'This is not a Bluesky profile link or handle.',
+  mismatchReason: 'mismatchBluesky',
   transform: titlePosts,
   resolveIcon: profileAvatar,
 });

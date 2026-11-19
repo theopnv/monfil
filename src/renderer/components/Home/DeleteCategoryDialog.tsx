@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { Trans, useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
 import { useEffect, useEffectEvent, useState } from "react";
 import { Heading } from "react-aria-components";
 import NativeSelect from "@/components/common/NativeSelect";
@@ -133,7 +134,7 @@ export default function DeleteCategoryDialog({ category, feedCount, otherCategor
             />
           )}
 
-          {error && <p className="px-6 pb-2 text-sm text-error-primary">{error.message}</p>}
+          {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
             <Button color="secondary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>

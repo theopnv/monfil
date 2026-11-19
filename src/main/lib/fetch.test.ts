@@ -7,7 +7,7 @@ import { createServer, type RequestListener, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { lookup } from 'node:dns/promises';
 import type { LookupAddress } from 'node:dns';
-import { fetchConditional, fetchText, httpStatusMessage, setRequestTransport, type RequestTransport } from './fetch';
+import { fetchConditional, fetchText, httpStatusMessage, httpStatusParams, setRequestTransport, type RequestTransport } from './fetch';
 import { MAX_FETCH_BYTES, MAX_REDIRECTS } from './constants';
 
 vi.mock(import('node:dns/promises'), () => ({ lookup: vi.fn() }));
@@ -20,8 +20,8 @@ vi.mock(import('electron'), () => ({
 // Pins the `all: true` overload, the only one the code under test uses.
 const mockedLookup = vi.mocked(lookup as (hostname: string, options: { all: true }) => Promise<LookupAddress[]>);
 
-const PRIVATE_HOST_ERROR = { success: false, error: { name: 'BLOCKED_URL_ERROR', message: 'This address is not on the public internet.' } };
-const SCHEME_ERROR = { success: false, error: { name: 'BLOCKED_URL_ERROR', message: 'Only http and https addresses can be fetched.' } };
+const PRIVATE_HOST_ERROR = { success: false, error: { name: 'BLOCKED_URL_ERROR', message: 'This address is not on the public internet.', params: { reason: 'private' } } };
+const SCHEME_ERROR = { success: false, error: { name: 'BLOCKED_URL_ERROR', message: 'Only http and https addresses can be fetched.', params: { reason: 'protocol' } } };
 
 interface RecordedRequest {
   url: string;
@@ -149,10 +149,24 @@ describe('fetchText', () => {
   });
 
   test.each([
-    { status: 199, statusMessage: 'Informational' },
-    { status: 300, statusMessage: 'Multiple Choices' },
-    { status: 404, statusMessage: 'Not Found' },
-  ])('returns GENERIC_FETCH_ERROR for a $status and releases the unread response', async ({ status, statusMessage }) => {
+    { status: 401, reason: 'refused' },
+    { status: 403, reason: 'refused' },
+    { status: 404, reason: 'notFound' },
+    { status: 410, reason: 'notFound' },
+    { status: 429, reason: 'rateLimited' },
+    { status: 500, reason: 'serverError' },
+    { status: 599, reason: 'serverError' },
+    { status: 418, reason: 'other' },
+    { status: 499, reason: 'other' },
+  ])('sorts a $status as $reason for translation', ({ status, reason }) => {
+    expect(httpStatusParams(status)).toEqual({ reason, status });
+  });
+
+  test.each([
+    { status: 199, statusMessage: 'Informational', reason: 'other' },
+    { status: 300, statusMessage: 'Multiple Choices', reason: 'other' },
+    { status: 404, statusMessage: 'Not Found', reason: 'notFound' },
+  ])('returns GENERIC_FETCH_ERROR for a $status and releases the unread response', async ({ status, statusMessage, reason }) => {
     // Arrange
     const requests = useTransport(() => ({ status, statusMessage }));
 
@@ -160,7 +174,7 @@ describe('fetchText', () => {
     const result = await fetchText('https://example.com');
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(status, statusMessage) } });
+    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(status, statusMessage), params: { reason, status } } });
     expect(requests.map((request) => request.aborts)).toEqual([1]);
   });
 
@@ -379,7 +393,7 @@ describe('fetchText', () => {
       const result = await fetchText('https://example.com/loop');
 
       // Assert
-      expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'Too many redirects.' } });
+      expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'Too many redirects.', params: { reason: 'redirects' } } });
       expect(requests).toHaveLength(MAX_REDIRECTS + 1);
       expect(requests.at(-1)?.aborts).toBe(1);
     });
@@ -464,7 +478,7 @@ describe('fetchText', () => {
       const result = await fetchText('https://missing.invalid/', { blockPrivateHosts: true });
 
       // Assert
-      expect(result).toEqual({ success: false, error: { name: 'NETWORK_ERROR', message: 'Could not resolve missing.invalid.' } });
+      expect(result).toEqual({ success: false, error: { name: 'NETWORK_ERROR', message: 'Could not resolve missing.invalid.', params: { reason: 'unresolvable', host: 'missing.invalid' } } });
       expect(requests).toHaveLength(0);
     });
 
@@ -558,7 +572,7 @@ describe('fetchConditional', () => {
     const result = await fetchConditional('https://example.com/feed', { validators: { etag: undefined, last_modified: undefined } });
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'The server answered with HTTP 304.' } });
+    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'The server answered with HTTP 304.', params: { reason: 'other', status: 304 } } });
   });
 
   test('returns the fresh body and its new validators after a full download', async () => {
@@ -679,7 +693,7 @@ describe('fetchText against a real server', () => {
     const result = await fetchText(`${url}/loop`);
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'Too many redirects.' } });
+    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'Too many redirects.', params: { reason: 'redirects' } } });
   });
 
   test('refuses the loopback server when private hosts are blocked', async () => {

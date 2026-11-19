@@ -91,7 +91,8 @@ describe('MoveFeedDialog', () => {
     await getByRole('button', { name: 'Move feed' }).click();
 
     // Assert
-    await expect.element(getByText('Disk is full')).toBeInTheDocument();
+    await expect.element(getByText('The database could not complete this change.', { exact: true })).toBeInTheDocument();
+    await expect.element(getByText('Details: Disk is full', { exact: true })).toBeInTheDocument();
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 });

@@ -466,6 +466,28 @@ describe('setFeedFetchResult', () => {
     expect(await storedFeed(inserted.data.id)).toMatchObject({ last_error: 'HTTP 500', last_fetched_at: '2026-05-06T07:08:09.000Z' });
   });
 
+  test('records the error code and params next to the raw text, and clears all three on success', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+    const stored = () => db.selectFrom('feedMetadata').select(['last_error', 'last_error_code', 'last_error_params']).where('id', '=', inserted.data.id).executeTakeFirstOrThrow();
+
+    // Act
+    await setFeedFetchResult(inserted.data.id, { last_error: 'HTTP 503', last_error_code: 'GENERIC_FETCH_ERROR', last_error_params: { reason: 'serverError', status: 503 } });
+    const failed = await stored();
+    await setFeedFetchResult(inserted.data.id, { last_error: 'offline', last_error_code: 'NETWORK_ERROR' });
+    const withoutParams = await stored();
+    await setFeedFetchResult(inserted.data.id, { last_error: null });
+    const cleared = await stored();
+
+    // Assert
+    expect(failed).toEqual({ last_error: 'HTTP 503', last_error_code: 'GENERIC_FETCH_ERROR', last_error_params: '{"reason":"serverError","status":503}' });
+    expect(withoutParams).toEqual({ last_error: 'offline', last_error_code: 'NETWORK_ERROR', last_error_params: null });
+    expect(cleared).toEqual({ last_error: null, last_error_code: null, last_error_params: null });
+  });
+
   test('keeps stored validators that the result leaves out and clears those set to null', async () => {
     // Arrange
     const inserted = await addFeedToDatabase(feedA);

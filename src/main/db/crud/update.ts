@@ -4,6 +4,7 @@
 
 import { db, dbReady } from '../database';
 import type { FeedCategory, MoveFeedError, UpdateCategoryError, UpdateFeedError, UpdateItemError, UpdateWorkspaceError, Workspace } from '../../../shared/contracts';
+import type { ErrorParams } from '../../../shared/errors';
 import type { Result } from '../../../shared/result';
 
 class WorkspaceNotFoundError extends Error {}
@@ -30,7 +31,7 @@ export async function renameCategory(categoryId: number, name: string, workspace
     return { success: true, data: updated };
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return { success: false, error: { name: 'DUPLICATE_NAME', message: `A category named "${name}" already exists.` } };
+      return { success: false, error: { name: 'DUPLICATE_NAME', message: `A category named "${name}" already exists.`, params: { name } } };
     }
     return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
   }
@@ -100,16 +101,19 @@ export async function setFeedsShowInWorkspace(feedIds: number[], showInWorkspace
  * their stored value; a validator set to `null` is cleared, which is how a body without validators
  * retires a stale one.
  * @param feedId the id of the feed that was fetched
- * @param result the failure to record, or `{ last_error: null }` to clear a previous one, plus the
- *   validators to persist
+ * @param result the failure to record (`last_error` is the raw text, `last_error_code` and
+ *   `last_error_params` let the renderer translate it), or `{ last_error: null }` to clear a previous
+ *   one, plus the validators to persist
  */
-export async function setFeedFetchResult(feedId: number, result: { last_error: string | null; etag?: string | undefined | null; last_modified?: string | undefined | null }): Promise<Result<void, UpdateFeedError>> {
+export async function setFeedFetchResult(feedId: number, result: { last_error: string | null; last_error_code?: string; last_error_params?: ErrorParams; etag?: string | undefined | null; last_modified?: string | undefined | null }): Promise<Result<void, UpdateFeedError>> {
   await dbReady;
   try {
     const updated = await db.updateTable('feedMetadata')
       .set({
         last_fetched_at: new Date().toISOString(),
         last_error: result.last_error,
+        last_error_code: result.last_error === null ? null : result.last_error_code ?? null,
+        last_error_params: result.last_error === null || result.last_error_params === undefined ? null : JSON.stringify(result.last_error_params),
         ...(result.etag !== undefined ? { etag: result.etag } : {}),
         ...(result.last_modified !== undefined ? { last_modified: result.last_modified } : {}),
       })

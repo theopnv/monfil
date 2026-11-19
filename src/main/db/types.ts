@@ -102,6 +102,9 @@ export interface FeedMetadataTable {
   last_fetched_at: string | undefined;
   // Update additionally allows `null`, so a successful fetch can clear the last failure.
   last_error: string | undefined | null;
+  // The stable error name the renderer translates. A row stored before this column has none.
+  last_error_code: string | undefined | null;
+  last_error_params: string | undefined | null;
   icon: string | undefined;
   // Validators for conditional GET on refresh. The fetch layer may return either or both; each
   // gets sent back as its own header. `null` clears a stale validator after a full re-download.

@@ -3,7 +3,10 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
+import { createI18n } from '../../../shared/i18n/create-i18n';
 import { categoryErrorMessage, categoryErrorPolicy } from './category-errors';
+
+const t = createI18n('en').getFixedT('en', 'errors');
 
 describe('category error policy', () => {
   test('uses a field for input errors', () => {
@@ -23,7 +26,7 @@ describe('category error policy', () => {
     { name: 'DB_ERROR', expected: 'The folder could not be saved.' },
   ] as const)('shows the folder message for $name, not the raw error text', ({ name, expected }) => {
     // Act
-    const message = categoryErrorMessage({ name, message: 'SQLITE_CONSTRAINT: raw detail' });
+    const message = categoryErrorMessage(t, { name, message: 'SQLITE_CONSTRAINT: raw detail' });
 
     // Assert
     expect(message).toBe(expected);
@@ -34,7 +37,7 @@ describe('category error policy', () => {
     const policy = categoryErrorPolicy.DB_ERROR;
 
     // Act
-    const result = { surface: policy.surface, level: policy.level, retry: policy.retry, message: policy.message };
+    const result = { surface: policy.surface, level: policy.level, retry: policy.retry, message: t(policy.messageKey) };
 
     // Assert
     expect(result).toEqual({ surface: 'toast', level: 'error', retry: 'none', message: 'The folder could not be saved.' });

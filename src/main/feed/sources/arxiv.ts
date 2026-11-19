@@ -40,5 +40,6 @@ export const arxivSource = createFeedSource({
   fetchesFullArticle: false,
   toCandidates: arxivCandidates,
   mismatchMessage: 'This is not an arXiv listing link, such as arxiv.org/list/cs.AI/recent.',
+  mismatchReason: 'mismatchArxiv',
   transform: dropReplacements,
 });

@@ -13,6 +13,7 @@ import * as itemRetention from './0007_item_retention';
 import * as savedItems from './0008_saved_items';
 import * as savedSearch from './0009_saved_search';
 import * as usageCounters from './0010_usage_counters';
+import * as feedErrorCode from './0011_feed_error_code';
 
 const migrations: Record<string, Migration> = {
   '0001_initial_schema': initialSchema,
@@ -25,6 +26,7 @@ const migrations: Record<string, Migration> = {
   '0008_saved_items': savedItems,
   '0009_saved_search': savedSearch,
   '0010_usage_counters': usageCounters,
+  '0011_feed_error_code': feedErrorCode,
 };
 
 export const migrationProvider: MigrationProvider = {

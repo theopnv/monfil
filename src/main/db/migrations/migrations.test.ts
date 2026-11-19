@@ -482,6 +482,27 @@ describe('0010_usage_counters', () => {
   });
 });
 
+describe('0011_feed_error_code', () => {
+  test('gives a stored feed no error code, accepts one, and rolls back cleanly', async () => {
+    // Arrange
+    assertMigrated(await migrateTo('0010_usage_counters'));
+    const seeded = await seed();
+
+    // Act
+    assertMigrated(await migrateToLatest());
+    const before = await db.selectFrom('feedMetadata').select(['last_error_code', 'last_error_params']).where('id', '=', seeded.feedId).executeTakeFirstOrThrow();
+    await db.updateTable('feedMetadata').set({ last_error_code: 'NETWORK_ERROR', last_error_params: '{"reason":"dropped"}' }).where('id', '=', seeded.feedId).execute();
+    const after = await db.selectFrom('feedMetadata').select(['last_error_code', 'last_error_params']).where('id', '=', seeded.feedId).executeTakeFirstOrThrow();
+    assertMigrated(await migrateTo('0010_usage_counters'));
+
+    // Assert
+    expect(before).toEqual({ last_error_code: null, last_error_params: null });
+    expect(after).toEqual({ last_error_code: 'NETWORK_ERROR', last_error_params: '{"reason":"dropped"}' });
+    expect((await columnsByTable()).get('feedMetadata')).not.toContain('last_error_code');
+    expect((await columnsByTable()).get('feedMetadata')).not.toContain('last_error_params');
+  });
+});
+
 describe('the migration list', () => {
   test('has unique names, already in the order Migrator will run them', () => {
     // Assert

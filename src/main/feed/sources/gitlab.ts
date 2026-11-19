@@ -53,5 +53,6 @@ export const gitlabSource = createFeedSource({
   fetchesFullArticle: false,
   toCandidates: gitlabCandidates,
   mismatchMessage: 'This is not a GitLab project link.',
+  mismatchReason: 'mismatchGitlab',
   resolveIcon: projectAvatar,
 });

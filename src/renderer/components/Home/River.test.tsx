@@ -947,7 +947,7 @@ describe('saved search pills', () => {
   test('shows the error when a name is already taken', async () => {
     // Arrange
     addSearch('Bs', 'item b');
-    const duplicate = { success: false, error: { name: 'DUPLICATE_NAME', message: 'A saved search named "Bs" already exists.' } };
+    const duplicate = { success: false, error: { name: 'DUPLICATE_NAME', message: 'A saved search named "Bs" already exists.', params: { reason: 'search', name: 'Bs' } } };
     const original = invokeMock.getMockImplementation() as (channel: string, arg: unknown) => Promise<unknown>;
     invokeMock.mockImplementation((channel: string, arg: unknown) => (channel === 'searches:create' ? Promise.resolve(duplicate) : original(channel, arg)));
     const { getByRole, getByText, getByPlaceholder } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);

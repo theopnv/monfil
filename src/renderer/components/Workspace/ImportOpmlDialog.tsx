@@ -3,6 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
+import { translateFeedFailure } from "@/lib/error-text";
 import { useState } from "react";
 import { Heading } from "react-aria-components";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
@@ -27,6 +29,7 @@ type Target = 'new-workspace' | 'merge-home';
 
 export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: ImportOpmlDialogProps) {
   const { t } = useTranslation(['workspace', 'common']);
+  const { t: tErrors } = useTranslation('errors');
   const importOpml = useImportOpml();
   const [target, setTarget] = useState<Target>('new-workspace');
   const [name, setName] = useState('');
@@ -90,10 +93,10 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
               {(summary.skipped.length > 0 || summary.failed.length > 0) && (
                 <ul className="flex max-h-40 flex-col gap-1 overflow-y-auto px-6 pb-4.5 text-sm text-tertiary">
                   {summary.skipped.map((item) => (
-                    <li key={`skipped-${item.title}`}>{item.title} — {item.reason}</li>
+                    <li key={`skipped-${item.title}`}>{item.title} — {tErrors(`importSkipped.${item.reason}`)}</li>
                   ))}
                   {summary.failed.map((item) => (
-                    <li key={`failed-${item.title}`}>{item.title} — {item.message}</li>
+                    <li key={`failed-${item.title}`}>{item.title} — {translateFeedFailure(tErrors, item)}</li>
                   ))}
                 </ul>
               )}
@@ -140,7 +143,7 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
                 </div>
               )}
 
-              {error && <p className="px-6 pb-2 text-sm text-error-primary">{error.message}</p>}
+              {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
               <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
                 <Button color="secondary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>

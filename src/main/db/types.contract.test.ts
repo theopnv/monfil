@@ -10,5 +10,6 @@ import type { FeedCategoryTable, FeedMetadataTable, WorkspaceTable } from './typ
 test('database rows implement shared contracts', () => {
   expectTypeOf<Selectable<WorkspaceTable>>().toExtend<Workspace>();
   expectTypeOf<Selectable<FeedCategoryTable>>().toExtend<FeedCategory>();
-  expectTypeOf<Selectable<FeedMetadataTable>>().toExtend<FeedMetadata>();
+  // The table keeps the params as JSON text; the contract carries them parsed.
+  expectTypeOf<Omit<Selectable<FeedMetadataTable>, 'last_error_params'>>().toExtend<FeedMetadata>();
 });

@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
 import { useEffect, useState } from "react";
 import { ipc } from '@/lib/ipc-client';
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
@@ -152,7 +153,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
 
           {step === 3 && result && <Step3Done feed={result} />}
 
-          {submitStatus === "error" && submitError && <p className="px-6 pb-2 text-sm text-error-primary">{submitError.message}</p>}
+          {submitStatus === "error" && submitError && <ErrorText error={submitError} className="px-6 pb-2 text-sm text-error-primary" />}
 
           {step === 1 && (
             <WizardFooter

@@ -88,7 +88,7 @@ describe('catalog', () => {
     // Assert
     expect(result).toEqual({
       success: false,
-      error: { name: 'UNSUPPORTED_VERSION', message: 'This version of Monfil cannot read feedpack catalog version 2.' },
+      error: { name: 'UNSUPPORTED_VERSION', message: 'This version of Monfil cannot read feedpack catalog version 2.', params: { version: '2' } },
     });
   });
 

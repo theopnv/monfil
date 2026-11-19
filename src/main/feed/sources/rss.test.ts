@@ -564,7 +564,7 @@ describe('fetchFeed', () => {
     // Assert
     expect(result).toEqual({
       success: false,
-      error: { name: 'PARSE_ERROR', message: 'The site sent a web page instead of the feed. It may show a bot check to automated readers or to your network or VPN.' },
+      error: { name: 'PARSE_ERROR', message: 'The site sent a web page instead of the feed. It may show a bot check to automated readers or to your network or VPN.', params: { reason: 'htmlPage' } },
     });
   });
 
@@ -664,7 +664,7 @@ describe('rssSource.discover', () => {
     const result = await rssSource.discover('not a link');
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a link." } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a link.", params: { reason: 'notLink' } } });
     expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
@@ -725,7 +725,7 @@ describe('rssSource.discover', () => {
     const result = await rssSource.discover('https://blog.test/');
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find a feed at that address." } });
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find a feed at that address.", params: { reason: 'noFeedAtAddress' } } });
   });
 
   test('a Mastodon-shaped profile URL becomes a mastodon feed when its .rss parses', async () => {

@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { translateErrorWithDetails } from "@/lib/error-text";
 import { Link02 } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { Input } from "@/components/untitled-ui/base/input/input";
@@ -54,6 +55,7 @@ function candidateDetail(feed: ParsedSource, t: TFunction<"addFeed">): string {
 
 export default function Step1Find({ query, onQueryChange, onValidate, type, onTypeChange, status, candidates, selectedIndex, onSelect, error }: Step1FindProps) {
   const { t } = useTranslation('addFeed');
+  const { t: tErrors } = useTranslation('errors');
   const feed = candidates[selectedIndex] ?? null;
   const kind = type ?? "anything";
 
@@ -124,7 +126,7 @@ export default function Step1Find({ query, onQueryChange, onValidate, type, onTy
         </fieldset>
       )}
       {status === "not-found" && (
-        <FeedMatchCard title={t('find.notFound')} detail={error?.message ?? t('find.notFoundDetail')} status="not-found" />
+        <FeedMatchCard title={t('find.notFound')} detail={error ? translateErrorWithDetails(tErrors, error) : t('find.notFoundDetail')} status="not-found" />
       )}
     </div>
   );

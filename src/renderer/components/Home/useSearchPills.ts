@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { translateErrorWithDetails } from "@/lib/error-text";
 import { useCallback, useEffect } from "react";
 import { announce } from "@/lib/announcer";
 import { notifyUndo } from "@/lib/notifications";
@@ -30,6 +31,7 @@ export interface SearchPillsState {
  */
 export function useSearchPills(searchQuery: string, setSearchQuery: (query: string) => void): SearchPillsState {
   const { t } = useTranslation('river');
+  const { t: tErrors } = useTranslation('errors');
   const { searches, hintExample } = useSavedSearches();
   const actions = useSavedSearchActions();
   const { setPreference } = usePreferences();
@@ -60,12 +62,12 @@ export function useSearchPills(searchQuery: string, setSearchQuery: (query: stri
     const query = searchQuery.trim();
     const result = await actions.create(name, query);
     if (!result.success) {
-      return result.error.message;
+      return translateErrorWithDetails(tErrors, result.error);
     }
     setActiveId(result.data.id);
     announce(t('pills.announce.created', { name: result.data.name }));
     return undefined;
-  }, [actions, searchQuery, setActiveId, t]);
+  }, [actions, searchQuery, setActiveId, t, tErrors]);
 
   const update = useCallback(async () => {
     if (!activeSearch) {
@@ -73,20 +75,20 @@ export function useSearchPills(searchQuery: string, setSearchQuery: (query: stri
     }
     const result = await actions.update(activeSearch.id, { query: searchQuery.trim() });
     if (!result.success) {
-      return result.error.message;
+      return translateErrorWithDetails(tErrors, result.error);
     }
     announce(t('pills.announce.updated', { name: activeSearch.name }));
     return undefined;
-  }, [actions, activeSearch, searchQuery, t]);
+  }, [actions, activeSearch, searchQuery, t, tErrors]);
 
   const rename = useCallback(async (search: SavedSearchSummary, name: string) => {
     const result = await actions.update(search.id, { name });
     if (!result.success) {
-      return result.error.message;
+      return translateErrorWithDetails(tErrors, result.error);
     }
     announce(t('pills.announce.renamed', { name: result.data.name }));
     return undefined;
-  }, [actions, t]);
+  }, [actions, t, tErrors]);
 
   const remove = useCallback((search: SavedSearchSummary) => {
     void actions.remove(search.id).then((result) => {

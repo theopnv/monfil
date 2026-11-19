@@ -126,6 +126,7 @@ function dropCategoryId(items: SidebarItem[], key: string): number | null {
 
 export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVisibility, onFeedDeleted, savedView = false }: RiverSidebarProps) {
   const { t } = useTranslation('river');
+  const { t: tErrors } = useTranslation('errors');
   const activeWorkspaceId = useActiveWorkspaceId();
   const [folders, setFolders] = useState(() => groupByCategory(categories, feeds));
   const [isAddFeedOpen, setIsAddFeedOpen] = useState(false);
@@ -229,7 +230,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
       setEditingCategoryId(null);
       setRenameError(null);
     } else {
-      setRenameError(categoryErrorMessage(result.error));
+      setRenameError(categoryErrorMessage(tErrors, result.error));
     }
   }
 
@@ -266,7 +267,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
     if (result.success) {
       cancelCreatingFolder();
     } else {
-      setCreateFolderError(categoryErrorMessage(result.error));
+      setCreateFolderError(categoryErrorMessage(tErrors, result.error));
     }
   }
 
