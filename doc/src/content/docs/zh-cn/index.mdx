@@ -1,0 +1,36 @@
+---
+title: Monfil 文档
+description: 为 Monfil 桌面订阅阅读器提供的使用指南和贡献指南。
+hero:
+  tagline: Monfil 文档。Monfil 是一款帮你追踪重要内容的桌面订阅阅读器。
+  image:
+    file: ../../../assets/icon.png
+  actions:
+    - text: 安装 Monfil
+      link: ./user-guide/install/
+      icon: download
+    - text: 访问 monfil.app
+      link: https://monfil.app
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid>
+  <Card title="用户指南" icon="open-book">
+    安装 Monfil，添加来源，使用 Workspace 和搜索，并为你的领域找到 Feedpack。
+
+    [从用户指南开始](./user-guide/home/)
+  </Card>
+  <Card title="贡献者指南" icon="pencil">
+    了解代码的组织方式，设置你的机器，并提交拉取请求。
+
+    [从贡献者指南开始](./contributor-guide/home/)
+  </Card>
+  <Card title="更新日志" icon="list-format">
+    查看每个版本的更新内容。
+
+    [阅读更新日志](./changelog/)
+  </Card>
+</CardGrid>

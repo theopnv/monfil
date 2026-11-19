@@ -1,0 +1,36 @@
+---
+title: Documentation de Monfil
+description: Guides pour utiliser et contribuer à Monfil, un lecteur de flux de bureau dont le code source est consultable.
+hero:
+  tagline: Documentation de Monfil, le lecteur de flux de bureau qui suit ce qui compte pour vous.
+  image:
+    file: ../../../assets/icon.png
+  actions:
+    - text: Installer Monfil
+      link: ./user-guide/install/
+      icon: download
+    - text: Visiter monfil.app
+      link: https://monfil.app
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid>
+  <Card title="Guide utilisateur" icon="open-book">
+    Installez Monfil, ajoutez des sources, utilisez les workspaces et la recherche, et trouvez un feedpack pour votre domaine.
+
+    [Commencer avec le guide utilisateur](./user-guide/home/)
+  </Card>
+  <Card title="Guide du contributeur" icon="pencil">
+    Découvrez comment le code est organisé, préparez votre machine et envoyez une pull request.
+
+    [Commencer avec le guide du contributeur](./contributor-guide/home/)
+  </Card>
+  <Card title="Journal des modifications" icon="list-format">
+    Consultez les changements de chaque version.
+
+    [Lire le journal des modifications](./changelog/)
+  </Card>
+</CardGrid>
