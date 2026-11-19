@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { useFormatLocale } from "@/lib/i18n";
 import FeedAvatar from "@/components/common/FeedAvatar";
 import JobFacts from "@/components/Home/JobFacts";
 import RiverCardImage from "@/components/Home/RiverCardImage";
@@ -11,12 +12,13 @@ import { describeRiverCard, estimateReadTime, formatRelativeTime, type RiverCard
 
 export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps) {
   const { t } = useTranslation('river');
+  const locale = useFormatLocale();
   return (
     <article
       data-item-id={item.id}
       role="button"
       tabIndex={0}
-      aria-label={describeRiverCard(item, read, t)}
+      aria-label={describeRiverCard(item, read, t, locale)}
       onClick={() => onOpen(item.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -35,7 +37,7 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
           <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
           <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="md" />
           <span className="min-w-0 truncate text-sm font-bold text-primary">{item.feedTitle}</span>
-          <span className="flex-none text-sm text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
+          <span className="flex-none text-sm text-tertiary">{formatRelativeTime(item.publishedAt, locale)}</span>
         </div>
 
         <h4 className="mb-1.75 text-lg leading-tight font-bold text-pretty text-primary">{item.title}</h4>
@@ -43,7 +45,7 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
         {item.excerpt && <p className="text-sm leading-relaxed text-pretty text-tertiary">{item.excerpt}</p>}
 
         <div className="mt-3.25 flex items-center gap-2">
-          {item.excerpt && <span className="text-xs text-tertiary">{estimateReadTime(item.excerpt)}</span>}
+          {item.excerpt && <span className="text-xs text-tertiary">{estimateReadTime(item.excerpt, t)}</span>}
           <span className="size-0.75 flex-none rounded-full bg-quaternary" />
           {item.categoryName && <span className="rounded-full bg-sage-200 px-2.5 py-0.75 text-xs font-semibold text-sage-800">{item.categoryName}</span>}
         </div>

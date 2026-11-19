@@ -17,7 +17,8 @@ import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents } 
 import { allowPrivateHosts } from './lib/fetch';
 import { configureLogging, logger } from './logging/logger';
 import { installFatalHandlers } from './logging/fatal';
-import { fatalDialogText } from './lib/i18n';
+import { fatalDialogText, setMainSystemLocale } from './lib/i18n';
+import { SYSTEM_LOCALE_ARGUMENT } from '../shared/i18n/format-locale';
 import { setLogFilePath } from './app/main-state';
 import { getDetailedLogging } from './app/settings';
 import { titleBarOverlayForTheme } from './app/window-chrome';
@@ -89,6 +90,7 @@ function bootstrap() {
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true,
+        additionalArguments: [`${SYSTEM_LOCALE_ARGUMENT}${app.getSystemLocale()}`],
       },
     });
     hardenWebContents(mainWindow.webContents);
@@ -120,6 +122,7 @@ function bootstrap() {
   });
 
   const main = () => {
+    setMainSystemLocale(app.getSystemLocale());
     denyWebPermissions(session.defaultSession);
     configureYouTubeEmbedReferrer(session.defaultSession);
     registerIpcListeners();

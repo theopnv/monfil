@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { mainFormatLocale, mainI18n } from '../../../lib/i18n';
 import { decodeText } from '../text';
 
 export type SalaryInterval = 'hour' | 'month' | 'year';
 
-const SYMBOLS: Record<string, string> = { USD: '$', EUR: '€', GBP: '£' };
+const SYMBOL_CURRENCIES: ReadonlySet<string> = new Set(['USD', 'EUR', 'GBP']);
 const CURRENCY = String.raw`(?:[$€£]|USD|EUR|GBP|NOK|SEK|DKK|CHF|CAD|AUD)`;
 const NUMBER = String.raw`\d{1,3}(?:[ ,.\u00a0\u202f]\d{3})+|\d+(?:[.,]\d+)?`;
 // A trailing M or B means millions or billions ("$100M funding"), never a pay.
@@ -30,7 +31,7 @@ function intervalIn(text: string): SalaryInterval | undefined {
 }
 
 function withInterval(label: string, interval: SalaryInterval | undefined): string {
-  return interval ? `${label} / ${interval}` : label;
+  return interval ? mainI18n.t('main:salary.withInterval', { label, interval: mainI18n.t(`main:salary.interval.${interval}`) }) : label;
 }
 
 function plainNumber(raw: string): number {
@@ -69,9 +70,16 @@ export function salaryFromText(text: string): string | undefined {
 }
 
 function formatMoney(value: number, currency: string): string {
-  const symbol = SYMBOLS[currency.toUpperCase()];
-  const amount = Math.round(value).toLocaleString('en-US');
-  return symbol ? `${symbol}${amount}` : `${currency.toUpperCase()} ${amount}`;
+  const code = currency.toUpperCase();
+  const locale = mainFormatLocale();
+  const amount = Math.round(value);
+  try {
+    // Only these currencies have a symbol that no other currency shares, so every other one shows its code.
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: code, currencyDisplay: SYMBOL_CURRENCIES.has(code) ? 'narrowSymbol' : 'code', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
+  } catch {
+    // The postings are untrusted data: a currency code that Intl rejects still gets a label.
+    return `${code} ${new Intl.NumberFormat(locale).format(amount)}`;
+  }
 }
 
 /** Maps the interval words ATS APIs use ("per-year-salary", "1 YEAR", "month") to an interval. */

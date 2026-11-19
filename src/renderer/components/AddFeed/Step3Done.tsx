@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { useFormatLocale } from "@/lib/i18n";
 import { useMemo } from "react";
 import { Check } from "@untitledui/icons";
 import { formatRelativeTime } from "@/lib/river/utils";
@@ -17,6 +18,7 @@ const PREVIEW_COUNT = 5;
 
 export default function Step3Done({ feed }: Step3DoneProps) {
   const { t } = useTranslation('addFeed');
+  const locale = useFormatLocale();
   const scope = useMemo(() => ({ workspaceId: HOME_WORKSPACE_ID, feedIds: [feed.id] }), [feed.id]);
   const { data } = useRiver(scope);
   const items = useMemo(() => (data?.pages.flatMap((page) => page.rows) ?? []).slice(0, PREVIEW_COUNT), [data]);
@@ -47,7 +49,7 @@ export default function Step3Done({ feed }: Step3DoneProps) {
             >
               <span className="size-1.75 flex-none rounded-full bg-brand-solid" />
               <span className="min-w-0 flex-1 truncate text-secondary">{item.title}</span>
-              <span className="flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
+              <span className="flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt, locale)}</span>
             </div>
           ))}
         </div>

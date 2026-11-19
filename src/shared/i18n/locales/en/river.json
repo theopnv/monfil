@@ -171,5 +171,6 @@
     "failed_one": "{{count}} feed could not be refreshed.",
     "failed_other": "{{count}} feeds could not be refreshed.",
     "more": "and {{count}} more"
-  }
+  },
+  "readTime": "{{count, number}} min read"
 }
