@@ -8,6 +8,8 @@ import { RouterProvider, createHashHistory, createRouter } from '@tanstack/react
 import { routeTree } from './routeTree.gen.ts';
 import '@/styles/globals.css';
 import { RootErrorBoundary } from '@/components/errors/RootErrorBoundary';
+import { LanguageProvider } from '@/providers/language-provider';
+import '@/lib/i18n';
 
 // The renderer is loaded via the `file://` protocol in production, so browser
 // history (path-based routing) can't resolve routes against the filesystem path.
@@ -31,8 +33,10 @@ const container = document.getElementById('root') as HTMLElement;
 const root = createRoot(container);
 root.render(
   <StrictMode>
-    <RootErrorBoundary>
-      <RouterProvider router={router} />
-    </RootErrorBoundary>
+    <LanguageProvider>
+      <RootErrorBoundary>
+        <RouterProvider router={router} />
+      </RootErrorBoundary>
+    </LanguageProvider>
   </StrictMode>
 );

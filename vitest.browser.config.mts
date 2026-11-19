@@ -17,7 +17,9 @@ export default defineConfig({
       '@tanstack/react-router-devtools',
       '@tanstack/react-router',
       '@tanstack/react-query',
-      'react-dom/client'],
+      'react-dom/client',
+      'react-i18next',
+      'i18next'],
   },
   test: {
     name: 'browser',
