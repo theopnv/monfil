@@ -19,6 +19,7 @@ const mockOn = vi.fn();
 const mockGetPath = vi.fn((_name: string) => 'mock-user-data');
 const mockGetAppPath = vi.fn(() => 'mock-app-path');
 const mockGetName = vi.fn(() => 'monfil');
+const mockGetSystemLocale = vi.fn(() => 'fr-CA');
 const mockSetPath = vi.fn();
 const mockHasSwitch = vi.fn(() => true);
 const mockDockSetIcon = vi.fn();
@@ -36,6 +37,7 @@ vi.mock(import('electron'), () => ({
     getName: mockGetName,
     setPath: mockSetPath,
     commandLine: { hasSwitch: mockHasSwitch },
+    getSystemLocale: mockGetSystemLocale,
     get isPackaged() {
       return mockIsPackaged;
     },
@@ -363,6 +365,22 @@ describe('main', () => {
     // Assert
     expect(vi.mocked(allowPrivateHosts).mock.calls).toHaveLength(allowsPrivateHosts ? 1 : 0);
     expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({ show: showsWindow }));
+  });
+
+  test('hands the system locale to the preload script and to the formatting of stored text', async () => {
+    // Arrange
+    const { BrowserWindow } = await import('electron');
+
+    // Act
+    await launchAndGetWindow();
+    const { mainFormatLocale, setMainLanguage } = await import('./lib/i18n');
+    await setMainLanguage('fr');
+
+    // Assert
+    expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
+      webPreferences: expect.objectContaining({ additionalArguments: ['--system-locale=fr-CA'] }),
+    }));
+    expect(mainFormatLocale()).toBe('fr-CA');
   });
 
   test('keeps the renderer isolated from Node and hardens its web contents', async () => {

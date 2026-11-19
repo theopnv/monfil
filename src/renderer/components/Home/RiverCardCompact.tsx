@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { useFormatLocale } from "@/lib/i18n";
 import FeedAvatar from "@/components/common/FeedAvatar";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import type { JobDetails } from "../../../shared/contracts";
@@ -15,12 +16,13 @@ function jobSuffix(job: JobDetails): string {
 
 export default function RiverCardCompact({ item, read, onOpen }: RiverCardProps) {
   const { t } = useTranslation('river');
+  const locale = useFormatLocale();
   return (
     <div
       data-item-id={item.id}
       role="button"
       tabIndex={0}
-      aria-label={describeRiverCard(item, read, t)}
+      aria-label={describeRiverCard(item, read, t, locale)}
       onClick={() => onOpen(item.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -39,7 +41,7 @@ export default function RiverCardCompact({ item, read, onOpen }: RiverCardProps)
       <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-secondary">{item.title}{item.job && <span className="text-tertiary">{jobSuffix(item.job)}</span>}</span>
       {item.categoryName && <span className="flex-none rounded-full bg-sage-200 px-2 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>}
       <span className="flex-none text-xs font-bold tracking-wide text-tertiary">{sourceTypeLabel(item.type, t)}</span>
-      <span className="w-13 flex-none text-end text-xs text-tertiary tabular-nums">{formatRelativeTime(item.publishedAt)}</span>
+      <span className="w-13 flex-none text-end text-xs text-tertiary tabular-nums">{formatRelativeTime(item.publishedAt, locale)}</span>
     </div>
   );
 }

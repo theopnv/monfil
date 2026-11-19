@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { i18n } from '@/lib/i18n';
 import { PreferencesProvider } from '@/providers/preferences-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
@@ -212,6 +213,42 @@ test('shares app info between the data stats and version', async () => {
   await expect.element(getByRole('banner').getByText('Monfil 1.2.3', { exact: true })).toBeInTheDocument();
   expect(vi.mocked(window.electron.ipcRenderer.invoke).mock.calls.filter(([channel]) => channel === 'app:get-info')).toHaveLength(1);
   expect(window.electron.ipcRenderer.on).not.toHaveBeenCalled();
+});
+
+afterEach(async () => {
+  await i18n.changeLanguage('en');
+});
+
+test('writes the data stats with the digit grouping and decimal mark of the language', async () => {
+  // Arrange
+  invokeImpl = (channel) => channel === 'app:get-info'
+    ? Promise.resolve({ ...appInfo, feedCount: 1234, itemCount: 56789, databaseSizeBytes: 1536 * 1024 })
+    : Promise.resolve(undefined);
+  await i18n.changeLanguage('de');
+
+  // Act
+  const { getByText } = await renderSettings();
+
+  // Assert
+  await expect.element(getByText('1.234', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('56.789', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('1,5 MB', { exact: true })).toBeInTheDocument();
+});
+
+test('follows the regional system locale for the data stats', async () => {
+  // Arrange
+  invokeImpl = (channel) => channel === 'app:get-info'
+    ? Promise.resolve({ ...appInfo, feedCount: 12345, itemCount: 42, databaseSizeBytes: 100 })
+    : Promise.resolve(undefined);
+  await i18n.changeLanguage('pt');
+  window.electron.systemLocale = 'pt-PT';
+
+  // Act
+  const { getByText } = await renderSettings();
+
+  // Assert
+  await expect.element(getByText('12\u00a0345', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('100 B', { exact: true })).toBeInTheDocument();
 });
 
 test.each<RefreshSummary>([

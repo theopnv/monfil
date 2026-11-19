@@ -4,6 +4,7 @@
 
 import { initReactI18next, useTranslation } from 'react-i18next';
 import { createI18n } from '../../shared/i18n/create-i18n';
+import { resolveFormatLocale } from '../../shared/i18n/format-locale';
 import { DEFAULT_LANGUAGE, directionOf, isLanguageCode, type LanguageCode } from '../../shared/i18n/languages';
 
 // The instance starts in English and is global, so a component that no provider wraps still translates. The test suites rely on that default.
@@ -13,6 +14,14 @@ export const i18n = createI18n(DEFAULT_LANGUAGE, [initReactI18next]);
 export function useActiveLanguage(): LanguageCode {
   const { i18n: active } = useTranslation();
   return isLanguageCode(active.language) ? active.language : DEFAULT_LANGUAGE;
+}
+
+/** The locale for dates, numbers, and relative times: the system locale when it speaks the interface language, else the bare language. */
+export function useFormatLocale(): string {
+  const language = useActiveLanguage();
+  // Tests and the first paint can run without the preload bridge.
+  const systemLocale = (window as { electron?: { systemLocale?: string } }).electron?.systemLocale;
+  return resolveFormatLocale(language, systemLocale);
 }
 
 /** Points the document at a language, so CSS `:lang()` rules and the layout direction follow it. */

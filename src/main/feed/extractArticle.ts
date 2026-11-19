@@ -9,16 +9,13 @@ import type { ArticleContentStatus } from '../db/types';
 import { SANITIZE_CONFIG } from '../../shared/sanitize-html';
 import { resolveEmbedUrl, type EmbedDescriptor } from '../../shared/embeds';
 import { removeFollowAuthorControls } from '../../shared/follow-author';
+import { countWords } from '../../shared/word-count';
 import { MIN_ARTICLE_LENGTH } from '../lib/constants';
 
 export interface ExtractedArticle {
   html: string;
   text: string;
   wordCount: number;
-}
-
-function countWords(text: string): number {
-  return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
 function httpUrl(value: string | null, baseUrl: string): string | undefined {

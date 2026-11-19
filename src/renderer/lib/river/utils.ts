@@ -5,6 +5,7 @@
 import type { TFunction } from 'i18next';
 import type { RiverRow, SourceType } from '../../../shared/contracts';
 import { ipc } from '@/lib/ipc-client';
+import { countWords } from '../../../shared/word-count';
 
 // Brand and protocol names stay as they are in every language.
 const BRAND_SOURCE_LABEL: Record<Exclude<SourceType, 'conference' | 'ats'>, string> = {
@@ -32,39 +33,65 @@ export interface RiverCardProps {
   onOpen: (id: number) => void;
 }
 
-export function formatRelativeTime(publishedAt: number): string {
+interface TimeFormatters {
+  date: Intl.DateTimeFormat;
+  now: string;
+  unit: Record<'day' | 'hour' | 'minute', Intl.NumberFormat>;
+}
+
+const timeFormatters = new Map<string, TimeFormatters>();
+
+function formattersFor(locale: string): TimeFormatters {
+  let formatters = timeFormatters.get(locale);
+  // Stryker disable next-line ConditionalExpression: the cache only saves building the formatters again; the output is the same without it
+  if (!formatters) {
+    const unit = (name: 'day' | 'hour' | 'minute') => new Intl.NumberFormat(locale, { style: 'unit', unit: name, unitDisplay: 'narrow' });
+    formatters = {
+      // Stryker disable next-line ObjectLiteral: year, month, and day all numeric is what Intl uses when no option is given
+      date: new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'numeric', day: 'numeric' }),
+      now: new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(0, 'second'),
+      unit: { day: unit('day'), hour: unit('hour'), minute: unit('minute') },
+    };
+    // Stryker disable next-line CallExpression: the cache only saves building the formatters again
+    timeFormatters.set(locale, formatters);
+  }
+  return formatters;
+}
+
+/** How long ago an item came out, in the shortest form of the locale: "5m", "3h", "2d", then a date from a week on. */
+export function formatRelativeTime(publishedAt: number, locale: string): string {
+  const formatters = formattersFor(locale);
   const diffMs = Math.max(0, Date.now() - publishedAt);
   const diffMinutes = Math.floor(diffMs / (60 * 1000));
   const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
   const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
 
   if (diffDays >= 7) {
-    return new Date(publishedAt).toLocaleDateString();
+    return formatters.date.format(publishedAt);
   }
   if (diffDays >= 1) {
-    return `${diffDays}d`;
+    return formatters.unit.day.format(diffDays);
   }
   if (diffHours >= 1) {
-    return `${diffHours}h`;
+    return formatters.unit.hour.format(diffHours);
   }
   if (diffMinutes >= 1) {
-    return `${diffMinutes}m`;
+    return formatters.unit.minute.format(diffMinutes);
   }
-  return 'now';
+  return formatters.now;
 }
 
 /** Screen-reader label for a river card: state isn't conveyed by opacity alone. */
-export function describeRiverCard(item: RiverRow, read: boolean, t: TFunction<'river'>): string {
-  return t('card.label', { context: read ? 'read' : 'unread', title: item.title, feed: item.feedTitle, time: formatRelativeTime(item.publishedAt) });
+export function describeRiverCard(item: RiverRow, read: boolean, t: TFunction<'river'>, locale: string): string {
+  return t('card.label', { context: read ? 'read' : 'unread', title: item.title, feed: item.feedTitle, time: formatRelativeTime(item.publishedAt, locale) });
 }
 
 const WORDS_PER_MINUTE = 200;
 
-export function estimateReadTime(input: string | number): string {
-  // Stryker disable next-line MethodExpression,Regex: blank pieces from edge or repeated whitespace are removed by filter(Boolean), and an empty text rounds up to 1 min anyway
-  const wordCount = typeof input === 'number' ? input : input.trim().split(/\s+/).filter(Boolean).length;
+export function estimateReadTime(input: string | number, t: TFunction<'river'>): string {
+  const wordCount = typeof input === 'number' ? input : countWords(input);
   const minutes = Math.max(1, Math.round(wordCount / WORDS_PER_MINUTE));
-  return `${minutes} min read`;
+  return t('readTime', { count: minutes });
 }
 
 export function openLink(link: string | undefined): void {
