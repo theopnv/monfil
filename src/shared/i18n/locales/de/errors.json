@@ -23,7 +23,7 @@
     "unknown": "Monfil konnte diesen Feed nicht lesen."
   },
   "importSkipped": {
-    "ALREADY_IN_WORKSPACE": "Bereits in diesem Arbeitsbereich"
+    "ALREADY_IN_WORKSPACE": "Bereits in diesem Workspace"
   },
   "codes": {
     "UNKNOWN": "Etwas ist schiefgelaufen.",
@@ -33,7 +33,7 @@
     "BACKUP_FAILED": "Die Datenbankdatei konnte nicht kopiert werden.",
     "FEED_NOT_FOUND": "Dieser Feed existiert nicht mehr.",
     "CATEGORY_NOT_FOUND": "Dieser Ordner existiert nicht mehr.",
-    "WORKSPACE_NOT_FOUND": "Dieser Arbeitsbereich existiert nicht mehr.",
+    "WORKSPACE_NOT_FOUND": "Dieser Workspace existiert nicht mehr.",
     "ITEM_NOT_FOUND": "Dieser Eintrag existiert nicht mehr.",
     "SEARCH_NOT_FOUND": "Diese gespeicherte Suche existiert nicht mehr.",
     "DUPLICATE_NAME": "Ein Eintrag mit diesem Namen existiert bereits.",
@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "Ein Name braucht 1 bis {{max}} Zeichen.",
     "INVALID_INPUT_query": "Eine Suche braucht 1 bis {{max}} Zeichen.",
     "INVALID_INPUT": "Dieser Wert ist nicht gültig.",
-    "HOME_NOT_DELETABLE": "Der Arbeitsbereich Start kann nicht gelöscht werden.",
+    "HOME_NOT_DELETABLE": "Der Workspace Start kann nicht gelöscht werden.",
     "GENERIC_FETCH_ERROR": "Der Server hat mit einem Fehler geantwortet.",
     "GENERIC_FETCH_ERROR_refused": "Der Server hat den Zugriff verweigert (HTTP {{status}}). Er blockiert möglicherweise automatische Leser oder Ihr Netzwerk bzw. VPN.",
     "GENERIC_FETCH_ERROR_notFound": "Der Feed wurde nicht gefunden (HTTP {{status}}).",

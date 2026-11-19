@@ -96,7 +96,7 @@
     "contains": "订阅源包含",
     "notFound": "未找到订阅源",
     "notFoundDetail": "返回第 1 步，尝试其他链接。",
-    "show": "在工作区中显示",
+    "show": "在Workspace中显示",
     "showHint": "对于你更愿意有目的地访问的高流量来源，请取消勾选。"
   },
   "done": {

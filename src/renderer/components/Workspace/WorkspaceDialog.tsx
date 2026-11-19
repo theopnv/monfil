@@ -154,9 +154,9 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
 
           {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
-          <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+          <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
             {!isEditing && onBrowseFeedpacks && (
-              <Button color="secondary" size="md" className="rounded-full" onPress={() => onBrowseFeedpacks({ name, icon, color })}>
+              <Button color="secondary" size="md" className="me-auto rounded-full" onPress={() => onBrowseFeedpacks({ name, icon, color })}>
                 {t('workspace:dialog.browse')}
               </Button>
             )}

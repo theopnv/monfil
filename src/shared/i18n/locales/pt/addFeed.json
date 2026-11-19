@@ -100,7 +100,7 @@
     "contains": "O feed contém",
     "notFound": "Nenhum feed encontrado",
     "notFoundDetail": "Volte à etapa 1 e tente outro link.",
-    "show": "Mostrar no espaço de trabalho",
+    "show": "Mostrar no workspace",
     "showHint": "Desmarque as fontes de alto volume que prefira visitar de propósito."
   },
   "done": {

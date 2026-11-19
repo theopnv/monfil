@@ -1,31 +1,31 @@
 {
   "navigation": {
-    "label": "Arbeitsbereichsansichten",
+    "label": "Workspace-Ansichten",
     "all": "Alle Einträge",
     "saved": "Gespeichert",
     "saveHint": "Speichern Sie einen Artikel mit dem Lesezeichen. Ihre gespeicherten Artikel finden Sie hier."
   },
   "switcher": {
-    "dialog": "Arbeitsbereich wechseln",
-    "field": "Name des Arbeitsbereichs",
-    "placeholder": "Zu Arbeitsbereich wechseln…",
-    "list": "Arbeitsbereiche",
-    "empty": "Kein Arbeitsbereich passt."
+    "dialog": "Workspace wechseln",
+    "field": "Name des Workspaces",
+    "placeholder": "Zu Workspace wechseln…",
+    "list": "Workspaces",
+    "empty": "Kein Workspace passt."
   },
   "rail": {
     "moveFailed": "Der Feed konnte nicht verschoben werden.",
-    "list": "Arbeitsbereiche",
+    "list": "Workspaces",
     "move": "{{name}} verschieben",
-    "hideNames": "Namen der Arbeitsbereiche ausblenden",
-    "showNames": "Namen der Arbeitsbereiche anzeigen",
+    "hideNames": "Namen der Workspaces ausblenden",
+    "showNames": "Namen der Workspaces anzeigen",
     "collapse": "Einklappen",
-    "new": "Neuer Arbeitsbereich",
-    "newHint": "Legen Sie einen Arbeitsbereich an, um Feeds zu gruppieren. Mit der rechten Maustaste auf einen Arbeitsbereich können Sie ihn bearbeiten oder löschen.",
+    "new": "Neuer Workspace",
+    "newHint": "Legen Sie einen Workspace an, um Feeds zu gruppieren. Mit der rechten Maustaste auf einen Workspace können Sie ihn bearbeiten oder löschen.",
     "settings": "Einstellungen"
   },
   "dialog": {
-    "editTitle": "Arbeitsbereich bearbeiten",
-    "newTitle": "Neuer Arbeitsbereich",
+    "editTitle": "Workspace bearbeiten",
+    "newTitle": "Neuer Workspace",
     "editBody": "Benennen Sie ihn um oder wählen Sie ein anderes Symbol und eine andere Farbe.",
     "newBody": "Ein Tab in der Leiste, mit eigenen Quellen und eigenem Stream.",
     "name": "Name",
@@ -35,13 +35,13 @@
     "colourOption": "Farbe {{value}}",
     "browse": "Feedpacks durchsuchen",
     "save": "Änderungen speichern",
-    "create": "Arbeitsbereich anlegen"
+    "create": "Workspace anlegen"
   },
   "delete": {
-    "title": "Arbeitsbereich löschen",
-    "body": "Dies löscht den Arbeitsbereich <bold>{{name}}</bold>, seine Ordner und seine Liste „Gespeichert“. Feeds, die nur hier liegen, werden ebenfalls entfernt. Exportieren Sie vorher als OPML, um eine Kopie zu behalten, die Sie später erneut importieren können.",
+    "title": "Workspace löschen",
+    "body": "Dies löscht den Workspace <bold>{{name}}</bold>, seine Ordner und seine Liste „Gespeichert“. Feeds, die nur hier liegen, werden ebenfalls entfernt. Exportieren Sie vorher als OPML, um eine Kopie zu behalten, die Sie später erneut importieren können.",
     "export": "Als OPML exportieren",
-    "confirm": "Arbeitsbereich löschen"
+    "confirm": "Workspace löschen"
   },
   "importOpml": {
     "doneTitle": "Import abgeschlossen",
@@ -52,7 +52,7 @@
     "titleInto": "OPML in {{name}} importieren",
     "title": "OPML importieren",
     "choose": "Wählen Sie im nächsten Fenster eine Datei aus.",
-    "newWorkspace": "Neuer Arbeitsbereich",
+    "newWorkspace": "Neuer Workspace",
     "mergeHome": "In Start zusammenführen",
     "name": "Name",
     "namePlaceholder": "Leer lassen, um den Titel der Datei zu verwenden"

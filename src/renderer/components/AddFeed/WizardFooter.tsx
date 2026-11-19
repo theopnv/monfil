@@ -15,7 +15,7 @@ export interface WizardFooterProps {
 
 export default function WizardFooter({ primaryLabel, onPrimary, primaryDisabled, primaryLoading, secondaryLabel, onSecondary }: WizardFooterProps) {
   return (
-    <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-7.5 py-4.5">
+    <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-secondary px-7.5 py-4.5">
       <Button color="secondary" size="md" className="rounded-full" onPress={onSecondary}>
         {secondaryLabel}
       </Button>

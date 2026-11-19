@@ -50,29 +50,29 @@
       }
     },
     "workspace": {
-      "meaning": "A named set of feeds with its own river, such as Work or News.",
+      "meaning": "A named set of feeds with its own river, such as Work or News. Never translated: Latin-script languages keep the English word, and ja and ar write it in their own script.",
       "translations": {
-        "fr": "espace de travail",
-        "de": "Arbeitsbereich",
-        "es": "espacio de trabajo",
-        "it": "spazio di lavoro",
-        "pt": "espaço de trabalho",
-        "zh": "工作区",
+        "fr": "workspace",
+        "de": "Workspace",
+        "es": "workspace",
+        "it": "workspace",
+        "pt": "workspace",
+        "zh": "Workspace",
         "ja": "ワークスペース",
-        "ar": "مساحة عمل"
+        "ar": "ووركسبيس"
       }
     },
     "feedpack": {
-      "meaning": "A curated bundle of feeds that a user installs into a workspace in one step.",
+      "meaning": "A curated bundle of feeds that a user installs into a workspace in one step. Never translated: Latin-script languages keep the English word, and ja and ar write it in their own script.",
       "translations": {
-        "fr": "pack de flux",
+        "fr": "feedpack",
         "de": "Feedpack",
-        "es": "paquete de fuentes",
-        "it": "pacchetto di feed",
-        "pt": "pacote de feeds",
-        "zh": "订阅包",
+        "es": "feedpack",
+        "it": "feedpack",
+        "pt": "feedpack",
+        "zh": "Feedpack",
         "ja": "フィードパック",
-        "ar": "حزمة موجزات"
+        "ar": "فيدباك"
       }
     },
     "folder": {

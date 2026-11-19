@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { test as base, expect, _electron as electron, type ElectronApplication, type Page, type TestInfo } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
@@ -164,3 +164,39 @@ languageTest('French menus follow the choice, and System goes back to the langua
   // Assert
   await expect.poll(async () => (await documentState(page)).lang).toBe(systemLanguage);
 });
+
+const LANGUAGES_WITH_TRANSLATIONS = ['fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'] as const;
+
+for (const code of LANGUAGES_WITH_TRANSLATIONS) {
+  languageTest(`every button of the new workspace dialog stays inside it in ${code}`, async ({ launch }) => {
+    // Arrange
+    const { page } = await launch();
+    await openSettings(page);
+    await languagePicker(page).selectOption(code);
+    await expect.poll(async () => (await documentState(page)).lang).toBe(code);
+    const words = JSON.parse(await readFile(path.join('src/shared/i18n/locales', code, 'workspace.json'), 'utf8')) as { rail: { new: string }; dialog: { browse: string } };
+    await page.evaluate(() => {
+      window.history.pushState(null, '', '#/');
+    });
+
+    // Act
+    await page.getByRole('button', { name: words.rail.new }).first().click();
+
+    // Assert
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    // A reviewer may shorten a translation, so the test stretches the label to the length of the longest draft.
+    await dialog.getByRole('button', { name: words.dialog.browse }).evaluate((element, label) => {
+      element.textContent = `${label} ${label}`;
+    }, words.dialog.browse);
+    const frame = await dialog.boundingBox();
+    const buttons = await dialog.getByRole('button').all();
+    expect(buttons.length).toBeGreaterThan(2);
+    for (const button of buttons) {
+      const box = await button.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box?.x).toBeGreaterThanOrEqual((frame?.x ?? 0) - 1);
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual((frame?.x ?? 0) + (frame?.width ?? 0) + 1);
+    }
+  });
+}

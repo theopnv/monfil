@@ -100,7 +100,7 @@
     "contains": "La fuente contiene",
     "notFound": "No se encontró ninguna fuente",
     "notFoundDetail": "Vuelve al paso 1 y prueba con otro enlace.",
-    "show": "Mostrar en el espacio de trabajo",
+    "show": "Mostrar en el workspace",
     "showHint": "Desmarca esta casilla en fuentes de mucho volumen que prefieras visitar a propósito."
   },
   "done": {

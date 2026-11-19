@@ -100,7 +100,7 @@
     "contains": "Le flux contient",
     "notFound": "Aucun flux trouvé",
     "notFoundDetail": "Revenez à l'étape 1 et essayez un autre lien.",
-    "show": "Afficher dans l'espace de travail",
+    "show": "Afficher dans le workspace",
     "showHint": "Décochez cette case pour les sources à fort volume que vous préférez consulter volontairement."
   },
   "done": {

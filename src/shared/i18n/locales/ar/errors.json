@@ -23,7 +23,7 @@
     "unknown": "تعذّر على Monfil قراءة هذا الموجز."
   },
   "importSkipped": {
-    "ALREADY_IN_WORKSPACE": "موجود بالفعل في مساحة العمل هذه"
+    "ALREADY_IN_WORKSPACE": "موجود بالفعل في هذا الووركسبيس"
   },
   "codes": {
     "UNKNOWN": "حدث خطأ ما.",
@@ -33,7 +33,7 @@
     "BACKUP_FAILED": "تعذّر نسخ ملف قاعدة البيانات.",
     "FEED_NOT_FOUND": "لم يعد هذا الموجز موجودًا.",
     "CATEGORY_NOT_FOUND": "لم يعد هذا المجلد موجودًا.",
-    "WORKSPACE_NOT_FOUND": "لم تعد مساحة العمل هذه موجودة.",
+    "WORKSPACE_NOT_FOUND": "لم يعد هذا الووركسبيس موجودًا.",
     "ITEM_NOT_FOUND": "لم يعد هذا العنصر موجودًا.",
     "SEARCH_NOT_FOUND": "لم يعد هذا البحث المحفوظ موجودًا.",
     "DUPLICATE_NAME": "يوجد عنصر بهذا الاسم بالفعل.",
@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "يجب أن يتراوح طول الاسم بين حرف واحد و{{max}} حرفًا.",
     "INVALID_INPUT_query": "يجب أن يتراوح طول البحث بين حرف واحد و{{max}} حرفًا.",
     "INVALID_INPUT": "هذه القيمة غير صالحة.",
-    "HOME_NOT_DELETABLE": "لا يمكن حذف مساحة عمل الصفحة الرئيسية.",
+    "HOME_NOT_DELETABLE": "لا يمكن حذف ووركسبيس الصفحة الرئيسية.",
     "GENERIC_FETCH_ERROR": "ردّ الخادم برسالة خطأ.",
     "GENERIC_FETCH_ERROR_refused": "رفض الخادم الوصول (HTTP {{status}}). قد يحظر القارئات الآلية، أو قد تحجبه شبكتك أو VPN.",
     "GENERIC_FETCH_ERROR_notFound": "لم يُعثر على الموجز (HTTP {{status}}).",
@@ -93,12 +93,12 @@
     "UNSUPPORTED_FORMAT_mismatchHackernews": "هذا ليس رابط Hacker News.",
     "MALFORMED_XML": "هذا الملف ليس مستند OPML صالحًا.",
     "NO_FEEDS": "لا توجد موجزات للاستيراد أو التصدير.",
-    "UNSUPPORTED_VERSION": "لا يستطيع هذا الإصدار من Monfil قراءة كتالوج حزم الموجزات بالإصدار {{version}}.",
-    "INVALID_CATALOG": "كتالوج حزم الموجزات غير صالح.",
-    "UNAVAILABLE": "كتالوج حزم الموجزات غير متاح.",
-    "PACK_NOT_FOUND": "حزمة الموجزات هذه غير موجودة.",
-    "FETCH_ERROR": "تعذّر على Monfil الحصول على حزمة الموجزات هذه.",
-    "FETCH_ERROR_local": "تعذّر على Monfil قراءة حزمة الموجزات {{title}}.",
-    "FETCH_ERROR_remote": "تعذّر على Monfil جلب حزمة الموجزات {{title}}."
+    "UNSUPPORTED_VERSION": "لا يستطيع هذا الإصدار من Monfil قراءة كتالوج الفيدباكات بالإصدار {{version}}.",
+    "INVALID_CATALOG": "كتالوج الفيدباكات غير صالح.",
+    "UNAVAILABLE": "كتالوج الفيدباكات غير متاح.",
+    "PACK_NOT_FOUND": "هذا الفيدباك غير موجود.",
+    "FETCH_ERROR": "تعذّر على Monfil الحصول على هذا الفيدباك.",
+    "FETCH_ERROR_local": "تعذّر على Monfil قراءة الفيدباك {{title}}.",
+    "FETCH_ERROR_remote": "تعذّر على Monfil جلب الفيدباك {{title}}."
   }
 }

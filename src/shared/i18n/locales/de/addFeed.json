@@ -98,7 +98,7 @@
     "contains": "Feed enthält",
     "notFound": "Kein Feed gefunden",
     "notFoundDetail": "Zurück zu Schritt 1 und einen anderen Link versuchen.",
-    "show": "Im Arbeitsbereich anzeigen",
+    "show": "Im Workspace anzeigen",
     "showHint": "Abwählen bei Quellen mit hohem Volumen, die Sie lieber bewusst besuchen."
   },
   "done": {
