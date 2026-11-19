@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { announce } from "@/lib/announcer";
 import { feedVisibility } from "@/lib/river/feed-visibility";
 import type { FeedSummary } from "../../../shared/contracts";
@@ -13,10 +14,6 @@ export interface RiverFilterStripProps {
   onClearFocus: () => void;
   /** Shows the given hidden feeds in the active workspace again. */
   onShowHidden: (feedIds: number[]) => void;
-}
-
-function feedCount(count: number): string {
-  return `${count} ${count === 1 ? "feed" : "feeds"}`;
 }
 
 function StripAction({ label, children, onPress }: { label: string; children: string; onPress: () => void }) {
@@ -34,6 +31,7 @@ function StripAction({ label, children, onPress }: { label: string; children: st
 
 /** Says why the river shows fewer feeds than the sidebar lists, with one way back for each cause. */
 export default function RiverFilterStrip({ feeds, showOnlyLinks, onClearFocus, onShowHidden }: RiverFilterStripProps) {
+  const { t } = useTranslation('river');
   const shown = feeds.filter((feed) => feed.showInWorkspace !== 0);
   const focusedCount = shown.filter((feed) => feedVisibility(feed, showOnlyLinks) === "only").length;
   const hiddenIds = feeds.filter((feed) => feed.showInWorkspace === 0).map((feed) => feed.id);
@@ -46,29 +44,29 @@ export default function RiverFilterStrip({ feeds, showOnlyLinks, onClearFocus, o
     <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-tertiary">
       {focusedCount > 0 && (
         <p className="flex items-center gap-2">
-          <span>{`Showing ${focusedCount} of ${feedCount(shown.length)}`}</span>
+          <span>{t('strip.focused', { focused: focusedCount, count: shown.length })}</span>
           <StripAction
-            label="Show all feeds"
+            label={t('strip.showAllLabel')}
             onPress={() => {
               onClearFocus();
-              announce("Showing all feeds.");
+              announce(t('strip.showAnnounce'));
             }}
           >
-            Show all
+            {t('strip.showAll')}
           </StripAction>
         </p>
       )}
       {hiddenIds.length > 0 && (
         <p className="flex items-center gap-2">
-          <span>{`${hiddenIds.length} hidden ${hiddenIds.length === 1 ? "feed" : "feeds"}`}</span>
+          <span>{t('strip.hidden', { count: hiddenIds.length })}</span>
           <StripAction
-            label="Show hidden feeds"
+            label={t('strip.showHiddenLabel')}
             onPress={() => {
               onShowHidden(hiddenIds);
-              announce("Hidden feeds are shown again.");
+              announce(t('strip.hiddenAnnounce'));
             }}
           >
-            Show
+            {t('strip.showHidden')}
           </StripAction>
         </p>
       )}

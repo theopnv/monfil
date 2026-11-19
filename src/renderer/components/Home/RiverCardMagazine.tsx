@@ -2,20 +2,22 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import FeedAvatar from "@/components/common/FeedAvatar";
 import JobFacts from "@/components/Home/JobFacts";
 import RiverCardImage from "@/components/Home/RiverCardImage";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
 import { cx } from "@/components/untitled-ui/utils/cx";
-import { describeRiverCard, formatRelativeTime, SOURCE_TYPE_LABEL, type RiverCardProps } from "@/lib/river/utils";
+import { describeRiverCard, formatRelativeTime, sourceTypeLabel, type RiverCardProps } from "@/lib/river/utils";
 
 export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps) {
+  const { t } = useTranslation('river');
   return (
     <article
       data-item-id={item.id}
       role="button"
       tabIndex={0}
-      aria-label={describeRiverCard(item, read)}
+      aria-label={describeRiverCard(item, read, t)}
       onClick={() => onOpen(item.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -46,7 +48,7 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
         <div className="mt-auto flex items-center gap-2 pt-3">
           {item.categoryName && <span className="rounded-full bg-sage-200 px-2.25 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>}
           <Badge color="brand" size="sm">
-            {SOURCE_TYPE_LABEL[item.type]}
+            {sourceTypeLabel(item.type, t)}
           </Badge>
         </div>
       </div>

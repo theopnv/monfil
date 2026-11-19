@@ -1,5 +1,15 @@
 {
   "action": {
-    "undo": "Undo"
+    "undo": "Undo",
+    "gotIt": "Got it",
+    "cancel": "Cancel",
+    "save": "Save",
+    "tryAgain": "Try again"
+  },
+  "item": {
+    "action": {
+      "save": "Save",
+      "removeFromSaved": "Remove from Saved"
+    }
   }
 }
