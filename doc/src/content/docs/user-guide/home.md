@@ -80,7 +80,7 @@ For keyboard controls, open **Settings** and turn on **Keyboard navigation** und
 
 ## Change your settings
 
-Select the settings icon at the bottom of the left rail. Under **Appearance**, choose a theme and the layout density for article cards. **Reading** controls what happens as you scroll and whether links open in your browser. Under **Refreshing**, choose how often Monfil checks for new items. **Your data** lets you back up the database or reveal its file on your computer.
+Select the settings icon at the bottom of the left rail. Under **Appearance**, choose a theme, the layout density for article cards, and the **Language** of the Monfil interface. Monfil follows your system language until you pick one. It comes in English, Français, Deutsch, Español, Italiano, Português (Brasil), 简体中文, 日本語, and العربية. A language tagged beta is a machine translation that no native speaker has checked yet. **Reading** controls what happens as you scroll and whether links open in your browser. Under **Refreshing**, choose how often Monfil checks for new items. **Your data** lets you back up the database or reveal its file on your computer.
 
 ![Monfil settings with Appearance, Reading, and Refreshing controls.](../../../assets/user-guide/settings.png)
 

@@ -80,7 +80,7 @@ Para os controles de teclado, abra **Configurações** e ative **Navegação pel
 
 ## Mudar as configurações
 
-Selecione o ícone de configurações na parte inferior da barra à esquerda. Em **Aparência**, escolha um tema e a densidade dos cards de artigos. **Leitura** controla o que acontece ao rolar a lista e se os links abrem no seu navegador. Em **Atualização**, escolha a frequência com que o Monfil verifica novos itens. **Seus dados** permite fazer backup do banco de dados ou mostrar o arquivo dele no computador.
+Selecione o ícone de configurações na parte inferior da barra à esquerda. Em **Aparência**, escolha um tema, a densidade dos cards de artigos e o **Idioma** da interface do Monfil. O Monfil segue o idioma do seu sistema até você escolher um. Ele está disponível em English, Français, Deutsch, Español, Italiano, Português (Brasil), 简体中文, 日本語 e العربية. Um idioma marcado como beta é uma tradução automática que nenhum falante nativo revisou ainda. **Leitura** controla o que acontece ao rolar a lista e se os links abrem no seu navegador. Em **Atualização**, escolha a frequência com que o Monfil verifica novos itens. **Seus dados** permite fazer backup do banco de dados ou mostrar o arquivo dele no computador.
 
 ![Configurações do Monfil com os controles de Aparência, Leitura e Atualização.](../../../../assets/user-guide/settings.png)
 

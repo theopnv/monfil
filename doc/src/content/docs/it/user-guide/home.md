@@ -80,7 +80,7 @@ Per i comandi da tastiera, apri **Impostazioni** e attiva **Navigazione da tasti
 
 ## Cambia le impostazioni
 
-Seleziona l'icona delle impostazioni in fondo alla barra a sinistra. In **Aspetto**, scegli un tema e la densità di disposizione delle schede degli articoli. **Lettura** controlla che cosa succede mentre scorri e se i link si aprono nel browser. In **Aggiornamento**, scegli ogni quanto Monfil controlla nuovi elementi. **I tuoi dati** ti permette di eseguire il backup del database o di mostrare il suo file sul computer.
+Seleziona l'icona delle impostazioni in fondo alla barra a sinistra. In **Aspetto**, scegli un tema, la densità di disposizione delle schede degli articoli e la **Lingua** dell'interfaccia di Monfil. Monfil segue la lingua del tuo sistema finché non ne scegli una. È disponibile in English, Français, Deutsch, Español, Italiano, Português (Brasil), 简体中文, 日本語 e العربية. Una lingua contrassegnata come beta è una traduzione automatica che nessun madrelingua ha ancora controllato. **Lettura** controlla che cosa succede mentre scorri e se i link si aprono nel browser. In **Aggiornamento**, scegli ogni quanto Monfil controlla nuovi elementi. **I tuoi dati** ti permette di eseguire il backup del database o di mostrare il suo file sul computer.
 
 ![Impostazioni di Monfil con i controlli Aspetto, Lettura e Aggiornamento.](../../../../assets/user-guide/settings.png)
 

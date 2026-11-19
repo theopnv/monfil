@@ -80,7 +80,7 @@ Pour les raccourcis clavier, ouvrez **Paramètres** et activez **Navigation au c
 
 ## Modifier vos paramètres
 
-Sélectionnez l'icône des paramètres en bas de la barre de gauche. Sous **Apparence**, choisissez un thème et la densité de disposition des cartes d'articles. **Lecture** contrôle ce qui se passe quand vous faites défiler et si les liens s'ouvrent dans votre navigateur. Sous **Actualisation**, choisissez à quelle fréquence Monfil vérifie les nouveaux éléments. **Vos données** vous permet de sauvegarder la base de données ou d'afficher son fichier sur votre ordinateur.
+Sélectionnez l'icône des paramètres en bas de la barre de gauche. Sous **Apparence**, choisissez un thème, la densité de disposition des cartes d'articles et la **Langue** de l'interface de Monfil. Monfil suit la langue de votre système tant que vous n'en choisissez pas une. Il existe en English, Français, Deutsch, Español, Italiano, Português (Brasil), 简体中文, 日本語 et العربية. Une langue marquée bêta est une traduction automatique qu'aucun locuteur natif n'a encore vérifiée. **Lecture** contrôle ce qui se passe quand vous faites défiler et si les liens s'ouvrent dans votre navigateur. Sous **Actualisation**, choisissez à quelle fréquence Monfil vérifie les nouveaux éléments. **Vos données** vous permet de sauvegarder la base de données ou d'afficher son fichier sur votre ordinateur.
 
 ![Paramètres de Monfil avec les commandes Apparence, Lecture et Actualisation.](../../../../assets/user-guide/settings.png)
 

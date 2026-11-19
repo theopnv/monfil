@@ -80,7 +80,7 @@ Für die Tastatursteuerung öffnen Sie **Einstellungen** und aktivieren Sie unte
 
 ## Ihre Einstellungen ändern
 
-Wählen Sie das Einstellungssymbol unten in der linken Leiste. Unter **Darstellung** wählen Sie ein Design und die Dichte der Artikelkarten. **Lesen** steuert, was beim Scrollen passiert und ob Links im Browser geöffnet werden. Unter **Aktualisierung** wählen Sie, wie oft Monfil auf neue Einträge prüft. Unter **Ihre Daten** sichern Sie die Datenbank oder zeigen ihre Datei auf Ihrem Computer an.
+Wählen Sie das Einstellungssymbol unten in der linken Leiste. Unter **Darstellung** wählen Sie ein Design, die Dichte der Artikelkarten und die **Sprache** der Monfil-Oberfläche. Monfil folgt der Sprache Ihres Systems, bis Sie eine auswählen. Es gibt Monfil auf English, Français, Deutsch, Español, Italiano, Português (Brasil), 简体中文, 日本語 und العربية. Eine Sprache mit dem Zusatz Beta ist eine maschinelle Übersetzung, die noch kein Muttersprachler geprüft hat. **Lesen** steuert, was beim Scrollen passiert und ob Links im Browser geöffnet werden. Unter **Aktualisierung** wählen Sie, wie oft Monfil auf neue Einträge prüft. Unter **Ihre Daten** sichern Sie die Datenbank oder zeigen ihre Datei auf Ihrem Computer an.
 
 ![Monfil-Einstellungen mit den Steuerelementen für Darstellung, Lesen und Aktualisierung.](../../../../assets/user-guide/settings.png)
 
