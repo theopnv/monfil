@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Heading } from 'react-aria-components';
@@ -21,6 +22,7 @@ export interface FeedpackInstallDialogProps {
 }
 
 export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceId, newWorkspaceDraft }: FeedpackInstallDialogProps) {
+  const { t } = useTranslation(['workspace', 'common']);
   const install = useInstallFeedpack();
   const navigate = useNavigate();
   const [selected, setSelected] = useState<FeedpackPreview | null>(null);
@@ -63,17 +65,17 @@ export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceI
       <Modal className="flex max-h-[85vh] w-full max-w-[640px] flex-col overflow-hidden">
         <Dialog className="flex min-h-0 flex-1 flex-col">
           <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
-            <Heading slot="title" className="font-display text-lg font-semibold text-primary">Feedpacks</Heading>
-            <p className="text-sm text-tertiary">Install a curated set of sources.</p>
+            <Heading slot="title" className="font-display text-lg font-semibold text-primary">{t('workspace:feedpackDialog.title')}</Heading>
+            <p className="text-sm text-tertiary">{t('workspace:feedpackDialog.body')}</p>
           </div>
 
           <FeedpackBrowser isActive={isOpen} selected={selected} onSelect={select} />
 
           {error && <p className="px-6 pb-2 text-sm text-error-primary">{error}</p>}
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
-            {selected && <Button color="secondary" size="md" className="me-auto" onPress={() => select(null)}>Back to feedpacks</Button>}
-            <Button color="secondary" size="md" onPress={() => onOpenChange(false)}>Close</Button>
-            {selected && <Button color="primary" size="md" isLoading={isInstalling} onPress={installSelected}>Install</Button>}
+            {selected && <Button color="secondary" size="md" className="me-auto" onPress={() => select(null)}>{t('workspace:feedpackDialog.back')}</Button>}
+            <Button color="secondary" size="md" onPress={() => onOpenChange(false)}>{t('common:action.close')}</Button>
+            {selected && <Button color="primary" size="md" isLoading={isInstalling} onPress={installSelected}>{t('workspace:feedpackDialog.install')}</Button>}
           </div>
         </Dialog>
       </Modal>

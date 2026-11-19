@@ -169,3 +169,22 @@ describe('logical Tailwind classes', () => {
     expect(await ruleErrors("export const a = 'ml-2';", 'src/main/example.ts', 'layout/logical-classes')).toBe(0);
   });
 });
+
+describe('literal strings in the renderer', () => {
+  test.each([
+    ["export const a = <p>Hello there</p>;", 1],
+    ["export const a = <button aria-label=\"Close\" />;", 1],
+    ["export const a = <button title=\"Close\">{t('a')}</button>;", 1],
+    ["export const a = <p>{t('hello')}</p>;", 0],
+    ["export const a = <span>·</span>;", 0],
+    ["export const a = <p>Monfil</p>;", 0],
+    ["export const a = <div className=\"flex gap-2\" data-testid=\"x\" />;", 0],
+  ])('counts the literal strings in %s', async (code, expected) => {
+    expect(await ruleErrors(code, 'src/renderer/components/example.tsx', 'i18next/no-literal-string')).toBe(expected);
+  });
+
+  test('skips tests and the vendored UI folder', async () => {
+    expect(await ruleErrors('export const a = <p>Hello there</p>;', 'src/renderer/components/example.test.tsx', 'i18next/no-literal-string')).toBe(0);
+    expect(await ruleErrors('export const a = <p>Hello there</p>;', 'src/renderer/components/untitled-ui/example.tsx', 'i18next/no-literal-string')).toBe(0);
+  });
+});

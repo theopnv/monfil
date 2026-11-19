@@ -166,5 +166,10 @@
     "renameFolder": "Rename {{name}}",
     "addFeedHint": "Add a feed here. To delete a feed, right-click it.",
     "filterHint": "Click a feed to show only its articles. Click the eye to hide a feed."
+  },
+  "refresh": {
+    "failed_one": "{{count}} feed could not be refreshed.",
+    "failed_other": "{{count}} feeds could not be refreshed.",
+    "more": "and {{count}} more"
   }
 }

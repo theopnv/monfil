@@ -111,11 +111,6 @@
       "count": 2
     }
   },
-  "src/renderer/components/Workspace/ImportOpmlDialog.tsx": {
-    "@sonarjs/cyclomatic-complexity": {
-      "count": 1
-    }
-  },
   "src/renderer/lib/ipc-client.ts": {
     "@sonarjs/cyclomatic-complexity": {
       "count": 1

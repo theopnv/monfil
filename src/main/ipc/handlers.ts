@@ -37,6 +37,7 @@ import { previewSummary } from '../analytics/report';
 import { openAndImportOpml } from "../opml/import";
 import { exportWorkspaceOpml } from "../opml/export";
 import { getFeedpackCatalog } from '../feedpacks/catalog';
+import { mainI18n } from '../lib/i18n';
 import { installFeedpack, previewFeedpack } from '../feedpacks/install';
 import type { IpcMainInvokeEvent } from "electron";
 import type {
@@ -313,7 +314,7 @@ export async function handleSettingsSetRetentionDays(_event: IpcMainInvokeEvent,
 export async function handleAppBackUpDatabase(): Promise<Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string }>> {
   const { canceled, filePath } = await dialog.showSaveDialog({
     defaultPath: `monfil-backup-${new Date().toISOString().slice(0, 10)}.db`,
-    filters: [{ name: 'SQLite database', extensions: ['db'] }],
+    filters: [{ name: mainI18n.t('main:dialog.sqliteFilter'), extensions: ['db'] }],
   });
   if (canceled || !filePath) {
     return { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } };

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useState } from "react";
 import { Heading } from "react-aria-components";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
@@ -25,6 +26,7 @@ export interface ImportOpmlDialogProps {
 type Target = 'new-workspace' | 'merge-home';
 
 export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: ImportOpmlDialogProps) {
+  const { t } = useTranslation(['workspace', 'common']);
   const importOpml = useImportOpml();
   const [target, setTarget] = useState<Target>('new-workspace');
   const [name, setName] = useState('');
@@ -75,12 +77,14 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
             <>
               <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
                 <Heading slot="title" className="font-display text-lg font-semibold text-primary">
-                  Import complete
+                  {t('workspace:importOpml.doneTitle')}
                 </Heading>
                 <p className="text-sm text-tertiary">
-                  Imported {summary.imported} {summary.imported === 1 ? 'feed' : 'feeds'}.
-                  {summary.skipped.length > 0 && ` ${summary.skipped.length} skipped.`}
-                  {summary.failed.length > 0 && ` ${summary.failed.length} failed to fetch.`}
+                  {[
+                    t('workspace:importOpml.imported', { count: summary.imported }),
+                    ...(summary.skipped.length > 0 ? [t('workspace:importOpml.skipped', { count: summary.skipped.length })] : []),
+                    ...(summary.failed.length > 0 ? [t('workspace:importOpml.failed', { count: summary.failed.length })] : []),
+                  ].join(' ')}
                 </p>
               </div>
               {(summary.skipped.length > 0 || summary.failed.length > 0) && (
@@ -95,7 +99,7 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
               )}
               <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
                 <Button color="primary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>
-                  Done
+                  {t('common:action.done')}
                 </Button>
               </div>
             </>
@@ -103,9 +107,9 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
             <>
               <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
                 <Heading slot="title" className="font-display text-lg font-semibold text-primary">
-                  {workspace ? `Import OPML into ${workspace.name}` : 'Import OPML'}
+                  {workspace ? t('workspace:importOpml.titleInto', { name: workspace.name }) : t('workspace:importOpml.title')}
                 </Heading>
-                <p className="text-sm text-tertiary">Choose a file from the picker that opens next.</p>
+                <p className="text-sm text-tertiary">{t('workspace:importOpml.choose')}</p>
               </div>
 
               {!workspace && (
@@ -113,22 +117,22 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
                   <div className="flex flex-col gap-1.5">
                     <label className="flex items-center gap-2 text-sm text-secondary">
                       <input type="radio" name="opml-target" checked={target === 'new-workspace'} onChange={() => setTarget('new-workspace')} />
-                      New workspace
+                      {t('workspace:importOpml.newWorkspace')}
                     </label>
                     <label className="flex items-center gap-2 text-sm text-secondary">
                       <input type="radio" name="opml-target" checked={target === 'merge-home'} onChange={() => setTarget('merge-home')} />
-                      Merge into Home
+                      {t('workspace:importOpml.mergeHome')}
                     </label>
                   </div>
 
                   {target === 'new-workspace' && (
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="opml-workspace-name" className="text-sm font-medium text-secondary">Name</label>
+                      <label htmlFor="opml-workspace-name" className="text-sm font-medium text-secondary">{t('workspace:importOpml.name')}</label>
                       <input
                         id="opml-workspace-name"
                         value={name}
                         onChange={(event) => setName(event.target.value)}
-                        placeholder="Leave blank to use the file's title"
+                        placeholder={t('workspace:importOpml.namePlaceholder')}
                         className="rounded-lg border border-secondary bg-primary px-3 py-2 text-sm text-primary outline-none"
                       />
                     </div>
@@ -140,10 +144,10 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
 
               <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
                 <Button color="secondary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>
-                  Cancel
+                  {t('common:action.cancel')}
                 </Button>
                 <Button color="primary" size="md" className="rounded-full" isLoading={isLoading} onPress={handleImport}>
-                  Import
+                  {t('common:action.import')}
                 </Button>
               </div>
             </>

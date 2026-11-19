@@ -1,1 +1,39 @@
-{}
+{
+  "menu": {
+    "feed": {
+      "refreshFeed": "Refresh feed",
+      "moveFeed": "Move to workspace…",
+      "deleteFeed": "Delete feed"
+    },
+    "category": {
+      "rename": "Rename",
+      "delete": "Delete"
+    },
+    "workspace": {
+      "edit": "Edit workspace",
+      "export": "Export as OPML",
+      "delete": "Delete workspace"
+    }
+  },
+  "fatal": {
+    "title": "Monfil could not continue",
+    "message": "Monfil encountered a system error. Incident {{incident}}.",
+    "restart": "Restart",
+    "showLog": "Show log file",
+    "quit": "Quit"
+  },
+  "dialog": {
+    "sqliteFilter": "SQLite database"
+  },
+  "source": {
+    "hackernews": {
+      "frontPage": "Front page",
+      "points100": "100+ points",
+      "points300": "300+ points",
+      "newest": "Newest",
+      "best": "Best"
+    },
+    "releases": "Releases",
+    "publicActivity": "Public activity"
+  }
+}
