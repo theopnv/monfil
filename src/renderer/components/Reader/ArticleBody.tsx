@@ -114,11 +114,13 @@ const PROSE_CLASSES = [
 ].join(" ");
 
 export default function ArticleBody({ html: rawHtml, sourceUrl }: ArticleBodyProps) {
+  const { t } = useTranslation('reader');
   const nodes = useMemo(() => {
-    const html = sanitizeArticleHtml(prepareReaderHtml(rawHtml, sourceUrl));
+    const labels = { embedTitle: (provider: string) => t('embed.defaultTitle', { name: provider }), openEmbedded: t('embed.openEmbedded') };
+    const html = sanitizeArticleHtml(prepareReaderHtml(rawHtml, labels, sourceUrl));
     const document = new DOMParser().parseFromString(html, 'text/html');
     return [...document.body.childNodes].map((node, index) => renderNode(node, String(index)));
-  }, [rawHtml, sourceUrl]);
+  }, [rawHtml, sourceUrl, t]);
 
   const handleClick = (event: MouseEvent<HTMLDivElement>) => {
     const anchor = (event.target as HTMLElement).closest("a");

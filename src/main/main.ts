@@ -17,6 +17,7 @@ import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents } 
 import { allowPrivateHosts } from './lib/fetch';
 import { configureLogging, logger } from './logging/logger';
 import { installFatalHandlers } from './logging/fatal';
+import { fatalDialogText } from './lib/i18n';
 import { setLogFilePath } from './app/main-state';
 import { getDetailedLogging } from './app/settings';
 import { titleBarOverlayForTheme } from './app/window-chrome';
@@ -52,7 +53,7 @@ function bootstrap() {
   const logFilePath = path.join(app.getPath('userData'), 'monfil.log');
   setLogFilePath(logFilePath);
   configureLogging(logFilePath, false);
-  installFatalHandlers(logger, logFilePath);
+  installFatalHandlers(logger, logFilePath, fatalDialogText);
 
   initializeDatabase(path.join(app.getPath('userData'), DB_FILE_NAME))
     .then(async () => configureLogging(logFilePath, await getDetailedLogging()))

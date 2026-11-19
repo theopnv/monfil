@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import { useCallback } from "react";
 import { ipc, rendererLogger } from '@/lib/ipc-client';
 import { notifyWarning } from '@/lib/notifications';
@@ -164,6 +165,7 @@ interface FeedsRefresh {
 }
 
 export const useFeedsRefresh = (): FeedsRefresh => {
+  const { t } = useTranslation(['river', 'common']);
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: () => ipc.invoke('feeds:refresh', undefined),
@@ -178,10 +180,10 @@ export const useFeedsRefresh = (): FeedsRefresh => {
         const count = summary.failedFeeds.length;
         const lines = summary.failedFeeds.slice(0, MAX_FAILURE_LINES).map(({ title, message }) => `${title}: ${message}`);
         if (count > MAX_FAILURE_LINES) {
-          lines.push(`and ${count - MAX_FAILURE_LINES} more`);
+          lines.push(t('river:refresh.more', { count: count - MAX_FAILURE_LINES }));
         }
-        notifyWarning(`${count} ${count === 1 ? 'feed' : 'feeds'} could not be refreshed.`, 'manual-refresh-failures', {
-          label: 'Show log file',
+        notifyWarning(t('river:refresh.failed', { count }), 'manual-refresh-failures', {
+          label: t('common:action.showLog'),
           onClick: () => ipc.send('app:reveal-log-file', undefined),
         }, lines);
       }

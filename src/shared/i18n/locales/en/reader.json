@@ -31,6 +31,9 @@
     "consent": "Loading this embed connects to {{name}}. The provider may use cookies.",
     "load": "Load {{name}}",
     "open": "Open on {{name}}",
-    "privacy": "Provider privacy policy"
-  }
+    "privacy": "Provider privacy policy",
+    "openEmbedded": "Open embedded content"
+  },
+  "saveFailed": "The item could not be saved. Try again.",
+  "unsaveFailed": "The item could not be removed from Saved. Try again."
 }

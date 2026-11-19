@@ -3,6 +3,7 @@
 import js from '@eslint/js';
 import type { Linter } from 'eslint';
 import { defineConfig } from 'eslint/config';
+import i18next from 'eslint-plugin-i18next';
 import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 import stylistic from '@stylistic/eslint-plugin';
@@ -24,7 +25,9 @@ export default defineConfig([
         // A nested checkout brings a second tsconfig.json; without this the parser refuses to guess between them.
         tsconfigRootDir: import.meta.dirname,
         projectService: {
-          allowDefaultProject: ['eslint.config.test.ts', 'dependency-cruiser.test.ts', 'src/*/boundary-test.ts', 'src/*/example.ts', 'src/renderer/components/untitled-ui/example.ts'],
+          allowDefaultProject: ['eslint.config.test.ts', 'dependency-cruiser.test.ts', 'src/*/boundary-test.ts', 'src/*/example.ts', 'src/renderer/components/untitled-ui/example.ts', 'src/renderer/components/example.tsx', 'src/renderer/components/example.test.tsx', 'src/renderer/components/untitled-ui/example.tsx'],
+          // The rule tests lint more example files than the default limit of 8.
+          maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 16,
         },
       },
     },
@@ -87,6 +90,23 @@ export default defineConfig([
   {
     files: ['src/renderer/components/untitled-ui/**'],
     rules: { 'layout/logical-classes': 'off' },
+  },
+  {
+    files: ['src/renderer/**/*.{ts,tsx}'],
+    ignores: ['src/renderer/**/*.test.{ts,tsx}', 'src/renderer/components/untitled-ui/**', 'src/renderer/routeTree.gen.ts', 'src/renderer/lib/test/**'],
+    plugins: { i18next: i18next as unknown as ESLintPlugin },
+    rules: {
+      'i18next/no-literal-string': ['error', {
+        mode: 'jsx-only',
+        'jsx-attributes': {
+          include: ['aria-label', 'aria-description', 'aria-roledescription', 'aria-valuetext', 'title', 'alt', 'placeholder', 'label', 'textValue', 'description', 'hint', 'tooltip', 'helperText', 'heading'],
+        },
+        words: {
+          // The brand name, punctuation and symbols, shouting codes such as RSS, and the values that route and aria props take.
+          exclude: ['^Monfil\\b.*', '^[\\s0-9!-/:-@\\[-`{-~·—–…]+$', '^[A-Z_-]+$', '^(all|saved|page|bottom-right|top|end|start)$'],
+        },
+      }],
+    },
   },
   {
     files: ['src/renderer/lib/ipc-client.ts'],

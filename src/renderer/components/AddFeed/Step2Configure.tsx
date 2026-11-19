@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { useTranslation } from 'react-i18next';
 import FeedAvatar from "@/components/common/FeedAvatar";
 import { Toggle } from "@/components/untitled-ui/base/toggle/toggle";
 import { computeFeedContentType, computePublishRate } from "@/lib/addFeed/feedStats";
@@ -33,6 +34,7 @@ export default function Step2Configure({
   showInWorkspace,
   onShowInWorkspaceChange,
 }: Step2ConfigureProps) {
+  const { t } = useTranslation('addFeed');
   return (
     <div className="flex flex-col gap-4.5 px-7.5 py-5.5">
       {feed ? (
@@ -48,17 +50,17 @@ export default function Step2Configure({
 
           <div className="mt-3.5 flex flex-wrap gap-4 border-t border-secondary pt-3.5">
             <div className="leading-tight">
-              <div className="text-sm font-bold tabular-nums text-primary">{computePublishRate(feed.items)}</div>
-              <div className="text-[11.5px] text-tertiary">Publishes</div>
+              <div className="text-sm font-bold tabular-nums text-primary">{computePublishRate(feed.items, t)}</div>
+              <div className="text-[11.5px] text-tertiary">{t('configure.publishes')}</div>
             </div>
             <div className="leading-tight">
-              <div className="text-sm font-bold text-primary">{computeFeedContentType(feed.items)}</div>
-              <div className="text-[11.5px] text-tertiary">Feed contains</div>
+              <div className="text-sm font-bold text-primary">{computeFeedContentType(feed.items, t)}</div>
+              <div className="text-[11.5px] text-tertiary">{t('configure.contains')}</div>
             </div>
           </div>
         </div>
       ) : (
-        <FeedMatchCard title="No feed found" detail="Go back to step 1 and try a different link." status="not-found" />
+        <FeedMatchCard title={t('configure.notFound')} detail={t('configure.notFoundDetail')} status="not-found" />
       )}
 
       <CategoryPicker
@@ -70,7 +72,7 @@ export default function Step2Configure({
         onAddNew={onAddNewCategory}
       />
 
-      <Toggle isSelected={showInWorkspace} onChange={onShowInWorkspaceChange} label="Show in Workspace" hint="Uncheck for high-volume sources you'd rather visit on purpose." />
+      <Toggle isSelected={showInWorkspace} onChange={onShowInWorkspaceChange} label={t('configure.show')} hint={t('configure.showHint')} />
     </div>
   );
 }

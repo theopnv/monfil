@@ -3,12 +3,15 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
+import { i18n } from '@/lib/i18n';
 import { computeFeedContentType, computePublishRate } from './feedStats';
+
+const t = i18n.getFixedT('en', 'addFeed');
 
 describe('computePublishRate', () => {
   test('returns "New" for an empty feed', () => {
     // Act
-    const result = computePublishRate([]);
+    const result = computePublishRate([], t);
 
     // Assert
     expect(result).toBe('New');
@@ -19,7 +22,7 @@ describe('computePublishRate', () => {
     const items = [{ pubDate: '2024-01-01', description: '' }];
 
     // Act
-    const result = computePublishRate(items);
+    const result = computePublishRate(items, t);
 
     // Assert
     expect(result).toBe('1');
@@ -35,7 +38,7 @@ describe('computePublishRate', () => {
     ];
 
     // Act
-    const result = computePublishRate(items);
+    const result = computePublishRate(items, t);
 
     // Assert
     expect(result).toBe('~2/day');
@@ -50,7 +53,7 @@ describe('computePublishRate', () => {
     ];
 
     // Act
-    const result = computePublishRate(items);
+    const result = computePublishRate(items, t);
 
     // Assert
     expect(result).toBe('~2/week');
@@ -64,7 +67,7 @@ describe('computePublishRate', () => {
     ];
 
     // Act
-    const result = computePublishRate(items);
+    const result = computePublishRate(items, t);
 
     // Assert
     expect(result).toBe('~1/month');
@@ -78,7 +81,7 @@ describe('computePublishRate', () => {
     ];
 
     // Act
-    const result = computePublishRate(items);
+    const result = computePublishRate(items, t);
 
     // Assert
     expect(result).toBe('2');
@@ -92,7 +95,7 @@ describe('computePublishRate', () => {
     ];
 
     // Act
-    const result = computePublishRate(items);
+    const result = computePublishRate(items, t);
 
     // Assert
     expect(result).toBe('~1/day');
@@ -106,7 +109,7 @@ describe('computePublishRate', () => {
     ];
 
     // Act
-    const result = computePublishRate(items);
+    const result = computePublishRate(items, t);
 
     // Assert
     expect(result).toBe('~1/week');
@@ -120,7 +123,7 @@ describe('computePublishRate', () => {
     }));
 
     // Act
-    const result = computePublishRate(items);
+    const result = computePublishRate(items, t);
 
     // Assert
     expect(result).toBe('~2/month');
@@ -134,7 +137,7 @@ describe('computePublishRate', () => {
     ];
 
     // Act
-    const result = computePublishRate(items);
+    const result = computePublishRate(items, t);
 
     // Assert
     expect(result).toBe('~1/month');
@@ -144,7 +147,7 @@ describe('computePublishRate', () => {
 describe('computeFeedContentType', () => {
   test('returns "Excerpt" for an empty feed', () => {
     // Act
-    const result = computeFeedContentType([]);
+    const result = computeFeedContentType([], t);
 
     // Assert
     expect(result).toBe('Excerpt');
@@ -155,7 +158,7 @@ describe('computeFeedContentType', () => {
     const items = [{ pubDate: '2024-01-01', description: 'A short summary.' }];
 
     // Act
-    const result = computeFeedContentType(items);
+    const result = computeFeedContentType(items, t);
 
     // Assert
     expect(result).toBe('Excerpt');
@@ -166,7 +169,7 @@ describe('computeFeedContentType', () => {
     const items = [{ pubDate: '2024-01-01', description: 'x'.repeat(500) }];
 
     // Act
-    const result = computeFeedContentType(items);
+    const result = computeFeedContentType(items, t);
 
     // Assert
     expect(result).toBe('Full text');
@@ -180,7 +183,7 @@ describe('computeFeedContentType', () => {
     ];
 
     // Act
-    const result = computeFeedContentType(items);
+    const result = computeFeedContentType(items, t);
 
     // Assert
     expect(result).toBe('Excerpt');
@@ -191,7 +194,7 @@ describe('computeFeedContentType', () => {
     const items = [{ pubDate: '2024-01-01', description: 'x'.repeat(400) }];
 
     // Act
-    const result = computeFeedContentType(items);
+    const result = computeFeedContentType(items, t);
 
     // Assert
     expect(result).toBe('Full text');
