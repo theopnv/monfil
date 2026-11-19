@@ -29,7 +29,7 @@ export default function PrivacySection() {
         isDisabled={state === undefined || !state.available}
         onChange={(selected) => choose(selected ? 'granted' : 'denied')}
       />
-      <div className="flex gap-2.5">
+      <div className="flex flex-wrap gap-2.5">
         <Button color="secondary" className="self-start" onPress={() => setIsPreviewOpen(true)}>{t('privacy.preview')}</Button>
         <Button color="tertiary" className="self-start" onPress={() => openLink(USAGE_ANALYTICS_NOTICE_URL)}>{t('privacy.notice')}</Button>
       </div>

@@ -100,7 +100,7 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
                   ))}
                 </ul>
               )}
-              <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+              <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
                 <Button color="primary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>
                   {t('common:action.done')}
                 </Button>
@@ -145,7 +145,7 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
 
               {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
-              <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+              <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
                 <Button color="secondary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>
                   {t('common:action.cancel')}
                 </Button>

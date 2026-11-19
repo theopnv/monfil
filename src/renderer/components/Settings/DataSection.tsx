@@ -54,7 +54,7 @@ export default function DataSection() {
         </div>
       </div>
 
-      <div className="flex gap-2.5">
+      <div className="flex flex-wrap gap-2.5">
         <Button color="secondary" className="self-start" onPress={() => {
           void ipc.invoke('app:back-up-database', undefined).then((result) => {
             if (result.success) {

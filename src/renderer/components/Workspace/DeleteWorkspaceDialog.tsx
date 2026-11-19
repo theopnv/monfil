@@ -69,7 +69,7 @@ export default function DeleteWorkspaceDialog({ workspace, onOpenChange, onDelet
 
   return (
     <ModalOverlay isOpen={workspace !== null} onOpenChange={handleOpenChange} isDismissable>
-      <Modal className="w-full max-w-[440px]">
+      <Modal className="w-full max-w-[580px]">
         <Dialog>
           <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
             <Heading slot="title" className="font-display text-lg font-semibold text-primary">
