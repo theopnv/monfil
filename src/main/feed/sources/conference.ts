@@ -381,17 +381,21 @@ function placeSuggestions(place: string, vocabulary: Vocabulary): string[] {
 export function checkFilter(filter: ConferenceFilter, vocabulary: Vocabulary): FeedFetchError | undefined {
   const topics = filter.topics.filter((topic) => !vocabulary.topics.has(topic));
   if (topics.length > 0) {
-    const suggestions = topics.flatMap((topic) => topicSuggestions(topic, vocabulary));
-    const names = listOr(topics.map((topic) => `"${topic}"`));
-    const tip = suggestions.length > 0 ? `Try ${listOr([...new Set(suggestions)].slice(0, 3))}.` : 'Topics are tags such as devops, java or testing.';
-    return { name: 'UNSUPPORTED_FORMAT', message: `No conference has the topic ${names}. ${tip}` };
+    const suggestions = [...new Set(topics.flatMap((topic) => topicSuggestions(topic, vocabulary)))].slice(0, 3);
+    const terms = topics.map((topic) => `"${topic}"`);
+    const names = listOr(terms);
+    const tip = suggestions.length > 0 ? `Try ${listOr(suggestions)}.` : 'Topics are tags such as devops, java or testing.';
+    const reason = suggestions.length > 0 ? 'conferenceUnknownTopicSuggest' : 'conferenceUnknownTopic';
+    return { name: 'UNSUPPORTED_FORMAT', message: `No conference has the topic ${names}. ${tip}`, params: { reason, terms, suggestions } };
   }
   const places = filter.places.filter((place) => !vocabulary.places.has(place.toLowerCase()));
   if (places.length > 0) {
-    const suggestions = places.flatMap((place) => placeSuggestions(place, vocabulary));
-    const names = listOr(places.map((place) => `"${place}"`));
-    const tip = suggestions.length > 0 ? `Try ${listOr([...new Set(suggestions)].slice(0, 3))}.` : 'Use a city or a country in English, such as Paris or Germany.';
-    return { name: 'UNSUPPORTED_FORMAT', message: `No conference takes place in ${names}. ${tip}` };
+    const suggestions = [...new Set(places.flatMap((place) => placeSuggestions(place, vocabulary)))].slice(0, 3);
+    const terms = places.map((place) => `"${place}"`);
+    const names = listOr(terms);
+    const tip = suggestions.length > 0 ? `Try ${listOr(suggestions)}.` : 'Use a city or a country in English, such as Paris or Germany.';
+    const reason = suggestions.length > 0 ? 'conferenceUnknownPlaceSuggest' : 'conferenceUnknownPlace';
+    return { name: 'UNSUPPORTED_FORMAT', message: `No conference takes place in ${names}. ${tip}`, params: { reason, terms, suggestions } };
   }
   return undefined;
 }
@@ -432,7 +436,7 @@ type LoadedEvents = Result<{ dataset: Dataset; validators: FetchValidators }, Fe
 function fromBody(fetched: FetchedText): LoadedEvents {
   const dataset = parseDataset(fetched.body);
   if (!dataset) {
-    return unsupported("This doesn't look like the developers.events dataset.");
+    return unsupported("This doesn't look like the developers.events dataset.", 'conferenceNotDataset');
   }
   cache = { validators: fetched.validators, dataset };
   return { success: true, data: { dataset, validators: fetched.validators } };
@@ -488,18 +492,18 @@ async function fetchFiltered(filter: ConferenceFilter, validators: FetchValidato
 
 async function fetchConferences(input: SourceFetchInput): Promise<Result<SourceFetchResult, FeedFetchError>> {
   const filter = parseConferenceLink(input.link);
-  return filter ? fetchFiltered(filter, input.validators) : unsupported("This doesn't look like a developers.events link.");
+  return filter ? fetchFiltered(filter, input.validators) : unsupported("This doesn't look like a developers.events link.", 'conferenceNotLink');
 }
 
 async function discover(query: string): Promise<Result<ParsedSource[], FeedFetchError>> {
   const filter = parseConferenceLink(query) ?? parseConferenceQuery(query);
   if (!filter) {
-    return unsupported('Type topics and places, such as "devops in France", or paste a developers.events link.');
+    return unsupported('Type topics and places, such as "devops in France", or paste a developers.events link.', 'conferenceEmptyQuery');
   }
   const ignored = unsupportedLinkFilters(query);
   if (ignored.length > 0) {
     const [noun, pronoun] = ignored.length > 1 ? ['filters', 'them'] : ['filter', 'it'];
-    return unsupported(`Monfil cannot apply the ${listOr(ignored)} ${noun} from developers.events. Remove ${pronoun} from the link, or type topics and places.`);
+    return unsupported(`Monfil cannot apply the ${listOr(ignored)} ${noun} from developers.events. Remove ${pronoun} from the link, or type topics and places.`, 'conferenceIgnoredFilters', { filters: ignored, count: ignored.length });
   }
   const result = await fetchFiltered(filter, undefined, true);
   return result.success ? { success: true, data: [result.data.parsed] } : result;

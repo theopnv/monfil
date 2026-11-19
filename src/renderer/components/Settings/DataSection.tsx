@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { translateErrorWithDetails } from "@/lib/error-text";
 import { useState } from "react";
 import { useQuery } from '@tanstack/react-query';
 import { ipc, rendererLogger } from '@/lib/ipc-client';
@@ -28,6 +29,7 @@ function formatBytes(bytes: number): string {
 
 export default function DataSection() {
   const { t } = useTranslation('settings');
+  const { t: tErrors } = useTranslation('errors');
   const { data: info } = useQuery(appInfoQuery());
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [backupMessage, setBackupMessage] = useState<string | undefined>();
@@ -55,7 +57,7 @@ export default function DataSection() {
             if (result.success) {
               setBackupMessage(t('data.backedUp'));
             } else if (result.error.name !== 'CANCELLED') {
-              setBackupMessage(t('data.backupFailed', { message: result.error.message }));
+              setBackupMessage(t('data.backupFailed', { message: translateErrorWithDetails(tErrors, result.error) }));
             }
           }).catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Database backup failed:' }, error));
         }}>{t('data.backUp')}</Button>

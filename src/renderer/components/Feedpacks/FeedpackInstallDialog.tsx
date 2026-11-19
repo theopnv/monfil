@@ -3,6 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
+import type { CodedError } from "../../../shared/errors";
 import { useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Heading } from 'react-aria-components';
@@ -27,7 +29,7 @@ export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceI
   const navigate = useNavigate();
   const [selected, setSelected] = useState<FeedpackPreview | null>(null);
   const [isInstalling, setIsInstalling] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<CodedError | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -56,7 +58,7 @@ export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceI
       onOpenChange(false);
       void navigate({ to: '/workspace/$workspaceId', params: { workspaceId: String(result.data.workspaceId) } });
     } else {
-      setError(result.error.message);
+      setError(result.error);
     }
   }
 
@@ -71,7 +73,7 @@ export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceI
 
           <FeedpackBrowser isActive={isOpen} selected={selected} onSelect={select} />
 
-          {error && <p className="px-6 pb-2 text-sm text-error-primary">{error}</p>}
+          {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
             {selected && <Button color="secondary" size="md" className="me-auto" onPress={() => select(null)}>{t('workspace:feedpackDialog.back')}</Button>}
             <Button color="secondary" size="md" onPress={() => onOpenChange(false)}>{t('common:action.close')}</Button>

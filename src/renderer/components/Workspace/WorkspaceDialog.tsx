@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
 import { useEffect, useEffectEvent, useState } from "react";
 import { Heading } from "react-aria-components";
 import { useNavigate } from "@tanstack/react-router";
@@ -151,7 +152,7 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
             </div>
           </div>
 
-          {error && <p className="px-6 pb-2 text-sm text-error-primary">{error.message}</p>}
+          {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
             {!isEditing && onBrowseFeedpacks && (

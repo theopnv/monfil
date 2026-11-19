@@ -7,6 +7,7 @@ import { dialog } from 'electron';
 import type { ImportFailed, ImportOpmlError, ImportOpmlTarget, ImportSkipped, ImportSummary } from '../../shared/contracts';
 import { db, dbReady } from '../db/database';
 import { queryFeedMetadataByIds } from '../db/crud/query';
+import { parseErrorParams } from '../db/error-params';
 import type { Result } from '../../shared/result';
 import { refreshFeeds } from '../feed/refresh';
 import { parseOpmlDocument } from './parse';
@@ -77,7 +78,7 @@ export async function startOpmlImport(
 
         for (const feed of category.feeds) {
           if (existingLinks.has(feed.xmlUrl)) {
-            skipped.push({ title: feed.title, reason: 'Already in this workspace' });
+            skipped.push({ title: feed.title, reason: 'ALREADY_IN_WORKSPACE' });
             continue;
           }
 
@@ -109,7 +110,7 @@ export async function startOpmlImport(
     const summary: ImportSummary = { workspaceId, imported: insertedFeedIds.length, skipped, failed: [] };
     const completion = refreshFeeds(insertedFeedIds).then(async () => {
       const refreshed = await queryFeedMetadataByIds(insertedFeedIds);
-      const failed: ImportFailed[] = refreshed.flatMap((feed) => (feed.last_error ? [{ title: feed.title, message: feed.last_error }] : []));
+      const failed: ImportFailed[] = refreshed.flatMap((feed) => (feed.last_error ? [{ title: feed.title, message: feed.last_error, code: feed.last_error_code ?? undefined, params: parseErrorParams(feed.last_error_params) ?? undefined }] : []));
       return { ...summary, failed };
     });
 

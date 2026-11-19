@@ -3,6 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import { Trans, useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
+import type { CodedError } from "../../../shared/errors";
 import { useState } from "react";
 import { Heading } from "react-aria-components";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
@@ -23,7 +25,7 @@ export default function DeleteWorkspaceDialog({ workspace, onOpenChange, onDelet
   const deleteWorkspace = useDeleteWorkspace();
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<CodedError | null>(null);
 
   function handleOpenChange(open: boolean) {
     if (!open) {
@@ -43,7 +45,7 @@ export default function DeleteWorkspaceDialog({ workspace, onOpenChange, onDelet
 
     setIsExporting(false);
     if (!result.success && result.error.name !== 'CANCELLED') {
-      setError(result.error.message);
+      setError(result.error);
     }
   }
 
@@ -61,7 +63,7 @@ export default function DeleteWorkspaceDialog({ workspace, onOpenChange, onDelet
       onDeleted(workspace.id);
       handleOpenChange(false);
     } else {
-      setError(response.error.message);
+      setError(response.error);
     }
   }
 
@@ -80,7 +82,7 @@ export default function DeleteWorkspaceDialog({ workspace, onOpenChange, onDelet
             )}
           </div>
 
-          {error && <p className="px-6 pb-2 text-sm text-error-primary">{error}</p>}
+          {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
           <div className="flex items-center justify-between gap-2.5 border-t border-secondary px-6 py-4">
             <Button color="secondary" size="md" className="rounded-full" isLoading={isExporting} onPress={handleExport}>

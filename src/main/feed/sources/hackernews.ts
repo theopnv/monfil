@@ -48,4 +48,5 @@ export const hackernewsSource = createFeedSource({
   fetchesFullArticle: true,
   toCandidates: hackernewsCandidates,
   mismatchMessage: 'This is not a Hacker News link.',
+  mismatchReason: 'mismatchHackernews',
 });

@@ -216,13 +216,25 @@ async function renderOpenSidebar(feeds: FeedSummary[], showOnlyLinks: ReadonlySe
 
 test('a failed feed shows the reason in the warning tooltip', async () => {
   // Arrange
-  const failing: FeedSummary = { ...feedA, last_error: 'The server refused access (HTTP 403).' };
+  const failing: FeedSummary = { ...feedA, last_error: 'The server refused access (HTTP 403).', last_error_code: 'GENERIC_FETCH_ERROR', last_error_params: { reason: 'refused', status: 403 } };
 
   // Act
   const { getByRole } = await renderOpenSidebar([failing], new Set());
 
   // Assert
-  await expect.element(getByRole('img', { name: 'Feed A refresh failed: The server refused access (HTTP 403).' })).toHaveAttribute('title', 'The last refresh failed: The server refused access (HTTP 403).');
+  const sentence = 'The server refused access (HTTP 403). It may block automated readers, or your network or VPN.';
+  await expect.element(getByRole('img', { name: `Feed A refresh failed: ${sentence}` })).toHaveAttribute('title', `The last refresh failed: ${sentence}`);
+});
+
+test('a feed that failed before error codes existed gets a generic reason, not the stored English text', async () => {
+  // Arrange
+  const legacy: FeedSummary = { ...feedA, last_error: 'The server refused access (HTTP 403).', last_error_code: null, last_error_params: null };
+
+  // Act
+  const { getByRole } = await renderOpenSidebar([legacy], new Set());
+
+  // Assert
+  await expect.element(getByRole('img', { name: 'Feed A refresh failed: Monfil could not read this feed.' })).toHaveAttribute('title', 'The last refresh failed: Monfil could not read this feed.');
 });
 
 describe('feed row focus and hide controls', () => {
@@ -585,7 +597,8 @@ describe('feed row context menu and delete', () => {
     await getByRole('button', { name: 'Delete feed' }).click();
 
     // Assert
-    await expect.element(getByText('Could not delete the feed.', { exact: true })).toBeInTheDocument();
+    await expect.element(getByText('The database could not complete this change.', { exact: true })).toBeInTheDocument();
+    await expect.element(getByText('Details: Could not delete the feed.', { exact: true })).toBeInTheDocument();
     await expect.element(getByRole('heading', { name: 'Delete feed' })).toBeInTheDocument();
     await expect.element(getByText('1 item', { exact: true })).toBeInTheDocument();
   });

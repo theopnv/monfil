@@ -3,6 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
+import type { CodedError } from "../../../shared/errors";
 import { useEffect, useState } from 'react';
 import { SearchLg } from '@untitledui/icons';
 import { Button } from '@/components/untitled-ui/base/buttons/button';
@@ -27,7 +29,7 @@ export default function FeedpackBrowser({ isActive, selected, onSelect }: Feedpa
   const catalog = useFeedpackCatalog(isActive);
   const preview = useFeedpackPreview();
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<CodedError | null>(null);
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -45,11 +47,12 @@ export default function FeedpackBrowser({ isActive, selected, onSelect }: Feedpa
     if (result.success) {
       onSelect(result.data);
     } else {
-      setError(result.error.message);
+      setError(result.error);
     }
   }
 
-  const catalogError = catalog.data && !catalog.data.success ? catalog.data.error.message : null;
+  const catalogError = catalog.data && !catalog.data.success ? catalog.data.error : null;
+  const shownError = catalogError ?? error;
   const packs = catalog.data?.success ? catalog.data.data.packs : [];
   const visiblePacks = packs.filter((pack) => matchesQuery(pack, query));
 
@@ -94,7 +97,7 @@ export default function FeedpackBrowser({ isActive, selected, onSelect }: Feedpa
       <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4.5">
         <div className="flex flex-col gap-2">
           {catalog.isPending && <p className="text-sm text-tertiary">{t('feedpacks.loading')}</p>}
-          {(catalogError ?? error) && <p className="text-sm text-error-primary">{catalogError ?? error}</p>}
+          {shownError && <ErrorText error={shownError} className="text-sm text-error-primary" />}
           {catalog.data?.success && packs.length === 0 && <p className="text-sm text-tertiary">{t('feedpacks.none')}</p>}
           {packs.length > 0 && visiblePacks.length === 0 && <p className="text-sm text-tertiary">{t('feedpacks.noMatch', { query: query.trim() })}</p>}
           {visiblePacks.map((pack) => (

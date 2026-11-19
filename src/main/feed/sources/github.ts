@@ -169,5 +169,6 @@ export const githubSource = createFeedSource({
   fetchesFullArticle: false,
   toCandidates: githubCandidates,
   mismatchMessage: 'This is not a GitHub repository or user link.',
+  mismatchReason: 'mismatchGithub',
   transform: cleanEntries,
 });

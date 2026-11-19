@@ -52,6 +52,7 @@ import type {
   Workspace,
   WorkspaceSummary,
 } from './contracts';
+import type { ErrorParams } from './errors';
 import type { IpcFailure, Result } from './result';
 import type { LogEventMap, LogEventName, LogLevel } from './logging';
 
@@ -120,7 +121,7 @@ export type TwoWayRendererMainChannelPayloads = {
   'settings:set-workspace-rail-expanded': boolean;
   'settings:get-retention-days': RetentionDays;
   'settings:set-retention-days': RetentionDays;
-  'app:back-up-database': Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string }>;
+  'app:back-up-database': Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string; params?: ErrorParams }>;
   'app:get-info': AppInfo;
   'app:hints-enabled': boolean;
   'app:get-startup-health': StartupHealth;

@@ -213,7 +213,7 @@ async function resolveTarget(
       }
       const extracted = extractChannel(pageResult.data.body);
       if (!extracted.channelId) {
-        return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find a YouTube channel at that address." } };
+        return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find a YouTube channel at that address.", params: { reason: 'youtubeNoChannel' } } };
       }
       return { success: true, data: { channelId: extracted.channelId, icon: extracted.icon, feedLink: channelFeedUrl(extracted.channelId), feedResult: undefined } };
     }
@@ -224,7 +224,7 @@ async function resolveTarget(
       }
       const extracted = extractChannel(pageResult.data.body);
       if (!extracted.channelId) {
-        return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel for that video." } };
+        return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel for that video.", params: { reason: 'youtubeNoVideoChannel' } } };
       }
       const page = await fetchChannelPage(extracted.channelId);
       return { success: true, data: { channelId: extracted.channelId, icon: page?.icon, feedLink: channelFeedUrl(extracted.channelId), feedResult: undefined } };
@@ -242,7 +242,7 @@ async function resolveTarget(
       }
       const ownerId = extractPlaylistOwner(feedResult.data.body);
       if (!ownerId) {
-        return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel that owns that playlist." } };
+        return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "Couldn't find the channel that owns that playlist.", params: { reason: 'youtubeNoPlaylistChannel' } } };
       }
       const page = await fetchChannelPage(ownerId);
       return { success: true, data: { channelId: ownerId, icon: page?.icon, feedLink, feedResult: { success: true, data: feedResult.data } } };
@@ -299,7 +299,7 @@ async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchRes
   try {
     const target = parseYoutubeInput(input.link, true);
     if (!target) {
-      return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel, playlist or video." } };
+      return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel, playlist or video.", params: { reason: 'youtubeNotRecognized' } } };
     }
 
     const resolution = await resolveTarget(target, input.validators);
@@ -323,7 +323,7 @@ async function fetchFeed(input: SourceFetchInput): Promise<Result<SourceFetchRes
 
     const parsed = parseFeedContent(feedResult.data.body);
     if (!parsed) {
-      return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel feed." } };
+      return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a YouTube channel feed.", params: { reason: 'youtubeNotChannelFeed' } } };
     }
 
     return {
@@ -354,7 +354,7 @@ async function discover(query: string): Promise<Result<ParsedSource[], FeedFetch
     return result;
   }
   if ('notModified' in result.data) {
-    return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: 'The feed did not change since it was last fetched.' } };
+    return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message: 'The feed did not change since it was last fetched.', params: { reason: 'notModified' } } };
   }
   return { success: true, data: [result.data.parsed] };
 }

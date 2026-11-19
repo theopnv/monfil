@@ -46,6 +46,7 @@ export const mastodonSource = createFeedSource({
   fetchesFullArticle: false,
   toCandidates: mastodonCandidates,
   mismatchMessage: 'This is not a Mastodon profile, tag or @user@host handle.',
+  mismatchReason: 'mismatchMastodon',
   transform: titlePosts,
   resolveIcon: feedImage,
 });

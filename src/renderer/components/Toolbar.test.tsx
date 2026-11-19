@@ -747,7 +747,8 @@ test('a failed edit keeps the dialog open and shows the error', async () => {
   await getByRole('button', { name: 'Save changes' }).click();
 
   // Assert
-  await expect.element(getByText('Could not update the workspace.', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('The database could not complete this change.', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Details: Could not update the workspace.', { exact: true })).toBeInTheDocument();
   await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
 });
 
@@ -805,7 +806,8 @@ test('a failed delete keeps the dialog open and shows the error', async () => {
   await getByRole('button', { name: 'Delete workspace' }).click();
 
   // Assert
-  await expect.element(getByText('Could not delete the workspace.', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('The database could not complete this change.', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Details: Could not delete the workspace.', { exact: true })).toBeInTheDocument();
   await expect.element(getByRole('heading', { name: 'Delete workspace' })).toBeInTheDocument();
 });
 

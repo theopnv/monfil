@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { Trans, useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
 import { useState } from "react";
 import { Heading } from "react-aria-components";
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
@@ -72,7 +73,7 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
             )}
           </div>
 
-          {error && <p className="px-6 pb-2 text-sm text-error-primary">{error.message}</p>}
+          {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
           <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
             <Button color="secondary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>

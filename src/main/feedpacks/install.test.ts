@@ -112,7 +112,7 @@ describe('loading a feedpack', () => {
     const previewed = await previewFeedpack('other-pack');
 
     // Assert
-    const expected = { success: false, error: { name: 'PACK_NOT_FOUND', message: expect.stringContaining('other-pack') } };
+    const expected = { success: false, error: { name: 'PACK_NOT_FOUND', message: expect.stringContaining('other-pack'), params: { slug: 'other-pack' } } };
     expect(installed).toEqual(expected);
     expect(previewed).toEqual(expected);
     expect(startOpmlImport).not.toHaveBeenCalled();
@@ -155,7 +155,7 @@ describe('loading a feedpack', () => {
     const result = await previewFeedpack(pack.slug);
 
     // Assert
-    expect(result).toEqual({ success: false, error: { name: 'FETCH_ERROR', message: expect.stringContaining(pack.title) } });
+    expect(result).toEqual({ success: false, error: { name: 'FETCH_ERROR', message: expect.stringContaining(pack.title), params: { reason: 'local', title: pack.title } } });
     expect(fetchText).not.toHaveBeenCalled();
   });
 
@@ -200,7 +200,7 @@ describe('loading a feedpack', () => {
       const result = await previewFeedpack(pack.slug);
 
       // Assert
-      expect(result).toEqual({ success: false, error: { name: 'FETCH_ERROR', message: expect.stringContaining(pack.title) } });
+      expect(result).toEqual({ success: false, error: { name: 'FETCH_ERROR', message: expect.stringContaining(pack.title), params: { reason: 'remote', title: pack.title } } });
     });
   });
 

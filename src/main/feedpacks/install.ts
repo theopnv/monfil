@@ -17,13 +17,13 @@ async function loadFeedpack(slug: string): Promise<Result<{ pack: Feedpack; xml:
   }
   const pack = catalog.data.packs.find((candidate) => candidate.slug === slug);
   if (!pack) {
-    return { success: false, error: { name: 'PACK_NOT_FOUND', message: `The feedpack "${slug}" does not exist.` } };
+    return { success: false, error: { name: 'PACK_NOT_FOUND', message: `The feedpack "${slug}" does not exist.`, params: { slug } } };
   }
   if (usesBundledFeedpacks()) {
     try {
       return { success: true, data: { pack, xml: await readBundledFeedpack(pack) } };
     } catch {
-      return { success: false, error: { name: 'FETCH_ERROR', message: `Could not read local ${pack.title}.` } };
+      return { success: false, error: { name: 'FETCH_ERROR', message: `Could not read local ${pack.title}.`, params: { reason: 'local', title: pack.title } } };
     }
   }
   const fetched = await fetchText(feedpackOpmlUrl(pack));
@@ -33,7 +33,7 @@ async function loadFeedpack(slug: string): Promise<Result<{ pack: Feedpack; xml:
   try {
     return { success: true, data: { pack, xml: await readBundledFeedpack(pack) } };
   } catch {
-    return { success: false, error: { name: 'FETCH_ERROR', message: `Could not fetch ${pack.title}.` } };
+    return { success: false, error: { name: 'FETCH_ERROR', message: `Could not fetch ${pack.title}.`, params: { reason: 'remote', title: pack.title } } };
   }
 }
 

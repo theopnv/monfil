@@ -71,7 +71,7 @@
     "articles": "Articles",
     "size": "Database size",
     "backedUp": "Database backup saved.",
-    "backupFailed": "Backup failed: {{message}}",
+    "backupFailed": "Backup failed. {{message}}",
     "backUp": "Back up database…",
     "reveal": "Reveal database file",
     "importOpml": "Import OPML"

@@ -617,7 +617,7 @@ describe('checkFilter', () => {
     const error = checkFilter({ topics: ['test-automation'], places: ['Paris'] }, vocabulary);
 
     // Assert
-    expect(error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: 'No conference has the topic "test-automation". Try testing or software-testing.' });
+    expect(error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: 'No conference has the topic "test-automation". Try testing or software-testing.', params: { reason: 'conferenceUnknownTopicSuggest', terms: ['"test-automation"'], suggestions: ['testing', 'software-testing'] } });
   });
 
   test('an unknown topic without a close tag gives examples', () => {
@@ -633,7 +633,7 @@ describe('checkFilter', () => {
     const error = checkFilter({ topics: [], places: ['Parris'] }, vocabulary);
 
     // Assert
-    expect(error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: 'No conference takes place in "Parris". Try Paris.' });
+    expect(error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: 'No conference takes place in "Parris". Try Paris.', params: { reason: 'conferenceUnknownPlaceSuggest', terms: ['"Parris"'], suggestions: ['Paris'] } });
   });
 
   test('an unknown place without a close place asks for a city or a country', () => {
@@ -848,6 +848,7 @@ describe('conferenceSource', () => {
     expect(!result.success && result.error).toEqual({
       name: 'UNSUPPORTED_FORMAT',
       message: 'Type topics and places, such as "devops in France", or paste a developers.events link.',
+      params: { reason: 'conferenceEmptyQuery' },
     });
   });
 
@@ -864,7 +865,7 @@ describe('conferenceSource', () => {
     const result = await conferenceSource.fetch({ link: 'https://example.com/all-events.json' });
 
     // Assert
-    expect(!result.success && result.error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a developers.events link." });
+    expect(!result.success && result.error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like a developers.events link.", params: { reason: 'conferenceNotLink' } });
     expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
@@ -876,7 +877,7 @@ describe('conferenceSource', () => {
     const result = await conferenceSource.fetch({ link });
 
     // Assert
-    expect(!result.success && result.error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like the developers.events dataset." });
+    expect(!result.success && result.error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like the developers.events dataset.", params: { reason: 'conferenceNotDataset' } });
   });
 
   test('a failed download is passed on as it is', async () => {

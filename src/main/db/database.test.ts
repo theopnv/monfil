@@ -41,7 +41,7 @@ describe('initializeDatabase', () => {
     // Assert
     expect(columnsOf('workspace')).toEqual(['color', 'icon', 'id', 'installed_at', 'name', 'position', 'search_hint_dismissed_at', 'source_slug', 'source_version']);
     expect(columnsOf('feedCategory')).toEqual(['id', 'name', 'workspace_id']);
-    expect(columnsOf('feedMetadata')).toEqual(['etag', 'icon', 'id', 'last_error', 'last_fetched_at', 'last_modified', 'link', 'title', 'type']);
+    expect(columnsOf('feedMetadata')).toEqual(['etag', 'icon', 'id', 'last_error', 'last_error_code', 'last_error_params', 'last_fetched_at', 'last_modified', 'link', 'title', 'type']);
     expect(columnsOf('feedPlacement')).toEqual(['category_id', 'feed_id', 'showInWorkspace', 'workspace_id']);
     expect(columnsOf('feedItem')).toEqual(['author', 'description', 'excerpt', 'extra', 'feed_id', 'guid', 'id', 'image', 'link', 'pubDate', 'published_at', 'read_at', 'title']);
     expect(columnsOf('undatedItem')).toEqual(['feed_id', 'first_fetched_at', 'guid']);
@@ -101,7 +101,7 @@ describe('reopening an already-migrated file', () => {
     await closeDatabase();
     const old = new SQLite(filePath);
     old.pragma('journal_mode = WAL');
-    old.exec("DROP TABLE usage_counter; DELETE FROM kysely_migration WHERE name = '0010_usage_counters'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
+    old.exec("ALTER TABLE feedMetadata DROP COLUMN last_error_params; ALTER TABLE feedMetadata DROP COLUMN last_error_code; DELETE FROM kysely_migration WHERE name = '0011_feed_error_code'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
 
     // Act
     await initializeDatabase(filePath);
@@ -111,7 +111,7 @@ describe('reopening an already-migrated file', () => {
     // Assert
     expect(backups).toHaveLength(1);
     expect(backup.prepare("SELECT value FROM setting WHERE key = 'wal-row'").get()).toEqual({ value: 'present' });
-    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0010_usage_counters'").get()).toBeUndefined();
+    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0011_feed_error_code'").get()).toBeUndefined();
     backup.close();
     old.close();
   });
@@ -220,15 +220,15 @@ describe('failing to open a file database', () => {
   test('rejects, reports FAILED, and releases the file when a pending migration cannot apply', async () => {
     // Arrange
     const old = new SQLite(filePath);
-    old.exec("DELETE FROM kysely_migration WHERE name = '0010_usage_counters'");
+    old.exec("DELETE FROM kysely_migration WHERE name = '0011_feed_error_code'");
     old.close();
 
     // Act
     const opening = initializeDatabase(filePath);
 
     // Assert
-    await expect(opening).rejects.toThrow(/already exists/);
-    expect(dbStatus).toEqual({ name: 'FAILED', message: expect.stringContaining('already exists'), incidentId: expect.any(String) });
+    await expect(opening).rejects.toThrow(/duplicate column name/);
+    expect(dbStatus).toEqual({ name: 'FAILED', message: expect.stringContaining('duplicate column name'), incidentId: expect.any(String) });
     expect(existsSync(`${filePath}-wal`)).toBe(false);
   });
 

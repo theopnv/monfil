@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
+import { translateFeedFailure } from "@/lib/error-text";
 import { DotsGrid, Eye, EyeOff, LayerSingle } from "@untitledui/icons";
 import { Button as DragHandleButton } from "react-aria-components";
 import { ipc } from '@/lib/ipc-client';
@@ -35,6 +36,7 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
   onSetVisibility: SetVisibility;
 }) {
   const { t } = useTranslation('river');
+  const { t: tErrors } = useTranslation('errors');
   const state = feedVisibility(feed, showOnlyLinks);
   const focus = focusAction(state);
   const hide = hideAction(state);
@@ -69,7 +71,7 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
       >
         <FeedAvatar title={feed.title} faviconUrl={feed.icon} size="sm" />
         <span className="min-w-0 flex-1 truncate">{feed.title}</span>
-        {feed.last_error && <span role="img" aria-label={t('feed.refreshFailedLabel', { title: feed.title, error: feed.last_error })} title={t('feed.refreshFailedTitle', { error: feed.last_error })} className="text-warning-primary">!</span>}
+        {feed.last_error && <span role="img" aria-label={t('feed.refreshFailedLabel', { title: feed.title, error: translateFeedFailure(tErrors, { code: feed.last_error_code, params: feed.last_error_params }) })} title={t('feed.refreshFailedTitle', { error: translateFeedFailure(tErrors, { code: feed.last_error_code, params: feed.last_error_params }) })} className="text-warning-primary">!</span>}
       </button>
       <button
         type="button"

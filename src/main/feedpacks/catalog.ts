@@ -54,7 +54,7 @@ function parseCatalog(text: string): Result<FeedpackCatalog, CatalogError> {
   if (catalog['version'] !== CATALOG_VERSION) {
     return {
       success: false,
-      error: { name: 'UNSUPPORTED_VERSION', message: `This version of Monfil cannot read feedpack catalog version ${String(catalog['version'])}.` },
+      error: { name: 'UNSUPPORTED_VERSION', message: `This version of Monfil cannot read feedpack catalog version ${String(catalog['version'])}.`, params: { version: String(catalog['version']) } },
     };
   }
   if (!Array.isArray(catalog['packs']) || !catalog['packs'].every(isFeedpack)) {

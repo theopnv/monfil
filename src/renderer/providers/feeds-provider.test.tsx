@@ -118,13 +118,13 @@ afterEach(async () => {
 
 test('a partial refresh failure lets the user reveal the log file', async () => {
   // Arrange
-  invokeImpl = () => Promise.resolve({ perFeed: [], failedFeeds: [{ feedId: 1, title: 'Alpha', message: 'offline' }, { feedId: 2, title: 'Beta', message: 'The server had an error (HTTP 502).' }] } satisfies RefreshSummary);
+  invokeImpl = () => Promise.resolve({ perFeed: [], failedFeeds: [{ feedId: 1, title: 'Alpha', message: 'offline', code: 'NETWORK_ERROR' }, { feedId: 2, title: 'Beta', message: 'The server had an error (HTTP 502).', code: 'GENERIC_FETCH_ERROR', params: { reason: 'serverError', status: 502 } }] } satisfies RefreshSummary);
   const { getByText, getByRole } = await renderWithQueryClient(<><RefreshButton /><NotificationHost /></>);
 
   // Act
   await getByRole('button', { name: 'Refresh feeds' }).click();
   await expect.element(getByText('2 feeds could not be refreshed.', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('Alpha: offline', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Alpha: Monfil could not reach the server.', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('Beta: The server had an error (HTTP 502).', { exact: true })).toBeInTheDocument();
   await getByRole('button', { name: 'Show log file' }).click();
 
@@ -134,7 +134,7 @@ test('a partial refresh failure lets the user reveal the log file', async () => 
 
 test('a refresh with four failures names three feeds and counts the rest', async () => {
   // Arrange
-  const failedFeeds = [1, 2, 3, 4].map((feedId) => ({ feedId, title: `Feed ${feedId}`, message: 'offline' }));
+  const failedFeeds = [1, 2, 3, 4].map((feedId) => ({ feedId, title: `Feed ${feedId}`, message: 'offline', code: 'NETWORK_ERROR' }));
   invokeImpl = () => Promise.resolve({ perFeed: [], failedFeeds } satisfies RefreshSummary);
   const { getByText, getByRole } = await renderWithQueryClient(<><RefreshButton /><NotificationHost /></>);
 
@@ -142,9 +142,9 @@ test('a refresh with four failures names three feeds and counts the rest', async
   await getByRole('button', { name: 'Refresh feeds' }).click();
 
   // Assert
-  await expect.element(getByText('Feed 3: offline', { exact: true })).toBeInTheDocument();
+  await expect.element(getByText('Feed 3: Monfil could not reach the server.', { exact: true })).toBeInTheDocument();
   await expect.element(getByText('and 1 more', { exact: true })).toBeInTheDocument();
-  await expect.element(getByText('Feed 4: offline', { exact: true })).not.toBeInTheDocument();
+  await expect.element(getByText('Feed 4: Monfil could not reach the server.', { exact: true })).not.toBeInTheDocument();
 });
 
 test('loads the first page on mount', async () => {
@@ -726,7 +726,7 @@ describe('useFeedsRefresh', () => {
 
   test('reports a single failed feed in the singular', async () => {
     // Arrange
-    invokeImpl = () => Promise.resolve({ perFeed: [], failedFeeds: [{ feedId: 3, title: 'Gamma', message: 'offline' }] } satisfies RefreshSummary);
+    invokeImpl = () => Promise.resolve({ perFeed: [], failedFeeds: [{ feedId: 3, title: 'Gamma', message: 'offline', code: 'NETWORK_ERROR' }] } satisfies RefreshSummary);
     const { getByText, getByRole } = await renderWithQueryClient(<><RefreshButton /><NotificationHost /></>);
 
     // Act

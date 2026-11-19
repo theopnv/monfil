@@ -13,6 +13,7 @@ import { sourceFor } from './sources/registry';
 import { setFeedFetchResult, setFeedIconIfMissing } from '../db/crud/update';
 import { resolveSiteIcon } from './sources/siteIcon';
 import type { RefreshSummary, RetentionDays, SourceType } from '../../shared/contracts';
+import type { CodedError } from '../../shared/errors';
 import { runWithConcurrency } from '../lib/utils';
 import { FEED_FETCH_CONCURRENCY } from '../lib/constants';
 import { getRetentionDays } from '../app/settings';
@@ -42,7 +43,7 @@ async function fillMissingIcon(feed: FeedMetadataRow, siteLink: string | undefin
   }
 }
 
-async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: boolean): Promise<{ items: FeedItem[]; updated: number; failure?: string }> {
+async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: boolean): Promise<{ items: FeedItem[]; updated: number; failure?: CodedError }> {
   if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
     return { items: [], updated: 0 };
   }
@@ -54,11 +55,15 @@ async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: bool
   }
   if (!result.success) {
     logger.warn('feed.refresh', { outcome: 'failed', feedId: feed.id, errorCode: result.error.name }, result.error);
-    const updated = await setFeedFetchResult(feed.id, { last_error: result.error.message });
+    const updated = await setFeedFetchResult(feed.id, {
+      last_error: result.error.message,
+      last_error_code: result.error.name,
+      ...(result.error.params ? { last_error_params: result.error.params } : {}),
+    });
     if (!updated.success) {
       logger.error('operation.failure', { operation: 'store-refresh-failure', entityId: feed.id }, updated.error);
     }
-    return { items: [], updated: 0, failure: result.error.message };
+    return { items: [], updated: 0, failure: result.error };
   }
 
   // A 304 keeps the stored validators as-is; a full fetch replaces them with the ones the server
@@ -76,7 +81,8 @@ async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: bool
   const inserted = await syncFeedItemsToDatabase(db, feed.id, outcome.parsed.items, cutoff);
   if (!inserted.success) {
     logger.error('operation.failure', { operation: 'store-refreshed-items', entityId: feed.id }, inserted.error);
-    return { items: [], updated: 0, failure: 'Could not save the new items.' };
+    const failure: CodedError = { name: 'DB_ERROR', message: 'Could not save the new items.' };
+    return { items: [], updated: 0, failure };
   }
 
   // Advance validators only after the response items are stored, so a 304 cannot hide an insert failure.
@@ -102,7 +108,7 @@ async function refreshFeedList(feedList: FeedMetadataRow[], retentionDays: Reten
     insertedByFeedId.set(feed.id, result.items);
     updatedByFeedId.set(feed.id, result.updated);
     if (result.failure !== undefined) {
-      failedFeeds.push({ feedId: feed.id, title: feed.title, message: result.failure });
+      failedFeeds.push({ feedId: feed.id, title: feed.title, message: result.failure.message, code: result.failure.name, ...(result.failure.params ? { params: result.failure.params } : {}) });
     }
   });
 

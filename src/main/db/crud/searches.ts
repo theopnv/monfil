@@ -22,17 +22,17 @@ function isUniqueViolation(error: unknown): boolean {
 
 function toFailure(error: unknown, duplicateName?: string): { success: false; error: SavedSearchError } {
   if (isUniqueViolation(error)) {
-    return failure({ name: 'DUPLICATE_NAME', message: `A saved search named "${duplicateName ?? ''}" already exists.` });
+    return failure({ name: 'DUPLICATE_NAME', message: `A saved search named "${duplicateName ?? ''}" already exists.`, params: { reason: 'search', name: duplicateName ?? '' } });
   }
   return failure({ name: 'DB_ERROR', message: error instanceof Error ? error.message : 'The saved search could not be stored.' });
 }
 
 function validate(name: string | undefined, query: string | undefined): SavedSearchError | undefined {
   if (name !== undefined && (name.trim() === '' || name.trim().length > MAX_NAME_LENGTH)) {
-    return { name: 'INVALID_INPUT', message: `A name needs 1 to ${MAX_NAME_LENGTH} characters.` };
+    return { name: 'INVALID_INPUT', message: `A name needs 1 to ${MAX_NAME_LENGTH} characters.`, params: { reason: 'name', max: MAX_NAME_LENGTH } };
   }
   if (query !== undefined && (query.trim() === '' || query.trim().length > MAX_QUERY_LENGTH)) {
-    return { name: 'INVALID_INPUT', message: `A search needs 1 to ${MAX_QUERY_LENGTH} characters.` };
+    return { name: 'INVALID_INPUT', message: `A search needs 1 to ${MAX_QUERY_LENGTH} characters.`, params: { reason: 'query', max: MAX_QUERY_LENGTH } };
   }
   return undefined;
 }

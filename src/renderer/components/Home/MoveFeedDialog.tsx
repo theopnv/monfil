@@ -3,6 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import { Trans, useTranslation } from 'react-i18next';
+import { ErrorText } from "@/components/errors/ErrorText";
+import type { CodedError } from "../../../shared/errors";
 import { useState } from "react";
 import { Heading } from "react-aria-components";
 import { useQuery } from "@tanstack/react-query";
@@ -31,7 +33,7 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
   const [folderChoice, setFolderChoice] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState(feed.category.name);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<CodedError | null>(null);
   const { data: categories = [] } = useQuery({ ...categoriesQuery(destinationId ?? 0), enabled: destinationId !== undefined });
 
   const folderNames = categories.map((category) => category.name);
@@ -50,7 +52,7 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
     if (result.success) {
       onClose();
     } else {
-      setError(result.error.message);
+      setError(result.error);
     }
   }
 
@@ -99,7 +101,7 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
         )}
       </div>
 
-      {error && <p className="px-6 pb-2 text-sm text-error-primary">{error}</p>}
+      {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
       <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
         <Button color="secondary" size="md" className="rounded-full" onPress={onClose}>
