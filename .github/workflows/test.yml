@@ -2,7 +2,8 @@ name: Test
 
 on:
   pull_request:
-    branches: [main]
+    # Any base branch, so each PR of a stack gets its own run.
+    branches: ['**']
     types: [opened, synchronize, reopened, labeled, unlabeled]
   workflow_dispatch:
   workflow_call:
