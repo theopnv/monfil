@@ -37,7 +37,7 @@ export default function Step3Done({ feed }: Step3DoneProps) {
       )}
 
       {items.length > 0 && (
-        <div className="w-full overflow-hidden rounded-xl border border-secondary text-left">
+        <div className="w-full overflow-hidden rounded-xl border border-secondary text-start">
           {items.map((item, index, all) => (
             <div
               key={item.id}

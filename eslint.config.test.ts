@@ -150,3 +150,22 @@ describe('Stryker suppression comments', () => {
     expect(count).toBe(1);
   });
 });
+
+describe('logical Tailwind classes', () => {
+  test.each([
+    ["export const a = 'ml-2';", 1],
+    ["export const a = 'flex pl-3 hover:pr-4';", 2],
+    ['export const a = `text-left ${b}`;', 1],
+    ["export const a = 'ms-2 text-start';", 0],
+  ])('counts the physical classes in %s', async (code, expected) => {
+    expect(await ruleErrors(code, 'src/renderer/example.ts', 'layout/logical-classes')).toBe(expected);
+  });
+
+  test('skips the vendored UI folder', async () => {
+    expect(await ruleErrors("export const a = 'ml-2';", 'src/renderer/components/untitled-ui/example.ts', 'layout/logical-classes')).toBe(0);
+  });
+
+  test('skips process code outside the renderer', async () => {
+    expect(await ruleErrors("export const a = 'ml-2';", 'src/main/example.ts', 'layout/logical-classes')).toBe(0);
+  });
+});

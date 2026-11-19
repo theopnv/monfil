@@ -51,7 +51,7 @@ function showWorkspaceMenu(workspaceId: number) {
 
 function WorkspaceButton({ workspace, isActive, shortcut }: WorkspaceButtonProps) {
   const Icon = workspaceIconComponent(workspace.icon);
-  const title = shortcut ? <>{workspace.name} <kbd className="ml-1 font-sans font-normal opacity-70">{shortcut}</kbd></> : workspace.name;
+  const title = shortcut ? <>{workspace.name} <kbd className="ms-1 font-sans font-normal opacity-70">{shortcut}</kbd></> : workspace.name;
 
   return (
     <Tooltip title={title} placement="right" delay={200}>
@@ -90,7 +90,7 @@ function ExpandedWorkspaceButton({ workspace, isActive, shortcut }: WorkspaceBut
         <Icon aria-hidden className="size-4.5 stroke-[2.25px]" />
       </span>
       <span title={workspace.name} className={cx("min-w-0 flex-1 truncate text-sm text-primary", isActive ? "font-semibold" : "font-medium")}>{workspace.name}</span>
-      {shortcut && <kbd className="mr-2.5 flex-none font-sans text-xs text-tertiary">{shortcut}</kbd>}
+      {shortcut && <kbd className="me-2.5 flex-none font-sans text-xs text-tertiary">{shortcut}</kbd>}
     </Link>
   );
 }
@@ -227,7 +227,7 @@ function RailToggle({ expanded, onToggle }: { expanded: boolean; onToggle: () =>
   }
 
   return (
-    <Tooltip title={<>{label} <kbd className="ml-1 font-sans font-normal opacity-70">{MOD_KEY_LABEL}B</kbd></>} placement="right" delay={200}>
+    <Tooltip title={<>{label} <kbd className="ms-1 font-sans font-normal opacity-70">{MOD_KEY_LABEL}B</kbd></>} placement="right" delay={200}>
       <Button aria-label={label} aria-expanded={false} size="md" color="tertiary" className="rounded-xl" iconLeading={<LayoutLeft />} onPress={onToggle} />
     </Tooltip>
   );
@@ -306,7 +306,7 @@ export default function Toolbar() {
   }
 
   return (
-    <nav className={cx("flex h-full flex-none flex-col gap-1.5 border-r border-secondary bg-secondary py-4.5", railExpanded ? "w-50 items-stretch px-3.5" : "w-16 items-center")}>
+    <nav className={cx("flex h-full flex-none flex-col gap-1.5 border-e border-secondary bg-secondary py-4.5", railExpanded ? "w-50 items-stretch px-3.5" : "w-16 items-center")}>
       <div className={cx("flex flex-col gap-3.5", railExpanded ? "items-stretch" : "items-center")}>
         <MonfilLogo className={cx("size-8.5", railExpanded && "self-start")} />
 

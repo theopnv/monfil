@@ -132,7 +132,7 @@ export default function RiverHeader({ searchQuery, onSearchChange, hasFeeds, vis
 
         {!savedView && <RiverFilterStrip feeds={feeds} showOnlyLinks={showOnlyLinks} onClearFocus={onClearFocus} onShowHidden={onShowHidden} />}
 
-        {!savedView && hasFeeds && refreshFailed && <p className="text-right text-sm text-error-primary">{REFRESH_FAILED_MESSAGE}</p>}
+        {!savedView && hasFeeds && refreshFailed && <p className="text-end text-sm text-error-primary">{REFRESH_FAILED_MESSAGE}</p>}
       </div>
     </header>
   );

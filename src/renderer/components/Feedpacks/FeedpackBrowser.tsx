@@ -60,11 +60,11 @@ export default function FeedpackBrowser({ isActive, selected, onSelect }: Feedpa
           <p className="text-sm text-secondary">{selected.sources.categories.reduce((total, category) => total + category.feeds.length, 0)} sources</p>
         </div>
 
-        <ul aria-label="Pack sources" className="flex flex-col gap-3 border-l border-secondary pl-4">
+        <ul aria-label="Pack sources" className="flex flex-col gap-3 border-s border-secondary ps-4">
           {selected.sources.categories.map((category) => (
             <li key={category.name}>
               <p className="text-sm font-semibold text-primary">{category.name}</p>
-              <ul className="mt-1 flex flex-col gap-1 border-l border-secondary pl-3 text-sm text-tertiary">
+              <ul className="mt-1 flex flex-col gap-1 border-s border-secondary ps-3 text-sm text-tertiary">
                 {category.feeds.map((feed) => <li key={feed.xmlUrl}>{feed.title}</li>)}
               </ul>
             </li>
@@ -96,7 +96,7 @@ export default function FeedpackBrowser({ isActive, selected, onSelect }: Feedpa
           {catalog.data?.success && packs.length === 0 && <p className="text-sm text-tertiary">No feedpacks are available.</p>}
           {packs.length > 0 && visiblePacks.length === 0 && <p className="text-sm text-tertiary">No feedpacks match &quot;{query.trim()}&quot;.</p>}
           {visiblePacks.map((pack) => (
-            <Button key={pack.slug} color="secondary" size="md" className="h-auto justify-start py-3 text-left" onPress={() => void showPack(pack)}>
+            <Button key={pack.slug} color="secondary" size="md" className="h-auto justify-start py-3 text-start" onPress={() => void showPack(pack)}>
               <span className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="flex min-w-0 items-baseline gap-2">
                   <span className="min-w-0 truncate font-medium">{pack.title}</span>

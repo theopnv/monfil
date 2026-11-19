@@ -102,7 +102,7 @@ function Pill({ search, isActive, onToggle, onDelete, onRename }: { search: Save
         }}
         className={cx(
           pillClasses,
-          "pr-3 group-focus-within:pr-7 group-hover:pr-7",
+          "pe-3 group-focus-within:pe-7 group-hover:pe-7",
           isActive ? "bg-brand-solid text-white" : "bg-secondary text-secondary ring-1 ring-secondary ring-inset hover:bg-secondary_hover",
         )}
       >
@@ -114,7 +114,7 @@ function Pill({ search, isActive, onToggle, onDelete, onRename }: { search: Save
         aria-label={`Delete saved search ${search.name}`}
         onClick={onDelete}
         className={cx(
-          "absolute top-1/2 right-1.5 flex size-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full opacity-0 outline-brand transition duration-100 ease-linear group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:outline-2",
+          "absolute top-1/2 end-1.5 flex size-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full opacity-0 outline-brand transition duration-100 ease-linear group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:outline-2",
           isActive ? "text-white" : "text-fg-quaternary hover:text-fg-quaternary_hover",
         )}
       >
@@ -126,8 +126,8 @@ function Pill({ search, isActive, onToggle, onDelete, onRename }: { search: Save
 
 function HintPill({ example, onUse, onDismiss }: { example: string; onUse: () => void; onDismiss: () => void }) {
   return (
-    <div className="flex flex-none items-center rounded-full border border-dashed border-primary pr-1">
-      <button type="button" onClick={onUse} className="cursor-pointer rounded-full py-1 pr-1.5 pl-3 text-left text-sm text-tertiary outline-brand focus-visible:outline-2">
+    <div className="flex flex-none items-center rounded-full border border-dashed border-primary pe-1">
+      <button type="button" onClick={onUse} className="cursor-pointer rounded-full py-1 pe-1.5 ps-3 text-start text-sm text-tertiary outline-brand focus-visible:outline-2">
         Save a search for each role you want, e.g. <code className="font-mono text-secondary">{example}</code>
       </button>
       <button

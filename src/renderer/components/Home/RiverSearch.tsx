@@ -101,7 +101,7 @@ export default function RiverSearch({ value, onChange, placeholder, saveControl 
           onFocus={() => setExpanded(true)}
           onBlur={handleBlur}
           style={expanded ? { width: placement.width || "100%", transform: `translate(${placement.x}px, ${placement.y}px)` } : { width: "100%", transform: "translate(0, 0)" }}
-          className="absolute top-0 right-0 z-40 transition-[width,transform] duration-200 ease-out motion-reduce:transition-none"
+          className="absolute top-0 end-0 z-40 transition-[width,transform] duration-200 ease-out motion-reduce:transition-none"
         >
           <div className="relative">
             <Input
@@ -110,7 +110,7 @@ export default function RiverSearch({ value, onChange, placeholder, saveControl 
               aria-label={placeholder}
               icon={SearchIcon}
               wrapperClassName="rounded-full"
-              inputClassName="pr-9"
+              inputClassName="pe-9"
               value={value}
               onChange={onChange}
               onKeyDown={handleKeyDown}
@@ -121,7 +121,7 @@ export default function RiverSearch({ value, onChange, placeholder, saveControl 
                 aria-label="Clear search"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => onChange("")}
-                className="absolute right-2.5 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-fg-quaternary transition duration-100 ease-linear hover:text-fg-quaternary_hover focus:outline-hidden"
+                className="absolute end-2.5 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-fg-quaternary transition duration-100 ease-linear hover:text-fg-quaternary_hover focus:outline-hidden"
               >
                 <XClose className="size-4 stroke-[2.25px]" />
               </button>
@@ -129,7 +129,7 @@ export default function RiverSearch({ value, onChange, placeholder, saveControl 
           </div>
 
           {expanded && (
-            <div role="region" aria-label="Search syntax" className="absolute top-full right-0 left-0 mt-2 animate-in rounded-2xl bg-primary p-5 shadow-xl ring-1 ring-secondary duration-200 fade-in slide-in-from-top-1">
+            <div role="region" aria-label="Search syntax" className="absolute top-full end-0 start-0 mt-2 animate-in rounded-2xl bg-primary p-5 shadow-xl ring-1 ring-secondary duration-200 fade-in slide-in-from-top-1">
               <dl className="grid grid-cols-1 gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
                 {SEARCH_SYNTAX.map(({ example, meaning }) => (
                   <div key={example} className="flex flex-col">

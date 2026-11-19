@@ -7,6 +7,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 import stylistic from '@stylistic/eslint-plugin';
 import sonarjs from 'eslint-plugin-sonarjs';
+import { physicalTailwindClassRule } from './scripts/lint/physical-tailwind-class.mts';
 import { strykerDisableRule } from './scripts/mutation/eslint-rule.mts';
 
 type ESLintPlugin = NonNullable<Linter.Config['plugins']>[string];
@@ -23,7 +24,7 @@ export default defineConfig([
         // A nested checkout brings a second tsconfig.json; without this the parser refuses to guess between them.
         tsconfigRootDir: import.meta.dirname,
         projectService: {
-          allowDefaultProject: ['eslint.config.test.ts', 'dependency-cruiser.test.ts', 'src/*/boundary-test.ts', 'src/*/example.ts'],
+          allowDefaultProject: ['eslint.config.test.ts', 'dependency-cruiser.test.ts', 'src/*/boundary-test.ts', 'src/*/example.ts', 'src/renderer/components/untitled-ui/example.ts'],
         },
       },
     },
@@ -65,8 +66,10 @@ export default defineConfig([
     files: ['src/renderer/**/*.{ts,tsx}'],
     plugins: {
       'react-hooks': reactHooks as unknown as ESLintPlugin,
+      'layout': { rules: { 'logical-classes': physicalTailwindClassRule } },
     },
     rules: {
+      'layout/logical-classes': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'error',
       'no-restricted-syntax': ['error', {
@@ -80,6 +83,10 @@ export default defineConfig([
         ],
       }],
     },
+  },
+  {
+    files: ['src/renderer/components/untitled-ui/**'],
+    rules: { 'layout/logical-classes': 'off' },
   },
   {
     files: ['src/renderer/lib/ipc-client.ts'],

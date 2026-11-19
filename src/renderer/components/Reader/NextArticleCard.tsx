@@ -17,7 +17,7 @@ export default function NextArticleCard({ item, label, onClick }: NextArticleCar
     <button
       type="button"
       onClick={onClick}
-      className="mb-8.5 flex w-full items-center gap-4.5 rounded-xl border border-secondary p-5.5 text-left transition hover:border-brand hover:shadow-md"
+      className="mb-8.5 flex w-full items-center gap-4.5 rounded-xl border border-secondary p-5.5 text-start transition hover:border-brand hover:shadow-md"
     >
       <div className="min-w-0 flex-1">
         <div className="mb-1.75 text-xs font-bold tracking-wide text-tertiary uppercase">{label}</div>

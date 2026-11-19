@@ -40,7 +40,7 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
   const HideIcon = state === "hidden" ? Eye : EyeOff;
 
   return (
-    <div className={cx("group/row flex min-w-0 items-center rounded-xl pl-2", isDropTarget && "bg-primary_hover")}>
+    <div className={cx("group/row flex min-w-0 items-center rounded-xl ps-2", isDropTarget && "bg-primary_hover")}>
       <DragHandleButton
         slot="drag"
         aria-label="Drag to a folder"
@@ -59,7 +59,7 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
           ipc.send('feeds:show-feed-context-menu', feed.id);
         }}
         className={cx(
-          "flex min-w-0 flex-1 items-center gap-2.25 rounded-xl px-2.25 py-1.5 text-left text-sm hover:bg-primary_hover",
+          "flex min-w-0 flex-1 items-center gap-2.25 rounded-xl px-2.25 py-1.5 text-start text-sm hover:bg-primary_hover",
           state === "only" && "bg-primary_hover font-semibold text-primary",
           state === "hidden" && "text-quaternary opacity-60",
           state === "home" && "text-secondary",
