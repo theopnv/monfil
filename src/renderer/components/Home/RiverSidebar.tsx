@@ -318,7 +318,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
     : [];
 
   return (
-    <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-r border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
+    <div className="flex h-full w-64 flex-none flex-col gap-1.5 overflow-y-auto border-e border-secondary bg-[color-mix(in_srgb,var(--color-bg-secondary)_45%,var(--color-bg-primary))] py-3">
       <WorkspaceNavigation saved={savedView} hasFeeds={hasFeeds} />
       <div className="flex items-center justify-between px-4.5 pb-2">
         <span className="text-xs font-bold tracking-wide text-tertiary uppercase">Feeds</span>
@@ -461,7 +461,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                         setFolderOpenStored(folder.id, !folder.open);
                         setFolders((prev) => prev.map((f) => (f.id === folder.id ? { ...f, open: !f.open } : f)));
                       }}
-                      className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+                      className="flex min-w-0 flex-1 items-center gap-1.5 text-start"
                     >
                       <ChevronRight className={cx("size-3.25 flex-none text-quaternary transition-transform", folder.open && "rotate-90")} />
                       <span className="min-w-0 flex-1 truncate">{folder.name}</span>

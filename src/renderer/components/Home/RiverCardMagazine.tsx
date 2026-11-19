@@ -32,11 +32,11 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
 
       <div className="flex flex-1 flex-col p-4.25">
         {/* Keeps the time clear of the save button RiverList overlays, which an absent or failed image leaves over this row. */}
-        <div className="mb-2 flex items-center gap-1.75 pr-7">
+        <div className="mb-2 flex items-center gap-1.75 pe-7">
           <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
           <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="sm" />
           <span className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
-          <span className="ml-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
+          <span className="ms-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt)}</span>
         </div>
 
         <h4 className="mb-1.75 text-base leading-snug font-bold text-pretty text-primary">{item.title}</h4>

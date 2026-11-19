@@ -19,11 +19,11 @@ export default function UsageAnalyticsCard() {
   }
 
   return (
-    <section aria-label="Anonymous usage stats" className="absolute right-6 bottom-6 z-10 flex w-[360px] flex-col gap-3 rounded-xl border-2 border-brand-solid bg-primary p-4 shadow-2xl ring-8 ring-black/5">
-      <button type="button" aria-label="Ask me later" className="absolute top-3 right-3 text-tertiary hover:text-secondary" onClick={() => dismiss()}>
+    <section aria-label="Anonymous usage stats" className="absolute end-6 bottom-6 z-10 flex w-[360px] flex-col gap-3 rounded-xl border-2 border-brand-solid bg-primary p-4 shadow-2xl ring-8 ring-black/5">
+      <button type="button" aria-label="Ask me later" className="absolute top-3 end-3 text-tertiary hover:text-secondary" onClick={() => dismiss()}>
         <XClose className="size-4" />
       </button>
-      <h2 className="pr-6 text-md font-semibold text-primary">Help improve Monfil</h2>
+      <h2 className="pe-6 text-md font-semibold text-primary">Help improve Monfil</h2>
       <p className="text-sm text-tertiary">
         Share anonymous usage stats: one daily count of the features you use. No feed, article, or search text leaves your device. You can change this in Settings at any time.
       </p>

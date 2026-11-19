@@ -29,7 +29,7 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
     >
       <div className="min-w-0 flex-1">
         {/* Keeps the time clear of the save button RiverList overlays on the card's top-right corner. */}
-        <div className="mb-2.25 flex items-center gap-2 pr-7">
+        <div className="mb-2.25 flex items-center gap-2 pe-7">
           <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
           <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="md" />
           <span className="min-w-0 truncate text-sm font-bold text-primary">{item.feedTitle}</span>
@@ -48,7 +48,7 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
       </div>
 
       {/* The right margin keeps the image clear of the save button RiverList overlays on the card's top-right corner. */}
-      <RiverCardImage src={item.image} className="mr-7 h-28 w-37.5 flex-none rounded-lg" />
+      <RiverCardImage src={item.image} className="me-7 h-28 w-37.5 flex-none rounded-lg" />
     </article>
   );
 }

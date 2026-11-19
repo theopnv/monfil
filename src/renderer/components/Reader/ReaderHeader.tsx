@@ -34,11 +34,11 @@ export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPre
         {item.categoryName && <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-tertiary">{item.categoryName}</span>}
       </div>
 
-      <div className="ml-auto flex flex-none items-center gap-1">
+      <div className="ms-auto flex flex-none items-center gap-1">
         {item.link && (
           <>
             <ArticleSourceLink item={item} />
-            <span className="mx-1.5 h-5.5 flex-none border-l border-secondary" />
+            <span className="mx-1.5 h-5.5 flex-none border-s border-secondary" />
           </>
         )}
 
@@ -47,7 +47,7 @@ export default function ReaderHeader({ item, onNavigateHome, onToggleRead, onPre
         </Tooltip>
         <SaveButton item={item} {...(savedView ? { onRemoved: onNavigateHome } : {})} />
 
-        <span className="mx-1.5 h-5.5 flex-none border-l border-secondary" />
+        <span className="mx-1.5 h-5.5 flex-none border-s border-secondary" />
 
         <Button aria-label="Previous article" color="tertiary" size="sm" className="rounded-full" iconLeading={ChevronUp} isDisabled={!hasPrevious} onPress={onPrevious} />
         <Button aria-label="Next article" color="tertiary" size="sm" className="rounded-full" iconLeading={ChevronDown} isDisabled={!hasNext} onPress={onNext} />
