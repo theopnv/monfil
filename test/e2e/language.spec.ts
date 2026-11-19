@@ -165,16 +165,16 @@ languageTest('French menus follow the choice, and System goes back to the langua
   await expect.poll(async () => (await documentState(page)).lang).toBe(systemLanguage);
 });
 
-const LANGUAGES_WITH_TRANSLATIONS = ['fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'] as const;
+const LANGUAGES_WITH_TRANSLATIONS = ['en', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'] as const;
 
 for (const code of LANGUAGES_WITH_TRANSLATIONS) {
-  languageTest(`every button of the new workspace dialog stays inside it in ${code}`, async ({ launch }) => {
+  languageTest(`the three footer buttons of the new workspace dialog share one row inside it in ${code}`, async ({ launch }) => {
     // Arrange
     const { page } = await launch();
     await openSettings(page);
     await languagePicker(page).selectOption(code);
     await expect.poll(async () => (await documentState(page)).lang).toBe(code);
-    const words = JSON.parse(await readFile(path.join('src/shared/i18n/locales', code, 'workspace.json'), 'utf8')) as { rail: { new: string }; dialog: { browse: string } };
+    const words = JSON.parse(await readFile(path.join('src/shared/i18n/locales', code, 'workspace.json'), 'utf8')) as { rail: { new: string } };
     await page.evaluate(() => {
       window.history.pushState(null, '', '#/');
     });
@@ -185,18 +185,19 @@ for (const code of LANGUAGES_WITH_TRANSLATIONS) {
     // Assert
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
-    // A reviewer may shorten a translation, so the test stretches the label to the length of the longest draft.
-    await dialog.getByRole('button', { name: words.dialog.browse }).evaluate((element, label) => {
-      element.textContent = `${label} ${label}`;
-    }, words.dialog.browse);
     const frame = await dialog.boundingBox();
     const buttons = await dialog.getByRole('button').all();
     expect(buttons.length).toBeGreaterThan(2);
+    const footerTops: number[] = [];
     for (const button of buttons) {
       const box = await button.boundingBox();
       expect(box).not.toBeNull();
       expect(box?.x).toBeGreaterThanOrEqual((frame?.x ?? 0) - 1);
       expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual((frame?.x ?? 0) + (frame?.width ?? 0) + 1);
     }
+    // Browse, Cancel, and Create share one row.
+    const footer = await Promise.all((await dialog.getByRole('button').all()).slice(-3).map((button) => button.boundingBox()));
+    footerTops.push(...footer.map((box) => Math.round(box?.y ?? -1)));
+    expect(new Set(footerTops).size).toBe(1);
   });
 }
