@@ -35,7 +35,7 @@ Le mainteneur du site Monfil est responsable de ce site. Pour toute question de 
 
 ## Application de bureau
 
-Monfil est un lecteur de flux de bureau. Il n'a ni compte ni serveur Monfil. Il enregistre vos flux, vos articles enregistrés et leur état de lecture sur votre appareil. Certains réglages d'affichage utilisent le stockage local. Vous pouvez trouver et sauvegarder la base de données dans les **Paramètres**.
+Monfil est un lecteur de flux RSS qui s'installe sur votre ordinateur. Il n'a ni compte ni serveur Monfil. Il enregistre vos flux, vos articles enregistrés et leur état de lecture sur votre appareil. Certains réglages d'affichage utilisent le stockage local. Vous pouvez trouver et sauvegarder la base de données dans les **Paramètres**.
 
 ### Statistiques d'usage anonymes (facultatif)
 
