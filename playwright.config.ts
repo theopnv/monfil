@@ -12,10 +12,13 @@ process.env['MONFIL_HINTS'] = 'off';
 // A second app on the same CPU makes them time out, so they run alone after the others.
 const ALONE = /(enrichment-performance|layout-audit|volume)\.spec\.ts/;
 
+// GitHub's macOS and Windows runners have too few cores for two apps at once: starting and quitting an app passes the 30 second limit.
+const WORKERS = process.env['CI'] && process.platform !== 'linux' ? 1 : 2;
+
 export default defineConfig({
   testDir: './test/e2e',
   testMatch: /.*\.spec\.ts/,
-  workers: 2,
+  workers: WORKERS,
   projects: [
     { name: 'parallel', testIgnore: ALONE },
     { name: 'alone', testMatch: ALONE, workers: 1, dependencies: ['parallel'] },
