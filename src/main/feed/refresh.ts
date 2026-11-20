@@ -52,7 +52,6 @@ async function fillMissingIcon({ feed, siteLink }: IconLookup): Promise<boolean>
   return stored.success;
 }
 
-// The icon is no reason to hold up a feed's items, so the lookups run once the items are stored.
 async function fillMissingIcons(lookups: readonly IconLookup[]): Promise<void> {
   let stored = 0;
   await runWithConcurrency(lookups, FEED_FETCH_CONCURRENCY, async (lookup) => {

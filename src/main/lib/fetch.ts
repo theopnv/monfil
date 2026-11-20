@@ -21,9 +21,9 @@ export interface FetchUrlOptions {
   timeoutMs?: number;
   /** Refuses hosts on loopback, link-local or private ranges. Set it for every URL a feed chose rather than the user. */
   blockPrivateHosts?: boolean;
-  /** Answers from the status line: the body is never read, and `FetchedText.body` is empty. For a probe that asks only whether the URL exists. */
+  /** Never reads the body, so `FetchedText.body` is empty. */
   headersOnly?: boolean;
-  /** Stops reading once this text has arrived (any letter case) and returns what came in so far, so a caller that needs only a page's head does not download the rest. */
+  /** Stops reading once this text has arrived, in any letter case, and returns what came in so far. */
   stopAfter?: string;
 }
 
@@ -268,7 +268,6 @@ export function readCappedText(
     const marker = stopAfter?.toLowerCase();
     let bytesRead = 0;
     let done = false;
-    // The end of the previous chunk, so a marker split across two chunks is still found.
     let tail = '';
 
     const finish = (result: Result<string, FetchUrlError>) => {

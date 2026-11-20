@@ -7,7 +7,6 @@
 import { sql, type Kysely } from 'kysely';
 
 export async function up(db: Kysely<any>): Promise<void> {
-  // Partial, so a feed's unread count and a workspace's "any unread" check read only the unread rows.
   await db.schema.createIndex('feedItem_feed_id_unread').on('feedItem').column('feed_id').where(sql.ref('read_at'), 'is', null).execute();
 }
 

@@ -88,9 +88,6 @@ function isExpectedExit(details: ProcessGoneDetails, quitting: boolean, stoppabl
     || (details.type === 'Utility' && details.name !== undefined && stoppableServices.includes(details.name));
 }
 
-/**
- * @param stoppableServices names of the utility processes the app stops or restarts on purpose, whose exit is no failure
- */
 export function installFatalHandlers(log: Logger, logFilePath: string, text: FatalDependencies['text'], stoppableServices: readonly string[]): void {
   const handle = createFatalHandler(log, logFilePath, { ...electronDependencies, text });
 
