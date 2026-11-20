@@ -1,11 +1,11 @@
 ---
 name: test-quality
-description: Improve Monfil's tests with Stryker mutation results. Use when asked to audit, strengthen, clean up, or prune tests for a file or folder under src/, or to raise its mutation score.
+description: Improve Monfil's tests with Stryker mutation results. Use when asked to audit, strengthen, clean up, or prune tests for a file or folder under src/main, src/preload, or src/shared, or to raise its mutation score.
 ---
 
 # Improve tests with mutation results
 
-Read `doc/src/content/docs/contributor-guide/mutation-testing.md` for the commands and the meaning of each status. This skill works on one path at a time: a file or a folder under `src/`. Ask for a path if the request has none, or take the first files of `.mutation/worklist.md`.
+Read `doc/src/content/docs/contributor-guide/mutation-testing.md` for the commands and the meaning of each status. This skill works on one path at a time: a file or a folder under `src/main/`, `src/preload/`, or `src/shared/`. Ask for a path if the request has none, or take the first files of `.mutation/worklist.md`.
 
 The goal is tests that fail when the behavior breaks. Do not change the behavior of the source code. If a survivor shows a real bug, add a test that fails for it, stop, and report it to the user.
 
@@ -21,7 +21,7 @@ npm run mutate:worklist -- <path>
 
 Read `.mutation/worklist.md`. Write down the score, the number of survivors, and the number of mutants without coverage for each file. You compare them at the end.
 
-A renderer path runs in Chromium and takes about 7 seconds for each mutant, so keep a renderer path to one folder of a few files. A node path of 25 files takes about 7 minutes.
+Only `src/main/`, `src/preload/`, and `src/shared/` are mutated, so this skill does not apply to renderer code. A path of 25 files takes about 7 minutes.
 
 ## 2. Kill the survivors
 
@@ -57,7 +57,7 @@ npm run mutate -- <path>
 npm run mutate:worklist -- <path>
 ```
 
-Run the changed test files with `npx vitest run --project node <files>` or `npx vitest run --config=vitest.browser.config.mts <files>`, and run `npm run lint`. Commit with the type `test` and a lowercase subject, for example `test(feed): kill survivors in the rss parser`. The commit body gives the score before and after, and each removed or merged test with the test that replaces it.
+Run the changed test files with `npx vitest run --project node <files>`, and run `npm run lint`. Commit with the type `test` and a lowercase subject, for example `test(feed): kill survivors in the rss parser`. The commit body gives the score before and after, and each removed or merged test with the test that replaces it.
 
 ## 6. Report
 

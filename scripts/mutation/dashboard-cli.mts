@@ -8,13 +8,13 @@ import { uploadReport } from './dashboard.mts';
 import { MUTATION_SUITES } from './targets.mts';
 
 const USAGE = [
-  'Usage: npm run mutate:upload -- [--version <name>] [--suite unit|integration]',
-  'Sends the last report of each suite in .mutation/ to the Stryker dashboard. The version defaults to the current branch.',
+  'Usage: npm run mutate:upload -- [--version <name>]',
+  'Sends the last report in .mutation/ to the Stryker dashboard. The version defaults to the current branch.',
   'Set STRYKER_DASHBOARD_API_KEY in the environment or in .env.',
 ].join('\n');
 
 async function main() {
-  const { values } = parseArgs({ options: { version: { type: 'string' }, suite: { type: 'string' } } });
+  const { values } = parseArgs({ options: { version: { type: 'string' } } });
   const apiKey = process.env['STRYKER_DASHBOARD_API_KEY'];
   if (!apiKey) {
     throw new Error('Missing STRYKER_DASHBOARD_API_KEY.');
@@ -23,8 +23,7 @@ async function main() {
   if (!version) {
     throw new Error('No current branch. Pass --version.');
   }
-  const suites = MUTATION_SUITES.filter((suite) => (values.suite ?? suite) === suite);
-  for (const suite of suites) {
+  for (const suite of MUTATION_SUITES) {
     const report = await readFile(reportPath(suite, 'json'), 'utf8').catch((error: NodeJS.ErrnoException) => {
       if (error.code === 'ENOENT') {
         return null;
