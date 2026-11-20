@@ -112,7 +112,6 @@ function sum(files: FileSummary[], metric: 'lines' | 'branches'): Count {
 
 export interface CompareOptions {
   mergeBaseSha: string;
-  /** Repository-relative paths that the PR changes. */
   changedFiles: string[];
 }
 

@@ -15,12 +15,10 @@ export interface TestSuites {
   e2e: TestCounts;
 }
 
-/** The parts of Vitest's `json` reporter output that the counts need. */
 export interface VitestResults {
   testResults: { name: string; assertionResults: { status: string }[] }[];
 }
 
-/** The parts of Playwright's `json` reporter output that the counts need. */
 export interface PlaywrightResults {
   suites: unknown[];
   stats: { expected: number; unexpected: number; flaky: number; skipped: number };
@@ -43,7 +41,6 @@ function add(counts: TestCounts, status: string): void {
   }
 }
 
-/** Counts the tests of one or more Vitest runs, split into the Node (`unit`) and browser (`integration`) projects. */
 export function countVitest(runs: VitestResults[], root: string): Pick<TestSuites, 'unit' | 'integration'> {
   const result = { unit: empty(), integration: empty() };
   for (const file of runs.flatMap((run) => run.testResults)) {
@@ -65,7 +62,6 @@ async function readJson<T>(file: string): Promise<T> {
   return JSON.parse(await readFile(file, 'utf8')) as T;
 }
 
-/** Reads the reporter files of both runners. */
 export async function loadTestSuites(vitestFiles: string[], playwrightFile: string, root: string): Promise<TestSuites> {
   const runs = await Promise.all(vitestFiles.map((file) => readJson<VitestResults>(file)));
   return { ...countVitest(runs, root), e2e: countPlaywright(await readJson<PlaywrightResults>(playwrightFile)) };

@@ -17,7 +17,6 @@ export function falseSurvivors(report: MutationTestResult): { file: string; muta
     .map((mutant) => ({ file, mutant })));
 }
 
-/** Reads the source text that a mutant replaces. Stryker's lines start at 1 and its columns at 1. */
 export function originalText(source: string, { start, end }: MutantResult['location']): string {
   const lines = source.split('\n').slice(start.line - 1, end.line);
   if (lines.length === 0) {
@@ -28,7 +27,6 @@ export function originalText(source: string, { start, end }: MutantResult['locat
   return lines.join('\n');
 }
 
-/** A mutant that no test killed: it survived its tests, or no test runs its line. */
 export interface Weakness {
   line: number;
   column: number;
@@ -51,10 +49,8 @@ export interface FileResult {
 export interface TestValue {
   file: string;
   name: string;
-  /** Valid mutants whose code the test runs. */
   covered: number;
   killed: number;
-  /** Mutants that this test kills and no other test does. */
   uniqueKills: number;
 }
 
@@ -78,7 +74,6 @@ function fileResult(file: string, source: string, mutants: readonly MutantResult
   return { file, killed: detected, survived: count('Survived'), noCoverage: count('NoCoverage'), score: valid === 0 ? null : (100 * detected) / valid, weaknesses };
 }
 
-/** The result of each mutated file, with the most undetected mutants first. */
 export function fileResults(report: MutationTestResult): FileResult[] {
   return Object.entries(report.files)
     .map(([file, { source, mutants }]) => fileResult(file, source, mutants))

@@ -21,7 +21,6 @@ export async function readJson(file: string): Promise<unknown> {
   return JSON.parse(await readFile(file, 'utf8'));
 }
 
-/** Writes to `file`, or to stdout when there is none. */
 export async function writeOutput(file: string | undefined, text: string): Promise<void> {
   if (file) {
     await writeFile(file, text);

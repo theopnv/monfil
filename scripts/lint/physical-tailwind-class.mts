@@ -35,7 +35,6 @@ function logicalToken(token: string): string | null {
   return null;
 }
 
-/** Splits `hover:!ml-2` into its variant prefix and the utility, and finds where the utility starts. */
 function splitVariants(token: string): { prefix: string; utility: string } {
   let depth = 0;
   let cut = 0;
@@ -54,14 +53,12 @@ function splitVariants(token: string): { prefix: string; utility: string } {
   return { prefix: token.slice(0, cut + important), utility: rest.slice(important) };
 }
 
-/** The logical class that replaces a physical Tailwind class, or null when the class is fine. */
 export function physicalClassSuggestion(token: string): string | null {
   const { prefix, utility } = splitVariants(token);
   const logical = logicalToken(utility);
   return logical === null ? null : `${prefix}${logical}`;
 }
 
-/** Bans Tailwind classes that name a screen side, because they do not flip in right-to-left layouts. */
 export const physicalTailwindClassRule: Rule.RuleModule = {
   meta: {
     type: 'problem',

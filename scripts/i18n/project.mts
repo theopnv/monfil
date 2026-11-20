@@ -31,12 +31,10 @@ export function namespacesOf(project: Project): string[] {
     .sort();
 }
 
-/** The languages that have a folder of translations now. */
 export function presentLanguages(project: Project): string[] {
   return TARGET_LANGUAGES.filter((language) => existsSync(path.join(project.localesDir, language)));
 }
 
-/** The units of a language, and the namespaces it has no file for. */
 export function readLanguage(project: Project, language: string, namespaces: readonly string[]): { units: Unit[]; missingFiles: string[] } {
   const units: Unit[] = [];
   const missingFiles: string[] = [];

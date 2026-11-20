@@ -23,7 +23,6 @@ export function badgeColor(percent: number): string {
   return percent >= 60 ? 'orange' : 'red';
 }
 
-/** Builds the badge from the line counts of the newest merged snapshot of `src`, or from no snapshot. */
 export function coverageBadge(row: { lines_covered: number; lines_total: number } | null): ShieldsEndpoint {
   if (!row || row.lines_total === 0) {
     return { schemaVersion: 1, label: 'coverage', message: 'unknown', color: 'lightgrey', cacheSeconds: CACHE_SECONDS };
