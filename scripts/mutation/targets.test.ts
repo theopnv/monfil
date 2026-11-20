@@ -15,6 +15,7 @@ describe('splitTargets', () => {
 
   it.each([
     ['a test file', 'src/main/feed/refresh.test.ts'],
+    ['a main-process test helper', 'src/main/test/db.ts'],
     ['a renderer test file', 'src/renderer/lib/hints.test.tsx'],
     ['a declaration file', 'src/renderer/vite-env.d.ts'],
     ['a vendored component', 'src/renderer/components/untitled-ui/base/button.tsx'],

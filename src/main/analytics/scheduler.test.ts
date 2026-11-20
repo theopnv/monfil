@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import { db, initializeDatabase } from '../db/database';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { db } from '../db/database';
 import { incrementCounter, setCountingEnabled } from './counters';
 import { setPreferencesSnapshot } from './preferences';
 import { flushUsageAnalytics, sendConsentGranted, startUsageAnalytics, stopUsageAnalytics, summaryTimestamp } from './scheduler';
@@ -13,6 +13,7 @@ import { observeLogs } from '../logging/logger';
 import { getAnalyticsEndpoint } from './config';
 import { sendEvents } from './client';
 import { logger } from '../logging/logger';
+import { useTestDatabase } from '../test/db';
 
 vi.mock(import('./config'), () => ({ getAnalyticsEndpoint: vi.fn() }));
 vi.mock(import('./client'), () => ({ sendEvents: vi.fn() }));
@@ -21,18 +22,12 @@ vi.mock(import('../logging/logger'), () => ({ logger: { warn: vi.fn(), info: vi.
 const endpoint = { name: 'ENABLED' as const, url: 'https://eu.aptabase.com/api/v0/events', key: 'A-EU-1' };
 const now = new Date('2026-10-23T08:00:00Z');
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
+useTestDatabase();
 
 beforeEach(() => {
   vi.mocked(getAnalyticsEndpoint).mockReturnValue(endpoint);
   vi.mocked(sendEvents).mockResolvedValue({ ok: true });
   setCountingEnabled(true);
-});
-
-afterEach(async () => {
-  await db.deleteFrom('usage_counter').execute();
 });
 
 async function remainingDays() {

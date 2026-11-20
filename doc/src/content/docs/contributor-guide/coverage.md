@@ -36,7 +36,7 @@ All suites use Istanbul, so the counts of different runs add up.
 | `e2e` | An instrumented build of the main process, the article extraction utility process, and the renderer. | The preload script runs in an isolated world that the collection cannot reach, so the suite shows it as uncovered. A test that kills the app leaves no file for that launch. |
 | `merged` | Both suites, joined by the location of each statement, function, and branch. | It counts the preload script through its unit tests only. |
 
-These files are not counted: test files, `*.d.ts`, `src/renderer/components/untitled-ui/`, and `src/renderer/routeTree.gen.ts`. The list is `INCLUDE` and `EXCLUDE` in `scripts/coverage/vite-plugins.mts`, which the root Vitest config imports.
+These files are not counted: test files, `*.d.ts`, `src/main/test/`, `src/renderer/components/untitled-ui/`, and `src/renderer/routeTree.gen.ts`. The list is `INCLUDE` and `EXCLUDE` in `scripts/coverage/vite-plugins.mts`, which the root Vitest config imports.
 
 ### How the e2e build collects coverage
 
@@ -121,7 +121,7 @@ Dates are stored in UTC. A coverage query is refused when it names a complexity 
 The work is split over two workflows, like the complexity report:
 
 - `coverage.yml` runs on `pull_request` with a read-only token. It runs the PR's code and uploads the snapshot and the PR number.
-- `coverage-comment.yml` runs on `workflow_run` with `pull-requests: write`. It checks out only `scripts/coverage` and `scripts/complexity` from `main`, checks the PR number and head sha, and reads the base from D1. The base is the row of the merge base. If that sha has no row, the comment compares with the latest earlier commit on `main` and says so. It lists the totals of each suite and the changed files under `src/` that lost merged line coverage.
+- `coverage-comment.yml` runs on `workflow_run` with `pull-requests: write`. It checks out only `scripts/coverage` and `scripts/devanalytics` from `main`, checks the PR number and head sha, and reads the base from D1. The base is the row of the merge base. If that sha has no row, the comment compares with the latest earlier commit on `main` and says so. It lists the totals of each suite and the changed files under `src/` that lost merged line coverage.
 
 `workflow_run` workflows run from the default branch. A change to `coverage-comment.yml` takes effect only after it lands in `main`.
 

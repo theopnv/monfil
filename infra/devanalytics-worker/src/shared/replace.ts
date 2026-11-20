@@ -1,0 +1,17 @@
+import { chunks, rowsWritten } from './chunks.ts';
+
+export interface TableRows {
+  table: string;
+  /** Inserts the rows of the JSON array in ?3 for the sha in ?1 and the date in ?2. */
+  insert: string;
+  rows: unknown[][];
+}
+
+/** Replaces every row of `sha` in each table in one batch, which D1 runs as a single transaction. Returns the rows D1 wrote. */
+export async function replaceRows(db: D1Database, sha: string, date: string, tables: TableRows[]): Promise<number> {
+  const statements = [
+    ...tables.map(({ table }) => db.prepare(`DELETE FROM ${table} WHERE sha = ?1`).bind(sha)),
+    ...tables.flatMap(({ insert, rows }) => chunks(rows).map((part) => db.prepare(insert).bind(sha, date, JSON.stringify(part)))),
+  ];
+  return rowsWritten(await db.batch(statements));
+}

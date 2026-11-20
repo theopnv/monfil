@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
-import { db, initializeDatabase } from '../db/database';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { db } from '../db/database';
 import { addFeedToDatabase, createCategory, createWorkspace, upsertArticleContent } from '../db/crud/insert';
 import { updateWorkspace } from '../db/crud/update';
 import { createSavedSearch, updateSavedSearch } from '../db/crud/searches';
@@ -22,6 +22,8 @@ import {
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 import type { IpcMainInvokeEvent } from 'electron';
 import { HOME_WORKSPACE_ID, type SourceType } from '../../shared/contracts';
+import { useTestDatabase } from '../test/db';
+import { makeFeedInput, makeItem } from '../test/fixtures';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
 vi.mock(import('../feed/extractArticleUtility'), () => ({ extractArticleInUtilityProcess: vi.fn() }));
@@ -47,15 +49,11 @@ const ARTICLE_PAGE_HTML = `<!doctype html>
 </article></body></html>`;
 
 async function createItem(link: string | undefined, options: { type?: SourceType; description?: string; feedLink?: string } = {}): Promise<number> {
-  const result = await addFeedToDatabase({
+  const result = await addFeedToDatabase(makeFeedInput({
     link: options.feedLink ?? 'https://a.example/feed',
-    title: 'Feed A',
-    items: [{ title: 'Item', link, guid: link ?? 'monfil:test:linkless', pubDate: '2024-01-01', description: options.description ?? '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
+    items: [makeItem({ link, guid: link ?? 'monfil:test:linkless', description: options.description ?? '' })],
     type: options.type ?? 'rss',
-    categoryName: 'tech',
-    workspaceId: HOME_WORKSPACE_ID,
-    showInWorkspace: true,
-  });
+  }));
   if (!result.success) {
     throw new Error('expected the feed to be created');
   }
@@ -66,11 +64,9 @@ async function createItem(link: string | undefined, options: { type?: SourceType
   return itemId;
 }
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
+useTestDatabase();
 
-afterEach(async () => {
+afterEach(() => {
   mockedFetchText.mockReset();
   mockedExtractArticleInUtilityProcess.mockReset();
   vi.mocked(enrichItems).mockReset();
@@ -82,13 +78,6 @@ afterEach(async () => {
   vi.mocked(updateSavedSearch).mockClear();
   vi.mocked(applyDetailedLogging).mockClear();
   vi.restoreAllMocks();
-  await db.deleteFrom('articleContent').execute();
-  await db.deleteFrom('feedItem').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
-  await db.deleteFrom('savedSearch').execute();
-  await db.deleteFrom('setting').execute();
-  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
 });
 
 describe('handleItemsGetContent', () => {

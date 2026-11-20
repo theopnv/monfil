@@ -27,7 +27,7 @@ jobs:
           sparse-checkout: |
             .github/actions
             scripts/coverage
-            scripts/complexity
+            scripts/devanalytics
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1

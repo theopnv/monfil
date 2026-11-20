@@ -2,35 +2,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type ElectronApplication, type Locator, type Page } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import type { ElectronApplication, Locator, Page } from '@playwright/test';
 import { HOME_WORKSPACE_ID, type NewFeedInput } from '../../src/shared/contracts';
+import { expect, test as base } from './fixtures';
 
-type RiverLayoutFixtures = {
-  userDataDir: string;
-  app: ElectronApplication;
-  page: Page;
-};
-
-const riverTest = base.extend<RiverLayoutFixtures>({
-  userDataDir: async ({}, use) => {
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'));
-    try {
-      await use(userDataDir);
-    } finally {
-      await rm(userDataDir, { recursive: true });
-    }
-  },
-
-  app: async ({ userDataDir }, use) => {
-    const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-    try {
-      await use(app);
-    } finally {
-      await app.close();
-    }
+const test = base.extend<{ app: ElectronApplication; page: Page }>({
+  app: async ({ launchElectron }, use) => {
+    await use((await launchElectron()).app);
   },
 
   page: async ({ app }, use) => {
@@ -82,7 +60,7 @@ async function resizeWindow(app: ElectronApplication, width: number): Promise<vo
 
 for (const width of [1024, 1440]) {
   for (const density of ['Cards', 'Magazine', 'Compact'] as const) {
-    riverTest(`in ${density} density at ${width}px, the save button does not cover the post time on a card without an image`, async ({ app, page }) => {
+    test(`in ${density} density at ${width}px, the save button does not cover the post time on a card without an image`, async ({ app, page }) => {
     // Arrange
       await resizeWindow(app, width);
       await subscribeImagelessPost(page);

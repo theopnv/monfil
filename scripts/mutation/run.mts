@@ -1,9 +1,10 @@
-import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
 import { Stryker } from '@stryker-mutator/core';
 import type { MutationTestResult } from 'mutation-testing-report-schema';
+import { runCli } from '../devanalytics/cli.mts';
+import { git } from '../devanalytics/git.mts';
 import { reportPath, strykerOptions } from './config.mts';
 import { falseSurvivors } from './report.mts';
 import { MUTATION_SUITES, splitTargets, SUITE_GLOBS, type MutationSuite } from './targets.mts';
@@ -14,7 +15,6 @@ const USAGE = [
   'A path can be a file, a folder or a git pathspec. Reports go to .mutation/<suite>/.',
 ].join('\n');
 
-const git = (...args: string[]) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 const lines = (text: string) => text.split('\n').filter(Boolean);
 
 function changedFiles(base: string): string[] {
@@ -71,7 +71,5 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
-  // Stryker can leave child process pipes open after a crash, and they keep Node alive.
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n${USAGE}\n`, () => process.exit(1));
-});
+// Stryker can leave child process pipes open after a crash, and they keep Node alive.
+runCli(main, USAGE, { exit: true });

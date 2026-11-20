@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, describe, expect, test } from 'vitest';
-import { db, initializeDatabase } from '../db/database';
+import { describe, expect, test } from 'vitest';
+import { db } from '../db/database';
+import { useTestDatabase } from '../test/db';
 import {
   DEFAULT_DETAILED_LOGGING, DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, DEFAULT_RETENTION_DAYS, getDetailedLogging, getRefreshInterval, getRefreshOnLaunch, getRetentionDays,
   setDetailedLogging, setRefreshInterval, setRefreshOnLaunch, setRetentionDays, toRefreshInterval, toRefreshOnLaunch, toRetentionDays,
@@ -12,13 +13,7 @@ import {
   getUsageAnalyticsConsent, getUsageAnalyticsPromptHistory, recordAppLaunch, recordUsageAnalyticsPromptDismissed, setUsageAnalyticsConsent, toUsageAnalyticsConsent,
 } from './settings';
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
-
-afterEach(async () => {
-  await db.deleteFrom('setting').execute();
-});
+useTestDatabase();
 
 describe('toRefreshInterval', () => {
   test.each([

@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
+import { runCli } from '../devanalytics/cli.mts';
 import type { MutationTestResult } from 'mutation-testing-report-schema';
 import { OUTPUT_DIR, reportPath } from './config.mts';
 import { MUTATION_SUITES } from './targets.mts';
@@ -41,7 +42,4 @@ async function main() {
   process.stdout.write(`Wrote ${out}.\n`);
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n${USAGE}\n`);
-  process.exitCode = 1;
-});
+runCli(main, USAGE);

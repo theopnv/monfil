@@ -6,11 +6,12 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { dialog } from 'electron';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
-import { db, initializeDatabase } from '../db/database';
+import { db } from '../db/database';
 import { exportWorkspaceOpml } from './export';
 import { parseOpmlDocument } from './parse';
+import { useTestDatabase } from '../test/db';
 
 vi.mock(import('electron'), () => ({ dialog: { showSaveDialog: vi.fn() } as unknown as Electron.Dialog }));
 
@@ -35,20 +36,14 @@ function saveTo(filePath: string): void {
   vi.mocked(dialog.showSaveDialog).mockResolvedValue({ canceled: false, filePath });
 }
 
+useTestDatabase();
+
 beforeAll(async () => {
-  await initializeDatabase(':memory:');
   exportDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'monfil-export-'));
 });
 
 beforeEach(() => {
   vi.mocked(dialog.showSaveDialog).mockReset();
-});
-
-afterEach(async () => {
-  await db.deleteFrom('feedPlacement').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
-  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
 });
 
 afterAll(async () => {

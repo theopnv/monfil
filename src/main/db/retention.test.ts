@@ -2,20 +2,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { beforeAll, afterEach, describe, expect, test, vi } from 'vitest';
-import { db, initializeDatabase } from './database';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { db } from './database';
 import { addFeedToDatabase, syncFeedItemsToDatabase, upsertArticleContent } from './crud/insert';
 import { isItemExpired, pruneExpiredItems, retainedFetchedItems, retentionCutoff } from './retention';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
+import { useTestDatabase } from '../test/db';
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:'); 
-});
-afterEach(async () => {
+useTestDatabase();
+afterEach(() => {
   vi.restoreAllMocks();
-  await db.deleteFrom('feedItem').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
 });
 
 test('keeps ten old items when a new source has no recent articles', () => {

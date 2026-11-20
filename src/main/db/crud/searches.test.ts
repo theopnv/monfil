@@ -2,24 +2,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
-import { db, initializeDatabase } from '../database';
+import { db } from '../database';
 import { createSavedSearch, deleteSavedSearch, dismissSearchHint, listSavedSearches, updateSavedSearch } from './searches';
+import { useTestDatabase } from '../../test/db';
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
-
-afterEach(async () => {
-  await db.deleteFrom('savedSearch').execute();
-  await db.deleteFrom('feedItem').execute();
-  await db.deleteFrom('feedPlacement').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
-  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
-  await db.updateTable('workspace').set({ search_hint_dismissed_at: null }).execute();
-});
+useTestDatabase();
 
 let seeded = 0;
 

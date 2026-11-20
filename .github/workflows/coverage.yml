@@ -9,6 +9,7 @@ on:
       - 'src/**'
       - 'test/**'
       - 'scripts/coverage/**'
+      - 'scripts/devanalytics/**'
       - 'vitest.config.mts'
       - 'vitest.browser.config.mts'
       - 'playwright.config.ts'
@@ -19,6 +20,7 @@ on:
       - 'src/**'
       - 'test/**'
       - 'scripts/coverage/**'
+      - 'scripts/devanalytics/**'
       - 'vitest.config.mts'
       - 'vitest.browser.config.mts'
       - 'playwright.config.ts'
@@ -115,7 +117,6 @@ jobs:
         with:
           sparse-checkout: |
             .github/actions/check-ingest-credential
-            scripts/coverage
             scripts/devanalytics
           persist-credentials: false
 
@@ -134,4 +135,4 @@ jobs:
 
       - env:
           DEVANALYTICS_INGEST_TOKEN: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
-        run: node scripts/coverage/ingest.mts "$RUNNER_TEMP/coverage-data/snapshot.json"
+        run: node scripts/devanalytics/ingest-cli.mts /coverage/ingest "$RUNNER_TEMP/coverage-data/snapshot.json"

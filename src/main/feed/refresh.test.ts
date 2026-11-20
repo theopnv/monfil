@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import { db, initializeDatabase } from '../db/database';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { db } from '../db/database';
 import { setItemSaved } from '../db/saved';
 import { deleteFeedFromDatabase } from '../db/crud/delete';
 import { addFeedToDatabase } from '../db/crud/insert';
@@ -16,6 +16,7 @@ import { broadcastToRenderers } from '../lib/sendToRenderer';
 import type { FeedItem } from '../db/types';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 import { resolveSiteIcon } from './sources/siteIcon';
+import { useTestDatabase } from '../test/db';
 
 vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: true, matches: vi.fn(), discover: vi.fn(), fetch: vi.fn(), parse: vi.fn() } }));
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
@@ -68,9 +69,7 @@ function storedTitles(): Promise<string[]> {
   return db.selectFrom('feedItem').select('title').orderBy('id').execute().then((rows) => rows.map((row) => row.title));
 }
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
+useTestDatabase();
 
 beforeEach(() => {
   mockedFetchText.mockResolvedValue({ success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } });
@@ -83,9 +82,6 @@ afterEach(async () => {
   mockedFetchFeed.mockReset();
   mockedFetchText.mockReset();
   mockedResolveSiteIcon.mockReset();
-  await db.deleteFrom('feedItem').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
 });
 
 describe('refreshAllFeeds', () => {

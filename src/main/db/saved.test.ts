@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, expect, test } from 'vitest';
+import { expect, test } from 'vitest';
 import type { FeedItem } from './types';
-import { db, initializeDatabase } from './database';
+import { db } from './database';
 import { addFeedToDatabase, createWorkspace, upsertArticleContent } from './crud/insert';
 import { deleteFeedFromDatabase, deleteWorkspace } from './crud/delete';
 import { queryRiverPage, querySubscribedFeedMetadata } from './crud/query';
@@ -12,19 +12,9 @@ import { moveFeedToWorkspace } from './crud/update';
 import { pruneExpiredItems } from './retention';
 import { querySavedPage, setItemSaved } from './saved';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
+import { useTestDatabase } from '../test/db';
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
-
-afterEach(async () => {
-  await db.deleteFrom('savedItem').execute();
-  await db.deleteFrom('feedItem').execute();
-  await db.deleteFrom('feedPlacement').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
-  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
-});
+useTestDatabase();
 
 async function seed(workspaceId = HOME_WORKSPACE_ID) {
   const result = await addFeedToDatabase({

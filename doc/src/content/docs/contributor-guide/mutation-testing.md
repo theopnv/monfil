@@ -32,7 +32,7 @@ Each source file goes to one suite, by path:
 | `unit` | `src/main/`, `src/preload/`, `src/shared/` | The `node` Vitest project, from `vitest.node.config.mts` | Well under a second. A full run of the suite, about 7,600 mutants, takes about 15 minutes on a 10-core machine. |
 | `integration` | `src/renderer/` | The `browser` Vitest project in Chromium, from `vitest.browser.config.mts` | About 7 seconds. Run it on one folder at a time. A full run takes hours. |
 
-Test files, `*.d.ts`, `src/renderer/components/untitled-ui/`, and `src/renderer/routeTree.gen.ts` are never mutated. The e2e suite does not take part: each mutant would need a new Electron package.
+Test files, `*.d.ts`, `src/main/test/`, `src/renderer/components/untitled-ui/`, and `src/renderer/routeTree.gen.ts` are never mutated. The e2e suite does not take part: each mutant would need a new Electron package.
 
 ## Read the result
 

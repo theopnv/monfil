@@ -1,12 +1,11 @@
-import { execFileSync, spawnSync } from 'node:child_process';
-import { cp, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { cp, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { parseArgs } from 'node:util';
-import { upload, uploadTarget, type UploadTarget } from '../devanalytics/upload.mts';
+import { backfill } from '../devanalytics/backfill.mts';
+import { runCli } from '../devanalytics/cli.mts';
 import type { Snapshot } from './maps.mts';
 import { forgeViteConfigs, originalName, wrapperSource } from './overlay.mts';
 import { EXCLUDE, INCLUDE } from './vite-plugins.mts';
@@ -15,12 +14,6 @@ const USAGE = 'Usage: npm run coverage:backfill -- [--dry-run] [--out-dir <dir>]
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const VITEST_CONFIGS = ['vitest.config.mts', 'vitest.browser.config.mts'];
-
-const git = (...args: string[]) => execFileSync('git', args, { encoding: 'utf8' }).trim();
-
-function releaseTags(): string[] {
-  return git('tag', '--list', 'v*', '--sort=creatordate').split('\n').filter(Boolean);
-}
 
 /** Runs a command and returns whether it succeeded. A failed test run is not a failed tag. */
 function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv = {}): boolean {
@@ -130,77 +123,27 @@ function runE2e(worktree: string): { dir: string; results: string } {
   return { dir, results };
 }
 
-/** Measures one tag with the current coverage tooling, in a worktree that is always removed. */
-async function measureTag(tag: string, parent: string): Promise<Snapshot | null> {
-  const worktree = path.join(parent, tag);
-  git('worktree', 'add', '--detach', worktree, `${tag}^{commit}`);
-  try {
-    if (!existsSync(path.join(worktree, 'playwright.config.ts')) && !existsSync(path.join(worktree, 'vitest.config.mts'))) {
-      return null;
-    }
-    await install(worktree);
-    await overlay(worktree);
-    // The e2e build writes routeTree.gen.ts, which the renderer files need when Vitest transforms them.
-    const e2e = runE2e(worktree);
-    const vitest = await runVitest(worktree);
-    const merge = path.join(REPO, 'scripts', 'coverage', 'merge.mts');
-    const args = [
-      '--root', worktree,
-      ...vitest.coverage.flatMap((file) => ['--vitest', file]),
-      ...vitest.results.flatMap((file) => ['--vitest-results', file]),
-      '--e2e', e2e.dir,
-      '--e2e-results', e2e.results,
-    ];
-    must(run(process.execPath, [merge, ...args], worktree), 'merge');
-    return JSON.parse(await readFile(path.join(worktree, 'coverage', 'snapshot.json'), 'utf8')) as Snapshot;
-  } finally {
-    git('worktree', 'remove', '--force', worktree);
+/** Measures a checkout with the current coverage tooling. Returns null when it has no tests. */
+async function measure(worktree: string): Promise<{ snapshot: Snapshot; detail: string } | null> {
+  if (!existsSync(path.join(worktree, 'playwright.config.ts')) && !existsSync(path.join(worktree, 'vitest.config.mts'))) {
+    return null;
   }
+  await install(worktree);
+  await overlay(worktree);
+  // The e2e build writes routeTree.gen.ts, which the renderer files need when Vitest transforms them.
+  const e2e = runE2e(worktree);
+  const vitest = await runVitest(worktree);
+  const merge = path.join(REPO, 'scripts', 'coverage', 'merge.mts');
+  const args = [
+    '--root', worktree,
+    ...vitest.coverage.flatMap((file) => ['--vitest', file]),
+    ...vitest.results.flatMap((file) => ['--vitest-results', file]),
+    '--e2e', e2e.dir,
+    '--e2e-results', e2e.results,
+  ];
+  must(run(process.execPath, [merge, ...args], worktree), 'merge');
+  const snapshot = JSON.parse(await readFile(path.join(worktree, 'coverage', 'snapshot.json'), 'utf8')) as Snapshot;
+  return { snapshot, detail: `${snapshot.suites.merged.length} files` };
 }
 
-async function handleTag(tag: string, parent: string, target: UploadTarget | null, outDir: string | undefined) {
-  const snapshot = await measureTag(tag, parent);
-  if (!snapshot) {
-    process.stdout.write(`${tag}: no tests, skipped\n`);
-    return;
-  }
-  const summary = `${tag} ${snapshot.sha.slice(0, 7)}: ${snapshot.suites.merged.length} files`;
-  if (outDir) {
-    await writeFile(path.join(outDir, `${tag}.json`), `${JSON.stringify(snapshot)}\n`);
-  }
-  if (target) {
-    process.stdout.write(`${summary}, ingest ${JSON.stringify(await upload(target, '/coverage/ingest', snapshot))}\n`);
-  } else {
-    process.stdout.write(`${summary}, not uploaded\n`);
-  }
-}
-
-async function main() {
-  const { values, positionals } = parseArgs({
-    allowPositionals: true,
-    options: {
-      'dry-run': { type: 'boolean' },
-      'out-dir': { type: 'string' },
-    },
-  });
-  const tags = positionals.length > 0 ? positionals : releaseTags();
-  const target = values['dry-run'] ? null : uploadTarget();
-  const outDir = values['out-dir'] ? path.resolve(values['out-dir']) : undefined;
-  if (outDir) {
-    await mkdir(outDir, { recursive: true });
-  }
-  const parent = await mkdtemp(path.join(os.tmpdir(), 'coverage-backfill-'));
-  try {
-    // One tag at a time keeps a single worktree on disk and one ingest batch in flight.
-    for (const tag of tags) {
-      await handleTag(tag, parent, target, outDir);
-    }
-  } finally {
-    await rm(parent, { recursive: true, force: true });
-  }
-}
-
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n${USAGE}\n`);
-  process.exitCode = 1;
-});
+runCli(() => backfill({ name: 'coverage', route: '/coverage/ingest', measure }), USAGE);

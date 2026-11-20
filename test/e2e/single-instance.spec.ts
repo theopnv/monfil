@@ -2,21 +2,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test, expect, _electron as electron, type ElectronApplication } from '@playwright/test';
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import { expect, test } from './fixtures';
 
-test('a second launch exits and focuses the existing window', async () => {
+test('a second launch exits and focuses the existing window', async ({ launchElectron, userDataDir }) => {
   // Arrange
-  const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-single-instance-'));
-  let primary: ElectronApplication | undefined;
   let secondary: ChildProcess | undefined;
   try {
-    const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-    primary = app;
-    await app.firstWindow();
+    const { app } = await launchElectron();
     const executablePath = await app.evaluate(() => process.execPath);
     const windowId = await app.evaluate(({ BrowserWindow }) => {
       const window = BrowserWindow.getAllWindows()[0];
@@ -63,7 +56,5 @@ test('a second launch exits and focuses the existing window', async () => {
     expect(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().map((window) => window.id))).toEqual([windowId]);
   } finally {
     secondary?.kill();
-    await primary?.close();
-    await rm(userDataDir, { recursive: true, force: true });
   }
 });

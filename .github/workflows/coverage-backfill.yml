@@ -90,7 +90,6 @@ jobs:
         with:
           sparse-checkout: |
             .github/actions/check-ingest-credential
-            scripts/coverage
             scripts/devanalytics
           persist-credentials: false
 
@@ -114,5 +113,5 @@ jobs:
         run: |
           while IFS= read -r file; do
             echo "$file"
-            node scripts/coverage/ingest.mts "$file"
+            node scripts/devanalytics/ingest-cli.mts /coverage/ingest "$file"
           done < <(find "$RUNNER_TEMP/snapshots" -name '*.json' | sort -V)

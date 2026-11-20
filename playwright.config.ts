@@ -8,8 +8,19 @@ process.env['E2E_TEST'] = '1';
 // Hints would cover buttons in specs that add feeds over IPC on a fresh profile. test/e2e/hints.spec.ts sets it back to 'on'.
 process.env['MONFIL_HINTS'] = 'off';
 
+// These assert wall-clock budgets (enrichment-performance, volume) or open every dialog in several languages (layout-audit).
+// A second app on the same CPU makes them time out, so they run alone after the others.
+const ALONE = /(enrichment-performance|layout-audit|volume)\.spec\.ts/;
+
+// GitHub's macOS and Windows runners have too few cores for two apps at once: starting and quitting an app passes the 30 second limit.
+const WORKERS = process.env['CI'] && process.platform !== 'linux' ? 1 : 2;
+
 export default defineConfig({
   testDir: './test/e2e',
   testMatch: /.*\.spec\.ts/,
-  workers: 1,
+  workers: WORKERS,
+  projects: [
+    { name: 'parallel', testIgnore: ALONE },
+    { name: 'alone', testMatch: ALONE, workers: 1, dependencies: ['parallel'] },
+  ],
 });

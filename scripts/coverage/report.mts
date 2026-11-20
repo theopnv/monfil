@@ -1,6 +1,6 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import process from 'node:process';
+import { readFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
+import { readJson, runCli, writeOutput } from '../devanalytics/cli.mts';
 import { compareSnapshots, parseDiff, parseSnapshot, renderMarkdown, snapshotFromRows } from './compare.mts';
 
 const USAGE = [
@@ -9,10 +9,6 @@ const USAGE = [
   '  npm run coverage:report -- render <diff.json> [--out <file>]',
   'base-rows.json is the response of POST /coverage/query for the rows of one sha. Use {"rows":[]} when there is none.',
 ].join('\n');
-
-async function readJson(file: string): Promise<unknown> {
-  return JSON.parse(await readFile(file, 'utf8'));
-}
 
 async function readLines(file: string | undefined): Promise<string[]> {
   return file ? (await readFile(file, 'utf8')).split('\n').map((line) => line.trim()).filter(Boolean) : [];
@@ -49,14 +45,7 @@ async function main() {
   } else {
     throw new Error(`Unknown command: ${[command, ...files].join(' ')}`);
   }
-  if (values.out) {
-    await writeFile(values.out, output);
-  } else {
-    process.stdout.write(output);
-  }
+  await writeOutput(values.out, output);
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n${USAGE}\n`);
-  process.exitCode = 1;
-});
+runCli(main, USAGE);

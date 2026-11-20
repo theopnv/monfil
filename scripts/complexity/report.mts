@@ -1,6 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import process from 'node:process';
 import { parseArgs } from 'node:util';
+import { readJson, runCli, writeOutput } from '../devanalytics/cli.mts';
 import { compareSnapshots, parseDiff, renderMarkdown, type Snapshot } from './compare.mts';
 
 const USAGE = [
@@ -8,10 +7,6 @@ const USAGE = [
   '  npm run complexity:report -- compare <base.json> <head.json> [--json] [--out <file>]',
   '  npm run complexity:report -- render <diff.json> [--out <file>]',
 ].join('\n');
-
-async function readJson(file: string): Promise<unknown> {
-  return JSON.parse(await readFile(file, 'utf8'));
-}
 
 async function run(command: string | undefined, files: string[], json: boolean): Promise<string> {
   if (command === 'compare' && files.length === 2) {
@@ -35,14 +30,7 @@ async function main() {
   });
   const [command, ...files] = positionals;
   const output = await run(command, files, values.json ?? false);
-  if (values.out) {
-    await writeFile(values.out, output);
-  } else {
-    process.stdout.write(output);
-  }
+  await writeOutput(values.out, output);
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n${USAGE}\n`);
-  process.exitCode = 1;
-});
+runCli(main, USAGE);

@@ -2,23 +2,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { beforeEach, afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
-import { db, initializeDatabase } from '../database';
+import { db } from '../database';
 import { countFeedItems, countFeedMetadata, countUnreadRiverItems, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedMetadataByIds, queryFeedSummaries, queryRiverPage, querySubscribedFeedMetadata, queryWorkspaceById, queryWorkspaceSummaries } from './query';
+import { useTestDatabase } from '../../test/db';
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
-
-afterEach(async () => {
-  await db.deleteFrom('articleContent').execute();
-  await db.deleteFrom('feedItem').execute();
-  await db.deleteFrom('feedPlacement').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
-  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
-});
+useTestDatabase();
 
 describe('queryFeedCategory', () => {
   test('returns every category when no criteria are given', async () => {

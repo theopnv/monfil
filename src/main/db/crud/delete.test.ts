@@ -2,44 +2,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, describe, expect, test } from 'vitest';
-import { HOME_WORKSPACE_ID, type NewFeedInput } from '../../../shared/contracts';
-import { db, initializeDatabase } from '../database';
+import { describe, expect, test } from 'vitest';
+import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
+import { db } from '../database';
 import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from './delete';
 import { addFeedToDatabase, createCategory, createWorkspace, upsertArticleContent } from './insert';
 import { moveFeedToWorkspace } from './update';
+import { useTestDatabase } from '../../test/db';
+import { makeFeedInput, makeItem } from '../../test/fixtures';
 
-const feedA: NewFeedInput = {
-  link: 'https://a.example/feed',
-  title: 'Feed A',
-  items: [{ title: 'Item 1', link: 'https://a.example/feed#1', guid: 'https://a.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
-  type: 'rss',
-  categoryName: 'tech',
-  workspaceId: HOME_WORKSPACE_ID,
-  showInWorkspace: true,
-};
-const feedB: NewFeedInput = {
-  link: 'https://b.example/feed',
-  title: 'Feed B',
-  items: [{ title: 'Item 1', link: 'https://b.example/feed#1', guid: 'https://b.example/feed#1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined }],
-  type: 'rss',
-  categoryName: 'tech',
-  workspaceId: HOME_WORKSPACE_ID,
-  showInWorkspace: true,
-};
+const feedA = makeFeedInput({ items: [makeItem({ title: 'Item 1', link: 'https://a.example/feed#1' })] });
+const feedB = makeFeedInput({ link: 'https://b.example/feed', title: 'Feed B', items: [makeItem({ title: 'Item 1', link: 'https://b.example/feed#1' })] });
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
-
-afterEach(async () => {
-  await db.deleteFrom('articleContent').execute();
-  await db.deleteFrom('feedItem').execute();
-  await db.deleteFrom('feedPlacement').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
-  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
-});
+useTestDatabase();
 
 describe('deleteFeedFromDatabase', () => {
   test('removes the feed and every one of its items through the cascade', async () => {

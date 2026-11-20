@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test, expect, _electron as electron } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { initializeDatabase, closeDatabase } from '../../src/main/db/database';
 import { addFeedToDatabase } from '../../src/main/db/crud/insert';
 import { DB_FILE_NAME } from '../../src/main/lib/constants';
 import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
+import { expect, test } from './fixtures';
 
 const FEED_COUNT = 20;
 const ITEMS_PER_FEED = 30; // 600 items total, well past RIVER_MAX_PAGES * RIVER_PAGE_SIZE.
@@ -58,51 +56,41 @@ async function seedDatabase(userDataDir: string): Promise<void> {
   }
 }
 
-test('the river stays bounded against a large corpus', async () => {
-  const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-volume-'));
-  try {
-    await seedDatabase(userDataDir);
+test('the river stays bounded against a large corpus', async ({ userDataDir, launchElectron }) => {
+  await seedDatabase(userDataDir);
 
-    const startedAt = Date.now();
-    const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-    try {
-      const page = await app.firstWindow();
-      const cards = page.locator('[data-item-id]');
+  const startedAt = Date.now();
+  const { page } = await launchElectron();
+  const cards = page.locator('[data-item-id]');
 
-      // Assert: reaches an interactive river inside a time budget.
-      await expect(page.getByText('Feed 0 item 0', { exact: true })).toBeVisible({ timeout: READY_BUDGET_MS });
-      expect(Date.now() - startedAt).toBeLessThan(READY_BUDGET_MS);
+  // Assert: reaches an interactive river inside a time budget.
+  await expect(page.getByText('Feed 0 item 0', { exact: true })).toBeVisible({ timeout: READY_BUDGET_MS });
+  expect(Date.now() - startedAt).toBeLessThan(READY_BUDGET_MS);
 
-      // Assert: first paint holds one page, not the corpus.
-      await expect.poll(() => cards.count()).toBeLessThanOrEqual(RIVER_PAGE_SIZE);
+  // Assert: first paint holds one page, not the corpus.
+  await expect.poll(() => cards.count()).toBeLessThanOrEqual(RIVER_PAGE_SIZE);
 
-      // Act: scroll to the bottom repeatedly, giving each page time to load and render.
-      const scrollContainer = page.locator('.flex-1.overflow-y-auto');
-      for (let i = 0; i < RIVER_MAX_PAGES + 2; i++) {
-        await scrollContainer.evaluate((element) => {
-          element.scrollTop = element.scrollHeight;
-        });
-        await page.waitForTimeout(150);
-      }
-
-      // Assert: bounded by maxPages even after scrolling past every page the corpus has to offer.
-      await expect.poll(() => cards.count()).toBeLessThanOrEqual(RIVER_MAX_PAGES * RIVER_PAGE_SIZE);
-      const scrolledCount = await cards.count();
-
-      // Act: hide one feed from the sidebar with its eye.
-      await page.getByRole('button', { name: 'volume', exact: true }).click();
-      const feedRow = page.getByRole('button', { name: /^Feed 0,/ });
-      await feedRow.hover();
-      await page.getByRole('button', { name: 'Hide Feed 0', exact: true }).click();
-      await expect(feedRow).toHaveAttribute('data-visibility', 'hidden');
-
-      // Assert: the river rescopes instead of transferring the whole corpus (no spike upward).
-      await expect(page.getByText('Feed 0 item 0', { exact: true })).not.toBeVisible();
-      await expect.poll(() => cards.count()).toBeLessThanOrEqual(scrolledCount);
-    } finally {
-      await app.close();
-    }
-  } finally {
-    await rm(userDataDir, { recursive: true });
+  // Act: scroll to the bottom repeatedly, giving each page time to load and render.
+  const scrollContainer = page.locator('.flex-1.overflow-y-auto');
+  for (let i = 0; i < RIVER_MAX_PAGES + 2; i++) {
+    await scrollContainer.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    await page.waitForTimeout(150);
   }
+
+  // Assert: bounded by maxPages even after scrolling past every page the corpus has to offer.
+  await expect.poll(() => cards.count()).toBeLessThanOrEqual(RIVER_MAX_PAGES * RIVER_PAGE_SIZE);
+  const scrolledCount = await cards.count();
+
+  // Act: hide one feed from the sidebar with its eye.
+  await page.getByRole('button', { name: 'volume', exact: true }).click();
+  const feedRow = page.getByRole('button', { name: /^Feed 0,/ });
+  await feedRow.hover();
+  await page.getByRole('button', { name: 'Hide Feed 0', exact: true }).click();
+  await expect(feedRow).toHaveAttribute('data-visibility', 'hidden');
+
+  // Assert: the river rescopes instead of transferring the whole corpus (no spike upward).
+  await expect(page.getByText('Feed 0 item 0', { exact: true })).not.toBeVisible();
+  await expect.poll(() => cards.count()).toBeLessThanOrEqual(scrolledCount);
 });

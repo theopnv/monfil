@@ -2,68 +2,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { createServer } from 'node:http';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import type { AddressInfo } from 'node:net';
-import { HOME_WORKSPACE_ID, type FeedSummary, type WorkspaceSummary } from '../../src/shared/contracts';
+import type { Page } from '@playwright/test';
+import { HOME_WORKSPACE_ID, type WorkspaceSummary } from '../../src/shared/contracts';
+import { expect, feedIdFor, rss, serve, subscribeAndReload, test } from './fixtures';
 
-const FIXTURE_PUB_DATE = new Date().toUTCString();
-
-function rss(): string {
-  return '<?xml version="1.0"?><rss version="2.0"><channel><title>Imported feed</title><description>A local feed</description>'
-    + `<item><title>Article</title><link>http://127.0.0.1/article</link><pubDate>${FIXTURE_PUB_DATE}</pubDate><description>An article</description></item>`
-    + '</channel></rss>';
-}
-
-type WorkspacesTestFixtures = {
-  userDataDir: string;
-  launchApp: () => Promise<{ app: ElectronApplication; page: Page }>;
-};
-
-const workspacesTest = base.extend<WorkspacesTestFixtures>({
-  userDataDir: async ({}, use) => {
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'));
-    try {
-      await use(userDataDir);
-    } finally {
-      await rm(userDataDir, { recursive: true });
-    }
-  },
-
-  launchApp: async ({ userDataDir }, use) => {
-    const launched: ElectronApplication[] = [];
-    try {
-      await use(async () => {
-        const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-        launched.push(app);
-        return { app, page: await app.firstWindow() };
-      });
-    } finally {
-      await Promise.all(launched.map((app) => app.close()));
-    }
-  },
-});
-
-// Subscribes without going through the wizard, then reloads: only the add-feed wizard invalidates
-// the feed query, and this writes behind its back.
-async function subscribe(page: Page, link: string, title: string, categoryName: string, workspaceId: number = HOME_WORKSPACE_ID): Promise<void> {
-  await page.evaluate(({ link, title, categoryName, workspaceId }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title, type: 'rss', items: [], categoryName, workspaceId, showInWorkspace: true,
-  }), { link, title, categoryName, workspaceId });
-  await page.reload();
-}
-
-async function feedIdFor(page: Page, link: string): Promise<number> {
-  const feeds = await page.evaluate((workspaceId) => window.electron.ipcRenderer.invoke('feeds:list', { workspaceId }), HOME_WORKSPACE_ID) as FeedSummary[];
-  const feed = feeds.find((candidate) => candidate.link === link);
-  if (!feed) {
-    throw new Error(`expected a feed for ${link}`);
-  }
-  return feed.id;
-}
+const feed = () => rss([{ title: 'Article', link: 'http://127.0.0.1/article' }], 'Imported feed');
 
 async function workspaceIdFor(page: Page, name: string): Promise<number> {
   const workspaces = await page.evaluate(() => window.electron.ipcRenderer.invoke('workspaces:list', undefined)) as WorkspaceSummary[];
@@ -80,10 +23,10 @@ async function ensureFolderOpen(page: Page, folderName: string, feedNamePattern:
   }
 }
 
-workspacesTest('create a workspace, move a feed into it: Home stops listing it and the new tab lists it', async ({ launchApp }) => {
+test('create a workspace, move a feed into it: Home stops listing it and the new tab lists it', async ({ launchElectron }) => {
   // Arrange
-  const { page } = await launchApp();
-  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
+  const { page } = await launchElectron();
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
   await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
   await ensureFolderOpen(page, 'Tech', /^Feed A/);
   await expect(page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
@@ -118,10 +61,10 @@ workspacesTest('create a workspace, move a feed into it: Home stops listing it a
   await expect(page.getByRole('button', { name: /^Feed A/ })).not.toBeVisible();
 });
 
-workspacesTest('a folder opened in one workspace stays open after visiting another workspace', async ({ launchApp }) => {
+test('a folder opened in one workspace stays open after visiting another workspace', async ({ launchElectron }) => {
   // Arrange: a feed in Home, and a workspace with its own feed to switch to and back from.
-  const { page } = await launchApp();
-  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
+  const { page } = await launchElectron();
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
   await ensureFolderOpen(page, 'Tech', /^Feed A/);
   await expect(page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
 
@@ -131,7 +74,7 @@ workspacesTest('a folder opened in one workspace stays open after visiting anoth
   await expect(page.getByRole('link', { name: 'CI/CD watch' })).toBeVisible();
 
   const workspaceId = await workspaceIdFor(page, 'CI/CD watch');
-  await subscribe(page, 'http://127.0.0.1/feed-b', 'Feed B', 'Videos', workspaceId);
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-b', 'Feed B', 'Videos', workspaceId);
   await ensureFolderOpen(page, 'Videos', /^Feed B/);
   await expect(page.getByRole('button', { name: /^Feed B/ })).toBeVisible();
 
@@ -142,18 +85,16 @@ workspacesTest('a folder opened in one workspace stays open after visiting anoth
   await expect(page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
 });
 
-workspacesTest('adding a feed through the wizard while on a workspace adds it there, not Home', async ({ launchApp }) => {
+test('adding a feed through the wizard while on a workspace adds it there, not Home', async ({ launchElectron }) => {
   // Arrange: a local feed the wizard can resolve, and a workspace to be on when adding it.
-  const server = createServer((_request, response) => {
+  const server = await serve((_request, response) => {
     response.writeHead(200, { 'Content-Type': 'application/rss+xml' });
-    response.end(rss());
+    response.end(feed());
   });
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const { port } = server.address() as AddressInfo;
-  const feedUrl = `http://127.0.0.1:${port}/feed.xml`;
+  const feedUrl = `${server.origin}/feed.xml`;
 
   try {
-    const { page } = await launchApp();
+    const { page } = await launchElectron();
     await page.getByRole('button', { name: 'New workspace' }).click();
     await page.getByRole('textbox', { name: 'Name' }).fill('CI/CD watch');
     await page.getByRole('button', { name: 'Create workspace' }).click();
@@ -180,13 +121,13 @@ workspacesTest('adding a feed through the wizard while on a workspace adds it th
     await page.getByRole('link', { name: 'Home' }).click();
     await expect(page.getByRole('button', { name: /^Imported feed/ })).not.toBeVisible();
   } finally {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await server.close();
   }
 });
 
-workspacesTest('creating a folder while on a workspace creates it there, not Home', async ({ launchApp }) => {
+test('creating a folder while on a workspace creates it there, not Home', async ({ launchElectron }) => {
   // Arrange: a workspace to be on when creating the folder.
-  const { page } = await launchApp();
+  const { page } = await launchElectron();
   await page.getByRole('button', { name: 'New workspace' }).click();
   await page.getByRole('textbox', { name: 'Name' }).fill('CI/CD watch');
   await page.getByRole('button', { name: 'Create workspace' }).click();
@@ -205,10 +146,10 @@ workspacesTest('creating a folder while on a workspace creates it there, not Hom
   await expect(page.getByRole('button', { name: 'Alerts', exact: true })).not.toBeVisible();
 });
 
-workspacesTest('a folder name another workspace already uses is free to reuse', async ({ launchApp }) => {
+test('a folder name another workspace already uses is free to reuse', async ({ launchElectron }) => {
   // Arrange: Home already has a Tech folder, and a second workspace to create one from.
-  const { page } = await launchApp();
-  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
+  const { page } = await launchElectron();
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
   await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'New workspace' }).click();
@@ -226,10 +167,10 @@ workspacesTest('a folder name another workspace already uses is free to reuse', 
   await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
 });
 
-workspacesTest('renaming a folder while on a workspace leaves the same-named Home folder alone', async ({ launchApp }) => {
+test('renaming a folder while on a workspace leaves the same-named Home folder alone', async ({ launchElectron }) => {
   // Arrange: a Tech folder in Home, and a Tech folder in a second workspace.
-  const { app, page } = await launchApp();
-  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
+  const { app, page } = await launchElectron();
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
   await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'New workspace' }).click();
@@ -237,7 +178,7 @@ workspacesTest('renaming a folder while on a workspace leaves the same-named Hom
   await page.getByRole('button', { name: 'Create workspace' }).click();
   await expect(page.getByRole('link', { name: 'CI/CD watch' })).toBeVisible();
   const workspaceId = await workspaceIdFor(page, 'CI/CD watch');
-  await subscribe(page, 'http://127.0.0.1/feed-b', 'Feed B', 'Tech', workspaceId);
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-b', 'Feed B', 'Tech', workspaceId);
   await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
 
   // Act: rename it from the workspace it belongs to.
@@ -265,10 +206,10 @@ workspacesTest('renaming a folder while on a workspace leaves the same-named Hom
   await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
 });
 
-workspacesTest('deleting a feed from one workspace leaves it in place in another', async ({ launchApp }) => {
+test('deleting a feed from one workspace leaves it in place in another', async ({ launchElectron }) => {
   // Arrange: the same feed placed in both Home and a second workspace.
-  const { app, page } = await launchApp();
-  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
+  const { app, page } = await launchElectron();
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
   await ensureFolderOpen(page, 'Tech', /^Feed A/);
   await expect(page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
 
@@ -277,7 +218,7 @@ workspacesTest('deleting a feed from one workspace leaves it in place in another
   await page.getByRole('button', { name: 'Create workspace' }).click();
   await expect(page.getByRole('link', { name: 'CI/CD watch' })).toBeVisible();
   const workspaceId = await workspaceIdFor(page, 'CI/CD watch');
-  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech', workspaceId);
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech', workspaceId);
   await ensureFolderOpen(page, 'Tech', /^Feed A/);
   await expect(page.getByRole('button', { name: /^Feed A/ })).toBeVisible();
   const feedId = await feedIdFor(page, 'http://127.0.0.1/feed-a');

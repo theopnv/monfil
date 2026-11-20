@@ -52,7 +52,7 @@ Test files are not counted. A function that only moved to another line is not a 
 The work is split over two workflows, because a PR from a fork must not get a write token:
 
 - `complexity.yml` runs on `pull_request` with a read-only token. It measures both sides and uploads a JSON diff. It runs the PR's code, so it never writes Markdown.
-- `complexity-comment.yml` runs on `workflow_run` with `pull-requests: write`. It checks out only `scripts/complexity` from `main`, checks that the PR number and head sha in the artifact match the GitHub API, and renders the comment. Every name from the diff goes into a code span, so a function name cannot add links, mentions, or HTML.
+- `complexity-comment.yml` runs on `workflow_run` with `pull-requests: write`. It checks out only `scripts/complexity` and `scripts/devanalytics` from `main`, checks that the PR number and head sha in the artifact match the GitHub API, and renders the comment. Every name from the diff goes into a code span, so a function name cannot add links, mentions, or HTML.
 
 `workflow_run` workflows run from the default branch. A change to `complexity-comment.yml` takes effect only after it lands in `main`.
 

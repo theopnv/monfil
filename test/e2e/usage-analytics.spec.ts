@@ -2,12 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type Page } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { createServer } from 'node:http';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import type { AddressInfo } from 'node:net';
+import type { Page } from '@playwright/test';
+import { expect, serve, test as base } from './fixtures';
 
 interface Received {
   headers: Record<string, string | string[] | undefined>;
@@ -22,7 +18,7 @@ const ARTICLE_LINK = 'http://127.0.0.1:9/secret-path';
 const test = base.extend<{ received: Received[]; appPage: Page }>({
   received: async ({}, use) => {
     const received: Received[] = [];
-    const server = createServer((request, response) => {
+    const server = await serve((request, response) => {
       const chunks: Buffer[] = [];
       request.on('data', (chunk: Buffer) => chunks.push(chunk));
       request.on('end', () => {
@@ -31,32 +27,21 @@ const test = base.extend<{ received: Received[]; appPage: Page }>({
         response.writeHead(200).end('{}');
       });
     });
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    const { port } = server.address() as AddressInfo;
-    (received as unknown as { url: string }).url = `http://127.0.0.1:${port}/api/v0/events`;
+    (received as unknown as { url: string }).url = `${server.origin}/api/v0/events`;
     try {
       await use(received);
     } finally {
-      await new Promise<void>((resolve) => server.close(() => resolve()));
+      await server.close();
     }
   },
 
-  appPage: async ({ received }, use) => {
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-analytics-e2e-'));
-    const env = Object.fromEntries(Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined));
-    const app = await electron.launch({
-      args: ['.', `--user-data-dir=${userDataDir}`],
-      env: { ...env, MONFIL_ANALYTICS_ENDPOINT: (received as unknown as { url: string }).url, MONFIL_ANALYTICS_FLUSH_MS: '200' },
+  appPage: async ({ received, launchElectron }, use) => {
+    const { page } = await launchElectron({
+      env: { MONFIL_ANALYTICS_ENDPOINT: (received as unknown as { url: string }).url, MONFIL_ANALYTICS_FLUSH_MS: '200' },
     });
-    try {
-      const page = await app.firstWindow();
-      await page.waitForURL(/\/index\.html/, { waitUntil: 'domcontentloaded' });
-      await expect(page.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
-      await use(page);
-    } finally {
-      await app.close();
-      await rm(userDataDir, { recursive: true });
-    }
+    await page.waitForURL(/\/index\.html/, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
+    await use(page);
   },
 });
 

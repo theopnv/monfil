@@ -2,16 +2,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type ElectronApplication, type Locator, type Page } from '@playwright/test';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { createServer } from 'node:http';
-import type { AddressInfo } from 'node:net';
-import { tmpdir } from 'node:os';
+import type { ElectronApplication, Locator, Page } from '@playwright/test';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { LANGUAGE_CODES } from '../../src/shared/i18n/languages';
+import { expect, rss, serve, test as base } from './fixtures';
 
 const REPORT_DIR = process.env['LAYOUT_AUDIT_DIR'];
-const NOW = new Date().toUTCString();
 const SEEDED_TEXT = ['Équipe RH et personnes', 'Un flux avec un titre assez long pour la barre', 'Technologie et ingénierie logicielle'] as const;
 
 const bundles = new Map<string, unknown>();
@@ -303,24 +300,21 @@ const SCENARIOS: Scenario[] = [
   },
 ];
 
-type Fixtures = { blogUrl: string };
-
-const auditTest = base.extend<Fixtures>({
+const auditTest = base.extend<{ blogUrl: string }>({
   blogUrl: async ({}, use) => {
-    const server = createServer((request, response) => {
+    const server = await serve((request, response) => {
       if (request.url === '/posts.xml') {
         response.writeHead(200, { 'Content-Type': 'application/rss+xml' });
-        response.end(`<?xml version="1.0"?><rss version="2.0"><channel><title>Blog posts</title><description>A local feed</description><item><title>Hello</title><link>http://127.0.0.1/hello</link><pubDate>${NOW}</pubDate><description>An article</description></item></channel></rss>`);
+        response.end(rss([{ title: 'Hello', link: 'http://127.0.0.1/hello' }], 'Blog posts'));
         return;
       }
       response.writeHead(200, { 'Content-Type': 'text/html' });
       response.end('<!doctype html><html><head><title>Local blog</title><link rel="alternate" type="application/rss+xml" title="Posts" href="/posts.xml"></head><body>Hello</body></html>');
     });
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
     try {
-      await use(`http://127.0.0.1:${(server.address() as AddressInfo).port}/`);
+      await use(`${server.origin}/`);
     } finally {
-      await new Promise<void>((resolve) => server.close(() => resolve()));
+      await server.close();
     }
   },
 });
@@ -336,59 +330,52 @@ function item(index: number) {
 const AUDITED = process.env['LAYOUT_AUDIT_ALL'] ? LANGUAGE_CODES : (['fr', 'de', 'ja', 'ar'] as const);
 
 for (const code of AUDITED) {
-  auditTest(`no dialog breaks its layout in ${code}`, async ({ blogUrl }, testInfo) => {
+  auditTest(`no dialog breaks its layout in ${code}`, async ({ blogUrl, launchElectron }, testInfo) => {
     testInfo.setTimeout(240_000);
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'));
-    const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
+    const { app, page } = await launchElectron();
     const problems: string[] = [];
-    try {
-      const page = await app.firstWindow();
-      await page.setViewportSize({ width: 1280, height: 900 });
-      await expect(page.locator('select, button').first()).toBeVisible();
-      const created = await page.evaluate((name) => window.electron.ipcRenderer.invoke('workspaces:create', { name, icon: 'Code01', color: '#d67f48' }), SEEDED_TEXT[0]);
-      const added = await page.evaluate(({ items, title, categoryName }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-        link: 'http://127.0.0.1/feed-audit', title, type: 'rss', items, categoryName, workspaceId: 1, showInWorkspace: true,
-      }), { items: [1, 2, 3].map(item), title: SEEDED_TEXT[1], categoryName: SEEDED_TEXT[2] });
-      if (!('success' in created) || !created.success || !('success' in added) || !added.success) {
-        throw new Error('seeding failed');
-      }
-      const categories = await page.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list-categories', { workspaceId: 1 }));
-      await page.evaluate(() => {
-        window.history.pushState(null, '', '#/settings');
-      });
-      await page.locator('select').filter({ has: page.locator('option[value="ar"]') }).selectOption(code);
-      await expect.poll(() => page.evaluate(() => document.documentElement.lang)).toBe(code);
-      await page.reload();
-      await page.waitForTimeout(800);
-      const ids = { workspace: created.data.id, feed: added.data.id, category: (categories as { id: number }[])[0]?.id ?? 0 };
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect(page.locator('select, button').first()).toBeVisible();
+    const created = await page.evaluate((name) => window.electron.ipcRenderer.invoke('workspaces:create', { name, icon: 'Code01', color: '#d67f48' }), SEEDED_TEXT[0]);
+    const added = await page.evaluate(({ items, title, categoryName }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
+      link: 'http://127.0.0.1/feed-audit', title, type: 'rss', items, categoryName, workspaceId: 1, showInWorkspace: true,
+    }), { items: [1, 2, 3].map(item), title: SEEDED_TEXT[1], categoryName: SEEDED_TEXT[2] });
+    if (!('success' in created) || !created.success || !('success' in added) || !added.success) {
+      throw new Error('seeding failed');
+    }
+    const categories = await page.evaluate(() => window.electron.ipcRenderer.invoke('feeds:list-categories', { workspaceId: 1 }));
+    await page.evaluate(() => {
+      window.history.pushState(null, '', '#/settings');
+    });
+    await page.locator('select').filter({ has: page.locator('option[value="ar"]') }).selectOption(code);
+    await expect.poll(() => page.evaluate(() => document.documentElement.lang)).toBe(code);
+    await page.reload();
+    await page.waitForTimeout(800);
+    const ids = { workspace: created.data.id, feed: added.data.id, category: (categories as { id: number }[])[0]?.id ?? 0 };
 
-      const context: Context = {
-        app, page, code, blogUrl, ids,
-        report: async (scenario, root) => {
-          for (const problem of await layoutProblems(root)) {
-            problems.push(`${code} | ${scenario} | ${problem}`);
-          }
-          if (REPORT_DIR) {
-            await mkdir(REPORT_DIR, { recursive: true });
-            await root.screenshot({ path: path.join(REPORT_DIR, `${code}-${scenario}.png`) });
-          }
-        },
-      };
-      for (const scenario of SCENARIOS) {
-        try {
-          await scenario.run(context);
-        } catch (error) {
-          problems.push(`${code} | ${scenario.name} | could not run: ${error instanceof Error ? error.message.split('\n')[0] : String(error)}`);
-          if (REPORT_DIR) {
-            await mkdir(REPORT_DIR, { recursive: true });
-            await page.screenshot({ path: path.join(REPORT_DIR, `${code}-FAILED-${scenario.name.replaceAll(' ', '-')}.png`) });
-          }
+    const context: Context = {
+      app, page, code, blogUrl, ids,
+      report: async (scenario, root) => {
+        for (const problem of await layoutProblems(root)) {
+          problems.push(`${code} | ${scenario} | ${problem}`);
         }
-        await closeDialogs(page);
+        if (REPORT_DIR) {
+          await mkdir(REPORT_DIR, { recursive: true });
+          await root.screenshot({ path: path.join(REPORT_DIR, `${code}-${scenario}.png`) });
+        }
+      },
+    };
+    for (const scenario of SCENARIOS) {
+      try {
+        await scenario.run(context);
+      } catch (error) {
+        problems.push(`${code} | ${scenario.name} | could not run: ${error instanceof Error ? error.message.split('\n')[0] : String(error)}`);
+        if (REPORT_DIR) {
+          await mkdir(REPORT_DIR, { recursive: true });
+          await page.screenshot({ path: path.join(REPORT_DIR, `${code}-FAILED-${scenario.name.replaceAll(' ', '-')}.png`) });
+        }
       }
-    } finally {
-      await app.close();
-      await rm(userDataDir, { recursive: true });
+      await closeDialogs(page);
     }
     if (REPORT_DIR) {
       await writeFile(path.join(REPORT_DIR, `${code}.txt`), `${problems.join('\n')}\n`);

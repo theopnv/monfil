@@ -2,38 +2,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import type { AddressInfo } from 'node:net';
 import { parseOpmlDocument } from '../../src/main/opml/parse';
+import { expect, rss, serve, test as base } from './fixtures';
 
-const FIXTURE_PUB_DATE = new Date().toUTCString();
+const feed = (title: string) => rss([{ title: 'Article', link: 'http://127.0.0.1/article' }], title);
 
-function rss(title: string): string {
-  return '<?xml version="1.0"?><rss version="2.0"><channel><title>' + title + '</title><description>A local feed</description>'
-    + `<item><title>Article</title><link>http://127.0.0.1/article</link><pubDate>${FIXTURE_PUB_DATE}</pubDate><description>An article</description></item>`
-    + '</channel></rss>';
-}
-
-type OpmlTestFixtures = {
-  userDataDir: string;
-  workDir: string;
-  launchApp: () => Promise<{ app: ElectronApplication; page: Page }>;
-};
-
-const opmlTest = base.extend<OpmlTestFixtures>({
-  userDataDir: async ({}, use) => {
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-userdata-'));
-    try {
-      await use(userDataDir);
-    } finally {
-      await rm(userDataDir, { recursive: true });
-    }
-  },
-
+const test = base.extend<{ workDir: string }>({
   workDir: async ({}, use) => {
     const workDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-opml-'));
     try {
@@ -42,31 +19,16 @@ const opmlTest = base.extend<OpmlTestFixtures>({
       await rm(workDir, { recursive: true });
     }
   },
-
-  launchApp: async ({ userDataDir }, use) => {
-    const launched: ElectronApplication[] = [];
-    try {
-      await use(async () => {
-        const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-        launched.push(app);
-        return { app, page: await app.firstWindow() };
-      });
-    } finally {
-      await Promise.all(launched.map((app) => app.close()));
-    }
-  },
 });
 
-opmlTest('imports an OPML file as a new workspace, then exports it back out with the same categories and feeds', async ({ launchApp, workDir }) => {
+test('imports an OPML file as a new workspace, then exports it back out with the same categories and feeds', async ({ launchElectron, workDir }) => {
   // Arrange: two local feeds under one category, referenced by an OPML file on disk.
-  const server = createServer((request, response) => {
+  const server = await serve((request, response) => {
     response.writeHead(200, { 'Content-Type': 'application/rss+xml' });
-    response.end(rss(request.url === '/a.xml' ? 'Feed A' : 'Feed B'));
+    response.end(feed(request.url === '/a.xml' ? 'Feed A' : 'Feed B'));
   });
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const { port } = server.address() as AddressInfo;
-  const feedAUrl = `http://127.0.0.1:${port}/a.xml`;
-  const feedBUrl = `http://127.0.0.1:${port}/b.xml`;
+  const feedAUrl = `${server.origin}/a.xml`;
+  const feedBUrl = `${server.origin}/b.xml`;
 
   const importPath = path.join(workDir, 'import.opml');
   await writeFile(importPath, `<?xml version="1.0" encoding="UTF-8"?><opml version="1.0"><head><title>Watch pack</title></head><body>`
@@ -76,7 +38,7 @@ opmlTest('imports an OPML file as a new workspace, then exports it back out with
     + `</outline></body></opml>`, 'utf-8');
 
   try {
-    const { app, page } = await launchApp();
+    const { app, page } = await launchElectron();
     await app.evaluate(({ dialog }, filePath) => {
       dialog.showOpenDialog = (() => Promise.resolve({ canceled: false, filePaths: [filePath] })) as typeof dialog.showOpenDialog;
     }, importPath);
@@ -120,26 +82,24 @@ opmlTest('imports an OPML file as a new workspace, then exports it back out with
     expect(parsed.data.categories[0]?.name).toBe('Tech');
     expect(parsed.data.categories[0]?.feeds.map((feed) => feed.xmlUrl).sort()).toEqual([feedAUrl, feedBUrl].sort());
   } finally {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await server.close();
   }
 });
 
-opmlTest('importing OPML from an empty workspace\'s own button fills that workspace, not a new one', async ({ launchApp, workDir }) => {
+test('importing OPML from an empty workspace\'s own button fills that workspace, not a new one', async ({ launchElectron, workDir }) => {
   // Arrange: one local feed, referenced by an OPML file on disk.
-  const server = createServer((_request, response) => {
+  const server = await serve((_request, response) => {
     response.writeHead(200, { 'Content-Type': 'application/rss+xml' });
-    response.end(rss('Feed A'));
+    response.end(feed('Feed A'));
   });
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const { port } = server.address() as AddressInfo;
-  const feedUrl = `http://127.0.0.1:${port}/a.xml`;
+  const feedUrl = `${server.origin}/a.xml`;
 
   const importPath = path.join(workDir, 'import.opml');
   await writeFile(importPath, `<?xml version="1.0" encoding="UTF-8"?><opml version="1.0"><head><title>Watch pack</title></head><body>`
     + `<outline text="Tech"><outline type="rss" text="Feed A" xmlUrl="${feedUrl}"/></outline></body></opml>`, 'utf-8');
 
   try {
-    const { app, page } = await launchApp();
+    const { app, page } = await launchElectron();
     await app.evaluate(({ dialog }, filePath) => {
       dialog.showOpenDialog = (() => Promise.resolve({ canceled: false, filePaths: [filePath] })) as typeof dialog.showOpenDialog;
     }, importPath);
@@ -165,6 +125,6 @@ opmlTest('importing OPML from an empty workspace\'s own button fills that worksp
     await page.getByRole('link', { name: 'Home' }).click();
     await expect(page.getByRole('button', { name: /^Feed A/ })).not.toBeVisible();
   } finally {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await server.close();
   }
 });

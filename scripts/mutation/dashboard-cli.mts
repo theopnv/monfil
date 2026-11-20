@@ -1,7 +1,8 @@
-import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
+import { runCli } from '../devanalytics/cli.mts';
+import { git } from '../devanalytics/git.mts';
 import { reportPath } from './config.mts';
 import { uploadReport } from './dashboard.mts';
 import { MUTATION_SUITES } from './targets.mts';
@@ -18,7 +19,7 @@ async function main() {
   if (!apiKey) {
     throw new Error('Missing STRYKER_DASHBOARD_API_KEY.');
   }
-  const version = values.version ?? execFileSync('git', ['branch', '--show-current'], { encoding: 'utf8' }).trim();
+  const version = values.version ?? git('branch', '--show-current');
   if (!version) {
     throw new Error('No current branch. Pass --version.');
   }
@@ -38,7 +39,4 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n${USAGE}\n`);
-  process.exitCode = 1;
-});
+runCli(main, USAGE);

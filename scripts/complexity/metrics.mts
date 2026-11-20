@@ -1,10 +1,10 @@
-import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from '@typescript-eslint/typescript-estree';
 import { ESLint, type Linter } from 'eslint';
 import sonarjs from 'eslint-plugin-sonarjs';
 import tseslint from 'typescript-eslint';
+import { headCommit } from '../devanalytics/git.mts';
 import { findFunctionAt, nameFunctions, type FunctionNode } from './naming.mts';
 
 export interface FunctionRecord {
@@ -125,13 +125,6 @@ export async function collect(root: string): Promise<CollectResult> {
   const records = perFile.flat().sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line
     || a.qualified_name.localeCompare(b.qualified_name));
   return { records, warnings };
-}
-
-export function headCommit(root: string): { sha: string; date: string } {
-  const [sha = '', date = ''] = execFileSync('git', ['-C', root, 'show', '-s', '--format=%H%n%cI', 'HEAD'], { encoding: 'utf8' })
-    .trim()
-    .split('\n');
-  return { sha, date };
 }
 
 /** Measures the checkout at `root` and adds the sha and commit date of its HEAD. */
