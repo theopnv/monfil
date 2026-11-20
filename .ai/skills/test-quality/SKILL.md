@@ -21,8 +21,6 @@ npm run mutate:worklist -- <path>
 
 Read `.mutation/worklist.md`. Write down the score, the number of survivors, and the number of mutants without coverage for each file. You compare them at the end.
 
-A renderer path runs in Chromium and takes about 7 seconds for each mutant, so keep a renderer path to one folder of a few files. A node path of 25 files takes about 7 minutes.
-
 ## 2. Kill the survivors
 
 Work on one source file at a time, with the most undetected mutants first. For each survivor, read the source line and the tests that cover it. Then take one action:
@@ -57,7 +55,7 @@ npm run mutate -- <path>
 npm run mutate:worklist -- <path>
 ```
 
-Run the changed test files with `npx vitest run --project node <files>` or `npx vitest run --config=vitest.browser.config.mts <files>`, and run `npm run lint`. Commit with the type `test` and a lowercase subject, for example `test(feed): kill survivors in the rss parser`. The commit body gives the score before and after, and each removed or merged test with the test that replaces it.
+Run the changed test files with `npx vitest run --project node <files>`, and run `npm run lint`. Commit with the type `test` and a lowercase subject, for example `test(feed): kill survivors in the rss parser`. The commit body gives the score before and after, and each removed or merged test with the test that replaces it.
 
 ## 6. Report
 

@@ -2,24 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { splitTargets } from './targets.mts';
 
 describe('splitTargets', () => {
-  it('sends renderer files to the integration suite and the other process trees to the unit suite', () => {
+  it('keeps the source files of the main, preload and shared trees', () => {
     // Act
-    const result = splitTargets(['src/main/feed/refresh.ts', 'src/shared/result.ts', 'src/preload/preload.ts', 'src/renderer/lib/hints.ts', 'src/renderer/routes/index.tsx']);
+    const result = splitTargets(['src/main/feed/refresh.ts', 'src/shared/result.ts', 'src/preload/preload.ts']);
 
     // Assert
-    expect(result).toEqual({
-      unit: ['src/main/feed/refresh.ts', 'src/shared/result.ts', 'src/preload/preload.ts'],
-      integration: ['src/renderer/lib/hints.ts', 'src/renderer/routes/index.tsx'],
-    });
+    expect(result).toEqual({ unit: ['src/main/feed/refresh.ts', 'src/shared/result.ts', 'src/preload/preload.ts'] });
   });
 
   it.each([
     ['a test file', 'src/main/feed/refresh.test.ts'],
     ['a main-process test helper', 'src/main/test/db.ts'],
-    ['a renderer test file', 'src/renderer/lib/hints.test.tsx'],
-    ['a declaration file', 'src/renderer/vite-env.d.ts'],
-    ['a vendored component', 'src/renderer/components/untitled-ui/base/button.tsx'],
-    ['the generated route tree', 'src/renderer/routeTree.gen.ts'],
+    ['a declaration file', 'src/shared/vite-env.d.ts'],
     ['a script', 'scripts/mutation/run.mts'],
     ['a doc', 'doc/src/content/docs/index.mdx'],
     ['a fixture', 'src/main/opml/__fixtures__/feedly-export.opml'],
@@ -28,7 +22,7 @@ describe('splitTargets', () => {
     const result = splitTargets([file]);
 
     // Assert
-    expect(result).toEqual({ unit: [], integration: [] });
+    expect(result).toEqual({ unit: [] });
   });
 
   it('accepts Windows separators and lists a file once', () => {

@@ -16,23 +16,15 @@ Mutation testing runs on your machine. No CI job runs it, and no threshold fails
 | `npm run mutate` | Mutates the source files that differ from the merge base with `main`, including uncommitted and new files. |
 | `npm run mutate -- src/main/feed` | Mutates the files under a path. A path can be a file, a folder, or a git pathspec. |
 | `npm run mutate -- --base origin/main` | Compares with another ref. |
-| `npm run mutate -- --suite unit` | Runs one suite only: `unit` or `integration`. |
-| `npm run mutate -- --all` | Mutates all of `src/`. |
+| `npm run mutate -- --all` | Mutates all of `src/main/`, `src/preload/`, and `src/shared/`. |
 | `npm run mutate:worklist -- [<path>]` | Writes `.mutation/worklist.md` from the last reports. |
 | `npm run mutate:upload -- [--version <name>]` | Sends the last reports to the Stryker dashboard. |
 
 The type check needs `src/renderer/routeTree.gen.ts`. `npm run mutate` writes it first with `npm run routes:generate`, so a fresh clone needs no build.
 
-`npm run mutate` prints a score table, and writes an HTML and a JSON report to `.mutation/unit/` and `.mutation/integration/`. Open `mutation.html` in a browser to see each mutant in its source line.
+`npm run mutate` prints a score table, and writes an HTML and a JSON report to `.mutation/unit/`. Open `mutation.html` in a browser to see each mutant in its source line.
 
-Each source file goes to one suite, by path:
-
-| Suite | Files | Tests | Time for each mutant |
-| --- | --- | --- | --- |
-| `unit` | `src/main/`, `src/preload/`, `src/shared/` | The `node` Vitest project, from `vitest.node.config.mts` | Well under a second. A full run of the suite, about 7,600 mutants, takes about 15 minutes on a 10-core machine. |
-| `integration` | `src/renderer/` | The `browser` Vitest project in Chromium, from `vitest.browser.config.mts` | About 7 seconds. Run it on one folder at a time. A full run takes hours. |
-
-Test files, `*.d.ts`, `src/main/test/`, `src/renderer/components/untitled-ui/`, and `src/renderer/routeTree.gen.ts` are never mutated. The e2e suite does not take part: each mutant would need a new Electron package.
+The run mutates `src/main/`, `src/preload/`, and `src/shared/`, and checks each mutant with the `node` Vitest project from `vitest.node.config.mts`. The e2e suite does not take part: each mutant would need a new Electron package. Test files, `*.d.ts`, and `src/main/test/` are never mutated.
 
 ## Read the result
 
@@ -52,7 +44,7 @@ The *score* is `(killed + timeout) / (killed + timeout + survived + no coverage)
 
 ### The work list
 
-`npm run mutate:worklist` turns the reports into `.mutation/worklist.md`. For each suite, it lists:
+`npm run mutate:worklist` turns the report into `.mutation/worklist.md`. It lists:
 
 - Each file with undetected mutants, most first, with the line, the mutator, and the original and replacement text of each mutant.
 - **Tests that kill no mutant.** The test runs mutated code, but no mutant makes it fail. Check what it asserts. A test that checks a rejection or an empty result can still guard a behavior that no mutant reaches.
@@ -84,7 +76,7 @@ The ESLint rule `mutation/stryker-disable` refuses a suppression without a reaso
 
 ## Publish to the dashboard
 
-The [Stryker dashboard](https://dashboard.stryker-mutator.io/repos/theopnv) shows a report for each version of the project `github.com/theopnv/monfil`. Each suite is a module of the version.
+The [Stryker dashboard](https://dashboard.stryker-mutator.io/repos/theopnv) shows a report for each version of the project `github.com/theopnv/monfil`. The report is the `unit` module of the version.
 
 1. Sign in to the dashboard with GitHub, enable the repository, and copy its API key.
 2. Add the key to `.env` at the repository root. Git ignores this file.
@@ -103,8 +95,8 @@ The dashboard is public for a public repository, and a report holds the full sou
 
 ## How the runs work
 
-`scripts/mutation/run.mts` starts Stryker once for each suite with the options from `scripts/mutation/config.mts`:
+`scripts/mutation/run.mts` starts Stryker with the options from `scripts/mutation/config.mts`:
 
 - **Runner:** `@stryker-mutator/vitest-runner` with `coverageAnalysis: 'perTest'`, so a mutant runs only the tests that cover its line. `disableBail` runs all of them, so the report lists every test that kills a mutant. The work list needs that, and it did not make a run slower.
-- **Type check:** `@stryker-mutator/typescript-checker` compiles the root `tsconfig.json` before any test runs, and marks a mutant that does not compile as `CompileError`. About 45% of the mutants of the `unit` suite end there.
+- **Type check:** `@stryker-mutator/typescript-checker` compiles the root `tsconfig.json` before any test runs, and marks a mutant that does not compile as `CompileError`. About 45% of the mutants end there.
 - **Sandbox:** Stryker copies `src/`, `feedpacks/`, the configs, and `package.json` to `.stryker-tmp/`, and links `node_modules`. Nothing else is copied.
