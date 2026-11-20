@@ -85,9 +85,13 @@ function bootstrap() {
         // Stryker disable next-line StringLiteral: titleBarOverlayForTheme gives the light overlay for any theme other than 'dark'
         : titleBarOverlayForTheme(nativeTheme.shouldUseDarkColors ? 'dark' : 'light'),
       show: !isE2ETest,
+      // maximize() shows a hidden window, so an e2e window gets a fixed size instead. It matches the 1920x1080 screen of the Linux CI runner.
+      ...(isE2ETest ? { width: 1920, height: 1080 } : {}),
       icon: iconPath,
       webPreferences: {
         preload: path.join(__dirname, 'preload.cjs'),
+        // A window that never shows would otherwise count as hidden, and Chromium pauses animation frames in a hidden page.
+        backgroundThrottling: !isE2ETest,
         // Electron's defaults, written out so a future default change cannot widen the renderer's reach unnoticed.
         contextIsolation: true,
         nodeIntegration: false,
@@ -96,7 +100,9 @@ function bootstrap() {
       },
     });
     hardenWebContents(mainWindow.webContents);
-    mainWindow.maximize();
+    if (!isE2ETest) {
+      mainWindow.maximize();
+    }
 
     if (import.meta.env.DEV && MAIN_WINDOW_VITE_DEV_SERVER_URL) {
       void mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
@@ -150,7 +156,13 @@ function bootstrap() {
   // On macOS, BrowserWindow's `icon` option is a no-op; the packaged app gets its icon from the
   // bundle's Info.plist, but in dev there's no bundle, so the dock icon needs setting explicitly.
   app.on('ready', () => {
-    if (process.platform === 'darwin' && !app.isPackaged) {
+    if (process.platform !== 'darwin') {
+      return;
+    }
+    if (isE2ETest) {
+      // No Dock icon, so a test run neither bounces it nor takes a place in Cmd+Tab.
+      app.dock?.hide();
+    } else if (!app.isPackaged) {
       app.dock?.setIcon(iconPath);
     }
   });
