@@ -2,25 +2,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type Page } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import type { Page } from '@playwright/test';
 import type { NewFeedInput } from '../../src/shared/contracts';
+import { expect, test as base } from './fixtures';
 
 const test = base.extend<{ appPage: Page }>({
-  appPage: async ({}, use) => {
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-ipc-e2e-'));
-    const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-    try {
-      const page = await app.firstWindow();
-      await page.waitForURL(/\/index\.html/, { waitUntil: 'domcontentloaded' });
-      await expect(page.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
-      await use(page);
-    } finally {
-      await app.close();
-      await rm(userDataDir, { recursive: true });
-    }
+  appPage: async ({ launchApp }, use) => {
+    const page = await launchApp();
+    await page.waitForURL(/\/index\.html/, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
+    await use(page);
   },
 });
 

@@ -2,40 +2,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { createServer } from 'node:http';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import type { AddressInfo } from 'node:net';
-import { HOME_WORKSPACE_ID, type SourceType } from '../../src/shared/contracts';
-
-const FIXTURE_PUB_DATE = new Date().toUTCString();
+import { expect, rss, serve, subscribe, test as base, type Article } from './fixtures';
 
 const ARTICLE_PARAGRAPH = 'This sentence only exists in the full article page, fetched from the source, not in the feed teaser. '.repeat(6);
 
-interface Article {
-  title: string;
-  link: string;
+interface ReaderArticle extends Article {
   body?: string;
 }
 
-interface FeedServer {
+interface ReaderFeedServer {
   url: string;
-  publish: (articles: Article[]) => void;
-}
-
-type ReaderArticleTestFixtures = {
-  feedServer: FeedServer;
-  userDataDir: string;
-  launchApp: () => Promise<Page>;
-};
-
-function rss(articles: Article[]): string {
-  const items = articles
-    .map((article) => `<item><title>${article.title}</title><link>${article.link}</link><pubDate>${FIXTURE_PUB_DATE}</pubDate><description>Short feed teaser.</description></item>`)
-    .join('');
-  return `<?xml version="1.0"?><rss version="2.0"><channel><title>Local feed</title><description>A local feed</description>${items}</channel></rss>`;
+  publish: (articles: ReaderArticle[]) => void;
 }
 
 function articlePage(title: string, body = `<p>${ARTICLE_PARAGRAPH}</p>`): string {
@@ -46,13 +23,13 @@ function articlePage(title: string, body = `<p>${ARTICLE_PARAGRAPH}</p>`): strin
 </body></html>`;
 }
 
-const readerArticleTest = base.extend<ReaderArticleTestFixtures>({
+const test = base.extend<{ feedServer: ReaderFeedServer }>({
   feedServer: async ({}, use) => {
-    let articles: Article[] = [];
-    const server = createServer((request, response) => {
+    let articles: ReaderArticle[] = [];
+    const server = await serve((request, response) => {
       if (request.url === '/feed.xml') {
         response.writeHead(200, { 'Content-Type': 'application/rss+xml' });
-        response.end(rss(articles));
+        response.end(rss(articles.map((article) => ({ ...article, description: 'Short feed teaser.' }))));
         return;
       }
       const article = articles.find((candidate) => request.url === new URL(candidate.link).pathname);
@@ -64,54 +41,20 @@ const readerArticleTest = base.extend<ReaderArticleTestFixtures>({
       response.writeHead(404);
       response.end();
     });
-    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-    const { port } = server.address() as AddressInfo;
     try {
       await use({
-        url: `http://127.0.0.1:${port}/feed.xml`,
+        url: `${server.origin}/feed.xml`,
         publish: (published) => {
-          articles = published.map((article) => ({ ...article, link: `http://127.0.0.1:${port}${article.link}` }));
+          articles = published.map((article) => ({ ...article, link: `${server.origin}${article.link}` }));
         },
       });
     } finally {
-      await new Promise<void>((resolve) => server.close(() => {
-        resolve();
-      }));
-    }
-  },
-
-  userDataDir: async ({}, use) => {
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'));
-    try {
-      await use(userDataDir);
-    } finally {
-      await rm(userDataDir, { recursive: true });
-    }
-  },
-
-  launchApp: async ({ userDataDir }, use) => {
-    const launched: ElectronApplication[] = [];
-    try {
-      await use(async () => {
-        const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-        launched.push(app);
-        return app.firstWindow();
-      });
-    } finally {
-      await Promise.all(launched.map((app) => app.close()));
+      await server.close();
     }
   },
 });
 
-// Subscribes without going through the wizard. The row is enough for a refresh to find the feed.
-async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Promise<void> {
-  await page.evaluate(({ link, type, workspaceId }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title: 'Local feed', type, items: [], categoryName: 'tech', workspaceId, showInWorkspace: true,
-  }), { link: url, type, workspaceId: HOME_WORKSPACE_ID });
-  await page.getByRole('button', { name: 'Refresh feeds' }).click();
-}
-
-readerArticleTest('shows the fetched article body instead of the feed description', async ({ feedServer, launchApp }) => {
+test('shows the fetched article body instead of the feed description', async ({ feedServer, launchApp }) => {
   // Arrange
   feedServer.publish([{ title: 'Full Article', link: '/article/full' }]);
   const page = await launchApp();
@@ -127,7 +70,7 @@ readerArticleTest('shows the fetched article body instead of the feed descriptio
   await expect(page.getByTestId('article-body')).not.toContainText('Short feed teaser.');
 });
 
-readerArticleTest('loads one provider frame only after a click', async ({ feedServer, launchApp }) => {
+test('loads one provider frame only after a click', async ({ feedServer, launchApp }) => {
   // Arrange
   feedServer.publish([{
     title: 'Embedded Article',

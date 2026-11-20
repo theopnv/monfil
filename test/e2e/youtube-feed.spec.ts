@@ -2,43 +2,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import type { Page } from '@playwright/test';
 import type { NewFeedInput } from '../../src/shared/contracts';
 import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
-
-const FIXTURE_PUB_DATE = new Date().toUTCString();
-
-type YoutubeFeedTestFixtures = {
-  userDataDir: string;
-  launchApp: () => Promise<Page>;
-};
-
-const youtubeFeedTest = base.extend<YoutubeFeedTestFixtures>({
-  userDataDir: async ({}, use) => {
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'));
-    try {
-      await use(userDataDir);
-    } finally {
-      await rm(userDataDir, { recursive: true });
-    }
-  },
-
-  launchApp: async ({ userDataDir }, use) => {
-    const launched: ElectronApplication[] = [];
-    try {
-      await use(async () => {
-        const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-        launched.push(app);
-        return app.firstWindow();
-      });
-    } finally {
-      await Promise.all(launched.map((app) => app.close()));
-    }
-  },
-});
+import { expect, PUB_DATE, test } from './fixtures';
 
 const ICON_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 const THUMBNAIL_URL = ICON_URL;
@@ -61,7 +28,7 @@ async function subscribeYoutube(page: Page): Promise<void> {
         title: 'A Video',
         guid: 'yt:video:abc123',
         link: 'https://www.youtube.com/watch?v=abc123',
-        pubDate: FIXTURE_PUB_DATE,
+        pubDate: PUB_DATE,
         description: VIDEO_DESCRIPTION,
         image: THUMBNAIL_URL,
         author: 'Local Channel',
@@ -72,7 +39,7 @@ async function subscribeYoutube(page: Page): Promise<void> {
   } satisfies NewFeedInput);
 }
 
-youtubeFeedTest('shows the channel avatar in the sidebar and the video description in the reader', async ({ launchApp }) => {
+test('shows the channel avatar in the sidebar and the video description in the reader', async ({ launchApp }) => {
   // Arrange
   const page = await launchApp();
 

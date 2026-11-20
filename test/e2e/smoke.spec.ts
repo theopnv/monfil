@@ -2,29 +2,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type ElectronApplication } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import type { ElectronApplication } from '@playwright/test';
+import { expect, test as base } from './fixtures';
 
-type SmokeTestFixtures = {
-  electronApp: ElectronApplication;
-};
-
-const smokeTest = base.extend<SmokeTestFixtures>({
-  electronApp: async ({}, use) => {
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'));
-    const electronApp = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-    try {
-      await use(electronApp);
-    } finally {
-      await electronApp.close();
-      await rm(userDataDir, { recursive: true });
-    }
-  }
+const test = base.extend<{ electronApp: ElectronApplication }>({
+  electronApp: async ({ launchElectron }, use) => {
+    await use((await launchElectron()).app);
+  },
 });
 
-smokeTest('smoke test', async ({ electronApp }) => {
+test('smoke test', async ({ electronApp }) => {
   const isPackaged = await electronApp.evaluate(async ({ app }) => {
     return app.isPackaged
   });
@@ -38,7 +25,7 @@ smokeTest('smoke test', async ({ electronApp }) => {
   await window.screenshot({ path: 'test-results/intro.png' });
 })
 
-smokeTest('clicking "Add feed" opens the add-feed wizard', async ({ electronApp }) => {
+test('clicking "Add feed" opens the add-feed wizard', async ({ electronApp }) => {
   // Arrange
   const window = await electronApp.firstWindow();
 

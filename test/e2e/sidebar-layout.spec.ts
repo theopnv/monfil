@@ -2,49 +2,17 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type Locator, type Page } from '@playwright/test';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
+import type { Locator, Page } from '@playwright/test';
+import { expect, subscribeAndReload, test as base } from './fixtures';
 
-type SidebarLayoutFixtures = {
-  userDataDir: string;
-  page: Page;
-};
-
-const sidebarTest = base.extend<SidebarLayoutFixtures>({
-  userDataDir: async ({}, use) => {
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'));
-    try {
-      await use(userDataDir);
-    } finally {
-      await rm(userDataDir, { recursive: true });
-    }
-  },
-
-  page: async ({ userDataDir }, use) => {
-    const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-    try {
-      const page = await app.firstWindow();
-      // The renderer answers `feeds:submit-add-feed` only once its IPC bridge is mounted.
-      await expect(page.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
-      await use(page);
-    } finally {
-      await app.close();
-    }
+const test = base.extend<{ page: Page }>({
+  page: async ({ launchApp }, use) => {
+    const page = await launchApp();
+    // The renderer answers `feeds:submit-add-feed` only once its IPC bridge is mounted.
+    await expect(page.getByRole('button', { name: 'Add feed', exact: true })).toBeVisible();
+    await use(page);
   },
 });
-
-// Subscribes without a network fetch or the wizard: enough for a feed and its category to exist.
-// The reload is what puts the new feed in the sidebar: only the add-feed wizard refreshes the feed
-// query, and this writes behind its back.
-async function subscribe(page: Page, link: string, title: string, categoryName: string): Promise<void> {
-  await page.evaluate(({ link, title, categoryName, workspaceId }) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
-    link, title, type: 'rss', items: [], categoryName, workspaceId, showInWorkspace: true,
-  }), { link, title, categoryName, workspaceId: HOME_WORKSPACE_ID });
-  await page.reload();
-}
 
 async function boxOf(locator: Locator): Promise<{ x: number; width: number; height: number }> {
   const box = await locator.boundingBox();
@@ -57,9 +25,9 @@ async function boxOf(locator: Locator): Promise<{ x: number; width: number; heig
 const LONG_FEED_TITLE = 'An extremely long feed title that could never fit inside a narrow sidebar column';
 const LONG_FOLDER_NAME = 'A folder name far too long for the sidebar to ever show in full';
 
-sidebarTest('a long feed title stays inside the sidebar', async ({ page }) => {
+test('a long feed title stays inside the sidebar', async ({ page }) => {
   // Arrange
-  await subscribe(page, 'http://127.0.0.1/feed-a', LONG_FEED_TITLE, 'Tech');
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-a', LONG_FEED_TITLE, 'Tech');
   await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
 
   // Act
@@ -71,10 +39,10 @@ sidebarTest('a long feed title stays inside the sidebar', async ({ page }) => {
   expect(row.x + row.width).toBeLessThanOrEqual(list.x + list.width);
 });
 
-sidebarTest('a long folder name is truncated to one line', async ({ page }) => {
+test('a long folder name is truncated to one line', async ({ page }) => {
   // Arrange
-  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
-  await subscribe(page, 'http://127.0.0.1/feed-b', 'Feed B', LONG_FOLDER_NAME);
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Tech');
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-b', 'Feed B', LONG_FOLDER_NAME);
 
   // Assert
   const longFolder = page.getByRole('button', { name: LONG_FOLDER_NAME, exact: true });
@@ -86,9 +54,9 @@ sidebarTest('a long folder name is truncated to one line', async ({ page }) => {
   expect(longRow.height).toBe(shortRow.height);
 });
 
-sidebarTest('a folder name that fits is shown in full until the row is hovered', async ({ page }) => {
+test('a folder name that fits is shown in full until the row is hovered', async ({ page }) => {
   // Arrange
-  await subscribe(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Media & Podcasts');
+  await subscribeAndReload(page, 'http://127.0.0.1/feed-a', 'Feed A', 'Media & Podcasts');
   const label = page.getByRole('button', { name: 'Media & Podcasts', exact: true }).locator('span');
   await expect(label).toBeVisible();
   await page.mouse.move(0, 0);
@@ -97,77 +65,67 @@ sidebarTest('a folder name that fits is shown in full until the row is hovered',
   expect(await label.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
 });
 
-sidebarTest('window controls reserve title bar space', async ({ userDataDir }) => {
-  sidebarTest.skip(process.platform === 'darwin');
+test('window controls reserve title bar space', async ({ launchElectron }) => {
+  test.skip(process.platform === 'darwin');
 
   // Arrange
-  const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-  try {
-    const page = await app.firstWindow();
-    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.showInactive());
+  const { app, page } = await launchElectron();
+  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.showInactive());
 
-    // Act
-    const overlay = await page.evaluate(() => {
-      const controls = (navigator as Navigator & {
-        windowControlsOverlay?: { visible: boolean; getTitlebarAreaRect(): DOMRect };
-      }).windowControlsOverlay;
-      return {
-        visible: controls?.visible,
-        width: controls?.getTitlebarAreaRect().width,
-        height: controls?.getTitlebarAreaRect().height,
-        windowWidth: window.innerWidth,
-      };
-    });
+  // Act
+  const overlay = await page.evaluate(() => {
+    const controls = (navigator as Navigator & {
+      windowControlsOverlay?: { visible: boolean; getTitlebarAreaRect(): DOMRect };
+    }).windowControlsOverlay;
+    return {
+      visible: controls?.visible,
+      width: controls?.getTitlebarAreaRect().width,
+      height: controls?.getTitlebarAreaRect().height,
+      windowWidth: window.innerWidth,
+    };
+  });
 
-    // Assert
-    expect(overlay.visible).toBe(true);
-    expect(overlay.width).toBeLessThan(overlay.windowWidth);
-    expect(overlay.height).toBe(32);
-  } finally {
-    await app.close();
-  }
+  // Assert
+  expect(overlay.visible).toBe(true);
+  expect(overlay.width).toBeLessThan(overlay.windowWidth);
+  expect(overlay.height).toBe(32);
 });
 
-sidebarTest('window controls follow the app theme', async ({ userDataDir }) => {
-  sidebarTest.skip(process.platform === 'darwin');
+test('window controls follow the app theme', async ({ launchElectron }) => {
+  test.skip(process.platform === 'darwin');
 
   // Arrange
-  const app = await electron.launch({ args: ['.', `--user-data-dir=${userDataDir}`] });
-  try {
-    const page = await app.firstWindow();
-    await app.evaluate(({ BrowserWindow }) => {
-      const window = BrowserWindow.getAllWindows()[0];
-      if (!window) {
-        throw new Error('expected an app window');
-      }
-      const setTitleBarOverlay = window.setTitleBarOverlay.bind(window);
-      window.setTitleBarOverlay = (options) => {
-        (window as typeof window & { lastTitleBarOverlay?: typeof options }).lastTitleBarOverlay = options;
-        setTitleBarOverlay(options);
-      };
-    });
+  const { app, page } = await launchElectron();
+  await app.evaluate(({ BrowserWindow }) => {
+    const window = BrowserWindow.getAllWindows()[0];
+    if (!window) {
+      throw new Error('expected an app window');
+    }
+    const setTitleBarOverlay = window.setTitleBarOverlay.bind(window);
+    window.setTitleBarOverlay = (options) => {
+      (window as typeof window & { lastTitleBarOverlay?: typeof options }).lastTitleBarOverlay = options;
+      setTitleBarOverlay(options);
+    };
+  });
 
-    const lastTitleBarOverlay = () => app.evaluate(({ BrowserWindow }) => {
-      const window = BrowserWindow.getAllWindows()[0] as (typeof BrowserWindow.prototype) & {
-        lastTitleBarOverlay?: { color?: string; symbolColor?: string; height?: number };
-      };
-      return window.lastTitleBarOverlay;
-    });
+  const lastTitleBarOverlay = () => app.evaluate(({ BrowserWindow }) => {
+    const window = BrowserWindow.getAllWindows()[0] as (typeof BrowserWindow.prototype) & {
+      lastTitleBarOverlay?: { color?: string; symbolColor?: string; height?: number };
+    };
+    return window.lastTitleBarOverlay;
+  });
 
-    // Act
-    await page.evaluate(() => localStorage.setItem('ui-theme', 'light'));
-    await page.reload();
+  // Act
+  await page.evaluate(() => localStorage.setItem('ui-theme', 'light'));
+  await page.reload();
 
-    // Assert
-    await expect.poll(lastTitleBarOverlay).toEqual({ color: '#ebddc5', symbolColor: '#201e1d', height: 32 });
+  // Assert
+  await expect.poll(lastTitleBarOverlay).toEqual({ color: '#ebddc5', symbolColor: '#201e1d', height: 32 });
 
-    // Act
-    await page.evaluate(() => localStorage.setItem('ui-theme', 'dark'));
-    await page.reload();
+  // Act
+  await page.evaluate(() => localStorage.setItem('ui-theme', 'dark'));
+  await page.reload();
 
-    // Assert
-    await expect.poll(lastTitleBarOverlay).toEqual({ color: '#272019', symbolColor: '#f2e7d6', height: 32 });
-  } finally {
-    await app.close();
-  }
+  // Assert
+  await expect.poll(lastTitleBarOverlay).toEqual({ color: '#272019', symbolColor: '#f2e7d6', height: 32 });
 });

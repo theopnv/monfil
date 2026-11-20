@@ -2,41 +2,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { test as base, expect, _electron as electron, type ElectronApplication, type Page, type TestInfo } from '@playwright/test';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import type { ElectronApplication, Page, TestInfo } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { HOME_WORKSPACE_ID } from '../../src/shared/contracts';
 import arabicMain from '../../src/shared/i18n/locales/ar/main.json' with { type: 'json' };
 import frenchMain from '../../src/shared/i18n/locales/fr/main.json' with { type: 'json' };
-
-type Launch = (userDataDir?: string) => Promise<{ app: ElectronApplication; page: Page }>;
-
-type LanguageFixtures = {
-  userDataDir: string;
-  launch: Launch;
-};
-
-const languageTest = base.extend<LanguageFixtures>({
-  userDataDir: async ({}, use) => {
-    const userDataDir = await mkdtemp(path.join(tmpdir(), 'monfil-e2e-'));
-    try {
-      await use(userDataDir);
-    } finally {
-      await rm(userDataDir, { recursive: true });
-    }
-  },
-
-  launch: async ({ userDataDir }, use) => {
-    const apps: ElectronApplication[] = [];
-    await use(async (dir = userDataDir) => {
-      const app = await electron.launch({ args: ['.', `--user-data-dir=${dir}`] });
-      apps.push(app);
-      return { app, page: await app.firstWindow() };
-    });
-    await Promise.all(apps.map((app) => app.close().catch(() => undefined)));
-  },
-});
+import { expect, test } from './fixtures';
 
 async function openSettings(page: Page): Promise<void> {
   await page.evaluate(() => {
@@ -91,9 +63,9 @@ async function subscribe(page: Page): Promise<number> {
   return result.data.id;
 }
 
-languageTest('switching to Arabic flips the page, the sidebar rail, the font, and the next native menu at once', async ({ launch }, testInfo) => {
+test('switching to Arabic flips the page, the sidebar rail, the font, and the next native menu at once', async ({ launchElectron }, testInfo) => {
   // Arrange
-  const { app, page } = await launch();
+  const { app, page } = await launchElectron();
   const feedId = await subscribe(page);
   await recordMenuLabels(app);
   await openSettings(page);
@@ -113,25 +85,25 @@ languageTest('switching to Arabic flips the page, the sidebar rail, the font, an
   await attachScreenshot(page, testInfo, 'settings-ar');
 });
 
-languageTest('the chosen language survives a restart and shows from the first paint', async ({ launch, userDataDir }) => {
+test('the chosen language survives a restart and shows from the first paint', async ({ launchElectron }) => {
   // Arrange
-  const first = await launch();
+  const first = await launchElectron();
   await openSettings(first.page);
   await languagePicker(first.page).selectOption('ar');
   await expect.poll(() => documentState(first.page)).toEqual({ lang: 'ar', dir: 'rtl' });
   await first.app.close();
 
   // Act
-  const second = await launch(userDataDir);
+  const second = await launchElectron();
   await second.page.waitForLoadState('domcontentloaded');
 
   // Assert
   expect(await documentState(second.page)).toEqual({ lang: 'ar', dir: 'rtl' });
 });
 
-languageTest('German text does not overflow the settings page', async ({ launch }, testInfo) => {
+test('German text does not overflow the settings page', async ({ launchElectron }, testInfo) => {
   // Arrange
-  const { page } = await launch();
+  const { page } = await launchElectron();
   await openSettings(page);
 
   // Act
@@ -144,9 +116,9 @@ languageTest('German text does not overflow the settings page', async ({ launch 
   await attachScreenshot(page, testInfo, 'settings-de');
 });
 
-languageTest('French menus follow the choice, and System goes back to the language of the system', async ({ launch }) => {
+test('French menus follow the choice, and System goes back to the language of the system', async ({ launchElectron }) => {
   // Arrange
-  const { app, page } = await launch();
+  const { app, page } = await launchElectron();
   const feedId = await subscribe(page);
   await recordMenuLabels(app);
   await openSettings(page);
@@ -168,9 +140,9 @@ languageTest('French menus follow the choice, and System goes back to the langua
 const LANGUAGES_WITH_TRANSLATIONS = ['en', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'] as const;
 
 for (const code of LANGUAGES_WITH_TRANSLATIONS) {
-  languageTest(`the three footer buttons of the new workspace dialog share one row inside it in ${code}`, async ({ launch }) => {
+  test(`the three footer buttons of the new workspace dialog share one row inside it in ${code}`, async ({ launchElectron }) => {
     // Arrange
-    const { page } = await launch();
+    const { page } = await launchElectron();
     await openSettings(page);
     await languagePicker(page).selectOption(code);
     await expect.poll(async () => (await documentState(page)).lang).toBe(code);
