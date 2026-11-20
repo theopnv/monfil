@@ -101,6 +101,7 @@ dist/
 
 # Playwright
 test-results/
+test-reports/
 
 # TanStack Router
 src/renderer/routeTree.gen.ts

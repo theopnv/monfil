@@ -21,6 +21,7 @@ export default defineConfig({
   },
   test: {
     name: 'browser',
+    retry: process.env['CI'] ? 1 : 0,
     include: [
       'src/renderer/**/*.{test,spec}.?(c|m)[jt]s?(x)',
     ],

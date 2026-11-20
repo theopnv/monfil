@@ -19,6 +19,8 @@ export default defineConfig({
   testDir: './test/e2e',
   testMatch: /.*\.spec\.ts/,
   workers: WORKERS,
+  // One retry on CI tells a flaky test from a broken one: the CI Health dashboard counts a test that passes on the retry.
+  retries: process.env['CI'] ? 1 : 0,
   projects: [
     { name: 'parallel', testIgnore: ALONE },
     { name: 'alone', testMatch: ALONE, workers: 1, dependencies: ['parallel'] },

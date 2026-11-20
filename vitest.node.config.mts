@@ -18,5 +18,6 @@ export default defineConfig({
       ...(process.env['SKIP_LINT_RULE_TESTS'] === 'true' ? ['**/eslint.config.test.ts'] : []),
     ],
     restoreMocks: true,
+    retry: process.env['CI'] ? 1 : 0,
   },
 })
