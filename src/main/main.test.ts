@@ -23,6 +23,7 @@ const mockGetSystemLocale = vi.fn(() => 'fr-CA');
 const mockSetPath = vi.fn();
 const mockHasSwitch = vi.fn(() => true);
 const mockDockSetIcon = vi.fn();
+const mockDockHide = vi.fn();
 const mockMkdirSync = vi.fn();
 const mockGetAllWindows = vi.fn(() => [] as Electron.BrowserWindow[]);
 let mockIsPackaged = false;
@@ -41,7 +42,7 @@ vi.mock(import('electron'), () => ({
     get isPackaged() {
       return mockIsPackaged;
     },
-    dock: { setIcon: mockDockSetIcon },
+    dock: { setIcon: mockDockSetIcon, hide: mockDockHide },
   } as unknown as Electron.App,
   BrowserWindow: Object.assign(vi.fn(function () {
     return {
@@ -361,6 +362,68 @@ describe('main', () => {
     // Assert
     expect(vi.mocked(allowPrivateHosts).mock.calls).toHaveLength(allowsPrivateHosts ? 1 : 0);
     expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({ show: showsWindow }));
+  });
+
+  test('opens an e2e window at a fixed size and keeps it rendering, because maximizing would show it', async () => {
+    // Arrange
+    vi.stubEnv('E2E_TEST', '1');
+    const { BrowserWindow } = await import('electron');
+
+    // Act
+    const window = await launchAndGetWindow();
+
+    // Assert
+    expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
+      show: false,
+      width: 1920,
+      height: 1080,
+      webPreferences: expect.objectContaining({ backgroundThrottling: false }),
+    }));
+    expect(window.maximize).not.toHaveBeenCalled();
+  });
+
+  test('lets a normal window pick its own size and throttle in the background', async () => {
+    // Arrange
+    const { BrowserWindow } = await import('electron');
+
+    // Act
+    await launchAndGetWindow();
+
+    // Assert
+    expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
+      webPreferences: expect.objectContaining({ backgroundThrottling: true }),
+    }));
+    expect(BrowserWindow).not.toHaveBeenCalledWith(expect.objectContaining({ width: expect.anything() }));
+  });
+
+  test.each([
+    { platform: 'darwin', e2e: '1', packaged: false, hidesDock: true, setsIcon: false },
+    { platform: 'darwin', e2e: '0', packaged: false, hidesDock: false, setsIcon: true },
+    { platform: 'darwin', e2e: '0', packaged: true, hidesDock: false, setsIcon: false },
+    { platform: 'linux', e2e: '1', packaged: false, hidesDock: false, setsIcon: false },
+  ])('on $platform with E2E_TEST=$e2e and packaged=$packaged, hides the Dock icon: $hidesDock, sets it: $setsIcon', async ({ platform, e2e, packaged, hidesDock, setsIcon }) => {
+    // Arrange
+    vi.stubEnv('E2E_TEST', e2e);
+    mockIsPackaged = packaged;
+    // A packaged app reads its icon from the resources folder, which only Electron defines.
+    Object.defineProperty(process, 'resourcesPath', { value: 'mock-resources', configurable: true });
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    await import('./main');
+    const readyHandlers = mockOn.mock.calls.filter(([event]) => event === 'ready').map(([, handler]) => handler as () => void);
+    const originalPlatform = process.platform;
+
+    try {
+      // Act
+      Object.defineProperty(process, 'platform', { value: platform, configurable: true });
+      readyHandlers.forEach((handler) => handler());
+    } finally {
+      Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
+      Reflect.deleteProperty(process, 'resourcesPath');
+    }
+
+    // Assert
+    expect(mockDockHide).toHaveBeenCalledTimes(hidesDock ? 1 : 0);
+    expect(mockDockSetIcon).toHaveBeenCalledTimes(setsIcon ? 1 : 0);
   });
 
   test('hands the system locale to the preload script and to the formatting of stored text', async () => {
