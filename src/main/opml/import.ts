@@ -6,6 +6,7 @@ import fs from 'node:fs/promises';
 import { dialog } from 'electron';
 import type { ImportFailed, ImportOpmlError, ImportOpmlTarget, ImportSkipped, ImportSummary } from '../../shared/contracts';
 import { db, dbReady } from '../db/database';
+import { upsertFeedCategory, upsertFeedPlacement } from '../db/crud/insert';
 import { queryFeedMetadataByIds } from '../db/crud/query';
 import { parseErrorParams } from '../db/error-params';
 import type { Result } from '../../shared/result';
@@ -70,11 +71,7 @@ export async function startOpmlImport(
       const insertedFeedIds: number[] = [];
 
       for (const category of parsed.data.categories) {
-        const categoryRow = await trx.insertInto('feedCategory')
-          .values({ name: category.name, workspace_id: workspaceId })
-          .onConflict((oc) => oc.columns(['workspace_id', 'name']).doUpdateSet((eb) => ({ name: eb.ref('excluded.name') })))
-          .returningAll()
-          .executeTakeFirstOrThrow();
+        const categoryRow = await upsertFeedCategory(trx, category.name, workspaceId);
 
         for (const feed of category.feeds) {
           if (existingLinks.has(feed.xmlUrl)) {
@@ -92,13 +89,7 @@ export async function startOpmlImport(
             .returningAll()
             .executeTakeFirstOrThrow();
 
-          await trx.insertInto('feedPlacement')
-            .values({ feed_id: metadata.id, category_id: categoryRow.id, workspace_id: workspaceId, showInWorkspace: 1 })
-            .onConflict((oc) => oc.columns(['feed_id', 'workspace_id']).doUpdateSet((eb) => ({
-              category_id: eb.ref('excluded.category_id'),
-              showInWorkspace: eb.ref('excluded.showInWorkspace'),
-            })))
-            .execute();
+          await upsertFeedPlacement(trx, metadata.id, categoryRow.id, workspaceId, 1);
 
           insertedFeedIds.push(metadata.id);
         }

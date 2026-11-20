@@ -22,10 +22,3 @@ export async function readLibraryState(): Promise<LibraryState> {
   ]);
   return { feeds: feeds.count, workspaces: workspaces.count, categories: categories.count, feedKinds: kinds.map((row) => row.type) };
 }
-
-/** Counts the feeds in the library. */
-export async function countFeeds(): Promise<number> {
-  await dbReady;
-  const { count } = await db.selectFrom('feedMetadata').select((eb) => eb.fn.countAll<number>().as('count')).executeTakeFirstOrThrow();
-  return count;
-}

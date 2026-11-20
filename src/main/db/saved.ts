@@ -2,24 +2,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { sql, type Kysely } from 'kysely';
+import { sql } from 'kysely';
+import { collectUnplacedFeeds } from './crud/delete';
 import { db, dbReady } from './database';
+import { paginate } from './paging';
 import { searchCondition } from './search';
-import type { Database } from './types';
 import type { RiverPage, SavedQuery, SetSavedItemInput, UpdateSavedItemError } from '../../shared/contracts';
 import type { Result } from '../../shared/result';
-
-export async function collectUnplacedFeeds(executor: Kysely<Database>): Promise<void> {
-  await executor.deleteFrom('feedItem')
-    .where('feed_id', 'in', executor.selectFrom('feedMetadata').select('id')
-      .where((eb) => eb.not(eb.exists(eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id')))))
-    .where((eb) => eb.not(eb.exists(eb.selectFrom('savedItem').select('item_id').whereRef('savedItem.item_id', '=', 'feedItem.id'))))
-    .execute();
-  await executor.deleteFrom('feedMetadata')
-    .where((eb) => eb.not(eb.exists(eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id'))))
-    .where((eb) => eb.not(eb.exists(eb.selectFrom('feedItem').select('id').whereRef('feedItem.feed_id', '=', 'feedMetadata.id'))))
-    .execute();
-}
 
 export async function setItemSaved(input: SetSavedItemInput, now = Date.now()): Promise<Result<void, UpdateSavedItemError>> {
   await dbReady;
@@ -84,11 +73,9 @@ export async function querySavedPage(query: SavedQuery): Promise<RiverPage> {
     ]));
   }
   const rows = await builder.orderBy('s.saved_at', 'desc').orderBy('i.id', 'desc').limit(query.limit + 1).execute();
-  const hasMore = rows.length > query.limit;
-  const page = hasMore ? rows.slice(0, query.limit) : rows;
-  const last = page[page.length - 1];
+  const { page, last } = paginate(rows, query.limit);
   return {
     rows: page,
-    ...(hasMore && last ? { nextCursor: { savedAt: last.savedAt, publishedAt: last.publishedAt, id: last.id } } : {}),
+    ...(last ? { nextCursor: { savedAt: last.savedAt, publishedAt: last.publishedAt, id: last.id } } : {}),
   };
 }

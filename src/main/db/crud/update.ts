@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { upsertFeedCategory, upsertFeedPlacement } from './insert';
 import { db, dbReady } from '../database';
 import type { FeedCategory, MoveFeedError, UpdateCategoryError, UpdateFeedError, UpdateItemError, UpdateWorkspaceError, Workspace } from '../../../shared/contracts';
 import type { ErrorParams } from '../../../shared/errors';
@@ -192,19 +193,8 @@ export async function moveFeedToWorkspace(feedId: number, fromWorkspaceId: numbe
         return false;
       }
 
-      const category = await trx.insertInto('feedCategory')
-        .values({ name: categoryName, workspace_id: toWorkspaceId })
-        .onConflict((oc) => oc.columns(['workspace_id', 'name']).doUpdateSet((eb) => ({ name: eb.ref('excluded.name') })))
-        .returningAll()
-        .executeTakeFirstOrThrow();
-
-      await trx.insertInto('feedPlacement')
-        .values({ feed_id: feedId, category_id: category.id, workspace_id: toWorkspaceId, showInWorkspace: source.showInWorkspace })
-        .onConflict((oc) => oc.columns(['feed_id', 'workspace_id']).doUpdateSet((eb) => ({
-          category_id: eb.ref('excluded.category_id'),
-          showInWorkspace: eb.ref('excluded.showInWorkspace'),
-        })))
-        .execute();
+      const category = await upsertFeedCategory(trx, categoryName, toWorkspaceId);
+      await upsertFeedPlacement(trx, feedId, category.id, toWorkspaceId, source.showInWorkspace);
 
       return true;
     });

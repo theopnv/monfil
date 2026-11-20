@@ -2,10 +2,24 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import type { Kysely } from 'kysely';
 import { db, dbReady } from '../database';
-import { collectUnplacedFeeds } from '../saved';
+import type { Database } from '../types';
 import { HOME_WORKSPACE_ID, type DeleteCategoryError, type DeleteFeedError, type DeleteWorkspaceError } from '../../../shared/contracts';
 import type { Result } from '../../../shared/result';
+
+/** Deletes the feeds that no workspace holds any more, and their items unless the item is saved. */
+export async function collectUnplacedFeeds(executor: Kysely<Database>): Promise<void> {
+  await executor.deleteFrom('feedItem')
+    .where('feed_id', 'in', executor.selectFrom('feedMetadata').select('id')
+      .where((eb) => eb.not(eb.exists(eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id')))))
+    .where((eb) => eb.not(eb.exists(eb.selectFrom('savedItem').select('item_id').whereRef('savedItem.item_id', '=', 'feedItem.id'))))
+    .execute();
+  await executor.deleteFrom('feedMetadata')
+    .where((eb) => eb.not(eb.exists(eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id'))))
+    .where((eb) => eb.not(eb.exists(eb.selectFrom('feedItem').select('id').whereRef('feedItem.feed_id', '=', 'feedMetadata.id'))))
+    .execute();
+}
 
 /**
  * Removes a feed from `workspaceId`. The underlying feed, and through the `feedItem.feed_id`

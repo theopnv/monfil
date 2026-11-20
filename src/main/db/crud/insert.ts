@@ -42,7 +42,8 @@ async function itemDates(executor: Kysely<Database>, feedId: number, items: Inco
   return dates;
 }
 
-async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: string, workspaceId: number) {
+/** Reuses the category of that name in the workspace, or creates it. */
+export async function upsertFeedCategory(trx: Kysely<Database>, categoryName: string, workspaceId: number) {
   return trx.insertInto('feedCategory')
     .values({ name: categoryName, workspace_id: workspaceId })
     .onConflict((oc) => oc.columns(['workspace_id', 'name']).doUpdateSet((eb) => ({ name: eb.ref('excluded.name') })))
@@ -51,7 +52,7 @@ async function addFeedCategoryToDatabase(trx: Kysely<Database>, categoryName: st
 }
 
 /**
- * Creates a new, empty category in `workspaceId`. Unlike `addFeedCategoryToDatabase`, a name
+ * Creates a new, empty category in `workspaceId`. Unlike `upsertFeedCategory`, a name
  * already in use is an error rather than a silent reuse, since this path is a deliberate "new folder"
  * action.
  * @param name the category's display name, unique within the workspace
@@ -106,9 +107,10 @@ async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, ti
     .executeTakeFirstOrThrow();
 }
 
-async function addFeedPlacementToDatabase(trx: Kysely<Database>, feedId: number, categoryId: number, workspaceId: number, showInWorkspace: boolean) {
+/** Places a feed in a workspace, or moves its existing placement there to the category. */
+export async function upsertFeedPlacement(trx: Kysely<Database>, feedId: number, categoryId: number, workspaceId: number, showInWorkspace: number) {
   return trx.insertInto('feedPlacement')
-    .values({ feed_id: feedId, category_id: categoryId, workspace_id: workspaceId, showInWorkspace: showInWorkspace ? 1 : 0 })
+    .values({ feed_id: feedId, category_id: categoryId, workspace_id: workspaceId, showInWorkspace })
     .onConflict((oc) => oc.columns(['feed_id', 'workspace_id']).doUpdateSet((eb) => ({
       category_id: eb.ref('excluded.category_id'),
       showInWorkspace: eb.ref('excluded.showInWorkspace'),
@@ -266,9 +268,9 @@ export async function addFeedToDatabase(input: NewFeedInput, cutoff = Number.NEG
   await dbReady;
   try {
     const { category, metadata, placement, otherWorkspaceCount } = await db.transaction().execute(async (trx) => {
-      const category = await addFeedCategoryToDatabase(trx, input.categoryName, input.workspaceId);
+      const category = await upsertFeedCategory(trx, input.categoryName, input.workspaceId);
       const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, input.type, input.icon);
-      const placement = await addFeedPlacementToDatabase(trx, metadata.id, category.id, input.workspaceId, input.showInWorkspace);
+      const placement = await upsertFeedPlacement(trx, metadata.id, category.id, input.workspaceId, input.showInWorkspace ? 1 : 0);
       await syncFeedItemsInTransaction(trx, metadata.id, input.items, cutoff);
       const { count: otherWorkspaceCount } = await trx.selectFrom('feedPlacement')
         .select((eb) => eb.fn.countAll<number>().as('count'))
