@@ -9,8 +9,8 @@ import { extractOgImageUrl } from './extractOgImage';
 import { ENRICHMENT_CONCURRENCY, ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 import { hasHttpScheme } from '../../shared/url';
 
-interface Candidate {
-  id: number;
+interface Candidate<T> {
+  item: T;
   link: string;
   host: string;
 }
@@ -23,8 +23,10 @@ function hostFor(link: string): string {
   }
 }
 
-function toCandidates(items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[]): Candidate[] {
-  const candidates: Candidate[] = [];
+type EnrichableItem = Pick<FeedItem, 'id' | 'link' | 'image'>;
+
+function toCandidates<T extends EnrichableItem>(items: readonly T[]): Candidate<T>[] {
+  const candidates: Candidate<T>[] = [];
   for (const item of items) {
     if (!item.link || !hasHttpScheme(item.link)) {
       continue;
@@ -33,7 +35,7 @@ function toCandidates(items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[])
     if (item.image) {
       continue;
     }
-    candidates.push({ id: item.id, link: item.link, host: hostFor(item.link) });
+    candidates.push({ item, link: item.link, host: hostFor(item.link) });
   }
   return candidates;
 }
@@ -42,21 +44,21 @@ function toCandidates(items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[])
  * Fetches pages for items without an image and reports the first image found in their metadata.
  * Only items with an absolute http(s) link to a public host are fetched.
  */
-export async function enrichItems(
-  items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[],
-  onImageFound: (itemId: number, image: string) => void,
+export async function enrichItems<T extends EnrichableItem>(
+  items: readonly T[],
+  onImageFound: (item: T, image: string) => void,
 ): Promise<void> {
   const previousByHost = new Map<string, Promise<void>>();
   await runWithConcurrency(toCandidates(items), ENRICHMENT_CONCURRENCY, async (candidate) => {
     const previous = previousByHost.get(candidate.host) ?? Promise.resolve();
     const current = previous.then(async () => {
-      const result = await fetchText(candidate.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+      const result = await fetchText(candidate.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true, stopAfter: '</head>' });
       if (!result.success) {
         return;
       }
       const image = extractOgImageUrl(result.data.body);
       if (image) {
-        onImageFound(candidate.id, image);
+        onImageFound(candidate.item, image);
       }
     });
     previousByHost.set(candidate.host, current);

@@ -23,26 +23,49 @@ const ENRICHMENT_BUDGET = 200;
 
 const iconLookups = new Set<string>();
 
+interface IconLookup {
+  feed: FeedMetadataRow;
+  siteLink: string | undefined;
+}
+
 function needsIconLookup(feed: FeedMetadataRow): boolean {
   return !feed.icon && !iconLookups.has(feed.link);
 }
 
-async function fillMissingIcon(feed: FeedMetadataRow, siteLink: string | undefined): Promise<void> {
+function claimIconLookup(feed: FeedMetadataRow): boolean {
   if (!needsIconLookup(feed)) {
-    return;
+    return false;
   }
   iconLookups.add(feed.link);
+  return true;
+}
+
+async function fillMissingIcon({ feed, siteLink }: IconLookup): Promise<boolean> {
   const icon = await resolveSiteIcon(siteLink ?? feed.link);
   if (!icon) {
-    return;
+    return false;
   }
   const stored = await setFeedIconIfMissing(feed.id, icon);
   if (!stored.success) {
     logger.error('operation.failure', { operation: 'store-feed-icon', entityId: feed.id }, stored.error);
   }
+  return stored.success;
 }
 
-async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: boolean): Promise<{ items: FeedItem[]; updated: number; failure?: CodedError }> {
+// The icon is no reason to hold up a feed's items, so the lookups run once the items are stored.
+async function fillMissingIcons(lookups: readonly IconLookup[]): Promise<void> {
+  let stored = 0;
+  await runWithConcurrency(lookups, FEED_FETCH_CONCURRENCY, async (lookup) => {
+    if (await fillMissingIcon(lookup)) {
+      stored += 1;
+    }
+  });
+  if (stored > 0) {
+    broadcastToRenderers('feeds:refreshed', { perFeed: [] });
+  }
+}
+
+async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: boolean): Promise<{ items: FeedItem[]; updated: number; failure?: CodedError; iconLookup?: IconLookup }> {
   if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
     return { items: [], updated: 0 };
   }
@@ -76,13 +99,14 @@ async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: bool
     return { items: [], updated: 0 };
   }
 
-  await fillMissingIcon(feed, outcome.parsed.siteLink);
   const inserted = await syncFeedItemsToDatabase(db, feed.id, outcome.parsed.items, cutoff);
   if (!inserted.success) {
     logger.error('operation.failure', { operation: 'store-refreshed-items', entityId: feed.id }, inserted.error);
     const failure: CodedError = { name: 'DB_ERROR', message: 'Could not save the new items.' };
     return { items: [], updated: 0, failure };
   }
+
+  const lookupIcon = claimIconLookup(feed);
 
   // Advance validators only after the response items are stored, so a 304 cannot hide an insert failure.
   const updated = await setFeedFetchResult(feed.id, {
@@ -93,19 +117,23 @@ async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: bool
   if (!updated.success) {
     logger.error('operation.failure', { operation: 'clear-refresh-failure', entityId: feed.id }, updated.error);
   }
-  return { items: inserted.data.inserted, updated: inserted.data.updated };
+  return { items: inserted.data.inserted, updated: inserted.data.updated, ...(lookupIcon ? { iconLookup: { feed, siteLink: outcome.parsed.siteLink } } : {}) };
 }
 
 async function refreshFeedList(feedList: FeedMetadataRow[], retentionDays: RetentionDays, force = false): Promise<RefreshSummary> {
   const insertedByFeedId = new Map<number, FeedItem[]>();
   const updatedByFeedId = new Map<number, number>();
   const failedFeeds: NonNullable<RefreshSummary['failedFeeds']> = [];
+  const pendingIconLookups: IconLookup[] = [];
   const cutoff = retentionCutoff(retentionDays);
 
   await runWithConcurrency(feedList, FEED_FETCH_CONCURRENCY, async (feed) => {
     const result = await refreshOneFeed(feed, cutoff, force);
     insertedByFeedId.set(feed.id, result.items);
     updatedByFeedId.set(feed.id, result.updated);
+    if (result.iconLookup) {
+      pendingIconLookups.push(result.iconLookup);
+    }
     if (result.failure !== undefined) {
       failedFeeds.push({ feedId: feed.id, title: feed.title, message: result.failure.message, code: result.failure.name, ...(result.failure.params ? { params: result.failure.params } : {}) });
     }
@@ -114,6 +142,10 @@ async function refreshFeedList(feedList: FeedMetadataRow[], retentionDays: Reten
   const removed = await pruneExpiredItems(retentionDays);
 
   const typeByFeedId = new Map(feedList.map((feed) => [feed.id, feed.type]));
+
+  fillMissingIcons(pendingIconLookups).catch((error: unknown) => {
+    logger.error('operation.failure', { operation: 'fill-feed-icons' }, error);
+  });
 
   // Images take a page fetch each, so they arrive later through their own push rather than holding up the list.
   enrichRefreshedItems(insertedByFeedId, typeByFeedId).catch((error: unknown) => {
@@ -154,26 +186,21 @@ export async function refreshFeeds(feedIds: number[], force = false): Promise<Re
 }
 
 async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedItem[]>, typeByFeedId: ReadonlyMap<number, SourceType>): Promise<void> {
-  let remaining = ENRICHMENT_BUDGET;
+  const candidates: FeedItem[] = [];
   for (const [feedId, items] of insertedByFeedId) {
-    if (remaining === 0) {
-      return;
+    if (sourceFor(typeByFeedId.get(feedId) ?? 'rss').fetchesFullArticle) {
+      candidates.push(...items.slice(0, ENRICHMENT_BUDGET - candidates.length));
     }
-    if (!sourceFor(typeByFeedId.get(feedId) ?? 'rss').fetchesFullArticle) {
-      continue;
-    }
-    const candidates = items.slice(0, remaining);
-    remaining -= candidates.length;
-    try {
-      await enrichItems(
-        candidates,
-        (itemId, image) => {
-          void updateFeedItemImage(itemId, image);
-          broadcastToRenderers('feeds:item-image-fetched', { feedId, itemId, image });
-        },
-      );
-    } catch (error) {
-      logger.error('operation.failure', { operation: 'enrich-feed-images', entityId: feedId }, error);
-    }
+  }
+  try {
+    await enrichItems(
+      candidates,
+      (item, image) => {
+        void updateFeedItemImage(item.id, image);
+        broadcastToRenderers('feeds:item-image-fetched', { feedId: item.feed_id, itemId: item.id, image });
+      },
+    );
+  } catch (error) {
+    logger.error('operation.failure', { operation: 'enrich-feed-images' }, error);
   }
 }

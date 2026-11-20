@@ -96,8 +96,71 @@ describe('refreshAllFeeds', () => {
     await refreshAllFeeds();
 
     // Assert
+    await vi.waitFor(async () => {
+      expect(await db.selectFrom('feedMetadata').select('icon').where('id', '=', feedId).executeTakeFirstOrThrow()).toEqual({ icon: 'https://moderne.example/brand/symbol.svg' });
+    });
     expect(mockedResolveSiteIcon).toHaveBeenCalledWith('https://moderne.example/blog');
-    expect(await db.selectFrom('feedMetadata').select('icon').where('id', '=', feedId).executeTakeFirstOrThrow()).toEqual({ icon: 'https://moderne.example/brand/symbol.svg' });
+  });
+
+  test('stores the items of a feed without waiting for its icon lookup', async () => {
+    // Arrange
+    const link = 'https://slow-icon.example/feed.xml';
+    const feedId = await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, [item({ title: 'Fresh', link: 'https://slow-icon.example/fresh' })]) });
+    mockedResolveSiteIcon.mockReturnValue(new Promise(() => undefined));
+
+    // Act
+    const summary = await refreshAllFeeds();
+
+    // Assert
+    expect(summary.perFeed).toEqual([{ feedId, inserted: 1 }]);
+    expect(await storedTitles()).toEqual(['Fresh']);
+    expect(mockedResolveSiteIcon).toHaveBeenCalledOnce();
+  });
+
+  test('looks up no icon for a feed whose items could not be stored', async () => {
+    // Arrange
+    const link = 'https://unsaved.example/feed.xml';
+    await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, [item({ title: null as unknown as string })]) });
+
+    // Act
+    const summary = await refreshAllFeeds();
+    await new Promise((resolve) => setImmediate(resolve));
+
+    // Assert
+    expect(summary.failedFeeds).toHaveLength(1);
+    expect(mockedResolveSiteIcon).not.toHaveBeenCalled();
+  });
+
+  test('tells the renderer to reload the feeds once an icon is stored', async () => {
+    // Arrange
+    const link = 'https://announce-icon.example/feed.xml';
+    await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, []) });
+    mockedResolveSiteIcon.mockResolvedValue('https://announce-icon.example/favicon.ico');
+
+    // Act
+    await refreshAllFeeds();
+
+    // Assert
+    await vi.waitFor(() => expect(mockedBroadcast).toHaveBeenCalledWith('feeds:refreshed', { perFeed: [] }));
+  });
+
+  test('tells the renderer nothing when no icon was found', async () => {
+    // Arrange
+    const link = 'https://no-announce.example/feed.xml';
+    await storeFeed(link);
+    mockedFetchFeed.mockResolvedValue({ success: true, data: fetched(link, []) });
+    mockedResolveSiteIcon.mockResolvedValue(undefined);
+
+    // Act
+    await refreshAllFeeds();
+    await vi.waitFor(() => expect(mockedResolveSiteIcon).toHaveBeenCalled());
+    await new Promise((resolve) => setImmediate(resolve));
+
+    // Assert
+    expect(mockedBroadcast).not.toHaveBeenCalledWith('feeds:refreshed', expect.anything());
   });
 
   test('looks up a missing icon once per session', async () => {
@@ -129,7 +192,9 @@ describe('refreshAllFeeds', () => {
 
     // Assert
     expect(mockedFetchFeed).toHaveBeenCalledWith({ link });
-    expect(await db.selectFrom('feedMetadata').select('icon').where('id', '=', feedId).executeTakeFirstOrThrow()).toEqual({ icon: 'https://cached.example/favicon.ico' });
+    await vi.waitFor(async () => {
+      expect(await db.selectFrom('feedMetadata').select('icon').where('id', '=', feedId).executeTakeFirstOrThrow()).toEqual({ icon: 'https://cached.example/favicon.ico' });
+    });
   });
 
   test('keeps the icon a feed already has', async () => {
@@ -503,7 +568,7 @@ describe('refreshAllFeeds', () => {
 
     // Assert
     expect(mockedFetchText).toHaveBeenCalledTimes(1);
-    expect(mockedFetchText).toHaveBeenCalledWith('https://a.example/new', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+    expect(mockedFetchText).toHaveBeenCalledWith('https://a.example/new', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true, stopAfter: '</head>' });
   });
 
   test('keeps enriching later feeds when an item fails', async () => {
@@ -530,6 +595,46 @@ describe('refreshAllFeeds', () => {
 
     // Assert
     expect(mockedFetchText.mock.calls.map(([link]) => link)).toEqual([`${failingLink}/1`, `${workingLink}/1`]);
+  });
+
+  test('looks for the images of every feed together, so a slow page of one feed does not hold back the others', async () => {
+    // Arrange
+    const slowLink = 'https://slow.example/feed';
+    const quickLink = 'https://quick.example/feed';
+    await storeFeed(slowLink);
+    await storeFeed(quickLink);
+    mockedFetchFeed.mockImplementation((input) => Promise.resolve({
+      success: true,
+      data: fetched(input.link, [item({ title: input.link, link: `${input.link}/1` })]),
+    }));
+    mockedFetchText.mockImplementation((link) => (link === `${slowLink}/1`
+      ? new Promise(() => undefined)
+      : Promise.resolve({ success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } })));
+
+    // Act
+    await refreshAllFeeds();
+
+    // Assert
+    await vi.waitFor(() => expect(mockedFetchText).toHaveBeenCalledWith(`${quickLink}/1`, expect.anything()));
+  });
+
+  test('announces an image under the feed that holds the item', async () => {
+    // Arrange
+    const firstLink = 'https://first.example/feed';
+    const secondLink = 'https://second.example/feed';
+    await storeFeed(firstLink);
+    const secondId = await storeFeed(secondLink);
+    mockedFetchFeed.mockImplementation((input) => Promise.resolve({
+      success: true,
+      data: fetched(input.link, input.link === secondLink ? [item({ title: 'Second', link: `${secondLink}/1` })] : []),
+    }));
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: '<meta property="og:image" content="https://second.example/cover.png">', validators: { etag: undefined, last_modified: undefined } } });
+
+    // Act
+    await refreshAllFeeds();
+
+    // Assert
+    await vi.waitFor(() => expect(mockedBroadcast).toHaveBeenCalledWith('feeds:item-image-fetched', expect.objectContaining({ feedId: secondId, image: 'https://second.example/cover.png' })));
   });
 
   test('limits image enrichment to 200 new items per refresh', async () => {

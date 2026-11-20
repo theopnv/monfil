@@ -4,7 +4,7 @@
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { fetchText, type FetchTextResult } from '../../lib/fetch';
-import { extractIconLinks, resolveSiteIcon } from './siteIcon';
+import { MAX_DATA_ICON_LENGTH, extractIconLinks, resolveSiteIcon } from './siteIcon';
 
 vi.mock(import('../../lib/fetch'), () => ({
   fetchText: vi.fn(),
@@ -151,6 +151,30 @@ describe('extractIconLinks', () => {
     expect(links).toEqual(['data:image/png;base64,AAAA']);
   });
 
+  test('drops a data image over the size limit and keeps the next icon', () => {
+    // Arrange
+    const huge = `data:image/png;base64,${'A'.repeat(MAX_DATA_ICON_LENGTH)}`;
+    const html = `<link rel="icon" sizes="512x512" href="${huge}"><link rel="icon" sizes="16x16" href="/small.png">`;
+
+    // Act
+    const links = extractIconLinks(html, 'https://site.example/');
+
+    // Assert
+    expect(links).toEqual(['https://site.example/small.png']);
+  });
+
+  test('keeps a data image at the size limit', () => {
+    // Arrange
+    const prefix = 'data:image/png;base64,';
+    const atLimit = `${prefix}${'A'.repeat(MAX_DATA_ICON_LENGTH - prefix.length)}`;
+
+    // Act
+    const links = extractIconLinks(`<link rel="icon" href="${atLimit}">`, 'https://site.example/');
+
+    // Assert
+    expect(links).toEqual([atLimit]);
+  });
+
   test.each([
     'data:text/html;base64,AAAA',
     'javascript:image/png',
@@ -230,6 +254,21 @@ describe('resolveSiteIcon', () => {
     // Assert
     expect(icon).toBeUndefined();
     expect(mockedFetchText).not.toHaveBeenCalled();
+  });
+
+  test('asks the fallback icons for their headers only, and reads the page in full', async () => {
+    // Arrange
+    serve({});
+
+    // Act
+    await resolveSiteIcon('https://site.example/');
+
+    // Assert
+    expect(mockedFetchText.mock.calls.map(([url, options]) => [url, options?.headersOnly === true])).toEqual([
+      ['https://site.example/', false],
+      ['https://site.example/favicon.ico', true],
+      ['https://icons.duckduckgo.com/ip3/site.example.ico', true],
+    ]);
   });
 
   test('refuses private hosts for every request', async () => {

@@ -40,8 +40,8 @@ describe('enrichItems', () => {
 
     // Assert
     expect(mockedFetchText).toHaveBeenCalledTimes(2);
-    expect(mockedFetchText).toHaveBeenCalledWith('https://example.com/1', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
-    expect(mockedFetchText).toHaveBeenCalledWith('http://example.com/2', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+    expect(mockedFetchText).toHaveBeenCalledWith('https://example.com/1', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true, stopAfter: '</head>' });
+    expect(mockedFetchText).toHaveBeenCalledWith('http://example.com/2', { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true, stopAfter: '</head>' });
   });
 
   test('uses each fetched page only to find its image', async () => {
@@ -58,7 +58,7 @@ describe('enrichItems', () => {
     expect(mockedFetchText).toHaveBeenCalledTimes(1);
     expect(mockedExtractOgImageUrl).toHaveBeenCalledWith('<html>page</html>');
     expect(mockedExtractArticle).not.toHaveBeenCalled();
-    expect(onImageFound).toHaveBeenCalledWith(1, 'https://example.com/found.jpg');
+    expect(onImageFound).toHaveBeenCalledExactlyOnceWith(items[0], 'https://example.com/found.jpg');
   });
 
   test('does not fetch an item that already has an image', async () => {

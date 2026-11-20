@@ -21,6 +21,10 @@ export interface FetchUrlOptions {
   timeoutMs?: number;
   /** Refuses hosts on loopback, link-local or private ranges. Set it for every URL a feed chose rather than the user. */
   blockPrivateHosts?: boolean;
+  /** Answers from the status line: the body is never read, and `FetchedText.body` is empty. For a probe that asks only whether the URL exists. */
+  headersOnly?: boolean;
+  /** Stops reading once this text has arrived (any letter case) and returns what came in so far, so a caller that needs only a page's head does not download the rest. */
+  stopAfter?: string;
 }
 
 export interface ConditionalFetchOptions extends FetchUrlOptions {
@@ -124,7 +128,7 @@ interface ResponseHop {
   statusMessage: string;
   headers: Record<string, string | string[]>;
   /** Reads the body in its declared charset, capped at MAX_FETCH_BYTES. */
-  readBody: () => Promise<Result<string, FetchUrlError>>;
+  readBody: (stopAfter?: string) => Promise<Result<string, FetchUrlError>>;
   /** Cancels the request, releasing its connection. Safe to call once the hop has settled. */
   abort: () => void;
 }
@@ -188,7 +192,7 @@ async function chromiumTransport(target: URL, headers: Record<string, string>, s
         status: response.statusCode,
         statusMessage: response.statusMessage,
         headers: response.headers as Record<string, string | string[]>,
-        readBody: () => readCappedText(response, request),
+        readBody: (stopAfter) => readCappedText(response, request, stopAfter),
         abort: () => {
           request.abort();
           response.removeAllListeners();
@@ -246,9 +250,10 @@ function raceAbort<T>(promise: Promise<T>, signal: AbortSignal, abort?: () => vo
 }
 
 // Streams the body so the cap is enforced before more than MAX_FETCH_BYTES is held in memory.
-function readCappedText(
+export function readCappedText(
   response: Electron.IncomingMessage,
   request: Electron.ClientRequest,
+  stopAfter?: string,
 ): Promise<Result<string, FetchUrlError>> {
   const contentLength = headerValue(response.headers as Record<string, string | string[]>, 'Content-Length');
   if (contentLength && Number(contentLength) > MAX_FETCH_BYTES) {
@@ -260,8 +265,11 @@ function readCappedText(
 
   return new Promise((resolve) => {
     const chunks: Buffer[] = [];
+    const marker = stopAfter?.toLowerCase();
     let bytesRead = 0;
     let done = false;
+    // The end of the previous chunk, so a marker split across two chunks is still found.
+    let tail = '';
 
     const finish = (result: Result<string, FetchUrlError>) => {
       if (done) {
@@ -280,6 +288,15 @@ function readCappedText(
         return;
       }
       chunks.push(chunk);
+      if (marker !== undefined) {
+        const seen = tail + chunk.toString('latin1').toLowerCase();
+        if (seen.includes(marker)) {
+          request.abort();
+          finish({ success: true, data: decodeBody(Buffer.concat(chunks), contentType) });
+          return;
+        }
+        tail = marker.length > 1 ? seen.slice(1 - marker.length) : '';
+      }
     });
     response.on('end', () => finish({ success: true, data: decodeBody(Buffer.concat(chunks), contentType) }));
     response.on('error', () => {
@@ -378,7 +395,12 @@ async function fetchResource(
         return fail('GENERIC_FETCH_ERROR', httpStatusMessage(hop.status, hop.statusMessage), httpStatusParams(hop.status));
       }
 
-      const body = await raceAbort(hop.readBody(), signal, hop.abort);
+      if (options.headersOnly) {
+        hop.abort();
+        return { success: true, data: { body: '', validators: { etag: undefined, last_modified: undefined } } };
+      }
+
+      const body = await raceAbort(hop.readBody(options.stopAfter), signal, hop.abort);
       if (!body.success) {
         hop.abort();
         return body;

@@ -50,9 +50,9 @@ export async function handleFeedsSubmitAddFeed(payload: ArgOf<'feeds:submit-add-
 
   const { items, category, ...metadata } = result.data;
   if (sourceFor(payload.type).fetchesFullArticle) {
-    void enrichItems(items, (itemId, image) => {
-      void updateFeedItemImage(itemId, image);
-      sendToRenderer(event.sender, 'feeds:item-image-fetched', { feedId: metadata.id, itemId, image });
+    void enrichItems(items, (item, image) => {
+      void updateFeedItemImage(item.id, image);
+      sendToRenderer(event.sender, 'feeds:item-image-fetched', { feedId: metadata.id, itemId: item.id, image });
     });
   }
 

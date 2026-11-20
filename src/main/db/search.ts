@@ -13,6 +13,8 @@ function escapeLike(word: string): string {
 }
 
 const SHORT_WORD = /^[\p{L}\p{N}]{1,3}$/u;
+// Search terms are typed by the user, so the cache must not grow with every distinct word.
+const MAX_WORD_PATTERNS = 256;
 const wordPatterns = new Map<string, RegExp>();
 
 // A short bare word such as "ci" would otherwise match inside "producing", so it must be a whole word.
@@ -28,6 +30,9 @@ function hasWord(text: unknown, word: unknown): number {
   let pattern = wordPatterns.get(word);
   if (!pattern) {
     pattern = new RegExp(`(?<![\\p{L}\\p{N}])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'iu');
+    if (wordPatterns.size >= MAX_WORD_PATTERNS) {
+      wordPatterns.clear();
+    }
     wordPatterns.set(word, pattern);
   }
   return pattern.test(text) ? 1 : 0;
