@@ -51,9 +51,6 @@ jobs:
           electron-dependencies: 'true'
           chromium: 'true'
 
-      # Vitest transforms every renderer file for the report, and routeTree.gen.ts only exists after a build.
-      - run: npx vite build --config src/renderer/vite.config.mts
-
       - run: npm run coverage:vitest -- --reporter=json --outputFile.json=coverage/tests/vitest.json
 
       # xvfb-run defaults to a 640x480 screen, and the maximized app window would follow it.

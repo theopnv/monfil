@@ -1,0 +1,40 @@
+name: Changes
+description: >
+  Reports which kinds of files a pull request changes, so a job can skip steps that the change cannot
+  affect. Any other event, an unreadable diff, or a workflow change reports both as true.
+  Needs a checkout of at least two commits.
+
+outputs:
+  docs:
+    description: true when the change touches documentation files
+    value: ${{ steps.diff.outputs.docs }}
+  code:
+    description: true when the change touches anything other than documentation
+    value: ${{ steps.diff.outputs.code }}
+
+runs:
+  using: composite
+  steps:
+    # On a pull_request run the checkout is GitHub's merge commit: its first parent is the base and its second is the PR head.
+    - id: diff
+      shell: bash
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+      run: |
+        docs=true
+        code=true
+        if [ "$EVENT_NAME" = pull_request ] && files="$(git diff --name-only --no-renames HEAD^1 HEAD 2>/dev/null)" && [ -n "$files" ]; then
+          docs=false
+          code=false
+          while IFS= read -r file; do
+            case "$file" in
+              doc/* | .github/* | .markdownlint-cli2.jsonc | *.md | *.mdx) docs=true ;;
+            esac
+            case "$file" in
+              doc/* | docs/* | *.md | *.mdx) ;;
+              *) code=true ;;
+            esac
+          done <<< "$files"
+        fi
+        echo "docs=$docs" >> "$GITHUB_OUTPUT"
+        echo "code=$code" >> "$GITHUB_OUTPUT"
