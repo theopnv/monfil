@@ -31,13 +31,8 @@ function isCorruptionError(error: unknown): boolean {
  * those mean the data itself is gone. `close` releases the failed connection before the retry; its own
  * failure is ignored, since a connection that never opened has nothing to release. `:memory:` databases
  * skip recovery entirely, since there is no file for any of this to happen to.
- *
  * A reset does not delete the corrupt file: it renames the main file and every existing sidecar aside to
  * a parallel `.corrupt-<timestamp>` path, so a later manual recovery can still open them.
- * @param filePath the database file to open, or `:memory:`
- * @param attempt opens the connection and brings the schema up to date
- * @param close releases the connection left behind by a failed `attempt`
- * @returns the quarantine path if a reset happened, `null` otherwise
  */
 export async function withCorruptionRecovery(filePath: string, attempt: () => Promise<void>, close: () => Promise<void>): Promise<string | null> {
   if (filePath === ':memory:') {

@@ -15,7 +15,6 @@ export interface AtsBoard {
   origin?: string;
 }
 
-/** One open position in a shape that does not depend on the ATS it came from. */
 export interface AtsJob {
   id: string;
   title: string;

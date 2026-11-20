@@ -36,9 +36,7 @@ export interface Launched {
 }
 
 export interface LaunchOptions {
-  /** Defaults to the `userDataDir` fixture. */
   userDataDir?: string;
-  /** Added to the environment of the test run. */
   env?: Record<string, string>;
 }
 
@@ -132,7 +130,6 @@ export const test = base.extend<Fixtures>({
   },
 });
 
-/** Adds a feed row over IPC, without the wizard and without a network fetch. */
 export async function addFeed(page: Page, feed: { link: string; title?: string; type?: SourceType; categoryName?: string; workspaceId?: number }) {
   return page.evaluate((payload) => window.electron.ipcRenderer.invoke('feeds:submit-add-feed', payload), {
     link: feed.link,

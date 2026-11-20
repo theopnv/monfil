@@ -28,7 +28,6 @@ import { titleBarOverlayForTheme } from './app/window-chrome';
 import { startAutoUpdates, stopAutoUpdates } from './updates/auto-updater';
 import { startUsageAnalytics, stopUsageAnalytics } from './analytics/scheduler';
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // app.quit() only schedules an exit, so without this return the rest of the module (and its app.on(...) wiring)
 // would still run during Squirrel's install/uninstall/update invocations.
 if (started) {
@@ -116,12 +115,6 @@ function bootstrap() {
         path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
       );
     }
-
-    // Stryker disable next-line ConditionalExpression: both branches are empty, so the condition has no effect
-    if (import.meta.env.DEV) {
-      // Uncomment this line to open the DevTools automatically when the app is launched in development mode.
-      // mainWindow.webContents.openDevTools();
-    }
     return mainWindow;
   };
 
@@ -152,8 +145,6 @@ function bootstrap() {
     });
   }
 
-  // This method will be called when Electron has finished initialization and is ready to create browser windows.
-  // Some APIs can only be used after this event occurs.
   app.on('ready', () => {
     void main();
   });
@@ -172,7 +163,6 @@ function bootstrap() {
     }
   });
 
-  // Quit when all windows are closed, except on macOS. There, it's common for applications and their menu bar to stay active until the user quits explicitly with Cmd + Q.
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
       app.quit();
@@ -180,7 +170,6 @@ function bootstrap() {
   });
 
   app.on('activate', () => {
-    // On OS X it's common to re-create a window in the app when the dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }

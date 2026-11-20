@@ -2,7 +2,7 @@
 title: Code coverage
 description: Run the coverage suites, open the reports, and read the coverage and test count history on the dashboard.
 sidebar:
-  order: 12
+  order: 14
 ---
 
 Monfil measures which lines of `src/` its tests run. Each pull request gets a report and a comment, and the history of `main` is in the same D1 database as the [complexity metrics](../complexity/). No threshold fails a build yet.
@@ -18,7 +18,7 @@ main ──> coverage.yml ──> Worker /coverage/ingest ──> D1 <── Wor
 | --- | --- |
 | `npm run test:unit` | Runs the Node tests (the `node` Vitest project). |
 | `npm run test:integration` | Runs the renderer tests in Chromium (the `browser` Vitest project). |
-| `npm run coverage:vitest` | Runs both projects with coverage, and writes the report to `.vitest/`. |
+| `npm run coverage:vitest` | Runs both projects with coverage, and writes the report to `.vitest/coverage/`. |
 | `COVERAGE=1 npm run test:e2e` | Packages an instrumented app, runs the Electron tests, and writes one file for each launch to `coverage/e2e/raw/`. |
 | `npm run coverage:merge` | Merges both runs. Writes `coverage/merged/` and `coverage/snapshot.json`. |
 
@@ -129,50 +129,4 @@ The ingest job in `coverage.yml` runs on pushes to `main` only, and it is the on
 
 ## Run the dashboard
 
-Add an Infinity data source "Monfil Coverage" in Grafana Cloud, with the settings of the "Monfil Complexity" source described in [Code complexity](../complexity/#data-source): the Worker's `QUERY_TOKEN` as the Bearer token, and `https://monfil-devanalytics.tpenavaire.workers.dev` as the allowed host. Each panel uses the same request settings, with the URL `https://monfil-devanalytics.tpenavaire.workers.dev/coverage/query`.
-
-A query variable named `folder` lists the folders of the latest commit:
-
-```json
-{"sql": "SELECT DISTINCT folder FROM coverage_folder_summary WHERE sha = (SELECT sha FROM coverage_folder_summary WHERE folder = 'src' AND suite = 'merged' ORDER BY date DESC LIMIT 1) ORDER BY folder"}
-```
-
-Every panel query starts with the `f(folder)` expression, which uses `src` when the parameter is empty or starts with `$`. A public dashboard does not support template variables and sends `$folder` unchanged, so without it the panel shows "No data".
-
-**Trend** (time series): the line coverage of the folder for each suite, in percent.
-
-```json
-{"sql":"WITH f(folder) AS (SELECT CASE WHEN ?1 = '' OR substr(?1, 1, 1) = '$' THEN 'src' ELSE ?1 END) SELECT s.date, 100.0 * sum(CASE WHEN s.suite = 'merged' THEN s.lines_covered END) / sum(CASE WHEN s.suite = 'merged' THEN s.lines_total END) AS merged, 100.0 * sum(CASE WHEN s.suite = 'vitest' THEN s.lines_covered END) / sum(CASE WHEN s.suite = 'vitest' THEN s.lines_total END) AS vitest, 100.0 * sum(CASE WHEN s.suite = 'e2e' THEN s.lines_covered END) / sum(CASE WHEN s.suite = 'e2e' THEN s.lines_total END) AS e2e FROM coverage_folder_summary s, f WHERE s.folder = f.folder GROUP BY s.date ORDER BY s.date","params":["$folder"]}
-```
-
-**Folder breakdown** (bar chart, X axis `child`): the direct children of the folder for the latest commit, merged suite.
-
-```json
-{"sql":"WITH f(folder) AS (SELECT CASE WHEN ?1 = '' OR substr(?1, 1, 1) = '$' THEN 'src' ELSE ?1 END), latest(sha) AS (SELECT sha FROM coverage_folder_summary WHERE folder = (SELECT folder FROM f) AND suite = 'merged' ORDER BY date DESC LIMIT 1) SELECT substr(s.folder, length(f.folder) + 2) AS child, 100.0 * s.lines_covered / s.lines_total AS lines_pct, 100.0 * s.branches_covered / s.branches_total AS branches_pct, s.lines_total - s.lines_covered AS uncovered_lines, s.file_count FROM coverage_folder_summary s, f WHERE s.sha = (SELECT sha FROM latest) AND s.suite = 'merged' AND s.folder GLOB f.folder || '/*' AND s.folder NOT GLOB f.folder || '/*/*' ORDER BY uncovered_lines DESC","params":["$folder"]}
-```
-
-**Least covered files** (table): the 20 files with the lowest line coverage under the folder, for the latest commit, merged suite. Files with fewer than 20 lines are left out.
-
-```json
-{"sql":"WITH f(folder) AS (SELECT CASE WHEN ?1 = '' OR substr(?1, 1, 1) = '$' THEN 'src' ELSE ?1 END), latest(sha) AS (SELECT sha FROM coverage_folder_summary WHERE folder = (SELECT folder FROM f) AND suite = 'merged' ORDER BY date DESC LIMIT 1) SELECT c.file, 100.0 * c.lines_covered / c.lines_total AS lines_pct, c.lines_total - c.lines_covered AS uncovered_lines FROM coverage_files c, f WHERE c.sha = (SELECT sha FROM latest) AND c.suite = 'merged' AND c.lines_total >= 20 AND c.file GLOB f.folder || '/*' ORDER BY lines_pct, uncovered_lines DESC LIMIT 20","params":["$folder"]}
-```
-
-**Suites** (bar gauge or stat): the line coverage of each suite for the latest commit.
-
-```json
-{"sql":"WITH f(folder) AS (SELECT CASE WHEN ?1 = '' OR substr(?1, 1, 1) = '$' THEN 'src' ELSE ?1 END), latest(sha) AS (SELECT sha FROM coverage_folder_summary WHERE folder = (SELECT folder FROM f) AND suite = 'merged' ORDER BY date DESC LIMIT 1) SELECT s.suite, 100.0 * s.lines_covered / s.lines_total AS lines_pct, 100.0 * s.branches_covered / s.branches_total AS branches_pct FROM coverage_folder_summary s, f WHERE s.sha = (SELECT sha FROM latest) AND s.folder = f.folder","params":["$folder"]}
-```
-
-**Test count trend** (time series): the total number of tests and the number in each suite, for each commit. These panels do not use the `folder` variable.
-
-```json
-{"sql":"SELECT date, sum(tests) AS total, sum(CASE WHEN suite = 'unit' THEN tests END) AS unit, sum(CASE WHEN suite = 'integration' THEN tests END) AS integration, sum(CASE WHEN suite = 'e2e' THEN tests END) AS e2e FROM coverage_tests GROUP BY sha, date ORDER BY date"}
-```
-
-**Tests** (stat or table): the counts of each suite and the total, for the latest commit.
-
-```json
-{"sql":"WITH latest(sha) AS (SELECT sha FROM coverage_tests ORDER BY date DESC LIMIT 1) SELECT suite, tests, files, skipped FROM coverage_tests WHERE sha = (SELECT sha FROM latest) UNION ALL SELECT 'total', sum(tests), sum(files), sum(skipped) FROM coverage_tests WHERE sha = (SELECT sha FROM latest)"}
-```
-
-Declare the `date` column as **Timestamp**, and keep a fixed time range on the dashboard, for the same reasons as in [Code complexity](../complexity/#panels).
+The coverage dashboard reads `/coverage/query` through the same Infinity setup as the complexity dashboard. Its data source, variable, and panel queries are in the [Worker README](https://github.com/theopnv/monfil/tree/main/infra/devanalytics-worker#coverage-dashboard).

@@ -5,7 +5,6 @@
 import type { LanguageCode } from './languages';
 import { languageOfTag } from './resolve-language';
 
-/** The command-line argument that carries the system locale from main to the preload script. */
 export const SYSTEM_LOCALE_ARGUMENT = '--system-locale=';
 
 /** The BCP 47 tag that stands for each language when no system locale narrows it down. */

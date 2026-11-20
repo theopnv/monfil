@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { errorDetails, translateError } from '@/lib/error-text';
 import type { CodedError } from '../../../shared/errors';
 
-/** Shows an error in the active language, with the raw technical text on a Details line when there is some. */
 export function ErrorText({ error, className }: { error: CodedError; className?: string }) {
   const { t } = useTranslation('errors');
   const details = errorDetails(error);

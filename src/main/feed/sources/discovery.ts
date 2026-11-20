@@ -27,7 +27,6 @@ function readAttributes(tag: string): Map<string, string> {
  * The feed URLs a page advertises with `<link rel="alternate">`, in page order and without duplicates.
  * Regexes, not a DOM: only `<link>` tags in the head count, because page content such as comments can
  * add tags to the body, and the page is untrusted.
- * @param baseUrl the page's own URL, which relative `href`s resolve against
  */
 export function findAlternateLinks(html: string, baseUrl: string): string[] {
   const headEnd = html.search(HEAD_END_REGEX);
@@ -50,7 +49,6 @@ export function findAlternateLinks(html: string, baseUrl: string): string[] {
   return links;
 }
 
-/** The common feed paths to try on a page's origin when it advertises no feed. */
 export function probeLinks(pageUrl: string): string[] {
   const { origin } = new URL(pageUrl);
   return PROBE_PATHS.map((path) => `${origin}${path}`);

@@ -8,7 +8,7 @@ import { decodeText } from '../../lib/strip-html';
 import { decodeOptional, decodeTitle, resolveGuid } from './text';
 import type { ParsedFeedContent } from './types';
 
-/** Parses RSS, Atom, RDF or JSON Feed content. Throws on content that is none of them. */
+/** Throws on content that is none of the supported formats. */
 export function parseFeedContent(content: string): ParsedFeedContent | null {
   const { format, feed } = parseFeed(content);
   switch (format) {

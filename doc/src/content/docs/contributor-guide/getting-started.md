@@ -26,7 +26,7 @@ Electron Forge starts the main process and renderer development server. Developm
 For a first pull request, choose an issue or a documentation error that you can check against the code. Discuss larger changes in a GitHub issue before you start.
 
 1. Make the change. Run the checks that apply to it.
-2. Commit and push your branch.
+2. Commit and push your branch. Write the commit messages as the [release procedure](../release-procedure/#write-commit-messages) describes.
 3. Open a pull request against the official repository. Describe the behavior, your change, and the checks you ran. Link an issue when there is one.
 4. Sign the [Contributor License Agreement](https://github.com/theopnv/monfil/blob/main/CLA.md) through the link from CLA Assistant.
 
@@ -38,6 +38,4 @@ In VS Code, the `Main + renderer` launch configuration attaches debuggers to bot
 
 ## Recommended setup
 
-- Claude or Codex can help understanding the codebase and write new features and fixes.
-- [Graft](https://github.com/trailhq/Graft) can help navigating the codebase.
 - Install [Husky](https://typicode.github.io/husky/get-started.html) to get the Git hooks: the pre-commit hook runs lint, and the commit-msg hook checks the message with commitlint.

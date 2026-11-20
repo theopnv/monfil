@@ -17,7 +17,6 @@ function healthCounter(event: LogEventName, data: LogEventMap[LogEventName]): Us
   }
 }
 
-/** Counts the failures that the logger sees. Returns a function that stops counting. */
 export function startHealthCounters(): () => void {
   return observeLogs((event, data) => {
     const counter = healthCounter(event, data);

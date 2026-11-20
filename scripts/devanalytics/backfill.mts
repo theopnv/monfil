@@ -9,7 +9,6 @@ import { upload, uploadTarget, type UploadTarget } from './upload.mts';
 export interface BackfillKind<T extends { sha: string }> {
   /** Names the temporary folder. */
   name: string;
-  /** The ingest route of the Worker. */
   route: string;
   /** Measures a checkout. Returns null to skip the tag. `detail` ends the progress line, for example `12 files`. */
   measure: (worktree: string) => Promise<{ snapshot: T; detail: string } | null>;
@@ -50,7 +49,6 @@ async function handleTag<T extends { sha: string }>(
   }
 }
 
-/** Measures each tag given on the command line, or every release tag, and uploads the snapshot unless `--dry-run` is set. */
 export async function backfill<T extends { sha: string }>(kind: BackfillKind<T>): Promise<void> {
   const { values, positionals } = parseArgs({
     allowPositionals: true,

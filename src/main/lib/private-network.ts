@@ -27,9 +27,8 @@ NON_PUBLIC_RANGES.addSubnet('ff00::', 8, 'ipv6');
 export type HostClass = 'public' | 'private' | 'unresolvable';
 
 /**
- * Tells whether an IP address is routable on the public internet.
- * @param address an IPv4 or IPv6 literal without brackets; IPv4-mapped IPv6 forms are checked as IPv4
- * @returns false for loopback, link-local, private and reserved ranges, and for anything that is not an IP address
+ * Tells whether an IP address is routable on the public internet. Takes a literal without brackets; IPv4-mapped
+ * IPv6 forms are checked as IPv4, and anything that is not an IP address is not public.
  */
 export function isPublicAddress(address: string): boolean {
   const version = isIP(address);
@@ -40,10 +39,9 @@ export function isPublicAddress(address: string): boolean {
 }
 
 /**
- * Classifies a URL host by where its addresses point. A name that resolves to a mix of public and
- * private addresses counts as private, since the connection could land on either.
- * @param hostname a URL hostname: an IP literal (IPv6 may keep its brackets) or a DNS name
- * @returns 'unresolvable' when the name has no address or the lookup fails
+ * Classifies a URL host by where its addresses point. A name that resolves to a mix of public and private
+ * addresses counts as private, since the connection could land on either. An IPv6 literal may keep its brackets;
+ * 'unresolvable' means the name has no address or the lookup failed.
  */
 export async function classifyHost(hostname: string): Promise<HostClass> {
   const bare = hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname;

@@ -24,11 +24,9 @@ export interface FetchUrlOptions {
 }
 
 export interface ConditionalFetchOptions extends FetchUrlOptions {
-  /** Validators from the previous fetch of this resource, replayed as `If-None-Match` / `If-Modified-Since`. */
   validators: FetchValidators;
 }
 
-/** The body plus the validators to store for the next conditional GET. */
 export interface FetchedText {
   body: string;
   validators: FetchValidators;
@@ -304,7 +302,6 @@ function httpStatusReason(status: number): 'refused' | 'notFound' | 'rateLimited
   return status >= 500 ? 'serverError' : 'other';
 }
 
-/** The parts of {@link httpStatusMessage} that the renderer translates. */
 export function httpStatusParams(status: number): ErrorParams {
   return { reason: httpStatusReason(status), status };
 }
@@ -409,9 +406,6 @@ async function fetchResource(
 /**
  * Fetches a URL as text over Chromium's network stack, following redirects one hop at a time so
  * every target, not only the first, goes through the scheme and private-host checks.
- * @param url the address to fetch; only http and https are accepted
- * @param options an abort signal, a timeout covering all hops, and whether private hosts are refused
- * @returns the body with the response's validators, or a tagged error
  */
 export async function fetchText(url: string, options: FetchUrlOptions = {}): Promise<FetchTextResult> {
   const outcome = await fetchResource(url, options, false);
@@ -421,10 +415,6 @@ export async function fetchText(url: string, options: FetchUrlOptions = {}): Pro
 /**
  * Fetches a URL as text with a conditional GET, following redirects one hop at a time so every
  * target, not only the first, goes through the scheme and private-host checks.
- * @param url the address to fetch; only http and https are accepted
- * @param options the validators from the previous fetch, plus an abort signal, a timeout and
- *   whether private hosts are refused
- * @returns a 304 when the validators still hold, the fresh body with its validators otherwise, or a tagged error
  */
 export async function fetchConditional(url: string, options: ConditionalFetchOptions): Promise<ConditionalFetchResult> {
   return fetchResource(url, options, true);

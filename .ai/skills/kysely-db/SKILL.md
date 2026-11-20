@@ -9,7 +9,7 @@ Read `doc/src/content/docs/contributor-guide/database.md` for data ownership and
 
 ## Types and criteria
 
-Each table has an interface in `src/main/db/types.ts`. Wrap it in Kysely's `Selectable`, `Insertable`, or `Updateable` where a function needs that shape. Export an alias from `types.ts` only when another module reads it, as with `FeedItem`. `Generated<T>` makes a database-assigned value present on reads and optional on inserts.
+Each table has an interface in `src/main/db/types.ts`. Export an alias from it only when another module reads it, as with `FeedItem`.
 
 The reusable criteria queries in `src/main/db/crud/query.ts` use `applyCriteria`, which filters on equality of each field that the `Partial` row sets, so a new column needs no change there. A query with its own filters can use Kysely's `.where()` directly; existing summary and lookup queries do this. Share a repeated upsert by exporting it from `src/main/db/crud/insert.ts`, as `upsertFeedCategory` and `upsertFeedPlacement` are.
 
@@ -19,9 +19,7 @@ Wrap a query that returns a `Result` in `dbTry` from `src/main/db/db-try.ts`. It
 
 Feed identity lives in `feedMetadata`. Category, workspace, and visibility live in `feedPlacement`. The upserts in `src/main/db/crud/insert.ts` show the current conflict keys and columns for each table. In `doUpdateSet`, `eb.ref('excluded.column')` reads the proposed row. List each column that must change on conflict; a column's default applies only to a new row.
 
-Use `.returningAll()` when the caller needs the stored row. Choose `executeTakeFirstOrThrow()` when a missing row is an error, `executeTakeFirst()` when it is a valid outcome, and `execute()` for a set of rows.
-
-Queries can throw on database errors, including calls to `execute()`. Catch errors at the operation boundary. Return the `Result` type from `src/shared/result.ts` for expected failures. Some best-effort writes, such as article content storage, log errors and return `void`; follow the contract of the operation you change. A private helper inside a transaction may throw so the transaction rolls back.
+Return the `Result` type from `src/shared/result.ts` for expected failures. Some best-effort writes, such as article content storage, log errors and return `void`; follow the contract of the operation you change. A private helper inside a transaction may throw so the transaction rolls back.
 
 ## Transactions
 

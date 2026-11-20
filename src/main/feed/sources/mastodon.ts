@@ -17,9 +17,8 @@ export function isMastodonHandle(raw: string): boolean {
 }
 
 /**
- * The Mastodon feed a handle, profile link or tag link leads to.
- * @param lenient accept profile and tag links on any host and handles without the leading `@`;
- *   Mastodon runs on any host, so without this only a full `@user@host` handle is recognised
+ * The Mastodon feed a handle, profile link or tag link leads to. `lenient` accepts profile and tag links on any host
+ * and handles without the leading `@`; Mastodon runs on any host, so without it only a full `@user@host` handle is recognised.
  */
 export function mastodonCandidates(raw: string, lenient: boolean): FeedCandidate[] | null {
   const trimmed = raw.trim();

@@ -5,7 +5,6 @@
 /**
  * Splits rows that were queried with `LIMIT limit + 1`. The extra row, when present, tells that a next page
  * exists without a count query, and the last row of the page is what the next cursor is made from.
- * @returns the page, and its last row only when more rows follow
  */
 export function paginate<T>(rows: T[], limit: number): { page: T[]; last: T | undefined } {
   const hasMore = rows.length > limit;

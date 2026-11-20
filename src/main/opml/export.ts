@@ -9,10 +9,6 @@ import { queryFeedSummaries, queryWorkspaceById } from '../db/crud/query';
 import { fail, ok, type Result } from '../../shared/result';
 import { generateWorkspaceOpml, type OpmlCategoryInput } from './generate';
 
-/**
- * Writes one workspace out as OPML, category by category, after asking the user where to save it.
- * @param workspaceId the workspace to export
- */
 export async function exportWorkspaceOpml(workspaceId: number): Promise<Result<void, ExportOpmlError>> {
   const workspace = await queryWorkspaceById(workspaceId);
   if (!workspace) {

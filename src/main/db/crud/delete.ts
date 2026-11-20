@@ -25,8 +25,6 @@ export async function collectUnplacedFeeds(executor: Kysely<Database>): Promise<
 /**
  * Removes a feed from `workspaceId`. The underlying feed, and through the `feedItem.feed_id`
  * cascade its unsaved items, is deleted once it has neither placements nor saved items.
- * @param feedId the id of the feed to remove
- * @param workspaceId the workspace to remove it from
  */
 export async function deleteFeedFromDatabase(feedId: number, workspaceId: number): Promise<Result<void, DeleteFeedError>> {
   return dbTry(async () => {
@@ -57,9 +55,6 @@ class CategoryNotFoundError extends Error {}
  * Both categories have to belong to `workspaceId`: reassigning into another workspace's folder
  * would put the feed in a folder its own sidebar never lists. Deleted feeds follow the same
  * collection rule as `deleteFeedFromDatabase`.
- * @param categoryId the id of the category to delete
- * @param reassignTo the id of the category its feeds move into first; omit to delete the feeds
- * @param workspaceId the workspace both categories belong to
  */
 export async function deleteCategory(categoryId: number, workspaceId: number, reassignTo?: number): Promise<Result<void, DeleteCategoryError>> {
   return dbTry(async () => {
@@ -103,7 +98,6 @@ export async function deleteCategory(categoryId: number, workspaceId: number, re
 /**
  * Deletes a workspace with its saved items, categories, and placements. Feeds retained by another
  * workspace's placements or saved items survive. Home can never be deleted.
- * @param workspaceId the id of the workspace to delete
  */
 export async function deleteWorkspace(workspaceId: number): Promise<Result<void, DeleteWorkspaceError>> {
   if (workspaceId === HOME_WORKSPACE_ID) {

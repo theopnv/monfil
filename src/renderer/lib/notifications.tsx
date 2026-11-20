@@ -26,12 +26,10 @@ export function notifyWarning(message: string, key = message, action?: { label: 
   toast.warning(message, { id: key, action, description, closeButton: true, duration: Infinity, onDismiss: () => activeKeys.delete(key), onAutoClose: () => activeKeys.delete(key) });
 }
 
-/** Shows a message that stays until the user acts on it or closes it. */
 export function notifyAction(message: string, key: string, action: { label: string; onClick: () => void }): void {
   toast(message, { id: key, action, duration: Infinity });
 }
 
-/** Shows a short-lived message with an Undo button. */
 export function notifyUndo(message: string, onUndo: () => void): void {
   toast(message, { action: { label: i18n.t('action.undo'), onClick: onUndo }, duration: 8000 });
 }

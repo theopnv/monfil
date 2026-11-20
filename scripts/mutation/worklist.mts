@@ -2,7 +2,6 @@ import type { MutationTestResult } from 'mutation-testing-report-schema';
 import { fileResults, testValues, type FileResult, type TestValue, type Weakness } from './report.mts';
 import type { MutationSuite } from './targets.mts';
 
-/** Keeps the mutated files under one of the paths, so the test counts cover only those files. */
 export function narrowReport(report: MutationTestResult, paths: readonly string[]): MutationTestResult {
   if (paths.length === 0) {
     return report;
@@ -12,7 +11,6 @@ export function narrowReport(report: MutationTestResult, paths: readonly string[
   return { ...report, files: Object.fromEntries(Object.entries(report.files).filter(([file]) => keep(file))) };
 }
 
-/** A Markdown code span that survives a backtick in the text. */
 export function code(text: string): string {
   if (text === '') {
     return '(empty)';
@@ -46,7 +44,6 @@ function byTestFile(tests: TestValue[], describe: (test: TestValue) => string): 
     .flatMap(([file, list]) => [`- ${code(file)}`, ...list.map((test) => `  - ${test.name} (${describe(test)})`)]);
 }
 
-/** Renders the work list of one suite: the undetected mutants of each file, then the tests that add no detection. */
 export function renderWorklist(suite: MutationSuite, report: MutationTestResult): string {
   const files = fileResults(report);
   const killed = files.reduce((sum, file) => sum + file.killed, 0);

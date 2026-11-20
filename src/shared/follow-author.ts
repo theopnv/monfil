@@ -24,7 +24,6 @@ interface ParsedPage {
 /**
  * Removes the follow-author list that some sites put in an article, with the box around it,
  * unless that box is the page or the article itself.
- * @param document the parsed page or article to clean in place
  */
 export function removeFollowAuthorControls(document: ParsedPage): void {
   for (const control of Array.from(document.querySelectorAll('[id^="follow-author-article_footer"]'))) {

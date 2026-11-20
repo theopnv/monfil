@@ -18,7 +18,11 @@ Monfil is an Electron app written in TypeScript. Start with [Getting started](..
 - [Feedpacks and OPML](../feedpacks-and-opml/) follows feed lists into and out of the app.
 - [Diagnostics](../diagnostics/) shows how to investigate errors.
 - [Usage analytics](../usage-analytics/) explains the opt-in counters and how to add one.
+- [Dependency rules](../dependency-rules/) explains the folder layers and the import rules that keep `src/` free of cycles.
 - [Code complexity](../complexity/) covers the lint limits, the pull request report, and the dashboard.
+- [Code coverage](../coverage/) runs the coverage suites and reads the coverage and test count history.
+- [Mutation testing](../mutation-testing/) runs Stryker on your change and reads the survivors.
+- [Translations](../translations/) shows where the interface text lives and how the i18n check works.
 - [Release procedure](../release-procedure/) records the maintainer's publish steps.
 
 ## Keep the guide current

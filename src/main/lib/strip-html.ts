@@ -15,10 +15,7 @@ export function decodeText(text: string): string {
   return decode(text, EntityLevel.HTML);
 }
 
-/**
- * Applies `pattern` until the text stops changing, so a removal cannot splice a new match together.
- * @param pattern must be global
- */
+/** Applies `pattern` until the text stops changing, so a removal cannot splice a new match together. `pattern` must be global. */
 export function removeAll(text: string, pattern: RegExp, replacement = ''): string {
   let previous: string;
   let current = text;
@@ -29,7 +26,6 @@ export function removeAll(text: string, pattern: RegExp, replacement = ''): stri
   return current;
 }
 
-/** Strips an HTML fragment down to its plain-text content, decoding entities and collapsing whitespace. */
 export function stripHtml(html: string): string {
   // Entities must be decoded before tag stripping: decoding afterwards would turn
   // entity-encoded markup (e.g. `&lt;script&gt;`) into live tags that already skipped removal.
@@ -41,7 +37,6 @@ export function stripHtml(html: string): string {
   return withoutStrayBrackets.replace(/\s+/g, ' ').trim();
 }
 
-/** Truncates plain text to at most `maxLength` characters, breaking on a word boundary and appending an ellipsis. */
 export function truncateOnWordBoundary(text: string, maxLength: number): string {
   const trimmed = text.trim();
   if (trimmed.length <= maxLength) {

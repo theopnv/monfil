@@ -19,8 +19,6 @@ export interface OpmlCategoryInput {
  * Generates an OPML document for one workspace: one folder outline per category, feeds as leaves.
  * Category names are written as-is, with no workspace prefix, so the file reads as a plain feed
  * list to any other reader.
- * @param workspaceName the workspace's name, written as the document's own title
- * @param categories the workspace's categories, each with its feeds
  */
 export function generateWorkspaceOpml(workspaceName: string, categories: OpmlCategoryInput[]): string {
   return generateOpml({

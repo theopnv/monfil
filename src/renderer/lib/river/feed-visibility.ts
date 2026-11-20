@@ -50,22 +50,18 @@ export function visibleFeedIds(feeds: FeedSummary[], showOnlyLinks: ReadonlySet<
   return new Set(feeds.filter((feed) => feed.showInWorkspace !== 0).map((feed) => feed.id));
 }
 
-/** The focus state a folder's focus button moves every feed to: cleared when all of them are focused already. */
 export function toggleFolderFocus(feeds: FeedSummary[], showOnlyLinks: ReadonlySet<string>): FeedVisibility {
   return toggleFocus(folderVisibility(feeds, showOnlyLinks));
 }
 
-/** The state a folder's eye moves every feed to: cleared when all of them are hidden already. */
 export function toggleFolderHidden(feeds: FeedSummary[], showOnlyLinks: ReadonlySet<string>): FeedVisibility {
   return toggleHidden(folderVisibility(feeds, showOnlyLinks));
 }
 
-/** Names the action of the focus control, which flips with the state it would clear. */
 export function focusAction(current: FeedVisibility | "mixed"): "focus" | "unfocus" {
   return current === "only" ? "unfocus" : "focus";
 }
 
-/** Names the action of the eye control. */
 export function hideAction(current: FeedVisibility | "mixed"): "hide" | "show" {
   return current === "hidden" ? "show" : "hide";
 }

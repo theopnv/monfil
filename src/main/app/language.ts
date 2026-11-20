@@ -27,15 +27,11 @@ export async function initializeLanguage(): Promise<LanguageState> {
   return state;
 }
 
-/** The state that the settings screen shows: the stored choice and what it resolves to. */
 export async function readLanguageState(): Promise<LanguageState> {
   return stateOf(await getLanguageSetting());
 }
 
-/**
- * Stores a new choice and moves the main process to its language, so the next menu or dialog uses it.
- * @param setting the choice to store
- */
+/** Stores a new choice and moves the main process to its language, so the next menu or dialog uses it. */
 export async function changeLanguage(setting: LanguageSetting): Promise<LanguageState> {
   await setLanguageSetting(setting);
   const state = stateOf(setting);

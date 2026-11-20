@@ -69,7 +69,6 @@ export function stopAutoUpdates(): void {
   state = { name: 'NONE' };
 }
 
-/** Restarts into the downloaded update. Does nothing until an update is ready. */
 export function installUpdate(): void {
   if (state.name === 'READY_TO_INSTALL') {
     autoUpdater.quitAndInstall();

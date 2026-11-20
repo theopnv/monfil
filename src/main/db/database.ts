@@ -26,8 +26,7 @@ export type DatabaseStatus =
   | { name: 'RESET'; quarantinePath: string; incidentId: string }
   | { name: 'FAILED'; message: string; incidentId: string };
 
-// Latched outcome of the last initializeDatabase() call. No consumer yet: this is the seam a later
-// step reads over an `invoke` channel, once there is a renderer surface for it.
+// Latched outcome of the last initializeDatabase() call.
 export let dbStatus: DatabaseStatus = { name: 'OK' };
 
 async function openAndMigrate(filePath: string): Promise<void> {

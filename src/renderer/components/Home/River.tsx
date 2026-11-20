@@ -52,7 +52,6 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
   const { query: searchQuery, setQuery: setSearchQuery } = useSearch(savedView);
   const pills = useSearchPills(searchQuery, setSearchQuery);
 
-  // The corpus-wide unread count of the visible feeds. Comes from FeedSummary.
   const unreadCount = useMemo(
     () => feeds.filter((feed) => visibleFeedIdsSet.has(feed.id)).reduce((sum, feed) => sum + feed.unreadCount, 0),
     [feeds, visibleFeedIdsSet],

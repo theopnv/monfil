@@ -40,8 +40,7 @@ function toCandidates(items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[])
 
 /**
  * Fetches pages for items without an image and reports the first image found in their metadata.
- * @param items the items to consider; only those with an absolute http(s) link to a public host are fetched
- * @param onImageFound called for each item whose page yields an og:image / twitter:image
+ * Only items with an absolute http(s) link to a public host are fetched.
  */
 export async function enrichItems(
   items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[],

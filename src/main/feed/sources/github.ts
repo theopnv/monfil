@@ -29,10 +29,7 @@ function userCandidate(user: string): FeedCandidate {
   return { link: `https://github.com/${user}.atom`, label: mainI18n.t('main:source.publicActivity'), icon: `https://github.com/${user}.png` };
 }
 
-/**
- * The GitHub feeds a link leads to: releases for a repository, public activity for a user or an org.
- * @param lenient accept a bare `owner/repo`, for when the GitHub chip is picked
- */
+/** The GitHub feeds a link leads to: releases for a repository, public activity for a user or an org. `lenient` accepts a bare `owner/repo`, for when the GitHub chip is picked. */
 export function githubCandidates(raw: string, lenient: boolean): FeedCandidate[] | null {
   const trimmed = raw.trim();
   const bare = OWNER_REPO_REGEX.exec(trimmed);

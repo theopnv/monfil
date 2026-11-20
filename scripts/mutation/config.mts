@@ -12,7 +12,6 @@ export function reportPath(suite: MutationSuite, extension: 'json' | 'html'): st
   return path.join(OUTPUT_DIR, suite, `mutation.${extension}`);
 }
 
-/** The options of one Stryker run. `mutate` takes files or globs, relative to the repository root. */
 export function strykerOptions(suite: MutationSuite, mutate: string[]): PartialStrykerOptions {
   return {
     testRunner: 'vitest',

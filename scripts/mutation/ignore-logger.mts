@@ -9,7 +9,6 @@ interface Node {
   name?: string;
 }
 
-/** True for a statement such as `logger.warn(...)`, whose result the code never reads. */
 export function isLoggerCall(node: Node): boolean {
   const call = node.type === 'ExpressionStatement' ? node.expression : undefined;
   const callee = call?.type === 'CallExpression' ? call.callee : undefined;

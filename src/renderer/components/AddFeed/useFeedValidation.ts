@@ -17,7 +17,6 @@ interface FeedValidationState {
 }
 
 interface FeedValidation extends FeedValidationState {
-  /** The candidate the user picked, the first one until they pick another. */
   feed: ParsedSource | null;
   selectedIndex: number;
   select: (index: number) => void;

@@ -42,9 +42,6 @@ function decoderFor(label: string | undefined): TextDecoder | undefined {
  * Decodes a fetched body with the charset it declares. A byte order mark wins, as the XML and
  * WHATWG specs require, then the `Content-Type` charset, then the XML prolog's `encoding`, then UTF-8.
  * Unknown labels are skipped and invalid bytes become U+FFFD.
- * @param bytes the raw response body
- * @param contentType the response's `Content-Type` header, if any
- * @returns the body as text, without a leading byte order mark
  */
 export function decodeBody(bytes: Uint8Array, contentType: string | undefined): string {
   const decoder = decoderFor(bomEncoding(bytes))

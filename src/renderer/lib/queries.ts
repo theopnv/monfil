@@ -40,7 +40,6 @@ export const queryKeys = {
   river: (scope: RiverScope) => ['river', normalizeScope(scope)] as const,
 };
 
-/** What a mutation makes stale, by what it changes. */
 export const invalidationSets = {
   feeds: [queryKeys.feedsAll, queryKeys.riverAll],
   categories: [queryKeys.categoriesAll],
@@ -98,7 +97,6 @@ export function categoriesQuery(workspaceId: number) {
   });
 }
 
-/** The saved searches of `workspaceId`, each with its unread count, plus the onboarding hint example when it applies. */
 export function savedSearchesQuery(workspaceId: number) {
   return queryOptions({
     queryKey: queryKeys.searches(workspaceId),
@@ -106,7 +104,6 @@ export function savedSearchesQuery(workspaceId: number) {
   });
 }
 
-/** Every workspace, in rail order. */
 export function workspacesQuery() {
   return queryOptions({
     queryKey: queryKeys.workspaces,
@@ -165,7 +162,6 @@ export function mergeRiverRows(data: InfiniteData<RiverPage>, rows: RiverRow[]):
   return { ...data, pages };
 }
 
-/** Applies `patch` to every row in `data` whose id is in `targetIds`, leaving every other page and row untouched. */
 export function patchRiverRows(
   data: InfiniteData<RiverPage>,
   targetIds: ReadonlySet<number>,

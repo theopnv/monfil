@@ -33,7 +33,6 @@ function hasWord(text: unknown, word: unknown): number {
   return pattern.test(text) ? 1 : 0;
 }
 
-/** Adds the SQL functions that river search conditions call. */
 export function registerSearchFunctions(sqlite: SQLite.Database): void {
   sqlite.function('has_word', { deterministic: true }, hasWord);
 }
@@ -57,10 +56,7 @@ function termExpression(term: SearchTerm): Expression<SqlBool> {
   return eb.or(columns.map((column) => sql<boolean>`${column} like ${pattern} escape '\\'`));
 }
 
-/**
- * The WHERE condition for a river search over a query that aliases the item table as `i` and the feed table as `f`.
- * @returns undefined when the search holds no term
- */
+/** The WHERE condition for a river search over a query that aliases the item table as `i` and the feed table as `f`. */
 export function searchCondition(search: string | undefined): Expression<SqlBool> | undefined {
   const clauses = parseSearchQuery(search ?? '');
   if (clauses.length === 0) {

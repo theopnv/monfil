@@ -2,7 +2,7 @@
 title: Mutation testing
 description: Run Stryker on your change, read the survivors and the tests that add nothing, and publish a report to the Stryker dashboard.
 sidebar:
-  order: 13
+  order: 15
 ---
 
 [Code coverage](../coverage/) tells which lines a test runs. It does not tell if a test would fail when that line is wrong. Mutation testing checks that. [StrykerJS](https://stryker-mutator.io/docs/stryker-js/introduction/) makes many small changes to the source, one at a time: it turns `<` into `<=`, empties a block, or replaces a string. Each changed copy is a *mutant*. Stryker runs the tests that cover the mutant. If a test fails, the mutant is *killed*. If all tests pass, it *survived*, and the code has a behavior that no test checks.

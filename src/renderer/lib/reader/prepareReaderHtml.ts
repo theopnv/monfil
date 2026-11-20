@@ -21,7 +21,6 @@ function keptSource(current: string, sourceUrl?: string): string | undefined {
   return /^[a-z][a-z\d+.-]*:/i.test(current) && !httpUrl(current) ? undefined : current;
 }
 
-/** The words that the rewritten markup shows. The caller owns the language. */
 export interface ReaderHtmlLabels {
   embedTitle: (provider: string) => string;
   openEmbedded: string;

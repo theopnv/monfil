@@ -30,20 +30,15 @@ Work on one source file at a time, with the most undetected mutants first. For e
 - **Equivalent mutant.** No input can change the observable behavior. Add `// Stryker disable next-line <Mutator>: <reason>` above the line. The reason says why no test can see the change. The lint rule `mutation/stryker-disable` refuses a disable without a reason or with `all`.
 - **Text that is not a contract.** A `StringLiteral` survivor in a log line or in a message that no caller reads is not worth a test. Leave it, and do not add a disable for it.
 
-Test observable behavior through the public function of the module. Do not export a private helper or spy on internals only to kill a mutant. Follow the test rules in `AGENTS.md`: `// Arrange`, `// Act`, `// Assert`, and `vi.mock(import('./module.ts'))` for module mocks.
+Test observable behavior through the public function of the module. Do not export a private helper or spy on internals only to kill a mutant. Follow the test rules in `AGENTS.md`.
 
 ## 3. Cover the code that no test runs
 
 For each mutant without coverage, decide if the code has a behavior that a unit test can check. If yes, add the test. If the code only wires the app together, such as IPC registration or window setup, check `npm run coverage:merge` to see if the e2e suite covers it, and leave it.
 
-## 4. Review the tests that add nothing
+## 4. Prune the tests that add nothing
 
-The work list has two lists of tests. Use them as candidates for review. They are not lists of tests to delete.
-
-- **Tests that kill no mutant.** Read what the test asserts. If it asserts nothing, or only that a value exists, make it exact or remove it. If it checks a rejection, an empty result, or an error path, it can still guard behavior that no mutant reaches. Keep it, unless another test checks the same input and result.
-- **Tests without a unique kill.** Another test kills each of its mutants. Remove or merge it only when another test checks the same behavior. Name that test in the commit message.
-
-After you remove or merge tests, run `npm run mutate -- <path>` again. The number of detected mutants must not go down. If it goes down, put the test back.
+The work list also names tests that kill no mutant, and tests with no unique kill. Judge each one with `.ai/skills/test-audit/SKILL.md`: the list is a set of candidates, not a set of tests to delete. After you remove or merge a test, run `npm run mutate -- <path>` again. The number of detected mutants must not go down. If it goes down, put the test back, and name the test that replaces a removed one in the commit message.
 
 ## 5. Verify and commit
 

@@ -8,14 +8,12 @@ import { useTranslation } from 'react-i18next';
 import { cx } from '@/components/untitled-ui/utils/cx';
 
 export interface HintProps extends Pick<PopoverProps, 'placement'> {
-  /** The element the hint points at. */
   triggerRef: RefObject<Element | null>;
   isOpen: boolean;
   onDismiss: () => void;
   children: ReactNode;
 }
 
-/** A first-run pointer: a short text beside one control, closed with "Got it" or Escape. */
 export default function Hint({ triggerRef, isOpen, onDismiss, placement = 'bottom', children }: HintProps) {
   const { t } = useTranslation();
   useEffect(() => {
