@@ -21,6 +21,7 @@ describe('parseQuery', () => {
 
   it.each([
     ['a table of another domain', 'SELECT * FROM coverage_files'],
+    ['a table of the CI domain', 'SELECT * FROM ci_steps'],
     ['a double-quoted name', 'SELECT * FROM "coverage_files"'],
     ['a bracketed name', 'SELECT * FROM [coverage_files]'],
     ['a backtick name', 'SELECT * FROM `coverage_folder_summary`'],

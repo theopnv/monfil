@@ -25,6 +25,31 @@ export function expectInteger(value: unknown, field: string): number {
   return value as number;
 }
 
+export function expectBoolean(value: unknown, field: string): boolean {
+  if (typeof value !== 'boolean') {
+    throw new ValidationError(`${field} must be a boolean`);
+  }
+  return value;
+}
+
+export function expectNullableInteger(value: unknown, field: string): number | null {
+  return value === null ? null : expectInteger(value, field);
+}
+
+export function expectOneOf<T extends string>(value: unknown, field: string, options: readonly T[]): T {
+  if (!options.includes(value as T)) {
+    throw new ValidationError(`${field} must be one of ${options.join(', ')}`);
+  }
+  return value as T;
+}
+
+export function expectList(value: unknown, field: string, maxLength: number): unknown[] {
+  if (!Array.isArray(value) || value.length > maxLength) {
+    throw new ValidationError(`${field} must be an array of at most ${maxLength} items`);
+  }
+  return value;
+}
+
 export function expectSha(value: unknown): string {
   if (typeof value !== 'string' || !/^[0-9a-f]{40}$/.test(value)) {
     throw new ValidationError('sha must be a 40-character commit sha');
