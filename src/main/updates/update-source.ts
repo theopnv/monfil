@@ -20,7 +20,6 @@ export type UpdateSource =
   | { name: 'STORE' }
   | { name: 'NONE'; reason: 'DEVELOPMENT' | 'UNSUPPORTED_PLATFORM' };
 
-/** Picks who delivers updates to this copy of the app. */
 export function resolveUpdateSource(environment: UpdateEnvironment): UpdateSource {
   if (!environment.isPackaged) {
     return { name: 'NONE', reason: 'DEVELOPMENT' };

@@ -9,10 +9,7 @@ import type { LibraryState } from './library';
 
 const MAX_STRING_LENGTH = 180;
 
-/**
- * Groups a feed count so the exact size of a library is never sent.
- * @param feeds the number of feeds
- */
+/** Groups a feed count so the exact size of a library is never sent. */
 export function feedsBucket(feeds: number): string {
   if (feeds <= 0) {
     return '0';
@@ -39,10 +36,7 @@ function cut(value: string): string {
   return value.slice(0, MAX_STRING_LENGTH);
 }
 
-/**
- * Builds the props of one `daily_summary` event. It holds counts, buckets, and settings, and no feed, article, or person.
- * @param input the day, its tallies, and the state of the library and preferences
- */
+/** Builds the props of one `daily_summary` event. It holds counts, buckets, and settings, and no feed, article, or person. */
 export function buildDailySummary({ day, counters, library, preferences, language }: SummaryInput): DailySummaryProps {
   const props: DailySummaryProps = { day };
   for (const name of USAGE_COUNTERS) {

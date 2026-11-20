@@ -38,7 +38,6 @@ async function itemDates(executor: Kysely<Database>, feedId: number, items: Inco
   return dates;
 }
 
-/** Reuses the category of that name in the workspace, or creates it. */
 export async function upsertFeedCategory(trx: Kysely<Database>, categoryName: string, workspaceId: number) {
   return trx.insertInto('feedCategory')
     .values({ name: categoryName, workspace_id: workspaceId })
@@ -51,8 +50,6 @@ export async function upsertFeedCategory(trx: Kysely<Database>, categoryName: st
  * Creates a new, empty category in `workspaceId`. Unlike `upsertFeedCategory`, a name
  * already in use is an error rather than a silent reuse, since this path is a deliberate "new folder"
  * action.
- * @param name the category's display name, unique within the workspace
- * @param workspaceId the workspace the category is created in
  */
 export async function createCategory(name: string, workspaceId: number): Promise<Result<FeedCategory, CreateCategoryError>> {
   return dbTry(async () => {
@@ -61,12 +58,7 @@ export async function createCategory(name: string, workspaceId: number): Promise
   }, { mapKnown: (error) => (hasSqliteCode(error, 'SQLITE_CONSTRAINT_UNIQUE') ? fail('DUPLICATE_NAME', `A category named "${name}" already exists.`, { name }) : undefined) });
 }
 
-/**
- * Creates a new workspace, appended after every existing one in rail order.
- * @param name the workspace's display name
- * @param icon an `@untitledui/icons` component name, as rendered by the rail
- * @param color a hex color for the rail button's tinted background
- */
+/** Appended after every existing workspace in rail order. `icon` is an `@untitledui/icons` component name and `color` a hex string. */
 export async function createWorkspace(name: string, icon: string, color: string): Promise<Result<Workspace, CreateWorkspaceError>> {
   return dbTry(async () => {
     const workspace = await db.transaction().execute(async (trx) => {
@@ -94,7 +86,6 @@ async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, ti
     .executeTakeFirstOrThrow();
 }
 
-/** Places a feed in a workspace, or moves its existing placement there to the category. */
 export async function upsertFeedPlacement(trx: Kysely<Database>, feedId: number, categoryId: number, workspaceId: number, showInWorkspace: number) {
   return trx.insertInto('feedPlacement')
     .values({ feed_id: feedId, category_id: categoryId, workspace_id: workspaceId, showInWorkspace })
@@ -126,13 +117,7 @@ async function insertFeedItems(executor: Kysely<Database>, feedId: number, items
     .execute();
 }
 
-/**
- * Inserts the items of one feed, skipping the guids that feed already holds.
- * @param executor the database connection
- * @param feedId the feed that owns the items
- * @param items the items to insert
- * @returns the inserted rows
- */
+/** Inserts the items of one feed, skipping the guids that feed already holds. */
 export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId: number, items: IncomingItem[]): Promise<Result<FeedItem[], AddFeedItemsError>> {
   try {
     const inserted = await executor.transaction().execute((trx) => insertFeedItems(trx, feedId, items));

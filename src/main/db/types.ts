@@ -33,7 +33,6 @@ export interface UsageCounterTable {
   value: number;
 }
 
-// A saved search is a named river query, shown as a pill above the river of one workspace.
 export interface SavedSearchTable {
   id: Generated<number>;
   workspace_id: number;
@@ -51,7 +50,6 @@ export interface SavedItemTable {
 }
 
 
-// =============== Workspace ===============
 // A workspace is a tab in the left rail: Home, or an installed pack / OPML import. See doc/src/content/docs/contributor-guide/feedpacks-and-opml.md.
 
 export interface WorkspaceTable {
@@ -68,8 +66,6 @@ export interface WorkspaceTable {
 }
 
 
-// =============== Feed Category ===============
-// A category is a name (e.g. "Tech", "News"...) scoped to one workspace.
 
 export interface FeedCategoryTable {
   id: Generated<number>;
@@ -78,7 +74,6 @@ export interface FeedCategoryTable {
 };
 
 
-// =============== Feed ===============
 // A feed is anything the user wants to subscribe to (e.g. RSS, podcasts, bluesky feed, etc). Identity
 // only: where it appears (category, workspace, visibility) is feedPlacement, below.
 
@@ -102,7 +97,6 @@ export interface FeedMetadataTable {
 
 export type FeedMetadataRow = Selectable<FeedMetadataTable>;
 
-// =============== Feed Placement ===============
 // Where a feed appears. Separate from feedMetadata so one feed can belong to several workspaces at
 // once, sharing one fetch and one read state. At most one placement per (feed_id, workspace_id).
 
@@ -114,8 +108,6 @@ export interface FeedPlacementTable {
 }
 
 
-// =============== Feed Item ===============
-// A feed item is a single entry in a feed (e.g. a blog post, a podcast episode, etc)
 
 export interface FeedItemTable {
   id: Generated<number>;
@@ -148,9 +140,6 @@ export interface UndatedItemTable {
 }
 
 
-// =============== Article Content ===============
-// Article content is the full text of a feed item, fetched and stored separately from the feed item itself.
-
 // It is interesting to store 'too_short' articles, because they are often paywalls or cookie walls, and the feed item description will then provide more value.
 export type ArticleContentStatus = 'ok' | 'failed' | 'too_short';
 
@@ -164,9 +153,6 @@ export interface ArticleContentTable {
 
 export type ArticleContent = Selectable<ArticleContentTable>;
 export type NewArticleContent = Insertable<ArticleContentTable>;
-
-// =============== Setting ===============
-// Settings are key-value pairs for application configuration.
 
 export interface SettingTable {
   key: string;

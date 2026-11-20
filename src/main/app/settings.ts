@@ -118,7 +118,6 @@ async function readCount(key: string): Promise<number> {
   return Number.isSafeInteger(count) && count > 0 ? count : 0;
 }
 
-/** Stores the choice with the time it was made and the version of the privacy notice it was made under. */
 export async function setUsageAnalyticsConsent(value: UsageAnalyticsConsent, noticeVersion: string, now: Date): Promise<void> {
   await usageAnalyticsConsent.write(value);
   await writeSetting(USAGE_ANALYTICS_CONSENT_AT_KEY, now.toISOString());
@@ -131,7 +130,6 @@ export interface UsageAnalyticsPromptHistory {
   lastShownAt: Date | undefined;
 }
 
-/** Reads how often the app launched and how often the consent card was put off. */
 export async function getUsageAnalyticsPromptHistory(): Promise<UsageAnalyticsPromptHistory> {
   const [launchCount, promptCount, [lastShown]] = await Promise.all([
     readCount(USAGE_ANALYTICS_LAUNCH_COUNT_KEY),

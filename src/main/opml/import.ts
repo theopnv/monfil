@@ -23,8 +23,6 @@ export interface StartedOpmlImport {
  * Parses an OPML document and writes its workspace, categories, and feed placements in one
  * transaction. Refresh starts after the transaction and is exposed separately to callers that do
  * not need to wait for fetched items.
- * @param xml the raw OPML document
- * @param target where to install it: a brand new workspace, or merged into an existing one
  */
 export async function startOpmlImport(
   xml: string,
@@ -124,7 +122,6 @@ export async function importOpml(xml: string, target: ImportOpmlTarget): Promise
 /**
  * Asks the user for an OPML file, then hands it to {@link importOpml}. Separate from that function
  * so the parsing and merge-rule logic stays testable without an Electron dialog in the loop.
- * @param target where to install the picked file
  */
 export async function openAndImportOpml(target: ImportOpmlTarget): Promise<Result<ImportSummary, ImportOpmlError>> {
   const { canceled, filePaths } = await dialog.showOpenDialog({

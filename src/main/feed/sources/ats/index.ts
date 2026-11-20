@@ -103,7 +103,6 @@ async function discoverBoard(board: AtsBoard, blockPrivateHosts: boolean): Promi
   };
 }
 
-/** The ATS boards a careers page links to or embeds, in page order. */
 export function boardsInPage(html: string): AtsBoard[] {
   const boards = new Map<string, AtsBoard>();
   for (const [link] of html.matchAll(LINK_IN_PAGE)) {

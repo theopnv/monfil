@@ -65,12 +65,7 @@ function toIconLink(tag: string, pageUrl: string): IconLink | undefined {
   return { href: href.href, score };
 }
 
-/**
- * Reads the icons a page declares with `<link rel="icon">` or `apple-touch-icon`, best first.
- * @param html the page markup
- * @param pageUrl the page address, which relative icon links resolve against
- * @returns absolute http(s) or `data:image` URLs, largest first and dark-scheme variants last
- */
+/** Reads the icons a page declares with `<link rel="icon">` or `apple-touch-icon`, best first. */
 export function extractIconLinks(html: string, pageUrl: string): string[] {
   // Stryker disable next-line ArrayDeclaration: a stand-in string has no rel or href, so it yields no icon
   const links = (html.match(LINK_TAG_REGEX) ?? []).flatMap((tag) => toIconLink(tag, pageUrl) ?? []);
@@ -90,8 +85,6 @@ async function declaredIcon(siteUrl: URL): Promise<string | undefined> {
 /**
  * Finds the icon of the site behind a feed: the one its page declares, else `/favicon.ico`, else
  * DuckDuckGo's copy. Each fallback must answer 2xx, so a placeholder is never returned.
- * @param siteLink the site's home or section page, as the feed names it
- * @returns the icon URL, or undefined when the site has none
  */
 export async function resolveSiteIcon(siteLink: string): Promise<string | undefined> {
   const siteUrl = parseHttpUrl(siteLink);

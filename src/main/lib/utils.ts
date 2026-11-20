@@ -5,10 +5,6 @@
 /**
  * Runs `worker` over every item, never more than `limit` at a time.
  * It throws after all items have been attempted if a worker failed.
- * @param items the list of items to run the worker onto
- * @param limit the max number concurrent runs
- * @param worker the function to run
- * @returns a promise that settles when the last item is done
  */
 export async function runWithConcurrency<T>(
   items: readonly T[],

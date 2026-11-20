@@ -11,9 +11,6 @@ import { createIncidentId } from '../logging/incident';
 import { logger } from '../logging/logger';
 import { routes, type Route } from './routes';
 
-// Renderer to main, two ways: ipcRenderer.invoke(channel, arg) on the renderer side, ipcMain.handle(channel, listener) here.
-// https://www.electronjs.org/docs/latest/tutorial/ipc#pattern-2-renderer-to-main-two-way
-
 function isFailure(response: unknown): boolean {
   return typeof response === 'object' && response !== null && 'success' in response && response.success === false;
 }

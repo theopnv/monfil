@@ -14,9 +14,6 @@ class WorkspaceNotFoundError extends Error {}
 /**
  * Renames a category in place. A category id that belongs to another workspace is reported as
  * missing rather than renamed, so an action taken from one workspace can never reach another's.
- * @param categoryId the id of the category to rename
- * @param name the new name, unique within the workspace
- * @param workspaceId the workspace the category belongs to
  */
 export async function renameCategory(categoryId: number, name: string, workspaceId: number): Promise<Result<FeedCategory, UpdateCategoryError>> {
   return dbTry(async () => {
@@ -36,9 +33,6 @@ export async function renameCategory(categoryId: number, name: string, workspace
 /**
  * Moves a batch of feeds into a category in one statement, within `workspaceId`. A category owned by
  * another workspace is refused by `feedPlacement_category_workspace_fk` and reported as missing.
- * @param feedIds the ids of the feeds to move
- * @param categoryId the id of the destination category
- * @param workspaceId the workspace both the feeds and the category belong to
  */
 export async function moveFeedsToCategory(feedIds: number[], categoryId: number, workspaceId: number): Promise<Result<void, UpdateCategoryError>> {
   if (feedIds.length === 0) {
@@ -59,9 +53,6 @@ export async function moveFeedsToCategory(feedIds: number[], categoryId: number,
  * Sets `showInWorkspace` on a batch of feeds' placement in `workspaceId`, in one statement. Every id
  * has to resolve to a placement there: a partially applied batch is reported as a failure, since the
  * caller asked for all of them.
- * @param feedIds the ids of the feeds to update
- * @param showInWorkspace the value to set
- * @param workspaceId the workspace the placement belongs to
  */
 export async function setFeedsShowInWorkspace(feedIds: number[], showInWorkspace: boolean, workspaceId: number): Promise<Result<void, UpdateFeedError>> {
   const ids = [...new Set(feedIds)];
@@ -87,10 +78,6 @@ export async function setFeedsShowInWorkspace(feedIds: number[], showInWorkspace
  * keeps failing is distinguishable from a feed that has published nothing. Validators left out keep
  * their stored value; a validator set to `null` is cleared, which is how a body without validators
  * retires a stale one.
- * @param feedId the id of the feed that was fetched
- * @param result the failure to record (`last_error` is the raw text, `last_error_code` and
- *   `last_error_params` let the renderer translate it), or `{ last_error: null }` to clear a previous
- *   one, plus the validators to persist
  */
 export async function setFeedFetchResult(feedId: number, result: { last_error: string | null; last_error_code?: string; last_error_params?: ErrorParams; etag?: string | undefined | null; last_modified?: string | undefined | null }): Promise<Result<void, UpdateFeedError>> {
   return dbTry(async () => {
@@ -112,11 +99,7 @@ export async function setFeedFetchResult(feedId: number, result: { last_error: s
   });
 }
 
-/**
- * Stores the icon found for a feed that had none, leaving an icon set meanwhile untouched.
- * @param feedId the id of the feed
- * @param icon the icon URL
- */
+/** Stores the icon found for a feed that had none, leaving an icon set meanwhile untouched. */
 export async function setFeedIconIfMissing(feedId: number, icon: string): Promise<Result<void, UpdateFeedError>> {
   return dbTry(async () => {
     await db.updateTable('feedMetadata').set({ icon }).where('id', '=', feedId).where('icon', 'is', null).execute();
@@ -124,11 +107,6 @@ export async function setFeedIconIfMissing(feedId: number, icon: string): Promis
   });
 }
 
-/**
- * Sets `read_at` on a batch of feed items in one statement.
- * @param itemIds the ids of the items to update
- * @param read whether the items are read
- */
 export async function setFeedItemsRead(itemIds: number[], read: boolean): Promise<Result<void, UpdateItemError>> {
   if (itemIds.length === 0) {
     return ok();
@@ -151,10 +129,6 @@ export async function setFeedItemsRead(itemIds: number[], read: boolean): Promis
  * `categoryName` there. That category is created first if the destination does not have it yet. The
  * source placement has to exist, otherwise this would add a placement rather than move one, and it
  * carries its `showInWorkspace` across so a hidden feed stays hidden.
- * @param feedId the id of the feed to move
- * @param fromWorkspaceId the workspace the feed currently sits in
- * @param toWorkspaceId the workspace to place it in instead
- * @param categoryName the destination category, created if missing
  */
 export async function moveFeedToWorkspace(feedId: number, fromWorkspaceId: number, toWorkspaceId: number, categoryName: string): Promise<Result<void, MoveFeedError>> {
   return dbTry(async () => {
@@ -182,11 +156,6 @@ export async function moveFeedToWorkspace(feedId: number, fromWorkspaceId: numbe
   });
 }
 
-/**
- * Updates a workspace's name, icon and/or colour in place.
- * @param workspaceId the id of the workspace to update
- * @param patch the fields to change; a field left out keeps its current value
- */
 export async function updateWorkspace(workspaceId: number, patch: { name?: string; icon?: string; color?: string }): Promise<Result<Workspace, UpdateWorkspaceError>> {
   return dbTry(async () => {
     const updated = await db.updateTable('workspace').set(patch).where('id', '=', workspaceId).returningAll().executeTakeFirst();
@@ -197,10 +166,6 @@ export async function updateWorkspace(workspaceId: number, patch: { name?: strin
   });
 }
 
-/**
- * Sets every workspace's `position` to its index in `orderedIds`, in one transaction.
- * @param orderedIds every workspace id, in the rail order to persist
- */
 export async function reorderWorkspaces(orderedIds: number[]): Promise<Result<void, UpdateWorkspaceError>> {
   if (orderedIds.length === 0) {
     return ok();

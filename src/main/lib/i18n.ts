@@ -7,14 +7,12 @@ import type { FatalDialogText } from '../logging/fatal';
 import { DEFAULT_LANGUAGE, isLanguageCode, type LanguageCode } from '../../shared/i18n/languages';
 import { resolveFormatLocale } from '../../shared/i18n/format-locale';
 
-/** Translates the text that the main process shows: menus, dialogs, and error messages. */
 export const mainI18n = createI18n(DEFAULT_LANGUAGE);
 
 export async function setMainLanguage(language: LanguageCode): Promise<void> {
   await mainI18n.changeLanguage(language);
 }
 
-/** The language the main process speaks now. */
 export function mainLanguage(): LanguageCode {
   return isLanguageCode(mainI18n.language) ? mainI18n.language : DEFAULT_LANGUAGE;
 }

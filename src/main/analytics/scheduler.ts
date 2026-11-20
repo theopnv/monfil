@@ -26,8 +26,6 @@ let flushing = false;
 /**
  * Picks the timestamp of a day's summary. The server rejects a timestamp older than 24 hours or in the future,
  * so the end of the day is used while it is recent enough, and the current time after that.
- * @param day the day as `YYYY-MM-DD`
- * @param now the current time
  */
 export function summaryTimestamp(day: string, now: Date): Date {
   const endOfDay = Date.parse(`${day}T23:59:59.999Z`);
@@ -110,7 +108,6 @@ function fastFlushMs(): number | undefined {
   return process.env['E2E_TEST'] === '1' && Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
-/** Loads the stored consent, starts counting failures from the log, and schedules the sending. */
 export async function startUsageAnalytics(): Promise<void> {
   setCountingEnabled(await getUsageAnalyticsConsent() === 'granted');
   await recordAppLaunch();

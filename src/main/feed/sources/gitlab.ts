@@ -11,10 +11,7 @@ const HOSTS = new Set(['gitlab.com', 'www.gitlab.com']);
 const SEGMENT_REGEX = /^[\w.-]+$/;
 const RELEASES_SUFFIX = '/-/releases.atom';
 
-/**
- * The GitLab releases feed a project link leads to.
- * @param lenient accept any host, for self-hosted instances when the GitLab chip is picked
- */
+/** The GitLab releases feed a project link leads to. `lenient` accepts any host, for self-hosted instances when the GitLab chip is picked. */
 export function gitlabCandidates(raw: string, lenient: boolean): FeedCandidate[] | null {
   const url = toUrl(raw);
   if (!url || (!lenient && !HOSTS.has(url.hostname.toLowerCase()))) {

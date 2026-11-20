@@ -9,10 +9,7 @@ const MAX_TITLE_LENGTH = 100;
 const BLOCK_BREAK_REGEX = /<br\s*\/?>|<\/(?:p|div|li|h[1-6]|blockquote)>/gi;
 const TAG_REGEX = /<[^>]*>/g;
 
-/**
- * A title for a post that has none: the first line of its text, cut on a word break.
- * @param description the post body, as HTML or plain text
- */
+/** A title for a post that has none: the first line of its text, cut on a word break. */
 export function postTitle(description: string): string {
   const text = decodeText(removeAll(description.replace(BLOCK_BREAK_REGEX, '\n'), TAG_REGEX));
   const firstLine = text.split('\n').map((line) => line.replace(/\s+/g, ' ').trim()).find((line) => line.length > 0);

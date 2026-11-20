@@ -94,9 +94,7 @@ function parseYoutubeUrl(url: URL): YoutubeTarget | null {
 
 /**
  * Resolves anything a user might type or paste into one of the shapes the adapter can fetch.
- * @param raw the text typed in the Add Feed wizard, or a stored feed's link on refresh
- * @param assumeYoutube whether the caller already knows this is meant to be YouTube (the Step 1
- *   toggle), which lets a bare handle typed without its leading `@` resolve too
+ * `assumeYoutube` is the Step 1 toggle: a bare handle typed without its leading `@` then resolves too.
  */
 export function parseYoutubeInput(raw: string, assumeYoutube = false): YoutubeTarget | null {
   const trimmed = raw.trim();

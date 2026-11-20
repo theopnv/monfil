@@ -27,7 +27,6 @@ function needsIconLookup(feed: FeedMetadataRow): boolean {
   return !feed.icon && !iconLookups.has(feed.link);
 }
 
-/** Looks up the site icon of a feed stored without one, at most once per feed link per session. */
 async function fillMissingIcon(feed: FeedMetadataRow, siteLink: string | undefined): Promise<void> {
   if (!needsIconLookup(feed)) {
     return;
@@ -134,7 +133,6 @@ async function refreshFeedList(feedList: FeedMetadataRow[], retentionDays: Reten
 /**
  * Fetches every subscribed feed and synchronizes publisher changes and retained history.
  * A feed that fails to fetch is logged and skipped, so the others still get their items.
- * @returns how many items each feed gained, so the renderer can show a pill without receiving the rows themselves
  */
 export async function refreshAllFeeds(force = false): Promise<RefreshSummary> {
   await dbReady;
@@ -145,8 +143,6 @@ export async function refreshAllFeeds(force = false): Promise<RefreshSummary> {
 /**
  * Fetches only the given feeds. Used right after an OPML import (or pack install), whose rows
  * are written with no items so the new tab has something to show while this runs.
- * @param feedIds the ids of the feeds to fetch
- * @param force skip conditional-request validators so a feed that errored is fetched in full
  */
 export async function refreshFeeds(feedIds: number[], force = false): Promise<RefreshSummary> {
   if (feedIds.length === 0) {

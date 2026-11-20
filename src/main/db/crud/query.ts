@@ -94,7 +94,6 @@ export async function countFeedMetadata(): Promise<number> {
  * Every feed placed in `workspaceId`, with its category and item counts, in one statement. No
  * items: use `queryRiverPage` for those. Scoping the join to one workspace is what keeps this one
  * row per feed even though a feed can hold a placement in several workspaces at once.
- * @param workspaceId the workspace to list feeds for
  */
 export async function queryFeedSummaries(workspaceId: number): Promise<FeedSummary[]> {
   await dbReady;
@@ -199,7 +198,6 @@ export async function queryWorkspaceSummaries(): Promise<WorkspaceSummary[]> {
   }));
 }
 
-/** One workspace by id, or `undefined` if it does not exist. */
 export async function queryWorkspaceById(workspaceId: number): Promise<Workspace | undefined> {
   await dbReady;
   return db.selectFrom('workspace').selectAll().where('id', '=', workspaceId).executeTakeFirst();

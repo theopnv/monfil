@@ -4,7 +4,6 @@
 
 import { HOME_WORKSPACE_ID, type NewFeedInput, type SourceItem } from '../../shared/contracts';
 
-/** A feed in the Home workspace with no items. */
 export function makeFeedInput(overrides: Partial<NewFeedInput> = {}): NewFeedInput {
   return {
     link: 'https://a.example/feed',

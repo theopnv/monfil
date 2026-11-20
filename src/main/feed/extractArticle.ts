@@ -105,12 +105,7 @@ function prepareEmbeds(document: Document, baseUrl: string): void {
   }
 }
 
-/**
- * Runs Readability over a fetched page and sanitizes the result.
- * @param pageHtml the raw HTML of the article page
- * @param url the page's URL, used to resolve relative links and image sources in the extracted markup
- * @returns the extracted article, or `undefined` when Readability finds no content
- */
+/** Runs Readability over a fetched page and sanitizes the result. */
 export function extractArticle(pageHtml: string, url: string): ExtractedArticle | undefined {
   // `url` sets `document.baseURI`/`documentURI`, which is what Readability resolves relative
   // links and image sources against. Scripts and external resources are never fetched or run:

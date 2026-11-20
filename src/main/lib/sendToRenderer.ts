@@ -20,8 +20,6 @@ export function sendToRenderer<C extends OneWayMainToRendererChannels>(
 /**
  * Sends to every open window. For senders that have no originating event.
  * Make sure the renderer is listening before sending, as webContents.send does not buffer.
- * @param channel the channel to send on
- * @param payload the payload to send
  */
 export function broadcastToRenderers<C extends OneWayMainToRendererChannels>(
   channel: C,
