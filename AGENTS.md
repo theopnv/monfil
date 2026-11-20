@@ -62,6 +62,6 @@ In VS Code, the `Main + renderer` compound launch configuration debugs both Elec
 - Functions in `src/` must stay at or below cognitive complexity 15 and cyclomatic complexity 10. Test files and `src/renderer/components/untitled-ui/` have no limit. Split a function that goes above a limit. Do not add a suppression. `eslint-suppressions.json` holds the old violations. When you bring old code below a limit, run `npx eslint --prune-suppressions .` and commit the smaller file.
 - Run focused checks for the area you changed. Run `npm run lint` for TypeScript changes. Run broader suites when a change crosses process boundaries or affects packaging, migrations, or security.
 - Keep repository paths relative to its root in code, comments, docs, tests, and CI. Do not add machine-specific paths or identifiers.
-- Add a code comment only when it explains a lasting constraint that the code cannot show. Keep existing comments unless the constraint has changed. Use JSDoc for important external APIs and helpers.
+- Write a comment only for a lasting constraint the code cannot show. Delete comments that repeat the code, and JSDoc that repeats the signature.
 - Keep documentation filenames in kebab case. The public site lives under `doc/src/content/docs/`.
 - Do not overwrite unrelated work in the working tree. Finish the requested change, check the diff, and report any checks you could not run.
