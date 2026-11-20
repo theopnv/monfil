@@ -24,9 +24,7 @@ The type check needs `src/renderer/routeTree.gen.ts`. `npm run mutate` writes it
 
 `npm run mutate` prints a score table, and writes an HTML and a JSON report to `.mutation/unit/`. Open `mutation.html` in a browser to see each mutant in its source line.
 
-The run mutates `src/main/`, `src/preload/`, and `src/shared/`, and checks each mutant with the `node` Vitest project from `vitest.node.config.mts`. Each mutant takes well under a second, and a full run, about 7,600 mutants, takes about 15 minutes on a 10-core machine.
-
-Renderer code is not mutated. Its tests run in Chromium and take about 7 seconds for each mutant, so a useful run takes hours. The e2e suite does not take part either: each mutant would need a new Electron package. Test files, `*.d.ts`, and `src/main/test/` are never mutated. A renderer path passed to `npm run mutate` is skipped.
+The run mutates `src/main/`, `src/preload/`, and `src/shared/`, and checks each mutant with the `node` Vitest project from `vitest.node.config.mts`. The e2e suite does not take part: each mutant would need a new Electron package. Test files, `*.d.ts`, and `src/main/test/` are never mutated.
 
 ## Read the result
 

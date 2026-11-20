@@ -12,7 +12,7 @@ import { MUTATION_SUITES, splitTargets, SUITE_GLOBS, type MutationSuite } from '
 const USAGE = [
   'Usage: npm run mutate -- [<path>...] [--all] [--base <ref>]',
   'Without a path or --all, it mutates the source files that differ from the merge base with --base (default: main).',
-  'A path can be a file, a folder or a git pathspec. Only src/main, src/preload and src/shared are mutated. Reports go to .mutation/unit/.',
+  'A path can be a file, a folder or a git pathspec. Reports go to .mutation/unit/.',
 ].join('\n');
 
 const lines = (text: string) => text.split('\n').filter(Boolean);

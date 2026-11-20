@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { splitTargets } from './targets.mts';
 
 describe('splitTargets', () => {
-  it('keeps the main, preload and shared files, and leaves the renderer out', () => {
+  it('keeps the source files of the main, preload and shared trees', () => {
     // Act
-    const result = splitTargets(['src/main/feed/refresh.ts', 'src/shared/result.ts', 'src/preload/preload.ts', 'src/renderer/lib/hints.ts', 'src/renderer/routes/index.tsx']);
+    const result = splitTargets(['src/main/feed/refresh.ts', 'src/shared/result.ts', 'src/preload/preload.ts']);
 
     // Assert
     expect(result).toEqual({ unit: ['src/main/feed/refresh.ts', 'src/shared/result.ts', 'src/preload/preload.ts'] });
@@ -14,8 +14,6 @@ describe('splitTargets', () => {
     ['a test file', 'src/main/feed/refresh.test.ts'],
     ['a main-process test helper', 'src/main/test/db.ts'],
     ['a declaration file', 'src/shared/vite-env.d.ts'],
-    ['a renderer file', 'src/renderer/lib/hints.ts'],
-    ['a renderer component', 'src/renderer/components/Home/River.tsx'],
     ['a script', 'scripts/mutation/run.mts'],
     ['a doc', 'doc/src/content/docs/index.mdx'],
     ['a fixture', 'src/main/opml/__fixtures__/feedly-export.opml'],

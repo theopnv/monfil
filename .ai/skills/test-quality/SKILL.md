@@ -1,11 +1,11 @@
 ---
 name: test-quality
-description: Improve Monfil's tests with Stryker mutation results. Use when asked to audit, strengthen, clean up, or prune tests for a file or folder under src/main, src/preload, or src/shared, or to raise its mutation score.
+description: Improve Monfil's tests with Stryker mutation results. Use when asked to audit, strengthen, clean up, or prune tests for a file or folder under src/, or to raise its mutation score.
 ---
 
 # Improve tests with mutation results
 
-Read `doc/src/content/docs/contributor-guide/mutation-testing.md` for the commands and the meaning of each status. This skill works on one path at a time: a file or a folder under `src/main/`, `src/preload/`, or `src/shared/`. Ask for a path if the request has none, or take the first files of `.mutation/worklist.md`.
+Read `doc/src/content/docs/contributor-guide/mutation-testing.md` for the commands and the meaning of each status. This skill works on one path at a time: a file or a folder under `src/`. Ask for a path if the request has none, or take the first files of `.mutation/worklist.md`.
 
 The goal is tests that fail when the behavior breaks. Do not change the behavior of the source code. If a survivor shows a real bug, add a test that fails for it, stop, and report it to the user.
 
@@ -20,8 +20,6 @@ npm run mutate:worklist -- <path>
 ```
 
 Read `.mutation/worklist.md`. Write down the score, the number of survivors, and the number of mutants without coverage for each file. You compare them at the end.
-
-Only `src/main/`, `src/preload/`, and `src/shared/` are mutated, so this skill does not apply to renderer code. A path of 25 files takes about 7 minutes.
 
 ## 2. Kill the survivors
 
