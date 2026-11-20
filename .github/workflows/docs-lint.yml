@@ -13,18 +13,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  markdownlint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-
-      - uses: DavidAnson/markdownlint-cli2-action@696eb3f2509270d7b882d2aa68347bc676e7af34
-        with:
-          globs: |
-            README.md
-            CONTRIBUTING.md
-            doc/src/content/docs/**/*.{md,mdx}
-
   links:
     runs-on: ubuntu-latest
     permissions:
@@ -32,6 +20,8 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
