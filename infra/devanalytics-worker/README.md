@@ -30,6 +30,22 @@ Tables:
 
 The tables store counts and never percents, so a sum of counts gives a correct percent. One ingest writes about 730 rows, and a second ingest of the same sha writes about twice that, because deletes count as writes.
 
+## CI
+
+- `POST /ci/ingest` takes a snapshot from `scripts/ci/collect.mts` and replaces every row of its run attempt in one batch. It needs `Authorization: Bearer <INGEST_TOKEN>`.
+- `POST /ci/query` works like `/complexity/query`, on the CI tables. It needs `Authorization: Bearer <QUERY_TOKEN>`.
+
+Tables, with one set of rows for each attempt of a `Test` or `Publish` workflow run:
+
+- `ci_runs`: one row for each run attempt, with the event, the branch, the conclusion, `full_matrix`, `code_changed` and the wall time in seconds. `code_changed` is 0 when no test suite uploaded a report, as in a documentation-only pull request.
+- `ci_jobs`: one row for each job, with the runner label, the operating system, the queue time and the run time.
+- `ci_steps`: one row for each step of each job. GitHub times a step to the second, and a skipped step has no duration.
+- `ci_step_groups`: one row for each `##[group]` of a job log that lasts a second or longer. It splits a composite action such as the setup action, and `actions/checkout`, into their own steps.
+- `ci_test_suites`: one row for each suite (`unit`, `integration` or `e2e`) and runner, with the counts of tests, passed, failed, skipped and flaky tests. A flaky test passed on a retry, so `flaky` is part of `passed`.
+- `ci_test_exceptions`: one row for each test that failed or needed a retry. A healthy run writes none.
+
+A run writes about 250 rows, and a second ingest of the same attempt writes about twice that. SQLite has no percentile function, so a panel picks the row at the nearest rank with `ROW_NUMBER()` and `COUNT(*)` window functions.
+
 ## Local development
 
 Run these commands in this folder.

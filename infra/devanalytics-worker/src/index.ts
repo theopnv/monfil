@@ -1,3 +1,5 @@
+import { ingestCi } from './ci/db.ts';
+import { parseCiSnapshot } from './ci/snapshot.ts';
 import { ingestComplexity } from './complexity/db.ts';
 import { parseSnapshot } from './complexity/snapshot.ts';
 import { readCoverageBadge } from './coverage/badge.ts';
@@ -6,7 +8,7 @@ import { parseCoverageSnapshot } from './coverage/snapshot.ts';
 import { hasToken } from './shared/auth.ts';
 import { ValidationError } from './shared/expect.ts';
 import { parseQuery, QueryError, runQuery } from './shared/query.ts';
-import { COMPLEXITY_TABLES, COVERAGE_TABLES } from './shared/tables.ts';
+import { CI_TABLES, COMPLEXITY_TABLES, COVERAGE_TABLES } from './shared/tables.ts';
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
@@ -58,6 +60,8 @@ const ROUTES: Record<string, Route> = {
   '/coverage/ingest': { method: 'POST', handle: ingestRoute(parseCoverageSnapshot, ingestCoverage) },
   '/coverage/query': { method: 'POST', handle: queryRoute(COVERAGE_TABLES) },
   '/coverage/badge': { method: 'GET', handle: coverageBadgeRoute },
+  '/ci/ingest': { method: 'POST', handle: ingestRoute(parseCiSnapshot, ingestCi) },
+  '/ci/query': { method: 'POST', handle: queryRoute(CI_TABLES) },
 };
 
 function errorResponse(error: unknown): Response {
