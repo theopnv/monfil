@@ -3,34 +3,16 @@
 // See LICENSE in the repository root for full terms.
 
 import { fetchConditional, fetchText, type FetchValidators, type NotModified } from '../../lib/fetch';
-import type { FeedFetchError, FetchUrlError, ParsedSource, SourceType } from '../../../shared/contracts';
+import type { FeedFetchError, ParsedSource, SourceType } from '../../../shared/contracts';
 import type { ErrorParams, UnsupportedReason } from '../../../shared/errors';
-import type { Result } from '../../../shared/result';
+import { fail, type Result } from '../../../shared/result';
 import { parseFeedContent } from './feedContent';
 import { resolveSiteIcon } from './siteIcon';
 import type { FeedCandidate, ParsedFeedContent, SourceAdapter } from './types';
+import { withScheme } from '../../../shared/url';
 
 /** The most candidates one link may fetch, so a page with many feed links stays cheap to validate. */
 export const MAX_CANDIDATES = 5;
-
-export function mapFetchError(error: FetchUrlError): FeedFetchError {
-  switch (error.name) {
-    case 'GENERIC_FETCH_ERROR':
-    case 'NETWORK_ERROR':
-    case 'NOT_ALLOWED_OR_ABORTED_ERROR':
-    case 'RESPONSE_TOO_LARGE_ERROR':
-    case 'BLOCKED_URL_ERROR':
-      return error;
-    default: {
-      const exhaustiveCheck: never = error;
-      return exhaustiveCheck;
-    }
-  }
-}
-
-export function withScheme(link: string): string {
-  return /^https?:\/\//i.test(link) ? link : `https://${link}`;
-}
 
 export function toUrl(raw: string): URL | null {
   try {
@@ -41,7 +23,7 @@ export function toUrl(raw: string): URL | null {
 }
 
 export function unsupported(message: string, reason: UnsupportedReason, params?: ErrorParams): { success: false; error: FeedFetchError } {
-  return { success: false, error: { name: 'UNSUPPORTED_FORMAT', message, params: { ...params, reason } } };
+  return fail('UNSUPPORTED_FORMAT', message, { ...params, reason });
 }
 
 type ContentParser = (content: string) => ParsedFeedContent | null;
@@ -63,7 +45,7 @@ export async function fetchAndParse(link: string, validators: FetchValidators | 
       ? await fetchConditional(link, { validators, ...options })
       : blockPrivateHosts ? await fetchText(link, options) : await fetchText(link);
     if (!result.success) {
-      return { success: false, error: mapFetchError(result.error) };
+      return { success: false, error: result.error };
     }
     if ('notModified' in result.data) {
       return { success: true, data: result.data };
@@ -74,7 +56,7 @@ export async function fetchAndParse(link: string, validators: FetchValidators | 
       parsed = parse(body);
     } catch (error) {
       if (HTML_PAGE.test(body)) {
-        return { success: false, error: { name: 'PARSE_ERROR', message: HTML_INSTEAD_OF_FEED, params: { reason: 'htmlPage' } } };
+        return fail('PARSE_ERROR', HTML_INSTEAD_OF_FEED, { reason: 'htmlPage' });
       }
       throw error;
     }
@@ -84,9 +66,9 @@ export async function fetchAndParse(link: string, validators: FetchValidators | 
     return { success: true, data: { parsed, body, validators: result.data.validators } };
   } catch (error) {
     if (error instanceof Error) {
-      return { success: false, error: { name: 'PARSE_ERROR', message: error.message } };
+      return fail('PARSE_ERROR', error.message);
     }
-    return { success: false, error: { name: 'UNKNOWN_ERROR', message: 'An unknown error occurred' } };
+    return fail('UNKNOWN_ERROR', 'An unknown error occurred');
   }
 }
 

@@ -7,26 +7,37 @@ import type {
   OneWayMainToRendererChannels,
   OneWayRendererToMainChannelPayloads,
   OneWayRendererToMainChannels,
-  TwoWayRendererMainChannelPayloads,
-  TwoWayRendererMainChannels,
-  TwoWayRendererMainChannelsInvokeArgs,
+  SettingKey,
+  SettingTypes,
 } from '../../shared/channels';
+import type { ArgOf, InvokeChannel, ResultOf } from '../../shared/ipc-schema';
+import { isIpcFailure } from '../../shared/result';
 import type { LogEventMap, LogEventName, LogLevel } from '../../shared/logging';
 
+type PlainChannel = Exclude<InvokeChannel, 'settings:get' | 'settings:set'>;
+
+/** A channel that takes no argument is called with the channel name alone. */
+type ArgsOf<C extends InvokeChannel> = [ArgOf<C>] extends [undefined] ? [] : [arg: ArgOf<C>];
+
+interface Invoke {
+  <K extends SettingKey>(channel: 'settings:get', arg: { key: K }): Promise<SettingTypes[K]['state']>;
+  <K extends SettingKey>(channel: 'settings:set', arg: { key: K; value: SettingTypes[K]['value'] }): Promise<SettingTypes[K]['state']>;
+  <C extends PlainChannel>(channel: C, ...args: ArgsOf<C>): Promise<ResultOf<C>>;
+}
+
+const invoke: Invoke = async (channel: InvokeChannel, arg?: unknown): Promise<never> => {
+  const response: unknown = await window.electron.ipcRenderer.invoke(channel, arg as never);
+  if (isIpcFailure(response)) {
+    const { error } = response;
+    throw error.name === 'INVALID_PAYLOAD'
+      ? Object.assign(new Error(error.message), error)
+      : Object.assign(new Error(), error, { message: `${error.message} Incident ${error.incidentId.slice(0, 8)}.` });
+  }
+  return response as never;
+};
+
 export const ipc = {
-  async invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<TwoWayRendererMainChannelPayloads[C]> {
-    const response: unknown = await window.electron.ipcRenderer.invoke(channel, arg);
-    if (response && typeof response === 'object' && 'success' in response && response.success === false && 'error' in response) {
-      const failure = response as { error: { name?: string; message?: string; incidentId?: string } };
-      if (failure.error.name === 'INVALID_PAYLOAD' && failure.error.message) {
-        throw Object.assign(new Error(failure.error.message), failure.error);
-      }
-      if (failure.error.name === 'UNEXPECTED_ERROR' && failure.error.message && failure.error.incidentId) {
-        throw Object.assign(new Error(), failure.error, { message: `${failure.error.message} Incident ${failure.error.incidentId.slice(0, 8)}.` });
-      }
-    }
-    return response as TwoWayRendererMainChannelPayloads[C];
-  },
+  invoke,
   send<C extends OneWayRendererToMainChannels>(channel: C, payload: OneWayRendererToMainChannelPayloads[C]): void {
     window.electron.ipcRenderer.sendMessage(channel, payload);
   },

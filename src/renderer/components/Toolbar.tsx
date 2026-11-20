@@ -24,7 +24,7 @@ import {
   useDeleteWorkspaceRequestedId,
   useEditWorkspaceRequestedId,
   useExportWorkspaceRequestedId,
-} from "@/lib/ipc-bridge";
+} from "@/lib/push-events";
 import { decodeFeedDrag, FEED_DRAG_TYPE } from "@/lib/feed-drag";
 import { notifyError } from "@/lib/notifications";
 import { digitFromCode, hasOnlyModKey, isLetterCode, MOD_KEY_LABEL } from "@/lib/keyboard";
@@ -46,7 +46,7 @@ function workspaceTint(color: string) {
 function showWorkspaceMenu(workspaceId: number) {
   return (event: { preventDefault: () => void }) => {
     event.preventDefault();
-    ipc.send('workspaces:show-context-menu', workspaceId);
+    ipc.send('menu:show', { kind: 'workspace', id: workspaceId });
   };
 }
 
@@ -131,7 +131,7 @@ function WorkspaceRail({ workspaces, activeId, goTo, expanded }: { workspaces: W
         if (!payload) {
           continue;
         }
-        const result = await moveFeedToWorkspace(payload.feedId, payload.workspaceId, destinationId, payload.categoryName);
+        const result = await moveFeedToWorkspace({ feedId: payload.feedId, fromWorkspaceId: payload.workspaceId, toWorkspaceId: destinationId, categoryName: payload.categoryName });
         if (!result.success) {
           notifyError(t('rail.moveFailed'));
           return;

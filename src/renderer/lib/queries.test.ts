@@ -13,7 +13,7 @@ const emptyPage: RiverPage = { rows: [] };
 beforeEach(() => {
   invoke.mockReset();
   invoke.mockResolvedValue(emptyPage);
-  window.electron = { ipcRenderer: { invoke, on: vi.fn(), once: vi.fn(), sendMessage: vi.fn() } };
+  window.electron = { ipcRenderer: { invoke, on: vi.fn(), sendMessage: vi.fn() } };
 });
 
 function row(id: number, overrides: Partial<RiverRow> = {}): RiverRow {

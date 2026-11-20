@@ -45,7 +45,7 @@ test('renaming a folder via the context menu persists the new name', async ({ la
 
   // Act: stand in for the native menu's click, which Playwright cannot drive.
   await app.evaluate(({ BrowserWindow }, id) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send('feeds:rename-category-requested', id);
+    BrowserWindow.getAllWindows()[0]?.webContents.send('menu:action', { kind: 'category', action: 'rename', id });
   }, categoryId);
   const input = page.getByRole('textbox', { name: 'Rename Tech' });
   await expect(input).toHaveValue('Tech');
@@ -70,7 +70,7 @@ test('typing a letter that matches the folder\'s own name does not close the ren
   await expect(page.getByRole('button', { name: 'Tech', exact: true })).toBeVisible();
   const categoryId = await categoryIdFor(page, 'Tech');
   await app.evaluate(({ BrowserWindow }, id) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send('feeds:rename-category-requested', id);
+    BrowserWindow.getAllWindows()[0]?.webContents.send('menu:action', { kind: 'category', action: 'rename', id });
   }, categoryId);
   const input = page.getByRole('textbox', { name: 'Rename Tech' });
   await expect(input).toHaveValue('Tech');

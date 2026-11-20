@@ -7,12 +7,19 @@ import type { LanguageCode, LanguageSetting } from './i18n/languages';
 
 // Home is inserted as the first row by the migration that creates this table, and it can never be
 // deleted, so its id is permanently 1.
+/** The command-line argument that tells the preload script whether the first-run hints may show. */
+export const HINTS_ARGUMENT = '--hints-enabled=';
+
 export const HOME_WORKSPACE_ID = 1;
 
 export const SOURCE_TYPES = ['rss', 'youtube', 'github', 'gitlab', 'hackernews', 'arxiv', 'bluesky', 'mastodon', 'conference', 'ats'] as const;
 export type SourceType = typeof SOURCE_TYPES[number];
-export type RefreshInterval = 15 | 30 | 60 | 360 | 'manual';
-export type RetentionDays = 15 | 30 | 60 | 90 | 180;
+/** How often the feeds refresh, in minutes, or never. */
+export const REFRESH_INTERVALS = [15, 30, 60, 360, 'manual'] as const;
+export type RefreshInterval = typeof REFRESH_INTERVALS[number];
+/** How long an item stays, in days. */
+export const RETENTION_OPTIONS = [15, 30, 60, 90, 180] as const;
+export type RetentionDays = typeof RETENTION_OPTIONS[number];
 
 export type StartupHealth =
   | { name: 'OK' }
@@ -135,6 +142,10 @@ export type MoveFeedError = DeleteFeedError;
 export type UpdateWorkspaceError =
   | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
   | { name: 'WORKSPACE_NOT_FOUND'; message: string; params?: ErrorParams };
+export type DismissSearchHintError =
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'WORKSPACE_NOT_FOUND'; message: string; params?: ErrorParams };
+export type BackupError = { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string; params?: ErrorParams };
 export type UpdateItemError =
   | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
   | { name: 'ITEM_NOT_FOUND'; message: string; params?: ErrorParams };

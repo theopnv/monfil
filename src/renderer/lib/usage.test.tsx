@@ -26,10 +26,10 @@ function Probe() {
 }
 
 beforeEach(() => {
-  invokeMock = vi.fn((channel: string) => Promise.resolve(channel === 'settings:get-usage-analytics' ? initial : undefined));
+  invokeMock = vi.fn((channel: string) => Promise.resolve(channel === 'settings:get' ? initial : undefined));
   sendMock = vi.fn();
   window.electron = {
-    ipcRenderer: { invoke: invokeMock, on: vi.fn(() => vi.fn()), once: vi.fn(), sendMessage: sendMock },
+    ipcRenderer: { invoke: invokeMock, on: vi.fn(() => vi.fn()), sendMessage: sendMock },
   } as unknown as typeof window.electron;
 });
 
@@ -49,14 +49,14 @@ describe('useUsageAnalytics', () => {
     await renderWithQueryClient(<Probe />);
     await expect.element(page.getByTestId('consent')).toHaveTextContent('unset');
     invokeMock.mockImplementation((channel: string) => Promise.resolve(
-      channel === 'settings:set-usage-analytics' ? { consent: 'granted', shouldPrompt: false, available: true } : initial,
+      channel === 'settings:set' ? { consent: 'granted', shouldPrompt: false, available: true } : initial,
     ));
 
     // Act
     await page.getByRole('button', { name: 'Allow' }).click();
 
     // Assert
-    expect(invokeMock).toHaveBeenCalledWith('settings:set-usage-analytics', 'granted');
+    expect(invokeMock).toHaveBeenCalledWith('settings:set', { key: 'usageAnalytics', value: 'granted' });
     await expect.element(page.getByTestId('consent')).toHaveTextContent('granted');
   });
 
@@ -80,7 +80,7 @@ describe('useUsageAnalytics', () => {
     await renderWithQueryClient(<Probe />);
     await expect.element(page.getByTestId('consent')).toHaveTextContent('unset');
     invokeMock.mockImplementation((channel: string) => (
-      channel === 'settings:get-usage-analytics' ? Promise.resolve(initial) : Promise.reject(new Error('write failed'))
+      channel === 'settings:get' ? Promise.resolve(initial) : Promise.reject(new Error('write failed'))
     ));
 
     // Act

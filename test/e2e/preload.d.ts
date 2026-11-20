@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import type { ElectronHandler } from '../../src/shared/channels';
+import type { ElectronHandler } from '../../src/shared/electron-handler';
 
 declare global {
   interface Window {

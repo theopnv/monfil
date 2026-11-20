@@ -66,7 +66,7 @@ test('should keep the chosen refresh interval after a restart', async ({ launchA
   await first.getByRole('button', { name: '6 h', exact: true }).click();
   // The invoke reply only comes back once the main process has written the row.
   await expect
-    .poll(() => first.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-refresh-interval', undefined)))
+    .poll(() => first.evaluate(() => window.electron.ipcRenderer.invoke('settings:get', { key: 'refreshInterval' })))
     .toBe(360);
   const second = await launchApp();
   await openSettings(second);
@@ -83,14 +83,14 @@ test('should keep "Refresh on launch" after a restart', async ({ launchApp }) =>
   // Act
   await first.getByText('Refresh on launch', { exact: true }).click();
   await expect
-    .poll(() => first.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-refresh-on-launch', undefined)))
+    .poll(() => first.evaluate(() => window.electron.ipcRenderer.invoke('settings:get', { key: 'refreshOnLaunch' })))
     .toBe(false);
   const second = await launchApp();
   await openSettings(second);
 
   // Assert
   await expect
-    .poll(() => second.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-refresh-on-launch', undefined)))
+    .poll(() => second.evaluate(() => window.electron.ipcRenderer.invoke('settings:get', { key: 'refreshOnLaunch' })))
     .toBe(false);
 });
 

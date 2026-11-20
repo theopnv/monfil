@@ -3,73 +3,20 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
-import { useEffect, useState } from "react";
-import { ipc, rendererLogger } from '@/lib/ipc-client';
+import { useServerSetting } from '@/lib/use-server-setting';
 import SegmentedControl from "@/components/common/SegmentedControl";
 import SettingsRow from "@/components/Settings/SettingsRow";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import { Toggle } from "@/components/untitled-ui/base/toggle/toggle";
-import type { RefreshInterval, RetentionDays } from "../../../shared/contracts";
+import { REFRESH_INTERVALS, RETENTION_OPTIONS, type RefreshInterval } from "../../../shared/contracts";
 
-const REFRESH_OPTIONS = [
-  { interval: 15, key: "m15" },
-  { interval: 30, key: "m30" },
-  { interval: 60, key: "h1" },
-  { interval: 360, key: "h6" },
-  { interval: "manual", key: "manual" },
-] as const satisfies readonly { interval: RefreshInterval; key: string }[];
-
-const REFRESH_INTERVALS = REFRESH_OPTIONS.map((option) => option.interval);
-const REFRESH_KEYS = Object.fromEntries(REFRESH_OPTIONS.map((option) => [option.interval, option.key])) as Record<RefreshInterval, (typeof REFRESH_OPTIONS)[number]["key"]>;
-
-const RETENTION_OPTIONS = [15, 30, 60, 90, 180] as const satisfies readonly RetentionDays[];
+const REFRESH_KEYS = { 15: "m15", 30: "m30", 60: "h1", 360: "h6", manual: "manual" } as const satisfies Record<RefreshInterval, string>;
 
 export default function RefreshingSection() {
   const { t } = useTranslation('settings');
-  const [refreshInterval, setRefreshIntervalState] = useState<RefreshInterval | undefined>(undefined);
-  const [refreshOnLaunch, setRefreshOnLaunchState] = useState<boolean | undefined>(undefined);
-  const [retentionDays, setRetentionDaysState] = useState<RetentionDays | undefined>(undefined);
-
-  useEffect(() => {
-    ipc.invoke("settings:get-refresh-interval", undefined)
-      .then(setRefreshIntervalState)
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error loading the refresh interval:' }, error);
-      });
-    ipc.invoke("settings:get-refresh-on-launch", undefined)
-      .then(setRefreshOnLaunchState)
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error loading the refresh-on-launch preference:' }, error);
-      });
-    ipc.invoke("settings:get-retention-days", undefined)
-      .then(setRetentionDaysState)
-      .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error loading retention:' }, error));
-  }, []);
-
-  const onIntervalChange = (interval: RefreshInterval) => {
-    setRefreshIntervalState(interval);
-    ipc.invoke("settings:set-refresh-interval", interval)
-      .then(setRefreshIntervalState)
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error saving the refresh interval:' }, error);
-      });
-  };
-
-  const onRefreshOnLaunchChange = (value: boolean) => {
-    setRefreshOnLaunchState(value);
-    ipc.invoke("settings:set-refresh-on-launch", value)
-      .then(setRefreshOnLaunchState)
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error saving the refresh-on-launch preference:' }, error);
-      });
-  };
-
-  const onRetentionChange = (value: RetentionDays) => {
-    setRetentionDaysState(value);
-    ipc.invoke("settings:set-retention-days", value)
-      .then(setRetentionDaysState)
-      .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error saving retention:' }, error));
-  };
+  const [refreshInterval, onIntervalChange] = useServerSetting('refreshInterval', { optimistic: true });
+  const [refreshOnLaunch, onRefreshOnLaunchChange] = useServerSetting('refreshOnLaunch', { optimistic: true });
+  const [retentionDays, onRetentionChange] = useServerSetting('retentionDays', { optimistic: true });
 
   return (
     <SettingsSection id="refreshing" title={t('section.refreshing')}>

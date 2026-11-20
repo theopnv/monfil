@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { decodeText } from './text';
+import { decodeText } from '../../lib/strip-html';
+import { parseHttpUrl } from '../../../shared/url';
 
 const FEED_TYPES = new Set(['application/rss+xml', 'application/atom+xml', 'application/feed+json', 'application/json']);
 const PROBE_PATHS = ['/feed', '/rss.xml', '/atom.xml', '/index.xml', '/feed.xml'];
@@ -41,14 +42,9 @@ export function findAlternateLinks(html: string, baseUrl: string): string[] {
     if (!rel.includes('alternate') || !type || !FEED_TYPES.has(type) || !href) {
       continue;
     }
-    try {
-      const resolved = new URL(href, baseUrl);
-      if ((resolved.protocol === 'http:' || resolved.protocol === 'https:') && !links.includes(resolved.href)) {
-        links.push(resolved.href);
-      }
-      // Stryker disable next-line BlockStatement: the catch is the last statement of the loop body, so an empty block moves on the same way
-    } catch {
-      continue;
+    const resolved = parseHttpUrl(href, baseUrl);
+    if (resolved && !links.includes(resolved.href)) {
+      links.push(resolved.href);
     }
   }
   return links;

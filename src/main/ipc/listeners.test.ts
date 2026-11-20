@@ -3,13 +3,19 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, afterEach, test, expect, vi } from 'vitest';
-import { listenToLinkOpen, listenToRevealDatabaseFile, listenToRevealLogFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu } from './listeners';
+import { listenToLinkOpen, listenToReveal, listenToShowMenu } from './listeners';
 import { BrowserWindow, Menu, shell } from 'electron';
 import { setLogFilePath } from '../app/main-state';
 import { refreshFeeds } from '../feed/refresh';
 import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { useTestDatabase } from '../test/db';
 
+const database = vi.hoisted(() => ({ status: { name: 'OK' } as { name: 'OK' } | { name: 'RESET'; quarantinePath: string; incidentId: string } }));
+
+// A Proxy, not a spread: `db` is a live binding that a spread would copy as undefined.
+vi.mock(import('../db/database'), async (importOriginal) => new Proxy(await importOriginal(), {
+  get: (target, key) => (key === 'dbStatus' ? database.status : Reflect.get(target, key)),
+}));
 vi.mock(import('../feed/refresh'), () => ({ refreshFeeds: vi.fn() }));
 vi.mock(import('../lib/sendToRenderer'), async (importOriginal) => ({ ...(await importOriginal()), broadcastToRenderers: vi.fn() }));
 
@@ -55,7 +61,7 @@ describe('link:open IPC listener', () => {
   });
 });
 
-describe('app:reveal-database-file IPC listener', () => {
+describe('app:reveal IPC listener for the database file', () => {
   useTestDatabase();
 
   afterEach(() => {
@@ -64,14 +70,14 @@ describe('app:reveal-database-file IPC listener', () => {
 
   test('reveals the database file in the OS file browser', () => {
     // Act
-    listenToRevealDatabaseFile();
+    listenToReveal({} as Electron.IpcMainEvent, 'database');
 
     // Assert
     expect(mockedShowItemInFolder).toHaveBeenCalledWith(':memory:');
   });
 });
 
-describe('app:reveal-log-file IPC listener', () => {
+describe('app:reveal IPC listener for the log file', () => {
   afterEach(() => {
     mockedShowItemInFolder.mockReset();
   });
@@ -82,14 +88,64 @@ describe('app:reveal-log-file IPC listener', () => {
     setLogFilePath(logPath);
 
     // Act
-    listenToRevealLogFile();
+    listenToReveal({} as Electron.IpcMainEvent, 'log');
 
     // Assert
     expect(mockedShowItemInFolder).toHaveBeenCalledWith(logPath);
   });
 });
 
-describe('feeds:show-feed-context-menu IPC listener', () => {
+describe('app:reveal IPC listener for the database backup', () => {
+  const event = {} as Electron.IpcMainEvent;
+
+  afterEach(() => {
+    mockedShowItemInFolder.mockReset();
+    database.status = { name: 'OK' };
+  });
+
+  test('reveals the quarantined database after a reset', () => {
+    // Arrange
+    database.status = { name: 'RESET', quarantinePath: 'mock-user-data/monfil.db.corrupt', incidentId: 'incident' };
+
+    // Act
+    listenToReveal(event, 'database-backup');
+
+    // Assert
+    expect(mockedShowItemInFolder).toHaveBeenCalledExactlyOnceWith('mock-user-data/monfil.db.corrupt');
+  });
+
+  test('reveals nothing when the database was not reset', () => {
+    // Act
+    listenToReveal(event, 'database-backup');
+
+    // Assert
+    expect(mockedShowItemInFolder).not.toHaveBeenCalled();
+  });
+
+  test.each(['', 'logs', undefined, null, 3])('ignores the unknown target %j', (target) => {
+    // Act
+    listenToReveal(event, target as never);
+
+    // Assert
+    expect(mockedShowItemInFolder).not.toHaveBeenCalled();
+  });
+});
+
+describe('menu:show IPC listener with a bad target', () => {
+  afterEach(() => {
+    mockedBuildFromTemplate.mockReset();
+  });
+
+  test.each([{ kind: 'item', id: 1 }, { kind: 'feed', id: 0 }, { kind: 'feed', id: '1' }, { kind: 'feed' }, null, 5])('shows no menu for %j', (target) => {
+    // Act
+    listenToShowMenu({ sender: {} } as unknown as Electron.IpcMainEvent, target as never);
+
+    // Assert
+    expect(mockedBuildFromTemplate).not.toHaveBeenCalled();
+  });
+});
+
+describe('menu:show IPC listener for a feed', () => {
   const fakeWindow = {} as Electron.BrowserWindow;
 
   function mockEvent(isDestroyed = false) {
@@ -111,7 +167,7 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     const event = mockEvent();
 
     // Act
-    listenToShowFeedContextMenu(event, 1);
+    listenToShowMenu(event, { kind: 'feed', id: 1 });
 
     // Assert
     expect(mockedFromWebContents).toHaveBeenCalledWith(event.sender);
@@ -124,26 +180,26 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     mockedFromWebContents.mockReturnValue(fakeWindow);
 
     // Act
-    listenToShowFeedContextMenu(mockEvent(), 1);
+    listenToShowMenu(mockEvent(), { kind: 'feed', id: 1 });
 
     // Assert
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     expect(template?.map((item) => item.label)).toEqual(['Refresh feed', 'Move to workspace…', 'Delete feed']);
   });
 
-  test("the move item's click sends feeds:move-feed-requested with the feed id", () => {
+  test("the move item's click sends menu:action (feed move) with the feed id", () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
     const event = mockEvent();
 
     // Act
-    listenToShowFeedContextMenu(event, 42);
+    listenToShowMenu(event, { kind: 'feed', id: 42 });
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     template?.[1]?.click?.(undefined as never, undefined, undefined as never);
 
     // Assert
-    expect(event.sender.send).toHaveBeenCalledWith('feeds:move-feed-requested', 42);
+    expect(event.sender.send).toHaveBeenCalledWith('menu:action', { kind: 'feed', action: 'move', id: 42 });
   });
 
   test('the refresh item force-refreshes that feed and applies the result immediately', async () => {
@@ -153,7 +209,7 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     vi.mocked(refreshFeeds).mockResolvedValue({ perFeed: [{ feedId: 7, inserted: 2 }] });
 
     // Act
-    listenToShowFeedContextMenu(mockEvent(), 7);
+    listenToShowMenu(mockEvent(), { kind: 'feed', id: 7 });
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     template?.[0]?.click?.(undefined as never, undefined, undefined as never);
 
@@ -162,19 +218,19 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     await vi.waitFor(() => expect(broadcastToRenderers).toHaveBeenCalledWith('feeds:refreshed', { perFeed: [{ feedId: 7, inserted: 2 }], applyImmediately: true }));
   });
 
-  test("the template item's click sends feeds:delete-feed-requested with the feed id", () => {
+  test("the template item's click sends menu:action (feed delete) with the feed id", () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
     const event = mockEvent();
 
     // Act
-    listenToShowFeedContextMenu(event, 42);
+    listenToShowMenu(event, { kind: 'feed', id: 42 });
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     template?.[2]?.click?.(undefined as never, undefined, undefined as never);
 
     // Assert
-    expect(event.sender.send).toHaveBeenCalledWith('feeds:delete-feed-requested', 42);
+    expect(event.sender.send).toHaveBeenCalledWith('menu:action', { kind: 'feed', action: 'delete', id: 42 });
   });
 
   test('a destroyed sender sends nothing when the item is clicked', () => {
@@ -184,7 +240,7 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     const event = mockEvent(true);
 
     // Act
-    listenToShowFeedContextMenu(event, 42);
+    listenToShowMenu(event, { kind: 'feed', id: 42 });
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     template?.[2]?.click?.(undefined as never, undefined, undefined as never);
 
@@ -199,14 +255,14 @@ describe('feeds:show-feed-context-menu IPC listener', () => {
     mockedFromWebContents.mockReturnValue(null);
 
     // Act
-    listenToShowFeedContextMenu(mockEvent(), 1);
+    listenToShowMenu(mockEvent(), { kind: 'feed', id: 1 });
 
     // Assert
     expect(popup).not.toHaveBeenCalled();
   });
 });
 
-describe('feeds:show-category-context-menu IPC listener', () => {
+describe('menu:show IPC listener for a category', () => {
   const fakeWindow = {} as Electron.BrowserWindow;
 
   function mockEvent() {
@@ -224,7 +280,7 @@ describe('feeds:show-category-context-menu IPC listener', () => {
     mockedFromWebContents.mockReturnValue(fakeWindow);
 
     // Act
-    listenToShowCategoryContextMenu(mockEvent(), 1);
+    listenToShowMenu(mockEvent(), { kind: 'category', id: 1 });
 
     // Assert
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
@@ -233,34 +289,34 @@ describe('feeds:show-category-context-menu IPC listener', () => {
     expect(template?.[1]?.label).toBe('Delete');
   });
 
-  test('"Rename" sends feeds:rename-category-requested with the category id', () => {
+  test('"Rename" sends menu:action (category rename) with the category id', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
     const event = mockEvent();
 
     // Act
-    listenToShowCategoryContextMenu(event, 7);
+    listenToShowMenu(event, { kind: 'category', id: 7 });
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     template?.[0]?.click?.(undefined as never, undefined, undefined as never);
 
     // Assert
-    expect(event.sender.send).toHaveBeenCalledWith('feeds:rename-category-requested', 7);
+    expect(event.sender.send).toHaveBeenCalledWith('menu:action', { kind: 'category', action: 'rename', id: 7 });
   });
 
-  test('"Delete" sends feeds:delete-category-requested with the category id', () => {
+  test('"Delete" sends menu:action (category delete) with the category id', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
     const event = mockEvent();
 
     // Act
-    listenToShowCategoryContextMenu(event, 7);
+    listenToShowMenu(event, { kind: 'category', id: 7 });
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     template?.[1]?.click?.(undefined as never, undefined, undefined as never);
 
     // Assert
-    expect(event.sender.send).toHaveBeenCalledWith('feeds:delete-category-requested', 7);
+    expect(event.sender.send).toHaveBeenCalledWith('menu:action', { kind: 'category', action: 'delete', id: 7 });
   });
 
   test('pops the menu at the window resolved from event.sender', () => {
@@ -271,7 +327,7 @@ describe('feeds:show-category-context-menu IPC listener', () => {
     const event = mockEvent();
 
     // Act
-    listenToShowCategoryContextMenu(event, 1);
+    listenToShowMenu(event, { kind: 'category', id: 1 });
 
     // Assert
     expect(mockedFromWebContents).toHaveBeenCalledWith(event.sender);
@@ -279,7 +335,7 @@ describe('feeds:show-category-context-menu IPC listener', () => {
   });
 });
 
-describe('workspaces:show-context-menu IPC listener', () => {
+describe('menu:show IPC listener for a workspace', () => {
   const fakeWindow = {} as Electron.BrowserWindow;
 
   function mockEvent(isDestroyed = false) {
@@ -299,7 +355,7 @@ describe('workspaces:show-context-menu IPC listener', () => {
     mockedFromWebContents.mockReturnValue(fakeWindow);
 
     // Act
-    listenToShowWorkspaceContextMenu(mockEvent(), 1);
+    listenToShowMenu(mockEvent(), { kind: 'workspace', id: 1 });
 
     // Assert
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
@@ -314,7 +370,7 @@ describe('workspaces:show-context-menu IPC listener', () => {
     mockedFromWebContents.mockReturnValue(fakeWindow);
 
     // Act
-    listenToShowWorkspaceContextMenu(mockEvent(), 3);
+    listenToShowMenu(mockEvent(), { kind: 'workspace', id: 3 });
 
     // Assert
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
@@ -322,49 +378,49 @@ describe('workspaces:show-context-menu IPC listener', () => {
     expect(template?.[2]?.label).toBe('Delete workspace');
   });
 
-  test('"Delete workspace" sends workspaces:delete-requested with the workspace id', () => {
+  test('"Delete workspace" sends menu:action (workspace delete) with the workspace id', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
     const event = mockEvent();
 
     // Act
-    listenToShowWorkspaceContextMenu(event, 3);
+    listenToShowMenu(event, { kind: 'workspace', id: 3 });
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     template?.[2]?.click?.(undefined as never, undefined, undefined as never);
 
     // Assert
-    expect(event.sender.send).toHaveBeenCalledWith('workspaces:delete-requested', 3);
+    expect(event.sender.send).toHaveBeenCalledWith('menu:action', { kind: 'workspace', action: 'delete', id: 3 });
   });
 
-  test('"Edit workspace" sends workspaces:edit-requested with the workspace id', () => {
+  test('"Edit workspace" sends menu:action (workspace edit) with the workspace id', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
     const event = mockEvent();
 
     // Act
-    listenToShowWorkspaceContextMenu(event, 3);
+    listenToShowMenu(event, { kind: 'workspace', id: 3 });
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     template?.[0]?.click?.(undefined as never, undefined, undefined as never);
 
     // Assert
-    expect(event.sender.send).toHaveBeenCalledWith('workspaces:edit-requested', 3);
+    expect(event.sender.send).toHaveBeenCalledWith('menu:action', { kind: 'workspace', action: 'edit', id: 3 });
   });
 
-  test('"Export as OPML" sends workspaces:export-requested with the workspace id', () => {
+  test('"Export as OPML" sends menu:action (workspace export) with the workspace id', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
     const event = mockEvent();
 
     // Act
-    listenToShowWorkspaceContextMenu(event, 3);
+    listenToShowMenu(event, { kind: 'workspace', id: 3 });
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     template?.[1]?.click?.(undefined as never, undefined, undefined as never);
 
     // Assert
-    expect(event.sender.send).toHaveBeenCalledWith('workspaces:export-requested', 3);
+    expect(event.sender.send).toHaveBeenCalledWith('menu:action', { kind: 'workspace', action: 'export', id: 3 });
   });
 
   test('a destroyed sender sends nothing when an item is clicked', () => {
@@ -374,7 +430,7 @@ describe('workspaces:show-context-menu IPC listener', () => {
     const event = mockEvent(true);
 
     // Act
-    listenToShowWorkspaceContextMenu(event, 3);
+    listenToShowMenu(event, { kind: 'workspace', id: 3 });
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
     template?.[0]?.click?.(undefined as never, undefined, undefined as never);
 
@@ -390,7 +446,7 @@ describe('workspaces:show-context-menu IPC listener', () => {
     const event = mockEvent();
 
     // Act
-    listenToShowWorkspaceContextMenu(event, 1);
+    listenToShowMenu(event, { kind: 'workspace', id: 1 });
 
     // Assert
     expect(mockedFromWebContents).toHaveBeenCalledWith(event.sender);
@@ -404,7 +460,7 @@ describe('workspaces:show-context-menu IPC listener', () => {
     mockedFromWebContents.mockReturnValue(null);
 
     // Act
-    listenToShowWorkspaceContextMenu(mockEvent(), 1);
+    listenToShowMenu(mockEvent(), { kind: 'workspace', id: 1 });
 
     // Assert
     expect(popup).not.toHaveBeenCalled();

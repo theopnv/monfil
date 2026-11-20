@@ -3,69 +3,44 @@
 // See LICENSE in the repository root for full terms.
 
 import type {
-  AddFeedError,
-  AppInfo,
   AppUpdateState,
-  CatalogError,
-  CreateCategoryError,
-  CreateWorkspaceError,
-  DailySummaryProps,
-  DeleteCategoryError,
-  DeleteFeedError,
-  DeleteWorkspaceError,
-  ExportOpmlError,
-  FeedCategory,
-  FeedFetchError,
-  FeedpackCatalog,
-  FeedpackError,
-  FeedpackInstallTarget,
-  FeedpackPreview,
-  FeedSummary,
-  ImportOpmlError,
-  ImportOpmlTarget,
-  ImportSummary,
-  InstallFeedpackError,
-  ItemBody,
   LanguageState,
-  MoveFeedError,
-  NewFeedInput,
-  ParsedSource,
   RefreshInterval,
   RendererUsageCounter,
   RefreshSummary,
   RetentionDays,
-  RiverPage,
-  RiverQuery,
-  SavedQuery,
-  SavedSearch,
-  SavedSearchError,
-  SavedSearchList,
-  SetSavedItemInput,
-  UpdateSavedItemError,
-  SourceType,
-  StartupHealth,
-  UpdateCategoryError,
-  UpdateFeedError,
-  UpdateItemError,
-  UpdateWorkspaceError,
   UsageAnalyticsState,
   UsagePreferences,
-  Workspace,
-  WorkspaceSummary,
 } from './contracts';
-import type { ErrorParams } from './errors';
-import type { LanguageCode, LanguageSetting } from './i18n/languages';
-import type { IpcFailure, Result } from './result';
+import type { LanguageSetting } from './i18n/languages';
 import type { LogEventMap, LogEventName, LogLevel } from './logging';
+
+export type SettingTypes = {
+  refreshInterval: { value: RefreshInterval; state: RefreshInterval };
+  refreshOnLaunch: { value: boolean; state: boolean };
+  workspaceRailExpanded: { value: boolean; state: boolean };
+  retentionDays: { value: RetentionDays; state: RetentionDays };
+  detailedLogging: { value: boolean; state: boolean };
+  language: { value: LanguageSetting; state: LanguageState };
+  usageAnalytics: { value: 'granted' | 'denied'; state: UsageAnalyticsState };
+};
+
+export type SettingKey = keyof SettingTypes;
+export type SettingState = SettingTypes[SettingKey]['state'];
+export type SettingGetArg = { key: SettingKey };
+export type SettingSetArg = { [K in SettingKey]: { key: K; value: SettingTypes[K]['value'] } }[SettingKey];
+
+export type RevealTarget = 'database' | 'log' | 'database-backup';
+
+export type MenuActions = { feed: 'move' | 'delete'; category: 'rename' | 'delete'; workspace: 'edit' | 'export' | 'delete' };
+export type MenuKind = keyof MenuActions;
+export type MenuTarget = { kind: MenuKind; id: number };
+export type MenuAction = { [K in MenuKind]: { kind: K; action: MenuActions[K]; id: number } }[MenuKind];
 
 export type OneWayRendererToMainChannelPayloads = {
   'link:open': string;
-  'feeds:show-feed-context-menu': number;
-  'feeds:show-category-context-menu': number;
-  'workspaces:show-context-menu': number;
-  'app:reveal-database-file': undefined;
-  'app:reveal-log-file': undefined;
-  'app:reveal-database-backup': undefined;
+  'menu:show': MenuTarget;
+  'app:reveal': RevealTarget;
   'app:restart': undefined;
   'app:install-update': undefined;
   'app:set-window-theme': 'light' | 'dark';
@@ -79,148 +54,9 @@ export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayl
 export type OneWayMainToRendererChannelPayloads = {
   'feeds:item-image-fetched': { feedId: number; itemId: number; image: string };
   'feeds:refreshed': RefreshSummary;
-  'feeds:delete-feed-requested': number;
-  'feeds:move-feed-requested': number;
-  'feeds:rename-category-requested': number;
-  'feeds:delete-category-requested': number;
-  'workspaces:edit-requested': number;
-  'workspaces:export-requested': number;
-  'workspaces:delete-requested': number;
+  'menu:action': MenuAction;
   'feedpacks:install-finished': { workspaceId: number; imported: number; failed: { title: string; message: string }[] };
   'app:update-state-changed': AppUpdateState;
 };
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
-
-export type TwoWayRendererMainChannelPayloads = {
-  'feeds:validate-feed-url': Result<ParsedSource[], FeedFetchError>;
-  'feeds:list-categories': FeedCategory[];
-  'feeds:list': FeedSummary[];
-  'items:query': RiverPage;
-  'saved:query': RiverPage;
-  'items:set-saved': Result<void, UpdateSavedItemError>;
-  'feeds:refresh': RefreshSummary;
-  'feeds:submit-add-feed': Result<FeedSummary, AddFeedError>;
-  'feeds:delete-feed': Result<void, DeleteFeedError>;
-  'feeds:set-show-in-workspace': Result<void, UpdateFeedError>;
-  'feeds:create-category': Result<FeedCategory, CreateCategoryError>;
-  'feeds:rename-category': Result<FeedCategory, UpdateCategoryError>;
-  'feeds:delete-category': Result<void, DeleteCategoryError>;
-  'feeds:move-feeds-to-category': Result<void, UpdateCategoryError>;
-  'feeds:move-to-workspace': Result<void, MoveFeedError>;
-  'workspaces:list': WorkspaceSummary[];
-  'workspaces:create': Result<Workspace, CreateWorkspaceError>;
-  'workspaces:update': Result<Workspace, UpdateWorkspaceError>;
-  'workspaces:delete': Result<void, DeleteWorkspaceError>;
-  'workspaces:reorder': Result<void, UpdateWorkspaceError>;
-  'settings:get-refresh-interval': RefreshInterval;
-  'settings:set-refresh-interval': RefreshInterval;
-  'items:set-read': Result<void, UpdateItemError>;
-  'items:get-content': ItemBody;
-  'settings:get-refresh-on-launch': boolean;
-  'settings:set-refresh-on-launch': boolean;
-  'settings:get-workspace-rail-expanded': boolean;
-  'settings:set-workspace-rail-expanded': boolean;
-  'settings:get-retention-days': RetentionDays;
-  'settings:set-retention-days': RetentionDays;
-  'settings:get-language': LanguageState;
-  'settings:set-language': LanguageState;
-  'app:back-up-database': Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string; params?: ErrorParams }>;
-  'app:get-info': AppInfo;
-  'app:hints-enabled': boolean;
-  'app:get-startup-health': StartupHealth;
-  'app:get-update-state': AppUpdateState;
-  'settings:get-detailed-logging': boolean;
-  'settings:set-detailed-logging': boolean;
-  'settings:get-usage-analytics': UsageAnalyticsState;
-  'settings:set-usage-analytics': UsageAnalyticsState;
-  'settings:dismiss-usage-analytics-prompt': UsageAnalyticsState;
-  'analytics:preview': DailySummaryProps;
-  'opml:import': Result<ImportSummary, ImportOpmlError>;
-  'opml:export': Result<void, ExportOpmlError>;
-  'feedpacks:list': Result<FeedpackCatalog, CatalogError>;
-  'feedpacks:preview': Result<FeedpackPreview, FeedpackError>;
-  'feedpacks:install': Result<ImportSummary, InstallFeedpackError>;
-  'searches:list': SavedSearchList;
-  'searches:create': Result<SavedSearch, SavedSearchError>;
-  'searches:update': Result<SavedSearch, SavedSearchError>;
-  'searches:delete': Result<void, SavedSearchError>;
-  'searches:dismiss-hint': Result<void, UpdateWorkspaceError>;
-};
-
-export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
-
-export type IpcInvokeResponse<C extends TwoWayRendererMainChannels> = TwoWayRendererMainChannelPayloads[C] | IpcFailure;
-
-export type TwoWayRendererMainChannelsInvokeArgs = {
-  'feeds:validate-feed-url': { query: string; type?: SourceType };
-  'feeds:list-categories': { workspaceId: number };
-  'feeds:list': { workspaceId: number };
-  'items:query': RiverQuery;
-  'saved:query': SavedQuery;
-  'items:set-saved': SetSavedItemInput;
-  'feeds:refresh': undefined;
-  'feeds:submit-add-feed': NewFeedInput;
-  'feeds:delete-feed': { feedId: number; workspaceId: number };
-  'feeds:set-show-in-workspace': { feedIds: number[]; showInWorkspace: boolean; workspaceId: number };
-  'feeds:create-category': { name: string; workspaceId: number };
-  'feeds:rename-category': { categoryId: number; name: string; workspaceId: number };
-  'feeds:delete-category': { categoryId: number; reassignTo?: number | undefined; workspaceId: number };
-  'feeds:move-feeds-to-category': { feedIds: number[]; categoryId: number; workspaceId: number };
-  'feeds:move-to-workspace': { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string };
-  'workspaces:list': undefined;
-  'workspaces:create': { name: string; icon: string; color: string };
-  'workspaces:update': { workspaceId: number; name?: string; icon?: string; color?: string };
-  'workspaces:delete': { workspaceId: number };
-  'workspaces:reorder': { orderedIds: number[] };
-  'settings:get-refresh-interval': undefined;
-  'settings:set-refresh-interval': RefreshInterval;
-  'items:set-read': { itemIds: number[]; read: boolean };
-  'items:get-content': number;
-  'settings:get-refresh-on-launch': undefined;
-  'settings:set-refresh-on-launch': boolean;
-  'settings:get-workspace-rail-expanded': undefined;
-  'settings:set-workspace-rail-expanded': boolean;
-  'settings:get-retention-days': undefined;
-  'settings:set-retention-days': RetentionDays;
-  'settings:get-language': undefined;
-  'settings:set-language': LanguageSetting;
-  'app:back-up-database': undefined;
-  'app:get-info': undefined;
-  'app:hints-enabled': undefined;
-  'app:get-startup-health': undefined;
-  'app:get-update-state': undefined;
-  'settings:get-detailed-logging': undefined;
-  'settings:set-detailed-logging': boolean;
-  'settings:get-usage-analytics': undefined;
-  'settings:set-usage-analytics': 'granted' | 'denied';
-  'settings:dismiss-usage-analytics-prompt': undefined;
-  'analytics:preview': undefined;
-  'opml:import': { target: ImportOpmlTarget };
-  'opml:export': { workspaceId: number };
-  'feedpacks:list': undefined;
-  'feedpacks:preview': { slug: string };
-  'feedpacks:install': { slug: string; target: FeedpackInstallTarget };
-  'searches:list': { workspaceId: number };
-  'searches:create': { workspaceId: number; name: string; query: string };
-  'searches:update': { searchId: number; name?: string; query?: string };
-  'searches:delete': { searchId: number };
-  'searches:dismiss-hint': { workspaceId: number };
-};
-
-export type ChannelPayloads = OneWayRendererToMainChannelPayloads
-  & OneWayMainToRendererChannelPayloads
-  & TwoWayRendererMainChannelPayloads;
-
-export interface ElectronHandler {
-  /** The operating system locale, read at startup. Absent when the window did not get one. */
-  systemLocale?: string;
-  /** The interface language that main resolved when it made the window. Absent when the window did not get one. */
-  language?: LanguageCode;
-  ipcRenderer: {
-    sendMessage<C extends OneWayRendererToMainChannels>(channel: C, payload: OneWayRendererToMainChannelPayloads[C]): void;
-    on<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void): () => void;
-    once<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void): void;
-    invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<IpcInvokeResponse<C>>;
-  };
-}

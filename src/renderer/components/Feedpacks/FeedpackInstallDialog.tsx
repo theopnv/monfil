@@ -16,6 +16,7 @@ import { useInstallFeedpack } from '@/providers/feedpacks-provider';
 import type { FeedpackInstallTarget, FeedpackPreview } from '../../../shared/contracts';
 import { feedpackText } from '../../../shared/i18n/feedpack-text';
 import FeedpackBrowser from './FeedpackBrowser';
+import { dialogHeaderClass, dialogTitleClass, dialogFooterClass } from '@/components/common/dialog-classes';
 
 export interface FeedpackInstallDialogProps {
   isOpen: boolean;
@@ -69,15 +70,15 @@ export default function FeedpackInstallDialog({ isOpen, onOpenChange, workspaceI
     <ModalOverlay isOpen={isOpen} onOpenChange={onOpenChange} isDismissable>
       <Modal className="flex max-h-[85vh] w-full max-w-[640px] flex-col overflow-hidden">
         <Dialog className="flex min-h-0 flex-1 flex-col">
-          <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
-            <Heading slot="title" className="font-display text-lg font-semibold text-primary">{t('workspace:feedpackDialog.title')}</Heading>
+          <div className={dialogHeaderClass}>
+            <Heading slot="title" className={dialogTitleClass}>{t('workspace:feedpackDialog.title')}</Heading>
             <p className="text-sm text-tertiary">{t('workspace:feedpackDialog.body')}</p>
           </div>
 
           <FeedpackBrowser isActive={isOpen} selected={selected} onSelect={select} />
 
           {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
-          <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+          <div className={dialogFooterClass}>
             {selected && <Button color="secondary" size="md" className="me-auto" onPress={() => select(null)}>{t('workspace:feedpackDialog.back')}</Button>}
             <Button color="secondary" size="md" onPress={() => onOpenChange(false)}>{t('common:action.close')}</Button>
             {selected && <Button color="primary" size="md" isLoading={isInstalling} onPress={installSelected}>{t('workspace:feedpackDialog.install')}</Button>}

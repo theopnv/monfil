@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { stripHtml, truncateOnWordBoundary } from './strip-html';
+import { decodeText, removeAll, stripHtml, truncateOnWordBoundary } from './strip-html';
 
 describe('stripHtml', () => {
   test('removes style blocks and their content', () => {
@@ -142,5 +142,29 @@ describe('truncateOnWordBoundary', () => {
 
     // Assert
     expect(result).toBe('supercalif…');
+  });
+});
+
+describe('removeAll', () => {
+  test('removes every match', () => {
+    // Act / Assert
+    expect(removeAll('a<b>c<b>d', /<b>/g)).toBe('acd');
+  });
+
+  test('removes a match that the removal itself splices together', () => {
+    // Act / Assert
+    expect(removeAll('<<b>b>', /<b>/g)).toBe('');
+  });
+
+  test('replaces with the given text until nothing matches', () => {
+    // Act / Assert
+    expect(removeAll('xxxx', /xx/g, 'x')).toBe('x');
+  });
+});
+
+describe('decodeText', () => {
+  test('decodes HTML entities that a feed left inside a CDATA section', () => {
+    // Act & Assert
+    expect(decodeText('It&#8217;s &amp; &lt;b&gt;')).toBe('It\u2019s & <b>');
   });
 });

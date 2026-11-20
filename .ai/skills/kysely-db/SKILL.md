@@ -11,9 +11,11 @@ Read `doc/src/content/docs/contributor-guide/database.md` for data ownership and
 
 Each table has an interface in `src/main/db/types.ts`. Wrap it in Kysely's `Selectable`, `Insertable`, or `Updateable` where a function needs that shape. Export an alias from `types.ts` only when another module reads it, as with `FeedItem`. `Generated<T>` makes a database-assigned value present on reads and optional on inserts.
 
-The reusable criteria queries in `src/main/db/crud/query.ts` use `CriteriaHandlers` and `applyCriteria`. When you add a column to a table covered by those handlers, add its handler too. A query with its own filters can use Kysely's `.where()` directly; existing summary and lookup queries do this.
+The reusable criteria queries in `src/main/db/crud/query.ts` use `applyCriteria`, which filters on equality of each field that the `Partial` row sets, so a new column needs no change there. A query with its own filters can use Kysely's `.where()` directly; existing summary and lookup queries do this. Share a repeated upsert by exporting it from `src/main/db/crud/insert.ts`, as `upsertFeedCategory` and `upsertFeedPlacement` are.
 
 ## Upserts and errors
+
+Wrap a query that returns a `Result` in `dbTry` from `src/main/db/db-try.ts`. It waits for the database and turns a thrown error into a `DB_ERROR`. Pass `mapKnown` for an error the caller expects, such as `hasSqliteCode(error, 'SQLITE_CONSTRAINT_UNIQUE')`.
 
 Feed identity lives in `feedMetadata`. Category, workspace, and visibility live in `feedPlacement`. The upserts in `src/main/db/crud/insert.ts` show the current conflict keys and columns for each table. In `doUpdateSet`, `eb.ref('excluded.column')` reads the proposed row. List each column that must change on conflict; a column's default applies only to a new row.
 

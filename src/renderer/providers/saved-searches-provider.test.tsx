@@ -23,7 +23,6 @@ beforeEach(() => {
       invoke: vi.fn((channel: string, arg: unknown) => invokeImpl(channel, arg)),
       on: vi.fn(() => vi.fn()),
       sendMessage: vi.fn(),
-      once: vi.fn(),
     },
   } as unknown as typeof window.electron;
 });

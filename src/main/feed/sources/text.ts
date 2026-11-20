@@ -3,13 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { createHash } from 'node:crypto';
-import { decode, EntityLevel } from 'entities';
-
-// Some feeds put literal entities like "&#8217;" inside a CDATA section, where XML parsers
-// leave them untouched by spec. Decode them here so titles and descriptions render as text.
-export function decodeText(text: string): string {
-  return decode(text, EntityLevel.HTML);
-}
+import { decodeText, removeAll } from '../../lib/strip-html';
 
 const LINE_BREAK_TAG_REGEX = /<br\b[^>]*>/gi;
 // Only known element names, so a title like "Vector<T>" keeps its brackets.
@@ -39,18 +33,4 @@ export function resolveGuid(guid: string | undefined, link: string | undefined, 
 
 export function escapeText(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-/**
- * Applies `pattern` until the text stops changing, so a removal cannot splice a new match together.
- * @param pattern must be global
- */
-export function removeAll(text: string, pattern: RegExp, replacement = ''): string {
-  let previous: string;
-  let current = text;
-  do {
-    previous = current;
-    current = current.replace(pattern, replacement);
-  } while (current !== previous);
-  return current;
 }

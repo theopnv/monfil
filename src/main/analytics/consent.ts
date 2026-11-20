@@ -4,7 +4,7 @@
 
 import { getAnalyticsEndpoint } from './config';
 import { deleteAll, isCountingEnabled, setCountingEnabled } from './counters';
-import { countFeeds } from './library';
+import { countFeedMetadata } from '../db/crud/query';
 import { sendConsentGranted } from './scheduler';
 import {
   getUsageAnalyticsConsent,
@@ -54,7 +54,7 @@ export async function getUsageAnalyticsState(now = new Date()): Promise<UsageAna
   if (!promptsAllowed || consent !== 'unset') {
     return { consent, shouldPrompt: false, available };
   }
-  const [history, feedCount] = await Promise.all([getUsageAnalyticsPromptHistory(), countFeeds()]);
+  const [history, feedCount] = await Promise.all([getUsageAnalyticsPromptHistory(), countFeedMetadata()]);
   return { consent, shouldPrompt: shouldPromptForUsageAnalytics({ consent, feedCount, now, ...history }), available };
 }
 

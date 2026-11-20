@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { mainFormatLocale, mainI18n } from '../../../lib/i18n';
-import { decodeText } from '../text';
+import { decodeText } from '../../../lib/strip-html';
 
 export type SalaryInterval = 'hour' | 'month' | 'year';
 

@@ -16,6 +16,7 @@ import { isComposing } from "@/lib/keyboard";
 import type { CreateWorkspaceError } from "../../../shared/contracts";
 import type { UpdateWorkspaceError } from "../../../shared/contracts";
 import type { WorkspaceSummary } from "../../../shared/contracts";
+import { dialogHeaderClass, dialogTitleClass, dialogFooterClass } from '@/components/common/dialog-classes';
 
 const DEFAULT_ICON = WORKSPACE_ICONS[0];
 const DEFAULT_COLOR = WORKSPACE_COLORS[0];
@@ -64,7 +65,7 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
     setError(null);
 
     const result = isEditing
-      ? await updateWorkspace(workspace.id, { name: trimmed, icon, color })
+      ? await updateWorkspace({ workspaceId: workspace.id, name: trimmed, icon, color })
       : await createWorkspace({ name: trimmed, icon, color });
 
     setIsLoading(false);
@@ -82,8 +83,8 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
     <ModalOverlay isOpen={isOpen} onOpenChange={onOpenChange} isDismissable>
       <Modal className="w-full max-w-[580px]">
         <Dialog>
-          <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
-            <Heading slot="title" className="font-display text-lg font-semibold text-primary">
+          <div className={dialogHeaderClass}>
+            <Heading slot="title" className={dialogTitleClass}>
               {isEditing ? t('workspace:dialog.editTitle') : t('workspace:dialog.newTitle')}
             </Heading>
             <p className="text-sm text-tertiary">
@@ -154,7 +155,7 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
 
           {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
-          <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+          <div className={dialogFooterClass}>
             {!isEditing && onBrowseFeedpacks && (
               <Button color="secondary" size="md" className="rounded-full" onPress={() => onBrowseFeedpacks({ name, icon, color })}>
                 {t('workspace:dialog.browse')}

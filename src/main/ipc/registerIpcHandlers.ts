@@ -4,151 +4,47 @@
 
 import { ipcMain } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
-import type { ChannelPayloads, IpcInvokeResponse, TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannels } from "../../shared/channels";
-import { invokePayloadGuards } from '../../shared/ipc-payloads';
-import { recordInvokeUsage } from '../analytics/channel-counters';
+import { incrementCounter } from '../analytics/counters';
+import { ipcSchema, type ArgOf, type InvokeChannel, type IpcInvokeResponse, type ResultOf, type Rpc } from '../../shared/ipc-schema';
+import { ipcFailure } from '../../shared/result';
 import { createIncidentId } from '../logging/incident';
 import { logger } from '../logging/logger';
-import {
-  handleAnalyticsPreview,
-  handleAppGetInfo,
-  handleAppGetStartupHealth,
-  handleAppGetUpdateState,
-  handleAppHintsEnabled,
-  handleFeedpacksInstall,
-  handleFeedpacksList,
-  handleFeedpacksPreview,
-  handleFeedsCreateCategory,
-  handleFeedsDeleteCategory,
-  handleFeedsDeleteFeed,
-  handleFeedsList,
-  handleFeedsListCategories,
-  handleFeedsMoveFeedsToCategory,
-  handleFeedsMoveToWorkspace,
-  handleFeedsRefresh,
-  handleFeedsRenameCategory,
-  handleFeedsSetShowInWorkspace,
-  handleFeedsSubmitAddFeed,
-  handleFeedsValidateFeedUrl,
-  handleItemsGetContent,
-  handleItemsQuery,
-  handleItemsSetSaved,
-  handleSavedQuery,
-  handleItemsSetRead,
-  handleOpmlExport,
-  handleOpmlImport,
-  handleSettingsDismissUsageAnalyticsPrompt,
-  handleSettingsGetDetailedLogging,
-  handleSettingsGetUsageAnalytics,
-  handleSettingsSetUsageAnalytics,
-  handleSettingsGetRefreshInterval,
-  handleSettingsGetRefreshOnLaunch,
-  handleSettingsSetDetailedLogging,
-  handleSettingsSetRefreshInterval,
-  handleSettingsSetRefreshOnLaunch,
-  handleSettingsGetWorkspaceRailExpanded,
-  handleSettingsSetWorkspaceRailExpanded,
-  handleSettingsGetLanguage,
-  handleSettingsGetRetentionDays,
-  handleSettingsSetLanguage,
-  handleSettingsSetRetentionDays,
-  handleAppBackUpDatabase,
-  handleSearchesCreate,
-  handleSearchesDelete,
-  handleSearchesDismissHint,
-  handleSearchesList,
-  handleSearchesUpdate,
-  handleWorkspacesCreate,
-  handleWorkspacesDelete,
-  handleWorkspacesList,
-  handleWorkspacesReorder,
-  handleWorkspacesUpdate,
-} from "./handlers";
+import { routes, type Route } from './routes';
 
-// IPC Handlers - Main from and to Renderer (two ways)
-// On the renderer side (exposed through preload): ipcRenderer.invoke(channel, ...args)
-// Handled by the main side: ipcMain.handle(channel, listener)
+// Renderer to main, two ways: ipcRenderer.invoke(channel, arg) on the renderer side, ipcMain.handle(channel, listener) here.
 // https://www.electronjs.org/docs/latest/tutorial/ipc#pattern-2-renderer-to-main-two-way
 
-type Handler<C extends TwoWayRendererMainChannels> = (
-  event: IpcMainInvokeEvent,
-  arg: TwoWayRendererMainChannelsInvokeArgs[C],
-) => ChannelPayloads[C] | Promise<ChannelPayloads[C]>;
+function isFailure(response: unknown): boolean {
+  return typeof response === 'object' && response !== null && 'success' in response && response.success === false;
+}
 
-const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
-  "feeds:validate-feed-url": handleFeedsValidateFeedUrl,
-  "feeds:list-categories": handleFeedsListCategories,
-  "feeds:list": handleFeedsList,
-  "feeds:refresh": handleFeedsRefresh,
-  "feeds:submit-add-feed": handleFeedsSubmitAddFeed,
-  "feeds:delete-feed": handleFeedsDeleteFeed,
-  "feeds:set-show-in-workspace": handleFeedsSetShowInWorkspace,
-  "feeds:create-category": handleFeedsCreateCategory,
-  "feeds:rename-category": handleFeedsRenameCategory,
-  "feeds:delete-category": handleFeedsDeleteCategory,
-  "feeds:move-feeds-to-category": handleFeedsMoveFeedsToCategory,
-  "feeds:move-to-workspace": handleFeedsMoveToWorkspace,
-  "workspaces:list": handleWorkspacesList,
-  "workspaces:create": handleWorkspacesCreate,
-  "workspaces:update": handleWorkspacesUpdate,
-  "workspaces:delete": handleWorkspacesDelete,
-  "workspaces:reorder": handleWorkspacesReorder,
-  "settings:get-refresh-interval": handleSettingsGetRefreshInterval,
-  "settings:set-refresh-interval": handleSettingsSetRefreshInterval,
-  "items:set-read": handleItemsSetRead,
-  "items:get-content": handleItemsGetContent,
-  "items:query": handleItemsQuery,
-  "items:set-saved": handleItemsSetSaved,
-  "saved:query": handleSavedQuery,
-  "opml:import": handleOpmlImport,
-  "opml:export": handleOpmlExport,
-  "feedpacks:list": handleFeedpacksList,
-  "feedpacks:preview": handleFeedpacksPreview,
-  "feedpacks:install": handleFeedpacksInstall,
-  "settings:get-refresh-on-launch": handleSettingsGetRefreshOnLaunch,
-  "settings:set-refresh-on-launch": handleSettingsSetRefreshOnLaunch,
-  "settings:get-workspace-rail-expanded": handleSettingsGetWorkspaceRailExpanded,
-  "settings:set-workspace-rail-expanded": handleSettingsSetWorkspaceRailExpanded,
-  "settings:get-retention-days": handleSettingsGetRetentionDays,
-  "settings:set-retention-days": handleSettingsSetRetentionDays,
-  "settings:get-language": handleSettingsGetLanguage,
-  "settings:set-language": handleSettingsSetLanguage,
-  "app:back-up-database": handleAppBackUpDatabase,
-  "app:get-info": handleAppGetInfo,
-  "app:hints-enabled": handleAppHintsEnabled,
-  "app:get-startup-health": handleAppGetStartupHealth,
-  "app:get-update-state": handleAppGetUpdateState,
-  "settings:get-detailed-logging": handleSettingsGetDetailedLogging,
-  "settings:set-detailed-logging": handleSettingsSetDetailedLogging,
-  "settings:get-usage-analytics": handleSettingsGetUsageAnalytics,
-  "settings:set-usage-analytics": handleSettingsSetUsageAnalytics,
-  "settings:dismiss-usage-analytics-prompt": handleSettingsDismissUsageAnalyticsPrompt,
-  "analytics:preview": handleAnalyticsPreview,
-  "searches:list": handleSearchesList,
-  "searches:create": handleSearchesCreate,
-  "searches:update": handleSearchesUpdate,
-  "searches:delete": handleSearchesDelete,
-  "searches:dismiss-hint": handleSearchesDismissHint,
-};
+function failedSetting(channel: string, arg: unknown): string | undefined {
+  return channel.startsWith('settings:') && typeof arg === 'object' && arg !== null && 'key' in arg && typeof arg.key === 'string' ? arg.key : undefined;
+}
+
+async function dispatch<C extends InvokeChannel>(channel: C, event: IpcMainInvokeEvent, arg: unknown): Promise<IpcInvokeResponse<C>> {
+  try {
+    if (!(ipcSchema[channel] as Rpc<ArgOf<C>, ResultOf<C>>).guard(arg)) {
+      return ipcFailure('INVALID_PAYLOAD');
+    }
+    const route = routes[channel] as unknown as Route<C>;
+    const response = await route.run(arg, event);
+    const counter = typeof route.counter === 'function' ? route.counter(arg) : route.counter;
+    // A failed Result counts for nothing.
+    if (counter && !isFailure(response)) {
+      void incrementCounter(counter);
+    }
+    return response;
+  } catch (error) {
+    const incidentId = createIncidentId();
+    const setting = failedSetting(channel, arg);
+    logger.error('ipc.failure', { channel, incidentId, ...(setting ? { setting } : {}) }, error);
+    return ipcFailure('UNEXPECTED_ERROR', incidentId);
+  }
+}
 
 export function registerIpcHandlers() {
-  for (const [channel, handler] of Object.entries(handlers) as [TwoWayRendererMainChannels, Handler<TwoWayRendererMainChannels>][]) {
-    ipcMain.handle(channel, async (event, arg: unknown): Promise<IpcInvokeResponse<TwoWayRendererMainChannels>> => {
-      try {
-        if (!invokePayloadGuards[channel](arg)) {
-          return { success: false, error: { name: 'INVALID_PAYLOAD', message: 'Invalid request payload.' } };
-        }
-        const response = await handler(event, arg);
-        recordInvokeUsage(channel, arg, response);
-        return response;
-      } catch (error) {
-        const incidentId = createIncidentId();
-        logger.error('ipc.failure', { channel, incidentId }, error);
-        return {
-          success: false,
-          error: { name: 'UNEXPECTED_ERROR', message: 'The operation could not be completed.', incidentId },
-        };
-      }
-    });
+  for (const channel of Object.keys(routes) as InvokeChannel[]) {
+    ipcMain.handle(channel, (event, arg: unknown) => dispatch(channel, event, arg));
   }
 }

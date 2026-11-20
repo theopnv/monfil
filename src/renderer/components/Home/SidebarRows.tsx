@@ -60,7 +60,7 @@ export function FeedRow({ feed, showOnlyLinks, isDropTarget, onSetVisibility }: 
         onClick={() => onSetVisibility([feed], toggleFocus(state))}
         onContextMenu={(event) => {
           event.preventDefault();
-          ipc.send('feeds:show-feed-context-menu', feed.id);
+          ipc.send('menu:show', { kind: 'feed', id: feed.id });
         }}
         className={cx(
           "flex min-w-0 flex-1 items-center gap-2.25 rounded-xl px-2.25 py-1.5 text-start text-sm hover:bg-primary_hover",

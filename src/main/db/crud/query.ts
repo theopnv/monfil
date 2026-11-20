@@ -7,72 +7,33 @@ import { type ArticleContent, type Database, type FeedItem, type FeedMetadataRow
 import { db, dbReady } from '../database';
 import { searchCondition } from '../search';
 import { parseErrorParams } from '../error-params';
+import { paginate } from '../paging';
 import type { FeedCategory, FeedSummary, JobDetails, RiverPage, RiverQuery, Workspace, WorkspaceSummary } from '../../../shared/contracts';
 
-// Criteria handlers force us to explicitly add any new field of a table to the query layer.
-// Adding a new field to a table object and forgetting to add it here will result in a compilation error.
-type CriteriaHandlers<TB extends keyof Database, T> = {
-  [K in keyof T]: (
-    query: SelectQueryBuilder<Database, TB, T>,
-    value: NonNullable<T[K]>
-  ) => SelectQueryBuilder<Database, TB, T>;
-};
-
+/** Filters on equality of every field the criteria set. The row type decides which fields exist, so a new column is queryable with no further change. */
 function applyCriteria<TB extends keyof Database, T>(
   query: SelectQueryBuilder<Database, TB, T>,
   criteria: Partial<T>,
-  handlers: CriteriaHandlers<TB, T>
 ): SelectQueryBuilder<Database, TB, T> {
   let result = query;
-  for (const key of Object.keys(criteria) as (keyof T)[]) {
-    const value = criteria[key];
+  for (const [key, value] of Object.entries(criteria)) {
     if (value !== undefined) {
-      result = handlers[key](result, value as NonNullable<T[typeof key]>);
+      result = result.where(sql.ref(key), '=', value);
     }
   }
   return result;
 }
 
-const feedItemHandlers = {
-  id: (q, v) => q.where('id', '=', v),
-  feed_id: (q, v) => q.where('feed_id', '=', v),
-  title: (q, v) => q.where('title', '=', v),
-  guid: (q, v) => q.where('guid', '=', v),
-  link: (q, v) => q.where('link', '=', v),
-  pubDate: (q, v) => q.where('pubDate', '=', v),
-  description: (q, v) => q.where('description', '=', v),
-  image: (q, v) => q.where('image', '=', v),
-  author: (q, v) => q.where('author', '=', v),
-  extra: (q, v) => q.where('extra', '=', v),
-  read_at: (q, v) => q.where('read_at', '=', v),
-  published_at: (q, v) => q.where('published_at', '=', v),
-  excerpt: (q, v) => q.where('excerpt', '=', v),
-} satisfies CriteriaHandlers<'feedItem', FeedItem>;
-
 // Ordered explicitly: without it SQLite returns rows in whatever order the chosen index gives,
 // which the UNIQUE(feed_id, guid) index made "by guid" rather than the insertion order callers expect.
 export async function queryFeedItems(criteria: Partial<FeedItem>): Promise<FeedItem[]> {
   await dbReady;
-  return applyCriteria(db.selectFrom('feedItem').selectAll(), criteria, feedItemHandlers).orderBy('id').execute();
+  return applyCriteria(db.selectFrom('feedItem').selectAll(), criteria).orderBy('id').execute();
 }
-
-const feedMetadataHandlers = {
-  id: (q, v) => q.where('id', '=', v),
-  link: (q, v) => q.where('link', '=', v),
-  title: (q, v) => q.where('title', '=', v),
-  type: (q, v) => q.where('type', '=', v),
-  last_fetched_at: (q, v) => q.where('last_fetched_at', '=', v),
-  last_error: (q, v) => q.where('last_error', '=', v),
-  last_error_code: (q, v) => q.where('last_error_code', '=', v),
-  last_error_params: (q, v) => q.where('last_error_params', '=', v),
-  icon: (q, v) => q.where('icon', '=', v),
-  etag: (q, v) => q.where('etag', '=', v),
-  last_modified: (q, v) => q.where('last_modified', '=', v),
-} satisfies CriteriaHandlers<'feedMetadata', FeedMetadataRow>;
 
 export async function queryFeedMetadata(criteria: Partial<FeedMetadataRow>): Promise<FeedMetadataRow[]> {
   await dbReady;
-  return applyCriteria(db.selectFrom('feedMetadata').selectAll(), criteria, feedMetadataHandlers).execute();
+  return applyCriteria(db.selectFrom('feedMetadata').selectAll(), criteria).execute();
 }
 
 export async function querySubscribedFeedMetadata(ids?: number[]): Promise<FeedMetadataRow[]> {
@@ -95,41 +56,22 @@ export async function queryFeedMetadataByIds(ids: number[]): Promise<FeedMetadat
   return db.selectFrom('feedMetadata').selectAll().where('id', 'in', ids).execute();
 }
 
-const feedCategoryHandlers = {
-  id: (q, v) => q.where('id', '=', v),
-  name: (q, v) => q.where('name', '=', v),
-  workspace_id: (q, v) => q.where('workspace_id', '=', v),
-} satisfies CriteriaHandlers<'feedCategory', FeedCategory>;
-
 // Ordered explicitly, same reasoning as queryFeedItems: filtering by workspace_id lets SQLite
 // satisfy the query from the (workspace_id, name) unique index, which returns rows alphabetically
 // by name rather than in creation order once that index is used instead of a full table scan.
 export async function queryFeedCategory(criteria: Partial<FeedCategory>): Promise<FeedCategory[]> {
   await dbReady;
-  return applyCriteria(db.selectFrom('feedCategory').selectAll(), criteria, feedCategoryHandlers).orderBy('id').execute();
+  return applyCriteria(db.selectFrom('feedCategory').selectAll(), criteria).orderBy('id').execute();
 }
-
-const articleContentHandlers = {
-  item_id: (q, v) => q.where('item_id', '=', v),
-  html: (q, v) => q.where('html', '=', v),
-  text: (q, v) => q.where('text', '=', v),
-  word_count: (q, v) => q.where('word_count', '=', v),
-  status: (q, v) => q.where('status', '=', v),
-} satisfies CriteriaHandlers<'articleContent', ArticleContent>;
 
 export async function queryArticleContent(criteria: Partial<ArticleContent>): Promise<ArticleContent[]> {
   await dbReady;
-  return applyCriteria(db.selectFrom('articleContent').selectAll(), criteria, articleContentHandlers).execute();
+  return applyCriteria(db.selectFrom('articleContent').selectAll(), criteria).execute();
 }
-
-const settingHandlers = {
-  key: (q, v) => q.where('key', '=', v),
-  value: (q, v) => q.where('value', '=', v),
-} satisfies CriteriaHandlers<'setting', Setting>;
 
 export async function querySettings(criteria: Partial<Setting>): Promise<Setting[]> {
   await dbReady;
-  return applyCriteria(db.selectFrom('setting').selectAll(), criteria, settingHandlers).execute();
+  return applyCriteria(db.selectFrom('setting').selectAll(), criteria).execute();
 }
 
 export async function countFeedItems(): Promise<number> {
@@ -358,15 +300,13 @@ export async function queryRiverPage(query: RiverQuery): Promise<RiverPage> {
     .limit(query.limit + 1)
     .execute();
 
-  const hasMore = rows.length > query.limit;
-  const page = hasMore ? rows.slice(0, query.limit) : rows;
-  const last = page[page.length - 1];
+  const { page, last } = paginate(rows, query.limit);
 
   return {
     rows: page.map(({ extra, ...row }) => {
       const job = row.type === 'ats' ? toJobDetails(extra ?? undefined) : undefined;
       return { ...row, savedAt: row.savedAt ?? undefined, ...(job ? { job } : {}) };
     }),
-    ...(hasMore && last ? { nextCursor: { publishedAt: last.publishedAt, id: last.id } } : {}),
+    ...(last ? { nextCursor: { publishedAt: last.publishedAt, id: last.id } } : {}),
   };
 }

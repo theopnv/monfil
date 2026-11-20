@@ -4,10 +4,11 @@
 
 import { fetchConditional, fetchText, type FetchedText, type FetchValidators } from '../../lib/fetch';
 import type { FeedFetchError, ParsedSource } from '../../../shared/contracts';
-import type { Result } from '../../../shared/result';
-import { mapFetchError, toUrl, unsupported } from './feedSource';
+import { fail, type Result } from '../../../shared/result';
+import { toUrl, unsupported } from './feedSource';
 import { escapeText } from './text';
 import type { NewSourceItem, ParsedFeedContent, SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
+import { parseHttpUrl } from '../../../shared/url';
 
 /** A conference in a shape that does not depend on the dataset it came from. */
 export interface ConferenceEvent {
@@ -125,12 +126,7 @@ function httpLink(raw: unknown): string | undefined {
   if (typeof raw !== 'string') {
     return undefined;
   }
-  try {
-    const url = new URL(raw.trim());
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
-  } catch {
-    return undefined;
-  }
+  return parseHttpUrl(raw.trim())?.href;
 }
 
 function text(raw: unknown): string {
@@ -448,7 +444,7 @@ async function loadEvents(validators: FetchValidators | undefined): Promise<Load
   if (validators && cached) {
     const conditional = await fetchConditional(DATASET_URL, { validators });
     if (!conditional.success) {
-      return { success: false, error: mapFetchError(conditional.error) };
+      return { success: false, error: conditional.error };
     }
     if ('notModified' in conditional.data) {
       return { success: true, data: { dataset: cached.dataset, validators } };
@@ -456,7 +452,7 @@ async function loadEvents(validators: FetchValidators | undefined): Promise<Load
     return fromBody(conditional.data);
   }
   const full = await fetchText(DATASET_URL);
-  return full.success ? fromBody(full.data) : { success: false, error: mapFetchError(full.error) };
+  return full.success ? fromBody(full.data) : { success: false, error: full.error };
 }
 
 /**
@@ -484,9 +480,9 @@ async function fetchFiltered(filter: ConferenceFilter, validators: FetchValidato
     return { success: true, data: { parsed, validators: loaded.data.validators } };
   } catch (error) {
     if (error instanceof Error) {
-      return { success: false, error: { name: 'PARSE_ERROR', message: error.message } };
+      return fail('PARSE_ERROR', error.message);
     }
-    return { success: false, error: { name: 'UNKNOWN_ERROR', message: 'An unknown error occurred' } };
+    return fail('UNKNOWN_ERROR', 'An unknown error occurred');
   }
 }
 

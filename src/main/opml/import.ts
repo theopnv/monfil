@@ -5,12 +5,14 @@
 import fs from 'node:fs/promises';
 import { dialog } from 'electron';
 import type { ImportFailed, ImportOpmlError, ImportOpmlTarget, ImportSkipped, ImportSummary } from '../../shared/contracts';
-import { db, dbReady } from '../db/database';
+import { db } from '../db/database';
+import { upsertFeedCategory, upsertFeedPlacement } from '../db/crud/insert';
 import { queryFeedMetadataByIds } from '../db/crud/query';
 import { parseErrorParams } from '../db/error-params';
-import type { Result } from '../../shared/result';
+import { fail, type Result } from '../../shared/result';
 import { refreshFeeds } from '../feed/refresh';
 import { parseOpmlDocument } from './parse';
+import { dbTry } from '../db/db-try';
 
 export interface StartedOpmlImport {
   summary: ImportSummary;
@@ -33,8 +35,7 @@ export async function startOpmlImport(
     return parsed;
   }
 
-  await dbReady;
-  try {
+  return dbTry(async () => {
     const { workspaceId, insertedFeedIds, skipped } = await db.transaction().execute(async (trx) => {
       let workspaceId: number;
       if (target.kind === 'new-workspace') {
@@ -70,11 +71,7 @@ export async function startOpmlImport(
       const insertedFeedIds: number[] = [];
 
       for (const category of parsed.data.categories) {
-        const categoryRow = await trx.insertInto('feedCategory')
-          .values({ name: category.name, workspace_id: workspaceId })
-          .onConflict((oc) => oc.columns(['workspace_id', 'name']).doUpdateSet((eb) => ({ name: eb.ref('excluded.name') })))
-          .returningAll()
-          .executeTakeFirstOrThrow();
+        const categoryRow = await upsertFeedCategory(trx, category.name, workspaceId);
 
         for (const feed of category.feeds) {
           if (existingLinks.has(feed.xmlUrl)) {
@@ -92,13 +89,7 @@ export async function startOpmlImport(
             .returningAll()
             .executeTakeFirstOrThrow();
 
-          await trx.insertInto('feedPlacement')
-            .values({ feed_id: metadata.id, category_id: categoryRow.id, workspace_id: workspaceId, showInWorkspace: 1 })
-            .onConflict((oc) => oc.columns(['feed_id', 'workspace_id']).doUpdateSet((eb) => ({
-              category_id: eb.ref('excluded.category_id'),
-              showInWorkspace: eb.ref('excluded.showInWorkspace'),
-            })))
-            .execute();
+          await upsertFeedPlacement(trx, metadata.id, categoryRow.id, workspaceId, 1);
 
           insertedFeedIds.push(metadata.id);
         }
@@ -115,9 +106,7 @@ export async function startOpmlImport(
     });
 
     return { success: true, data: { summary, completion } };
-  } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
-  }
+  });
 }
 
 export async function importOpml(xml: string, target: ImportOpmlTarget): Promise<Result<ImportSummary, ImportOpmlError>> {
@@ -128,7 +117,7 @@ export async function importOpml(xml: string, target: ImportOpmlTarget): Promise
   try {
     return { success: true, data: await started.data.completion };
   } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+    return fail('DB_ERROR', error instanceof Error ? error.message : 'An unknown error occurred');
   }
 }
 
@@ -144,14 +133,14 @@ export async function openAndImportOpml(target: ImportOpmlTarget): Promise<Resul
   });
   const filePath = filePaths[0];
   if (canceled || !filePath) {
-    return { success: false, error: { name: 'CANCELLED', message: 'Import cancelled.' } };
+    return fail('CANCELLED', 'Import cancelled.');
   }
 
   let xml: string;
   try {
     xml = await fs.readFile(filePath, 'utf-8');
   } catch (error) {
-    return { success: false, error: { name: 'FS_ERROR', message: error instanceof Error ? error.message : 'Could not read the file.' } };
+    return fail('FS_ERROR', error instanceof Error ? error.message : 'Could not read the file.');
   }
 
   return importOpml(xml, target);

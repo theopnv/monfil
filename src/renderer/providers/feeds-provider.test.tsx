@@ -13,7 +13,7 @@ import {
 import { queryKeys } from '../lib/queries';
 import { renderHookInWorkspace } from '../lib/test/render-hook-in-workspace';
 import { dismissAllNotifications, NotificationHost } from '../lib/notifications';
-import { uiKeys, useHasPendingRefresh, useIpcBridge } from '../lib/ipc-bridge';
+import { uiKeys, useHasPendingRefresh, usePushEvents } from '../lib/push-events';
 import { renderWithQueryClient } from '../lib/test/render-with-query-client';
 import { HOME_WORKSPACE_ID, type NewFeedInput, type RefreshSummary, type RiverPage, type RiverRow } from '../../shared/contracts';
 
@@ -69,8 +69,8 @@ function PendingState({ feedIds = [1] }: { feedIds?: number[] }) {
   return <span>{hasPending ? 'pending' : 'idle'}</span>;
 }
 
-function IpcBridgeMount() {
-  useIpcBridge();
+function PushEventsMount() {
+  usePushEvents();
   return null;
 }
 
@@ -101,7 +101,6 @@ beforeEach(() => {
         return vi.fn();
       }),
       sendMessage: vi.fn(),
-      once: vi.fn(),
     },
   } as unknown as typeof window.electron;
 });
@@ -129,7 +128,7 @@ test('a partial refresh failure lets the user reveal the log file', async () => 
   await getByRole('button', { name: 'Show log file' }).click();
 
   // Assert
-  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('app:reveal-log-file', undefined);
+  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('app:reveal', 'log');
 });
 
 test('a refresh with four failures names three feeds and counts the rest', async () => {
@@ -191,7 +190,7 @@ test('a feeds:refreshed push with new items marks the refresh pending without mo
   invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [rowA] } satisfies RiverPage : []);
   const { getByText } = await renderWithQueryClient(
     <>
-      <IpcBridgeMount />
+      <PushEventsMount />
       <PendingState />
       <RiverRows />
     </>,
@@ -210,7 +209,7 @@ test('publisher edits and removals leave the refresh idle', async () => {
   // Arrange
   const row = createRow({ title: 'Row A' });
   invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [row] } satisfies RiverPage : []);
-  const { getByText } = await renderWithQueryClient(<><IpcBridgeMount /><PendingState /><RiverRows /></>);
+  const { getByText } = await renderWithQueryClient(<><PushEventsMount /><PendingState /><RiverRows /></>);
   await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 
   // Act
@@ -224,7 +223,7 @@ test('new items in a feed outside the given scope leave the refresh idle', async
   // Arrange
   const row = createRow({ title: 'Row A' });
   invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [row] } satisfies RiverPage : []);
-  const { getByText } = await renderWithQueryClient(<><IpcBridgeMount /><PendingState feedIds={[1]} /><RiverRows /></>);
+  const { getByText } = await renderWithQueryClient(<><PushEventsMount /><PendingState feedIds={[1]} /><RiverRows /></>);
   await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
 
   // Act
@@ -238,7 +237,7 @@ test('a manual refresh clears the pending state', async () => {
   // Arrange
   const row = createRow({ title: 'Row A' });
   invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [row] } satisfies RiverPage : { perFeed: [] } satisfies RefreshSummary);
-  const { getByText, getByRole } = await renderWithQueryClient(<><IpcBridgeMount /><PendingState /><RiverRows /><RefreshButton /></>);
+  const { getByText, getByRole } = await renderWithQueryClient(<><PushEventsMount /><PendingState /><RiverRows /><RefreshButton /></>);
   await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
   feedsRefreshedHandler?.({ perFeed: [{ feedId: 1, inserted: 3 }] });
   await expect.element(getByText('pending', { exact: true })).toBeInTheDocument();
@@ -254,7 +253,7 @@ test('a refresh applied immediately clears the pending state', async () => {
   // Arrange
   const row = createRow({ title: 'Row A' });
   invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [row] } satisfies RiverPage : []);
-  const { getByText } = await renderWithQueryClient(<><IpcBridgeMount /><PendingState /><RiverRows /></>);
+  const { getByText } = await renderWithQueryClient(<><PushEventsMount /><PendingState /><RiverRows /></>);
   await expect.element(getByText('Row A: unread', { exact: true })).toBeInTheDocument();
   feedsRefreshedHandler?.({ perFeed: [{ feedId: 1, inserted: 3 }] });
   await expect.element(getByText('pending', { exact: true })).toBeInTheDocument();
@@ -273,7 +272,7 @@ test('a feeds:refreshed push before the river has ever rendered leaves the refre
   invokeImpl = (channel) => (channel === 'items:query' ? new Promise(() => { }) : Promise.resolve([]));
   const { getByText } = await renderWithQueryClient(
     <>
-      <IpcBridgeMount />
+      <PushEventsMount />
       <PendingState />
       <RiverRows />
     </>,
@@ -293,7 +292,7 @@ test('a feeds:item-image-fetched push patches exactly one row', async () => {
   invokeImpl = (channel) => Promise.resolve(channel === 'items:query' ? { rows: [target, other] } satisfies RiverPage : []);
   const { getByText } = await renderWithQueryClient(
     <>
-      <IpcBridgeMount />
+      <PushEventsMount />
       <RiverRows />
     </>,
   );
@@ -455,42 +454,42 @@ const MUTATION_CASES: MutationCase[] = [
   },
   {
     name: 'useDeleteFeed',
-    run: () => runHook(useDeleteFeed, (remove) => remove(7)),
+    run: () => runHook(useDeleteFeed, (remove) => remove({ feedId: 7 })),
     channel: 'feeds:delete-feed',
     payload: { feedId: 7, workspaceId: HOME_WORKSPACE_ID },
     invalidates: ['feeds', 'river'],
   },
   {
     name: 'useSetShowInWorkspace',
-    run: () => runHook(useSetShowInWorkspace, (setShow) => setShow([4, 5], false)),
+    run: () => runHook(useSetShowInWorkspace, (setShow) => setShow({ feedIds: [4, 5], showInWorkspace: false })),
     channel: 'feeds:set-show-in-workspace',
     payload: { feedIds: [4, 5], showInWorkspace: false, workspaceId: HOME_WORKSPACE_ID },
     invalidates: ['feeds', 'river'],
   },
   {
     name: 'useCreateCategory',
-    run: () => runHook(useCreateCategory, (create) => create('News')),
+    run: () => runHook(useCreateCategory, (create) => create({ name: 'News' })),
     channel: 'feeds:create-category',
     payload: { name: 'News', workspaceId: HOME_WORKSPACE_ID },
     invalidates: ['categories'],
   },
   {
     name: 'useRenameCategory',
-    run: () => runHook(useRenameCategory, (rename) => rename(3, 'Science')),
+    run: () => runHook(useRenameCategory, (rename) => rename({ categoryId: 3, name: 'Science' })),
     channel: 'feeds:rename-category',
     payload: { categoryId: 3, name: 'Science', workspaceId: HOME_WORKSPACE_ID },
     invalidates: ['categories', 'feeds', 'river'],
   },
   {
     name: 'useDeleteCategory',
-    run: () => runHook(useDeleteCategory, (remove) => remove(3, 4)),
+    run: () => runHook(useDeleteCategory, (remove) => remove({ categoryId: 3, reassignTo: 4 })),
     channel: 'feeds:delete-category',
     payload: { categoryId: 3, reassignTo: 4, workspaceId: HOME_WORKSPACE_ID },
     invalidates: ['categories', 'feeds', 'river'],
   },
   {
     name: 'useMoveFeeds',
-    run: () => runHook(useMoveFeeds, (move) => move([4, 5], 3)),
+    run: () => runHook(useMoveFeeds, (move) => move({ feedIds: [4, 5], categoryId: 3 })),
     channel: 'feeds:move-feeds-to-category',
     payload: { feedIds: [4, 5], categoryId: 3, workspaceId: HOME_WORKSPACE_ID },
     invalidates: ['feeds', 'river'],
@@ -540,12 +539,12 @@ function switchCase<T extends (...args: never[]) => Promise<unknown>>(
 
 test.each([
   switchCase('useAddFeed', useAddFeed, (add) => add(newFeed), 'feeds:submit-add-feed'),
-  switchCase('useDeleteFeed', useDeleteFeed, (remove) => remove(7), 'feeds:delete-feed'),
-  switchCase('useSetShowInWorkspace', useSetShowInWorkspace, (setShow) => setShow([4], true), 'feeds:set-show-in-workspace'),
-  switchCase('useRenameCategory', useRenameCategory, (rename) => rename(3, 'Science'), 'feeds:rename-category'),
-  switchCase('useDeleteCategory', useDeleteCategory, (remove) => remove(3, 4), 'feeds:delete-category'),
-  switchCase('useMoveFeeds', useMoveFeeds, (move) => move([4], 3), 'feeds:move-feeds-to-category'),
-  switchCase('useCreateCategory', useCreateCategory, (create) => create('News'), 'feeds:create-category'),
+  switchCase('useDeleteFeed', useDeleteFeed, (remove) => remove({ feedId: 7 }), 'feeds:delete-feed'),
+  switchCase('useSetShowInWorkspace', useSetShowInWorkspace, (setShow) => setShow({ feedIds: [4], showInWorkspace: true }), 'feeds:set-show-in-workspace'),
+  switchCase('useRenameCategory', useRenameCategory, (rename) => rename({ categoryId: 3, name: 'Science' }), 'feeds:rename-category'),
+  switchCase('useDeleteCategory', useDeleteCategory, (remove) => remove({ categoryId: 3, reassignTo: 4 }), 'feeds:delete-category'),
+  switchCase('useMoveFeeds', useMoveFeeds, (move) => move({ feedIds: [4], categoryId: 3 }), 'feeds:move-feeds-to-category'),
+  switchCase('useCreateCategory', useCreateCategory, (create) => create({ name: 'News' }), 'feeds:create-category'),
 ])('%s acts on the workspace that is active when it is called', async (_name, run, channel) => {
   // Arrange
   invokeImpl = () => Promise.resolve({ success: true, data: undefined });

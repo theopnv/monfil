@@ -15,15 +15,15 @@ beforeEach(() => {
   state = { consent: 'unset', shouldPrompt: true, available: true };
   invoke = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
-      case 'settings:get-usage-analytics': return Promise.resolve(state);
-      case 'settings:set-usage-analytics': return Promise.resolve({ consent: arg, shouldPrompt: false, available: true });
+      case 'settings:get': return Promise.resolve(state);
+      case 'settings:set': return Promise.resolve({ consent: (arg as { value: string }).value, shouldPrompt: false, available: true });
       case 'settings:dismiss-usage-analytics-prompt': return Promise.resolve({ ...state, shouldPrompt: false });
       case 'analytics:preview': return Promise.resolve({ day: '2026-10-23', searches: 2 });
       default: return Promise.resolve(undefined);
     }
   });
   sendMessage = vi.fn();
-  window.electron = { ipcRenderer: { invoke, sendMessage, on: vi.fn(), once: vi.fn() } } as unknown as typeof window.electron;
+  window.electron = { ipcRenderer: { invoke, sendMessage, on: vi.fn() } } as unknown as typeof window.electron;
 });
 
 test('shows two equal buttons when the card should prompt', async () => {
@@ -43,7 +43,7 @@ test('renders nothing when it should not prompt', async () => {
   const { container } = await renderWithQueryClient(<UsageAnalyticsCard />);
 
   // Assert
-  await vi.waitFor(() => expect(invoke).toHaveBeenCalledWith('settings:get-usage-analytics', undefined));
+  await vi.waitFor(() => expect(invoke).toHaveBeenCalledWith('settings:get', { key: 'usageAnalytics' }));
   expect(container.querySelector('section')).toBeNull();
 });
 
@@ -55,7 +55,7 @@ test('"Share usage stats" stores the grant and hides the card', async () => {
   await getByRole('button', { name: 'Share usage stats' }).click();
 
   // Assert
-  expect(invoke).toHaveBeenCalledWith('settings:set-usage-analytics', 'granted');
+  expect(invoke).toHaveBeenCalledWith('settings:set', { key: 'usageAnalytics', value: 'granted' });
   await expect.element(getByRole('button', { name: 'No thanks' })).not.toBeInTheDocument();
 });
 
@@ -67,7 +67,7 @@ test('"No thanks" stores the refusal', async () => {
   await getByRole('button', { name: 'No thanks' }).click();
 
   // Assert
-  expect(invoke).toHaveBeenCalledWith('settings:set-usage-analytics', 'denied');
+  expect(invoke).toHaveBeenCalledWith('settings:set', { key: 'usageAnalytics', value: 'denied' });
 });
 
 test('the close icon puts the card off for later', async () => {

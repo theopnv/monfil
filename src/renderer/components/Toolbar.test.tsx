@@ -10,13 +10,14 @@ import { userEvent } from 'vitest/browser';
 import { RouteProvider } from '@/providers/route-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useFeeds } from '@/providers/feeds-provider';
-import { useFeedpackRefreshing, useIpcBridge } from '@/lib/ipc-bridge';
+import { useFeedpackRefreshing, usePushEvents } from '@/lib/push-events';
 import { MOD_KEY_LABEL } from '@/lib/keyboard';
 import { createTestQueryClient } from '@/lib/test/render-with-query-client';
 import { pressComposing } from '@/lib/test/press-composing';
 import Toolbar from './Toolbar';
 import type { DeleteWorkspaceError } from '../../shared/contracts';
 import type { UpdateWorkspaceError } from '../../shared/contracts';
+import type { MenuAction } from '../../shared/channels';
 import type { Result } from '../../shared/result';
 import type { FeedSummary, WorkspaceSummary } from '../../shared/contracts';
 
@@ -59,9 +60,7 @@ let workspaces: WorkspaceSummary[];
 let feedsByWorkspace: Record<number, FeedSummary[]>;
 let updateWorkspaceResult: Result<WorkspaceSummary, UpdateWorkspaceError> | undefined;
 let deleteWorkspaceResult: Result<void, DeleteWorkspaceError> | undefined;
-let editWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
-let exportWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
-let deleteWorkspaceRequestedHandler: ((workspaceId: number) => void) | undefined;
+let menuActionHandler: ((menu: MenuAction) => void) | undefined;
 let invokeMock: ReturnType<typeof vi.fn>;
 let railExpanded: boolean;
 let reorderResponse: Promise<Result<void, UpdateWorkspaceError>> | undefined;
@@ -73,9 +72,7 @@ beforeEach(() => {
   feedsByWorkspace = {};
   updateWorkspaceResult = undefined;
   deleteWorkspaceResult = undefined;
-  editWorkspaceRequestedHandler = undefined;
-  exportWorkspaceRequestedHandler = undefined;
-  deleteWorkspaceRequestedHandler = undefined;
+  menuActionHandler = undefined;
   feedpacks = [];
   installedCount = 1;
   reorderResponse = undefined;
@@ -114,10 +111,10 @@ beforeEach(() => {
         workspaces = orderedIds.flatMap((id) => workspaces.filter((workspace) => workspace.id === id));
         return Promise.resolve({ success: true, data: undefined });
       }
-      case 'settings:get-workspace-rail-expanded':
+      case 'settings:get':
         return Promise.resolve(railExpanded);
-      case 'settings:set-workspace-rail-expanded':
-        railExpanded = arg as boolean;
+      case 'settings:set':
+        railExpanded = (arg as { value: boolean }).value;
         return Promise.resolve(railExpanded);
       case 'opml:export':
         return Promise.resolve({ success: true, data: undefined });
@@ -140,19 +137,12 @@ beforeEach(() => {
     ipcRenderer: {
       invoke: invokeMock,
       on: vi.fn((channel: string, handler: (payload: never) => void) => {
-        if (channel === 'workspaces:edit-requested') {
-          editWorkspaceRequestedHandler = handler as typeof editWorkspaceRequestedHandler;
-        }
-        if (channel === 'workspaces:export-requested') {
-          exportWorkspaceRequestedHandler = handler as typeof exportWorkspaceRequestedHandler;
-        }
-        if (channel === 'workspaces:delete-requested') {
-          deleteWorkspaceRequestedHandler = handler as typeof deleteWorkspaceRequestedHandler;
+        if (channel === 'menu:action') {
+          menuActionHandler = handler as typeof menuActionHandler;
         }
         return vi.fn();
       }),
       sendMessage: vi.fn(),
-      once: vi.fn(),
     },
   } as unknown as typeof window.electron;
 });
@@ -169,8 +159,8 @@ function FeedsList() {
   );
 }
 
-function IpcBridgeMount() {
-  useIpcBridge();
+function PushEventsMount() {
+  usePushEvents();
   return null;
 }
 
@@ -179,7 +169,7 @@ function renderApp(initialPath: string) {
     component: () => (
       <RouteProvider>
         <ActiveWorkspaceIdProvider>
-          <IpcBridgeMount />
+          <PushEventsMount />
           <div className="flex">
             <Toolbar />
             <Outlet />
@@ -644,7 +634,7 @@ test('the quick switcher filters workspaces by name and opens the chosen one', a
   await expect.element(getByRole('dialog', { name: 'Switch workspace' })).not.toBeInTheDocument();
 });
 
-test('right-clicking a workspace sends workspaces:show-context-menu with its id', async () => {
+test('right-clicking a workspace sends menu:show for that workspace', async () => {
   // Arrange
   workspaces = [createWorkspace({ id: 1, name: 'Home' })];
   const { getByRole } = await renderApp('/workspace/1');
@@ -653,16 +643,16 @@ test('right-clicking a workspace sends workspaces:show-context-menu with its id'
   await getByRole('link', { name: 'Home' }).click({ button: 'right' });
 
   // Assert
-  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('workspaces:show-context-menu', 1);
+  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('menu:show', { kind: 'workspace', id: 1 });
 });
 
-test('firing workspaces:edit-requested opens the edit dialog prefilled with the workspace', async () => {
+test('the edit menu action opens the edit dialog prefilled with the workspace', async () => {
   // Arrange
   workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch', icon: 'Terminal', color: '#3b82f6' })];
   const { getByRole } = await renderApp('/workspace/2');
 
   // Act
-  editWorkspaceRequestedHandler?.(2);
+  menuActionHandler?.({ kind: 'workspace', action: 'edit', id: 2 });
 
   // Assert
   await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
@@ -677,11 +667,11 @@ test('an open edit dialog retargets to another workspace', async () => {
     createWorkspace({ id: 3, name: 'Design watch', icon: 'Rocket02', color: '#ef4444' }),
   ];
   const { getByRole } = await renderApp('/workspace/2');
-  editWorkspaceRequestedHandler?.(2);
+  menuActionHandler?.({ kind: 'workspace', action: 'edit', id: 2 });
   await expect.element(getByRole('textbox', { name: 'Name' })).toHaveValue('CI/CD watch');
 
   // Act
-  editWorkspaceRequestedHandler?.(3);
+  menuActionHandler?.({ kind: 'workspace', action: 'edit', id: 3 });
 
   // Assert
   await expect.element(getByRole('textbox', { name: 'Name' })).toHaveValue('Design watch');
@@ -692,7 +682,7 @@ test('saving the edit dialog renames the workspace and updates its icon and colo
   // Arrange
   workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch', icon: 'Terminal', color: '#3b82f6' })];
   const { getByRole } = await renderApp('/workspace/2');
-  editWorkspaceRequestedHandler?.(2);
+  menuActionHandler?.({ kind: 'workspace', action: 'edit', id: 2 });
   await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
 
   // Act
@@ -711,7 +701,7 @@ test('an Enter that belongs to an IME composition does not save the workspace di
   // Arrange
   workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
   const { getByRole } = await renderApp('/workspace/2');
-  editWorkspaceRequestedHandler?.(2);
+  menuActionHandler?.({ kind: 'workspace', action: 'edit', id: 2 });
   const name = getByRole('textbox', { name: 'Name' });
   await name.fill('インフラ');
 
@@ -724,13 +714,13 @@ test('an Enter that belongs to an IME composition does not save the workspace di
   await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
 });
 
-test('firing workspaces:export-requested invokes opml:export with the workspace id', async () => {
+test('the export menu action invokes opml:export with the workspace id', async () => {
   // Arrange
   workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
   await renderApp('/workspace/2');
 
   // Act
-  exportWorkspaceRequestedHandler?.(2);
+  menuActionHandler?.({ kind: 'workspace', action: 'export', id: 2 });
 
   // Assert
   await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('opml:export', { workspaceId: 2 }));
@@ -741,7 +731,7 @@ test('a failed edit keeps the dialog open and shows the error', async () => {
   workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
   updateWorkspaceResult = { success: false, error: { name: 'DB_ERROR', message: 'Could not update the workspace.' } };
   const { getByRole, getByText } = await renderApp('/workspace/2');
-  editWorkspaceRequestedHandler?.(2);
+  menuActionHandler?.({ kind: 'workspace', action: 'edit', id: 2 });
 
   // Act
   await getByRole('button', { name: 'Save changes' }).click();
@@ -752,13 +742,13 @@ test('a failed edit keeps the dialog open and shows the error', async () => {
   await expect.element(getByRole('heading', { name: 'Edit workspace' })).toBeInTheDocument();
 });
 
-test('firing workspaces:delete-requested opens the delete dialog for that workspace', async () => {
+test('the delete menu action opens the delete dialog for that workspace', async () => {
   // Arrange
   workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
   const { getByRole, getByText } = await renderApp('/workspace/2');
 
   // Act
-  deleteWorkspaceRequestedHandler?.(2);
+  menuActionHandler?.({ kind: 'workspace', action: 'delete', id: 2 });
 
   // Assert
   await expect.element(getByRole('heading', { name: 'Delete workspace' })).toBeInTheDocument();
@@ -769,7 +759,7 @@ test('exporting from the delete dialog invokes opml:export and leaves the dialog
   // Arrange
   workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
   const { getByRole } = await renderApp('/workspace/2');
-  deleteWorkspaceRequestedHandler?.(2);
+  menuActionHandler?.({ kind: 'workspace', action: 'delete', id: 2 });
 
   // Act
   await getByRole('button', { name: 'Export as OPML' }).click();
@@ -784,7 +774,7 @@ test('confirming delete on the active workspace removes it and navigates to Home
   workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
   feedsByWorkspace = { 1: [createFeed({ id: 1, title: 'Home feed', workspaceId: 1 })] };
   const { getByRole, getByText } = await renderApp('/workspace/2');
-  deleteWorkspaceRequestedHandler?.(2);
+  menuActionHandler?.({ kind: 'workspace', action: 'delete', id: 2 });
 
   // Act
   await getByRole('button', { name: 'Delete workspace' }).click();
@@ -800,7 +790,7 @@ test('a failed delete keeps the dialog open and shows the error', async () => {
   workspaces = [createWorkspace({ id: 2, name: 'CI/CD watch' })];
   deleteWorkspaceResult = { success: false, error: { name: 'DB_ERROR', message: 'Could not delete the workspace.' } };
   const { getByRole, getByText } = await renderApp('/workspace/2');
-  deleteWorkspaceRequestedHandler?.(2);
+  menuActionHandler?.({ kind: 'workspace', action: 'delete', id: 2 });
 
   // Act
   await getByRole('button', { name: 'Delete workspace' }).click();
@@ -850,14 +840,14 @@ test('stores the choice when the toggle button is pressed', async () => {
 
   // Assert
   await expect.element(getByText('Home', { exact: true })).toBeVisible();
-  expect(invokeMock).toHaveBeenCalledWith('settings:set-workspace-rail-expanded', true);
+  expect(invokeMock).toHaveBeenCalledWith('settings:set', { key: 'workspaceRailExpanded', value: true });
 
   // Act
   await getByRole('button', { name: 'Hide workspace names' }).click();
 
   // Assert
   await expect.element(getByRole('button', { name: 'Show workspace names' })).toBeVisible();
-  expect(invokeMock).toHaveBeenCalledWith('settings:set-workspace-rail-expanded', false);
+  expect(invokeMock).toHaveBeenCalledWith('settings:set', { key: 'workspaceRailExpanded', value: false });
 });
 
 test('toggles the rail with the platform modifier and B', async () => {
@@ -884,5 +874,5 @@ test('ignores B without the modifier', async () => {
 
   // Assert
   await expect.element(getByRole('button', { name: 'Show workspace names' })).toBeVisible();
-  expect(invokeMock).not.toHaveBeenCalledWith('settings:set-workspace-rail-expanded', expect.anything());
+  expect(invokeMock).not.toHaveBeenCalledWith('settings:set', expect.anything());
 });

@@ -193,7 +193,7 @@ test('renaming a folder while on a workspace leaves the same-named Home folder a
     throw new Error('expected a Tech folder in the workspace');
   }
   await app.evaluate(({ BrowserWindow }, id) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send('feeds:rename-category-requested', id);
+    BrowserWindow.getAllWindows()[0]?.webContents.send('menu:action', { kind: 'category', action: 'rename', id });
   }, categoryId);
   await page.getByRole('textbox', { name: 'Rename Tech' }).fill('Alerts');
   await page.getByRole('textbox', { name: 'Rename Tech' }).press('Enter');
@@ -225,7 +225,7 @@ test('deleting a feed from one workspace leaves it in place in another', async (
 
   // Act: delete it while on the CI/CD watch workspace, standing in for the native menu's click.
   await app.evaluate(({ BrowserWindow }, id) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send('feeds:delete-feed-requested', id);
+    BrowserWindow.getAllWindows()[0]?.webContents.send('menu:action', { kind: 'feed', action: 'delete', id });
   }, feedId);
   await expect(page.getByRole('heading', { name: 'Remove feed' })).toBeVisible();
   await expect(page.getByText(/stays in 1 other workspace with its items/)).toBeVisible();

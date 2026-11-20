@@ -30,7 +30,7 @@ import {
   useDeleteFeedRequestedId,
   useMoveFeedRequestedId,
   useRenameCategoryRequestedId,
-} from "@/lib/ipc-bridge";
+} from "@/lib/push-events";
 import { readLocalStorageJSON, writeLocalStorageJSON } from "@/lib/local-storage";
 import { useCreateCategory, useMoveFeeds, useRenameCategory } from "@/providers/feeds-provider";
 import { isComposing } from "@/lib/keyboard";
@@ -225,7 +225,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
       return;
     }
 
-    const result = await renameCategory(editingCategoryId, name);
+    const result = await renameCategory({ categoryId: editingCategoryId, name });
     if (result.success) {
       setEditingCategoryId(null);
       setRenameError(null);
@@ -263,7 +263,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
       return;
     }
 
-    const result = await createCategory(name);
+    const result = await createCategory({ name });
     if (result.success) {
       cancelCreatingFolder();
     } else {
@@ -303,14 +303,14 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
         if (payload.workspaceId !== activeWorkspaceId) {
           // A feed carried here from another workspace (a rail hover opened this one mid-drag).
           if (folderName !== undefined) {
-            await moveFeedToWorkspace(payload.feedId, payload.workspaceId, activeWorkspaceId, folderName);
+            await moveFeedToWorkspace({ feedId: payload.feedId, fromWorkspaceId: payload.workspaceId, toWorkspaceId: activeWorkspaceId, categoryName: folderName });
           }
         } else if (feeds.find((feed) => feed.id === payload.feedId)?.category.id !== categoryId) {
           feedIds.push(payload.feedId);
         }
       }
       if (feedIds.length > 0) {
-        await moveFeeds(feedIds, categoryId);
+        await moveFeeds({ feedIds, categoryId });
       }
     },
   });
@@ -425,7 +425,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                 <div
                   onContextMenu={(event) => {
                     event.preventDefault();
-                    ipc.send('feeds:show-category-context-menu', folder.id);
+                    ipc.send('menu:show', { kind: 'category', id: folder.id });
                   }}
                   className={cx(
                     "group flex w-full items-center gap-1.5 rounded-xl px-2.25 py-1.75 text-sm font-semibold hover:bg-primary_hover",

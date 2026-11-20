@@ -5,7 +5,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import { activeHint, HINT_ORDER, readHintsState, writeHintsState, type HintId } from '@/lib/hints';
-import { ipc, rendererLogger } from '@/lib/ipc-client';
+import { rendererLogger } from '@/lib/ipc-client';
 import { feedsQuery, workspacesQuery } from '@/lib/queries';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
 
@@ -45,7 +45,7 @@ export const HintsProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     let cancelled = false;
     async function check() {
-      if (!(await ipc.invoke('app:hints-enabled', undefined))) {
+      if (!window.electron.hintsEnabled) {
         setSeen(new Set(HINT_ORDER));
         setPhase('ready');
         return;

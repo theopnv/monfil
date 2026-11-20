@@ -9,7 +9,7 @@ test('Saved keeps read and unread articles through restart and source removal', 
   // Arrange
   const setup = await launchApp();
   const feedId = await setup.evaluate(async (workspaceId) => {
-    await window.electron.ipcRenderer.invoke('settings:set-refresh-on-launch', false);
+    await window.electron.ipcRenderer.invoke('settings:set', { key: 'refreshOnLaunch', value: false });
     const result = await window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
       workspaceId, link: 'https://saved.example/feed', title: 'Saved source', type: 'rss',
       categoryName: 'Tech', showInWorkspace: true,

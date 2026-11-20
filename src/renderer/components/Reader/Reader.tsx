@@ -20,7 +20,7 @@ import { queryKeys, mergeRiverRows, queryItemPage } from "@/lib/queries";
 import { getReaderNavigation } from "@/lib/reader/reader";
 import { useReaderContent } from "@/lib/reader/useReaderContent";
 import { isTypingTarget } from "@/lib/river/useRiverKeyboardNav";
-import { useAppliedRefreshVersion } from '@/lib/ipc-bridge';
+import { useAppliedRefreshVersion } from '@/lib/push-events';
 import { useRiverScope } from "@/providers/river-scope-provider";
 import { useCategories, useFeeds, useFeedsPending, useReadState, useRiver } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
@@ -32,6 +32,26 @@ export interface ReaderProps {
   onNavigateHome: () => void;
   savedView?: boolean;
   onShowFeed?: () => void;
+}
+
+/** Loads one page while `enabled`, and merges its rows into the river unless the effect ran again first. */
+function useFetchRowIntoRiver(enabled: boolean, load: () => Promise<RiverPage>, merge: (rows: RiverPage['rows']) => void): void {
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+    let cancelled = false;
+    load()
+      .then((page) => {
+        if (!cancelled) {
+          merge(page.rows);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, load, merge]);
 }
 
 export default function Reader({ itemId, onNavigateToItem, onNavigateHome, savedView = false, onShowFeed }: ReaderProps) {
@@ -67,40 +87,21 @@ export default function Reader({ itemId, onNavigateToItem, onNavigateHome, saved
   }, [queryClient, scope]);
 
   // A deep link to an item outside the loaded window: fetch the exact row directly.
-  useEffect(() => {
-    if (currentItem || Number.isNaN(id)) {
-      return;
-    }
-    let cancelled = false;
-    queryItemPage({ workspaceId: scope.workspaceId, ...(scope.saved ? { saved: true } : {}) }, undefined, 1, [id])
-      .then((page) => {
-        if (!cancelled) {
-          mergeRows(page.rows);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [currentItem, id, mergeRows, scope.workspaceId, scope.saved]);
+  const loadDeepLinkRow = useCallback(
+    () => queryItemPage({ workspaceId: scope.workspaceId, ...(scope.saved ? { saved: true } : {}) }, undefined, 1, [id]),
+    [id, scope.workspaceId, scope.saved],
+  );
+  useFetchRowIntoRiver(!currentItem && !Number.isNaN(id), loadDeepLinkRow, mergeRows);
 
   // `nextUnread` found nothing locally: ask main for the next unread row past this one's cursor.
-  useEffect(() => {
-    if (!currentItem || (scope.saved ? navigation.next : navigation.nextUnread)) {
-      return;
+  const loadNextRow = useCallback(() => {
+    if (!currentItem) {
+      return Promise.resolve({ rows: [] });
     }
-    let cancelled = false;
-    queryItemPage({ ...scope, ...(scope.saved ? {} : { unreadOnly: true }) }, { publishedAt: currentItem.publishedAt, id: currentItem.id, ...(scope.saved ? { savedAt: currentItem.savedAt } : {}) }, 1)
-      .then((page) => {
-        if (!cancelled) {
-          mergeRows(page.rows);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [currentItem, navigation.next, navigation.nextUnread, scope, mergeRows]);
+    const cursor = { publishedAt: currentItem.publishedAt, id: currentItem.id, ...(scope.saved ? { savedAt: currentItem.savedAt } : {}) };
+    return queryItemPage({ ...scope, ...(scope.saved ? {} : { unreadOnly: true }) }, cursor, 1);
+  }, [currentItem, scope]);
+  useFetchRowIntoRiver(currentItem !== undefined && !(scope.saved ? navigation.next : navigation.nextUnread), loadNextRow, mergeRows);
 
   useEffect(() => {
     if (currentItemId !== undefined) {

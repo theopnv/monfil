@@ -32,7 +32,6 @@ beforeEach(() => {
       invoke: invokeMock,
       on: vi.fn(() => vi.fn()),
       sendMessage: vi.fn(),
-      once: vi.fn(),
     },
   } as unknown as typeof window.electron;
   vi.useFakeTimers();
@@ -97,7 +96,7 @@ describe('useFeedValidation', () => {
 
     // Assert
     expect(invokeMock).toHaveBeenCalledTimes(1);
-    expect(invokeMock).toHaveBeenCalledWith('feeds:validate-feed-url', { query: 'example.com/feed', type: undefined });
+    expect(invokeMock).toHaveBeenCalledWith('feeds:discover', { query: 'example.com/feed', type: undefined });
   });
 
   test('sends the type hint, and re-validates unchanged text when the hint changes', async () => {
@@ -111,8 +110,8 @@ describe('useFeedValidation', () => {
     await vi.advanceTimersByTimeAsync(450);
 
     // Assert
-    expect(invokeMock).toHaveBeenNthCalledWith(1, 'feeds:validate-feed-url', { query: 'https://youtube.com/@Underscore_', type: 'youtube' });
-    expect(invokeMock).toHaveBeenNthCalledWith(2, 'feeds:validate-feed-url', { query: 'https://youtube.com/@Underscore_', type: 'rss' });
+    expect(invokeMock).toHaveBeenNthCalledWith(1, 'feeds:discover', { query: 'https://youtube.com/@Underscore_', type: 'youtube' });
+    expect(invokeMock).toHaveBeenNthCalledWith(2, 'feeds:discover', { query: 'https://youtube.com/@Underscore_', type: 'rss' });
   });
 
   test('maps a successful validation to status "found"', async () => {

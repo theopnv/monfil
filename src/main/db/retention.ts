@@ -6,6 +6,7 @@ import { sql } from 'kysely';
 import { db, dbReady, vacuumDatabase } from './database';
 import type { RetentionDays, SourceItem } from '../../shared/contracts';
 import { logger } from '../logging/logger';
+import { publishedAtOrFallback } from './dates';
 
 const DAY_MS = 86_400_000;
 const VACUUM_THRESHOLD = 1_000;
@@ -15,16 +16,13 @@ export function retentionCutoff(days: RetentionDays, now = Date.now()): number {
 }
 
 export function isItemExpired(item: Pick<SourceItem, 'pubDate'>, cutoff: number, fetchedAt = Date.now()): boolean {
-  const published = new Date(item.pubDate).getTime();
-  return (Number.isFinite(published) ? published : fetchedAt) < cutoff;
+  return publishedAtOrFallback(item.pubDate, fetchedAt) < cutoff;
 }
 
 export function retainedFetchedItems<T extends Pick<SourceItem, 'pubDate'>>(items: T[], cutoff: number, fetchedAt = Date.now()): T[] {
-  const newest = new Set([...items]
-    .sort((a, b) => (Number.isFinite(new Date(b.pubDate).getTime()) ? new Date(b.pubDate).getTime() : fetchedAt)
-      - (Number.isFinite(new Date(a.pubDate).getTime()) ? new Date(a.pubDate).getTime() : fetchedAt))
-    .slice(0, 10));
-  return items.filter((item) => newest.has(item) || !isItemExpired(item, cutoff, fetchedAt));
+  const dated = items.map((item) => ({ item, publishedAt: publishedAtOrFallback(item.pubDate, fetchedAt) }));
+  const newest = new Set(dated.toSorted((a, b) => b.publishedAt - a.publishedAt).slice(0, 10).map(({ item }) => item));
+  return dated.filter(({ item, publishedAt }) => newest.has(item) || publishedAt >= cutoff).map(({ item }) => item);
 }
 
 export async function pruneExpiredItems(days: RetentionDays, now = Date.now()): Promise<number> {

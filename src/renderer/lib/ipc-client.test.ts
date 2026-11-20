@@ -4,13 +4,12 @@
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ipc, rendererLogger } from './ipc-client';
-import type { TwoWayRendererMainChannels } from '../../shared/channels';
 
 const invoke = vi.fn();
 
 beforeEach(() => {
   invoke.mockReset();
-  window.electron = { ipcRenderer: { invoke, on: vi.fn(), once: vi.fn(), sendMessage: vi.fn() } };
+  window.electron = { ipcRenderer: { invoke, on: vi.fn(), sendMessage: vi.fn() } };
 });
 
 test('throws a named error for invalid payloads', async () => {
@@ -93,17 +92,28 @@ describe('rendererLogger', () => {
   });
 });
 
+test('returns the response of a channel without an argument', async () => {
+  // Arrange
+  invoke.mockResolvedValue([]);
+
+  // Act
+  const result = await ipc.invoke('workspaces:list');
+
+  // Assert
+  expect(result).toEqual([]);
+});
+
 test.each([
-  { channel: 'settings:get-refresh-on-launch', response: false },
-  { channel: 'settings:get-refresh-interval', response: 30 },
-  { channel: 'workspaces:list', response: [] },
-] satisfies { channel: TwoWayRendererMainChannels; response: unknown }[])('returns a valid response for $channel', async ({ channel, response }) => {
+  { key: 'refreshOnLaunch', response: false },
+  { key: 'refreshInterval', response: 30 },
+] as const)('reads the setting $key', async ({ key, response }) => {
   // Arrange
   invoke.mockResolvedValue(response);
 
   // Act
-  const result = await ipc.invoke(channel, undefined);
+  const result = await ipc.invoke('settings:get', { key });
 
   // Assert
   expect(result).toEqual(response);
+  expect(invoke).toHaveBeenCalledExactlyOnceWith('settings:get', { key });
 });

@@ -4,6 +4,7 @@
 
 import { fetchText } from '../../lib/fetch';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../../lib/constants';
+import { parseHttpUrl } from '../../../shared/url';
 
 const LINK_TAG_REGEX = /<link\b[^>]*>/gi;
 const REL_REGEX = /\brel\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
@@ -93,13 +94,8 @@ async function declaredIcon(siteUrl: URL): Promise<string | undefined> {
  * @returns the icon URL, or undefined when the site has none
  */
 export async function resolveSiteIcon(siteLink: string): Promise<string | undefined> {
-  let siteUrl: URL;
-  try {
-    siteUrl = new URL(siteLink);
-  } catch {
-    return undefined;
-  }
-  if (siteUrl.protocol !== 'http:' && siteUrl.protocol !== 'https:') {
+  const siteUrl = parseHttpUrl(siteLink);
+  if (!siteUrl) {
     return undefined;
   }
   try {

@@ -5,15 +5,14 @@
 import { contextBridge, ipcRenderer } from "electron/renderer";
 import type { IpcRendererEvent } from "electron";
 import type {
-  ElectronHandler,
   OneWayMainToRendererChannelPayloads,
   OneWayMainToRendererChannels,
   OneWayRendererToMainChannelPayloads,
   OneWayRendererToMainChannels,
-  IpcInvokeResponse,
-  TwoWayRendererMainChannels,
-  TwoWayRendererMainChannelsInvokeArgs,
 } from "../shared/channels";
+import type { ElectronHandler } from "../shared/electron-handler";
+import type { ArgOf, InvokeChannel, IpcInvokeResponse } from "../shared/ipc-schema";
+import { HINTS_ARGUMENT } from "../shared/contracts";
 import { SYSTEM_LOCALE_ARGUMENT } from "../shared/i18n/format-locale";
 import { isLanguageCode, LANGUAGE_ARGUMENT } from "../shared/i18n/languages";
 
@@ -22,9 +21,12 @@ const systemLocale = process.argv.find((argument) => argument.startsWith(SYSTEM_
 const argumentLanguage = process.argv.find((argument) => argument.startsWith(LANGUAGE_ARGUMENT))?.slice(LANGUAGE_ARGUMENT.length);
 const language = isLanguageCode(argumentLanguage) ? argumentLanguage : undefined;
 
+const hintsArgument = process.argv.find((argument) => argument.startsWith(HINTS_ARGUMENT))?.slice(HINTS_ARGUMENT.length);
+
 const electronHandler: ElectronHandler = {
   ...(systemLocale ? { systemLocale } : {}),
   ...(language ? { language } : {}),
+  ...(hintsArgument ? { hintsEnabled: hintsArgument === 'true' } : {}),
   ipcRenderer: {
     sendMessage<C extends OneWayRendererToMainChannels>(channel: C, payload: OneWayRendererToMainChannelPayloads[C]) {
       ipcRenderer.send(channel, payload);
@@ -38,10 +40,7 @@ const electronHandler: ElectronHandler = {
         ipcRenderer.removeListener(channel, subscription);
       };
     },
-    once<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void) {
-      ipcRenderer.once(channel, (_event, payload: OneWayMainToRendererChannelPayloads[C]) => func(payload));
-    },
-    invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<IpcInvokeResponse<C>> {
+    invoke<C extends InvokeChannel>(channel: C, arg: ArgOf<C>): Promise<IpcInvokeResponse<C>> {
       return ipcRenderer.invoke(channel, arg);
     }
   },

@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { page } from 'vitest/browser';
-import { useIpcBridge } from '@/lib/ipc-bridge';
+import { usePushEvents } from '@/lib/push-events';
 import { dismissAllNotifications, NotificationHost } from '@/lib/notifications';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import { useUpdateNotification } from './app-update';
@@ -15,7 +15,7 @@ let pushUpdateState: ((state: AppUpdateState) => void) | undefined;
 let sendMock: ReturnType<typeof vi.fn>;
 
 function UpdateHarness() {
-  useIpcBridge();
+  usePushEvents();
   useUpdateNotification();
   return <NotificationHost />;
 }
@@ -33,7 +33,6 @@ beforeEach(() => {
         }
         return vi.fn();
       }),
-      once: vi.fn(),
       sendMessage: sendMock,
     },
   } as unknown as typeof window.electron;

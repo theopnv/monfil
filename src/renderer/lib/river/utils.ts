@@ -82,8 +82,8 @@ export function formatRelativeTime(publishedAt: number, locale: string): string 
 }
 
 /** Screen-reader label for a river card: state isn't conveyed by opacity alone. */
-export function describeRiverCard(item: RiverRow, read: boolean, t: TFunction<'river'>, locale: string): string {
-  return t('card.label', { context: read ? 'read' : 'unread', title: item.title, feed: item.feedTitle, time: formatRelativeTime(item.publishedAt, locale) });
+export function describeRiverCard(item: RiverRow, read: boolean, t: TFunction<'river'>, time: string): string {
+  return t('card.label', { context: read ? 'read' : 'unread', title: item.title, feed: item.feedTitle, time });
 }
 
 const WORDS_PER_MINUTE = 200;

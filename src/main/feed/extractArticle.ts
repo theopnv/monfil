@@ -11,6 +11,7 @@ import { resolveEmbedUrl, type EmbedDescriptor } from '../../shared/embeds';
 import { removeFollowAuthorControls } from '../../shared/follow-author';
 import { countWords } from '../../shared/word-count';
 import { MIN_ARTICLE_LENGTH } from '../lib/constants';
+import { parseHttpUrl } from '../../shared/url';
 
 export interface ExtractedArticle {
   html: string;
@@ -22,12 +23,7 @@ function httpUrl(value: string | null, baseUrl: string): string | undefined {
   if (!value) {
     return undefined;
   }
-  try {
-    const url = new URL(value, baseUrl);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
-  } catch {
-    return undefined;
-  }
+  return parseHttpUrl(value, baseUrl)?.href;
 }
 
 function prepareImages(document: Document, baseUrl: string): void {

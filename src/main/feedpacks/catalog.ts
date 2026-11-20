@@ -7,7 +7,7 @@ import path from 'node:path';
 import { app } from 'electron';
 import type { CatalogError, Feedpack, FeedpackCatalog, FeedpackText, FetchUrlError } from '../../shared/contracts';
 import { fetchText } from '../lib/fetch';
-import type { Result } from '../../shared/result';
+import { fail, type Result } from '../../shared/result';
 
 const CATALOG_URL = 'https://raw.githubusercontent.com/theopnv/monfil/main/feedpacks/index.json';
 const CATALOG_VERSION = 1;
@@ -54,11 +54,11 @@ function parseCatalog(text: string): Result<FeedpackCatalog, CatalogError> {
   try {
     document = JSON.parse(text);
   } catch {
-    return { success: false, error: { name: 'INVALID_CATALOG', message: 'The feedpack catalog is not valid JSON.' } };
+    return fail('INVALID_CATALOG', 'The feedpack catalog is not valid JSON.');
   }
 
   if (typeof document !== 'object' || document === null) {
-    return { success: false, error: { name: 'INVALID_CATALOG', message: 'The feedpack catalog has an invalid shape.' } };
+    return fail('INVALID_CATALOG', 'The feedpack catalog has an invalid shape.');
   }
   const catalog = document as Record<string, unknown>;
   if (catalog['version'] !== CATALOG_VERSION) {
@@ -68,7 +68,7 @@ function parseCatalog(text: string): Result<FeedpackCatalog, CatalogError> {
     };
   }
   if (!Array.isArray(catalog['packs']) || !catalog['packs'].every(isFeedpack)) {
-    return { success: false, error: { name: 'INVALID_CATALOG', message: 'The feedpack catalog has an invalid shape.' } };
+    return fail('INVALID_CATALOG', 'The feedpack catalog has an invalid shape.');
   }
   return { success: true, data: { version: CATALOG_VERSION, packs: catalog['packs'] } };
 }
@@ -78,7 +78,7 @@ export function createCatalogService(dependencies: CatalogDependencies): { get: 
     try {
       return parseCatalog(await dependencies.readFile(dependencies.bundledPath, 'utf-8'));
     } catch {
-      return { success: false, error: { name: 'UNAVAILABLE', message: 'The bundled feedpack catalog is unavailable.' } };
+      return fail('UNAVAILABLE', 'The bundled feedpack catalog is unavailable.');
     }
   }
 

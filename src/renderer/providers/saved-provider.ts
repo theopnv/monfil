@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient, type InfiniteData, type QueryKey } from '@tanstack/react-query';
 import { ipc } from '@/lib/ipc-client';
 import { notifyError } from '@/lib/notifications';
-import { patchRiverRows, type RiverScope } from '@/lib/queries';
+import { patchRiverRows, queryKeys, type RiverScope } from '@/lib/queries';
 import { useActiveWorkspaceId } from './workspace-provider';
 import type { RiverPage, SetSavedItemInput } from '../../shared/contracts';
 
@@ -23,7 +23,7 @@ export function useSavedState() {
     },
     onMutate: async (input) => {
       const filter = {
-        queryKey: ['river'],
+        queryKey: queryKeys.riverAll,
         predicate: (query: { queryKey: QueryKey }) => (query.queryKey[1] as RiverScope).workspaceId === input.workspaceId,
       };
       await queryClient.cancelQueries(filter);
@@ -52,7 +52,7 @@ export function useSavedState() {
       notifyError(input.saved ? t('saveFailed') : t('unsaveFailed'));
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ['river'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.riverAll });
     },
   });
   return {

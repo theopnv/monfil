@@ -4,7 +4,7 @@
 
 import { redirect } from '@tanstack/react-router';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
-import { isPositiveSafeInteger } from '../../shared/validation';
+import { isPositiveSafeInteger } from '../../shared/guards';
 
 export function parseRouteId(value: string | undefined): number | undefined {
   // Stryker disable next-line ConditionalExpression: an empty string reads as 0, which isPositiveSafeInteger refuses as well

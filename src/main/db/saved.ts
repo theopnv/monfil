@@ -2,32 +2,21 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { sql, type Kysely } from 'kysely';
+import { sql } from 'kysely';
+import { collectUnplacedFeeds } from './crud/delete';
 import { db, dbReady } from './database';
+import { paginate } from './paging';
 import { searchCondition } from './search';
-import type { Database } from './types';
 import type { RiverPage, SavedQuery, SetSavedItemInput, UpdateSavedItemError } from '../../shared/contracts';
-import type { Result } from '../../shared/result';
-
-export async function collectUnplacedFeeds(executor: Kysely<Database>): Promise<void> {
-  await executor.deleteFrom('feedItem')
-    .where('feed_id', 'in', executor.selectFrom('feedMetadata').select('id')
-      .where((eb) => eb.not(eb.exists(eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id')))))
-    .where((eb) => eb.not(eb.exists(eb.selectFrom('savedItem').select('item_id').whereRef('savedItem.item_id', '=', 'feedItem.id'))))
-    .execute();
-  await executor.deleteFrom('feedMetadata')
-    .where((eb) => eb.not(eb.exists(eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id'))))
-    .where((eb) => eb.not(eb.exists(eb.selectFrom('feedItem').select('id').whereRef('feedItem.feed_id', '=', 'feedMetadata.id'))))
-    .execute();
-}
+import { fail, ok, type Result } from '../../shared/result';
+import { dbTry } from './db-try';
 
 export async function setItemSaved(input: SetSavedItemInput, now = Date.now()): Promise<Result<void, UpdateSavedItemError>> {
-  await dbReady;
-  try {
+  return dbTry(async () => {
     return await db.transaction().execute(async (trx): Promise<Result<void, UpdateSavedItemError>> => {
       const workspace = await trx.selectFrom('workspace').select('id').where('id', '=', input.workspaceId).executeTakeFirst();
       if (!workspace) {
-        return { success: false, error: { name: 'WORKSPACE_NOT_FOUND', message: 'The workspace could not be found.' } };
+        return fail('WORKSPACE_NOT_FOUND', 'The workspace could not be found.');
       }
       if (input.saved) {
         const item = await trx.selectFrom('feedItem').select('id').where('id', '=', input.itemId)
@@ -36,7 +25,7 @@ export async function setItemSaved(input: SetSavedItemInput, now = Date.now()): 
             eb.exists(eb.selectFrom('savedItem').select('item_id').whereRef('savedItem.item_id', '=', 'feedItem.id').where('workspace_id', '=', input.workspaceId)),
           ])).executeTakeFirst();
         if (!item) {
-          return { success: false, error: { name: 'ITEM_NOT_FOUND', message: 'The item could not be found in this workspace.' } };
+          return fail('ITEM_NOT_FOUND', 'The item could not be found in this workspace.');
         }
         await trx.insertInto('savedItem')
           .values({ workspace_id: input.workspaceId, item_id: input.itemId, saved_at: now })
@@ -45,11 +34,9 @@ export async function setItemSaved(input: SetSavedItemInput, now = Date.now()): 
         await trx.deleteFrom('savedItem').where('workspace_id', '=', input.workspaceId).where('item_id', '=', input.itemId).execute();
         await collectUnplacedFeeds(trx);
       }
-      return { success: true, data: undefined };
+      return ok();
     });
-  } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'The item could not be saved.' } };
-  }
+  }, { fallback: 'The item could not be saved.' });
 }
 
 export async function querySavedPage(query: SavedQuery): Promise<RiverPage> {
@@ -84,11 +71,9 @@ export async function querySavedPage(query: SavedQuery): Promise<RiverPage> {
     ]));
   }
   const rows = await builder.orderBy('s.saved_at', 'desc').orderBy('i.id', 'desc').limit(query.limit + 1).execute();
-  const hasMore = rows.length > query.limit;
-  const page = hasMore ? rows.slice(0, query.limit) : rows;
-  const last = page[page.length - 1];
+  const { page, last } = paginate(rows, query.limit);
   return {
     rows: page,
-    ...(hasMore && last ? { nextCursor: { savedAt: last.savedAt, publishedAt: last.publishedAt, id: last.id } } : {}),
+    ...(last ? { nextCursor: { savedAt: last.savedAt, publishedAt: last.publishedAt, id: last.id } } : {}),
   };
 }

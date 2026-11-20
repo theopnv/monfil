@@ -11,7 +11,7 @@ import RiverFilterStrip from "@/components/Home/RiverFilterStrip";
 import RiverSearch from "@/components/Home/RiverSearch";
 import { cx } from "@/components/untitled-ui/utils/cx";
 import { announce } from "@/lib/announcer";
-import { useApplyPendingRefresh, useHasPendingRefresh } from "@/lib/ipc-bridge";
+import { useApplyPendingRefresh, useHasPendingRefresh } from "@/lib/push-events";
 import { useFeedsRefresh } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";
 import { useActiveWorkspace } from "@/providers/workspace-provider";

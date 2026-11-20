@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ExportOpmlError } from "../../shared/contracts";
 import type { ImportOpmlError, ImportOpmlTarget, ImportSummary } from "../../shared/contracts";
 import type { Result } from "../../shared/result";
-import { queryKeys } from "../lib/queries";
+import { invalidateAll, invalidationSets } from "../lib/queries";
 
 export const useImportOpml = (): ((target: ImportOpmlTarget) => Promise<Result<ImportSummary, ImportOpmlError>>) => {
   const queryClient = useQueryClient();
@@ -16,10 +16,7 @@ export const useImportOpml = (): ((target: ImportOpmlTarget) => Promise<Result<I
     mutationFn: (target: ImportOpmlTarget) => ipc.invoke('opml:import', { target }),
     onSuccess: (result) => {
       if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
-        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-        void queryClient.invalidateQueries({ queryKey: ['categories'] });
-        void queryClient.invalidateQueries({ queryKey: ['river'] });
+        invalidateAll(queryClient, invalidationSets.workspaceContents);
       }
     },
   });

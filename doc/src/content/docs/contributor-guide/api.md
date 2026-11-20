@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-The [channel contracts](https://github.com/theopnv/monfil/blob/main/src/shared/channels.ts) define calls and their argument and return types. [Shared data types](https://github.com/theopnv/monfil/blob/main/src/shared/contracts.ts) describe the payloads. The renderer calls main through `window.electron.ipcRenderer`.
+The [invoke schema](https://github.com/theopnv/monfil/blob/main/src/shared/ipc-schema.ts) holds one entry per `invoke` channel: the guard that checks its argument, and its result type. The [channel contracts](https://github.com/theopnv/monfil/blob/main/src/shared/channels.ts) define the one-way channels. [Shared data types](https://github.com/theopnv/monfil/blob/main/src/shared/contracts.ts) describe the payloads. The renderer calls main through `window.electron.ipcRenderer`.
 
 ## Read the channel list
 
@@ -22,9 +22,7 @@ Load initial state, such as the feed list, with `invoke`. Use `on` for later upd
 | `app:back-up-database` | `invoke` | Open the manual database backup dialog. |
 | `app:get-info` | `invoke` | Get app details. |
 | `app:get-startup-health` | `invoke` | Get database startup status. |
-| `app:reveal-database-file` | `sendMessage` | Show the database file in the file manager. |
-| `app:reveal-log-file` | `sendMessage` | Show the log file. |
-| `app:reveal-database-backup` | `sendMessage` | Show the database backup. |
+| `app:reveal` | `sendMessage` | Show the database file, the log file, or the database backup in the file manager. |
 | `app:restart` | `sendMessage` | Restart the app. |
 | `app:set-window-theme` | `sendMessage` | Match the window chrome to the selected theme. |
 
@@ -41,7 +39,7 @@ Load initial state, such as the feed list, with `invoke`. Use `on` for later upd
 
 | Channel | Call | Purpose |
 | --- | --- | --- |
-| `feeds:validate-feed-url` | `invoke` | Resolve and fetch a feed entered by the user. |
+| `feeds:discover` | `invoke` | Resolve and fetch a feed entered by the user. |
 | `feeds:list-categories` | `invoke` | Get categories in a workspace. |
 | `feeds:list` | `invoke` | Get feeds in a workspace. |
 | `feeds:refresh` | `invoke` | Refresh feeds now. |
@@ -53,13 +51,8 @@ Load initial state, such as the feed list, with `invoke`. Use `on` for later upd
 | `feeds:delete-category` | `invoke` | Delete a category and reassign its feeds. |
 | `feeds:move-feeds-to-category` | `invoke` | Move feeds to a category. |
 | `feeds:move-to-workspace` | `invoke` | Move a feed between workspaces. |
-| `feeds:show-feed-context-menu` | `sendMessage` | Open a feed's native context menu. |
-| `feeds:show-category-context-menu` | `sendMessage` | Open a category's native context menu. |
 | `feeds:item-image-fetched` | `on` | Receive an image found after refresh. |
 | `feeds:refreshed` | `on` | Receive a background refresh summary. |
-| `feeds:delete-feed-requested` | `on` | Handle a delete action from the context menu. |
-| `feeds:rename-category-requested` | `on` | Handle a rename action from the context menu. |
-| `feeds:delete-category-requested` | `on` | Handle a delete action from the context menu. |
 
 ## `items:*`
 
@@ -88,18 +81,19 @@ Load initial state, such as the feed list, with `invoke`. Use `on` for later upd
 | `opml:import` | `invoke` | Import feeds from an OPML file. |
 | `opml:export` | `invoke` | Export one workspace as OPML. |
 
+## `menu:*`
+
+| Channel | Call | Purpose |
+| --- | --- | --- |
+| `menu:show` | `sendMessage` | Open the native context menu of a feed, category, or workspace. |
+| `menu:action` | `on` | Receive the action the user picked in that menu. |
+
 ## `settings:*`
 
 | Channel | Call | Purpose |
 | --- | --- | --- |
-| `settings:get-refresh-interval` | `invoke` | Get the scheduled refresh interval. |
-| `settings:set-refresh-interval` | `invoke` | Set the scheduled refresh interval. |
-| `settings:get-refresh-on-launch` | `invoke` | Get the launch refresh setting. |
-| `settings:set-refresh-on-launch` | `invoke` | Set the launch refresh setting. |
-| `settings:get-retention-days` | `invoke` | Get the item retention period. |
-| `settings:set-retention-days` | `invoke` | Set the item retention period. |
-| `settings:get-detailed-logging` | `invoke` | Get the detailed logging setting. |
-| `settings:set-detailed-logging` | `invoke` | Set the detailed logging setting. |
+| `settings:get` | `invoke` | Read one setting by key: refresh interval, refresh on launch, retention days, detailed logging, workspace rail, language, or usage stats consent. |
+| `settings:set` | `invoke` | Write one setting by key and return its new state. |
 
 ## `workspaces:*`
 
@@ -110,10 +104,6 @@ Load initial state, such as the feed list, with `invoke`. Use `on` for later upd
 | `workspaces:update` | `invoke` | Change a workspace. |
 | `workspaces:delete` | `invoke` | Delete a workspace. |
 | `workspaces:reorder` | `invoke` | Set workspace order. |
-| `workspaces:show-context-menu` | `sendMessage` | Open a workspace's native context menu. |
-| `workspaces:edit-requested` | `on` | Handle an edit action from the context menu. |
-| `workspaces:export-requested` | `on` | Handle an export action from the context menu. |
-| `workspaces:delete-requested` | `on` | Handle a delete action from the context menu. |
 
 ## Handle errors
 
@@ -121,4 +111,4 @@ Expected failures use the shared [`Result` type](https://github.com/theopnv/monf
 
 ## Add or change a channel
 
-Define the arguments and result in the channel contracts. Keep shared data shapes in the shared contracts. Main registers calls and listeners in its [IPC folder](https://github.com/theopnv/monfil/tree/main/src/main/ipc). For an event to the renderer, use the typed send helpers and attach a listener with cleanup. Add a test at the boundary where behavior changes.
+For an `invoke` channel, add one entry to the invoke schema and one entry to the [route table](https://github.com/theopnv/monfil/blob/main/src/main/ipc/routes.ts). A missing route does not compile. For a one-way channel, define the payload in the channel contracts and register a listener in the [IPC folder](https://github.com/theopnv/monfil/tree/main/src/main/ipc). Keep shared data shapes in the shared contracts. For an event to the renderer, use the typed send helpers and attach a listener with cleanup. Add a test at the boundary where behavior changes.

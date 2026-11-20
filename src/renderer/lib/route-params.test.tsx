@@ -40,7 +40,7 @@ const invoke = vi.fn().mockResolvedValue([]);
 
 beforeEach(() => {
   invoke.mockClear();
-  window.electron = { ipcRenderer: { invoke, on: vi.fn(), once: vi.fn(), sendMessage: vi.fn() } };
+  window.electron = { ipcRenderer: { invoke, on: vi.fn(), sendMessage: vi.fn() } };
 });
 
 function createTestRouter(path: string) {

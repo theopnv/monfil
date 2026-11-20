@@ -2,10 +2,25 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { db, dbReady } from '../database';
-import { collectUnplacedFeeds } from '../saved';
+import type { Kysely } from 'kysely';
+import { db } from '../database';
+import type { Database } from '../types';
 import { HOME_WORKSPACE_ID, type DeleteCategoryError, type DeleteFeedError, type DeleteWorkspaceError } from '../../../shared/contracts';
-import type { Result } from '../../../shared/result';
+import { fail, ok, type Result } from '../../../shared/result';
+import { dbTry } from '../db-try';
+
+/** Deletes the feeds that no workspace holds any more, and their items unless the item is saved. */
+export async function collectUnplacedFeeds(executor: Kysely<Database>): Promise<void> {
+  await executor.deleteFrom('feedItem')
+    .where('feed_id', 'in', executor.selectFrom('feedMetadata').select('id')
+      .where((eb) => eb.not(eb.exists(eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id')))))
+    .where((eb) => eb.not(eb.exists(eb.selectFrom('savedItem').select('item_id').whereRef('savedItem.item_id', '=', 'feedItem.id'))))
+    .execute();
+  await executor.deleteFrom('feedMetadata')
+    .where((eb) => eb.not(eb.exists(eb.selectFrom('feedPlacement').select('feed_id').whereRef('feedPlacement.feed_id', '=', 'feedMetadata.id'))))
+    .where((eb) => eb.not(eb.exists(eb.selectFrom('feedItem').select('id').whereRef('feedItem.feed_id', '=', 'feedMetadata.id'))))
+    .execute();
+}
 
 /**
  * Removes a feed from `workspaceId`. The underlying feed, and through the `feedItem.feed_id`
@@ -14,8 +29,7 @@ import type { Result } from '../../../shared/result';
  * @param workspaceId the workspace to remove it from
  */
 export async function deleteFeedFromDatabase(feedId: number, workspaceId: number): Promise<Result<void, DeleteFeedError>> {
-  await dbReady;
-  try {
+  return dbTry(async () => {
     const deleted = await db.transaction().execute(async (trx) => {
       const deleted = await trx.deleteFrom('feedPlacement')
         .where('feed_id', '=', feedId)
@@ -30,12 +44,10 @@ export async function deleteFeedFromDatabase(feedId: number, workspaceId: number
     });
 
     if (deleted.numDeletedRows === 0n) {
-      return { success: false, error: { name: 'FEED_NOT_FOUND', message: `No feed found with id ${feedId} in workspace ${workspaceId}` } };
+      return fail('FEED_NOT_FOUND', `No feed found with id ${feedId} in workspace ${workspaceId}`);
     }
-    return { success: true, data: undefined };
-  } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
-  }
+    return ok();
+  });
 }
 
 class CategoryNotFoundError extends Error {}
@@ -50,8 +62,7 @@ class CategoryNotFoundError extends Error {}
  * @param workspaceId the workspace both categories belong to
  */
 export async function deleteCategory(categoryId: number, workspaceId: number, reassignTo?: number): Promise<Result<void, DeleteCategoryError>> {
-  await dbReady;
-  try {
+  return dbTry(async () => {
     const result = await db.transaction().execute(async (trx) => {
       if (reassignTo === undefined) {
         await trx.deleteFrom('feedPlacement')
@@ -83,15 +94,10 @@ export async function deleteCategory(categoryId: number, workspaceId: number, re
         .executeTakeFirst();
     });
     if (result.numDeletedRows === 0n) {
-      return { success: false, error: { name: 'CATEGORY_NOT_FOUND', message: `No category found with id ${categoryId} in workspace ${workspaceId}` } };
+      return fail('CATEGORY_NOT_FOUND', `No category found with id ${categoryId} in workspace ${workspaceId}`);
     }
-    return { success: true, data: undefined };
-  } catch (error) {
-    if (error instanceof CategoryNotFoundError) {
-      return { success: false, error: { name: 'CATEGORY_NOT_FOUND', message: error.message } };
-    }
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
-  }
+    return ok();
+  }, { mapKnown: (error) => (error instanceof CategoryNotFoundError ? fail('CATEGORY_NOT_FOUND', error.message) : undefined) });
 }
 
 /**
@@ -101,11 +107,10 @@ export async function deleteCategory(categoryId: number, workspaceId: number, re
  */
 export async function deleteWorkspace(workspaceId: number): Promise<Result<void, DeleteWorkspaceError>> {
   if (workspaceId === HOME_WORKSPACE_ID) {
-    return { success: false, error: { name: 'HOME_NOT_DELETABLE', message: 'The Home workspace cannot be deleted.' } };
+    return fail('HOME_NOT_DELETABLE', 'The Home workspace cannot be deleted.');
   }
 
-  await dbReady;
-  try {
+  return dbTry(async () => {
     const result = await db.transaction().execute(async (trx) => {
       await trx.deleteFrom('savedItem').where('workspace_id', '=', workspaceId).execute();
       await trx.deleteFrom('feedPlacement').where('workspace_id', '=', workspaceId).execute();
@@ -116,10 +121,8 @@ export async function deleteWorkspace(workspaceId: number): Promise<Result<void,
     });
 
     if (result.numDeletedRows === 0n) {
-      return { success: false, error: { name: 'WORKSPACE_NOT_FOUND', message: `No workspace found with id ${workspaceId}` } };
+      return fail('WORKSPACE_NOT_FOUND', `No workspace found with id ${workspaceId}`);
     }
-    return { success: true, data: undefined };
-  } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
-  }
+    return ok();
+  });
 }

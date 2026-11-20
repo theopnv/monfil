@@ -191,7 +191,7 @@ describe('describeRiverCard', () => {
     const row = createRow({ title: 'A headline', feedTitle: 'Feed A', publishedAt: Date.now() });
 
     // Act
-    const result = describeRiverCard(row, false, t, 'en');
+    const result = describeRiverCard(row, false, t, formatRelativeTime(row.publishedAt, 'en'));
 
     // Assert
     expect(result).toBe(`A headline, unread, from Feed A, ${formatRelativeTime(row.publishedAt, 'en')}.`);
@@ -202,7 +202,7 @@ describe('describeRiverCard', () => {
     const row = createRow({ title: 'A headline', feedTitle: 'Feed A', publishedAt: Date.now() });
 
     // Act
-    const result = describeRiverCard(row, true, t, 'en');
+    const result = describeRiverCard(row, true, t, formatRelativeTime(row.publishedAt, 'en'));
 
     // Assert
     expect(result).toBe(`A headline, read, from Feed A, ${formatRelativeTime(row.publishedAt, 'en')}.`);

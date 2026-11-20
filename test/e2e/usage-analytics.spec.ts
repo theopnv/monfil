@@ -68,7 +68,7 @@ test('sends nothing before the user agrees, nothing after they refuse, then one 
   expect(received).toHaveLength(0);
 
   // Act
-  await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:set-usage-analytics', 'denied'));
+  await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:set', { key: 'usageAnalytics', value: 'denied' }));
   await appPage.evaluate(() => window.electron.ipcRenderer.invoke('items:get-content', 1));
   await appPage.waitForTimeout(1500);
 
@@ -76,7 +76,7 @@ test('sends nothing before the user agrees, nothing after they refuse, then one 
   expect(received).toHaveLength(0);
 
   // Act
-  await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:set-usage-analytics', 'granted'));
+  await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:set', { key: 'usageAnalytics', value: 'granted' }));
   await expect.poll(() => received.some((request) => request.events.some((event) => event.eventName === 'consent_granted'))).toBe(true);
   await appPage.evaluate(() => window.electron.ipcRenderer.invoke('items:get-content', 1));
   await expect.poll(() => received.some((request) => request.events.some((event) => event.eventName === 'daily_summary'))).toBe(true);

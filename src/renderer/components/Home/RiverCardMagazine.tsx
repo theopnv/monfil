@@ -8,39 +8,31 @@ import FeedAvatar from "@/components/common/FeedAvatar";
 import JobFacts from "@/components/Home/JobFacts";
 import RiverCardImage from "@/components/Home/RiverCardImage";
 import { Badge } from "@/components/untitled-ui/base/badges/badges";
-import { cx } from "@/components/untitled-ui/utils/cx";
+import { CategoryChip, RiverCardShell, UnreadDot } from "@/components/Home/RiverCardShell";
 import { describeRiverCard, formatRelativeTime, sourceTypeLabel, type RiverCardProps } from "@/lib/river/utils";
 
 export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps) {
   const { t } = useTranslation('river');
   const locale = useFormatLocale();
+  const time = formatRelativeTime(item.publishedAt, locale);
   return (
-    <article
-      data-item-id={item.id}
-      role="button"
-      tabIndex={0}
-      aria-label={describeRiverCard(item, read, t, locale)}
-      onClick={() => onOpen(item.id)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onOpen(item.id);
-        }
-      }}
-      className={cx(
-        "flex cursor-pointer flex-col overflow-hidden rounded-xl border border-secondary bg-primary transition hover:border-brand hover:shadow-md",
-        read && "opacity-50",
-      )}
+    <RiverCardShell
+      as="article"
+      item={item}
+      read={read}
+      onOpen={onOpen}
+      label={describeRiverCard(item, read, t, time)}
+      className="flex cursor-pointer flex-col overflow-hidden rounded-xl border border-secondary bg-primary transition hover:border-brand hover:shadow-md"
     >
       <RiverCardImage src={item.image} className="h-33 w-full" />
 
       <div className="flex flex-1 flex-col p-4.25">
         {/* Keeps the time clear of the save button RiverList overlays, which an absent or failed image leaves over this row. */}
         <div className="mb-2 flex items-center gap-1.75 pe-7">
-          <span aria-hidden className={cx("size-1.75 flex-none rounded-full", read ? "bg-quaternary" : "bg-brand-solid")} />
+          <UnreadDot read={read} />
           <FeedAvatar title={item.feedTitle} faviconUrl={item.feedIcon} size="sm" />
           <span dir="auto" className="overflow-hidden text-ellipsis whitespace-nowrap text-xs font-bold text-primary">{item.feedTitle}</span>
-          <span className="ms-auto flex-none text-xs text-tertiary">{formatRelativeTime(item.publishedAt, locale)}</span>
+          <span className="ms-auto flex-none text-xs text-tertiary">{time}</span>
         </div>
 
         <h4 dir="auto" className="mb-1.75 text-base leading-snug font-bold text-pretty text-primary">{item.title}</h4>
@@ -48,12 +40,12 @@ export default function RiverCardMagazine({ item, read, onOpen }: RiverCardProps
         {item.excerpt && <p dir="auto" className="text-sm leading-snug text-pretty text-tertiary">{item.excerpt}</p>}
 
         <div className="mt-auto flex items-center gap-2 pt-3">
-          {item.categoryName && <span className="rounded-full bg-sage-200 px-2.25 py-0.5 text-xs font-semibold text-sage-800">{item.categoryName}</span>}
+          {item.categoryName && <CategoryChip name={item.categoryName} className="px-2.25 py-0.5" />}
           <Badge color="brand" size="sm">
             {sourceTypeLabel(item.type, t)}
           </Badge>
         </div>
       </div>
-    </article>
+    </RiverCardShell>
   );
 }
