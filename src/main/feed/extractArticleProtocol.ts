@@ -4,6 +4,9 @@
 
 import type { ExtractedArticle } from './extractArticle';
 
+// Lets the fatal handler tell this process's exits (a kill on quit, a restart after a timeout) from a crash.
+export const ARTICLE_EXTRACTION_SERVICE_NAME = 'monfil-article-extraction';
+
 export interface ExtractArticleRequest {
   id: number;
   html: string;

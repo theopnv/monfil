@@ -12,6 +12,7 @@ import { closeDatabase, dbStatus, initializeDatabase } from './db/database';
 import { DB_FILE_NAME } from './lib/constants';
 import { startRefreshScheduler, stopRefreshScheduler } from './feed/scheduler';
 import { stopArticleExtractionProcess } from './feed/extractArticleUtility';
+import { ARTICLE_EXTRACTION_SERVICE_NAME } from './feed/extractArticleProtocol';
 import { resolveDevUserDataDir } from './dev-user-data-dir';
 import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents } from './app/window-security';
 import { allowPrivateHosts } from './lib/fetch';
@@ -56,7 +57,7 @@ function bootstrap() {
   const logFilePath = path.join(app.getPath('userData'), 'monfil.log');
   setLogFilePath(logFilePath);
   configureLogging(logFilePath, false);
-  installFatalHandlers(logger, logFilePath, fatalDialogText);
+  installFatalHandlers(logger, logFilePath, fatalDialogText, [ARTICLE_EXTRACTION_SERVICE_NAME]);
 
   initializeDatabase(path.join(app.getPath('userData'), DB_FILE_NAME))
     .then(async () => configureLogging(logFilePath, await getDetailedLogging()))
