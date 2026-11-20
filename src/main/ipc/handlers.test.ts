@@ -299,7 +299,7 @@ describe('handleFeedsSubmitAddFeed', () => {
     const feed = await db.selectFrom('feedMetadata').select('id').where('link', '=', input.link).executeTakeFirstOrThrow();
 
     // Act
-    onImageFound(item.id, 'https://rss.example/cover.png');
+    onImageFound(item, 'https://rss.example/cover.png');
 
     // Assert
     await vi.waitFor(async () => {

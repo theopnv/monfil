@@ -83,3 +83,21 @@ test('keeps the search across a visit to a page with no workspace', async () => 
   // Assert
   await expect.element(getByRole('textbox', { name: 'Feed search' })).toHaveValue('kubernetes');
 });
+
+test('keeps the same context value while neither query changes', async () => {
+  // Arrange
+  const seen: ReturnType<typeof useSearch>[] = [];
+  function Probe() {
+    seen.push(useSearch());
+    return null;
+  }
+  const { rerender } = await render(<SearchProvider><Probe /></SearchProvider>);
+  const rendersBefore = seen.length;
+
+  // Act
+  await rerender(<SearchProvider><Probe /></SearchProvider>);
+
+  // Assert
+  expect(seen.length).toBeGreaterThan(rendersBefore);
+  expect(seen.at(-1)).toBe(seen[rendersBefore - 1]);
+});

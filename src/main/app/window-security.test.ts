@@ -90,10 +90,11 @@ describe('hardenWebContents', () => {
     hardenWebContents(contents as unknown as WebContents);
     const windowOpenHandler = contents.setWindowOpenHandler.mock.calls[0]?.[0] as ((details: Electron.HandlerDetails) => Electron.WindowOpenHandlerResponse) | undefined;
     const willNavigate = listeners.get('will-navigate') as ((details: { url: string; preventDefault: () => void }) => void) | undefined;
-    if (!windowOpenHandler || !willNavigate) {
-      throw new Error('expected both guards to be registered');
+    const willRedirect = listeners.get('will-redirect') as ((details: { url: string; preventDefault: () => void }) => void) | undefined;
+    if (!windowOpenHandler || !willNavigate || !willRedirect) {
+      throw new Error('expected all three guards to be registered');
     }
-    return { windowOpenHandler, willNavigate };
+    return { windowOpenHandler, willNavigate, willRedirect };
   }
 
   function windowOpen(url: string): Electron.HandlerDetails {
@@ -144,6 +145,30 @@ describe('hardenWebContents', () => {
 
     // Act
     willNavigate({ url: 'file:///Applications/monfil.app/renderer/index.html#/workspace/2', preventDefault });
+
+    // Assert
+    expect(preventDefault).not.toHaveBeenCalled();
+  });
+
+  test('blocks a redirect away from the app document', () => {
+    // Arrange
+    const { willRedirect } = fakeWebContents();
+    const preventDefault = vi.fn();
+
+    // Act
+    willRedirect({ url: 'https://example.com/', preventDefault });
+
+    // Assert
+    expect(preventDefault).toHaveBeenCalled();
+  });
+
+  test('lets a redirect stay on the app document', () => {
+    // Arrange
+    const { willRedirect } = fakeWebContents();
+    const preventDefault = vi.fn();
+
+    // Act
+    willRedirect({ url: 'file:///Applications/monfil.app/renderer/index.html#/workspace/2', preventDefault });
 
     // Assert
     expect(preventDefault).not.toHaveBeenCalled();

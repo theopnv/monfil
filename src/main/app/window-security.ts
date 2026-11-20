@@ -42,11 +42,13 @@ export function hardenWebContents(contents: WebContents): void {
     openExternalLink(url);
     return { action: 'deny' };
   });
-  contents.on('will-navigate', (event) => {
+  const keepOnAppDocument = (event: { url: string; preventDefault: () => void }): void => {
     if (!isSameDocument(contents.getURL(), event.url)) {
       event.preventDefault();
     }
-  });
+  };
+  contents.on('will-navigate', keepOnAppDocument);
+  contents.on('will-redirect', keepOnAppDocument);
 }
 
 /**

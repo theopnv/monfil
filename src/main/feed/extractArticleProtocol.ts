@@ -4,6 +4,8 @@
 
 import type { ExtractedArticle } from './extractArticle';
 
+export const ARTICLE_EXTRACTION_SERVICE_NAME = 'monfil-article-extraction';
+
 export interface ExtractArticleRequest {
   id: number;
   html: string;

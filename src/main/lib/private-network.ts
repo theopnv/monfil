@@ -18,8 +18,14 @@ NON_PUBLIC_RANGES.addSubnet('192.168.0.0', 16, 'ipv4');
 NON_PUBLIC_RANGES.addSubnet('198.18.0.0', 15, 'ipv4');
 NON_PUBLIC_RANGES.addSubnet('224.0.0.0', 4, 'ipv4');
 NON_PUBLIC_RANGES.addSubnet('240.0.0.0', 4, 'ipv4');
-NON_PUBLIC_RANGES.addAddress('::', 'ipv6');
-NON_PUBLIC_RANGES.addAddress('::1', 'ipv6');
+// ::/96 covers the unspecified and loopback addresses and the deprecated IPv4-compatible form.
+NON_PUBLIC_RANGES.addSubnet('::', 96, 'ipv6');
+// IPv4-translated (SIIT) addresses embed an IPv4 address that BlockList does not unwrap, unlike the ::ffff:0:0/96 mapped form.
+NON_PUBLIC_RANGES.addSubnet('::ffff:0:0:0', 96, 'ipv6');
+// NAT64 and 6to4 turn an IPv6 address into a connection to the embedded IPv4 address, private ones included.
+NON_PUBLIC_RANGES.addSubnet('64:ff9b::', 96, 'ipv6');
+NON_PUBLIC_RANGES.addSubnet('64:ff9b:1::', 48, 'ipv6');
+NON_PUBLIC_RANGES.addSubnet('2002::', 16, 'ipv6');
 NON_PUBLIC_RANGES.addSubnet('fc00::', 7, 'ipv6');
 NON_PUBLIC_RANGES.addSubnet('fe80::', 10, 'ipv6');
 NON_PUBLIC_RANGES.addSubnet('ff00::', 8, 'ipv6');

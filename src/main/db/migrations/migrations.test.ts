@@ -503,6 +503,30 @@ describe('0011_feed_error_code', () => {
   });
 });
 
+describe('0012_unread_feed_index', () => {
+  async function unreadIndexSql(): Promise<string | undefined> {
+    const { rows } = await sql<{ sql: string }>`SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'feedItem_feed_id_unread'`.execute(db);
+    return rows[0]?.sql;
+  }
+
+  test('adds a partial index of the unread items by feed, and rolls back cleanly', async () => {
+    // Arrange
+    assertMigrated(await migrateTo('0011_feed_error_code'));
+    const before = await unreadIndexSql();
+
+    // Act
+    assertMigrated(await migrateToLatest());
+    const created = await unreadIndexSql();
+    assertMigrated(await migrateTo('0011_feed_error_code'));
+    const afterRollback = await unreadIndexSql();
+
+    // Assert
+    expect(before).toBeUndefined();
+    expect(created).toMatch(/\(\s*"?feed_id"?\s*\)\s+where\s+"?read_at"?\s+is\s+null/i);
+    expect(afterRollback).toBeUndefined();
+  });
+});
+
 describe('the migration list', () => {
   test('has unique names, already in the order Migrator will run them', () => {
     // Assert

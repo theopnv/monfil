@@ -75,11 +75,36 @@ export function createFatalHandler(log: Logger, logFilePath: string, dependencie
   };
 }
 
-export function installFatalHandlers(log: Logger, logFilePath: string, text: FatalDependencies['text']): void {
+interface ProcessGoneDetails {
+  reason?: string;
+  type?: string;
+  name?: string;
+}
+
+function isExpectedExit(details: ProcessGoneDetails, quitting: boolean, stoppableServices: readonly string[]): boolean {
+  return quitting
+    || details.reason === 'clean-exit'
+    // Stryker disable next-line ConditionalExpression: includes(undefined) is false as well, so the check only narrows the type
+    || (details.type === 'Utility' && details.name !== undefined && stoppableServices.includes(details.name));
+}
+
+export function installFatalHandlers(log: Logger, logFilePath: string, text: FatalDependencies['text'], stoppableServices: readonly string[]): void {
   const handle = createFatalHandler(log, logFilePath, { ...electronDependencies, text });
 
   process.on('uncaughtException', (error) => void handle('uncaughtException', error));
   process.on('unhandledRejection', (error) => void handle('unhandledRejection', error));
-  app.on('render-process-gone', (_event, _webContents, details) => void handle('render-process-gone', details));
-  app.on('child-process-gone', (_event, details) => void handle('child-process-gone', details));
+  let quitting = false;
+  app.on('before-quit', () => {
+    quitting = true;
+  });
+  app.on('render-process-gone', (_event, _webContents, details) => {
+    if (!isExpectedExit(details, quitting, stoppableServices)) {
+      void handle('render-process-gone', details);
+    }
+  });
+  app.on('child-process-gone', (_event, details) => {
+    if (!isExpectedExit(details, quitting, stoppableServices)) {
+      void handle('child-process-gone', details);
+    }
+  });
 }

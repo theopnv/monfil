@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { createContext, useContext, useState, type PropsWithChildren } from "react";
+import { createContext, useContext, useMemo, useState, type PropsWithChildren } from "react";
 
 interface SearchContextType {
   query: string;
@@ -35,8 +35,10 @@ export const SearchProvider = ({ workspaceId, children }: PropsWithChildren<{ wo
     setSavedQuery("");
   }
 
+  const value = useMemo(() => ({ feed: { query, setQuery }, saved: { query: savedQuery, setQuery: setSavedQuery } }), [query, savedQuery]);
+
   return (
-    <SearchContext.Provider value={{ feed: { query, setQuery }, saved: { query: savedQuery, setQuery: setSavedQuery } }}>
+    <SearchContext.Provider value={value}>
       {children}
     </SearchContext.Provider>
   );
