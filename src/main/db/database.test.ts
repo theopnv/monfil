@@ -101,7 +101,7 @@ describe('reopening an already-migrated file', () => {
     await closeDatabase();
     const old = new SQLite(filePath);
     old.pragma('journal_mode = WAL');
-    old.exec("ALTER TABLE feedMetadata DROP COLUMN last_error_params; ALTER TABLE feedMetadata DROP COLUMN last_error_code; DELETE FROM kysely_migration WHERE name = '0011_feed_error_code'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
+    old.exec("DROP INDEX feedItem_feed_id_unread; DELETE FROM kysely_migration WHERE name = '0012_unread_feed_index'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
 
     // Act
     await initializeDatabase(filePath);
@@ -111,7 +111,7 @@ describe('reopening an already-migrated file', () => {
     // Assert
     expect(backups).toHaveLength(1);
     expect(backup.prepare("SELECT value FROM setting WHERE key = 'wal-row'").get()).toEqual({ value: 'present' });
-    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0011_feed_error_code'").get()).toBeUndefined();
+    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0012_unread_feed_index'").get()).toBeUndefined();
     backup.close();
     old.close();
   });
@@ -220,7 +220,7 @@ describe('failing to open a file database', () => {
   test('rejects, reports FAILED, and releases the file when a pending migration cannot apply', async () => {
     // Arrange
     const old = new SQLite(filePath);
-    old.exec("DELETE FROM kysely_migration WHERE name = '0011_feed_error_code'");
+    old.exec("DELETE FROM kysely_migration WHERE name IN ('0011_feed_error_code', '0012_unread_feed_index')");
     old.close();
 
     // Act

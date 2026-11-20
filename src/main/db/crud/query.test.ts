@@ -2,13 +2,33 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { CompiledQuery } from 'kysely';
 import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 import { db } from '../database';
 import { countFeedItems, countFeedMetadata, countUnreadRiverItems, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedMetadataByIds, queryFeedSummaries, queryRiverPage, querySubscribedFeedMetadata, queryWorkspaceById, queryWorkspaceSummaries } from './query';
 import { useTestDatabase } from '../../test/db';
 
 useTestDatabase();
+
+/** The SQLite plan of the one statement `run` sends. */
+async function queryPlanOf(run: () => Promise<unknown>): Promise<string> {
+  const executor = db.getExecutor();
+  const original = executor.executeQuery.bind(executor);
+  const sent: CompiledQuery[] = [];
+  const spy = vi.spyOn(executor, 'executeQuery').mockImplementation(((query: CompiledQuery, queryId: never) => {
+    sent.push(query);
+    return original(query, queryId);
+  }) as never);
+  await run();
+  spy.mockRestore();
+  const [statement] = sent;
+  if (sent.length !== 1 || !statement) {
+    throw new Error(`expected one statement, got ${sent.length}`);
+  }
+  const { rows } = await db.executeQuery<{ detail: string }>(CompiledQuery.raw(`explain query plan ${statement.sql}`, [...statement.parameters]));
+  return rows.map((row) => row.detail).join('\n');
+}
 
 describe('queryFeedCategory', () => {
   test('returns every category when no criteria are given', async () => {
@@ -487,6 +507,51 @@ describe('queryFeedSummaries', () => {
     // Assert
     expect(summaries).toHaveLength(1);
     expect(summaries[0]?.otherWorkspaceCount).toBe(2);
+  });
+});
+
+describe('the unread counts', () => {
+  test('the feed summaries count through the unread index and never scan the items', async () => {
+    // Arrange
+    const feedId = await seedFeed();
+    await seedItem(feedId);
+
+    // Act
+    const plan = await queryPlanOf(() => queryFeedSummaries(HOME_WORKSPACE_ID));
+
+    // Assert
+    expect(plan).toContain('feedItem_feed_id_unread');
+    expect(plan).not.toMatch(/SCAN feedItem/);
+  });
+
+  test('the workspace summaries look for one unread item through the unread index and never scan the items', async () => {
+    // Arrange
+    const feedId = await seedFeed();
+    await seedItem(feedId);
+
+    // Act
+    const plan = await queryPlanOf(() => queryWorkspaceSummaries());
+
+    // Assert
+    expect(plan).toContain('feedItem_feed_id_unread');
+    expect(plan).not.toMatch(/SCAN feedItem/);
+  });
+});
+
+describe('queryFeedSummaries counts', () => {
+  test('counts the items and the unread items of each feed separately', async () => {
+    // Arrange
+    const first = await seedFeed();
+    const second = await seedFeed({ link: 'https://b.example/feed' });
+    await seedItem(first);
+    await seedItem(first, { readAt: '2024-01-02T00:00:00.000Z' });
+    await seedItem(second, { readAt: '2024-01-02T00:00:00.000Z' });
+
+    // Act
+    const summaries = await queryFeedSummaries(HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(summaries.map((summary) => [summary.id, summary.itemCount, summary.unreadCount]).sort()).toEqual([[first, 2, 1], [second, 1, 0]].sort());
   });
 });
 

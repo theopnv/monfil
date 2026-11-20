@@ -14,6 +14,7 @@ import * as savedItems from './0008_saved_items';
 import * as savedSearch from './0009_saved_search';
 import * as usageCounters from './0010_usage_counters';
 import * as feedErrorCode from './0011_feed_error_code';
+import * as unreadFeedIndex from './0012_unread_feed_index';
 
 const migrations: Record<string, Migration> = {
   '0001_initial_schema': initialSchema,
@@ -27,6 +28,7 @@ const migrations: Record<string, Migration> = {
   '0009_saved_search': savedSearch,
   '0010_usage_counters': usageCounters,
   '0011_feed_error_code': feedErrorCode,
+  '0012_unread_feed_index': unreadFeedIndex,
 };
 
 export const migrationProvider: MigrationProvider = {
