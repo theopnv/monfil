@@ -60,8 +60,6 @@ export default defineConfig({
     ...coveragePlugins('renderer'),
   ],
   resolve: {
-    alias: {
-      '@': import.meta.dirname,
-    },
+    tsconfigPaths: true,
   },
 });

@@ -1,16 +1,12 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "composite": true,
-    "noEmit": true,
-    "lib": ["ES2023"],
-    "types": ["node", "electron"]
-  },
+  "extends": "../../tsconfig.node.json",
   "include": [
     "**/*.ts",
     "../shared/**/*.ts",
     "../../test/e2e/**/*.ts",
     "../../eslint.config.ts",
+    "../../eslint.config.test.ts",
+    "../../dependency-cruiser.test.ts",
     "../../forge.config.ts",
     "../../forge.env.d.ts",
     "../../playwright.config.ts",

@@ -88,7 +88,7 @@ module.exports = {
     doNotFollow: { path: 'node_modules' },
     exclude: { path: ['\\.test\\.tsx?$', '/__screenshots__/', '/__fixtures__/', '^src/main/graft/', '^src/renderer/lib/test/'] },
     tsPreCompilationDeps: true,
-    tsConfig: { fileName: 'tsconfig.dependency-cruiser.json' },
+    tsConfig: { fileName: 'src/renderer/tsconfig.json' },
     enhancedResolveOptions: {
       extensions: ['.ts', '.tsx', '.js', '.mjs', '.cjs', '.json'],
       exportsFields: ['exports'],

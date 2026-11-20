@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "tsc -b . && eslint --ext .ts,.tsx . && npm run lint:deps",
     "lint:deps": "depcruise src",
-    "lint:docs": "markdownlint-cli2 \"README.md\" \"CONTRIBUTING.md\" \"doc/src/content/docs/**/*.{md,mdx}\"",
+    "lint:docs": "markdownlint-cli2",
     "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:unit": "vitest --run --project node",
     "test:integration": "vitest --run --project browser",
