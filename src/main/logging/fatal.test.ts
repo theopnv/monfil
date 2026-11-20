@@ -260,11 +260,15 @@ describe('installed process listeners', () => {
       listeners.set(event, listener);
       return app;
     }) as unknown as typeof app.on);
-    vi.spyOn(process, 'on').mockImplementation(() => process);
+    vi.spyOn(process, 'on').mockImplementation(((event: string, listener: Listener) => {
+      listeners.set(event, listener);
+      return process;
+    }) as unknown as typeof process.on);
     vi.mocked(app.isReady).mockReturnValue(true);
     vi.mocked(dialog.showMessageBox).mockResolvedValue({ response: 2, checkboxChecked: false });
-    installFatalHandlers(logger(), 'mock-user-data/monfil.log', () => ({ title: 'Title', message: 'Message', buttons: ['Restart', 'Show log file', 'Quit'] }), [STOPPABLE_SERVICE]);
-    return listeners;
+    const log = logger();
+    installFatalHandlers(log, 'mock-user-data/monfil.log', () => ({ title: 'Title', message: 'Message', buttons: ['Restart', 'Show log file', 'Quit'] }), [STOPPABLE_SERVICE]);
+    return Object.assign(listeners, { log });
   }
 
   test('shows a dialog when the renderer crashes', async () => {
@@ -277,6 +281,19 @@ describe('installed process listeners', () => {
 
     // Assert
     expect(app.quit).toHaveBeenCalledOnce();
+    expect(listeners.log.error).toHaveBeenCalledWith('system.failure', expect.objectContaining({ source: 'render-process-gone' }), { reason: 'crashed' });
+  });
+
+  test.each(['uncaughtException', 'unhandledRejection'])('shows a dialog and logs the source for an %s', async (event) => {
+    // Arrange
+    const listeners = install();
+
+    // Act
+    listeners.get(event)?.(new Error('boom'));
+    await vi.waitFor(() => expect(dialog.showMessageBox).toHaveBeenCalledOnce());
+
+    // Assert
+    expect(listeners.log.error).toHaveBeenCalledWith('system.failure', expect.objectContaining({ source: event }), expect.any(Error));
   });
 
   test('shows a dialog when a Chromium service crashes', async () => {
@@ -289,6 +306,19 @@ describe('installed process listeners', () => {
 
     // Assert
     expect(app.quit).toHaveBeenCalledOnce();
+    expect(listeners.log.error).toHaveBeenCalledWith('system.failure', expect.objectContaining({ source: 'child-process-gone' }), expect.anything());
+  });
+
+  test.each([
+    ['a process of another type that has the name of a stoppable service', { type: 'GPU', name: STOPPABLE_SERVICE, reason: 'crashed' }],
+    ['a utility process with no name', { type: 'Utility', reason: 'crashed' }],
+  ])('still shows a dialog for %s', async (_label, details) => {
+    // Arrange
+    const listeners = install();
+
+    // Act
+    listeners.get('child-process-gone')?.({}, details);
+    await vi.waitFor(() => expect(dialog.showMessageBox).toHaveBeenCalledOnce());
   });
 
   test.each(['render-process-gone', 'child-process-gone'])('ignores a %s event while the app quits', async (event) => {

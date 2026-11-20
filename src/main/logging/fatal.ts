@@ -84,6 +84,7 @@ interface ProcessGoneDetails {
 function isExpectedExit(details: ProcessGoneDetails, quitting: boolean, stoppableServices: readonly string[]): boolean {
   return quitting
     || details.reason === 'clean-exit'
+    // Stryker disable next-line ConditionalExpression: includes(undefined) is false as well, so the check only narrows the type
     || (details.type === 'Utility' && details.name !== undefined && stoppableServices.includes(details.name));
 }
 

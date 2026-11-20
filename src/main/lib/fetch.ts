@@ -295,6 +295,7 @@ export function readCappedText(
           finish({ success: true, data: decodeBody(Buffer.concat(chunks), contentType) });
           return;
         }
+        // Stryker disable next-line ConditionalExpression,EqualityOperator,MethodExpression: a longer tail finds the same marker and only costs memory
         tail = marker.length > 1 ? seen.slice(1 - marker.length) : '';
       }
     });

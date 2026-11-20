@@ -30,6 +30,7 @@ function hasWord(text: unknown, word: unknown): number {
   let pattern = wordPatterns.get(word);
   if (!pattern) {
     pattern = new RegExp(`(?<![\\p{L}\\p{N}])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'iu');
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: a cache miss rebuilds the same pattern, so the cap is invisible to callers
     if (wordPatterns.size >= MAX_WORD_PATTERNS) {
       wordPatterns.clear();
     }

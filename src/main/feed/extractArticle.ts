@@ -124,6 +124,7 @@ export function extractArticle(pageHtml: string, url: string): ExtractedArticle 
     prepareEmbeds(contentDom.window.document, url);
     const purify = createDOMPurify(dom.window);
     const body = purify.sanitize(contentDom.window.document.body.innerHTML, { ...SANITIZE_CONFIG, RETURN_DOM: true }) as HTMLElement;
+    // Stryker disable next-line OptionalChaining: the textContent of an element is never null
     const text = body.textContent?.trim() ?? '';
 
     return { html: body.innerHTML, text, wordCount: countWords(text) };

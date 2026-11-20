@@ -129,6 +129,53 @@ describe('extractArticleInUtilityProcess', () => {
     expect(children[0]?.killed).toBe(false);
   });
 
+  test('times out the next request as well when the restarted process stays silent', async () => {
+    // Arrange
+    const slow = extractArticleInUtilityProcess('<p>slow</p>', 'https://example.com/slow');
+    const next = extractArticleInUtilityProcess('<p>next</p>', 'https://example.com/next');
+    const rejections = Promise.all([expect(slow).rejects.toThrow(/timed out/), expect(next).rejects.toThrow(/timed out/)]);
+
+    // Act
+    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS);
+    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS);
+
+    // Assert
+    await rejections;
+    expect(children[1]?.killed).toBe(true);
+  });
+
+  test('starts the timeout of the next request when the one in front answers', async () => {
+    // Arrange
+    const first = extractArticleInUtilityProcess('<p>first</p>', 'https://example.com/first');
+    const second = extractArticleInUtilityProcess('<p>second</p>', 'https://example.com/second');
+    const secondRejection = expect(second).rejects.toThrow(/timed out/);
+    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS - 1);
+    children[0]?.respond(children[0].sent[0]?.id ?? -1, 'first');
+    await first;
+
+    // Act
+    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS);
+
+    // Assert
+    await secondRejection;
+    expect(children[0]?.killed).toBe(true);
+  });
+
+  test('a request queued later does not postpone the timeout of the one in front', async () => {
+    // Arrange
+    const first = extractArticleInUtilityProcess('<p>first</p>', 'https://example.com/first');
+    const firstRejection = expect(first).rejects.toThrow(/timed out/);
+    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS - 1_000);
+    const later = extractArticleInUtilityProcess('<p>later</p>', 'https://example.com/later');
+    void later.catch(() => undefined);
+
+    // Act
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    // Assert
+    await firstRejection;
+  });
+
   test('rejects every request when the process exits on its own', async () => {
     // Arrange
     const first = extractArticleInUtilityProcess('<p>a</p>', 'https://example.com/a');
@@ -140,6 +187,31 @@ describe('extractArticleInUtilityProcess', () => {
 
     // Assert
     await rejections;
+  });
+
+  test('starts no new process after a timeout when nothing is queued', async () => {
+    // Arrange
+    const slow = extractArticleInUtilityProcess('<p>slow</p>', 'https://example.com/slow');
+    const slowRejection = expect(slow).rejects.toThrow(/timed out/);
+
+    // Act
+    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS);
+    await slowRejection;
+
+    // Assert
+    expect(children).toHaveLength(1);
+  });
+
+  test('ignores a response that no request waits for', async () => {
+    // Arrange
+    const result = extractArticleInUtilityProcess('<p>a</p>', 'https://example.com/a');
+
+    // Act
+    children[0]?.respond(9_999, 'stray');
+    children[0]?.respond(children[0].sent[0]?.id ?? -1, 'real');
+
+    // Assert
+    await expect(result).resolves.toMatchObject({ text: 'real' });
   });
 
   test('uses a new process for a request after a timeout', async () => {

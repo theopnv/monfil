@@ -23,6 +23,7 @@ let frontTimer: NodeJS.Timeout | undefined;
 const pending = new Map<number, PendingExtraction>();
 
 function rejectPending(error: Error): void {
+  // Stryker disable next-line CallExpression: a timer left running finds its request gone and does nothing
   clearTimeout(frontTimer);
   for (const request of pending.values()) {
     request.reject(error);
@@ -32,6 +33,7 @@ function rejectPending(error: Error): void {
 
 // The process answers in order, so only the request at the front is running. The others wait without a clock.
 function watchFrontRequest(): void {
+  // Stryker disable next-line CallExpression: a timer left running finds its request gone and does nothing
   clearTimeout(frontTimer);
   const [front] = pending.keys();
   if (front !== undefined) {
@@ -90,6 +92,7 @@ function startExtractionProcess(): UtilityProcess {
 export function extractArticleInUtilityProcess(html: string, url: string): Promise<ExtractedArticle | undefined> {
   const child = extractionProcess ?? startExtractionProcess();
   const id = nextRequestId;
+  // Stryker disable next-line AssignmentOperator: request ids only have to be unique, and counting down is unique too
   nextRequestId += 1;
   const request: ExtractArticleRequest = { id, html, url };
   return new Promise((resolve, reject) => {

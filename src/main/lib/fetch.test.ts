@@ -655,6 +655,44 @@ describe('readCappedText', () => {
     expect(request.abort).not.toHaveBeenCalled();
   });
 
+  test('reads a body of exactly the cap', async () => {
+    // Arrange
+    const { response, request, result } = body();
+
+    // Act
+    response.emit('data', Buffer.alloc(MAX_FETCH_BYTES, 'a'));
+    response.emit('end');
+
+    // Assert
+    await expect(result).resolves.toMatchObject({ success: true });
+    expect(request.abort).not.toHaveBeenCalled();
+  });
+
+  test('refuses a body that goes one byte over the cap, even when it comes in several chunks', async () => {
+    // Arrange
+    const { response, request, result } = body();
+
+    // Act
+    response.emit('data', Buffer.alloc(MAX_FETCH_BYTES / 2, 'a'));
+    response.emit('data', Buffer.alloc(MAX_FETCH_BYTES / 2 + 1, 'a'));
+
+    // Assert
+    await expect(result).resolves.toMatchObject({ success: false, error: { name: 'RESPONSE_TOO_LARGE_ERROR' } });
+    expect(request.abort).toHaveBeenCalledOnce();
+  });
+
+  test('accepts a declared length of exactly the cap', async () => {
+    // Arrange
+    const { response, request, result } = body(undefined, { 'Content-Length': String(MAX_FETCH_BYTES) });
+
+    // Act
+    response.emit('end');
+
+    // Assert
+    await expect(result).resolves.toMatchObject({ success: true });
+    expect(request.abort).not.toHaveBeenCalled();
+  });
+
   test('refuses a declared length over the cap without reading', async () => {
     // Arrange
     const { request, result } = body(undefined, { 'Content-Length': String(MAX_FETCH_BYTES + 1) });
