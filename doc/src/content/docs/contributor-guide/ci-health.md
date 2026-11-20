@@ -84,8 +84,6 @@ A run writes about 250 rows, and a second ingest of the same attempt writes abou
 
 The dashboard has two sections. "Codebase Health" holds the complexity and coverage panels, and "CI Health" holds the panels below. They use the Infinity data source of the other panels, which sends the Worker's `QUERY_TOKEN` as the Bearer token (see [Code complexity](../complexity/#data-source)). Each CI panel posts to `https://monfil-devanalytics.tpenavaire.workers.dev/ci/query`.
 
-`infra/devanalytics-worker/dashboard.json` is a copy of the whole dashboard. After a change in Grafana, export it again with `gcx dashboards get <name> -o json`. To restore it, fetch the current manifest, copy its `metadata.resourceVersion` into the file, and run `gcx dashboards update <name> -f dashboard.json`.
-
 SQLite has no percentile function. Each percentile panel numbers the rows of its group with `ROW_NUMBER()` and takes the first row whose number reaches the share of the group size, which is the nearest-rank method. A week with a few runs shows a p95 close to its maximum. Each panel buckets the data by the Monday of the week.
 
 Percentile panels use runs of the `Test` workflow with `conclusion = 'success'` and `code_changed = 1`. Times are in seconds. Declare the `date` column as **Timestamp**, and keep a fixed time range on the dashboard, for the same reasons as in [Code complexity](../complexity/#panels).
