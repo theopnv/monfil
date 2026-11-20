@@ -173,7 +173,7 @@ export async function setLanguageSetting(value: LanguageSetting): Promise<void> 
     .execute();
 }
 
-export const DEFAULT_USAGE_ANALYTICS_CONSENT: UsageAnalyticsConsent = 'unset';
+const DEFAULT_USAGE_ANALYTICS_CONSENT: UsageAnalyticsConsent = 'unset';
 const USAGE_ANALYTICS_CONSENT_KEY = 'usageAnalyticsConsent';
 const USAGE_ANALYTICS_CONSENT_AT_KEY = 'usageAnalyticsConsentAt';
 const USAGE_ANALYTICS_NOTICE_VERSION_KEY = 'usageAnalyticsNoticeVersion';

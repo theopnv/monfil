@@ -7,7 +7,6 @@ import type {
   Generated,
   Insertable,
   Selectable,
-  Updateable,
 } from 'kysely'
 import type {
   SourceType,
@@ -44,9 +43,6 @@ export interface SavedSearchTable {
   created_at: number;
 }
 
-export type SavedSearchRow = Selectable<SavedSearchTable>;
-export type NewSavedSearch = Insertable<SavedSearchTable>;
-export type UpdateSavedSearch = Updateable<SavedSearchTable>;
 
 export interface SavedItemTable {
   workspace_id: number;
@@ -54,8 +50,6 @@ export interface SavedItemTable {
   saved_at: number;
 }
 
-export type SavedItem = Selectable<SavedItemTable>;
-export type NewSavedItem = Insertable<SavedItemTable>;
 
 // =============== Workspace ===============
 // A workspace is a tab in the left rail: Home, or an installed pack / OPML import. See doc/src/content/docs/contributor-guide/feedpacks-and-opml.md.
@@ -73,9 +67,6 @@ export interface WorkspaceTable {
   search_hint_dismissed_at: string | undefined | null;
 }
 
-export type WorkspaceRow = Selectable<WorkspaceTable>;
-export type NewWorkspace = Insertable<WorkspaceTable>;
-export type UpdateWorkspace = Updateable<WorkspaceTable>;
 
 // =============== Feed Category ===============
 // A category is a name (e.g. "Tech", "News"...) scoped to one workspace.
@@ -86,9 +77,6 @@ export interface FeedCategoryTable {
   workspace_id: number;
 };
 
-export type FeedCategoryRow = Selectable<FeedCategoryTable>;
-export type NewFeedCategory = Insertable<FeedCategoryTable>;
-export type UpdateFeedCategory = Updateable<FeedCategoryTable>;
 
 // =============== Feed ===============
 // A feed is anything the user wants to subscribe to (e.g. RSS, podcasts, bluesky feed, etc). Identity
@@ -113,8 +101,6 @@ export interface FeedMetadataTable {
 }
 
 export type FeedMetadataRow = Selectable<FeedMetadataTable>;
-export type NewFeedMetadata = Insertable<FeedMetadataTable>;
-export type UpdateFeedMetadata = Updateable<FeedMetadataTable>;
 
 // =============== Feed Placement ===============
 // Where a feed appears. Separate from feedMetadata so one feed can belong to several workspaces at
@@ -127,9 +113,6 @@ export interface FeedPlacementTable {
   showInWorkspace: Generated<number>;
 }
 
-export type FeedPlacement = Selectable<FeedPlacementTable>;
-export type NewFeedPlacement = Insertable<FeedPlacementTable>;
-export type UpdateFeedPlacement = Updateable<FeedPlacementTable>;
 
 // =============== Feed Item ===============
 // A feed item is a single entry in a feed (e.g. a blog post, a podcast episode, etc)
@@ -157,8 +140,6 @@ export interface FeedItemTable {
 };
 
 export type FeedItem = Selectable<FeedItemTable>;
-export type NewFeedItem = Insertable<FeedItemTable>;
-export type UpdateFeedItem = Updateable<FeedItemTable>;
 
 export interface UndatedItemTable {
   feed_id: number;
@@ -166,8 +147,6 @@ export interface UndatedItemTable {
   first_fetched_at: number;
 }
 
-export type UndatedItem = Selectable<UndatedItemTable>;
-export type NewUndatedItem = Insertable<UndatedItemTable>;
 
 // =============== Article Content ===============
 // Article content is the full text of a feed item, fetched and stored separately from the feed item itself.
@@ -185,7 +164,6 @@ export interface ArticleContentTable {
 
 export type ArticleContent = Selectable<ArticleContentTable>;
 export type NewArticleContent = Insertable<ArticleContentTable>;
-export type UpdateArticleContent = Updateable<ArticleContentTable>;
 
 // =============== Setting ===============
 // Settings are key-value pairs for application configuration.
@@ -196,5 +174,3 @@ export interface SettingTable {
 };
 
 export type Setting = Selectable<SettingTable>;
-export type NewSetting = Insertable<SettingTable>;
-export type UpdateSetting = Updateable<SettingTable>;

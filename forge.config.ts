@@ -65,7 +65,6 @@ const config: ForgeConfig = {
       },
     ],
   },
-  rebuildConfig: {},
   makers: [
     new MakerSquirrel({ setupIcon: 'assets/icons/icon.ico' }),
     new MakerMSIX({
@@ -133,19 +132,6 @@ const config: ForgeConfig = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
-  publishers: [
-    {
-      name: '@electron-forge/publisher-github',
-      config: {
-        repository: {
-          owner: 'theopnv',
-          name: 'monfil'
-        },
-        prerelease: false,
-        draft: false
-      }
-    }
-  ]
 };
 
 export default config;

@@ -53,7 +53,8 @@ import {
   Tv01,
   Users01,
 } from "@untitledui/icons";
-import type { IconComponentType } from "@/components/untitled-ui/base/badges/badge-types";
+
+type IconComponentType = React.FunctionComponent<{ className?: string; strokeWidth?: string | number }>;
 
 // A curated subset of `@untitledui/icons`, not the whole set: the picker in WorkspaceDialog stays
 // a short grid instead of a searchable list.

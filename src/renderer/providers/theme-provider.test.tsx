@@ -38,12 +38,12 @@ function stubSystemTheme(initiallyDark: boolean) {
   };
 }
 
-function renderTheme(props: { storageKey?: string; defaultTheme?: 'light' | 'dark' | 'system'; darkModeClass?: string } = {}) {
-  const wrapper = ({ children }: PropsWithChildren) => <ThemeProvider {...props}>{children}</ThemeProvider>;
+function renderTheme() {
+  const wrapper = ({ children }: PropsWithChildren) => <ThemeProvider>{children}</ThemeProvider>;
   return renderHook(() => useTheme(), { wrapper });
 }
 
-const isDarkClassSet = (className = 'dark-mode') => document.documentElement.classList.contains(className);
+const isDarkClassSet = () => document.documentElement.classList.contains('dark-mode');
 
 beforeEach(() => {
   window.electron = {
@@ -54,7 +54,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks();
   localStorage.clear();
-  document.documentElement.classList.remove('dark-mode', 'night');
+  document.documentElement.classList.remove('dark-mode');
 });
 
 describe('ThemeProvider', () => {
@@ -99,18 +99,6 @@ describe('ThemeProvider', () => {
     expect(isDarkClassSet()).toBe(true);
   });
 
-  test('starts with the default theme when nothing is stored', async () => {
-    // Arrange
-    stubSystemTheme(false);
-
-    // Act
-    const { result } = await renderTheme({ defaultTheme: 'dark' });
-
-    // Assert
-    expect(result.current).toMatchObject({ theme: 'dark', resolvedTheme: 'dark' });
-    expect(localStorage.getItem('ui-theme')).toBe('dark');
-  });
-
   test('choosing a theme applies it, stores it and tells the window', async () => {
     // Arrange
     stubSystemTheme(true);
@@ -140,20 +128,6 @@ describe('ThemeProvider', () => {
     expect(localStorage.getItem('ui-theme')).toBeNull();
     expect(result.current).toMatchObject({ theme: 'system', resolvedTheme: 'light' });
     expect(isDarkClassSet()).toBe(false);
-  });
-
-  test('uses the given storage key and dark class', async () => {
-    // Arrange
-    stubSystemTheme(false);
-    localStorage.setItem('custom-theme', 'dark');
-
-    // Act
-    await renderTheme({ storageKey: 'custom-theme', darkModeClass: 'night' });
-
-    // Assert
-    expect(isDarkClassSet('night')).toBe(true);
-    expect(isDarkClassSet()).toBe(false);
-    expect(localStorage.getItem('ui-theme')).toBeNull();
   });
 
   test('a change of the system theme applies while the theme is system', async () => {

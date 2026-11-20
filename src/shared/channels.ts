@@ -212,8 +212,6 @@ export type ChannelPayloads = OneWayRendererToMainChannelPayloads
   & OneWayMainToRendererChannelPayloads
   & TwoWayRendererMainChannelPayloads;
 
-export type Channels = keyof ChannelPayloads;
-
 export interface ElectronHandler {
   /** The operating system locale, read at startup. Absent when the window did not get one. */
   systemLocale?: string;

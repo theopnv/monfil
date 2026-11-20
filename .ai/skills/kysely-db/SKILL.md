@@ -9,7 +9,7 @@ Read `doc/src/content/docs/contributor-guide/database.md` for data ownership and
 
 ## Types and criteria
 
-Each table has an interface in `src/main/db/types.ts`. Use its `Selectable`, `Insertable`, or `Updateable` alias when that operation needs one. `Generated<T>` makes a database-assigned value present on reads and optional on inserts. Some tables have no update alias because the code does not update them.
+Each table has an interface in `src/main/db/types.ts`. Wrap it in Kysely's `Selectable`, `Insertable`, or `Updateable` where a function needs that shape. Export an alias from `types.ts` only when another module reads it, as with `FeedItem`. `Generated<T>` makes a database-assigned value present on reads and optional on inserts.
 
 The reusable criteria queries in `src/main/db/crud/query.ts` use `CriteriaHandlers` and `applyCriteria`. When you add a column to a table covered by those handlers, add its handler too. A query with its own filters can use Kysely's `.where()` directly; existing summary and lookup queries do this.
 

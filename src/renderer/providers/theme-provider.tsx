@@ -27,32 +27,16 @@ export const useTheme = (): ThemeContextType => {
   return context;
 };
 
-interface ThemeProviderProps {
-  children: ReactNode;
-  /**
-     * The class to add to the root element when the theme is dark
-     * @default "dark-mode"
-     */
-  darkModeClass?: string;
-  /**
-     * The default theme to use if no theme is stored in localStorage
-     * @default "system"
-     */
-  defaultTheme?: Theme;
-  /**
-     * The key to use to store the theme in localStorage
-     * @default "ui-theme"
-     */
-  storageKey?: string;
-}
+const STORAGE_KEY = "ui-theme";
+const DARK_MODE_CLASS = "dark-mode";
 
-export const ThemeProvider = ({ children, defaultTheme = "system", storageKey = "ui-theme", darkModeClass = "dark-mode" }: ThemeProviderProps) => {
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem(storageKey) as Theme | null;
-      return savedTheme || defaultTheme;
+      const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
+      return savedTheme || "system";
     }
-    return defaultTheme;
+    return "system";
   });
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
 
@@ -62,14 +46,14 @@ export const ThemeProvider = ({ children, defaultTheme = "system", storageKey = 
       const effectiveTheme: ResolvedTheme =
         theme === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : theme;
 
-      root.classList.toggle(darkModeClass, effectiveTheme === "dark");
+      root.classList.toggle(DARK_MODE_CLASS, effectiveTheme === "dark");
       setResolvedTheme(effectiveTheme);
       ipc.send('app:set-window-theme', effectiveTheme);
 
       if (theme === "system") {
-        localStorage.removeItem(storageKey);
+        localStorage.removeItem(STORAGE_KEY);
       } else {
-        localStorage.setItem(storageKey, theme);
+        localStorage.setItem(STORAGE_KEY, theme);
       }
     };
 
@@ -86,7 +70,7 @@ export const ThemeProvider = ({ children, defaultTheme = "system", storageKey = 
 
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [darkModeClass, storageKey, theme]);
+  }, [theme]);
 
   return <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>{children}</ThemeContext.Provider>;
 };

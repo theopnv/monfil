@@ -7,15 +7,13 @@ import { createI18n } from '../../shared/i18n/create-i18n';
 import { resolveFormatLocale } from '../../shared/i18n/format-locale';
 import { DEFAULT_LANGUAGE, directionOf, isLanguageCode, type LanguageCode } from '../../shared/i18n/languages';
 
-type PreloadBridge = { electron?: { systemLocale?: string; language?: unknown } };
-
 /** The language that main resolved when it made the window. English when there is no preload bridge, as in the test suites. */
-export function initialLanguage(bridge: PreloadBridge): LanguageCode {
+export function initialLanguage(bridge: { electron?: { language?: unknown } }): LanguageCode {
   const language = bridge.electron?.language;
   return isLanguageCode(language) ? language : DEFAULT_LANGUAGE;
 }
 
-export const INITIAL_LANGUAGE: LanguageCode = initialLanguage(window as PreloadBridge);
+export const INITIAL_LANGUAGE: LanguageCode = initialLanguage(window);
 
 // The instance is global, so a component that no provider wraps still translates.
 export const i18n = createI18n(INITIAL_LANGUAGE, [initReactI18next]);
@@ -30,7 +28,7 @@ export function useActiveLanguage(): LanguageCode {
 export function useFormatLocale(): string {
   const language = useActiveLanguage();
   // Tests and the first paint can run without the preload bridge.
-  const systemLocale = (window as PreloadBridge).electron?.systemLocale;
+  const systemLocale = window.electron?.systemLocale;
   return resolveFormatLocale(language, systemLocale);
 }
 

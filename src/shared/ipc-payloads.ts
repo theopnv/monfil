@@ -77,7 +77,7 @@ function isConsentChoice(value: unknown): value is 'granted' | 'denied' {
   return value === 'granted' || value === 'denied';
 }
 
-export function isRendererUsageCounter(value: unknown): value is RendererUsageCounter {
+function isRendererUsageCounter(value: unknown): value is RendererUsageCounter {
   return (RENDERER_USAGE_COUNTERS as readonly unknown[]).includes(value);
 }
 
