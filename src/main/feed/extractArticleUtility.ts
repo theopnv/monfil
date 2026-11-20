@@ -9,20 +9,53 @@ import type { ExtractedArticle } from './extractArticle';
 import { ARTICLE_EXTRACTION_SERVICE_NAME, isExtractArticleLog, isExtractArticleResponse, type ExtractArticleRequest } from './extractArticleProtocol';
 import { logger } from '../logging/logger';
 
+export const EXTRACTION_TIMEOUT_MS = 20_000;
+
 interface PendingExtraction {
+  request: ExtractArticleRequest;
   resolve: (article: ExtractedArticle | undefined) => void;
   reject: (error: Error) => void;
 }
 
 let extractionProcess: UtilityProcess | undefined;
 let nextRequestId = 0;
+let frontTimer: NodeJS.Timeout | undefined;
 const pending = new Map<number, PendingExtraction>();
 
 function rejectPending(error: Error): void {
+  clearTimeout(frontTimer);
   for (const request of pending.values()) {
     request.reject(error);
   }
   pending.clear();
+}
+
+// The process answers in order, so only the request at the front is running. The others wait without a clock.
+function watchFrontRequest(): void {
+  clearTimeout(frontTimer);
+  const [front] = pending.keys();
+  if (front !== undefined) {
+    frontTimer = setTimeout(() => abandonRequest(front), EXTRACTION_TIMEOUT_MS);
+  }
+}
+
+function abandonRequest(id: number): void {
+  const request = pending.get(id);
+  if (!request) {
+    return;
+  }
+  pending.delete(id);
+  request.reject(new Error(`Article extraction timed out after ${EXTRACTION_TIMEOUT_MS} ms.`));
+  const stuck = extractionProcess;
+  extractionProcess = undefined;
+  stuck?.kill();
+  if (pending.size > 0) {
+    const child = startExtractionProcess();
+    for (const waiting of pending.values()) {
+      child.postMessage(waiting.request);
+    }
+    watchFrontRequest();
+  }
 }
 
 function startExtractionProcess(): UtilityProcess {
@@ -41,6 +74,7 @@ function startExtractionProcess(): UtilityProcess {
       return;
     }
     pending.delete(message.id);
+    watchFrontRequest();
     request.resolve(message.article);
   });
   child.on('exit', (code) => {
@@ -59,7 +93,10 @@ export function extractArticleInUtilityProcess(html: string, url: string): Promi
   nextRequestId += 1;
   const request: ExtractArticleRequest = { id, html, url };
   return new Promise((resolve, reject) => {
-    pending.set(id, { resolve, reject });
+    pending.set(id, { request, resolve, reject });
+    if (pending.size === 1) {
+      watchFrontRequest();
+    }
     child.postMessage(request);
   });
 }
