@@ -2,6 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
+import { runCli } from '../devanalytics/cli.mts';
 import { snapshot } from './metrics.mts';
 
 const USAGE = 'Usage: npm run complexity -- [--root <checkout>] [--out <snapshot.json>]';
@@ -32,7 +33,4 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n${USAGE}\n`);
-  process.exitCode = 1;
-});
+runCli(main, USAGE);

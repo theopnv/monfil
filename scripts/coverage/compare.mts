@@ -1,8 +1,8 @@
-import { codeSpan } from '../complexity/compare.mts';
+import { expectCount, expectObject, expectSha, expectString } from '../devanalytics/expect.mts';
+import { codeSpan, MAX_ROWS } from '../devanalytics/markdown.mts';
 import type { Count, FileSummary, Snapshot } from './maps.mts';
 
 export const MARKER = '<!-- coverage-report -->';
-export const MAX_ROWS = 15;
 export const SUITES = ['merged', 'vitest', 'e2e'] as const;
 export type SuiteName = (typeof SUITES)[number];
 
@@ -28,35 +28,6 @@ export interface Diff {
   files: FileRow[];
 }
 
-function expectObject(value: unknown, field: string): Record<string, unknown> {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    throw new Error(`${field} must be an object`);
-  }
-  return value as Record<string, unknown>;
-}
-
-function expectCount(value: unknown, field: string): number {
-  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
-    throw new Error(`${field} must be a non-negative integer`);
-  }
-  return value;
-}
-
-function expectString(value: unknown, field: string): string {
-  if (typeof value !== 'string' || value.length === 0) {
-    throw new Error(`${field} must be a non-empty string`);
-  }
-  return value;
-}
-
-function expectSha(value: unknown, field: string): string {
-  const sha = expectString(value, field);
-  if (!/^[0-9a-f]{40}$/.test(sha)) {
-    throw new Error(`${field} must be a commit sha`);
-  }
-  return sha;
-}
-
 function expectPair(value: unknown, field: string): Count {
   if (!Array.isArray(value) || value.length !== 2) {
     throw new Error(`${field} must be a pair of covered and total`);
@@ -73,7 +44,7 @@ function parseFileSummary(value: unknown, field: string): FileSummary {
   const entry = expectObject(value, field);
   const pair = (metric: 'lines' | 'statements' | 'functions' | 'branches') => expectPair(entry[metric], `${field}.${metric}`);
   return {
-    file: expectString(entry['file'], `${field}.file`),
+    file: expectString(entry['file'], `${field}.file`, { nonEmpty: true }),
     lines: pair('lines'),
     statements: pair('statements'),
     functions: pair('functions'),
@@ -94,7 +65,7 @@ export function parseSnapshot(value: unknown): Snapshot {
   const suites = expectObject(snapshot['suites'], 'suites');
   return {
     sha: expectSha(snapshot['sha'], 'sha'),
-    date: expectString(snapshot['date'], 'date'),
+    date: expectString(snapshot['date'], 'date', { nonEmpty: true }),
     suites: {
       vitest: parseSuite(suites['vitest'], 'suites.vitest'),
       e2e: parseSuite(suites['e2e'], 'suites.e2e'),
@@ -122,10 +93,10 @@ export function snapshotFromRows(value: unknown): Snapshot | null {
       throw new Error(`rows[${index}].suite is not a suite`);
     }
     sha = expectSha(row['sha'], `rows[${index}].sha`);
-    date = expectString(row['date'], `rows[${index}].date`);
+    date = expectString(row['date'], `rows[${index}].date`, { nonEmpty: true });
     const pair = (name: string): Count => expectPair([row[`${name}_covered`], row[`${name}_total`]], `rows[${index}].${name}`);
     suites[suite].push({
-      file: expectString(row['file'], `rows[${index}].file`),
+      file: expectString(row['file'], `rows[${index}].file`, { nonEmpty: true }),
       lines: pair('lines'),
       statements: pair('statements'),
       functions: pair('functions'),
@@ -200,7 +171,7 @@ export function parseDiff(value: unknown): Diff {
     files: files.map((value: unknown, index) => {
       const row = expectObject(value, `files[${index}]`);
       return {
-        file: expectString(row['file'], `files[${index}].file`),
+        file: expectString(row['file'], `files[${index}].file`, { nonEmpty: true }),
         lines: expectPair(row['lines'], `files[${index}].lines`),
         base_lines: row['base_lines'] === null ? null : expectPair(row['base_lines'], `files[${index}].base_lines`),
       };

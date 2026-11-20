@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { codeSpan, compareSnapshots, MARKER, MAX_ROWS, parseDiff, renderMarkdown, type Snapshot, type SnapshotFunction } from './compare.mts';
+import { MAX_ROWS } from '../devanalytics/markdown.mts';
+import { compareSnapshots, MARKER, parseDiff, renderMarkdown, type Snapshot, type SnapshotFunction } from './compare.mts';
 
 const BASE_SHA = 'a'.repeat(40);
 const HEAD_SHA = 'b'.repeat(40);
@@ -59,33 +60,6 @@ describe('compareSnapshots', () => {
     // Assert
     expect(diff.introduced).toEqual([]);
     expect(diff.above_limits).toEqual({ base: 0, head: 0 });
-  });
-});
-
-describe('codeSpan', () => {
-  it('uses a fence longer than any backtick run in the text', () => {
-    // Act
-    const result = codeSpan('a``b');
-
-    // Assert
-    expect(result).toBe('``` a``b ```');
-  });
-
-  it('removes line breaks, bidirectional overrides and table pipes', () => {
-    // Act
-    const result = codeSpan('a\nb\u202ec|d');
-
-    // Assert
-    expect(result).toBe('` a b c∣d `');
-  });
-
-  it('shortens long text', () => {
-    // Act
-    const result = codeSpan('x'.repeat(500));
-
-    // Assert
-    expect(result.length).toBeLessThan(130);
-    expect(result).toContain('…');
   });
 });
 

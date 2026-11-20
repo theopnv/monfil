@@ -1,7 +1,8 @@
+import { expectCount, expectObject, expectSha, expectString } from '../devanalytics/expect.mts';
+import { codeSpan, MAX_ROWS } from '../devanalytics/markdown.mts';
 import { LIMITS } from './limits.mts';
 
 export const MARKER = '<!-- complexity-report -->';
-export const MAX_ROWS = 15;
 
 export interface SnapshotFunction {
   file: string;
@@ -103,37 +104,8 @@ export function compareSnapshots(base: Snapshot, head: Snapshot): Diff {
   };
 }
 
-function expectObject(value: unknown, field: string): Record<string, unknown> {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    throw new Error(`${field} must be an object`);
-  }
-  return value as Record<string, unknown>;
-}
-
-function expectCount(value: unknown, field: string): number {
-  if (!Number.isSafeInteger(value) || (value as number) < 0) {
-    throw new Error(`${field} must be a non-negative integer`);
-  }
-  return value as number;
-}
-
 function expectNullableCount(value: unknown, field: string): number | null {
   return value === null ? null : expectCount(value, field);
-}
-
-function expectString(value: unknown, field: string): string {
-  if (typeof value !== 'string') {
-    throw new Error(`${field} must be a string`);
-  }
-  return value;
-}
-
-function expectSha(value: unknown, field: string): string {
-  const sha = expectString(value, field);
-  if (!/^[0-9a-f]{40}$/.test(sha)) {
-    throw new Error(`${field} must be a commit sha`);
-  }
-  return sha;
 }
 
 function parseTotals(value: unknown, field: string): Totals {
@@ -173,25 +145,6 @@ export function parseDiff(value: unknown): Diff {
     worse: parseRows(diff['worse'], 'worse'),
     improved: parseRows(diff['improved'], 'improved'),
   };
-}
-
-const MAX_CODE_LENGTH = 120;
-// Line breaks, other control characters, and bidirectional overrides that could hide text.
-// eslint-disable-next-line no-control-regex
-const UNSAFE_CHARACTERS = /[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g;
-
-/**
- * Shows untrusted text as a code span, where GitHub renders no links, mentions or HTML.
- * A pipe would end the table cell even inside a code span, so it becomes a similar character.
- */
-export function codeSpan(text: string): string {
-  let clean = text.replace(UNSAFE_CHARACTERS, ' ').replaceAll('|', '∣');
-  if (clean.length > MAX_CODE_LENGTH) {
-    clean = `${clean.slice(0, MAX_CODE_LENGTH - 1)}…`;
-  }
-  const longestRun = Math.max(0, ...(clean.match(/`+/g) ?? []).map((run) => run.length));
-  const fence = '`'.repeat(longestRun + 1);
-  return `${fence} ${clean} ${fence}`;
 }
 
 function scoreCell(score: number, baseScore: number | null, limit: number): string {

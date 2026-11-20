@@ -1,4 +1,4 @@
-import { chunks, rowsWritten } from '../shared/chunks.ts';
+import { replaceRows } from '../shared/replace.ts';
 import { fileSums, SUITES, summarizeCoverage, testRows, type CoverageSnapshot } from './snapshot.ts';
 
 const INSERT_FILES = `
@@ -20,7 +20,7 @@ INSERT INTO coverage_tests (sha, date, suite, files, tests, passed, failed, skip
 SELECT ?1, ?2, value ->> 0, value ->> 1, value ->> 2, value ->> 3, value ->> 4, value ->> 5
 FROM json_each(?3)`;
 
-/** Replaces every row of the snapshot's sha in one batch, which D1 runs as a single transaction. */
+/** Replaces every row of the snapshot's sha. */
 export async function ingestCoverage(
   db: D1Database,
   snapshot: CoverageSnapshot,
@@ -29,14 +29,10 @@ export async function ingestCoverage(
   const fileRows = SUITES.flatMap((suite) => snapshot.suites[suite].map((file) => [suite, file.file, ...fileSums(file)]));
   const summaryRows = summarizeCoverage(snapshot).map((s) => [s.suite, s.folder, ...s.sums, s.file_count]);
   const suiteRows = testRows(snapshot);
-  const statements = [
-    db.prepare('DELETE FROM coverage_files WHERE sha = ?1').bind(sha),
-    db.prepare('DELETE FROM coverage_folder_summary WHERE sha = ?1').bind(sha),
-    db.prepare('DELETE FROM coverage_tests WHERE sha = ?1').bind(sha),
-    ...chunks(fileRows).map((rows) => db.prepare(INSERT_FILES).bind(sha, date, JSON.stringify(rows))),
-    ...chunks(summaryRows).map((rows) => db.prepare(INSERT_SUMMARY).bind(sha, date, JSON.stringify(rows))),
-    ...chunks(suiteRows).map((rows) => db.prepare(INSERT_TESTS).bind(sha, date, JSON.stringify(rows))),
-  ];
-  const results = await db.batch(statements);
-  return { files: fileRows.length, folders: summaryRows.length, testSuites: suiteRows.length, rowsWritten: rowsWritten(results) };
+  const written = await replaceRows(db, sha, date, [
+    { table: 'coverage_files', insert: INSERT_FILES, rows: fileRows },
+    { table: 'coverage_folder_summary', insert: INSERT_SUMMARY, rows: summaryRows },
+    { table: 'coverage_tests', insert: INSERT_TESTS, rows: suiteRows },
+  ]);
+  return { files: fileRows.length, folders: summaryRows.length, testSuites: suiteRows.length, rowsWritten: written };
 }

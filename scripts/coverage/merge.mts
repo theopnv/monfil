@@ -5,7 +5,8 @@ import process from 'node:process';
 import { parseArgs } from 'node:util';
 import libReport from 'istanbul-lib-report';
 import reports from 'istanbul-reports';
-import { headCommit } from '../complexity/metrics.mts';
+import { runCli } from '../devanalytics/cli.mts';
+import { headCommit } from '../devanalytics/git.mts';
 import { buildSuites, loadE2eMap, loadVitestMap, mergeMaps, total, type Snapshot } from './maps.mts';
 import { loadTestSuites, type TestSuites } from './tests.mts';
 
@@ -70,7 +71,4 @@ async function main() {
   }
 }
 
-main().catch((error: unknown) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n${USAGE}\n`);
-  process.exitCode = 1;
-});
+runCli(main, USAGE);
