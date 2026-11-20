@@ -13,6 +13,7 @@ import { WORKSPACE_COLORS, WORKSPACE_ICONS } from "@/lib/workspace-icons";
 import { useImportOpml } from "@/providers/opml-provider";
 import { HOME_WORKSPACE_ID } from "../../../shared/contracts";
 import type { ImportOpmlError, ImportSummary } from "../../../shared/contracts";
+import { dialogHeaderClass, dialogTitleClass, dialogFooterClass } from '@/components/common/dialog-classes';
 
 export interface ImportOpmlDialogProps {
   isOpen: boolean;
@@ -78,8 +79,8 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
         <Dialog>
           {summary ? (
             <>
-              <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
-                <Heading slot="title" className="font-display text-lg font-semibold text-primary">
+              <div className={dialogHeaderClass}>
+                <Heading slot="title" className={dialogTitleClass}>
                   {t('workspace:importOpml.doneTitle')}
                 </Heading>
                 <p className="text-sm text-tertiary">
@@ -100,7 +101,7 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
                   ))}
                 </ul>
               )}
-              <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+              <div className={dialogFooterClass}>
                 <Button color="primary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>
                   {t('common:action.done')}
                 </Button>
@@ -108,8 +109,8 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
             </>
           ) : (
             <>
-              <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
-                <Heading slot="title" className="font-display text-lg font-semibold text-primary">
+              <div className={dialogHeaderClass}>
+                <Heading slot="title" className={dialogTitleClass}>
                   {workspace ? t('workspace:importOpml.titleInto', { name: workspace.name }) : t('workspace:importOpml.title')}
                 </Heading>
                 <p className="text-sm text-tertiary">{t('workspace:importOpml.choose')}</p>
@@ -145,7 +146,7 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
 
               {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
-              <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+              <div className={dialogFooterClass}>
                 <Button color="secondary" size="md" className="rounded-full" onPress={() => handleOpenChange(false)}>
                   {t('common:action.cancel')}
                 </Button>

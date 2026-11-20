@@ -9,6 +9,7 @@ import { Dialog, Modal, ModalOverlay } from '@/components/untitled-ui/applicatio
 import { Button } from '@/components/untitled-ui/base/buttons/button';
 import { ipc, rendererLogger } from '@/lib/ipc-client';
 import type { DailySummaryProps } from '../../../shared/contracts';
+import { dialogHeaderClass, dialogTitleClass } from '@/components/common/dialog-classes';
 
 export interface UsageAnalyticsPreviewProps {
   isOpen: boolean;
@@ -32,8 +33,8 @@ export default function UsageAnalyticsPreview({ isOpen, onOpenChange }: UsageAna
     <ModalOverlay isOpen={isOpen} onOpenChange={onOpenChange} isDismissable>
       <Modal className="w-full max-w-[520px]">
         <Dialog>
-          <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
-            <Heading slot="title" className="font-display text-lg font-semibold text-primary">{t('settings:analyticsPreview.title')}</Heading>
+          <div className={dialogHeaderClass}>
+            <Heading slot="title" className={dialogTitleClass}>{t('settings:analyticsPreview.title')}</Heading>
             <p className="text-sm text-tertiary">
               {t('settings:analyticsPreview.body')}
             </p>

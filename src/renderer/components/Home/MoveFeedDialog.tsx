@@ -14,6 +14,7 @@ import NativeSelect from "@/components/common/NativeSelect";
 import { categoriesQuery } from "@/lib/queries";
 import { useActiveWorkspaceId, useMoveFeedToWorkspace, useWorkspaces } from "@/providers/workspace-provider";
 import type { FeedSummary } from "../../../shared/contracts";
+import { dialogHeaderClass, dialogTitleClass, dialogFooterClass } from '@/components/common/dialog-classes';
 
 const NEW_FOLDER = "";
 const FIELD_CLASSES = "rounded-lg border border-secondary bg-primary px-3 py-2 text-sm text-primary";
@@ -58,8 +59,8 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
 
   return (
     <>
-      <div className="flex flex-col gap-1.5 px-6 pt-6 pb-4.5">
-        <Heading slot="title" className="font-display text-lg font-semibold text-primary">
+      <div className={dialogHeaderClass}>
+        <Heading slot="title" className={dialogTitleClass}>
           {t('river:moveFeed.title')}
         </Heading>
         <p className="text-sm text-tertiary">
@@ -103,7 +104,7 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
 
       {error && <ErrorText error={error} className="px-6 pb-2 text-sm text-error-primary" />}
 
-      <div className="flex items-center justify-end gap-2.5 border-t border-secondary px-6 py-4">
+      <div className={dialogFooterClass}>
         <Button color="secondary" size="md" className="rounded-full" onPress={onClose}>
           {t('common:action.cancel')}
         </Button>
