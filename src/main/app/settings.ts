@@ -7,48 +7,29 @@ import { querySettings } from '../db/crud/query';
 import type { RefreshInterval, RetentionDays, UsageAnalyticsConsent } from '../../shared/contracts';
 import { isLanguageSetting, type LanguageSetting } from '../../shared/i18n/languages';
 
-export const REFRESH_INTERVALS: readonly RefreshInterval[] = [15, 30, 60, 360, 'manual'];
-
-export const DEFAULT_REFRESH_INTERVAL: RefreshInterval = 30;
-
-const REFRESH_INTERVAL_KEY = 'refreshIntervalMinutes';
-
-/**
- * Narrows an untrusted value, such as a hand-edited database row or an IPC payload, to a supported interval.
- * @param value anything that is meant to be a refresh interval
- * @returns the matching interval, or `DEFAULT_REFRESH_INTERVAL` when there is no match
- */
-export function toRefreshInterval(value: unknown): RefreshInterval {
-  const candidate = typeof value === 'string' && value !== 'manual' ? Number(value) : value;
-  return REFRESH_INTERVALS.includes(candidate as RefreshInterval)
-    ? candidate as RefreshInterval
-    : DEFAULT_REFRESH_INTERVAL;
-}
-
-/**
- * Reads how often the feeds are refreshed.
- * @returns the stored interval, or `DEFAULT_REFRESH_INTERVAL` when none is stored
- */
-export async function getRefreshInterval(): Promise<RefreshInterval> {
-  const [row] = await querySettings({ key: REFRESH_INTERVAL_KEY });
-  return toRefreshInterval(row?.value);
-}
-
-/**
- * Stores how often the feeds are refreshed. The caller reschedules the timer.
- * @param value the interval to store
- */
-export async function setRefreshInterval(value: RefreshInterval): Promise<void> {
+async function writeSetting(key: string, value: string): Promise<void> {
   await dbReady;
   await db.insertInto('setting')
-    .values({ key: REFRESH_INTERVAL_KEY, value: String(value) })
+    .values({ key, value })
     .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
     .execute();
 }
 
-export const DEFAULT_REFRESH_ON_LAUNCH = true;
+interface Setting<T> {
+  read: () => Promise<T>;
+  write: (value: T) => Promise<void>;
+}
 
-const REFRESH_ON_LAUNCH_KEY = 'refreshOnLaunch';
+/** `parse` narrows what is stored, so it must return the default for anything it does not know. */
+function defineSetting<T>(key: string, parse: (value: unknown) => T, serialize: (value: T) => string = String): Setting<T> {
+  return {
+    async read() {
+      const [row] = await querySettings({ key });
+      return parse(row?.value);
+    },
+    write: (value) => writeSetting(key, serialize(value)),
+  };
+}
 
 function toBoolean(value: unknown, fallback: boolean): boolean {
   if (value === 'true' || value === true) {
@@ -60,134 +41,77 @@ function toBoolean(value: unknown, fallback: boolean): boolean {
   return fallback;
 }
 
-/**
- * Narrows an untrusted value, such as a hand-edited database row or an IPC payload, to a boolean.
- * @param value anything that is meant to be the refresh-on-launch preference
- * @returns the matching boolean, or `DEFAULT_REFRESH_ON_LAUNCH` when there is no match
- */
+export const REFRESH_INTERVALS: readonly RefreshInterval[] = [15, 30, 60, 360, 'manual'];
+export const DEFAULT_REFRESH_INTERVAL: RefreshInterval = 30;
+
+export function toRefreshInterval(value: unknown): RefreshInterval {
+  const candidate = typeof value === 'string' && value !== 'manual' ? Number(value) : value;
+  return REFRESH_INTERVALS.includes(candidate as RefreshInterval)
+    ? candidate as RefreshInterval
+    : DEFAULT_REFRESH_INTERVAL;
+}
+
+/** The caller reschedules the refresh timer after a write. */
+const refreshInterval = defineSetting('refreshIntervalMinutes', toRefreshInterval);
+export const getRefreshInterval = refreshInterval.read;
+export const setRefreshInterval = refreshInterval.write;
+
+export const DEFAULT_REFRESH_ON_LAUNCH = true;
+
 export function toRefreshOnLaunch(value: unknown): boolean {
   return toBoolean(value, DEFAULT_REFRESH_ON_LAUNCH);
 }
 
-/**
- * Reads whether feeds refresh once at launch, in addition to the repeating timer.
- * @returns the stored preference, or `DEFAULT_REFRESH_ON_LAUNCH` when none is stored
- */
-export async function getRefreshOnLaunch(): Promise<boolean> {
-  const [row] = await querySettings({ key: REFRESH_ON_LAUNCH_KEY });
-  return toRefreshOnLaunch(row?.value);
-}
-
-/**
- * Stores whether feeds refresh once at launch.
- * @param value the preference to store
- */
-export async function setRefreshOnLaunch(value: boolean): Promise<void> {
-  await dbReady;
-  await db.insertInto('setting')
-    .values({ key: REFRESH_ON_LAUNCH_KEY, value: String(value) })
-    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
-    .execute();
-}
+const refreshOnLaunch = defineSetting('refreshOnLaunch', toRefreshOnLaunch);
+export const getRefreshOnLaunch = refreshOnLaunch.read;
+export const setRefreshOnLaunch = refreshOnLaunch.write;
 
 export const RETENTION_OPTIONS: readonly RetentionDays[] = [15, 30, 60, 90, 180];
 export const DEFAULT_RETENTION_DAYS: RetentionDays = 30;
-const RETENTION_KEY = 'retentionDays';
 
 export function toRetentionDays(value: unknown): RetentionDays {
   const candidate = typeof value === 'string' ? Number(value) : value;
   return RETENTION_OPTIONS.includes(candidate as RetentionDays) ? candidate as RetentionDays : DEFAULT_RETENTION_DAYS;
 }
 
-export async function getRetentionDays(): Promise<RetentionDays> {
-  const [row] = await querySettings({ key: RETENTION_KEY });
-  return toRetentionDays(row?.value);
-}
-
-export async function setRetentionDays(value: RetentionDays): Promise<void> {
-  await dbReady;
-  await db.insertInto('setting').values({ key: RETENTION_KEY, value: String(toRetentionDays(value)) })
-    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
-    .execute();
-}
+const retentionDays = defineSetting('retentionDays', toRetentionDays, (value) => String(toRetentionDays(value)));
+export const getRetentionDays = retentionDays.read;
+export const setRetentionDays = retentionDays.write;
 
 export const DEFAULT_DETAILED_LOGGING = false;
-const DETAILED_LOGGING_KEY = 'detailedLogging';
 
-export async function getDetailedLogging(): Promise<boolean> {
-  const [row] = await querySettings({ key: DETAILED_LOGGING_KEY });
-  return toBoolean(row?.value, DEFAULT_DETAILED_LOGGING);
-}
-
-export async function setDetailedLogging(value: boolean): Promise<void> {
-  await dbReady;
-  await db.insertInto('setting')
-    .values({ key: DETAILED_LOGGING_KEY, value: String(value) })
-    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
-    .execute();
-}
+const detailedLogging = defineSetting('detailedLogging', (value) => toBoolean(value, DEFAULT_DETAILED_LOGGING));
+export const getDetailedLogging = detailedLogging.read;
+export const setDetailedLogging = detailedLogging.write;
 
 export const DEFAULT_WORKSPACE_RAIL_EXPANDED = false;
-const WORKSPACE_RAIL_EXPANDED_KEY = 'workspaceRailExpanded';
 
-export async function getWorkspaceRailExpanded(): Promise<boolean> {
-  const [row] = await querySettings({ key: WORKSPACE_RAIL_EXPANDED_KEY });
-  return toBoolean(row?.value, DEFAULT_WORKSPACE_RAIL_EXPANDED);
-}
-
-export async function setWorkspaceRailExpanded(value: boolean): Promise<void> {
-  await dbReady;
-  await db.insertInto('setting')
-    .values({ key: WORKSPACE_RAIL_EXPANDED_KEY, value: String(value) })
-    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
-    .execute();
-}
+const workspaceRailExpanded = defineSetting('workspaceRailExpanded', (value) => toBoolean(value, DEFAULT_WORKSPACE_RAIL_EXPANDED));
+export const getWorkspaceRailExpanded = workspaceRailExpanded.read;
+export const setWorkspaceRailExpanded = workspaceRailExpanded.write;
 
 export const DEFAULT_LANGUAGE_SETTING: LanguageSetting = 'system';
-const LANGUAGE_KEY = 'language';
 
-/**
- * Narrows an untrusted value, such as a hand-edited database row, to a language choice.
- * @param value anything that is meant to be a language choice
- * @returns the matching choice, or `DEFAULT_LANGUAGE_SETTING` when there is no match
- */
 export function toLanguageSetting(value: unknown): LanguageSetting {
   return isLanguageSetting(value) ? value : DEFAULT_LANGUAGE_SETTING;
 }
 
-/** Reads the interface language choice: `system`, or one language. */
-export async function getLanguageSetting(): Promise<LanguageSetting> {
-  const [row] = await querySettings({ key: LANGUAGE_KEY });
-  return toLanguageSetting(row?.value);
+const languageSetting = defineSetting('language', toLanguageSetting, toLanguageSetting);
+export const getLanguageSetting = languageSetting.read;
+export const setLanguageSetting = languageSetting.write;
+
+export function toUsageAnalyticsConsent(value: unknown): UsageAnalyticsConsent {
+  return value === 'granted' || value === 'denied' ? value : 'unset';
 }
 
-/**
- * Stores the interface language choice.
- * @param value the choice to store
- */
-export async function setLanguageSetting(value: LanguageSetting): Promise<void> {
-  await dbReady;
-  await db.insertInto('setting')
-    .values({ key: LANGUAGE_KEY, value: toLanguageSetting(value) })
-    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
-    .execute();
-}
+const usageAnalyticsConsent = defineSetting('usageAnalyticsConsent', toUsageAnalyticsConsent);
+export const getUsageAnalyticsConsent = usageAnalyticsConsent.read;
 
-const DEFAULT_USAGE_ANALYTICS_CONSENT: UsageAnalyticsConsent = 'unset';
-const USAGE_ANALYTICS_CONSENT_KEY = 'usageAnalyticsConsent';
 const USAGE_ANALYTICS_CONSENT_AT_KEY = 'usageAnalyticsConsentAt';
 const USAGE_ANALYTICS_NOTICE_VERSION_KEY = 'usageAnalyticsNoticeVersion';
 const USAGE_ANALYTICS_PROMPT_COUNT_KEY = 'usageAnalyticsPromptCount';
 const USAGE_ANALYTICS_PROMPT_LAST_SHOWN_KEY = 'usageAnalyticsPromptLastShownAt';
 const USAGE_ANALYTICS_LAUNCH_COUNT_KEY = 'usageAnalyticsLaunchCount';
-
-async function writeSetting(key: string, value: string): Promise<void> {
-  await dbReady;
-  await db.insertInto('setting')
-    .values({ key, value })
-    .onConflict((oc) => oc.column('key').doUpdateSet((eb) => ({ value: eb.ref('excluded.value') })))
-    .execute();
-}
 
 async function readCount(key: string): Promise<number> {
   const [row] = await querySettings({ key });
@@ -196,29 +120,9 @@ async function readCount(key: string): Promise<number> {
   return Number.isSafeInteger(count) && count > 0 ? count : 0;
 }
 
-/**
- * Narrows an untrusted value, such as a hand-edited database row, to a consent state.
- * @param value anything that is meant to be a consent state
- * @returns the matching state, or `unset` when there is no match
- */
-export function toUsageAnalyticsConsent(value: unknown): UsageAnalyticsConsent {
-  return value === 'granted' || value === 'denied' ? value : DEFAULT_USAGE_ANALYTICS_CONSENT;
-}
-
-/** Reads whether the user agreed to share anonymous usage stats. */
-export async function getUsageAnalyticsConsent(): Promise<UsageAnalyticsConsent> {
-  const [row] = await querySettings({ key: USAGE_ANALYTICS_CONSENT_KEY });
-  return toUsageAnalyticsConsent(row?.value);
-}
-
-/**
- * Stores the user's choice with the time it was made and the privacy notice version it was made under.
- * @param value the choice to store
- * @param noticeVersion the version of the privacy notice the user saw
- * @param now the time of the choice
- */
+/** Stores the choice with the time it was made and the version of the privacy notice it was made under. */
 export async function setUsageAnalyticsConsent(value: UsageAnalyticsConsent, noticeVersion: string, now: Date): Promise<void> {
-  await writeSetting(USAGE_ANALYTICS_CONSENT_KEY, value);
+  await usageAnalyticsConsent.write(value);
   await writeSetting(USAGE_ANALYTICS_CONSENT_AT_KEY, now.toISOString());
   await writeSetting(USAGE_ANALYTICS_NOTICE_VERSION_KEY, noticeVersion);
 }
@@ -240,15 +144,10 @@ export async function getUsageAnalyticsPromptHistory(): Promise<UsageAnalyticsPr
   return { launchCount, promptCount, lastShownAt: lastShownAt && !Number.isNaN(lastShownAt.getTime()) ? lastShownAt : undefined };
 }
 
-/** Counts one launch of the app. */
 export async function recordAppLaunch(): Promise<void> {
   await writeSetting(USAGE_ANALYTICS_LAUNCH_COUNT_KEY, String(await readCount(USAGE_ANALYTICS_LAUNCH_COUNT_KEY) + 1));
 }
 
-/**
- * Counts one time the user put the consent card off.
- * @param now the time the card was put off
- */
 export async function recordUsageAnalyticsPromptDismissed(now: Date): Promise<void> {
   await writeSetting(USAGE_ANALYTICS_PROMPT_COUNT_KEY, String(await readCount(USAGE_ANALYTICS_PROMPT_COUNT_KEY) + 1));
   await writeSetting(USAGE_ANALYTICS_PROMPT_LAST_SHOWN_KEY, now.toISOString());
