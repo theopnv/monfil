@@ -16,13 +16,16 @@ import type { LogEventMap, LogEventName, LogLevel } from '../../shared/logging';
 
 type PlainChannel = Exclude<InvokeChannel, 'settings:get' | 'settings:set'>;
 
+/** A channel that takes no argument is called with the channel name alone. */
+type ArgsOf<C extends InvokeChannel> = [ArgOf<C>] extends [undefined] ? [] : [arg: ArgOf<C>];
+
 interface Invoke {
   <K extends SettingKey>(channel: 'settings:get', arg: { key: K }): Promise<SettingTypes[K]['state']>;
   <K extends SettingKey>(channel: 'settings:set', arg: { key: K; value: SettingTypes[K]['value'] }): Promise<SettingTypes[K]['state']>;
-  <C extends PlainChannel>(channel: C, arg: ArgOf<C>): Promise<ResultOf<C>>;
+  <C extends PlainChannel>(channel: C, ...args: ArgsOf<C>): Promise<ResultOf<C>>;
 }
 
-const invoke: Invoke = async (channel: InvokeChannel, arg: unknown): Promise<never> => {
+const invoke: Invoke = async (channel: InvokeChannel, arg?: unknown): Promise<never> => {
   const response: unknown = await window.electron.ipcRenderer.invoke(channel, arg as never);
   if (isIpcFailure(response)) {
     const { error } = response;

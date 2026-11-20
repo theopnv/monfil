@@ -56,7 +56,7 @@ export default function DeleteWorkspaceDialog({ workspace, onOpenChange, onDelet
     setIsDeleting(true);
     setError(null);
 
-    const response = await deleteWorkspace(workspace.id);
+    const response = await deleteWorkspace({ workspaceId: workspace.id });
 
     setIsDeleting(false);
     if (response.success) {

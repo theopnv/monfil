@@ -5,7 +5,7 @@
 import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ipc } from "@/lib/ipc-client";
-import { savedSearchesQuery } from "@/lib/queries";
+import { queryKeys, savedSearchesQuery } from "@/lib/queries";
 import { useActiveWorkspaceId } from "./workspace-provider";
 import type { SavedSearch, SavedSearchError, SavedSearchSummary } from "../../shared/contracts";
 import type { Result } from "../../shared/result";
@@ -35,7 +35,7 @@ export const useSavedSearchActions = (): SavedSearchActions => {
   const workspaceId = useActiveWorkspaceId();
   const queryClient = useQueryClient();
   // Stryker disable next-line ArrayDeclaration: the query client is the same object on every render
-  const refresh = useCallback(() => queryClient.invalidateQueries({ queryKey: ["feeds", "searches"] }), [queryClient]);
+  const refresh = useCallback(() => queryClient.invalidateQueries({ queryKey: queryKeys.searchesAll }), [queryClient]);
 
   const create = useCallback(async (name: string, query: string) => {
     const result = await ipc.invoke("searches:create", { workspaceId, name, query });

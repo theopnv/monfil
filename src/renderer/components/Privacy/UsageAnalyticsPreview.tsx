@@ -23,7 +23,7 @@ export default function UsageAnalyticsPreview({ isOpen, onOpenChange }: UsageAna
     if (!isOpen) {
       return;
     }
-    ipc.invoke('analytics:preview', undefined)
+    ipc.invoke('analytics:preview')
       .then(setSummary)
       .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Could not load the usage stats preview' }, error));
   }, [isOpen]);

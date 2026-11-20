@@ -12,7 +12,7 @@ import { SearchProvider } from '@/providers/search-provider';
 import { HintsProvider } from '@/providers/hints-provider';
 import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
-import { useIpcBridge } from '@/lib/ipc-bridge';
+import { usePushEvents } from '@/lib/push-events';
 import { parseRouteId } from '@/lib/route-params';
 import { useUpdateNotification } from '@/lib/app-update';
 import { useUsageReporting } from '@/providers/usage-reporting';
@@ -33,8 +33,8 @@ export const Route = createRootRoute({
   ),
 });
 
-function IpcBridgedAppShell() {
-  useIpcBridge();
+function PushEventsAppShell() {
+  usePushEvents();
   useUpdateNotification();
   useUsageReporting();
   return <AppShell />;
@@ -52,7 +52,7 @@ function RootComponent() {
                 <QueryClientProvider client={queryClient}>
                   <StartupGate>
                     <HintsProvider>
-                      <IpcBridgedAppShell />
+                      <PushEventsAppShell />
                     </HintsProvider>
                   </StartupGate>
                   <NotificationHost />

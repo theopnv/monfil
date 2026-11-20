@@ -9,12 +9,12 @@ import type { CatalogError, FeedpackCatalog } from '../../shared/contracts';
 import type { FeedpackError, FeedpackInstallTarget, FeedpackPreview, InstallFeedpackError } from '../../shared/contracts';
 import type { ImportSummary } from '../../shared/contracts';
 import type { Result } from '../../shared/result';
-import { queryKeys } from '@/lib/queries';
-import { uiKeys } from '@/lib/ipc-bridge';
+import { invalidateAll, invalidationSets, queryKeys } from '@/lib/queries';
+import { uiKeys } from '@/lib/push-events';
 
 export const useFeedpackCatalog = (enabled: boolean) => useQuery({
-  queryKey: ['feedpacks', 'catalog'],
-  queryFn: () => ipc.invoke('feedpacks:list', undefined),
+  queryKey: queryKeys.feedpackCatalog,
+  queryFn: () => ipc.invoke('feedpacks:list'),
   enabled,
   staleTime: Infinity,
 });
@@ -37,9 +37,7 @@ export const useInstallFeedpack = (): ((slug: string, target: FeedpackInstallTar
           queryClient.setQueryData(uiKeys.feedpackRefreshing(result.data.workspaceId), true);
         }
         void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
-        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-        void queryClient.invalidateQueries({ queryKey: ['categories'] });
-        void queryClient.invalidateQueries({ queryKey: ['river'] });
+        invalidateAll(queryClient, invalidationSets.feedsAndCategories);
       }
     },
   });

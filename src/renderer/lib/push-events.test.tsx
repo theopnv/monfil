@@ -27,9 +27,9 @@ import {
   useExportWorkspaceRequestedId,
   useFeedpackRefreshing,
   useHasPendingRefresh,
-  useIpcBridge,
+  usePushEvents,
   useRenameCategoryRequestedId,
-} from './ipc-bridge';
+} from './push-events';
 import type { RefreshSummary, RiverPage, RiverRow } from '../../shared/contracts';
 
 // Seeded data has no observer, so the default gcTime of 0 would drop it before the test reads it.
@@ -70,7 +70,7 @@ function under(client: QueryClient, child: ReactElement): ReactElement {
 }
 
 function Bridge() {
-  useIpcBridge();
+  usePushEvents();
   return null;
 }
 
@@ -113,7 +113,7 @@ function refreshed(summary: RefreshSummary): RefreshSummary {
   return summary;
 }
 
-describe('useIpcBridge', () => {
+describe('usePushEvents', () => {
   describe('feeds:refreshed with applyImmediately', () => {
     test('clears the pending feeds, raises the applied version and invalidates the rivers', async () => {
       // Arrange

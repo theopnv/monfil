@@ -10,7 +10,7 @@ import { userEvent } from 'vitest/browser';
 import { RouteProvider } from '@/providers/route-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useFeeds } from '@/providers/feeds-provider';
-import { useFeedpackRefreshing, useIpcBridge } from '@/lib/ipc-bridge';
+import { useFeedpackRefreshing, usePushEvents } from '@/lib/push-events';
 import { MOD_KEY_LABEL } from '@/lib/keyboard';
 import { createTestQueryClient } from '@/lib/test/render-with-query-client';
 import { pressComposing } from '@/lib/test/press-composing';
@@ -159,8 +159,8 @@ function FeedsList() {
   );
 }
 
-function IpcBridgeMount() {
-  useIpcBridge();
+function PushEventsMount() {
+  usePushEvents();
   return null;
 }
 
@@ -169,7 +169,7 @@ function renderApp(initialPath: string) {
     component: () => (
       <RouteProvider>
         <ActiveWorkspaceIdProvider>
-          <IpcBridgeMount />
+          <PushEventsMount />
           <div className="flex">
             <Toolbar />
             <Outlet />

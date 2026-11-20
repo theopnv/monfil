@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import NativeSelect from '@/components/common/NativeSelect';
 import SettingsRow from '@/components/Settings/SettingsRow';
 import { setRendererLanguage } from '@/lib/i18n';
-import { ipc, rendererLogger } from '@/lib/ipc-client';
-import type { LanguageState } from '../../../shared/contracts';
+import { useServerSetting } from '@/lib/use-server-setting';
 import { isLanguageSetting, LANGUAGES, type LanguageCode } from '../../../shared/i18n/languages';
 
 function nativeNameOf(code: LanguageCode): string {
@@ -17,24 +15,12 @@ function nativeNameOf(code: LanguageCode): string {
 
 export default function LanguageRow() {
   const { t } = useTranslation('settings');
-  const [state, setState] = useState<LanguageState | undefined>(undefined);
-
-  useEffect(() => {
-    ipc.invoke('settings:get', { key: 'language' })
-      .then(setState)
-      .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error loading the language:' }, error));
-  }, []);
+  const [state, save] = useServerSetting('language', { onSaved: (next) => setRendererLanguage(next.language) });
 
   const onChange = (value: string) => {
-    if (!isLanguageSetting(value)) {
-      return;
+    if (isLanguageSetting(value)) {
+      save(value);
     }
-    ipc.invoke('settings:set', { key: 'language', value: value })
-      .then(async (next) => {
-        setState(next);
-        await setRendererLanguage(next.language);
-      })
-      .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error saving the language:' }, error));
   };
 
   const showsBeta = state !== undefined && !(LANGUAGES.find((language) => language.code === state.language)?.reviewed ?? true);

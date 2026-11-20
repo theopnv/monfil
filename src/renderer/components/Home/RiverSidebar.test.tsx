@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { useCategories, useFeeds } from '@/providers/feeds-provider';
-import { useIpcBridge } from '@/lib/ipc-bridge';
+import { usePushEvents } from '@/lib/push-events';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import { pressComposing } from '@/lib/test/press-composing';
 import RiverSidebar from './RiverSidebar';
@@ -159,8 +159,8 @@ function stubElectron(overrides: {
   } as unknown as typeof window.electron;
 }
 
-function IpcBridgeMount() {
-  useIpcBridge();
+function PushEventsMount() {
+  usePushEvents();
   return null;
 }
 
@@ -169,7 +169,7 @@ function ConnectedSidebar({ onFeedDeleted }: { onFeedDeleted: (feed: FeedSummary
   const categories = useCategories();
   return (
     <>
-      <IpcBridgeMount />
+      <PushEventsMount />
       <RiverSidebar feeds={feeds} categories={categories} showOnlyLinks={new Set()} onSetVisibility={vi.fn()} onFeedDeleted={onFeedDeleted} />
     </>
   );

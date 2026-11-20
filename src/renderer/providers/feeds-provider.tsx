@@ -9,13 +9,10 @@ import { notifyWarning } from '@/lib/notifications';
 import { translateFeedFailure } from '@/lib/error-text';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData, type UseInfiniteQueryResult } from "@tanstack/react-query";
 import type { FeedCategory, FeedSummary, RiverPage } from "../../shared/contracts";
-import type { DeleteCategoryError, DeleteFeedError } from "../../shared/contracts";
-import type { AddFeedError, CreateCategoryError, NewFeedInput } from "../../shared/contracts";
-import type { UpdateCategoryError, UpdateFeedError } from "../../shared/contracts";
-import type { Result } from "../../shared/result";
-import { categoriesQuery, feedsQuery, patchRiverRows, riverQuery, type RiverScope } from "../lib/queries";
-import { useActiveWorkspaceId } from "./workspace-provider";
-import { uiKeys } from '../lib/ipc-bridge';
+import { categoriesQuery, feedsQuery, invalidationSets, patchRiverRows, queryKeys, riverQuery, type RiverScope } from "../lib/queries";
+import { useActiveWorkspaceId } from "@/lib/active-workspace";
+import { useResultMutation } from "@/lib/use-result-mutation";
+import { applyRefreshNow } from '../lib/push-events';
 
 /** Every feed placed in the active workspace. */
 export const useFeeds = (): FeedSummary[] => {
@@ -40,122 +37,19 @@ export const useCategories = (): FeedCategory[] => {
 
 export const useRiver = (scope: RiverScope, enabled = true): UseInfiniteQueryResult<InfiniteData<RiverPage>> => useInfiniteQuery({ ...riverQuery(scope), enabled });
 
-export const useAddFeed = (): ((input: Omit<NewFeedInput, 'workspaceId'>) => Promise<Result<FeedSummary, AddFeedError>>) => {
-  const workspaceId = useActiveWorkspaceId();
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (input: NewFeedInput) => ipc.invoke('feeds:submit-add-feed', input),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-        // A feed can be filed under a brand new category name (see CategoryPicker's "+ New
-        // category"), which creates that category as a side effect.
-        void queryClient.invalidateQueries({ queryKey: ['categories'] });
-        void queryClient.invalidateQueries({ queryKey: ['river'] });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  return useCallback((input: Omit<NewFeedInput, 'workspaceId'>) => mutateAsync({ ...input, workspaceId }), [mutateAsync, workspaceId]);
-};
+export const useAddFeed = () => useResultMutation('feeds:submit-add-feed', { invalidate: invalidationSets.feedsAndCategories, withWorkspace: true });
 
-export const useDeleteFeed = (): ((feedId: number) => Promise<Result<void, DeleteFeedError>>) => {
-  const workspaceId = useActiveWorkspaceId();
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (variables: { feedId: number; workspaceId: number }) => ipc.invoke('feeds:delete-feed', variables),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-        void queryClient.invalidateQueries({ queryKey: ['river'] });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  return useCallback((feedId: number) => mutateAsync({ feedId, workspaceId }), [mutateAsync, workspaceId]);
-};
+export const useDeleteFeed = () => useResultMutation('feeds:delete-feed', { invalidate: invalidationSets.feeds, withWorkspace: true });
 
-export const useSetShowInWorkspace = (): ((feedIds: number[], showInWorkspace: boolean) => Promise<Result<void, UpdateFeedError>>) => {
-  const workspaceId = useActiveWorkspaceId();
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (variables: { feedIds: number[]; showInWorkspace: boolean; workspaceId: number }) => ipc.invoke('feeds:set-show-in-workspace', variables),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-        void queryClient.invalidateQueries({ queryKey: ['river'] });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  return useCallback((feedIds: number[], showInWorkspace: boolean) => mutateAsync({ feedIds, showInWorkspace, workspaceId }), [mutateAsync, workspaceId]);
-};
+export const useSetShowInWorkspace = () => useResultMutation('feeds:set-show-in-workspace', { invalidate: invalidationSets.feeds, withWorkspace: true });
 
-export const useCreateCategory = (): ((name: string) => Promise<Result<FeedCategory, CreateCategoryError>>) => {
-  const workspaceId = useActiveWorkspaceId();
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (name: string) => ipc.invoke('feeds:create-category', { name, workspaceId }),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: ['categories'] });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
-  return useCallback((name: string) => mutateAsync(name), [mutateAsync]);
-};
+export const useCreateCategory = () => useResultMutation('feeds:create-category', { invalidate: invalidationSets.categories, withWorkspace: true });
 
-export const useRenameCategory = (): ((categoryId: number, name: string) => Promise<Result<FeedCategory, UpdateCategoryError>>) => {
-  const workspaceId = useActiveWorkspaceId();
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (variables: { categoryId: number; name: string; workspaceId: number }) => ipc.invoke('feeds:rename-category', variables),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-        void queryClient.invalidateQueries({ queryKey: ['categories'] });
-        void queryClient.invalidateQueries({ queryKey: ['river'] });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  return useCallback((categoryId: number, name: string) => mutateAsync({ categoryId, name, workspaceId }), [mutateAsync, workspaceId]);
-};
+export const useRenameCategory = () => useResultMutation('feeds:rename-category', { invalidate: invalidationSets.feedsAndCategories, withWorkspace: true });
 
-export const useDeleteCategory = (): ((categoryId: number, reassignTo?: number) => Promise<Result<void, DeleteCategoryError>>) => {
-  const workspaceId = useActiveWorkspaceId();
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (variables: { categoryId: number; reassignTo?: number | undefined; workspaceId: number }) => ipc.invoke('feeds:delete-category', variables),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-        void queryClient.invalidateQueries({ queryKey: ['categories'] });
-        void queryClient.invalidateQueries({ queryKey: ['river'] });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  return useCallback((categoryId: number, reassignTo?: number) => mutateAsync({ categoryId, reassignTo, workspaceId }), [mutateAsync, workspaceId]);
-};
+export const useDeleteCategory = () => useResultMutation('feeds:delete-category', { invalidate: invalidationSets.feedsAndCategories, withWorkspace: true });
 
-export const useMoveFeeds = (): ((feedIds: number[], categoryId: number) => Promise<Result<void, UpdateCategoryError>>) => {
-  const workspaceId = useActiveWorkspaceId();
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (variables: { feedIds: number[]; categoryId: number; workspaceId: number }) => ipc.invoke('feeds:move-feeds-to-category', variables),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-        void queryClient.invalidateQueries({ queryKey: ['river'] });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  return useCallback((feedIds: number[], categoryId: number) => mutateAsync({ feedIds, categoryId, workspaceId }), [mutateAsync, workspaceId]);
-};
+export const useMoveFeeds = () => useResultMutation('feeds:move-feeds-to-category', { invalidate: invalidationSets.feeds, withWorkspace: true });
 
 const MAX_FAILURE_LINES = 3;
 
@@ -170,14 +64,12 @@ export const useFeedsRefresh = (): FeedsRefresh => {
   const { t: tErrors } = useTranslation('errors');
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: () => ipc.invoke('feeds:refresh', undefined),
+    mutationFn: () => ipc.invoke('feeds:refresh'),
     onSuccess: (summary) => {
       // A user-initiated refresh gets its content immediately; an automatic cycle's `feeds:refreshed`
-      // push only raises the pill (see `useIpcBridge`), so it never moves the river under the user.
-      void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-      void queryClient.invalidateQueries({ queryKey: ['river'] });
-      queryClient.setQueryData<number[]>(uiKeys.pendingRefreshFeedIds, []);
-      queryClient.setQueryData<number>(uiKeys.appliedRefreshVersion, (version) => (version ?? 0) + 1);
+      // push only raises the pill (see `usePushEvents`), so it never moves the river under the user.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.feedsAll });
+      applyRefreshNow(queryClient);
       if (summary.failedFeeds?.length) {
         const count = summary.failedFeeds.length;
         const lines = summary.failedFeeds.slice(0, MAX_FAILURE_LINES).map((failure) => `${failure.title}: ${translateFeedFailure(tErrors, failure)}`);
@@ -233,13 +125,13 @@ export const useReadState = (): ReadState => {
       }
     },
     onMutate: async ({ itemIds, read }) => {
-      await queryClient.cancelQueries({ queryKey: ['river'] });
+      await queryClient.cancelQueries({ queryKey: queryKeys.riverAll });
 
       const targetIds = new Set(itemIds);
       const readAt = read ? new Date().toISOString() : undefined;
       const previousReadAt = new Map<number, string | undefined>();
       queryClient.setQueriesData<InfiniteData<RiverPage>>(
-        { queryKey: ['river'] },
+        { queryKey: queryKeys.riverAll },
         (data) => (data ? patchRiverRows(data, targetIds, (row) => {
           previousReadAt.set(row.id, row.readAt);
           return { ...row, readAt };
@@ -254,12 +146,12 @@ export const useReadState = (): ReadState => {
         return;
       }
       queryClient.setQueriesData<InfiniteData<RiverPage>>(
-        { queryKey: ['river'] },
+        { queryKey: queryKeys.riverAll },
         (data) => (data ? patchRiverRows(data, new Set(context.previousReadAt.keys()), (row) => ({ ...row, readAt: context.previousReadAt.get(row.id) })) : data),
       );
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ['feeds'] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.feedsAll });
     },
   });
 

@@ -97,7 +97,7 @@ test('returns the response of a channel without an argument', async () => {
   invoke.mockResolvedValue([]);
 
   // Act
-  const result = await ipc.invoke('workspaces:list', undefined);
+  const result = await ipc.invoke('workspaces:list');
 
   // Assert
   expect(result).toEqual([]);

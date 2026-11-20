@@ -20,7 +20,7 @@ import { queryKeys, mergeRiverRows, queryItemPage } from "@/lib/queries";
 import { getReaderNavigation } from "@/lib/reader/reader";
 import { useReaderContent } from "@/lib/reader/useReaderContent";
 import { isTypingTarget } from "@/lib/river/useRiverKeyboardNav";
-import { useAppliedRefreshVersion } from '@/lib/ipc-bridge';
+import { useAppliedRefreshVersion } from '@/lib/push-events';
 import { useRiverScope } from "@/providers/river-scope-provider";
 import { useCategories, useFeeds, useFeedsPending, useReadState, useRiver } from "@/providers/feeds-provider";
 import { usePreferences } from "@/providers/preferences-provider";

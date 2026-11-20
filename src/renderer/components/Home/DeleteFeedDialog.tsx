@@ -35,7 +35,7 @@ export default function DeleteFeedDialog({ feed, onOpenChange, onDeleted }: Dele
     setIsLoading(true);
     setError(null);
 
-    const response = await deleteFeed(feed.id);
+    const response = await deleteFeed({ feedId: feed.id });
 
     setIsLoading(false);
     if (response.success) {

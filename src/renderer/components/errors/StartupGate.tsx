@@ -6,13 +6,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useEffectEvent, type PropsWithChildren } from 'react';
 import { ipc } from '@/lib/ipc-client';
+import { queryKeys } from '@/lib/queries';
 import { ErrorRecovery } from './ErrorRecovery';
 import { notifyWarning } from '@/lib/notifications';
 
 export function StartupGate({ children }: PropsWithChildren) {
   const { t } = useTranslation('errors');
   const queryClient = useQueryClient();
-  const health = useQuery({ queryKey: ['startup-health'], queryFn: () => ipc.invoke('app:get-startup-health', undefined), retry: false });
+  const health = useQuery({ queryKey: queryKeys.startupHealth, queryFn: () => ipc.invoke('app:get-startup-health'), retry: false });
   const warnAboutRecovery = useEffectEvent(() => notifyWarning(t('startup.databaseRecovered'), 'database-recovered', {
     label: t('startup.revealBackup'),
     onClick: () => ipc.send('app:reveal', 'database-backup'),

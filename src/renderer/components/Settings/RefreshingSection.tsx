@@ -3,8 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
-import { useEffect, useState } from "react";
-import { ipc, rendererLogger } from '@/lib/ipc-client';
+import { useServerSetting } from '@/lib/use-server-setting';
 import SegmentedControl from "@/components/common/SegmentedControl";
 import SettingsRow from "@/components/Settings/SettingsRow";
 import SettingsSection from "@/components/Settings/SettingsSection";
@@ -26,50 +25,9 @@ const RETENTION_OPTIONS = [15, 30, 60, 90, 180] as const satisfies readonly Rete
 
 export default function RefreshingSection() {
   const { t } = useTranslation('settings');
-  const [refreshInterval, setRefreshIntervalState] = useState<RefreshInterval | undefined>(undefined);
-  const [refreshOnLaunch, setRefreshOnLaunchState] = useState<boolean | undefined>(undefined);
-  const [retentionDays, setRetentionDaysState] = useState<RetentionDays | undefined>(undefined);
-
-  useEffect(() => {
-    ipc.invoke('settings:get', { key: 'refreshInterval' })
-      .then(setRefreshIntervalState)
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error loading the refresh interval:' }, error);
-      });
-    ipc.invoke('settings:get', { key: 'refreshOnLaunch' })
-      .then(setRefreshOnLaunchState)
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error loading the refresh-on-launch preference:' }, error);
-      });
-    ipc.invoke('settings:get', { key: 'retentionDays' })
-      .then(setRetentionDaysState)
-      .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error loading retention:' }, error));
-  }, []);
-
-  const onIntervalChange = (interval: RefreshInterval) => {
-    setRefreshIntervalState(interval);
-    ipc.invoke('settings:set', { key: 'refreshInterval', value: interval })
-      .then(setRefreshIntervalState)
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error saving the refresh interval:' }, error);
-      });
-  };
-
-  const onRefreshOnLaunchChange = (value: boolean) => {
-    setRefreshOnLaunchState(value);
-    ipc.invoke('settings:set', { key: 'refreshOnLaunch', value: value })
-      .then(setRefreshOnLaunchState)
-      .catch((error: unknown) => {
-        rendererLogger.error('renderer.failure', { message: 'Error saving the refresh-on-launch preference:' }, error);
-      });
-  };
-
-  const onRetentionChange = (value: RetentionDays) => {
-    setRetentionDaysState(value);
-    ipc.invoke('settings:set', { key: 'retentionDays', value: value })
-      .then(setRetentionDaysState)
-      .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error saving retention:' }, error));
-  };
+  const [refreshInterval, onIntervalChange] = useServerSetting('refreshInterval', { optimistic: true });
+  const [refreshOnLaunch, onRefreshOnLaunchChange] = useServerSetting('refreshOnLaunch', { optimistic: true });
+  const [retentionDays, onRetentionChange] = useServerSetting('retentionDays', { optimistic: true });
 
   return (
     <SettingsSection id="refreshing" title={t('section.refreshing')}>

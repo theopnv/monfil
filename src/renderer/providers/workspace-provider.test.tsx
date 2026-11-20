@@ -83,7 +83,7 @@ const MUTATION_CASES: MutationCase[] = [
   },
   {
     name: 'useUpdateWorkspace',
-    run: () => runHook(useUpdateWorkspace, (update) => update(2, { name: 'Play', color: 'green' })),
+    run: () => runHook(useUpdateWorkspace, (update) => update({ workspaceId: 2, name: 'Play', color: 'green' })),
     channel: 'workspaces:update',
     payload: { workspaceId: 2, name: 'Play', color: 'green' },
     invalidates: ['workspaces'],
@@ -91,7 +91,7 @@ const MUTATION_CASES: MutationCase[] = [
   },
   {
     name: 'useDeleteWorkspace',
-    run: () => runHook(useDeleteWorkspace, (remove) => remove(2)),
+    run: () => runHook(useDeleteWorkspace, (remove) => remove({ workspaceId: 2 })),
     channel: 'workspaces:delete',
     payload: { workspaceId: 2 },
     invalidates: ['categories', 'feeds', 'river', 'workspaces'],
@@ -108,7 +108,7 @@ const MUTATION_CASES: MutationCase[] = [
   },
   {
     name: 'useMoveFeedToWorkspace',
-    run: () => runHook(useMoveFeedToWorkspace, (move) => move(9, 1, 2, 'Tech')),
+    run: () => runHook(useMoveFeedToWorkspace, (move) => move({ feedId: 9, fromWorkspaceId: 1, toWorkspaceId: 2, categoryName: 'Tech' })),
     channel: 'feeds:move-to-workspace',
     payload: { feedId: 9, fromWorkspaceId: 1, toWorkspaceId: 2, categoryName: 'Tech' },
     invalidates: ['categories', 'feeds', 'river', 'workspaces'],

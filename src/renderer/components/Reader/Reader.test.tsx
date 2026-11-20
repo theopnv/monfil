@@ -8,7 +8,7 @@ import { userEvent } from 'vitest/browser';
 import { PreferencesProvider } from '@/providers/preferences-provider';
 import { SearchProvider } from '@/providers/search-provider';
 import { RiverScopeProvider } from '@/providers/river-scope-provider';
-import { useIpcBridge } from '@/lib/ipc-bridge';
+import { usePushEvents } from '@/lib/push-events';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import Reader from './Reader';
 import type { MenuAction } from '../../../shared/channels';
@@ -108,7 +108,7 @@ function Session({ children }: PropsWithChildren) {
     <SearchProvider>
       <RiverScopeProvider>
         <PreferencesProvider>
-          <IpcBridgeMount />
+          <PushEventsMount />
           {children}
         </PreferencesProvider>
       </RiverScopeProvider>
@@ -116,8 +116,8 @@ function Session({ children }: PropsWithChildren) {
   );
 }
 
-function IpcBridgeMount() {
-  useIpcBridge();
+function PushEventsMount() {
+  usePushEvents();
   return null;
 }
 

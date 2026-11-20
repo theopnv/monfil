@@ -85,7 +85,7 @@ export default function DeleteCategoryDialog({ category, feedCount, otherCategor
     setIsLoading(true);
     setError(null);
 
-    const response = await deleteCategory(category.id, shouldMove ? reassignTo : undefined);
+    const response = await deleteCategory({ categoryId: category.id, reassignTo: shouldMove ? reassignTo : undefined });
 
     setIsLoading(false);
     if (response.success) {

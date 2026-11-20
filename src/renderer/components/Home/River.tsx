@@ -16,7 +16,7 @@ import ImportOpmlDialog from "@/components/Workspace/ImportOpmlDialog";
 import FeedpackInstallDialog from '@/components/Feedpacks/FeedpackInstallDialog';
 import { announce } from "@/lib/announcer";
 import { recordUsage } from "@/lib/usage";
-import { useFeedpackRefreshing } from '@/lib/ipc-bridge';
+import { useFeedpackRefreshing } from '@/lib/push-events';
 import { type FeedVisibility } from "@/lib/river/feed-visibility";
 import { openLink } from "@/lib/river/utils";
 import { useLoadMoreOnScroll } from "@/lib/river/useLoadMoreOnScroll";
@@ -112,7 +112,7 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
 
     const needsWrite = targets.filter((feed) => (feed.showInWorkspace !== 0) === (target === "hidden"));
     if (needsWrite.length > 0) {
-      await setShowInWorkspace(needsWrite.map((feed) => feed.id), target !== "hidden");
+      await setShowInWorkspace({ feedIds: needsWrite.map((feed) => feed.id), showInWorkspace: target !== "hidden" });
     }
   }, [setShowInWorkspace, setShowOnlyLinks, savedView, onShowFeed]);
 
@@ -121,7 +121,7 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
   }, [setShowOnlyLinks]);
 
   const showHiddenFeeds = useCallback((feedIds: number[]) => {
-    void setShowInWorkspace(feedIds, true);
+    void setShowInWorkspace({ feedIds, showInWorkspace: true });
   }, [setShowInWorkspace]);
 
   const handleFeedDeleted = useCallback((feed: FeedSummary) => {

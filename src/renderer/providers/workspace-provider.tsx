@@ -2,22 +2,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { createContext, useCallback, useContext, type PropsWithChildren } from "react";
+import { type PropsWithChildren } from "react";
 import { ipc } from '@/lib/ipc-client';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import type { DeleteWorkspaceError } from "../../shared/contracts";
-import type { CreateWorkspaceError } from "../../shared/contracts";
-import type { MoveFeedError, UpdateWorkspaceError } from "../../shared/contracts";
-import type { Result } from "../../shared/result";
-import { queryKeys, workspaceRailExpandedQuery, workspacesQuery } from "../lib/queries";
-import { HOME_WORKSPACE_ID, type Workspace, type WorkspaceSummary } from "../../shared/contracts";
+import type { ResultOf } from "../../shared/ipc-schema";
+import { ActiveWorkspaceIdContext, useActiveWorkspaceId } from "@/lib/active-workspace";
+import { invalidationSets, queryKeys, workspaceRailExpandedQuery, workspacesQuery } from "../lib/queries";
+import { useResultMutation } from "@/lib/use-result-mutation";
+import { HOME_WORKSPACE_ID, type WorkspaceSummary } from "../../shared/contracts";
 import { parseRouteId } from '@/lib/route-params';
 
-const ActiveWorkspaceIdContext = createContext<number>(HOME_WORKSPACE_ID);
-
-/** The workspace the URL currently points at, or Home for a component tree with no provider (most unit tests). */
-export const useActiveWorkspaceId = (): number => useContext(ActiveWorkspaceIdContext);
+export { useActiveWorkspaceId };
 
 /**
  * Mounted once at the root, above the router outlet: reads `workspaceId` off the URL
@@ -59,55 +55,13 @@ export const useActiveWorkspace =(): WorkspaceSummary | undefined => {
   return workspaces.find((workspace) => workspace.id === activeWorkspaceId);
 };
 
-export const useCreateWorkspace = (): ((input: { name: string; icon: string; color: string }) => Promise<Result<Workspace, CreateWorkspaceError>>) => {
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (input: { name: string; icon: string; color: string }) => ipc.invoke('workspaces:create', input),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
-  return useCallback((input: { name: string; icon: string; color: string }) => mutateAsync(input), [mutateAsync]);
-};
+export const useCreateWorkspace = () => useResultMutation('workspaces:create', { invalidate: invalidationSets.workspaces });
 
-export const useUpdateWorkspace = (): ((workspaceId: number, patch: { name?: string; icon?: string; color?: string }) => Promise<Result<Workspace, UpdateWorkspaceError>>) => {
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (variables: { workspaceId: number; name?: string; icon?: string; color?: string }) => ipc.invoke('workspaces:update', variables),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
-  return useCallback((workspaceId: number, patch: { name?: string; icon?: string; color?: string }) => mutateAsync({ workspaceId, ...patch }), [mutateAsync]);
-};
+export const useUpdateWorkspace = () => useResultMutation('workspaces:update', { invalidate: invalidationSets.workspaces });
 
-export const useDeleteWorkspace = (): ((workspaceId: number) => Promise<Result<void, DeleteWorkspaceError>>) => {
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (workspaceId: number) => ipc.invoke('workspaces:delete', { workspaceId }),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
-        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-        void queryClient.invalidateQueries({ queryKey: ['categories'] });
-        void queryClient.invalidateQueries({ queryKey: ['river'] });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
-  return useCallback((workspaceId: number) => mutateAsync(workspaceId), [mutateAsync]);
-};
+export const useDeleteWorkspace = () => useResultMutation('workspaces:delete', { invalidate: invalidationSets.workspaceContents });
 
-export const useReorderWorkspaces = (): ((orderedIds: number[]) => Promise<Result<void, UpdateWorkspaceError>>) => {
+export const useReorderWorkspaces = (): ((orderedIds: number[]) => Promise<ResultOf<'workspaces:reorder'>>) => {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: (orderedIds: number[]) => ipc.invoke('workspaces:reorder', { orderedIds }),
@@ -117,28 +71,7 @@ export const useReorderWorkspaces = (): ((orderedIds: number[]) => Promise<Resul
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.workspaces }),
   });
-  const { mutateAsync } = mutation;
-  // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
-  return useCallback((orderedIds: number[]) => mutateAsync(orderedIds), [mutateAsync]);
+  return mutation.mutateAsync;
 };
 
-export const useMoveFeedToWorkspace = (): ((feedId: number, fromWorkspaceId: number, toWorkspaceId: number, categoryName: string) => Promise<Result<void, MoveFeedError>>) => {
-  const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: (variables: { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string }) => ipc.invoke('feeds:move-to-workspace', variables),
-    onSuccess: (result) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: ['feeds'] });
-        void queryClient.invalidateQueries({ queryKey: ['categories'] });
-        void queryClient.invalidateQueries({ queryKey: ['river'] });
-        void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces });
-      }
-    },
-  });
-  const { mutateAsync } = mutation;
-  return useCallback(
-    (feedId: number, fromWorkspaceId: number, toWorkspaceId: number, categoryName: string) => mutateAsync({ feedId, fromWorkspaceId, toWorkspaceId, categoryName }),
-    // Stryker disable next-line ArrayDeclaration: mutateAsync is the same function on every render
-    [mutateAsync],
-  );
-};
+export const useMoveFeedToWorkspace = () => useResultMutation('feeds:move-to-workspace', { invalidate: invalidationSets.workspaceContents });

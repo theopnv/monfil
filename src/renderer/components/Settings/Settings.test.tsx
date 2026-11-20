@@ -8,7 +8,7 @@ import { PreferencesProvider } from '@/providers/preferences-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { callName } from '@/lib/test/call-name';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
-import { useIpcBridge } from '@/lib/ipc-bridge';
+import { usePushEvents } from '@/lib/push-events';
 import Settings from './Settings';
 import type { AppInfo, RefreshSummary } from '../../../shared/contracts';
 import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
@@ -18,8 +18,8 @@ const appInfo: AppInfo = { version: '1.2.3', feedCount: 2, itemCount: 42, databa
 let invokeImpl: (channel: string) => Promise<unknown>;
 let feedsRefreshedHandlers: Set<(summary: RefreshSummary) => void>;
 
-function IpcBridgeMount() {
-  useIpcBridge();
+function PushEventsMount() {
+  usePushEvents();
   return null;
 }
 
@@ -27,7 +27,7 @@ function renderSettings(withBridge = false) {
   return renderWithQueryClient(
     <ThemeProvider>
       <PreferencesProvider>
-        {withBridge && <IpcBridgeMount />}
+        {withBridge && <PushEventsMount />}
         <Settings />
       </PreferencesProvider>
     </ThemeProvider>,

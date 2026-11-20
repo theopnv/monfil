@@ -13,7 +13,7 @@ import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import { pressComposing } from '@/lib/test/press-composing';
-import { useIpcBridge } from '@/lib/ipc-bridge';
+import { usePushEvents } from '@/lib/push-events';
 import { NotificationHost } from '@/lib/notifications';
 import River from './River';
 import { parseSearchQuery } from '../../../shared/search-query';
@@ -227,13 +227,13 @@ beforeEach(() => {
   ];
 });
 
-function IpcBridgeMount() {
-  useIpcBridge();
+function PushEventsMount() {
+  usePushEvents();
   return null;
 }
 
 function Session({ children }: PropsWithChildren) {
-  return <SearchProvider><IpcBridgeMount /><RiverScopeProvider><PreferencesProvider>{children}</PreferencesProvider></RiverScopeProvider></SearchProvider>;
+  return <SearchProvider><PushEventsMount /><RiverScopeProvider><PreferencesProvider>{children}</PreferencesProvider></RiverScopeProvider></SearchProvider>;
 }
 
 test('saving from the list keeps the item unread and does not open it', async () => {

@@ -5,7 +5,8 @@
 import { useTranslation } from 'react-i18next';
 import { ErrorText } from "@/components/errors/ErrorText";
 import { useEffect, useState } from "react";
-import { ipc } from '@/lib/ipc-client';
+import { categoriesQuery } from '@/lib/queries';
+import { useQuery } from '@tanstack/react-query';
 import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/application/modals/modal";
 import { useAddFeed } from "@/providers/feeds-provider";
 import Step1Find, { type FeedType } from "./Step1Find";
@@ -23,6 +24,12 @@ export interface AddFeedModalProps {
   onOpenChange: (isOpen: boolean) => void;
 }
 
+/** The categories of the workspace, read while the wizard is open. A failed read shows none. */
+function useOpenCategories(workspaceId: number, isOpen: boolean): FeedCategory[] {
+  const { data, isError } = useQuery({ ...categoriesQuery(workspaceId), enabled: isOpen, retry: false });
+  return isError ? [] : data ?? [];
+}
+
 export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps) {
   const { t } = useTranslation(['addFeed', 'common']);
   const addFeed = useAddFeed();
@@ -32,7 +39,6 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   const [maxStepReached, setMaxStepReached] = useState<WizardStep>(1);
   const [query, setQuery] = useState("");
   const [type, setType] = useState<FeedType>(undefined);
-  const [categories, setCategories] = useState<FeedCategory[]>([]);
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showInWorkspace, setShowInWorkspace] = useState(true);
@@ -41,6 +47,7 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   const [result, setResult] = useState<FeedSummary | null>(null);
 
   const validation = useFeedValidation(query, type);
+  const categories = useOpenCategories(workspaceId, isOpen);
 
   function resetWizard() {
     setStep(1);
@@ -56,13 +63,9 @@ export default function AddFeedModal({ isOpen, onOpenChange }: AddFeedModalProps
   }
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
+    if (isOpen) {
+      resetWizard();
     }
-    resetWizard();
-    ipc.invoke("feeds:list-categories", { workspaceId })
-      .then(setCategories)
-      .catch(() => setCategories([]));
   }, [isOpen, workspaceId]);
 
   function goToStep(target: WizardStep) {

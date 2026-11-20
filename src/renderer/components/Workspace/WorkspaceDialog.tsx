@@ -64,7 +64,7 @@ export default function WorkspaceDialog({ isOpen, onOpenChange, workspace, onBro
     setError(null);
 
     const result = isEditing
-      ? await updateWorkspace(workspace.id, { name: trimmed, icon, color })
+      ? await updateWorkspace({ workspaceId: workspace.id, name: trimmed, icon, color })
       : await createWorkspace({ name: trimmed, icon, color });
 
     setIsLoading(false);

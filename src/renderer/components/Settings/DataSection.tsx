@@ -56,7 +56,7 @@ export default function DataSection() {
 
       <div className="flex flex-wrap gap-2.5">
         <Button color="secondary" className="self-start" onPress={() => {
-          void ipc.invoke('app:back-up-database', undefined).then((result) => {
+          void ipc.invoke('app:back-up-database').then((result) => {
             if (result.success) {
               setBackupMessage(t('data.backedUp'));
             } else if (result.error.name !== 'CANCELLED') {

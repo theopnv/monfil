@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { infiniteQueryOptions, queryOptions, type InfiniteData } from '@tanstack/react-query';
+import { infiniteQueryOptions, queryOptions, type InfiniteData, type QueryClient } from '@tanstack/react-query';
 import { ipc, rendererLogger } from '@/lib/ipc-client';
 import type { AppInfo, UsageAnalyticsState, FeedCategory, FeedSummary, RiverCursor, SavedSearchList, RiverPage, RiverQuery, RiverRow, SavedCursor, WorkspaceSummary } from '../../shared/contracts';
 
@@ -21,6 +21,10 @@ function normalizeScope(scope: RiverScope): RiverScope {
 }
 
 export const queryKeys = {
+  // Prefixes: they match every entry of that kind, whatever its workspace or scope.
+  feedsAll: ['feeds'] as const,
+  categoriesAll: ['categories'] as const,
+  riverAll: ['river'] as const,
   appInfo: ['app-info'] as const,
   updateState: ['app-update-state'] as const,
   usageAnalytics: ['usage-analytics'] as const,
@@ -29,16 +33,34 @@ export const queryKeys = {
   workspaces: ['workspaces'] as const,
   workspaceRailExpanded: ['workspace-rail-expanded'] as const,
   // Nested under 'feeds' on purpose: every refresh, read-state change and feed edit already invalidates that prefix, which keeps the pill counts current.
+  searchesAll: ['feeds', 'searches'] as const,
   searches: (workspaceId: number) => ['feeds', 'searches', workspaceId] as const,
+  startupHealth: ['startup-health'] as const,
+  feedpackCatalog: ['feedpacks', 'catalog'] as const,
   river: (scope: RiverScope) => ['river', normalizeScope(scope)] as const,
 };
+
+/** What a mutation makes stale, by what it changes. */
+export const invalidationSets = {
+  feeds: [queryKeys.feedsAll, queryKeys.riverAll],
+  categories: [queryKeys.categoriesAll],
+  feedsAndCategories: [queryKeys.feedsAll, queryKeys.categoriesAll, queryKeys.riverAll],
+  workspaces: [queryKeys.workspaces],
+  workspaceContents: [queryKeys.workspaces, queryKeys.feedsAll, queryKeys.categoriesAll, queryKeys.riverAll],
+} as const;
+
+export function invalidateAll(queryClient: QueryClient, keys: readonly (readonly unknown[])[]): void {
+  for (const queryKey of keys) {
+    void queryClient.invalidateQueries({ queryKey });
+  }
+}
 
 export function appInfoQuery() {
   return queryOptions({
     queryKey: queryKeys.appInfo,
     queryFn: async (): Promise<AppInfo> => {
       try {
-        return await ipc.invoke('app:get-info', undefined);
+        return await ipc.invoke('app:get-info');
       } catch (error: unknown) {
         rendererLogger.error('renderer.failure', { message: 'Error loading app info:' }, error);
         throw error;
@@ -88,7 +110,7 @@ export function savedSearchesQuery(workspaceId: number) {
 export function workspacesQuery() {
   return queryOptions({
     queryKey: queryKeys.workspaces,
-    queryFn: (): Promise<WorkspaceSummary[]> => ipc.invoke('workspaces:list', undefined),
+    queryFn: (): Promise<WorkspaceSummary[]> => ipc.invoke('workspaces:list'),
   });
 }
 

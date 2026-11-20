@@ -15,7 +15,7 @@ export function useUpdateNotification(): void {
   const { t } = useTranslation();
   const { data } = useQuery({
     queryKey: queryKeys.updateState,
-    queryFn: (): Promise<AppUpdateState> => ipc.invoke('app:get-update-state', undefined),
+    queryFn: (): Promise<AppUpdateState> => ipc.invoke('app:get-update-state'),
     staleTime: Infinity,
   });
   const isReady = data?.name === 'READY_TO_INSTALL';

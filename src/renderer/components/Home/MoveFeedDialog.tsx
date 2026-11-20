@@ -47,7 +47,7 @@ function MoveFeedForm({ feed, onClose }: { feed: FeedSummary; onClose: () => voi
     }
     setIsLoading(true);
     setError(null);
-    const result = await moveFeedToWorkspace(feed.id, activeId, destinationId, categoryName);
+    const result = await moveFeedToWorkspace({ feedId: feed.id, fromWorkspaceId: activeId, toWorkspaceId: destinationId, categoryName });
     setIsLoading(false);
     if (result.success) {
       onClose();

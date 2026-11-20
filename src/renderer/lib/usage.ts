@@ -25,7 +25,7 @@ export function useUsageAnalytics() {
     onError,
   });
   const dismiss = useMutation({
-    mutationFn: () => ipc.invoke('settings:dismiss-usage-analytics-prompt', undefined),
+    mutationFn: () => ipc.invoke('settings:dismiss-usage-analytics-prompt'),
     onSuccess: store,
     onError,
   });

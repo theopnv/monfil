@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { renderHook } from 'vitest-browser-react';
 import { useFeedpackCatalog, useFeedpackPreview, useInstallFeedpack } from './feedpacks-provider';
-import { uiKeys } from '../lib/ipc-bridge';
+import { uiKeys } from '../lib/push-events';
 import { queryKeys } from '../lib/queries';
 import { HOME_WORKSPACE_ID, type FeedpackInstallTarget } from '../../shared/contracts';
 
