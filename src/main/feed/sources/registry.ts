@@ -14,6 +14,7 @@ import { mastodonSource } from './mastodon';
 import { rssSource } from './rss';
 import type { SourceAdapter } from './types';
 import { isYoutubeLink, youtubeSource } from './youtube';
+import { hasHttpScheme } from '../../../shared/url';
 
 // `satisfies` is the exhaustiveness guard: adding a member to SourceType breaks the build here until an adapter for it exists
 const sources = {
@@ -78,5 +79,5 @@ export function detectType(feedUrl: string): SourceType {
   if (isConferenceLink(feedUrl)) {
     return 'conference';
   }
-  return /^https?:\/\//i.test(feedUrl) && isBlueskyLink(feedUrl) ? 'bluesky' : 'rss';
+  return hasHttpScheme(feedUrl) && isBlueskyLink(feedUrl) ? 'bluesky' : 'rss';
 }

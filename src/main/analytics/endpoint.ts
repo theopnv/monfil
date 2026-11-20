@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { parseHttpUrl } from '../../shared/url';
+
 const EVENTS_PATH = '/api/v0/events';
 
 const REGION_HOSTS: Record<string, string> = {
@@ -26,12 +28,8 @@ function selfHostedUrl(host: string | undefined): string | undefined {
   if (!host) {
     return undefined;
   }
-  try {
-    const parsed = new URL(host);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? `${parsed.origin}${EVENTS_PATH}` : undefined;
-  } catch {
-    return undefined;
-  }
+  const parsed = parseHttpUrl(host);
+  return parsed ? `${parsed.origin}${EVENTS_PATH}` : undefined;
 }
 
 function resolveKeyedEndpoint(key: string, host: string | undefined): AnalyticsEndpoint {

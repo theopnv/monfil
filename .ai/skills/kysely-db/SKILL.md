@@ -15,6 +15,8 @@ The reusable criteria queries in `src/main/db/crud/query.ts` use `applyCriteria`
 
 ## Upserts and errors
 
+Wrap a query that returns a `Result` in `dbTry` from `src/main/db/db-try.ts`. It waits for the database and turns a thrown error into a `DB_ERROR`. Pass `mapKnown` for an error the caller expects, such as `hasSqliteCode(error, 'SQLITE_CONSTRAINT_UNIQUE')`.
+
 Feed identity lives in `feedMetadata`. Category, workspace, and visibility live in `feedPlacement`. The upserts in `src/main/db/crud/insert.ts` show the current conflict keys and columns for each table. In `doUpdateSet`, `eb.ref('excluded.column')` reads the proposed row. List each column that must change on conflict; a column's default applies only to a new row.
 
 Use `.returningAll()` when the caller needs the stored row. Choose `executeTakeFirstOrThrow()` when a missing row is an error, `executeTakeFirst()` when it is a valid outcome, and `execute()` for a set of rows.

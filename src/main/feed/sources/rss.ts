@@ -8,9 +8,10 @@ import type { Result } from '../../../shared/result';
 import { findAlternateLinks, probeLinks } from './discovery';
 import { parseFeedContent } from './feedContent';
 import { resolveSiteIcon } from './siteIcon';
-import { fetchAndParse, fetchCandidates, mapFetchError, unsupported, withScheme } from './feedSource';
+import { fetchAndParse, fetchCandidates, unsupported } from './feedSource';
 import { mastodonCandidates, mastodonSource } from './mastodon';
 import type { SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
+import { withScheme } from '../../../shared/url';
 
 export { parseFeedContent } from './feedContent';
 
@@ -69,7 +70,7 @@ async function discover(query: string): Promise<Result<ParsedSource[], FeedFetch
 
   const page = await fetchText(link);
   if (!page.success) {
-    return { success: false, error: mapFetchError(page.error) };
+    return { success: false, error: page.error };
   }
   const direct = safeParse(page.data.body);
   if (direct) {

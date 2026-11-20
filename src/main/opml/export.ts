@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import { dialog } from 'electron';
 import type { ExportOpmlError } from '../../shared/contracts';
 import { queryFeedSummaries, queryWorkspaceById } from '../db/crud/query';
-import type { Result } from '../../shared/result';
+import { fail, ok, type Result } from '../../shared/result';
 import { generateWorkspaceOpml, type OpmlCategoryInput } from './generate';
 
 /**
@@ -16,13 +16,13 @@ import { generateWorkspaceOpml, type OpmlCategoryInput } from './generate';
 export async function exportWorkspaceOpml(workspaceId: number): Promise<Result<void, ExportOpmlError>> {
   const workspace = await queryWorkspaceById(workspaceId);
   if (!workspace) {
-    return { success: false, error: { name: 'WORKSPACE_NOT_FOUND', message: `No workspace found with id ${workspaceId}` } };
+    return fail('WORKSPACE_NOT_FOUND', `No workspace found with id ${workspaceId}`);
   }
 
   const feeds = await queryFeedSummaries(workspaceId);
   // OPML 2.0 needs at least one outline in the body, so an empty workspace has no valid file.
   if (feeds.length === 0) {
-    return { success: false, error: { name: 'NO_FEEDS', message: 'This workspace has no feeds to export.' } };
+    return fail('NO_FEEDS', 'This workspace has no feeds to export.');
   }
   const categoriesByName = new Map<string, OpmlCategoryInput>();
   for (const feed of feeds) {
@@ -38,13 +38,13 @@ export async function exportWorkspaceOpml(workspaceId: number): Promise<Result<v
     filters: [{ name: 'OPML', extensions: ['opml'] }],
   });
   if (canceled || !filePath) {
-    return { success: false, error: { name: 'CANCELLED', message: 'Export cancelled.' } };
+    return fail('CANCELLED', 'Export cancelled.');
   }
 
   try {
     await fs.writeFile(filePath, xml, 'utf-8');
-    return { success: true, data: undefined };
+    return ok();
   } catch (error) {
-    return { success: false, error: { name: 'FS_ERROR', message: error instanceof Error ? error.message : 'Could not write the file.' } };
+    return fail('FS_ERROR', error instanceof Error ? error.message : 'Could not write the file.');
   }
 }

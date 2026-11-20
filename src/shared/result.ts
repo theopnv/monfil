@@ -2,10 +2,23 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-type Success<S> = { success: true; data: S };
-type Failure<E> = { success: false; error: E };
+import type { ErrorParams } from './errors';
+
+export type Success<S> = { success: true; data: S };
+export type Failure<E> = { success: false; error: E };
 
 export type Result<S, E = Error> = Success<S> | Failure<E>;
+
+export function ok(): Success<undefined>;
+export function ok<S>(data: S): Success<S>;
+export function ok(data?: unknown): Success<unknown> {
+  return { success: true, data };
+}
+
+/** A failed `Result`. `params` fills the placeholders of the translated message, and is left out when absent. */
+export function fail<N extends string>(name: N, message: string, params?: ErrorParams): Failure<{ name: N; message: string; params?: ErrorParams }> {
+  return { success: false, error: { name, message, ...(params ? { params } : {}) } };
+}
 
 export interface UnexpectedError {
   name: 'UNEXPECTED_ERROR';

@@ -4,7 +4,7 @@
 
 import { db, dbReady } from '../db/database';
 import { querySettings } from '../db/crud/query';
-import type { RefreshInterval, RetentionDays, UsageAnalyticsConsent } from '../../shared/contracts';
+import { REFRESH_INTERVALS, RETENTION_OPTIONS, type RefreshInterval, type RetentionDays, type UsageAnalyticsConsent } from '../../shared/contracts';
 import { isLanguageSetting, type LanguageSetting } from '../../shared/i18n/languages';
 
 async function writeSetting(key: string, value: string): Promise<void> {
@@ -41,12 +41,11 @@ function toBoolean(value: unknown, fallback: boolean): boolean {
   return fallback;
 }
 
-export const REFRESH_INTERVALS: readonly RefreshInterval[] = [15, 30, 60, 360, 'manual'];
 export const DEFAULT_REFRESH_INTERVAL: RefreshInterval = 30;
 
 export function toRefreshInterval(value: unknown): RefreshInterval {
   const candidate = typeof value === 'string' && value !== 'manual' ? Number(value) : value;
-  return REFRESH_INTERVALS.includes(candidate as RefreshInterval)
+  return (REFRESH_INTERVALS as readonly unknown[]).includes(candidate)
     ? candidate as RefreshInterval
     : DEFAULT_REFRESH_INTERVAL;
 }
@@ -66,12 +65,11 @@ const refreshOnLaunch = defineSetting('refreshOnLaunch', toRefreshOnLaunch);
 export const getRefreshOnLaunch = refreshOnLaunch.read;
 export const setRefreshOnLaunch = refreshOnLaunch.write;
 
-export const RETENTION_OPTIONS: readonly RetentionDays[] = [15, 30, 60, 90, 180];
 export const DEFAULT_RETENTION_DAYS: RetentionDays = 30;
 
 export function toRetentionDays(value: unknown): RetentionDays {
   const candidate = typeof value === 'string' ? Number(value) : value;
-  return RETENTION_OPTIONS.includes(candidate as RetentionDays) ? candidate as RetentionDays : DEFAULT_RETENTION_DAYS;
+  return (RETENTION_OPTIONS as readonly unknown[]).includes(candidate) ? candidate as RetentionDays : DEFAULT_RETENTION_DAYS;
 }
 
 const retentionDays = defineSetting('retentionDays', toRetentionDays, (value) => String(toRetentionDays(value)));

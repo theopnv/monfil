@@ -55,11 +55,10 @@ import type {
   SourceItem,
   DismissSearchHintError,
 } from './contracts';
-import { SOURCE_TYPES } from './contracts';
+import { REFRESH_INTERVALS, RETENTION_OPTIONS, SOURCE_TYPES } from './contracts';
 import type { IpcFailure, Result } from './result';
 import { isLanguageSetting } from './i18n/languages';
-import { array, isBoolean, isFiniteNumber, isString, isUndefined, object, optional, type Guard } from './ipc-payloads';
-import { isPositiveSafeInteger } from './validation';
+import { array, isBoolean, isFiniteNumber, isPositiveSafeInteger, isString, isUndefined, object, optional, type Guard } from './guards';
 
 /** One invoke channel: the guard that checks its argument, and the type of what it returns. `result` only carries the type. */
 export interface Rpc<A, R> {
@@ -74,11 +73,11 @@ function isSourceType(value: unknown): value is SourceType {
 }
 
 function isRefreshInterval(value: unknown): value is RefreshInterval {
-  return value === 15 || value === 30 || value === 60 || value === 360 || value === 'manual';
+  return (REFRESH_INTERVALS as readonly unknown[]).includes(value);
 }
 
 function isRetentionDays(value: unknown): value is RetentionDays {
-  return value === 15 || value === 30 || value === 60 || value === 90 || value === 180;
+  return (RETENTION_OPTIONS as readonly unknown[]).includes(value);
 }
 
 function isConsentChoice(value: unknown): value is 'granted' | 'denied' {

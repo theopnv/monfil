@@ -4,7 +4,7 @@
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { fetchConditional, fetchText, type FetchTextResult } from '../../lib/fetch';
-import { createFeedSource, fetchAndParse, fetchCandidates, MAX_CANDIDATES, toUrl, withScheme } from './feedSource';
+import { createFeedSource, fetchAndParse, fetchCandidates, MAX_CANDIDATES, toUrl } from './feedSource';
 import type { ParsedFeedContent } from './types';
 
 vi.mock(import('../../lib/fetch'), () => ({
@@ -22,20 +22,6 @@ const parseAlways = () => parsedFeed;
 afterEach(() => {
   mockedFetchText.mockReset();
   mockedFetchConditional.mockReset();
-});
-
-describe('withScheme', () => {
-  test('keeps a link that starts with http or https, in any letter case', () => {
-    // Act / Assert
-    expect(withScheme('http://example.com/a')).toBe('http://example.com/a');
-    expect(withScheme('HTTPS://example.com/a')).toBe('HTTPS://example.com/a');
-  });
-
-  test('adds https to a link with no scheme, even when a scheme appears later in it', () => {
-    // Act / Assert
-    expect(withScheme('example.com/a')).toBe('https://example.com/a');
-    expect(withScheme('example.com/?next=https://other.example/')).toBe('https://example.com/?next=https://other.example/');
-  });
 });
 
 describe('toUrl', () => {

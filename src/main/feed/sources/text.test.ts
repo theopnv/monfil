@@ -3,24 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { decodeTitle, removeAll } from './text';
-
-describe('removeAll', () => {
-  test('removes every match', () => {
-    // Act / Assert
-    expect(removeAll('a<b>c<b>d', /<b>/g)).toBe('acd');
-  });
-
-  test('removes a match that the removal itself splices together', () => {
-    // Act / Assert
-    expect(removeAll('<<b>b>', /<b>/g)).toBe('');
-  });
-
-  test('replaces with the given text until nothing matches', () => {
-    // Act / Assert
-    expect(removeAll('xxxx', /xx/g, 'x')).toBe('x');
-  });
-});
+import { decodeTitle } from './text';
 
 describe('decodeTitle', () => {
   test('removes HTML tags that a feed puts around a title', () => {

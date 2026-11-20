@@ -4,18 +4,13 @@
 
 import { resolveEmbedUrl, type EmbedDescriptor } from '../../../shared/embeds';
 import { removeFollowAuthorControls } from '../../../shared/follow-author';
+import { parseHttpUrl } from '../../../shared/url';
 
 function httpUrl(value: string | null, baseUrl?: string): string | undefined {
   if (!value) {
     return undefined;
   }
-  try {
-    const url = new URL(value, baseUrl);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
-    // Stryker disable next-line BlockStatement: an empty catch also returns undefined
-  } catch {
-    return undefined;
-  }
+  return parseHttpUrl(value, baseUrl)?.href;
 }
 
 /** The src to keep for an image: resolved when the article URL is known, and none for a scheme other than http or https. */

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { decodeText, removeAll } from './text';
+import { decodeText, removeAll } from '../../lib/strip-html';
 import type { ParsedFeedContent } from './types';
 
 const MAX_TITLE_LENGTH = 100;

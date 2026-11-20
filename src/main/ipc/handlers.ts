@@ -7,7 +7,7 @@ import type { IpcMainInvokeEvent } from 'electron';
 import type { SettingGetArg, SettingKey, SettingSetArg, SettingState, SettingTypes } from '../../shared/channels';
 import type { BackupError, ItemBody, RetentionDays, StartupHealth } from '../../shared/contracts';
 import type { ArgOf, ResultOf } from '../../shared/ipc-schema';
-import type { Result } from '../../shared/result';
+import { fail, ok, type Result } from '../../shared/result';
 import { changeUsageAnalyticsConsent, getUsageAnalyticsState } from '../analytics/consent';
 import { incrementCounter } from '../analytics/counters';
 import {
@@ -180,13 +180,13 @@ export async function handleAppBackUpDatabase(): Promise<Result<void, BackupErro
     filters: [{ name: mainI18n.t('main:dialog.sqliteFilter'), extensions: ['db'] }],
   });
   if (canceled || !filePath) {
-    return { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } };
+    return fail('CANCELLED', 'Backup cancelled.');
   }
   try {
     await backUpDatabase(filePath);
-    return { success: true, data: undefined };
+    return ok();
   } catch (error) {
-    return { success: false, error: { name: 'BACKUP_FAILED', message: error instanceof Error ? error.message : String(error) } };
+    return fail('BACKUP_FAILED', error instanceof Error ? error.message : String(error));
   }
 }
 

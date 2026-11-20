@@ -7,7 +7,7 @@ import type { Feedpack, FeedpackError, FeedpackInstallTarget, FeedpackPreview, I
 import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { mainLanguage } from '../lib/i18n';
 import { feedpackText } from '../../shared/i18n/feedpack-text';
-import type { Result } from '../../shared/result';
+import { fail, type Result } from '../../shared/result';
 import { startOpmlImport } from '../opml/import';
 import { parseOpmlDocument } from '../opml/parse';
 import { feedpackOpmlUrl, getFeedpackCatalog, readBundledFeedpack, usesBundledFeedpacks } from './catalog';
@@ -19,13 +19,13 @@ async function loadFeedpack(slug: string): Promise<Result<{ pack: Feedpack; xml:
   }
   const pack = catalog.data.packs.find((candidate) => candidate.slug === slug);
   if (!pack) {
-    return { success: false, error: { name: 'PACK_NOT_FOUND', message: `The feedpack "${slug}" does not exist.`, params: { slug } } };
+    return fail('PACK_NOT_FOUND', `The feedpack "${slug}" does not exist.`, { slug });
   }
   if (usesBundledFeedpacks()) {
     try {
       return { success: true, data: { pack, xml: await readBundledFeedpack(pack) } };
     } catch {
-      return { success: false, error: { name: 'FETCH_ERROR', message: `Could not read local ${pack.title}.`, params: { reason: 'local', title: feedpackText(pack, mainLanguage()).title } } };
+      return fail('FETCH_ERROR', `Could not read local ${pack.title}.`, { reason: 'local', title: feedpackText(pack, mainLanguage()).title });
     }
   }
   const fetched = await fetchText(feedpackOpmlUrl(pack));
@@ -35,7 +35,7 @@ async function loadFeedpack(slug: string): Promise<Result<{ pack: Feedpack; xml:
   try {
     return { success: true, data: { pack, xml: await readBundledFeedpack(pack) } };
   } catch {
-    return { success: false, error: { name: 'FETCH_ERROR', message: `Could not fetch ${pack.title}.`, params: { reason: 'remote', title: feedpackText(pack, mainLanguage()).title } } };
+    return fail('FETCH_ERROR', `Could not fetch ${pack.title}.`, { reason: 'remote', title: feedpackText(pack, mainLanguage()).title });
   }
 }
 

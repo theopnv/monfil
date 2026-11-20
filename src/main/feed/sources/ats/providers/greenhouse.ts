@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { decodeText } from '../../text';
+import { decodeText } from '../../../../lib/strip-html';
 import { salaryFromRange, salaryFromText } from '../salary';
 import type { AtsBoard, AtsJob, AtsListing, AtsProviderAdapter } from '../types';
 import { asArray, asRec, firstSegment, isoFromText, num, parseJson, pathSegments, str } from '../values';

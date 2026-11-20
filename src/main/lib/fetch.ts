@@ -9,6 +9,7 @@ import type { ErrorParams } from '../../shared/errors.ts';
 import { FETCH_TIMEOUT_MS, MAX_FETCH_BYTES, MAX_REDIRECTS } from './constants.ts';
 import { classifyHost } from './private-network.ts';
 import { decodeBody } from './decode-body.ts';
+import { fail } from '../../shared/result';
 
 export interface FetchValidators {
   etag: string | undefined;
@@ -43,7 +44,7 @@ export type FetchedResource = FetchedText | NotModified;
 export type FetchTextResult = Result<FetchedText, FetchUrlError>;
 export type ConditionalFetchResult = Result<FetchedResource, FetchUrlError>;
 
-const REDIRECT_ERROR: FetchTextResult = { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'Too many redirects.', params: { reason: 'redirects' } } };
+const REDIRECT_ERROR: FetchTextResult = fail('GENERIC_FETCH_ERROR', 'Too many redirects.', { reason: 'redirects' });
 
 function userAgent(): string {
   return `monfil/${app.getVersion()} (+https://github.com/theopnv/monfil)`;
@@ -60,7 +61,7 @@ export function allowPrivateHosts(): void {
 }
 
 function tooLarge(): Result<string, Extract<FetchUrlError, { name: 'RESPONSE_TOO_LARGE_ERROR' }>> {
-  return { success: false, error: { name: 'RESPONSE_TOO_LARGE_ERROR', message: 'This feed is too large to read.' } };
+  return fail('RESPONSE_TOO_LARGE_ERROR', 'This feed is too large to read.');
 }
 
 function blocked(message: string, reason: 'protocol' | 'private'): Extract<FetchUrlError, { name: 'BLOCKED_URL_ERROR' }> {
@@ -285,7 +286,7 @@ function readCappedText(
     response.on('end', () => finish({ success: true, data: decodeBody(Buffer.concat(chunks), contentType) }));
     response.on('error', () => {
       request.abort();
-      finish({ success: false, error: { name: 'NETWORK_ERROR', message: 'The connection dropped while reading the response.', params: { reason: 'dropped' } } });
+      finish(fail('NETWORK_ERROR', 'The connection dropped while reading the response.', { reason: 'dropped' }));
     });
   });
 }
@@ -373,11 +374,11 @@ async function fetchResource(
         if (allowNotModified && hasValidator(options.validators ?? { etag: undefined, last_modified: undefined })) {
           return { success: true, data: { notModified: true } };
         }
-        return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(hop.status, hop.statusMessage), params: httpStatusParams(hop.status) } };
+        return fail('GENERIC_FETCH_ERROR', httpStatusMessage(hop.status, hop.statusMessage), httpStatusParams(hop.status));
       }
       if (hop.status < 200 || hop.status >= 300) {
         hop.abort();
-        return { success: false, error: { name: 'GENERIC_FETCH_ERROR', message: httpStatusMessage(hop.status, hop.statusMessage), params: httpStatusParams(hop.status) } };
+        return fail('GENERIC_FETCH_ERROR', httpStatusMessage(hop.status, hop.statusMessage), httpStatusParams(hop.status));
       }
 
       const body = await raceAbort(hop.readBody(), signal, hop.abort);
@@ -397,11 +398,11 @@ async function fetchResource(
 
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      return { success: false, error: { name: 'NOT_ALLOWED_OR_ABORTED_ERROR', message: error.message } };
+      return fail('NOT_ALLOWED_OR_ABORTED_ERROR', error.message);
     }
     // Chromium reports every transport failure (DNS, refused, TLS) as a plain Error.
     const message = error instanceof Error ? error.message : String(error);
-    return { success: false, error: { name: 'NETWORK_ERROR', message } };
+    return fail('NETWORK_ERROR', message);
   }
 }
 

@@ -4,7 +4,7 @@
 
 import { parseOpml, type Opml } from 'feedsmith';
 import type { ParsedOpml, ParsedOpmlCategory, ParsedOpmlFeed, ParseOpmlError } from '../../shared/contracts';
-import type { Result } from '../../shared/result';
+import { fail, type Result } from '../../shared/result';
 import { detectType } from '../feed/sources/registry';
 
 const DEFAULT_TITLE = 'Imported';
@@ -48,7 +48,7 @@ export function parseOpmlDocument(xml: string): Result<ParsedOpml, ParseOpmlErro
   try {
     document = parseOpml(xml);
   } catch (error) {
-    return { success: false, error: { name: 'MALFORMED_XML', message: error instanceof Error ? error.message : 'Could not parse the OPML document.' } };
+    return fail('MALFORMED_XML', error instanceof Error ? error.message : 'Could not parse the OPML document.');
   }
 
   const categories: ParsedOpmlCategory[] = [];
@@ -74,7 +74,7 @@ export function parseOpmlDocument(xml: string): Result<ParsedOpml, ParseOpmlErro
   // Stryker disable next-line ArrowFunction,ArithmeticOperator: a category is only added with feeds, so the total is zero exactly when the list is empty
   const totalFeeds = categories.reduce((sum, category) => sum + category.feeds.length, 0);
   if (totalFeeds === 0) {
-    return { success: false, error: { name: 'NO_FEEDS', message: 'The OPML document has no feeds.' } };
+    return fail('NO_FEEDS', 'The OPML document has no feeds.');
   }
 
   return { success: true, data: { title: document.head?.title ?? DEFAULT_TITLE, categories } };

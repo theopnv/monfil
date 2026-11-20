@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { shell, type Session, type WebContents } from 'electron';
+import { parseHttpUrl } from '../../shared/url';
 
 /**
  * Hands a link to the OS browser when it is http(s), and drops anything else.
@@ -11,13 +12,7 @@ import { shell, type Session, type WebContents } from 'electron';
  * @param url the link as found in the content
  */
 export function openExternalLink(url: string): void {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return;
-  }
-  if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+  if (parseHttpUrl(url)) {
     void shell.openExternal(url);
   }
 }

@@ -4,8 +4,10 @@
 
 import { mainI18n } from '../../lib/i18n';
 import { createFeedSource, toUrl } from './feedSource';
-import { escapeText, removeAll } from './text';
+import { removeAll } from '../../lib/strip-html';
+import { escapeText } from './text';
 import type { FeedCandidate, NewSourceItem, ParsedFeedContent } from './types';
+import { parseHttpUrl } from '../../../shared/url';
 
 const HOSTS = new Set(['github.com', 'www.github.com']);
 const NAME_REGEX = /^[\w.-]+$/;
@@ -77,12 +79,7 @@ const HREF_REGEX = /\bhref\s*=\s*"([^"]*)"/i;
 
 /** The absolute form of a link, or undefined for anything but http(s), such as `javascript:`. */
 function absolute(href: string): string | undefined {
-  try {
-    const url = new URL(href, ORIGIN);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
-  } catch {
-    return undefined;
-  }
+  return parseHttpUrl(href, ORIGIN)?.href;
 }
 
 // Stand-ins for the brackets of the tags this module emits, so every other `<` and `>` can be escaped as text.

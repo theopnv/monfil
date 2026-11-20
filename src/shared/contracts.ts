@@ -14,8 +14,12 @@ export const HOME_WORKSPACE_ID = 1;
 
 export const SOURCE_TYPES = ['rss', 'youtube', 'github', 'gitlab', 'hackernews', 'arxiv', 'bluesky', 'mastodon', 'conference', 'ats'] as const;
 export type SourceType = typeof SOURCE_TYPES[number];
-export type RefreshInterval = 15 | 30 | 60 | 360 | 'manual';
-export type RetentionDays = 15 | 30 | 60 | 90 | 180;
+/** How often the feeds refresh, in minutes, or never. */
+export const REFRESH_INTERVALS = [15, 30, 60, 360, 'manual'] as const;
+export type RefreshInterval = typeof REFRESH_INTERVALS[number];
+/** How long an item stays, in days. */
+export const RETENTION_OPTIONS = [15, 30, 60, 90, 180] as const;
+export type RetentionDays = typeof RETENTION_OPTIONS[number];
 
 export type StartupHealth =
   | { name: 'OK' }

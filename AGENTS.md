@@ -50,7 +50,7 @@ In VS Code, the `Main + renderer` compound launch configuration debugs both Elec
 - Feed source adapters live in `src/main/feed/sources/`. RSS, RDF, JSON Feed, and YouTube feed support share the refresh path. Item enrichment and article extraction run in `src/main/feed/`; retention and backup work live in `src/main/db/`.
 - Diagnostic logging and error recovery span `src/main/logging/`, `src/renderer/components/errors/`, and the Settings diagnostics section.
 - The renderer uses TanStack Router and TanStack Query. Its `@/` alias points only to `src/renderer/`. Declare it in `src/renderer/tsconfig.json` and in the vendored UI `tsconfig.json`; Vite, Vitest, and dependency-cruiser read those paths.
-- Use `type` for type-only imports. Use the `Result` union in `src/shared/result.ts` for expected failures. Handle tagged errors by `name` and keep exhaustive switches exhaustive.
+- Use `type` for type-only imports. Use the `Result` union in `src/shared/result.ts` for expected failures, and build it with `ok()` and `fail()`. Handle tagged errors by `name` and keep exhaustive switches exhaustive.
 
 ## Changes and checks
 

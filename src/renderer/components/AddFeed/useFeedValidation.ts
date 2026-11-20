@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ipc } from '@/lib/ipc-client';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import type { ParsedSource, FeedFetchError, SourceType } from '../../../shared/contracts';
+import { parseHttpUrl } from '../../../shared/url';
 
 export type FeedValidationStatus = 'idle' | 'loading' | 'found' | 'not-found';
 
@@ -29,12 +30,7 @@ function isUrlReady(query: string): boolean {
   if (query.startsWith('@')) {
     return false;
   }
-  try {
-    const url = new URL(query.includes('://') ? query : `https://${query}`);
-    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.includes('.');
-  } catch {
-    return false;
-  }
+  return parseHttpUrl(query.includes('://') ? query : `https://${query}`)?.hostname.includes('.') ?? false;
 }
 
 export function useFeedValidation(query: string, type?: SourceType): FeedValidation {

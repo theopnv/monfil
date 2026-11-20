@@ -7,8 +7,7 @@ import { runWithConcurrency } from '../lib/utils';
 import { fetchText } from '../lib/fetch';
 import { extractOgImageUrl } from './extractOgImage';
 import { ENRICHMENT_CONCURRENCY, ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
-
-const ABSOLUTE_HTTP_URL_REGEX = /^https?:\/\//i;
+import { hasHttpScheme } from '../../shared/url';
 
 interface Candidate {
   id: number;
@@ -27,7 +26,7 @@ function hostFor(link: string): string {
 function toCandidates(items: readonly Pick<FeedItem, 'id' | 'link' | 'image'>[]): Candidate[] {
   const candidates: Candidate[] = [];
   for (const item of items) {
-    if (!item.link || !ABSOLUTE_HTTP_URL_REGEX.test(item.link)) {
+    if (!item.link || !hasHttpScheme(item.link)) {
       continue;
     }
     // better-sqlite3 reads a NULL column back as `null`, not `undefined`, despite the FeedItem type.

@@ -4,7 +4,8 @@
 
 import { parseFeed } from 'feedsmith';
 import { extractAtomImageUrl, extractImageUrl, extractJsonImageUrl, extractRdfImageUrl } from './extractImage';
-import { decodeOptional, decodeText, decodeTitle, resolveGuid } from './text';
+import { decodeText } from '../../lib/strip-html';
+import { decodeOptional, decodeTitle, resolveGuid } from './text';
 import type { ParsedFeedContent } from './types';
 
 /** Parses RSS, Atom, RDF or JSON Feed content. Throws on content that is none of them. */

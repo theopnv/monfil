@@ -6,7 +6,8 @@ import { db, dbReady } from '../database';
 import { countUnreadRiverItems } from './query';
 import type { SavedSearch, SavedSearchError, SavedSearchList, DismissSearchHintError } from '../../../shared/contracts';
 import { pickHintExample } from '../../../shared/search-hint';
-import type { Result } from '../../../shared/result';
+import { fail, ok, type Result } from '../../../shared/result';
+import { dbTry } from '../db-try';
 
 const MAX_NAME_LENGTH = 60;
 const MAX_QUERY_LENGTH = 500;
@@ -133,20 +134,17 @@ export async function deleteSavedSearch(searchId: number): Promise<Result<void, 
     const result = await db.deleteFrom('savedSearch').where('id', '=', searchId).executeTakeFirst();
     return result.numDeletedRows === 0n
       ? failure({ name: 'SEARCH_NOT_FOUND', message: 'The saved search could not be found.' })
-      : { success: true, data: undefined };
+      : ok();
   } catch (error) {
     return toFailure(error);
   }
 }
 
 export async function dismissSearchHint(workspaceId: number, now = new Date()): Promise<Result<void, DismissSearchHintError>> {
-  await dbReady;
-  try {
+  return dbTry(async () => {
     const result = await db.updateTable('workspace').set({ search_hint_dismissed_at: now.toISOString() }).where('id', '=', workspaceId).executeTakeFirst();
     return result.numUpdatedRows === 0n
-      ? { success: false, error: { name: 'WORKSPACE_NOT_FOUND', message: `No workspace found with id ${workspaceId}` } }
-      : { success: true, data: undefined };
-  } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
-  }
+      ? fail('WORKSPACE_NOT_FOUND', `No workspace found with id ${workspaceId}`)
+      : ok();
+  });
 }

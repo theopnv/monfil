@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { ipcFailure, isIpcFailure } from './result';
+import { fail, ipcFailure, isIpcFailure, ok } from './result';
 
 describe('ipcFailure', () => {
   test('describes a payload that did not pass its guard', () => {
@@ -42,5 +42,25 @@ describe('isIpcFailure', () => {
   ])('rejects %j', (response) => {
     // Act & Assert
     expect(isIpcFailure(response)).toBe(false);
+  });
+});
+
+describe('ok', () => {
+  test('wraps data, or nothing', () => {
+    // Act & Assert
+    expect(ok(3)).toStrictEqual({ success: true, data: 3 });
+    expect(ok()).toStrictEqual({ success: true, data: undefined });
+  });
+});
+
+describe('fail', () => {
+  test('leaves params out when the caller gives none', () => {
+    // Act & Assert
+    expect(fail('DB_ERROR', 'Broken.')).toStrictEqual({ success: false, error: { name: 'DB_ERROR', message: 'Broken.' } });
+  });
+
+  test('carries the params that fill the message', () => {
+    // Act & Assert
+    expect(fail('DUPLICATE_NAME', 'Taken.', { name: 'Tech' })).toStrictEqual({ success: false, error: { name: 'DUPLICATE_NAME', message: 'Taken.', params: { name: 'Tech' } } });
   });
 });

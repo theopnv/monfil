@@ -8,15 +8,15 @@ import { db, dbReady } from './database';
 import { paginate } from './paging';
 import { searchCondition } from './search';
 import type { RiverPage, SavedQuery, SetSavedItemInput, UpdateSavedItemError } from '../../shared/contracts';
-import type { Result } from '../../shared/result';
+import { fail, ok, type Result } from '../../shared/result';
+import { dbTry } from './db-try';
 
 export async function setItemSaved(input: SetSavedItemInput, now = Date.now()): Promise<Result<void, UpdateSavedItemError>> {
-  await dbReady;
-  try {
+  return dbTry(async () => {
     return await db.transaction().execute(async (trx): Promise<Result<void, UpdateSavedItemError>> => {
       const workspace = await trx.selectFrom('workspace').select('id').where('id', '=', input.workspaceId).executeTakeFirst();
       if (!workspace) {
-        return { success: false, error: { name: 'WORKSPACE_NOT_FOUND', message: 'The workspace could not be found.' } };
+        return fail('WORKSPACE_NOT_FOUND', 'The workspace could not be found.');
       }
       if (input.saved) {
         const item = await trx.selectFrom('feedItem').select('id').where('id', '=', input.itemId)
@@ -25,7 +25,7 @@ export async function setItemSaved(input: SetSavedItemInput, now = Date.now()): 
             eb.exists(eb.selectFrom('savedItem').select('item_id').whereRef('savedItem.item_id', '=', 'feedItem.id').where('workspace_id', '=', input.workspaceId)),
           ])).executeTakeFirst();
         if (!item) {
-          return { success: false, error: { name: 'ITEM_NOT_FOUND', message: 'The item could not be found in this workspace.' } };
+          return fail('ITEM_NOT_FOUND', 'The item could not be found in this workspace.');
         }
         await trx.insertInto('savedItem')
           .values({ workspace_id: input.workspaceId, item_id: input.itemId, saved_at: now })
@@ -34,11 +34,9 @@ export async function setItemSaved(input: SetSavedItemInput, now = Date.now()): 
         await trx.deleteFrom('savedItem').where('workspace_id', '=', input.workspaceId).where('item_id', '=', input.itemId).execute();
         await collectUnplacedFeeds(trx);
       }
-      return { success: true, data: undefined };
+      return ok();
     });
-  } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'The item could not be saved.' } };
-  }
+  }, { fallback: 'The item could not be saved.' });
 }
 
 export async function querySavedPage(query: SavedQuery): Promise<RiverPage> {

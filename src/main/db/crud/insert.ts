@@ -9,23 +9,19 @@ import { queryFeedItems } from './query';
 import { parseErrorParams } from '../error-params';
 import { type Database, type FeedItem, type NewArticleContent } from '../types';
 import type { AddFeedError, CreateCategoryError, CreateWorkspaceError, FeedCategory, FeedMetadata, NewFeedInput, SourceType, Workspace } from '../../../shared/contracts';
-import type { Result } from '../../../shared/result';
+import { fail, type Result } from '../../../shared/result';
 import { stripHtml, truncateOnWordBoundary } from '../../lib/strip-html';
+import { dbTry, hasSqliteCode } from '../db-try';
+import { hasPublishedDate, publishedAtOrFallback } from '../dates';
 
 const EXCERPT_MAX_LENGTH = 200;
 // Undated items on a feed's first fetch are backlog, so they must not bury the news that came with them.
 const FIRST_FETCH_UNDATED_AGE_MS = 7 * 86_400_000;
 
-// SQLite cannot parse RFC-822 pubDates, so this must run in JS rather than in SQL.
-function parsePublishedAt(pubDate: string, fetchedAt: number): number {
-  const timestamp = new Date(pubDate).getTime();
-  return Number.isFinite(timestamp) ? timestamp : fetchedAt;
-}
-
 type IncomingItem = Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>;
 
 async function itemDates(executor: Kysely<Database>, feedId: number, items: IncomingItem[], firstSeenAt: (guid: string) => number): Promise<Map<string, number>> {
-  const undated = items.filter((item) => !Number.isFinite(new Date(item.pubDate).getTime()));
+  const undated = items.filter((item) => !hasPublishedDate(item.pubDate));
   const existing = undated.length > 0
     ? await executor.selectFrom('undatedItem').selectAll().where('feed_id', '=', feedId).where('guid', 'in', undated.map((item) => item.guid)).execute()
     : [];
@@ -59,16 +55,10 @@ export async function upsertFeedCategory(trx: Kysely<Database>, categoryName: st
  * @param workspaceId the workspace the category is created in
  */
 export async function createCategory(name: string, workspaceId: number): Promise<Result<FeedCategory, CreateCategoryError>> {
-  await dbReady;
-  try {
+  return dbTry(async () => {
     const category = await db.insertInto('feedCategory').values({ name, workspace_id: workspaceId }).returningAll().executeTakeFirstOrThrow();
     return { success: true, data: category };
-  } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return { success: false, error: { name: 'DUPLICATE_NAME', message: `A category named "${name}" already exists.`, params: { name } } };
-    }
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
-  }
+  }, { mapKnown: (error) => (hasSqliteCode(error, 'SQLITE_CONSTRAINT_UNIQUE') ? fail('DUPLICATE_NAME', `A category named "${name}" already exists.`, { name }) : undefined) });
 }
 
 /**
@@ -78,8 +68,7 @@ export async function createCategory(name: string, workspaceId: number): Promise
  * @param color a hex color for the rail button's tinted background
  */
 export async function createWorkspace(name: string, icon: string, color: string): Promise<Result<Workspace, CreateWorkspaceError>> {
-  await dbReady;
-  try {
+  return dbTry(async () => {
     const workspace = await db.transaction().execute(async (trx) => {
       const { maxPosition } = await trx.selectFrom('workspace')
         .select((eb) => eb.fn.max('position').as('maxPosition'))
@@ -90,9 +79,7 @@ export async function createWorkspace(name: string, icon: string, color: string)
         .executeTakeFirstOrThrow();
     });
     return { success: true, data: workspace };
-  } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
-  }
+  });
 }
 
 async function addFeedMetadataToDatabase(trx: Kysely<Database>, link: string, title: string, type: SourceType, icon: string | undefined) {
@@ -131,7 +118,7 @@ async function insertFeedItems(executor: Kysely<Database>, feedId: number, items
     .values(items.map((item) => ({
       feed_id: feedId,
       ...item,
-      published_at: parsePublishedAt(item.pubDate, dates.get(item.guid) ?? fetchedAt),
+      published_at: publishedAtOrFallback(item.pubDate, dates.get(item.guid) ?? fetchedAt),
       excerpt: truncateOnWordBoundary(stripHtml(item.description), EXCERPT_MAX_LENGTH),
     })))
     .onConflict((oc) => oc.columns(['feed_id', 'guid']).doNothing())
@@ -151,7 +138,7 @@ export async function addFeedItemsToDatabase(executor: Kysely<Database>, feedId:
     const inserted = await executor.transaction().execute((trx) => insertFeedItems(trx, feedId, items));
     return { success: true, data: inserted };
   } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
+    return fail('DB_ERROR', error instanceof Error ? error.message : 'An unknown error occurred');
   }
 }
 
@@ -177,7 +164,7 @@ async function syncFeedItemsInTransaction(trx: Kysely<Database>, feedId: number,
     .where('feed_id', '=', feedId).orderBy('published_at', 'desc').orderBy('id', 'desc').limit(10).execute();
   const rank = new Map(newestStored.map((row) => [row.guid, row.published_at]));
   for (const item of items) {
-    rank.set(item.guid, parsePublishedAt(item.pubDate, markerByGuid.get(item.guid) ?? fetchedAt));
+    rank.set(item.guid, publishedAtOrFallback(item.pubDate, markerByGuid.get(item.guid) ?? fetchedAt));
   }
   const protectedGuids = new Set([...rank].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([guid]) => guid));
   const fresh = items.filter((item) => {
@@ -186,8 +173,8 @@ async function syncFeedItemsInTransaction(trx: Kysely<Database>, feedId: number,
       // Stryker disable next-line BooleanLiteral: same reason, a stored guid is skipped by the insert whatever this returns
       return false;
     }
-    const date = parsePublishedAt(item.pubDate, markerByGuid.get(item.guid) ?? fetchedAt);
-    if (tombstones.has(item.guid) && date < cutoff && !Number.isFinite(new Date(item.pubDate).getTime())) {
+    const date = publishedAtOrFallback(item.pubDate, markerByGuid.get(item.guid) ?? fetchedAt);
+    if (tombstones.has(item.guid) && date < cutoff && !hasPublishedDate(item.pubDate)) {
       return false;
     }
     return date >= cutoff || protectedGuids.has(item.guid);
@@ -202,7 +189,7 @@ async function syncFeedItemsInTransaction(trx: Kysely<Database>, feedId: number,
     const patch = {
       title: item.title, link: item.link, pubDate: item.pubDate, description: item.description,
       image: item.image, author: item.author, extra: item.extra,
-      published_at: parsePublishedAt(item.pubDate, markerByGuid.get(item.guid) ?? old.published_at),
+      published_at: publishedAtOrFallback(item.pubDate, markerByGuid.get(item.guid) ?? old.published_at),
       excerpt: truncateOnWordBoundary(stripHtml(item.description), EXCERPT_MAX_LENGTH),
     };
     if ((Object.keys(patch) as (keyof typeof patch)[]).every((key) => (old[key] ?? undefined) === (patch[key] ?? undefined))) {
@@ -214,7 +201,7 @@ async function syncFeedItemsInTransaction(trx: Kysely<Database>, feedId: number,
     await trx.updateTable('feedItem').set(patch).where('id', '=', old.id).execute();
     updated++;
   }
-  const corrected = items.filter((item) => Number.isFinite(new Date(item.pubDate).getTime()));
+  const corrected = items.filter((item) => hasPublishedDate(item.pubDate));
   if (corrected.length > 0) {
     await trx.deleteFrom('undatedItem').where('feed_id', '=', feedId).where('guid', 'in', corrected.map((item) => item.guid)).execute();
   }
@@ -226,7 +213,7 @@ export async function syncFeedItemsToDatabase(executor: Kysely<Database>, feedId
     const data = await executor.transaction().execute((trx) => syncFeedItemsInTransaction(trx, feedId, items, cutoff));
     return { success: true, data };
   } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : String(error) } };
+    return fail('DB_ERROR', error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -265,8 +252,7 @@ export async function upsertArticleContent(content: NewArticleContent): Promise<
 }
 
 export async function addFeedToDatabase(input: NewFeedInput, cutoff = Number.NEGATIVE_INFINITY): Promise<Result<AddedFeed, AddFeedError>> {
-  await dbReady;
-  try {
+  return dbTry(async () => {
     const { category, metadata, placement, otherWorkspaceCount } = await db.transaction().execute(async (trx) => {
       const category = await upsertFeedCategory(trx, input.categoryName, input.workspaceId);
       const metadata = await addFeedMetadataToDatabase(trx, input.link, input.title, input.type, input.icon);
@@ -300,7 +286,5 @@ export async function addFeedToDatabase(input: NewFeedInput, cutoff = Number.NEG
         otherWorkspaceCount,
       },
     };
-  } catch (error) {
-    return { success: false, error: { name: 'DB_ERROR', message: error instanceof Error ? error.message : 'An unknown error occurred' } };
-  }
+  });
 }
