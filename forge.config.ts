@@ -45,12 +45,13 @@ const config: ForgeConfig = {
     // src/main/vite.config.mts marks a few packages (better-sqlite3, jsdom) as Rollup `external`
     // since they can't be bundled, so their real files need to survive packaging. Keeping
     // node_modules here lets the default `prune` step (packagerConfig.prune, on unless set
-    // false) trim it back down to production dependencies only.
+    // false) trim it back down to production dependencies only. Dot folders such as
+    // node_modules/.vite hold local caches, so they stay out.
     ignore: (file) => {
       if (!file) {
         return false;
       }
-      return !(file.startsWith('/.vite') || file.startsWith('/node_modules'));
+      return !(file.startsWith('/.vite') || (file.startsWith('/node_modules') && !file.startsWith('/node_modules/.')));
     },
     afterCopy: [
       // better-sqlite3 ships one prebuild per platform/arch; keep only the one this

@@ -36,7 +36,7 @@ All suites use Istanbul, so the counts of different runs add up.
 | `e2e` | An instrumented build of the main process, the article extraction utility process, and the renderer. | The preload script runs in an isolated world that the collection cannot reach, so the suite shows it as uncovered. A test that kills the app leaves no file for that launch. |
 | `merged` | Both suites, joined by the location of each statement, function, and branch. | It counts the preload script through its unit tests only. |
 
-These files are not counted: test files, `*.d.ts`, `src/renderer/components/untitled-ui/`, and `src/renderer/routeTree.gen.ts`. The list is in `scripts/coverage/vite-plugins.mts` and in the root Vitest config.
+These files are not counted: test files, `*.d.ts`, `src/renderer/components/untitled-ui/`, and `src/renderer/routeTree.gen.ts`. The list is `INCLUDE` and `EXCLUDE` in `scripts/coverage/vite-plugins.mts`, which the root Vitest config imports.
 
 ### How the e2e build collects coverage
 

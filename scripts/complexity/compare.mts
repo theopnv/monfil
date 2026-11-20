@@ -1,4 +1,5 @@
-export const LIMITS = { cognitive: 15, cyclomatic: 10 } as const;
+import { LIMITS } from './limits.mts';
+
 export const MARKER = '<!-- complexity-report -->';
 export const MAX_ROWS = 15;
 

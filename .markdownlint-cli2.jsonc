@@ -1,4 +1,5 @@
 {
+  "globs": ["README.md", "CONTRIBUTING.md", "doc/src/content/docs/**/*.{md,mdx}"],
   "config": {
     "MD013": false,
     "MD033": false,

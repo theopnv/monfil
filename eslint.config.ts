@@ -8,6 +8,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 import stylistic from '@stylistic/eslint-plugin';
 import sonarjs from 'eslint-plugin-sonarjs';
+import { LIMITS } from './scripts/complexity/limits.mts';
 import { physicalTailwindClassRule } from './scripts/lint/physical-tailwind-class.mts';
 import { strykerDisableRule } from './scripts/mutation/eslint-rule.mts';
 
@@ -25,7 +26,7 @@ export default defineConfig([
         // A nested checkout brings a second tsconfig.json; without this the parser refuses to guess between them.
         tsconfigRootDir: import.meta.dirname,
         projectService: {
-          allowDefaultProject: ['eslint.config.test.ts', 'dependency-cruiser.test.ts', 'src/*/boundary-test.ts', 'src/*/example.ts', 'src/renderer/components/untitled-ui/example.ts', 'src/renderer/components/example.tsx', 'src/renderer/components/example.test.tsx', 'src/renderer/components/untitled-ui/example.tsx'],
+          allowDefaultProject: ['src/*/boundary-test.ts', 'src/*/example.ts', 'src/renderer/components/untitled-ui/example.ts', 'src/renderer/components/example.tsx', 'src/renderer/components/example.test.tsx', 'src/renderer/components/untitled-ui/example.tsx'],
           // The rule tests lint more example files than the default limit of 8.
           maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 16,
         },
@@ -54,8 +55,8 @@ export default defineConfig([
     },
     rules: {
       'mutation/stryker-disable': 'error',
-      '@sonarjs/cognitive-complexity': ['error', 15],
-      '@sonarjs/cyclomatic-complexity': ['error', { threshold: 10 }]
+      '@sonarjs/cognitive-complexity': ['error', LIMITS.cognitive],
+      '@sonarjs/cyclomatic-complexity': ['error', { threshold: LIMITS.cyclomatic }]
     }
   },
   {

@@ -5,9 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      '@': `${import.meta.dirname}/src/renderer`,
-    },
+    tsconfigPaths: true,
   },
   // Pre-bundle up front. A dep discovered mid-run forces Vite to reload the page, which breaks whatever test is in flight at that moment (vitest-dev/vitest#9509, #9473, #8447).
   // Vitest's own "unexpectedly reloaded a test" warning names the late-discovered deps. List them here so the reload never happens.

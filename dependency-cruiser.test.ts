@@ -49,7 +49,7 @@ async function violatedRules(edges: Edge[]): Promise<string[]> {
     await writeModule(file, imports);
   }
 
-  const result = await cruise(['src'], { baseDir, validate: true, tsPreCompilationDeps: config.options?.tsPreCompilationDeps, ruleSet: { forbidden: config.forbidden ?? [] } }, { extensions: ['.ts', '.tsx'] });
+  const result = await cruise(['src'], { baseDir, validate: true, tsPreCompilationDeps: config.options?.tsPreCompilationDeps ?? false, ruleSet: { forbidden: config.forbidden ?? [] } }, { extensions: ['.ts', '.tsx'] });
   if (typeof result.output === 'string') {
     throw new TypeError('Expected a structured cruise result');
   }

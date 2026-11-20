@@ -43,12 +43,13 @@ In VS Code, the `Main + renderer` compound launch configuration debugs both Elec
 ## Code boundaries
 
 - `forge.config.ts` defines the Electron build. The main, preload, and renderer processes have separate Vite and TypeScript configs.
+- `dependencies` in `package.json` holds only the packages that the main bundle cannot bundle. They are the `external` list in `src/main/vite.config.mts`, and a test keeps the two lists equal. Every other package is a `devDependency`, because Vite bundles it and packaging copies only `dependencies` into the installers.
 - Define cross-process payloads in `src/shared/channels.ts` and shared data types in `src/shared/contracts.ts`. Keep IPC calls aligned with those contracts; do not add local payload types at call sites.
 - Keep network, filesystem, and database access in the main process. Use the preload bridge for renderer requests. Treat feed content and external URLs as untrusted input; preserve the existing fetch, window security, and HTML sanitization boundaries.
 - Database queries live in `src/main/db/`. Add schema changes as a new numbered migration and register it in `src/main/db/migrations/index.ts`. Use `.ai/skills/kysely-db/SKILL.md` for database edits.
 - Feed source adapters live in `src/main/feed/sources/`. RSS, RDF, JSON Feed, and YouTube feed support share the refresh path. Item enrichment and article extraction run in `src/main/feed/`; retention and backup work live in `src/main/db/`.
 - Diagnostic logging and error recovery span `src/main/logging/`, `src/renderer/components/errors/`, and the Settings diagnostics section.
-- The renderer uses TanStack Router and TanStack Query. Its `@/` alias points only to `src/renderer/`. Keep the alias declarations in the renderer TypeScript, Vite, and vendored UI configs aligned.
+- The renderer uses TanStack Router and TanStack Query. Its `@/` alias points only to `src/renderer/`. Declare it in `src/renderer/tsconfig.json` and in the vendored UI `tsconfig.json`; Vite, Vitest, and dependency-cruiser read those paths.
 - Use `type` for type-only imports. Use the `Result` union in `src/shared/result.ts` for expected failures. Handle tagged errors by `name` and keep exhaustive switches exhaustive.
 
 ## Changes and checks
