@@ -6,9 +6,14 @@ import type { MenuKind, MenuTarget, RevealTarget } from './channels';
 import { RENDERER_USAGE_COUNTERS } from './contracts';
 import type { RendererUsageCounter, UsagePreferences } from './contracts';
 import { isBoolean, isPositiveSafeInteger, object } from './guards';
+import type { LogLevel } from './logging';
 
 function isRendererUsageCounter(value: unknown): value is RendererUsageCounter {
   return (RENDERER_USAGE_COUNTERS as readonly unknown[]).includes(value);
+}
+
+export function isLogLevel(value: unknown): value is LogLevel {
+  return value === 'debug' || value === 'info' || value === 'warn' || value === 'error';
 }
 
 export function isRevealTarget(value: unknown): value is RevealTarget {

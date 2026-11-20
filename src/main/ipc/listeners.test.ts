@@ -3,9 +3,10 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, afterEach, test, expect, vi } from 'vitest';
-import { listenToLinkOpen, listenToReveal, listenToShowMenu } from './listeners';
+import { listenToLinkOpen, listenToRendererLog, listenToReveal, listenToShowMenu } from './listeners';
 import { BrowserWindow, Menu, shell } from 'electron';
 import { setLogFilePath } from '../app/main-state';
+import { logger } from '../logging/logger';
 import { refreshFeeds } from '../feed/refresh';
 import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { useTestDatabase } from '../test/db';
@@ -128,6 +129,45 @@ describe('app:reveal IPC listener for the database backup', () => {
 
     // Assert
     expect(mockedShowItemInFolder).not.toHaveBeenCalled();
+  });
+});
+
+describe('log:write IPC listener', () => {
+  const event = {} as Electron.IpcMainEvent;
+
+  test.each(['debug', 'info', 'warn', 'error'] as const)('writes a %s record to the logger', (level) => {
+    // Arrange
+    const write = vi.spyOn(logger, level).mockImplementation(() => undefined);
+
+    // Act
+    listenToRendererLog(event, { level, event: 'renderer.failure', data: { message: 'Something happened' }, error: 'boom' });
+
+    // Assert
+    expect(write).toHaveBeenCalledExactlyOnceWith('renderer.failure', { message: 'Something happened' }, 'boom');
+  });
+
+  test.each(['', 'fatal', 'child', 'write', 'constructor', 'toString', undefined, null, 3])('drops a record with the level %j instead of throwing', (level) => {
+    // Arrange
+    const writers = (['debug', 'info', 'warn', 'error', 'child'] as const).map((method) => vi.spyOn(logger, method).mockImplementation(() => undefined as never));
+
+    // Act
+    const act = () => listenToRendererLog(event, { level, event: 'renderer.failure', data: { message: 'x' } } as never);
+
+    // Assert
+    expect(act).not.toThrow();
+    expect(writers.flatMap((writer) => writer.mock.calls)).toEqual([]);
+  });
+
+  test.each([undefined, null, 'error', 7])('drops the payload %j instead of throwing', (payload) => {
+    // Arrange
+    const write = vi.spyOn(logger, 'error').mockImplementation(() => undefined);
+
+    // Act
+    const act = () => listenToRendererLog(event, payload as never);
+
+    // Assert
+    expect(act).not.toThrow();
+    expect(write).not.toHaveBeenCalled();
   });
 });
 
