@@ -5,7 +5,7 @@
 import { ipcMain } from "electron";
 import type { IpcMainEvent } from "electron";
 import type { OneWayRendererToMainChannelPayloads, OneWayRendererToMainChannels } from "../../shared/channels";
-import { listenToInstallUpdate, listenToLinkOpen, listenToRendererLog, listenToRestart, listenToRevealDatabaseBackup, listenToRevealDatabaseFile, listenToRevealLogFile, listenToSetWindowTheme, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu, listenToUsagePreferences, listenToUsageRecord } from "./listeners";
+import { listenToInstallUpdate, listenToLinkOpen, listenToRendererLog, listenToReveal, listenToRestart, listenToSetWindowTheme, listenToShowMenu, listenToUsagePreferences, listenToUsageRecord } from "./listeners";
 
 // IPC Listeners - Renderer to main
 // Triggered from the renderer side (exposed through preload): ipcRenderer.send(channel, payload)
@@ -19,12 +19,8 @@ type Listener<C extends OneWayRendererToMainChannels> = (
 
 const listeners: { [C in OneWayRendererToMainChannels]: Listener<C> } = {
   "link:open": listenToLinkOpen,
-  "feeds:show-feed-context-menu": listenToShowFeedContextMenu,
-  "feeds:show-category-context-menu": listenToShowCategoryContextMenu,
-  "workspaces:show-context-menu": listenToShowWorkspaceContextMenu,
-  "app:reveal-database-file": listenToRevealDatabaseFile,
-  "app:reveal-log-file": listenToRevealLogFile,
-  "app:reveal-database-backup": listenToRevealDatabaseBackup,
+  "menu:show": listenToShowMenu,
+  "app:reveal": listenToReveal,
   "app:restart": listenToRestart,
   "app:install-update": listenToInstallUpdate,
   "app:set-window-theme": listenToSetWindowTheme,

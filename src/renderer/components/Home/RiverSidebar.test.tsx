@@ -15,7 +15,7 @@ import type { CreateCategoryError } from '../../../shared/contracts';
 import type { UpdateCategoryError } from '../../../shared/contracts';
 import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary, type WorkspaceSummary } from '../../../shared/contracts';
 import type { Result } from '../../../shared/result';
-import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../shared/channels';
+import type { MenuAction, TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../shared/channels';
 
 const feedA: FeedSummary = {
   id: 1,
@@ -87,9 +87,7 @@ function categoriesFrom(feeds: FeedSummary[]): FeedCategory[] {
   return [...seen.values()];
 }
 
-let deleteFeedRequestedHandler: ((feedId: number) => void) | undefined;
-let renameCategoryRequestedHandler: ((categoryId: number) => void) | undefined;
-let deleteCategoryRequestedHandler: ((categoryId: number) => void) | undefined;
+let menuActionHandler: ((menu: MenuAction) => void) | undefined;
 let invokeMock: ReturnType<typeof vi.fn>;
 
 function stubElectron(overrides: {
@@ -101,9 +99,7 @@ function stubElectron(overrides: {
   deleteCategory?: Result<void, DeleteCategoryError>;
   moveFeedsToCategory?: Result<void, UpdateCategoryError>;
 } = {}) {
-  deleteFeedRequestedHandler = undefined;
-  renameCategoryRequestedHandler = undefined;
-  deleteCategoryRequestedHandler = undefined;
+  menuActionHandler = undefined;
 
   // Mutated by create/rename/delete below, so a test asserting the sidebar reflects a mutation
   // (e.g. a deleted folder actually disappearing) sees `feeds:list-categories` catch up, the same
@@ -152,19 +148,12 @@ function stubElectron(overrides: {
     ipcRenderer: {
       invoke: invokeMock,
       on: vi.fn((channel: string, handler: (payload: never) => void) => {
-        if (channel === 'feeds:delete-feed-requested') {
-          deleteFeedRequestedHandler = handler as typeof deleteFeedRequestedHandler;
-        }
-        if (channel === 'feeds:rename-category-requested') {
-          renameCategoryRequestedHandler = handler as typeof renameCategoryRequestedHandler;
-        }
-        if (channel === 'feeds:delete-category-requested') {
-          deleteCategoryRequestedHandler = handler as typeof deleteCategoryRequestedHandler;
+        if (channel === 'menu:action') {
+          menuActionHandler = handler as typeof menuActionHandler;
         }
         return vi.fn();
       }),
       sendMessage: vi.fn(),
-      once: vi.fn(),
     },
   } as unknown as typeof window.electron;
 }
@@ -478,7 +467,7 @@ describe('unread counts', () => {
 
 
 describe('feed row context menu and delete', () => {
-  test('right-clicking a feed row sends feeds:show-feed-context-menu with the feed id', async () => {
+  test('right-clicking a feed row sends menu:show for that feed', async () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByRole, getByText } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
@@ -489,17 +478,17 @@ describe('feed row context menu and delete', () => {
     await getByText('Feed A', { exact: true }).click({ button: 'right' });
 
     // Assert
-    expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('feeds:show-feed-context-menu', feedA.id);
+    expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('menu:show', { kind: 'feed', id: feedA.id });
   });
 
-  test('firing feeds:delete-feed-requested opens the dialog naming the feed and its item count', async () => {
+  test('the delete feed menu action opens the dialog naming the feed and its item count', async () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByText, getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
     await expect.element(getByRole('heading', { name: 'Delete feed' })).not.toBeInTheDocument();
 
     // Act
-    deleteFeedRequestedHandler?.(feedA.id);
+    menuActionHandler?.({ kind: 'feed', action: 'delete', id: feedA.id });
 
     // Assert
     await expect.element(getByRole('heading', { name: 'Delete feed' })).toBeInTheDocument();
@@ -513,7 +502,7 @@ describe('feed row context menu and delete', () => {
     const { getByText, getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
 
     // Act
-    deleteFeedRequestedHandler?.(feedA.id);
+    menuActionHandler?.({ kind: 'feed', action: 'delete', id: feedA.id });
 
     // Assert
     await expect.element(getByRole('heading', { name: 'Delete feed' })).toBeInTheDocument();
@@ -528,7 +517,7 @@ describe('feed row context menu and delete', () => {
     const { getByText, getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
 
     // Act
-    deleteFeedRequestedHandler?.(sharedFeed.id);
+    menuActionHandler?.({ kind: 'feed', action: 'delete', id: sharedFeed.id });
 
     // Assert
     await expect.element(getByRole('heading', { name: 'Remove feed' })).toBeInTheDocument();
@@ -543,7 +532,7 @@ describe('feed row context menu and delete', () => {
     stubElectron({ feeds: [sharedFeed] });
     const onFeedDeleted = vi.fn();
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={onFeedDeleted} />);
-    deleteFeedRequestedHandler?.(sharedFeed.id);
+    menuActionHandler?.({ kind: 'feed', action: 'delete', id: sharedFeed.id });
 
     // Act
     await getByRole('button', { name: 'Remove from Home' }).click();
@@ -558,7 +547,7 @@ describe('feed row context menu and delete', () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    deleteFeedRequestedHandler?.(feedA.id);
+    menuActionHandler?.({ kind: 'feed', action: 'delete', id: feedA.id });
     await expect.element(getByRole('heading', { name: 'Delete feed' })).toBeInTheDocument();
     invokeMock.mockClear();
 
@@ -575,7 +564,7 @@ describe('feed row context menu and delete', () => {
     stubElectron({ feeds: [feedA, feedB], deleteFeed: { success: true, data: undefined } });
     const onFeedDeleted = vi.fn();
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={onFeedDeleted} />);
-    deleteFeedRequestedHandler?.(feedA.id);
+    menuActionHandler?.({ kind: 'feed', action: 'delete', id: feedA.id });
     await expect.element(getByRole('heading', { name: 'Delete feed' })).toBeInTheDocument();
 
     // Act
@@ -591,7 +580,7 @@ describe('feed row context menu and delete', () => {
     // Arrange
     stubElectron({ feeds: [feedA], deleteFeed: { success: false, error: { name: 'DB_ERROR', message: 'Could not delete the feed.' } } });
     const { getByText, getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    deleteFeedRequestedHandler?.(feedA.id);
+    menuActionHandler?.({ kind: 'feed', action: 'delete', id: feedA.id });
 
     // Act
     await getByRole('button', { name: 'Delete feed' }).click();
@@ -605,7 +594,7 @@ describe('feed row context menu and delete', () => {
 });
 
 describe('folder context menu and rename', () => {
-  test('right-clicking a folder header sends feeds:show-category-context-menu with the category id', async () => {
+  test('right-clicking a folder header sends menu:show for that category', async () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
@@ -614,17 +603,17 @@ describe('folder context menu and rename', () => {
     await getByRole('button', { name: 'Tech', exact: true }).click({ button: 'right' });
 
     // Assert
-    expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('feeds:show-category-context-menu', feedA.category.id);
+    expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('menu:show', { kind: 'category', id: feedA.category.id });
   });
 
-  test('firing feeds:rename-category-requested swaps the label for an editable field', async () => {
+  test('the rename category menu action swaps the label for an editable field', async () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
     await expect.element(getByRole('textbox')).not.toBeInTheDocument();
 
     // Act
-    renameCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'rename', id: feedA.category.id });
 
     // Assert
     await expect.element(getByRole('textbox')).toHaveValue('Tech');
@@ -634,7 +623,7 @@ describe('folder context menu and rename', () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    renameCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'rename', id: feedA.category.id });
     await expect.element(getByRole('textbox')).toHaveValue('Tech');
 
     // Act
@@ -649,7 +638,7 @@ describe('folder context menu and rename', () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    renameCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'rename', id: feedA.category.id });
     const input = getByRole('textbox');
     await expect.element(input).toHaveValue('Tech');
     await input.click();
@@ -678,7 +667,7 @@ describe('folder context menu and rename', () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    renameCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'rename', id: feedA.category.id });
     await expect.element(getByRole('textbox')).toHaveValue('Tech');
 
     // Act
@@ -699,7 +688,7 @@ describe('folder context menu and rename', () => {
     await expect.element(getByRole('button', { name: 'News', exact: true })).toBeInTheDocument();
 
     // Act
-    renameCategoryRequestedHandler?.(feedC.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'rename', id: feedC.category.id });
     await expect.element(getByRole('textbox')).toHaveValue('News');
     await getByRole('textbox').fill('Politics');
     await userEvent.keyboard('{Enter}');
@@ -720,7 +709,7 @@ describe('folder context menu and rename', () => {
     await expect.element(getByRole('button', { name: 'Recipes', exact: true })).toBeInTheDocument();
 
     // Act
-    renameCategoryRequestedHandler?.(empty.id);
+    menuActionHandler?.({ kind: 'category', action: 'rename', id: empty.id });
     await expect.element(getByRole('textbox')).toHaveValue('Recipes');
     await getByRole('textbox').fill('Meals');
     await userEvent.keyboard('{Enter}');
@@ -735,7 +724,7 @@ describe('folder context menu and rename', () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    renameCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'rename', id: feedA.category.id });
     await getByRole('textbox').fill('Engineering');
 
     // Act
@@ -752,7 +741,7 @@ describe('folder context menu and rename', () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    renameCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'rename', id: feedA.category.id });
     await getByRole('textbox').fill('Engineering');
     invokeMock.mockClear();
 
@@ -768,7 +757,7 @@ describe('folder context menu and rename', () => {
     // Arrange
     stubElectron({ feeds: [feedA] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    renameCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'rename', id: feedA.category.id });
     const input = getByRole('textbox');
     await input.fill('技術');
     invokeMock.mockClear();
@@ -786,7 +775,7 @@ describe('folder context menu and rename', () => {
     // Arrange
     stubElectron({ feeds: [feedA], renameCategory: { success: false, error: { name: 'DUPLICATE_NAME', message: 'nope' } } });
     const { getByRole, getByText } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    renameCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'rename', id: feedA.category.id });
     await getByRole('textbox').fill('Engineering');
 
     // Act
@@ -889,14 +878,14 @@ describe('folder create', () => {
 });
 
 describe('folder delete', () => {
-  test('firing feeds:delete-category-requested opens the dialog naming the folder and its feed count', async () => {
+  test('the delete category menu action opens the dialog naming the folder and its feed count', async () => {
     // Arrange
     stubElectron({ feeds: [feedA, feedB] });
     const { getByRole, getByText } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
     await expect.element(getByRole('heading', { name: 'Delete folder' })).not.toBeInTheDocument();
 
     // Act
-    deleteCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'delete', id: feedA.category.id });
 
     // Assert
     await expect.element(getByRole('heading', { name: 'Delete folder' })).toBeInTheDocument();
@@ -908,7 +897,7 @@ describe('folder delete', () => {
     // Arrange
     stubElectron({ feeds: [feedA, feedC] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    deleteCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'delete', id: feedA.category.id });
     await expect.element(getByRole('heading', { name: 'Delete folder' })).toBeInTheDocument();
 
     // Act
@@ -923,7 +912,7 @@ describe('folder delete', () => {
     // Arrange
     stubElectron({ feeds: [feedA, feedC] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    deleteCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'delete', id: feedA.category.id });
     await expect.element(getByRole('heading', { name: 'Delete folder' })).toBeInTheDocument();
 
     // Act
@@ -939,7 +928,7 @@ describe('folder delete', () => {
     // Arrange
     stubElectron({ feeds: [feedA, feedB] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    deleteCategoryRequestedHandler?.(feedA.category.id);
+    menuActionHandler?.({ kind: 'category', action: 'delete', id: feedA.category.id });
     await expect.element(getByRole('heading', { name: 'Delete folder' })).toBeInTheDocument();
 
     // Assert
@@ -949,14 +938,14 @@ describe('folder delete', () => {
 
   // A category with no feeds in it isn't findable through any feed's `.category` — the dialog's
   // request handler must look it up in `categories` instead, or it silently does nothing.
-  test('firing feeds:delete-category-requested opens the dialog for a folder with no feeds in it', async () => {
+  test('the delete category menu action opens the dialog for a folder with no feeds in it', async () => {
     // Arrange
     const empty: FeedCategory = { id: 5, name: 'Recipes', workspace_id: HOME_WORKSPACE_ID };
     stubElectron({ feeds: [feedA], categories: [feedA.category, empty] });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
 
     // Act
-    deleteCategoryRequestedHandler?.(empty.id);
+    menuActionHandler?.({ kind: 'category', action: 'delete', id: empty.id });
 
     // Assert
     await expect.element(getByRole('heading', { name: 'Delete folder' })).toBeInTheDocument();
@@ -968,7 +957,7 @@ describe('folder delete', () => {
     const empty: FeedCategory = { id: 5, name: 'Recipes', workspace_id: HOME_WORKSPACE_ID };
     stubElectron({ feeds: [feedA], categories: [feedA.category, empty], deleteCategory: { success: true, data: undefined } });
     const { getByRole } = await renderWithQueryClient(<ConnectedSidebar onFeedDeleted={vi.fn()} />);
-    deleteCategoryRequestedHandler?.(empty.id);
+    menuActionHandler?.({ kind: 'category', action: 'delete', id: empty.id });
     await expect.element(getByRole('heading', { name: 'Delete folder' })).toBeInTheDocument();
 
     // Act

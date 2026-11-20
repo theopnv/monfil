@@ -20,7 +20,7 @@ export function useUsageAnalytics() {
   const onError = (error: unknown) => rendererLogger.error('renderer.failure', { message: 'Could not save usage stats choice' }, error);
 
   const choose = useMutation({
-    mutationFn: (choice: 'granted' | 'denied') => ipc.invoke('settings:set-usage-analytics', choice),
+    mutationFn: (choice: 'granted' | 'denied') => ipc.invoke('settings:set', { key: 'usageAnalytics', value: choice }),
     onSuccess: store,
     onError,
   });

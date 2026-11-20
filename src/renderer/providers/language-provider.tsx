@@ -17,7 +17,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   // A reload keeps the argument that main gave the window at its creation, which is older than a switch made since. Main holds the current choice.
   useEffect(() => {
-    ipc.invoke('settings:get-language', undefined)
+    ipc.invoke('settings:get', { key: 'language' })
       .then(({ language: current }) => setRendererLanguage(current))
       .catch(() => undefined);
   }, []);

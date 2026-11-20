@@ -33,7 +33,6 @@ beforeEach(() => {
         }
         return vi.fn();
       }),
-      once: vi.fn(),
       sendMessage: sendMock,
     },
   } as unknown as typeof window.electron;

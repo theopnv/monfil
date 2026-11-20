@@ -15,7 +15,7 @@ export function StartupGate({ children }: PropsWithChildren) {
   const health = useQuery({ queryKey: ['startup-health'], queryFn: () => ipc.invoke('app:get-startup-health', undefined), retry: false });
   const warnAboutRecovery = useEffectEvent(() => notifyWarning(t('startup.databaseRecovered'), 'database-recovered', {
     label: t('startup.revealBackup'),
-    onClick: () => ipc.send('app:reveal-database-backup', undefined),
+    onClick: () => ipc.send('app:reveal', 'database-backup'),
   }));
   useEffect(() => {
     if (health.data?.name === 'RESET') {

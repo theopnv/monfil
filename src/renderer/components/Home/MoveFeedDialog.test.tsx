@@ -45,7 +45,7 @@ function stubElectron(destination: FeedCategory[], moveResult: Result<void, { na
         return Promise.resolve(undefined);
     }
   });
-  window.electron = { ipcRenderer: { invoke: invokeMock, on: vi.fn(() => vi.fn()), sendMessage: vi.fn(), once: vi.fn() } } as unknown as typeof window.electron;
+  window.electron = { ipcRenderer: { invoke: invokeMock, on: vi.fn(() => vi.fn()), sendMessage: vi.fn() } } as unknown as typeof window.electron;
 }
 
 describe('MoveFeedDialog', () => {

@@ -18,14 +18,14 @@ let invokeMock: ReturnType<typeof vi.fn>;
 function stubElectron({ feeds = [] as FeedSummary[], workspaces = [home], hintsEnabled = true } = {}) {
   invokeMock = vi.fn((channel: string) => {
     switch (channel) {
-      case 'app:hints-enabled': return Promise.resolve(hintsEnabled);
       case 'feeds:list': return Promise.resolve(feeds);
       case 'workspaces:list': return Promise.resolve(workspaces);
       default: return Promise.resolve(undefined);
     }
   });
   window.electron = {
-    ipcRenderer: { invoke: invokeMock, on: vi.fn(() => vi.fn()), sendMessage: vi.fn(), once: vi.fn() },
+    hintsEnabled,
+    ipcRenderer: { invoke: invokeMock, on: vi.fn(() => vi.fn()), sendMessage: vi.fn() },
   } as unknown as typeof window.electron;
 }
 
@@ -189,7 +189,7 @@ describe('HintsProvider on a fresh profile', () => {
 
   test('a failed first-run check logs a warning and keeps the hints closed', async () => {
     // Arrange
-    invokeMock.mockImplementation((channel: string) => (channel === 'app:hints-enabled' ? Promise.reject(new Error('offline')) : Promise.resolve(undefined)));
+    invokeMock.mockImplementation((channel: string) => (channel === 'feeds:list' ? Promise.reject(new Error('offline')) : Promise.resolve([])));
 
     // Act
     const { getByLabelText } = await renderWithQueryClient(<HintsProvider><AllProbes /></HintsProvider>);
@@ -258,7 +258,6 @@ describe('HintsProvider for current users', () => {
     const { getByLabelText } = await renderWithQueryClient(<HintsProvider><AllProbes /></HintsProvider>);
 
     // Assert
-    await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('app:hints-enabled', undefined));
     await expect.element(getByLabelText('add-feed state')).toHaveTextContent('closed');
   });
 });
@@ -271,8 +270,10 @@ describe('HintsProvider off switch', () => {
     // Act
     const { getByLabelText } = await renderWithQueryClient(<HintsProvider><AllProbes /></HintsProvider>);
 
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     // Assert
-    await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('app:hints-enabled', undefined));
+    expect(invokeMock).not.toHaveBeenCalledWith('feeds:list', expect.anything());
     await expect.element(getByLabelText('add-feed state')).toHaveTextContent('closed');
   });
 

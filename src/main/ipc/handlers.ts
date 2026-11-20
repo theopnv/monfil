@@ -4,7 +4,7 @@
 
 import { querySavedPage, setItemSaved } from '../db/saved';
 import { enrichItems } from "../feed/enrichItems";
-import { logger } from '../logging/logger';
+import { logger, setDetailedLogging as applyDetailedLogging } from '../logging/logger';
 import { ARTICLE_FETCH_TIMEOUT_MS } from "../lib/constants";
 import { deriveArticleContentStatus } from "../feed/extractArticle";
 import { extractArticleInUtilityProcess } from '../feed/extractArticleUtility';
@@ -21,17 +21,20 @@ import {
   getDetailedLogging,
   getRefreshInterval,
   getRefreshOnLaunch,
+  getRetentionDays,
   getWorkspaceRailExpanded,
   setDetailedLogging,
   setRefreshInterval,
   setRefreshOnLaunch,
+  setRetentionDays,
   setWorkspaceRailExpanded,
   toRefreshInterval,
+  toRetentionDays,
 } from "../app/settings";
 import { getAppInfo } from "../app/app-info";
 import { changeLanguage, readLanguageState } from '../app/language';
 import { getUpdateState } from "../updates/auto-updater";
-import { sendToRenderer } from "../lib/sendToRenderer";
+import { broadcastToRenderers, sendToRenderer } from "../lib/sendToRenderer";
 import { changeUsageAnalyticsConsent, dismissUsageAnalyticsPrompt, getUsageAnalyticsState } from '../analytics/consent';
 import { incrementCounter } from '../analytics/counters';
 import { previewSummary } from '../analytics/report';
@@ -41,6 +44,8 @@ import { getFeedpackCatalog } from '../feedpacks/catalog';
 import { mainI18n } from '../lib/i18n';
 import { installFeedpack, previewFeedpack } from '../feedpacks/install';
 import type { IpcMainInvokeEvent } from "electron";
+import { dialog } from 'electron';
+import type { SettingGetArg, SettingKey, SettingSetArg, SettingState, SettingTypes } from '../../shared/channels';
 import type {
   AddFeedError,
   AppInfo,
@@ -67,8 +72,8 @@ import type {
   MoveFeedError,
   NewFeedInput,
   ParsedSource,
-  RefreshInterval,
   RefreshSummary,
+  RetentionDays,
   RiverPage,
   RiverQuery,
   SavedQuery,
@@ -85,18 +90,11 @@ import type {
   Workspace,
   WorkspaceSummary,
 } from "../../shared/contracts";
-import type { DailySummaryProps, LanguageState, UsageAnalyticsState } from '../../shared/contracts';
-import type { LanguageSetting } from '../../shared/i18n/languages';
+import type { DailySummaryProps, UsageAnalyticsState } from '../../shared/contracts';
 import type { Result } from "../../shared/result";
-import { dbReady, dbStatus } from '../db/database';
+import { backUpDatabase, dbReady, dbStatus } from '../db/database';
 import type { StartupHealth } from '../../shared/contracts';
-import { setDetailedLogging as applyDetailedLogging } from '../logging/logger';
-import { getRetentionDays, setRetentionDays, toRetentionDays } from '../app/settings';
 import { retainedFetchedItems, pruneExpiredItems, retentionCutoff } from '../db/retention';
-import { broadcastToRenderers } from '../lib/sendToRenderer';
-import { backUpDatabase } from '../db/database';
-import { dialog } from 'electron';
-import type { RetentionDays } from '../../shared/contracts';
 
 export function handleFeedsValidateFeedUrl(_event: IpcMainInvokeEvent, payload: { query: string; type?: SourceType }): Promise<Result<ParsedSource[], FeedFetchError>> {
   return resolveSource(payload.query, payload.type).discover(payload.query);
@@ -200,15 +198,66 @@ export async function handleWorkspacesReorder(_event: IpcMainInvokeEvent, payloa
   return reorderWorkspaces(payload.orderedIds);
 }
 
-export function handleSettingsGetRefreshInterval(): Promise<RefreshInterval> {
-  return getRefreshInterval();
+type SettingRoute<K extends SettingKey> = {
+  get: () => Promise<SettingTypes[K]['state']>;
+  set: (value: SettingTypes[K]['value']) => Promise<SettingTypes[K]['state']>;
+};
+
+function plainSetting<T>(get: () => Promise<T>, set: (value: T) => Promise<void>): { get: () => Promise<T>; set: (value: T) => Promise<T> } {
+  return {
+    get,
+    async set(value) {
+      await set(value);
+      return value;
+    },
+  };
 }
 
-export async function handleSettingsSetRefreshInterval(_event: IpcMainInvokeEvent, payload: RefreshInterval): Promise<RefreshInterval> {
-  const interval = toRefreshInterval(payload);
-  await setRefreshInterval(interval);
-  rescheduleRefresh(interval);
-  return interval;
+async function setRetention(value: RetentionDays): Promise<RetentionDays> {
+  const days = toRetentionDays(value);
+  const previous = await getRetentionDays();
+  await setRetentionDays(days);
+  const removed = await pruneExpiredItems(days);
+  if (days > previous) {
+    const refreshed = await refreshAllFeeds(true);
+    broadcastToRenderers('feeds:refreshed', { ...refreshed, removed: (refreshed.removed ?? 0) + removed, applyImmediately: true });
+  } else if (removed > 0) {
+    broadcastToRenderers('feeds:refreshed', { perFeed: [], removed, applyImmediately: true });
+  }
+  return days;
+}
+
+const settingRoutes: { [K in SettingKey]: SettingRoute<K> } = {
+  refreshInterval: {
+    get: getRefreshInterval,
+    async set(value) {
+      const interval = toRefreshInterval(value);
+      await setRefreshInterval(interval);
+      rescheduleRefresh(interval);
+      return interval;
+    },
+  },
+  refreshOnLaunch: plainSetting(getRefreshOnLaunch, setRefreshOnLaunch),
+  workspaceRailExpanded: plainSetting(getWorkspaceRailExpanded, setWorkspaceRailExpanded),
+  retentionDays: { get: getRetentionDays, set: setRetention },
+  detailedLogging: plainSetting(getDetailedLogging, async (value) => {
+    await setDetailedLogging(value);
+    applyDetailedLogging(value);
+  }),
+  language: { get: readLanguageState, set: changeLanguage },
+  usageAnalytics: { get: getUsageAnalyticsState, set: changeUsageAnalyticsConsent },
+};
+
+function setSetting<K extends SettingKey>(key: K, value: SettingTypes[K]['value']): Promise<SettingTypes[K]['state']> {
+  return settingRoutes[key].set(value);
+}
+
+export function handleSettingsGet(_event: IpcMainInvokeEvent, payload: SettingGetArg): Promise<SettingState> {
+  return settingRoutes[payload.key].get();
+}
+
+export function handleSettingsSet(_event: IpcMainInvokeEvent, payload: SettingSetArg): Promise<SettingState> {
+  return setSetting(payload.key, payload.value);
 }
 
 export async function handleItemsSetRead(_event: IpcMainInvokeEvent, payload: { itemIds: number[]; read: boolean }): Promise<Result<void, UpdateItemError>> {
@@ -265,60 +314,12 @@ export async function handleItemsGetContent(_event: IpcMainInvokeEvent, itemId: 
   };
 }
 
-export function handleSettingsGetRefreshOnLaunch(): Promise<boolean> {
-  return getRefreshOnLaunch();
-}
-
-export async function handleSettingsSetRefreshOnLaunch(_event: IpcMainInvokeEvent, payload: boolean): Promise<boolean> {
-  await setRefreshOnLaunch(payload);
-  return payload;
-}
-
-export function handleSettingsGetWorkspaceRailExpanded(): Promise<boolean> {
-  return getWorkspaceRailExpanded();
-}
-
-export async function handleSettingsSetWorkspaceRailExpanded(_event: IpcMainInvokeEvent, payload: boolean): Promise<boolean> {
-  await setWorkspaceRailExpanded(payload);
-  return payload;
-}
-
-export function handleSettingsGetLanguage(): Promise<LanguageState> {
-  return readLanguageState();
-}
-
-export function handleSettingsSetLanguage(_event: IpcMainInvokeEvent, payload: LanguageSetting): Promise<LanguageState> {
-  return changeLanguage(payload);
-}
-
 export function handleAppGetInfo(): Promise<AppInfo> {
   return getAppInfo();
 }
 
-export function handleAppHintsEnabled(): boolean {
-  return process.env['MONFIL_HINTS'] !== 'off';
-}
-
 export function handleAppGetUpdateState(): AppUpdateState {
   return getUpdateState();
-}
-
-export function handleSettingsGetRetentionDays(): Promise<RetentionDays> {
-  return getRetentionDays();
-}
-
-export async function handleSettingsSetRetentionDays(_event: IpcMainInvokeEvent, payload: RetentionDays): Promise<RetentionDays> {
-  const days = toRetentionDays(payload);
-  const previous = await getRetentionDays();
-  await setRetentionDays(days);
-  const removed = await pruneExpiredItems(days);
-  if (days > previous) {
-    const refreshed = await refreshAllFeeds(true);
-    broadcastToRenderers('feeds:refreshed', { ...refreshed, removed: (refreshed.removed ?? 0) + removed, applyImmediately: true });
-  } else if (removed > 0) {
-    broadcastToRenderers('feeds:refreshed', { perFeed: [], removed, applyImmediately: true });
-  }
-  return days;
 }
 
 export async function handleAppBackUpDatabase(): Promise<Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string }>> {
@@ -347,24 +348,6 @@ export async function handleAppGetStartupHealth(): Promise<StartupHealth> {
     return dbStatus;
   }
   return { name: dbStatus.name, incidentId: dbStatus.incidentId };
-}
-
-export function handleSettingsGetDetailedLogging(): Promise<boolean> {
-  return getDetailedLogging();
-}
-
-export async function handleSettingsSetDetailedLogging(_event: IpcMainInvokeEvent, payload: boolean): Promise<boolean> {
-  await setDetailedLogging(payload);
-  applyDetailedLogging(payload);
-  return payload;
-}
-
-export function handleSettingsGetUsageAnalytics(): Promise<UsageAnalyticsState> {
-  return getUsageAnalyticsState();
-}
-
-export function handleSettingsSetUsageAnalytics(_event: IpcMainInvokeEvent, payload: 'granted' | 'denied'): Promise<UsageAnalyticsState> {
-  return changeUsageAnalyticsConsent(payload);
 }
 
 export function handleSettingsDismissUsageAnalyticsPrompt(): Promise<UsageAnalyticsState> {

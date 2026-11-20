@@ -101,7 +101,6 @@ beforeEach(() => {
         return vi.fn();
       }),
       sendMessage: vi.fn(),
-      once: vi.fn(),
     },
   } as unknown as typeof window.electron;
 });
@@ -129,7 +128,7 @@ test('a partial refresh failure lets the user reveal the log file', async () => 
   await getByRole('button', { name: 'Show log file' }).click();
 
   // Assert
-  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('app:reveal-log-file', undefined);
+  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('app:reveal', 'log');
 });
 
 test('a refresh with four failures names three feeds and counts the rest', async () => {

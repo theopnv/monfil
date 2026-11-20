@@ -15,7 +15,7 @@ test('a saved search keeps its jobs after they are read, and its count drops', a
   // Arrange: the board is stored as the Lever adapter would store it, since the adapter only reads known public hosts.
   const setup = await launchApp();
   await setup.evaluate(async ({ workspaceId, jobs }) => {
-    await window.electron.ipcRenderer.invoke('settings:set-refresh-on-launch', false);
+    await window.electron.ipcRenderer.invoke('settings:set', { key: 'refreshOnLaunch', value: false });
     const result = await window.electron.ipcRenderer.invoke('feeds:submit-add-feed', {
       workspaceId, link: 'https://api.lever.co/v0/postings/acme?mode=json', title: 'Acme · Jobs', type: 'ats',
       categoryName: 'Jobs', showInWorkspace: true,

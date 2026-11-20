@@ -68,7 +68,7 @@ export default function DataSection() {
           color="secondary"
           iconLeading={Folder}
           className="self-start"
-          onPress={() => ipc.send("app:reveal-database-file", undefined)}
+          onPress={() => ipc.send('app:reveal', 'database')}
         >
           {t('data.reveal')}
         </Button>

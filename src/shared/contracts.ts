@@ -7,6 +7,9 @@ import type { LanguageCode, LanguageSetting } from './i18n/languages';
 
 // Home is inserted as the first row by the migration that creates this table, and it can never be
 // deleted, so its id is permanently 1.
+/** The command-line argument that tells the preload script whether the first-run hints may show. */
+export const HINTS_ARGUMENT = '--hints-enabled=';
+
 export const HOME_WORKSPACE_ID = 1;
 
 export const SOURCE_TYPES = ['rss', 'youtube', 'github', 'gitlab', 'hackernews', 'arxiv', 'bluesky', 'mastodon', 'conference', 'ats'] as const;

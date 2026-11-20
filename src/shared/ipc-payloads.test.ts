@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { invokePayloadGuards, isUsagePreferences } from './ipc-payloads';
+import { invokePayloadGuards, isMenuTarget, isRevealTarget, isUsagePreferences } from './ipc-payloads';
 import type { NewFeedInput, SourceItem } from './contracts';
 import type { TwoWayRendererMainChannels } from './channels';
 
@@ -19,18 +19,34 @@ const feed: NewFeedInput = {
 describe('language payloads', () => {
   test.each(['system', 'en', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'])('accepts the choice %j', (choice) => {
     // Act & Assert
-    expect(invokePayloadGuards['settings:set-language'](choice)).toBe(true);
+    expect(invokePayloadGuards['settings:set']({ key: 'language', value: choice })).toBe(true);
   });
 
   test.each(['pt-BR', 'zh-Hans', 'klingon', '', null, undefined, 3, { language: 'fr' }])('rejects the choice %j', (choice) => {
     // Act & Assert
-    expect(invokePayloadGuards['settings:set-language'](choice)).toBe(false);
+    expect(invokePayloadGuards['settings:set']({ key: 'language', value: choice })).toBe(false);
   });
 
-  test('reads the language with no argument', () => {
+  test('reads a setting by its key only', () => {
     // Act & Assert
-    expect(invokePayloadGuards['settings:get-language'](undefined)).toBe(true);
-    expect(invokePayloadGuards['settings:get-language']('fr')).toBe(false);
+    expect(invokePayloadGuards['settings:get']({ key: 'language' })).toBe(true);
+    expect(invokePayloadGuards['settings:get'](undefined)).toBe(false);
+    expect(invokePayloadGuards['settings:get']({ key: 'unknown' })).toBe(false);
+    expect(invokePayloadGuards['settings:get']({ key: 'language', value: 'fr' })).toBe(false);
+  });
+
+  test('rejects a write without a value or with an unknown key', () => {
+    // Act & Assert
+    expect(invokePayloadGuards['settings:set']({ key: 'language' })).toBe(false);
+    expect(invokePayloadGuards['settings:set']({ key: 'unknown', value: true })).toBe(false);
+    expect(invokePayloadGuards['settings:set']({ key: 'language', value: 'fr', extra: 1 })).toBe(false);
+  });
+
+  test('checks the value against the key it is written to', () => {
+    // Act & Assert
+    expect(invokePayloadGuards['settings:set']({ key: 'refreshOnLaunch', value: 'fr' })).toBe(false);
+    expect(invokePayloadGuards['settings:set']({ key: 'language', value: true })).toBe(false);
+    expect(invokePayloadGuards['settings:set']({ key: 'toString', value: true })).toBe(false);
   });
 });
 
@@ -157,7 +173,7 @@ describe('IPC payload guards', () => {
 
   test.each([15, 30, 60, 360, 'manual'])('accepts refresh interval %s', (arg) => {
     // Act
-    const valid = invokePayloadGuards['settings:set-refresh-interval'](arg);
+    const valid = invokePayloadGuards['settings:set']({ key: 'refreshInterval', value: arg });
 
     // Assert
     expect(valid).toBe(true);
@@ -165,16 +181,16 @@ describe('IPC payload guards', () => {
 
   test.each([15, 30, 60, 90, 180])('accepts retention period %s', (arg) => {
     // Act
-    const valid = invokePayloadGuards['settings:set-retention-days'](arg);
+    const valid = invokePayloadGuards['settings:set']({ key: 'retentionDays', value: arg });
 
     // Assert
     expect(valid).toBe(true);
   });
 
   test.each([
-    ['settings:set-refresh-interval', '30'], ['settings:set-refresh-interval', 90],
-    ['settings:set-retention-days', '30'], ['settings:set-retention-days', 360],
-    ['settings:set-detailed-logging', 1], ['settings:set-refresh-on-launch', 'false'],
+    ['settings:set', { key: 'refreshInterval', value: '30' }], ['settings:set', { key: 'refreshInterval', value: 90 }],
+    ['settings:set', { key: 'retentionDays', value: '30' }], ['settings:set', { key: 'retentionDays', value: 360 }],
+    ['settings:set', { key: 'detailedLogging', value: 1 }], ['settings:set', { key: 'refreshOnLaunch', value: 'false' }],
     ['feeds:validate-feed-url', { query: 'https://example.com', type: 'json' }],
     ['workspaces:update', { workspaceId: 1, icon: 42 }],
     ['feeds:submit-add-feed', { ...feed, showInWorkspace: 1 }],
@@ -234,12 +250,12 @@ describe('payload object shape', () => {
 describe('consent choice payload', () => {
   test.each(['granted', 'denied'])('accepts %s', (arg) => {
     // Act & Assert
-    expect(invokePayloadGuards['settings:set-usage-analytics'](arg)).toBe(true);
+    expect(invokePayloadGuards['settings:set']({ key: 'usageAnalytics', value: arg })).toBe(true);
   });
 
   test.each(['', 'GRANTED', 'yes', true, undefined, null])('rejects %j', (arg) => {
     // Act & Assert
-    expect(invokePayloadGuards['settings:set-usage-analytics'](arg)).toBe(false);
+    expect(invokePayloadGuards['settings:set']({ key: 'usageAnalytics', value: arg })).toBe(false);
   });
 });
 
@@ -311,5 +327,27 @@ describe('saved search payloads', () => {
     expect(invokePayloadGuards['searches:create']({ workspaceId: 1, name: 'a' })).toBe(false);
     expect(invokePayloadGuards['searches:update']({ searchId: 0 })).toBe(false);
     expect(invokePayloadGuards['searches:delete']({ searchId: 1, extra: true })).toBe(false);
+  });
+});
+
+describe('reveal and menu payloads', () => {
+  test.each(['database', 'log', 'database-backup'])('accepts the reveal target %s', (target) => {
+    // Act & Assert
+    expect(isRevealTarget(target)).toBe(true);
+  });
+
+  test.each(['', 'logs', undefined, null, 1])('rejects the reveal target %j', (target) => {
+    // Act & Assert
+    expect(isRevealTarget(target)).toBe(false);
+  });
+
+  test.each(['feed', 'category', 'workspace'])('accepts a %s menu target', (kind) => {
+    // Act & Assert
+    expect(isMenuTarget({ kind, id: 1 })).toBe(true);
+  });
+
+  test.each([{ kind: 'feed', id: 0 }, { kind: 'feed', id: 1.5 }, { kind: 'item', id: 1 }, { kind: 'feed' }, { id: 1 }, 7, null])('rejects the menu target %j', (target) => {
+    // Act & Assert
+    expect(isMenuTarget(target)).toBe(false);
   });
 });

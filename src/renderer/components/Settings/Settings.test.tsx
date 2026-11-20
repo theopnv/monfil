@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { i18n } from '@/lib/i18n';
 import { PreferencesProvider } from '@/providers/preferences-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
+import { callName } from '@/lib/test/call-name';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import { useIpcBridge } from '@/lib/ipc-bridge';
 import Settings from './Settings';
@@ -39,15 +40,15 @@ beforeEach(() => {
   invokeImpl = (channel) => {
     switch (channel) {
       case 'app:get-info': return Promise.resolve(appInfo);
-      case 'settings:get-refresh-interval': return Promise.resolve(30);
-      case 'settings:get-refresh-on-launch': return Promise.resolve(true);
-      case 'settings:set-refresh-interval': return Promise.resolve(60);
-      case 'settings:set-refresh-on-launch': return Promise.resolve(false);
-      case 'settings:get-usage-analytics': return Promise.resolve({ consent: 'unset', shouldPrompt: false, available: true });
-      case 'settings:set-usage-analytics': return Promise.resolve({ consent: 'granted', shouldPrompt: false, available: true });
+      case 'settings:get:refreshInterval': return Promise.resolve(30);
+      case 'settings:get:refreshOnLaunch': return Promise.resolve(true);
+      case 'settings:set:refreshInterval': return Promise.resolve(60);
+      case 'settings:set:refreshOnLaunch': return Promise.resolve(false);
+      case 'settings:get:usageAnalytics': return Promise.resolve({ consent: 'unset', shouldPrompt: false, available: true });
+      case 'settings:set:usageAnalytics': return Promise.resolve({ consent: 'granted', shouldPrompt: false, available: true });
       case 'analytics:preview': return Promise.resolve({ day: '2026-10-23', articles_opened: 0 });
-      case 'settings:get-retention-days': return Promise.resolve(30);
-      case 'settings:set-retention-days': return Promise.resolve(90);
+      case 'settings:get:retentionDays': return Promise.resolve(30);
+      case 'settings:set:retentionDays': return Promise.resolve(90);
       case 'app:back-up-database': return Promise.resolve({ success: true, data: undefined });
       case 'opml:import': return Promise.resolve({ success: true, data: { workspaceId: 2, imported: 1, skipped: [], failed: [] } });
       default: return Promise.resolve(undefined);
@@ -55,7 +56,7 @@ beforeEach(() => {
   };
   window.electron = {
     ipcRenderer: {
-      invoke: vi.fn((channel: string) => invokeImpl(channel)),
+      invoke: vi.fn((channel: string, arg: unknown) => invokeImpl(callName(channel, arg))),
       on: vi.fn((channel: string, handler: (summary: RefreshSummary) => void) => {
         if (channel === 'feeds:refreshed') {
           feedsRefreshedHandlers.add(handler);
@@ -63,7 +64,6 @@ beforeEach(() => {
         return vi.fn(() => feedsRefreshedHandlers.delete(handler));
       }),
       sendMessage: vi.fn(),
-      once: vi.fn(),
     },
   } as unknown as typeof window.electron;
 });
@@ -142,7 +142,7 @@ test('toggling "Keyboard navigation" writes the preference', async () => {
   expect(JSON.parse(localStorage.getItem('preferences-keyboard-navigation') ?? 'null')).toBe(false);
 });
 
-test('choosing a refresh interval invokes settings:set-refresh-interval', async () => {
+test('choosing a refresh interval invokes settings:set for the refresh interval', async () => {
   // Arrange
   const { getByRole } = await renderSettings();
   await expect.element(getByRole('button', { name: '1 h' })).toBeInTheDocument();
@@ -151,7 +151,7 @@ test('choosing a refresh interval invokes settings:set-refresh-interval', async 
   await getByRole('button', { name: '1 h' }).click();
 
   // Assert
-  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set-refresh-interval', 60);
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set', { key: 'refreshInterval', value: 60 });
 });
 
 test('choosing retention saves the age limit', async () => {
@@ -162,7 +162,7 @@ test('choosing retention saves the age limit', async () => {
   await getByRole('button', { name: '90 days' }).click();
 
   // Assert
-  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set-retention-days', 90);
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set', { key: 'retentionDays', value: 90 });
 });
 
 test('starts a database backup from Settings', async () => {
@@ -176,7 +176,7 @@ test('starts a database backup from Settings', async () => {
   expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('app:back-up-database', undefined);
 });
 
-test('toggling "Refresh on launch" invokes settings:set-refresh-on-launch', async () => {
+test('toggling "Refresh on launch" invokes settings:set for refresh on launch', async () => {
   // Arrange
   const { getByRole, getByText } = await renderSettings();
   // The switch starts disabled until the current preference loads.
@@ -188,10 +188,10 @@ test('toggling "Refresh on launch" invokes settings:set-refresh-on-launch', asyn
   await getByText('Refresh on launch', { exact: true }).click();
 
   // Assert
-  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set-refresh-on-launch', false);
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set', { key: 'refreshOnLaunch', value: false });
 });
 
-test('reveal database file sends app:reveal-database-file', async () => {
+test('reveal database file sends app:reveal for the database', async () => {
   // Arrange
   const { getByRole } = await renderSettings();
 
@@ -199,7 +199,7 @@ test('reveal database file sends app:reveal-database-file', async () => {
   await getByRole('button', { name: 'Reveal database file' }).click();
 
   // Assert
-  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('app:reveal-database-file', undefined);
+  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('app:reveal', 'database');
 });
 
 test('shares app info between the data stats and version', async () => {
@@ -297,7 +297,7 @@ test('turning on "Share anonymous usage stats" stores the choice', async () => {
   await getByText('Share anonymous usage stats', { exact: true }).click();
 
   // Assert
-  await vi.waitFor(() => expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set-usage-analytics', 'granted'));
+  await vi.waitFor(() => expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:set', { key: 'usageAnalytics', value: 'granted' }));
   await expect.element(getByText('Share anonymous usage stats', { exact: true })).toBeInTheDocument();
 });
 
@@ -315,7 +315,7 @@ test('"See what is sent" shows the summary', async () => {
 test('the toggle is off when the build collects nothing', async () => {
   // Arrange
   const original = invokeImpl;
-  invokeImpl = (channel) => channel === 'settings:get-usage-analytics' ? Promise.resolve({ consent: 'unset', shouldPrompt: false, available: false }) : original(channel);
+  invokeImpl = (channel) => channel === 'settings:get:usageAnalytics' ? Promise.resolve({ consent: 'unset', shouldPrompt: false, available: false }) : original(channel);
 
   // Act
   const { getByText } = await renderSettings();

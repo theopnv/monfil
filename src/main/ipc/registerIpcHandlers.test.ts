@@ -59,7 +59,7 @@ vi.mock(import('../lib/sendToRenderer'), () => ({ sendToRenderer: vi.fn(), broad
 vi.mock(import('../app/settings'), () => ({
   getDetailedLogging: vi.fn(), getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn(), getRetentionDays: vi.fn(), getWorkspaceRailExpanded: vi.fn(),
   setDetailedLogging: vi.fn(), setRefreshInterval: vi.fn(), setRefreshOnLaunch: vi.fn(), setRetentionDays: vi.fn(), setWorkspaceRailExpanded: vi.fn(),
-  toRefreshInterval: () => 30, toRetentionDays: () => 30,
+  toRefreshInterval: (value: unknown) => value as never, toRetentionDays: (value: unknown) => value as never,
 }));
 vi.mock(import('../opml/import'), () => ({ openAndImportOpml: vi.fn() }));
 vi.mock(import('../opml/export'), () => ({ exportWorkspaceOpml: vi.fn() }));
@@ -95,6 +95,7 @@ const imported = { success: true as const, data: { workspaceId: 1, imported: 1, 
 const catalog: FeedpackCatalog = { version: 1, packs: [] };
 const usageState = { consent: 'granted' as const, shouldPrompt: false, available: true };
 const summary = { day: '2026-10-23', articles_opened: 1 };
+const languageState = { setting: 'system' as const, language: 'en' as const, systemLanguage: 'en' as const };
 const preview = { pack: { slug: 'tech', title: 'Tech', description: '', tags: [], curator: '', sourceCount: 1, updatedAt: '', opml: 'tech.opml' }, sources: { title: 'Tech', categories: [] } };
 
 type Fixture<C extends TwoWayRendererMainChannels> = {
@@ -124,27 +125,14 @@ const fixtures: { [C in TwoWayRendererMainChannels]: Fixture<C> } = {
   'workspaces:update': { arg: { workspaceId: 1, name: 'Home' }, response: { success: true, data: workspace }, handler: handlers.handleWorkspacesUpdate },
   'workspaces:delete': { arg: { workspaceId: 6 }, response: done, handler: handlers.handleWorkspacesDelete },
   'workspaces:reorder': { arg: { orderedIds: [1, 6] }, response: done, handler: handlers.handleWorkspacesReorder },
-  'settings:get-refresh-interval': { arg: undefined, response: 30, handler: handlers.handleSettingsGetRefreshInterval },
-  'settings:set-refresh-interval': { arg: 30, response: 30, handler: handlers.handleSettingsSetRefreshInterval },
   'items:set-read': { arg: { itemIds: [4], read: true }, response: done, handler: handlers.handleItemsSetRead },
   'items:get-content': { arg: 4, response: { description: '', article: undefined }, handler: handlers.handleItemsGetContent },
-  'settings:get-refresh-on-launch': { arg: undefined, response: false, handler: handlers.handleSettingsGetRefreshOnLaunch },
-  'settings:set-refresh-on-launch': { arg: false, response: false, handler: handlers.handleSettingsSetRefreshOnLaunch },
-  'settings:get-workspace-rail-expanded': { arg: undefined, response: false, handler: handlers.handleSettingsGetWorkspaceRailExpanded },
-  'settings:set-workspace-rail-expanded': { arg: true, response: true, handler: handlers.handleSettingsSetWorkspaceRailExpanded },
-  'settings:get-retention-days': { arg: undefined, response: 30, handler: handlers.handleSettingsGetRetentionDays },
-  'settings:set-retention-days': { arg: 30, response: 30, handler: handlers.handleSettingsSetRetentionDays },
-  'settings:get-language': { arg: undefined, response: { setting: 'system', language: 'en', systemLanguage: 'en' }, handler: handlers.handleSettingsGetLanguage },
-  'settings:set-language': { arg: 'fr', response: { setting: 'fr', language: 'fr', systemLanguage: 'en' }, handler: handlers.handleSettingsSetLanguage },
   'app:back-up-database': { arg: undefined, response: { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } }, handler: handlers.handleAppBackUpDatabase },
   'app:get-info': { arg: undefined, response: { version: '1', feedCount: 1, itemCount: 0, databaseSizeBytes: 0 }, handler: handlers.handleAppGetInfo },
-  'app:hints-enabled': { arg: undefined, response: true, handler: handlers.handleAppHintsEnabled },
   'app:get-startup-health': { arg: undefined, response: { name: 'OK' }, handler: handlers.handleAppGetStartupHealth },
   'app:get-update-state': { arg: undefined, response: { name: 'NONE' }, handler: handlers.handleAppGetUpdateState },
-  'settings:get-detailed-logging': { arg: undefined, response: false, handler: handlers.handleSettingsGetDetailedLogging },
-  'settings:set-detailed-logging': { arg: false, response: false, handler: handlers.handleSettingsSetDetailedLogging },
-  'settings:get-usage-analytics': { arg: undefined, response: usageState, handler: handlers.handleSettingsGetUsageAnalytics },
-  'settings:set-usage-analytics': { arg: 'granted', response: usageState, handler: handlers.handleSettingsSetUsageAnalytics },
+  'settings:get': { arg: { key: 'language' }, response: languageState, handler: handlers.handleSettingsGet },
+  'settings:set': { arg: { key: 'language', value: 'fr' }, response: { setting: 'fr', language: 'fr', systemLanguage: 'en' }, handler: handlers.handleSettingsSet },
   'settings:dismiss-usage-analytics-prompt': { arg: undefined, response: usageState, handler: handlers.handleSettingsDismissUsageAnalyticsPrompt },
   'analytics:preview': { arg: undefined, response: summary, handler: handlers.handleAnalyticsPreview },
   'opml:import': { arg: { target: { kind: 'new-workspace', name: 'Tech', icon: 'Home01', color: 'blue', sourceSlug: 'tech', sourceVersion: '1' } }, response: imported, handler: handlers.handleOpmlImport },
@@ -210,8 +198,8 @@ beforeEach(() => {
   vi.mocked(dismissUsageAnalyticsPrompt).mockResolvedValue(usageState);
   vi.mocked(previewSummary).mockResolvedValue(summary);
   vi.mocked(getAppInfo).mockResolvedValue(fixtures['app:get-info'].response);
-  vi.mocked(readLanguageState).mockResolvedValue(fixtures['settings:get-language'].response);
-  vi.mocked(changeLanguage).mockResolvedValue(fixtures['settings:set-language'].response);
+  vi.mocked(readLanguageState).mockResolvedValue(languageState);
+  vi.mocked(changeLanguage).mockResolvedValue(fixtures['settings:set'].response as typeof languageState);
   vi.mocked(dialog.showSaveDialog).mockResolvedValue({ canceled: true, filePath: '' });
   registerIpcHandlers();
 });
@@ -295,6 +283,70 @@ describe('invoke channel contract', () => {
     expect(response).toEqual({ success: false, error: { name: 'UNEXPECTED_ERROR', message: 'The operation could not be completed.', incidentId: 'test-incident' } });
     expect(structuredClone(response)).toEqual(response);
     expect(logger.error).toHaveBeenCalledWith('ipc.failure', { channel: 'feeds:list', incidentId: 'test-incident' }, error);
+  });
+});
+
+describe('settings channels', () => {
+  test.each([
+    ['refreshInterval', 60, settings.getRefreshInterval, settings.setRefreshInterval],
+    ['refreshOnLaunch', true, settings.getRefreshOnLaunch, settings.setRefreshOnLaunch],
+    ['workspaceRailExpanded', true, settings.getWorkspaceRailExpanded, settings.setWorkspaceRailExpanded],
+    ['retentionDays', 60, settings.getRetentionDays, settings.setRetentionDays],
+    ['detailedLogging', true, settings.getDetailedLogging, settings.setDetailedLogging],
+  ] as const)('%s is read and written through its own setting', async (key, value, getter, setter) => {
+    // Arrange
+    vi.mocked(getter as (typeof settings)['getRefreshInterval']).mockResolvedValue(value as never);
+    vi.mocked(refreshAllFeeds).mockResolvedValue({ perFeed: [] });
+
+    // Act
+    const read: unknown = await registered('settings:get')(event, { key });
+    const written: unknown = await registered('settings:set')(event, { key, value });
+
+    // Assert
+    expect(read).toBe(value);
+    expect(written).toBe(value);
+    expect(setter).toHaveBeenCalledExactlyOnceWith(value);
+  });
+
+  test('reads and writes the language through the language module', async () => {
+    // Act
+    const read: unknown = await registered('settings:get')(event, { key: 'language' });
+    await registered('settings:set')(event, { key: 'language', value: 'fr' });
+
+    // Assert
+    expect(read).toEqual(languageState);
+    expect(changeLanguage).toHaveBeenCalledExactlyOnceWith('fr');
+  });
+
+  test('reads and writes the usage analytics consent through the consent module', async () => {
+    // Act
+    const read: unknown = await registered('settings:get')(event, { key: 'usageAnalytics' });
+    await registered('settings:set')(event, { key: 'usageAnalytics', value: 'denied' });
+
+    // Assert
+    expect(read).toEqual(usageState);
+    expect(changeUsageAnalyticsConsent).toHaveBeenCalledExactlyOnceWith('denied');
+  });
+
+  test('rejects a value that does not belong to the key before it stores anything', async () => {
+    // Act
+    const response: unknown = await registered('settings:set')(event, { key: 'refreshOnLaunch', value: 'fr' });
+
+    // Assert
+    expect(response).toEqual(invalidPayload);
+    expect(settings.setRefreshOnLaunch).not.toHaveBeenCalled();
+  });
+
+  test('logs the key of a setting that failed', async () => {
+    // Arrange
+    const error = new Error('disk full');
+    vi.mocked(settings.setRefreshOnLaunch).mockRejectedValueOnce(error);
+
+    // Act
+    await registered('settings:set')(event, { key: 'refreshOnLaunch', value: false });
+
+    // Assert
+    expect(logger.error).toHaveBeenCalledWith('ipc.failure', { channel: 'settings:set', incidentId: 'test-incident', setting: 'refreshOnLaunch' }, error);
   });
 });
 

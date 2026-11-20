@@ -19,13 +19,13 @@ function stateFor(setting: LanguageSetting, systemLanguage: LanguageState['syste
 beforeEach(() => {
   state = stateFor('system', 'fr');
   invoke.mockReset();
-  invoke.mockImplementation((channel: string, arg: LanguageSetting) => {
-    if (channel === 'settings:set-language') {
-      state = stateFor(arg, 'fr');
+  invoke.mockImplementation((channel: string, arg: { key: string; value?: LanguageSetting }) => {
+    if (channel === 'settings:set' && arg.value) {
+      state = stateFor(arg.value, 'fr');
     }
     return Promise.resolve(state);
   });
-  window.electron = { ipcRenderer: { invoke, on: vi.fn(), once: vi.fn(), sendMessage: vi.fn() } } as unknown as typeof window.electron;
+  window.electron = { ipcRenderer: { invoke, on: vi.fn(), sendMessage: vi.fn() } } as unknown as typeof window.electron;
 });
 
 afterEach(async () => {
@@ -79,7 +79,7 @@ describe('LanguageRow', () => {
     await getByRole('combobox', { name: 'Language' }).selectOptions('ar');
 
     // Assert
-    expect(invoke).toHaveBeenCalledWith('settings:set-language', 'ar');
+    expect(invoke).toHaveBeenCalledWith('settings:set', { key: 'language', value: 'ar' });
     await expect.element(getByText('اللغة', { exact: true })).toBeInTheDocument();
     expect(i18n.language).toBe('ar');
     expect(document.documentElement.dir).toBe('rtl');
@@ -96,7 +96,7 @@ describe('LanguageRow', () => {
     await getByRole('combobox').selectOptions('system');
 
     // Assert
-    expect(invoke).toHaveBeenCalledWith('settings:set-language', 'system');
+    expect(invoke).toHaveBeenCalledWith('settings:set', { key: 'language', value: 'system' });
     await vi.waitFor(() => expect(i18n.language).toBe('fr'));
     expect(document.documentElement.dir).toBe('ltr');
   });
@@ -127,7 +127,7 @@ describe('LanguageRow', () => {
   test('keeps the old language when the main process cannot store the choice', async () => {
     // Arrange
     const { getByRole } = await renderRow();
-    invoke.mockImplementation((channel: string) => (channel === 'settings:set-language' ? Promise.reject(new Error('disk full')) : Promise.resolve(state)));
+    invoke.mockImplementation((channel: string) => (channel === 'settings:set' ? Promise.reject(new Error('disk full')) : Promise.resolve(state)));
 
     // Act
     await getByRole('combobox', { name: 'Language' }).selectOptions('ja');

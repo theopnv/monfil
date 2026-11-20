@@ -46,7 +46,7 @@ function workspaceTint(color: string) {
 function showWorkspaceMenu(workspaceId: number) {
   return (event: { preventDefault: () => void }) => {
     event.preventDefault();
-    ipc.send('workspaces:show-context-menu', workspaceId);
+    ipc.send('menu:show', { kind: 'workspace', id: workspaceId });
   };
 }
 

@@ -50,14 +50,14 @@ export function appInfoQuery() {
 export function usageAnalyticsQuery() {
   return queryOptions({
     queryKey: queryKeys.usageAnalytics,
-    queryFn: (): Promise<UsageAnalyticsState> => ipc.invoke('settings:get-usage-analytics', undefined),
+    queryFn: (): Promise<UsageAnalyticsState> => ipc.invoke('settings:get', { key: 'usageAnalytics' }),
   });
 }
 
 export function workspaceRailExpandedQuery() {
   return queryOptions({
     queryKey: queryKeys.workspaceRailExpanded,
-    queryFn: (): Promise<boolean> => ipc.invoke('settings:get-workspace-rail-expanded', undefined),
+    queryFn: (): Promise<boolean> => ipc.invoke('settings:get', { key: 'workspaceRailExpanded' }),
   });
 }
 

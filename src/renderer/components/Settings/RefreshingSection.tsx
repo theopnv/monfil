@@ -31,24 +31,24 @@ export default function RefreshingSection() {
   const [retentionDays, setRetentionDaysState] = useState<RetentionDays | undefined>(undefined);
 
   useEffect(() => {
-    ipc.invoke("settings:get-refresh-interval", undefined)
+    ipc.invoke('settings:get', { key: 'refreshInterval' })
       .then(setRefreshIntervalState)
       .catch((error: unknown) => {
         rendererLogger.error('renderer.failure', { message: 'Error loading the refresh interval:' }, error);
       });
-    ipc.invoke("settings:get-refresh-on-launch", undefined)
+    ipc.invoke('settings:get', { key: 'refreshOnLaunch' })
       .then(setRefreshOnLaunchState)
       .catch((error: unknown) => {
         rendererLogger.error('renderer.failure', { message: 'Error loading the refresh-on-launch preference:' }, error);
       });
-    ipc.invoke("settings:get-retention-days", undefined)
+    ipc.invoke('settings:get', { key: 'retentionDays' })
       .then(setRetentionDaysState)
       .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error loading retention:' }, error));
   }, []);
 
   const onIntervalChange = (interval: RefreshInterval) => {
     setRefreshIntervalState(interval);
-    ipc.invoke("settings:set-refresh-interval", interval)
+    ipc.invoke('settings:set', { key: 'refreshInterval', value: interval })
       .then(setRefreshIntervalState)
       .catch((error: unknown) => {
         rendererLogger.error('renderer.failure', { message: 'Error saving the refresh interval:' }, error);
@@ -57,7 +57,7 @@ export default function RefreshingSection() {
 
   const onRefreshOnLaunchChange = (value: boolean) => {
     setRefreshOnLaunchState(value);
-    ipc.invoke("settings:set-refresh-on-launch", value)
+    ipc.invoke('settings:set', { key: 'refreshOnLaunch', value: value })
       .then(setRefreshOnLaunchState)
       .catch((error: unknown) => {
         rendererLogger.error('renderer.failure', { message: 'Error saving the refresh-on-launch preference:' }, error);
@@ -66,7 +66,7 @@ export default function RefreshingSection() {
 
   const onRetentionChange = (value: RetentionDays) => {
     setRetentionDaysState(value);
-    ipc.invoke("settings:set-retention-days", value)
+    ipc.invoke('settings:set', { key: 'retentionDays', value: value })
       .then(setRetentionDaysState)
       .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error saving retention:' }, error));
   };

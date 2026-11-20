@@ -437,9 +437,23 @@ describe('main', () => {
 
     // Assert
     expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
-      webPreferences: expect.objectContaining({ additionalArguments: ['--system-locale=fr-CA', '--language=en'] }),
+      webPreferences: expect.objectContaining({ additionalArguments: ['--system-locale=fr-CA', '--language=en', '--hints-enabled=true'] }),
     }));
     expect(mainFormatLocale()).toBe('fr-CA');
+  });
+
+  test('turns the first-run hints off for the preload script when MONFIL_HINTS is off', async () => {
+    // Arrange
+    const { BrowserWindow } = await import('electron');
+    vi.stubEnv('MONFIL_HINTS', 'off');
+
+    // Act
+    await launchAndGetWindow();
+
+    // Assert
+    expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
+      webPreferences: expect.objectContaining({ additionalArguments: expect.arrayContaining(['--hints-enabled=false']) as string[] }),
+    }));
   });
 
   test('applies the stored language before it opens the window, and hands it to the preload script', async () => {
@@ -457,7 +471,7 @@ describe('main', () => {
 
     // Assert
     expect(BrowserWindow).toHaveBeenCalledWith(expect.objectContaining({
-      webPreferences: expect.objectContaining({ additionalArguments: ['--system-locale=fr-CA', '--language=ar'] }),
+      webPreferences: expect.objectContaining({ additionalArguments: ['--system-locale=fr-CA', '--language=ar', '--hints-enabled=true'] }),
     }));
     expect(vi.mocked(initializeLanguage).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(BrowserWindow).mock.invocationCallOrder[0] ?? 0);
   });

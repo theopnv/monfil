@@ -20,7 +20,7 @@ export default function LanguageRow() {
   const [state, setState] = useState<LanguageState | undefined>(undefined);
 
   useEffect(() => {
-    ipc.invoke('settings:get-language', undefined)
+    ipc.invoke('settings:get', { key: 'language' })
       .then(setState)
       .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Error loading the language:' }, error));
   }, []);
@@ -29,7 +29,7 @@ export default function LanguageRow() {
     if (!isLanguageSetting(value)) {
       return;
     }
-    ipc.invoke('settings:set-language', value)
+    ipc.invoke('settings:set', { key: 'language', value: value })
       .then(async (next) => {
         setState(next);
         await setRendererLanguage(next.language);

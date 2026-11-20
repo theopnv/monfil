@@ -14,7 +14,6 @@ import {
   handleAppGetInfo,
   handleAppGetStartupHealth,
   handleAppGetUpdateState,
-  handleAppHintsEnabled,
   handleFeedpacksInstall,
   handleFeedpacksList,
   handleFeedpacksPreview,
@@ -38,20 +37,8 @@ import {
   handleOpmlExport,
   handleOpmlImport,
   handleSettingsDismissUsageAnalyticsPrompt,
-  handleSettingsGetDetailedLogging,
-  handleSettingsGetUsageAnalytics,
-  handleSettingsSetUsageAnalytics,
-  handleSettingsGetRefreshInterval,
-  handleSettingsGetRefreshOnLaunch,
-  handleSettingsSetDetailedLogging,
-  handleSettingsSetRefreshInterval,
-  handleSettingsSetRefreshOnLaunch,
-  handleSettingsGetWorkspaceRailExpanded,
-  handleSettingsSetWorkspaceRailExpanded,
-  handleSettingsGetLanguage,
-  handleSettingsGetRetentionDays,
-  handleSettingsSetLanguage,
-  handleSettingsSetRetentionDays,
+  handleSettingsGet,
+  handleSettingsSet,
   handleAppBackUpDatabase,
   handleSearchesCreate,
   handleSearchesDelete,
@@ -93,8 +80,6 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "workspaces:update": handleWorkspacesUpdate,
   "workspaces:delete": handleWorkspacesDelete,
   "workspaces:reorder": handleWorkspacesReorder,
-  "settings:get-refresh-interval": handleSettingsGetRefreshInterval,
-  "settings:set-refresh-interval": handleSettingsSetRefreshInterval,
   "items:set-read": handleItemsSetRead,
   "items:get-content": handleItemsGetContent,
   "items:query": handleItemsQuery,
@@ -105,23 +90,12 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "feedpacks:list": handleFeedpacksList,
   "feedpacks:preview": handleFeedpacksPreview,
   "feedpacks:install": handleFeedpacksInstall,
-  "settings:get-refresh-on-launch": handleSettingsGetRefreshOnLaunch,
-  "settings:set-refresh-on-launch": handleSettingsSetRefreshOnLaunch,
-  "settings:get-workspace-rail-expanded": handleSettingsGetWorkspaceRailExpanded,
-  "settings:set-workspace-rail-expanded": handleSettingsSetWorkspaceRailExpanded,
-  "settings:get-retention-days": handleSettingsGetRetentionDays,
-  "settings:set-retention-days": handleSettingsSetRetentionDays,
-  "settings:get-language": handleSettingsGetLanguage,
-  "settings:set-language": handleSettingsSetLanguage,
   "app:back-up-database": handleAppBackUpDatabase,
   "app:get-info": handleAppGetInfo,
-  "app:hints-enabled": handleAppHintsEnabled,
   "app:get-startup-health": handleAppGetStartupHealth,
   "app:get-update-state": handleAppGetUpdateState,
-  "settings:get-detailed-logging": handleSettingsGetDetailedLogging,
-  "settings:set-detailed-logging": handleSettingsSetDetailedLogging,
-  "settings:get-usage-analytics": handleSettingsGetUsageAnalytics,
-  "settings:set-usage-analytics": handleSettingsSetUsageAnalytics,
+  "settings:get": handleSettingsGet,
+  "settings:set": handleSettingsSet,
   "settings:dismiss-usage-analytics-prompt": handleSettingsDismissUsageAnalyticsPrompt,
   "analytics:preview": handleAnalyticsPreview,
   "searches:list": handleSearchesList,
@@ -130,6 +104,10 @@ const handlers: { [C in TwoWayRendererMainChannels]: Handler<C> } = {
   "searches:delete": handleSearchesDelete,
   "searches:dismiss-hint": handleSearchesDismissHint,
 };
+
+function failedSetting(channel: string, arg: unknown): string | undefined {
+  return channel.startsWith('settings:') && typeof arg === 'object' && arg !== null && 'key' in arg && typeof arg.key === 'string' ? arg.key : undefined;
+}
 
 export function registerIpcHandlers() {
   for (const [channel, handler] of Object.entries(handlers) as [TwoWayRendererMainChannels, Handler<TwoWayRendererMainChannels>][]) {
@@ -143,7 +121,8 @@ export function registerIpcHandlers() {
         return response;
       } catch (error) {
         const incidentId = createIncidentId();
-        logger.error('ipc.failure', { channel, incidentId }, error);
+        const setting = failedSetting(channel, arg);
+        logger.error('ipc.failure', { channel, incidentId, ...(setting ? { setting } : {}) }, error);
         return {
           success: false,
           error: { name: 'UNEXPECTED_ERROR', message: 'The operation could not be completed.', incidentId },

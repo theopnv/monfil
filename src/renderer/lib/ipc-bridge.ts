@@ -5,6 +5,7 @@
 import { useCallback, useEffect } from 'react';
 import { ipc } from '@/lib/ipc-client';
 import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
+import type { MenuActions, MenuKind } from '../../shared/channels';
 import type { RiverPage } from '../../shared/contracts';
 import { patchRiverRows, queryKeys } from './queries';
 
@@ -19,6 +20,18 @@ export const uiKeys = {
   pendingRefreshFeedIds: ['ui', 'pending-refresh-feed-ids'] as const,
   appliedRefreshVersion: ['ui', 'applied-refresh-version'] as const,
   feedpackRefreshing: (workspaceId: number) => ['ui', 'feedpack-refreshing', workspaceId] as const,
+};
+
+type MenuRequestName = { [K in MenuKind]: `${K}.${MenuActions[K]}` }[MenuKind];
+
+const menuRequestKeys: Record<MenuRequestName, readonly unknown[]> = {
+  'feed.move': uiKeys.moveFeedRequestedId,
+  'feed.delete': uiKeys.deleteFeedRequestedId,
+  'category.rename': uiKeys.renameCategoryRequestedId,
+  'category.delete': uiKeys.deleteCategoryRequestedId,
+  'workspace.edit': uiKeys.editWorkspaceRequestedId,
+  'workspace.export': uiKeys.exportWorkspaceRequestedId,
+  'workspace.delete': uiKeys.deleteWorkspaceRequestedId,
 };
 
 /**
@@ -61,32 +74,8 @@ export function useIpcBridge(): void {
         );
       }),
 
-      ipc.on('feeds:delete-feed-requested', (feedId) => {
-        queryClient.setQueryData(uiKeys.deleteFeedRequestedId, feedId);
-      }),
-
-      ipc.on('feeds:move-feed-requested', (feedId) => {
-        queryClient.setQueryData(uiKeys.moveFeedRequestedId, feedId);
-      }),
-
-      ipc.on('feeds:rename-category-requested', (categoryId) => {
-        queryClient.setQueryData(uiKeys.renameCategoryRequestedId, categoryId);
-      }),
-
-      ipc.on('feeds:delete-category-requested', (categoryId) => {
-        queryClient.setQueryData(uiKeys.deleteCategoryRequestedId, categoryId);
-      }),
-
-      ipc.on('workspaces:edit-requested', (workspaceId) => {
-        queryClient.setQueryData(uiKeys.editWorkspaceRequestedId, workspaceId);
-      }),
-
-      ipc.on('workspaces:export-requested', (workspaceId) => {
-        queryClient.setQueryData(uiKeys.exportWorkspaceRequestedId, workspaceId);
-      }),
-
-      ipc.on('workspaces:delete-requested', (workspaceId) => {
-        queryClient.setQueryData(uiKeys.deleteWorkspaceRequestedId, workspaceId);
+      ipc.on('menu:action', (menu) => {
+        queryClient.setQueryData(menuRequestKeys[`${menu.kind}.${menu.action}` as MenuRequestName], menu.id);
       }),
 
       ipc.on('app:update-state-changed', (state) => {

@@ -36,7 +36,7 @@ export function ErrorRecovery({ error, onRetry, onRestart, onShowLog, variant = 
         <div className="flex flex-wrap gap-2">
           <Button color="primary" onPress={() => void onRetry()}>{t('recovery.tryAgain')}</Button>
           {(root || onRestart) && <Button color="secondary" onPress={onRestart ?? (() => ipc.send('app:restart', undefined))}>{t('recovery.restart')}</Button>}
-          {(root || onShowLog) && <Button color="secondary" onPress={onShowLog ?? (() => ipc.send('app:reveal-log-file', undefined))}>{t('recovery.showLog')}</Button>}
+          {(root || onShowLog) && <Button color="secondary" onPress={onShowLog ?? (() => ipc.send('app:reveal', 'log'))}>{t('recovery.showLog')}</Button>}
         </div>
       </div>
     </section>

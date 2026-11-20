@@ -15,14 +15,14 @@ export default function DiagnosticsSection() {
   const [detailed, setDetailed] = useState<boolean>();
 
   useEffect(() => {
-    void ipc.invoke('settings:get-detailed-logging', undefined)
+    void ipc.invoke('settings:get', { key: 'detailedLogging' })
       .then(setDetailed)
       .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Could not load diagnostic settings' }, error));
   }, []);
 
   const changeDetailed = (value: boolean) => {
     setDetailed(value);
-    void ipc.invoke('settings:set-detailed-logging', value)
+    void ipc.invoke('settings:set', { key: 'detailedLogging', value: value })
       .then(setDetailed)
       .catch((error: unknown) => rendererLogger.error('renderer.failure', { message: 'Could not save diagnostic settings' }, error));
   };
@@ -37,7 +37,7 @@ export default function DiagnosticsSection() {
         isDisabled={detailed === undefined}
         onChange={changeDetailed}
       />
-      <Button color="secondary" iconLeading={Folder} className="self-start" onPress={() => ipc.send('app:reveal-log-file', undefined)}>
+      <Button color="secondary" iconLeading={Folder} className="self-start" onPress={() => ipc.send('app:reveal', 'log')}>
         {t('diagnostics.showLog')}
       </Button>
     </SettingsSection>

@@ -21,7 +21,6 @@ beforeEach(() => {
       invoke: vi.fn(() => Promise.resolve({ success: true, data: catalog })),
       on: vi.fn(() => vi.fn()),
       sendMessage: vi.fn(),
-      once: vi.fn(),
     },
   } as unknown as typeof window.electron;
 });

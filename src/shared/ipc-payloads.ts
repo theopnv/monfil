@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import type { TwoWayRendererMainChannels, TwoWayRendererMainChannelsInvokeArgs } from './channels';
+import type { MenuKind, MenuTarget, RevealTarget, SettingGetArg, SettingKey, SettingSetArg, SettingTypes, TwoWayRendererMainChannels, TwoWayRendererMainChannelsInvokeArgs } from './channels';
 import { RENDERER_USAGE_COUNTERS, SOURCE_TYPES } from './contracts';
 import type { FeedpackInstallTarget, ImportOpmlTarget, NewFeedInput, RefreshInterval, RendererUsageCounter, RetentionDays, RiverCursor, RiverQuery, SavedCursor, SavedQuery, SourceItem, SourceType, UsagePreferences } from './contracts';
 import { isLanguageSetting } from './i18n/languages';
@@ -81,6 +81,37 @@ function isRendererUsageCounter(value: unknown): value is RendererUsageCounter {
   return (RENDERER_USAGE_COUNTERS as readonly unknown[]).includes(value);
 }
 
+const settingValueGuards: { [K in SettingKey]: Guard<SettingTypes[K]['value']> } = {
+  refreshInterval: isRefreshInterval,
+  refreshOnLaunch: isBoolean,
+  workspaceRailExpanded: isBoolean,
+  retentionDays: isRetentionDays,
+  detailedLogging: isBoolean,
+  language: isLanguageSetting,
+  usageAnalytics: isConsentChoice,
+};
+
+function isSettingKey(value: unknown): value is SettingKey {
+  return typeof value === 'string' && Object.hasOwn(settingValueGuards, value);
+}
+
+const isSettingGet = object<SettingGetArg>({ key: isSettingKey });
+
+const isSettingEnvelope = object<{ key: SettingKey; value: unknown }>({ key: isSettingKey, value: (_value): _value is unknown => true });
+
+function isSettingSet(value: unknown): value is SettingSetArg {
+  return isSettingEnvelope(value) && settingValueGuards[value.key](value.value);
+}
+
+export function isRevealTarget(value: unknown): value is RevealTarget {
+  return value === 'database' || value === 'log' || value === 'database-backup';
+}
+
+export const isMenuTarget = object<MenuTarget>({
+  kind: (value): value is MenuKind => value === 'feed' || value === 'category' || value === 'workspace',
+  id: isPositiveSafeInteger,
+});
+
 export const isRendererUsageRecord = object<{ counter: RendererUsageCounter }>({ counter: isRendererUsageCounter });
 
 export const isUsagePreferences = object<UsagePreferences>({
@@ -152,27 +183,14 @@ export const invokePayloadGuards: { [C in TwoWayRendererMainChannels]: Guard<Two
   'workspaces:update': object<TwoWayRendererMainChannelsInvokeArgs['workspaces:update']>({ workspaceId: isPositiveSafeInteger, name: optional(isString), icon: optional(isString), color: optional(isString) }),
   'workspaces:delete': isWorkspace,
   'workspaces:reorder': object({ orderedIds: isIds }),
-  'settings:get-refresh-interval': isUndefined,
-  'settings:set-refresh-interval': isRefreshInterval,
   'items:set-read': object({ itemIds: isIds, read: isBoolean }),
   'items:get-content': isPositiveSafeInteger,
-  'settings:get-refresh-on-launch': isUndefined,
-  'settings:set-refresh-on-launch': isBoolean,
-  'settings:get-workspace-rail-expanded': isUndefined,
-  'settings:set-workspace-rail-expanded': isBoolean,
-  'settings:get-retention-days': isUndefined,
-  'settings:set-retention-days': isRetentionDays,
-  'settings:get-language': isUndefined,
-  'settings:set-language': isLanguageSetting,
   'app:back-up-database': isUndefined,
   'app:get-info': isUndefined,
-  'app:hints-enabled': isUndefined,
   'app:get-startup-health': isUndefined,
   'app:get-update-state': isUndefined,
-  'settings:get-detailed-logging': isUndefined,
-  'settings:set-detailed-logging': isBoolean,
-  'settings:get-usage-analytics': isUndefined,
-  'settings:set-usage-analytics': isConsentChoice,
+  'settings:get': isSettingGet,
+  'settings:set': isSettingSet,
   'settings:dismiss-usage-analytics-prompt': isUndefined,
   'analytics:preview': isUndefined,
   'opml:import': object({ target: isImportTarget }),

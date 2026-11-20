@@ -11,6 +11,7 @@ import { RiverScopeProvider } from '@/providers/river-scope-provider';
 import { useIpcBridge } from '@/lib/ipc-bridge';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import Reader from './Reader';
+import type { MenuAction } from '../../../shared/channels';
 import type { ReaderProps } from './Reader';
 import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary, type ItemBody, type RiverPage, type RiverQuery, type RiverRow, type SetSavedItemInput } from '../../../shared/contracts';
 
@@ -175,7 +176,7 @@ test('saving in the reader keeps the loaded article content', async () => {
 });
 
 let invokeMock: ReturnType<typeof vi.fn>;
-let renameCategoryRequestedHandler: ((categoryId: number) => void) | undefined;
+let menuActionHandler: ((menu: MenuAction) => void) | undefined;
 
 beforeEach(() => {
   localStorage.clear();
@@ -185,7 +186,7 @@ beforeEach(() => {
   allRows = [];
   descriptionsById = new Map();
   itemBodyOverride = undefined;
-  renameCategoryRequestedHandler = undefined;
+  menuActionHandler = undefined;
 
   invokeMock = vi.fn((channel: string, arg: unknown) => {
     switch (channel) {
@@ -229,13 +230,12 @@ beforeEach(() => {
     ipcRenderer: {
       invoke: invokeMock,
       on: vi.fn((channel: string, handler: (payload: never) => void) => {
-        if (channel === 'feeds:rename-category-requested') {
-          renameCategoryRequestedHandler = handler as (categoryId: number) => void;
+        if (channel === 'menu:action') {
+          menuActionHandler = handler as (menu: MenuAction) => void;
         }
         return vi.fn();
       }),
       sendMessage: vi.fn(),
-      once: vi.fn(),
     },
   } as unknown as typeof window.electron;
 });
@@ -402,10 +402,10 @@ test('typing in the category rename field does not trigger Reader shortcuts', as
   const { getByRole, getByText } = await renderReader({ itemId: String(itemB.id), onNavigateToItem, onNavigateHome });
   await expect.element(getByText('Middle item', { exact: true })).toBeInTheDocument();
   await expect.element(getByRole('button', { name: 'Tech', exact: true })).toBeInTheDocument();
-  await vi.waitFor(() => expect(renameCategoryRequestedHandler).toBeDefined());
+  await vi.waitFor(() => expect(menuActionHandler).toBeDefined());
 
   // Act
-  renameCategoryRequestedHandler?.(feedA.category.id);
+  menuActionHandler?.({ kind: 'category', action: 'rename', id: feedA.category.id });
   const renameInput = getByRole('textbox', { name: 'Rename Tech' });
   await expect.element(renameInput).toHaveValue('Tech');
   await userEvent.clear(renameInput);

@@ -46,7 +46,7 @@ export const useWorkspaceRailExpanded = (): [boolean, (expanded: boolean) => voi
   const queryClient = useQueryClient();
   const { data } = useQuery(workspaceRailExpandedQuery());
   const { mutate } = useMutation({
-    mutationFn: (expanded: boolean) => ipc.invoke('settings:set-workspace-rail-expanded', expanded),
+    mutationFn: (expanded: boolean) => ipc.invoke('settings:set', { key: 'workspaceRailExpanded', value: expanded }),
     onMutate: (expanded) => queryClient.setQueryData(queryKeys.workspaceRailExpanded, expanded),
     onSettled: () => void queryClient.invalidateQueries({ queryKey: queryKeys.workspaceRailExpanded }),
   });

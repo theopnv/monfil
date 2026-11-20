@@ -19,6 +19,7 @@ import { configureLogging, logger } from './logging/logger';
 import { installFatalHandlers } from './logging/fatal';
 import { fatalDialogText, mainLanguage, setMainSystemLocale } from './lib/i18n';
 import { initializeLanguage } from './app/language';
+import { HINTS_ARGUMENT } from '../shared/contracts';
 import { SYSTEM_LOCALE_ARGUMENT } from '../shared/i18n/format-locale';
 import { LANGUAGE_ARGUMENT } from '../shared/i18n/languages';
 import { setLogFilePath } from './app/main-state';
@@ -96,7 +97,11 @@ function bootstrap() {
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true,
-        additionalArguments: [`${SYSTEM_LOCALE_ARGUMENT}${app.getSystemLocale()}`, `${LANGUAGE_ARGUMENT}${mainLanguage()}`],
+        additionalArguments: [
+          `${SYSTEM_LOCALE_ARGUMENT}${app.getSystemLocale()}`,
+          `${LANGUAGE_ARGUMENT}${mainLanguage()}`,
+          `${HINTS_ARGUMENT}${process.env['MONFIL_HINTS'] !== 'off'}`,
+        ],
       },
     });
     hardenWebContents(mainWindow.webContents);

@@ -214,7 +214,6 @@ beforeEach(() => {
         return vi.fn();
       }),
       sendMessage: vi.fn(),
-      once: vi.fn(),
     },
   } as unknown as typeof window.electron;
 

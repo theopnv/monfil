@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import type { MenuAction } from '../../shared/channels';
 import { QueryClient, QueryClientProvider, type InfiniteData } from '@tanstack/react-query';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { page } from 'vitest/browser';
@@ -51,7 +52,6 @@ beforeEach(() => {
         unsubscribers.set(channel, unsubscribe);
         return unsubscribe;
       }),
-      once: vi.fn(),
       sendMessage: vi.fn(),
     },
   } as unknown as typeof window.electron;
@@ -76,7 +76,7 @@ function Bridge() {
 
 async function mountBridge(client: QueryClient) {
   const screen = await render(under(client, <Bridge />));
-  await expect.poll(() => handlers.size).toBe(11);
+  await expect.poll(() => handlers.size).toBe(5);
   return screen;
 }
 
@@ -278,7 +278,7 @@ describe('useIpcBridge', () => {
     await screen.unmount();
 
     // Assert
-    expect([...unsubscribers.values()].map((unsubscribe) => unsubscribe.mock.calls.length)).toEqual(Array(11).fill(1));
+    expect([...unsubscribers.values()].map((unsubscribe) => unsubscribe.mock.calls.length)).toEqual(Array(5).fill(1));
   });
 
   test('listens for the new client when the query client changes', async () => {
@@ -408,20 +408,20 @@ describe('useFeedpackRefreshing', () => {
 });
 
 interface RequestCase {
-  channel: string;
+  menu: Pick<MenuAction, 'kind' | 'action'>;
   key: readonly unknown[];
   useRequestedId: () => number | null;
   useClear: () => () => void;
 }
 
 const requestCases: RequestCase[] = [
-  { channel: 'feeds:delete-feed-requested', key: uiKeys.deleteFeedRequestedId, useRequestedId: useDeleteFeedRequestedId, useClear: useClearDeleteFeedRequest },
-  { channel: 'feeds:move-feed-requested', key: uiKeys.moveFeedRequestedId, useRequestedId: useMoveFeedRequestedId, useClear: useClearMoveFeedRequest },
-  { channel: 'feeds:rename-category-requested', key: uiKeys.renameCategoryRequestedId, useRequestedId: useRenameCategoryRequestedId, useClear: useClearRenameCategoryRequest },
-  { channel: 'feeds:delete-category-requested', key: uiKeys.deleteCategoryRequestedId, useRequestedId: useDeleteCategoryRequestedId, useClear: useClearDeleteCategoryRequest },
-  { channel: 'workspaces:edit-requested', key: uiKeys.editWorkspaceRequestedId, useRequestedId: useEditWorkspaceRequestedId, useClear: useClearEditWorkspaceRequest },
-  { channel: 'workspaces:export-requested', key: uiKeys.exportWorkspaceRequestedId, useRequestedId: useExportWorkspaceRequestedId, useClear: useClearExportWorkspaceRequest },
-  { channel: 'workspaces:delete-requested', key: uiKeys.deleteWorkspaceRequestedId, useRequestedId: useDeleteWorkspaceRequestedId, useClear: useClearDeleteWorkspaceRequest },
+  { menu: { kind: 'feed', action: 'delete' }, key: uiKeys.deleteFeedRequestedId, useRequestedId: useDeleteFeedRequestedId, useClear: useClearDeleteFeedRequest },
+  { menu: { kind: 'feed', action: 'move' }, key: uiKeys.moveFeedRequestedId, useRequestedId: useMoveFeedRequestedId, useClear: useClearMoveFeedRequest },
+  { menu: { kind: 'category', action: 'rename' }, key: uiKeys.renameCategoryRequestedId, useRequestedId: useRenameCategoryRequestedId, useClear: useClearRenameCategoryRequest },
+  { menu: { kind: 'category', action: 'delete' }, key: uiKeys.deleteCategoryRequestedId, useRequestedId: useDeleteCategoryRequestedId, useClear: useClearDeleteCategoryRequest },
+  { menu: { kind: 'workspace', action: 'edit' }, key: uiKeys.editWorkspaceRequestedId, useRequestedId: useEditWorkspaceRequestedId, useClear: useClearEditWorkspaceRequest },
+  { menu: { kind: 'workspace', action: 'export' }, key: uiKeys.exportWorkspaceRequestedId, useRequestedId: useExportWorkspaceRequestedId, useClear: useClearExportWorkspaceRequest },
+  { menu: { kind: 'workspace', action: 'delete' }, key: uiKeys.deleteWorkspaceRequestedId, useRequestedId: useDeleteWorkspaceRequestedId, useClear: useClearDeleteWorkspaceRequest },
 ];
 
 function RequestProbe({ useRequestedId, useClear }: Pick<RequestCase, 'useRequestedId' | 'useClear'>) {
@@ -435,16 +435,16 @@ function RequestProbe({ useRequestedId, useClear }: Pick<RequestCase, 'useReques
   );
 }
 
-describe.each(requestCases)('$channel', ({ channel, key, useRequestedId, useClear }) => {
+describe.each(requestCases)('menu action $menu.kind $menu.action', ({ menu, key, useRequestedId, useClear }) => {
   test('shows the requested ID until the request is cleared', async () => {
     // Arrange
     const client = createTestQueryClient();
     await render(under(client, <><Bridge /><RequestProbe useRequestedId={useRequestedId} useClear={useClear} /></>));
-    await expect.poll(() => handlers.size).toBe(11);
+    await expect.poll(() => handlers.size).toBe(5);
     await expect.element(page.getByRole('status')).toHaveTextContent('null');
 
     // Act
-    emit(channel, 7);
+    emit('menu:action', { ...menu, id: 7 });
 
     // Assert
     await expect.element(page.getByRole('status')).toHaveTextContent('7');

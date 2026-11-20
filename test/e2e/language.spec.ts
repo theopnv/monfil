@@ -48,7 +48,7 @@ async function openFeedMenu(app: ElectronApplication, page: Page, feedId: number
   await app.evaluate(() => {
     (globalThis as { __menuLabels?: string[] }).__menuLabels = [];
   });
-  await page.evaluate((id) => window.electron.ipcRenderer.sendMessage('feeds:show-feed-context-menu', id), feedId);
+  await page.evaluate((id) => window.electron.ipcRenderer.sendMessage('menu:show', { kind: 'feed', id }), feedId);
   await expect.poll(() => app.evaluate(() => (globalThis as { __menuLabels?: string[] }).__menuLabels?.length ?? 0)).toBeGreaterThan(0);
   return app.evaluate(() => (globalThis as { __menuLabels?: string[] }).__menuLabels ?? []);
 }

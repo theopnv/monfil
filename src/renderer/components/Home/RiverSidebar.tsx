@@ -425,7 +425,7 @@ export default function RiverSidebar({ feeds, categories, showOnlyLinks, onSetVi
                 <div
                   onContextMenu={(event) => {
                     event.preventDefault();
-                    ipc.send('feeds:show-category-context-menu', folder.id);
+                    ipc.send('menu:show', { kind: 'category', id: folder.id });
                   }}
                   className={cx(
                     "group flex w-full items-center gap-1.5 rounded-xl px-2.25 py-1.75 text-sm font-semibold hover:bg-primary_hover",

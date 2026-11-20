@@ -49,12 +49,12 @@ test('rejects malformed feed items before storing a feed', async ({ appPage }) =
 
 test('rejects invalid setting values without changing preferences', async ({ appPage }) => {
   // Arrange
-  const before = await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-refresh-on-launch', undefined));
+  const before = await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:get', { key: 'refreshOnLaunch' }));
 
   // Act
   const response = await appPage.evaluate(() =>
-    window.electron.ipcRenderer.invoke('settings:set-refresh-on-launch', 'false' as unknown as boolean));
-  const after = await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-refresh-on-launch', undefined));
+    window.electron.ipcRenderer.invoke('settings:set', { key: 'refreshOnLaunch', value: 'false' as unknown as boolean }));
+  const after = await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:get', { key: 'refreshOnLaunch' }));
 
   // Assert
   expect(response).toEqual(invalidPayload);
@@ -94,12 +94,12 @@ test('opens Home for invalid workspace and Reader URLs', async ({ appPage }) => 
 
 test('rejects an invalid workspace rail value without changing it', async ({ appPage }) => {
   // Arrange
-  const before = await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-workspace-rail-expanded', undefined));
+  const before = await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:get', { key: 'workspaceRailExpanded' }));
 
   // Act
   const response = await appPage.evaluate(() =>
-    window.electron.ipcRenderer.invoke('settings:set-workspace-rail-expanded', 'true' as unknown as boolean));
-  const after = await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:get-workspace-rail-expanded', undefined));
+    window.electron.ipcRenderer.invoke('settings:set', { key: 'workspaceRailExpanded', value: 'true' as unknown as boolean }));
+  const after = await appPage.evaluate(() => window.electron.ipcRenderer.invoke('settings:get', { key: 'workspaceRailExpanded' }));
 
   // Assert
   expect(response).toEqual(invalidPayload);

@@ -16,8 +16,8 @@ import { refreshAllFeeds } from '../feed/refresh';
 import { rescheduleRefresh } from '../feed/scheduler';
 import { broadcastToRenderers, sendToRenderer } from '../lib/sendToRenderer';
 import {
-  handleAppHintsEnabled, handleFeedsListCategories, handleFeedsSubmitAddFeed, handleItemsGetContent, handleSearchesUpdate,
-  handleSettingsSetDetailedLogging, handleSettingsSetRefreshInterval, handleSettingsSetRetentionDays, handleWorkspacesUpdate,
+  handleFeedsListCategories, handleFeedsSubmitAddFeed, handleItemsGetContent, handleSearchesUpdate,
+  handleSettingsSet, handleWorkspacesUpdate,
 } from './handlers';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 import type { IpcMainInvokeEvent } from 'electron';
@@ -184,36 +184,6 @@ describe('handleItemsGetContent', () => {
     // Assert
     expect(result).toEqual({ description: 'Video description', article: undefined });
     expect(mockedFetchText).not.toHaveBeenCalled();
-  });
-});
-
-describe('handleAppHintsEnabled', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
-  test('is on by default', () => {
-    // Arrange
-    vi.stubEnv('MONFIL_HINTS', undefined);
-
-    // Act & Assert
-    expect(handleAppHintsEnabled()).toBe(true);
-  });
-
-  test('is on when MONFIL_HINTS is on', () => {
-    // Arrange
-    vi.stubEnv('MONFIL_HINTS', 'on');
-
-    // Act & Assert
-    expect(handleAppHintsEnabled()).toBe(true);
-  });
-
-  test('is off when MONFIL_HINTS is off', () => {
-    // Arrange
-    vi.stubEnv('MONFIL_HINTS', 'off');
-
-    // Act & Assert
-    expect(handleAppHintsEnabled()).toBe(false);
   });
 });
 
@@ -436,10 +406,10 @@ describe('handleSearchesUpdate', () => {
   });
 });
 
-describe('handleSettingsSetRefreshInterval', () => {
+describe('handleSettingsSet for the refresh interval', () => {
   test('stores the interval, reschedules the timer with it and returns it', async () => {
     // Act
-    const result = await handleSettingsSetRefreshInterval(fakeEvent, 60);
+    const result = await handleSettingsSet(fakeEvent, { key: 'refreshInterval', value: 60 });
 
     // Assert
     expect(result).toBe(60);
@@ -449,7 +419,7 @@ describe('handleSettingsSetRefreshInterval', () => {
 
   test('turns an unsupported interval into the default before it stores and schedules it', async () => {
     // Act
-    const result = await handleSettingsSetRefreshInterval(fakeEvent, 7 as never);
+    const result = await handleSettingsSet(fakeEvent, { key: 'refreshInterval', value: 7 as never });
 
     // Assert
     expect(result).toBe(30);
@@ -457,10 +427,10 @@ describe('handleSettingsSetRefreshInterval', () => {
   });
 });
 
-describe('handleSettingsSetDetailedLogging', () => {
+describe('handleSettingsSet for detailed logging', () => {
   test('stores the choice and applies it to the logger', async () => {
     // Act
-    const result = await handleSettingsSetDetailedLogging(fakeEvent, true);
+    const result = await handleSettingsSet(fakeEvent, { key: 'detailedLogging', value: true });
 
     // Assert
     expect(result).toBe(true);
@@ -469,7 +439,7 @@ describe('handleSettingsSetDetailedLogging', () => {
   });
 });
 
-describe('handleSettingsSetRetentionDays', () => {
+describe('handleSettingsSet for the retention days', () => {
   async function seedFeed(expiredCount: number) {
     const item = (name: string, ageDays: number, minute: number) => ({
       title: name, link: `https://a.example/${name}`, guid: name, pubDate: new Date(Date.now() - ageDays * DAY_MS - minute * 60_000).toISOString(),
@@ -491,7 +461,7 @@ describe('handleSettingsSetRetentionDays', () => {
     vi.mocked(refreshAllFeeds).mockResolvedValue({ perFeed: [] });
 
     // Act
-    const result = await handleSettingsSetRetentionDays(fakeEvent, 60);
+    const result = await handleSettingsSet(fakeEvent, { key: 'retentionDays', value: 60 });
 
     // Assert
     expect(result).toBe(60);
@@ -500,7 +470,7 @@ describe('handleSettingsSetRetentionDays', () => {
 
   test('turns an unsupported number of days into the default', async () => {
     // Act
-    const result = await handleSettingsSetRetentionDays(fakeEvent, 7 as never);
+    const result = await handleSettingsSet(fakeEvent, { key: 'retentionDays', value: 7 as never });
 
     // Assert
     expect(result).toBe(30);
@@ -513,7 +483,7 @@ describe('handleSettingsSetRetentionDays', () => {
     vi.mocked(refreshAllFeeds).mockResolvedValue({ perFeed: [{ feedId: 1, inserted: 4 }], removed: 3 });
 
     // Act
-    await handleSettingsSetRetentionDays(fakeEvent, 90);
+    await handleSettingsSet(fakeEvent, { key: 'retentionDays', value: 90 });
 
     // Assert
     expect(refreshAllFeeds).toHaveBeenCalledExactlyOnceWith(true);
@@ -526,7 +496,7 @@ describe('handleSettingsSetRetentionDays', () => {
     vi.mocked(refreshAllFeeds).mockResolvedValue({ perFeed: [] });
 
     // Act
-    await handleSettingsSetRetentionDays(fakeEvent, 90);
+    await handleSettingsSet(fakeEvent, { key: 'retentionDays', value: 90 });
 
     // Assert
     expect(broadcastToRenderers).toHaveBeenCalledExactlyOnceWith('feeds:refreshed', { perFeed: [], removed: 2, applyImmediately: true });
@@ -538,7 +508,7 @@ describe('handleSettingsSetRetentionDays', () => {
     await seedFeed(2);
 
     // Act
-    await handleSettingsSetRetentionDays(fakeEvent, 30);
+    await handleSettingsSet(fakeEvent, { key: 'retentionDays', value: 30 });
 
     // Assert
     expect(refreshAllFeeds).not.toHaveBeenCalled();
@@ -551,7 +521,7 @@ describe('handleSettingsSetRetentionDays', () => {
     await seedFeed(2);
 
     // Act
-    await handleSettingsSetRetentionDays(fakeEvent, 30);
+    await handleSettingsSet(fakeEvent, { key: 'retentionDays', value: 30 });
 
     // Assert
     expect(refreshAllFeeds).not.toHaveBeenCalled();
@@ -564,7 +534,7 @@ describe('handleSettingsSetRetentionDays', () => {
     await seedFeed(0);
 
     // Act
-    await handleSettingsSetRetentionDays(fakeEvent, 30);
+    await handleSettingsSet(fakeEvent, { key: 'retentionDays', value: 30 });
 
     // Assert
     expect(refreshAllFeeds).not.toHaveBeenCalled();

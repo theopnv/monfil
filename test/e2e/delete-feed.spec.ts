@@ -14,7 +14,7 @@ test('confirming the dialog removes the feed and its items, even after a restart
 
   // Act: stand in for the native menu's click, which Playwright cannot drive.
   await app.evaluate(({ BrowserWindow }, id) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send('feeds:delete-feed-requested', id);
+    BrowserWindow.getAllWindows()[0]?.webContents.send('menu:action', { kind: 'feed', action: 'delete', id });
   }, feedId);
   await expect(page.getByRole('heading', { name: 'Delete feed' })).toBeVisible();
   await page.getByRole('button', { name: 'Delete feed' }).click();
@@ -40,7 +40,7 @@ test('cancelling the dialog leaves the feed in place', async ({ feedServer, laun
 
   // Act
   await app.evaluate(({ BrowserWindow }, id) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send('feeds:delete-feed-requested', id);
+    BrowserWindow.getAllWindows()[0]?.webContents.send('menu:action', { kind: 'feed', action: 'delete', id });
   }, feedId);
   await expect(page.getByRole('heading', { name: 'Delete feed' })).toBeVisible();
   await page.getByRole('button', { name: 'Cancel' }).click();

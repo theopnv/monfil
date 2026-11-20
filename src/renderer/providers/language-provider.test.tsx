@@ -85,7 +85,7 @@ describe('LanguageProvider', () => {
     await render(<LanguageProvider><ReactAriaLocale /></LanguageProvider>);
 
     // Assert
-    await vi.waitFor(() => expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:get-language', undefined));
+    await vi.waitFor(() => expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('settings:get', { key: 'language' }));
     expect(i18n.language).toBe('en');
     delete (window as { electron?: unknown }).electron;
   });

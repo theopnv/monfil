@@ -111,10 +111,10 @@ type Context = {
 
 type Scenario = { name: string; run: (context: Context) => Promise<void> };
 
-async function sendFromMain(app: ElectronApplication, channel: string, id: number): Promise<void> {
-  await app.evaluate(({ BrowserWindow }, { channel, id }) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send(channel, id);
-  }, { channel, id });
+async function sendMenuAction(app: ElectronApplication, kind: string, action: string, id: number): Promise<void> {
+  await app.evaluate(({ BrowserWindow }, menu) => {
+    BrowserWindow.getAllWindows()[0]?.webContents.send('menu:action', menu);
+  }, { kind, action, id });
 }
 
 async function goHome(page: Page): Promise<void> {
@@ -152,7 +152,7 @@ const SCENARIOS: Scenario[] = [
   {
     name: 'edit workspace',
     run: async ({ app, page, ids, report }) => {
-      await sendFromMain(app, 'workspaces:edit-requested', ids.workspace);
+      await sendMenuAction(app, 'workspace', 'edit', ids.workspace);
       await expect(dialogOf(page)).toBeVisible();
       await report('edit-workspace', dialogOf(page));
     },
@@ -160,7 +160,7 @@ const SCENARIOS: Scenario[] = [
   {
     name: 'delete workspace',
     run: async ({ app, page, ids, report }) => {
-      await sendFromMain(app, 'workspaces:delete-requested', ids.workspace);
+      await sendMenuAction(app, 'workspace', 'delete', ids.workspace);
       await expect(dialogOf(page)).toBeVisible();
       await report('delete-workspace', dialogOf(page));
     },
@@ -169,7 +169,7 @@ const SCENARIOS: Scenario[] = [
     name: 'delete feed',
     run: async ({ app, page, ids, report }) => {
       await goHome(page);
-      await sendFromMain(app, 'feeds:delete-feed-requested', ids.feed);
+      await sendMenuAction(app, 'feed', 'delete', ids.feed);
       await expect(dialogOf(page)).toBeVisible();
       await report('delete-feed', dialogOf(page));
     },
@@ -178,7 +178,7 @@ const SCENARIOS: Scenario[] = [
     name: 'move feed',
     run: async ({ app, page, ids, report }) => {
       await goHome(page);
-      await sendFromMain(app, 'feeds:move-feed-requested', ids.feed);
+      await sendMenuAction(app, 'feed', 'move', ids.feed);
       await expect(dialogOf(page)).toBeVisible();
       await report('move-feed', dialogOf(page));
     },
@@ -187,7 +187,7 @@ const SCENARIOS: Scenario[] = [
     name: 'delete folder',
     run: async ({ app, page, ids, report }) => {
       await goHome(page);
-      await sendFromMain(app, 'feeds:delete-category-requested', ids.category);
+      await sendMenuAction(app, 'category', 'delete', ids.category);
       await expect(dialogOf(page)).toBeVisible();
       await report('delete-folder', dialogOf(page));
     },
@@ -278,11 +278,11 @@ const SCENARIOS: Scenario[] = [
   {
     name: 'expanded rail',
     run: async ({ page, report }) => {
-      await page.evaluate(() => window.electron.ipcRenderer.invoke('settings:set-workspace-rail-expanded', true));
+      await page.evaluate(() => window.electron.ipcRenderer.invoke('settings:set', { key: 'workspaceRailExpanded', value: true }));
       await page.reload();
       await page.waitForTimeout(900);
       await report('page-expanded-rail', page.locator('#root'));
-      await page.evaluate(() => window.electron.ipcRenderer.invoke('settings:set-workspace-rail-expanded', false));
+      await page.evaluate(() => window.electron.ipcRenderer.invoke('settings:set', { key: 'workspaceRailExpanded', value: false }));
     },
   },
   {

@@ -186,7 +186,7 @@ export const useFeedsRefresh = (): FeedsRefresh => {
         }
         notifyWarning(t('river:refresh.failed', { count }), 'manual-refresh-failures', {
           label: t('common:action.showLog'),
-          onClick: () => ipc.send('app:reveal-log-file', undefined),
+          onClick: () => ipc.send('app:reveal', 'log'),
         }, lines);
       }
     },
