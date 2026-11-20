@@ -7,7 +7,8 @@ import { createServer, type RequestListener, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { lookup } from 'node:dns/promises';
 import type { LookupAddress } from 'node:dns';
-import { fetchConditional, fetchText, httpStatusMessage, httpStatusParams, setRequestTransport, type RequestTransport } from './fetch';
+import { fetchConditional, fetchText, httpStatusMessage, httpStatusParams, readCappedText, setRequestTransport, type RequestTransport } from './fetch';
+import { EventEmitter } from 'node:events';
 import { MAX_FETCH_BYTES, MAX_REDIRECTS } from './constants';
 
 vi.mock(import('node:dns/promises'), () => ({ lookup: vi.fn() }));
@@ -121,6 +122,38 @@ describe('fetchText', () => {
 
     // Assert
     expect(result).toEqual({ success: true, data: { body: '<html></html>', validators: { etag: undefined, last_modified: undefined } } });
+  });
+
+  test('with headersOnly it answers from the status line and releases the connection without reading the body', async () => {
+    // Arrange
+    let bodyRead = false;
+    const requests = useTransport(() => ({
+      status: 200,
+      body: new ReadableStream<Uint8Array>({
+        pull() {
+          bodyRead = true;
+        },
+      }, { highWaterMark: 0 }),
+    }));
+
+    // Act
+    const result = await fetchText('https://example.com/favicon.ico', { headersOnly: true });
+
+    // Assert
+    expect(result).toEqual({ success: true, data: { body: '', validators: { etag: undefined, last_modified: undefined } } });
+    expect(bodyRead).toBe(false);
+    expect(requests[0]?.aborts).toBe(1);
+  });
+
+  test('with headersOnly a failing status is still an error', async () => {
+    // Arrange
+    useTransport(() => ({ status: 404, statusMessage: 'Not Found' }));
+
+    // Act
+    const result = await fetchText('https://example.com/favicon.ico', { headersOnly: true });
+
+    // Assert
+    expect(result).toMatchObject({ success: false, error: { name: 'GENERIC_FETCH_ERROR' } });
   });
 
   test('sends the monfil user agent and a no-cache directive', async () => {
@@ -528,6 +561,145 @@ describe('fetchText', () => {
       expect(result).toEqual({ success: true, data: { body: 'local', validators: { etag: undefined, last_modified: undefined } } });
       expect(requests).toHaveLength(1);
     });
+  });
+});
+
+describe('fetchText with stopAfter', () => {
+  afterEach(() => {
+    setRequestTransport(undefined as unknown as RequestTransport);
+  });
+
+  test('hands the marker to the transport that reads the body', async () => {
+    // Arrange
+    const readBody = vi.fn(async () => ({ success: true as const, data: '<head></head>' }));
+    setRequestTransport(async () => ({ status: 200, statusMessage: '', headers: {}, readBody, abort: () => undefined }));
+
+    // Act
+    await fetchText('https://example.com', { stopAfter: '</head>' });
+
+    // Assert
+    expect(readBody).toHaveBeenCalledExactlyOnceWith('</head>');
+  });
+});
+
+describe('readCappedText', () => {
+  function body(stopAfter?: string, headers: Record<string, string> = {}) {
+    const response = Object.assign(new EventEmitter(), { headers });
+    const request = { abort: vi.fn() };
+    const result = readCappedText(response as never, request as never, stopAfter);
+    return { response, request, result };
+  }
+
+  test('reads the whole body when there is no marker', async () => {
+    // Arrange
+    const { response, request, result } = body();
+
+    // Act
+    response.emit('data', Buffer.from('<head></head>'));
+    response.emit('data', Buffer.from('<body>text</body>'));
+    response.emit('end');
+
+    // Assert
+    await expect(result).resolves.toEqual({ success: true, data: '<head></head><body>text</body>' });
+    expect(request.abort).not.toHaveBeenCalled();
+  });
+
+  test('stops and releases the connection once the marker has arrived, keeping what came before it', async () => {
+    // Arrange
+    const { response, request, result } = body('</head>');
+
+    // Act
+    response.emit('data', Buffer.from('<head><meta>'));
+    response.emit('data', Buffer.from('</head><body>'));
+
+    // Assert
+    await expect(result).resolves.toEqual({ success: true, data: '<head><meta></head><body>' });
+    expect(request.abort).toHaveBeenCalledOnce();
+  });
+
+  test('finds a marker that is split between two chunks', async () => {
+    // Arrange
+    const { response, request, result } = body('</head>');
+
+    // Act
+    response.emit('data', Buffer.from('<head></he'));
+    response.emit('data', Buffer.from('ad><body>'));
+
+    // Assert
+    await expect(result).resolves.toEqual({ success: true, data: '<head></head><body>' });
+    expect(request.abort).toHaveBeenCalledOnce();
+  });
+
+  test('matches the marker in any letter case', async () => {
+    // Arrange
+    const { response, result } = body('</head>');
+
+    // Act
+    response.emit('data', Buffer.from('<HEAD></HEAD><body>'));
+
+    // Assert
+    await expect(result).resolves.toEqual({ success: true, data: '<HEAD></HEAD><body>' });
+  });
+
+  test('keeps reading while the marker has not arrived', async () => {
+    // Arrange
+    const { response, request, result } = body('</head>');
+
+    // Act
+    response.emit('data', Buffer.from('<head><title>x</title>'));
+    response.emit('data', Buffer.from('</hea'));
+    response.emit('end');
+
+    // Assert
+    await expect(result).resolves.toEqual({ success: true, data: '<head><title>x</title></hea' });
+    expect(request.abort).not.toHaveBeenCalled();
+  });
+
+  test('reads a body of exactly the cap', async () => {
+    // Arrange
+    const { response, request, result } = body();
+
+    // Act
+    response.emit('data', Buffer.alloc(MAX_FETCH_BYTES, 'a'));
+    response.emit('end');
+
+    // Assert
+    await expect(result).resolves.toMatchObject({ success: true });
+    expect(request.abort).not.toHaveBeenCalled();
+  });
+
+  test('refuses a body that goes one byte over the cap, even when it comes in several chunks', async () => {
+    // Arrange
+    const { response, request, result } = body();
+
+    // Act
+    response.emit('data', Buffer.alloc(MAX_FETCH_BYTES / 2, 'a'));
+    response.emit('data', Buffer.alloc(MAX_FETCH_BYTES / 2 + 1, 'a'));
+
+    // Assert
+    await expect(result).resolves.toMatchObject({ success: false, error: { name: 'RESPONSE_TOO_LARGE_ERROR' } });
+    expect(request.abort).toHaveBeenCalledOnce();
+  });
+
+  test('accepts a declared length of exactly the cap', async () => {
+    // Arrange
+    const { response, request, result } = body(undefined, { 'Content-Length': String(MAX_FETCH_BYTES) });
+
+    // Act
+    response.emit('end');
+
+    // Assert
+    await expect(result).resolves.toMatchObject({ success: true });
+    expect(request.abort).not.toHaveBeenCalled();
+  });
+
+  test('refuses a declared length over the cap without reading', async () => {
+    // Arrange
+    const { request, result } = body(undefined, { 'Content-Length': String(MAX_FETCH_BYTES + 1) });
+
+    // Assert
+    await expect(result).resolves.toMatchObject({ success: false, error: { name: 'RESPONSE_TOO_LARGE_ERROR' } });
+    expect(request.abort).toHaveBeenCalledOnce();
   });
 });
 

@@ -51,7 +51,6 @@ function isPlausible(first: string, second: string, interval: SalaryInterval | u
  * A salary label read from posting text, such as `$150,000–$190,000`, `45 000 € - 55 000 € par an`
  * or `€60k–€75k`. A range needs a currency on at least one side so that years and headcounts do not
  * read as pay.
- * @returns undefined when the text states no salary
  */
 export function salaryFromText(text: string): string | undefined {
   const plain = decodeText(text.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ');
@@ -99,7 +98,6 @@ function hasAmount(min: number | undefined, max: number | undefined): boolean {
   return (min ?? 0) > 0 || (max ?? 0) > 0;
 }
 
-/** A label for a structured pay range. */
 export function salaryFromRange(min: number | undefined, max: number | undefined, currency: string | undefined, interval: SalaryInterval | undefined): string | undefined {
   if (!currency || !hasAmount(min, max)) {
     return undefined;

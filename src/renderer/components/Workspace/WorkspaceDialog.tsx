@@ -25,7 +25,6 @@ export interface WorkspaceDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onBrowseFeedpacks?: (draft: { name: string; icon: WorkspaceIconName; color: string }) => void;
-  /** The workspace to edit. Omitted, the dialog creates a new one. */
   workspace?: WorkspaceSummary;
 }
 

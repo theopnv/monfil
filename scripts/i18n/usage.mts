@@ -8,7 +8,6 @@ import ts from 'typescript';
 import { splitPlural } from './catalog.mts';
 
 export interface UsageIndex {
-  /** Every string that appears in the source as a whole literal. */
   literals: ReadonlySet<string>;
   /** The fixed start of every template literal that continues with a value, such as `codes.` in `` `codes.${name}` ``. */
   prefixes: readonly string[];
@@ -48,14 +47,12 @@ function candidates(id: string): string[] {
   }
 }
 
-/** Whether some source file names the unit, directly or through a template literal prefix. */
 export function isUsed(id: string, usage: UsageIndex): boolean {
   return candidates(id).some((name) => usage.literals.has(name) || usage.prefixes.some((prefix) => name.startsWith(prefix)));
 }
 
 const SKIPPED_DIRECTORIES = new Set(['node_modules', 'locales', '__screenshots__']);
 
-/** The source files whose strings can name a translation key: everything under `src/` except tests and the locale files. */
 export function listSourceFiles(root: string): string[] {
   const found: string[] = [];
   const walk = (directory: string): void => {

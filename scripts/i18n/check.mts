@@ -10,7 +10,6 @@ export type Lock = Record<string, Record<string, string>>;
 
 export interface LanguageData {
   units: readonly Unit[];
-  /** The namespaces that have no file in this language. */
   missingFiles: readonly string[];
 }
 
@@ -24,19 +23,15 @@ export interface CheckInput {
 export interface LanguageReport {
   /** English units with no translation, or with plural forms that the language needs and lacks. */
   missing: string[];
-  /** Translations whose English text changed after they were made. */
   stale: string[];
   /** Translations that no lock entry covers, such as a hand-written one. */
   unlocked: string[];
-  /** Translations of English units that no longer exist. */
   unused: string[];
-  /** Translations that add, or drop, a `{{value}}` or a `<tag>`. */
   placeholders: string[];
   missingFiles: string[];
 }
 
 export interface CheckReport {
-  /** English units that no source file names. */
   unusedEnglish: string[];
   languages: Record<string, LanguageReport>;
 }
@@ -74,7 +69,6 @@ function compare(english: readonly Unit[], translated: ReadonlyMap<string, Unit>
   return { missing, stale, unlocked, unused, placeholders };
 }
 
-/** Compares every language with the English source. Plural forms are checked per language by {@link checkPlurals}. */
 export function check(input: CheckInput): CheckReport {
   const languages: Record<string, LanguageReport> = {};
   for (const [language, data] of Object.entries(input.languages)) {
@@ -85,7 +79,6 @@ export function check(input: CheckInput): CheckReport {
   return { unusedEnglish: input.english.filter((unit) => !isUsed(unit.id, input.usage)).map((unit) => unit.id), languages };
 }
 
-/** Plural units that a translation has, but without every form its language needs. */
 function checkPlurals(english: readonly Unit[], data: LanguageData, language: string, alreadyMissing: readonly string[]): string[] {
   const translated = new Map(data.units.map((unit) => [unit.id, unit]));
   const incomplete: string[] = [];
@@ -124,7 +117,6 @@ export function updatedLock(input: CheckInput, report: CheckReport): Lock {
   return { ...input.lock, ...lock };
 }
 
-/** The problems in a report, one line each, grouped by what to do about them. */
 export function describe(report: CheckReport, options: { requireAllLanguages: readonly string[] }): string[] {
   const lines: string[] = [];
   for (const id of report.unusedEnglish) {

@@ -18,7 +18,6 @@ export function languageOfTag(tag: string): LanguageCode | null {
   return isLanguageCode(locale.language) ? locale.language : null;
 }
 
-/** Picks the first system language, in the user's order, that Monfil supports. Falls back to English. */
 export function resolveSystemLanguage(systemLanguages: readonly string[]): LanguageCode {
   for (const tag of systemLanguages) {
     const language = languageOfTag(tag);

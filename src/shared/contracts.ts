@@ -14,10 +14,8 @@ export const HOME_WORKSPACE_ID = 1;
 
 export const SOURCE_TYPES = ['rss', 'youtube', 'github', 'gitlab', 'hackernews', 'arxiv', 'bluesky', 'mastodon', 'conference', 'ats'] as const;
 export type SourceType = typeof SOURCE_TYPES[number];
-/** How often the feeds refresh, in minutes, or never. */
 export const REFRESH_INTERVALS = [15, 30, 60, 360, 'manual'] as const;
 export type RefreshInterval = typeof REFRESH_INTERVALS[number];
-/** How long an item stays, in days. */
 export const RETENTION_OPTIONS = [15, 30, 60, 90, 180] as const;
 export type RetentionDays = typeof RETENTION_OPTIONS[number];
 
@@ -174,7 +172,6 @@ export type FeedSummary = FeedMetadata & {
 
 export type WorkspaceSummary = Workspace & { hasUnread: boolean };
 
-/** What a job card shows beyond the title, read from an `ats` item's `extra` JSON. */
 export interface JobDetails {
   company: string | undefined;
   location: string | undefined;
@@ -393,7 +390,6 @@ export interface UsagePreferences {
 
 export type DailySummaryProps = Record<string, string | number>;
 
-/** The language choice, the language it resolves to now, and the language the operating system asks for. */
 export interface LanguageState {
   setting: LanguageSetting;
   language: LanguageCode;

@@ -8,17 +8,17 @@ Before adding or changing a test, answer:
 2. What credible regression makes it fail?
 3. Why doesn't existing coverage catch that?
 4. Does it need a production seam no production caller uses?
+
 If any answer is missing, do not add the test.
 
 Reject:
-Tautological tests that verify the testing framework or mock objects instead of application code.
-Over-mocking, where dependencies are stubbed so heavily the test runs in a vacuum.
-Happy-path-only coverage that avoids critical error boundaries entirely.
-Copied assertions, where the test blindly asserts whatever wrong value the function currently returns.Assertion-free tests, self-comparisons, expected values
-computed by the code under test, mocks that implement the asserted
-behavior, string greps of source, tests that break on behavior-
-preserving refactors.
+- Tautological tests that verify the testing framework or mock objects instead of application code.
+- Over-mocking, where dependencies are stubbed so heavily that the test runs in a vacuum.
+- Happy-path-only coverage that avoids the critical error boundaries.
+- Copied assertions, where the test asserts whatever wrong value the function returns now.
+- Assertion-free tests and self-comparisons.
+- Expected values computed by the code under test, and mocks that implement the asserted behavior.
+- String greps of source.
+- Tests that break on behavior-preserving refactors.
 
-Keep: public API, protocol, config, migration, security, release
-contracts. Slow or static is not a reason to delete.
-
+Keep tests of the public API, protocols, config, migrations, security, and release contracts. A test that is slow or static is no reason to delete it.

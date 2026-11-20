@@ -52,15 +52,12 @@ export interface RiverHeaderProps {
   hasFeeds: boolean;
   /** The feeds the river shows, so the Refresh pill only appears for items that will land in it. */
   visibleFeedIds: ReadonlySet<number>;
-  /** Called after the Refresh pill loads the new items into the river. */
   onPendingApplied?: () => void;
   savedView?: boolean;
-  /** The active workspace's feeds, for the strip that explains an active filter. */
   feeds: FeedSummary[];
   showOnlyLinks: ReadonlySet<string>;
   onClearFocus: () => void;
   onShowHidden: (feedIds: number[]) => void;
-  /** Controls shown beside the search box, such as saving the search. */
   searchActions?: ReactNode;
 }
 

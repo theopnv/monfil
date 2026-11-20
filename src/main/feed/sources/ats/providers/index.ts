@@ -15,7 +15,6 @@ import { workable } from './workable';
 
 export const PROVIDERS: AtsProviderAdapter[] = [greenhouse, lever, ashby, workable, smartrecruiters, recruitee, teamtailor, personio];
 
-/** The ATS board a board page or API URL belongs to, or null. */
 export function toBoard(raw: string): AtsBoard | null {
   const url = toUrl(raw);
   if (!url) {

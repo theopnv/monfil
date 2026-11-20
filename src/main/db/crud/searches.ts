@@ -62,10 +62,6 @@ async function hintExampleFor(workspaceId: number, hintDismissed: boolean): Prom
   return hasAtsFeed ? pickHintExample([]) : undefined;
 }
 
-/**
- * The saved searches of a workspace in pill order, each with its unread count, plus the example for the
- * onboarding hint when it applies.
- */
 export async function listSavedSearches(workspaceId: number): Promise<SavedSearchList> {
   await dbReady;
   const rows = await db.selectFrom('savedSearch').selectAll().where('workspace_id', '=', workspaceId).orderBy('position').orderBy('id').execute();

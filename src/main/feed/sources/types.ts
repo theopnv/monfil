@@ -19,14 +19,11 @@ export interface ParsedFeedContent {
 
 export interface SourceFetchInput {
   link: string;
-  /** Validators from the feed's previous fetch, replayed as conditional GET headers. */
   validators?: FetchValidators;
 }
 
-/** A parsed feed, plus the validators the fetch returned for the next conditional GET. */
 export type SourceFetchResult = { parsed: ParsedSource; validators: FetchValidators } | NotModified;
 
-/** One feed URL that a link the user typed leads to, before it is fetched. */
 export interface FeedCandidate {
   link: string;
   label?: string;
@@ -46,9 +43,7 @@ export interface SourceAdapter {
   readonly fetchesFullArticle: boolean;
   /** Whether the raw wizard text belongs to this source when no chip is picked. Must not touch the network. */
   matches(query: string): boolean;
-  /** Turns the raw wizard text into the feeds it leads to, fetched and parsed, default first. */
   discover(query: string): Promise<Result<ParsedSource[], FeedFetchError>>;
-  /** Retrieves and parses a stored subscription at `link`. */
   fetch(input: SourceFetchInput): Promise<Result<SourceFetchResult, FeedFetchError>>;
   /** Parses already-retrieved content, so callers can test the parse without the network. */
   parse(content: string): ParsedFeedContent | null;

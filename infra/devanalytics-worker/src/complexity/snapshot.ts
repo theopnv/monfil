@@ -53,7 +53,6 @@ function parseFunction(value: unknown, index: number): FunctionRow {
   };
 }
 
-/** Checks a snapshot written by `scripts/complexity/index.mts`. */
 export function parseSnapshot(value: unknown): Snapshot {
   const snapshot = expectObject(value, 'snapshot');
   const functions = snapshot['functions'];

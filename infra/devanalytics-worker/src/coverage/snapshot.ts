@@ -20,7 +20,6 @@ export type TestSuite = (typeof TEST_SUITES)[number];
 
 const TEST_COUNTS = ['files', 'tests', 'passed', 'failed', 'skipped'] as const;
 
-/** The counts of one test run, in the order of the table columns. */
 export type TestCounts = Record<(typeof TEST_COUNTS)[number], number>;
 
 export interface CoverageSnapshot {
@@ -87,7 +86,6 @@ function parseTests(value: unknown): CoverageSnapshot['tests'] {
   };
 }
 
-/** Checks a snapshot written by `scripts/coverage/merge.mts`. */
 export function parseCoverageSnapshot(value: unknown): CoverageSnapshot {
   const snapshot = expectObject(value, 'snapshot');
   const suites = expectObject(snapshot['suites'], 'suites');

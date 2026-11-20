@@ -11,11 +11,9 @@ type DbFailure = Failure<{ name: 'DB_ERROR'; message: string; params?: ErrorPara
 interface DbTryOptions<K> {
   /** Turns an error that the caller expects, such as a constraint violation, into its own failure. */
   mapKnown: (error: unknown) => K | undefined;
-  /** The message for a thrown value that is not an `Error`. */
   fallback?: string;
 }
 
-/** Whether a database error carries this SQLite result code, such as `SQLITE_CONSTRAINT_UNIQUE`. */
 export function hasSqliteCode(error: unknown, code: string): boolean {
   return error instanceof Error && 'code' in error && error.code === code;
 }

@@ -24,7 +24,7 @@ Run commands from the repository root unless a command says otherwise.
 | Run renderer tests in Chromium | `npm run test:integration` |
 | Build and run Electron end-to-end tests | `npm run test:e2e` |
 | Run all test suites | `npm test` |
-| Run Vitest with coverage (report in `.vitest/`) | `npm run coverage:vitest` |
+| Run Vitest with coverage (report in `.vitest/coverage/`) | `npm run coverage:vitest` |
 | Run the end-to-end tests on an instrumented build | `COVERAGE=1 npm run test:e2e` |
 | Merge the Vitest and e2e coverage (`coverage/merged/`, `coverage/snapshot.json`) | `npm run coverage:merge` |
 | Mutation-test the files changed against `main` (report in `.mutation/`) | `npm run mutate` |
@@ -57,11 +57,12 @@ In VS Code, the `Main + renderer` compound launch configuration debugs both Elec
 - Pick the commit type and the PR title by what users of the shipped app see, because semantic-release reads them. `feat` makes a minor release and `fix` or `perf` makes a patch release. Use them only for a change in the packaged app, under `src/`. Use `ci`, `build`, `test`, `chore`, `docs`, or `refactor` for CI, tooling, scripts, `infra/`, tests, configs, and documentation, which release nothing. When in doubt, choose the type that releases nothing. A squash merge takes the PR title as its commit, so it follows the same rule. Check the type of every commit and the PR title before you push.
 - For a bug fix, first add a test that fails for the reported behavior. Then fix the code and run the affected test again.
 - Keep unit tests next to source as `*.test.ts` or `*.test.tsx`. Put Electron end-to-end tests in `test/e2e/*.spec.ts`, and build them on `test/e2e/fixtures.ts`. They run on two workers (one on the macOS and Windows runners of CI), so each test needs its own profile and a free port, which `launchApp` and `serve` give. Main-process tests share `src/main/test/` (`useTestDatabase`, `makeFeedInput`, `makeItem`). Renderer component tests run in Vitest Browser Mode, not the Node suite.
+- Before you add, change, or prune a test, apply `.ai/skills/test-audit/SKILL.md`.
 - After you write or change tests for a module, run `npm run mutate -- <path>` on it. Kill each survivor with a test, or suppress a proven equivalent mutant with `// Stryker disable next-line <mutator>: <reason>`. Use `.ai/skills/test-quality/SKILL.md` to improve or prune the tests of a path from its results.
 - Test observable behavior. Use fixtures and setup or teardown hooks when they help. Mark test phases with `// Arrange`, `// Act`, and `// Assert`. Use `vi.mock(import('./module.ts'))` for Vitest module mocks.
 - Functions in `src/` must stay at or below cognitive complexity 15 and cyclomatic complexity 10. Test files and `src/renderer/components/untitled-ui/` have no limit. Split a function that goes above a limit. Do not add a suppression. `eslint-suppressions.json` holds the old violations. When you bring old code below a limit, run `npx eslint --prune-suppressions .` and commit the smaller file.
 - Run focused checks for the area you changed. Run `npm run lint` for TypeScript changes. Run broader suites when a change crosses process boundaries or affects packaging, migrations, or security.
 - Keep repository paths relative to its root in code, comments, docs, tests, and CI. Do not add machine-specific paths or identifiers.
-- Add a code comment only when it explains a lasting constraint that the code cannot show. Keep existing comments unless the constraint has changed. Use JSDoc for important external APIs and helpers.
+- Write a comment only for a lasting constraint the code cannot show. Delete comments that repeat the code, and JSDoc that repeats the signature.
 - Keep documentation filenames in kebab case. The public site lives under `doc/src/content/docs/`.
 - Do not overwrite unrelated work in the working tree. Finish the requested change, check the diff, and report any checks you could not run.

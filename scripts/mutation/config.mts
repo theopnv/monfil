@@ -6,17 +6,12 @@ export const OUTPUT_DIR = '.mutation';
 
 const VITEST_CONFIG: Record<MutationSuite, string> = {
   unit: 'vitest.node.config.mts',
-  integration: 'vitest.browser.config.mts',
 };
-
-/** Each Chromium page takes far more memory than a Node worker, and the browser suite already runs its files one at a time. */
-const CONCURRENCY: Partial<Record<MutationSuite, number>> = { integration: 2 };
 
 export function reportPath(suite: MutationSuite, extension: 'json' | 'html'): string {
   return path.join(OUTPUT_DIR, suite, `mutation.${extension}`);
 }
 
-/** The options of one Stryker run. `mutate` takes files or globs, relative to the repository root. */
 export function strykerOptions(suite: MutationSuite, mutate: string[]): PartialStrykerOptions {
   return {
     testRunner: 'vitest',
@@ -43,6 +38,5 @@ export function strykerOptions(suite: MutationSuite, mutate: string[]): PartialS
     cleanTempDir: 'always',
     // A linked node_modules would share the Vitest module cache with the repository, and each side clears it for the other because they hash the lockfile differently.
     symlinkNodeModules: false,
-    ...(CONCURRENCY[suite] && { concurrency: CONCURRENCY[suite] }),
   };
 }

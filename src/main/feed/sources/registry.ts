@@ -33,18 +33,13 @@ const sources = {
 // Checked in order, so a more specific source must come before a broader one. RSS takes the rest.
 const DETECTION_ORDER: SourceAdapter[] = [atsSource, youtubeSource, githubSource, gitlabSource, hackernewsSource, arxivSource, blueskySource, mastodonSource, conferenceSource];
 
-/**
- * The adapter that owns a stored feed.
- * @param type the `type` column of the feed's row
- */
 export function sourceFor(type: SourceType): SourceAdapter {
   return sources[type];
 }
 
 /**
  * The adapter to use for a link the user has just typed, before anything about it is stored.
- * @param link the raw text from the Add Feed wizard
- * @param hint the Step 1 chip, when the user has picked a type explicitly rather than leaving it to host sniffing
+ * `hint` is the Step 1 chip, when the user picked a type explicitly instead of leaving it to host sniffing.
  */
 export function resolveSource(link: string, hint?: SourceType): SourceAdapter {
   if (hint) {

@@ -14,7 +14,6 @@ import { useActiveWorkspaceId } from "@/lib/active-workspace";
 import { useResultMutation } from "@/lib/use-result-mutation";
 import { applyRefreshNow } from '../lib/push-events';
 
-/** Every feed placed in the active workspace. */
 export const useFeeds = (): FeedSummary[] => {
   const workspaceId = useActiveWorkspaceId();
   const { data } = useQuery(feedsQuery(workspaceId));
@@ -28,7 +27,6 @@ export const useFeedsPending = (): boolean => {
   return isPending;
 };
 
-/** Every category in the active workspace, including ones with no feeds in them yet. */
 export const useCategories = (): FeedCategory[] => {
   const workspaceId = useActiveWorkspaceId();
   const { data } = useQuery(categoriesQuery(workspaceId));

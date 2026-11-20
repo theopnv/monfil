@@ -5,7 +5,6 @@
 import { app } from 'electron';
 import { resolveAnalyticsEndpoint, type AnalyticsEndpoint } from './endpoint';
 
-/** The endpoint for this build, or the reason there is none. */
 export function getAnalyticsEndpoint(): AnalyticsEndpoint {
   return resolveAnalyticsEndpoint({
     key: import.meta.env.MONFIL_APTABASE_KEY,

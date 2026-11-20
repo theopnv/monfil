@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import RiverHeader from "@/components/Home/RiverHeader";
 import RiverBody, { riverView } from "@/components/Home/RiverBody";
 import SearchPills from "@/components/Home/SearchPills";
@@ -52,7 +52,6 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
   const { query: searchQuery, setQuery: setSearchQuery } = useSearch(savedView);
   const pills = useSearchPills(searchQuery, setSearchQuery);
 
-  // The corpus-wide unread count of the visible feeds. Comes from FeedSummary.
   const unreadCount = useMemo(
     () => feeds.filter((feed) => visibleFeedIdsSet.has(feed.id)).reduce((sum, feed) => sum + feed.unreadCount, 0),
     [feeds, visibleFeedIdsSet],
@@ -82,15 +81,21 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
     }
   }, [debouncedSearch]);
 
+  // Read through a ref so the callback keeps its identity when one item changes, and the memoized cards stay as they are.
+  const openState = useRef({ visibleItems, openLinksExternally: preferences.openLinksExternally, markRead, onOpenItem });
+  useLayoutEffect(() => {
+    openState.current = { visibleItems, openLinksExternally: preferences.openLinksExternally, markRead, onOpenItem };
+  });
   const handleOpen = useCallback((id: number) => {
-    const item = visibleItems.find((candidate) => candidate.id === id);
-    if (preferences.openLinksExternally && item?.link) {
+    const { visibleItems: items, openLinksExternally, markRead: mark, onOpenItem: open } = openState.current;
+    const item = items.find((candidate) => candidate.id === id);
+    if (openLinksExternally && item?.link) {
       openLink(item.link);
-      markRead(id);
+      mark(id);
       return;
     }
-    onOpenItem(id);
-  }, [visibleItems, preferences.openLinksExternally, markRead, onOpenItem]);
+    open(id);
+  }, []);
 
   const applyVisibility = useCallback(async (targets: FeedSummary[], target: FeedVisibility) => {
     if (savedView) {

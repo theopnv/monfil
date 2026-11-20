@@ -2,7 +2,7 @@
 title: Dependency rules
 description: The folder layers in src/ and the dependency-cruiser rules that keep them free of cycles.
 sidebar:
-  order: 11
+  order: 13
 ---
 
 Monfil keeps the import graph of `src/` free of cycles, between files and between folders. [dependency-cruiser](https://github.com/sverweij/dependency-cruiser) checks the graph with the rules in `.dependency-cruiser.cjs`. `npm run lint` runs it, so the pre-commit hook and CI fail on a violation. Run only this check with:

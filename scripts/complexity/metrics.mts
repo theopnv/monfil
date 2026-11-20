@@ -127,7 +127,6 @@ export async function collect(root: string): Promise<CollectResult> {
   return { records, warnings };
 }
 
-/** Measures the checkout at `root` and adds the sha and commit date of its HEAD. */
 export async function snapshot(root: string): Promise<{ snapshot: Snapshot; warnings: string[] }> {
   const { records, warnings } = await collect(root);
   return { snapshot: { ...headCommit(root), functions: records }, warnings };

@@ -13,6 +13,7 @@ function escapeLike(word: string): string {
 }
 
 const SHORT_WORD = /^[\p{L}\p{N}]{1,3}$/u;
+const MAX_WORD_PATTERNS = 256;
 const wordPatterns = new Map<string, RegExp>();
 
 // A short bare word such as "ci" would otherwise match inside "producing", so it must be a whole word.
@@ -28,12 +29,15 @@ function hasWord(text: unknown, word: unknown): number {
   let pattern = wordPatterns.get(word);
   if (!pattern) {
     pattern = new RegExp(`(?<![\\p{L}\\p{N}])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'iu');
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: a cache miss rebuilds the same pattern, so the cap is invisible to callers
+    if (wordPatterns.size >= MAX_WORD_PATTERNS) {
+      wordPatterns.clear();
+    }
     wordPatterns.set(word, pattern);
   }
   return pattern.test(text) ? 1 : 0;
 }
 
-/** Adds the SQL functions that river search conditions call. */
 export function registerSearchFunctions(sqlite: SQLite.Database): void {
   sqlite.function('has_word', { deterministic: true }, hasWord);
 }
@@ -57,10 +61,7 @@ function termExpression(term: SearchTerm): Expression<SqlBool> {
   return eb.or(columns.map((column) => sql<boolean>`${column} like ${pattern} escape '\\'`));
 }
 
-/**
- * The WHERE condition for a river search over a query that aliases the item table as `i` and the feed table as `f`.
- * @returns undefined when the search holds no term
- */
+/** The WHERE condition for a river search over a query that aliases the item table as `i` and the feed table as `f`. */
 export function searchCondition(search: string | undefined): Expression<SqlBool> | undefined {
   const clauses = parseSearchQuery(search ?? '');
   if (clauses.length === 0) {

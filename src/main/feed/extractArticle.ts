@@ -105,31 +105,33 @@ function prepareEmbeds(document: Document, baseUrl: string): void {
   }
 }
 
-/**
- * Runs Readability over a fetched page and sanitizes the result.
- * @param pageHtml the raw HTML of the article page
- * @param url the page's URL, used to resolve relative links and image sources in the extracted markup
- * @returns the extracted article, or `undefined` when Readability finds no content
- */
+/** Runs Readability over a fetched page and sanitizes the result. */
 export function extractArticle(pageHtml: string, url: string): ExtractedArticle | undefined {
   // `url` sets `document.baseURI`/`documentURI`, which is what Readability resolves relative
   // links and image sources against. Scripts and external resources are never fetched or run:
   // jsdom's `runScripts`/`resources` options are left at their safe (disabled) defaults.
   const dom = new JSDOM(pageHtml, { url });
-  prepareImages(dom.window.document, url);
-  removeSiteModules(dom.window.document);
-  const article = new Readability(dom.window.document).parse();
-  if (!article?.content || !article.textContent?.trim()) {
-    return undefined;
+  let contentDom: JSDOM | undefined;
+  try {
+    prepareImages(dom.window.document, url);
+    removeSiteModules(dom.window.document);
+    const article = new Readability(dom.window.document).parse();
+    if (!article?.content || !article.textContent?.trim()) {
+      return undefined;
+    }
+
+    contentDom = new JSDOM(article.content, { url });
+    prepareEmbeds(contentDom.window.document, url);
+    const purify = createDOMPurify(dom.window);
+    const body = purify.sanitize(contentDom.window.document.body.innerHTML, { ...SANITIZE_CONFIG, RETURN_DOM: true }) as HTMLElement;
+    // Stryker disable next-line OptionalChaining: the textContent of an element is never null
+    const text = body.textContent?.trim() ?? '';
+
+    return { html: body.innerHTML, text, wordCount: countWords(text) };
+  } finally {
+    dom.window.close();
+    contentDom?.window.close();
   }
-
-  const contentDom = new JSDOM(article.content, { url });
-  prepareEmbeds(contentDom.window.document, url);
-  const purify = createDOMPurify(dom.window);
-  const html = purify.sanitize(contentDom.window.document.body.innerHTML, SANITIZE_CONFIG);
-  const text = new JSDOM(html).window.document.body.textContent?.trim() ?? '';
-
-  return { html, text, wordCount: countWords(text) };
 }
 
 export function deriveArticleContentStatus(article: ExtractedArticle | undefined): ArticleContentStatus {

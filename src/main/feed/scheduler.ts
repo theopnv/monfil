@@ -38,9 +38,8 @@ function armTimer(interval: RefreshInterval): void {
 }
 
 /**
- * Refreshes every feed once, then again on each period of the stored interval. Each cycle broadcasts
- * its result on `feeds:list`. The launch refresh runs even when the interval is `manual`, unless the
- * refresh-on-launch preference is off.
+ * Refreshes every feed once, then again on each period of the stored interval. The launch refresh runs even
+ * when the interval is `manual`, unless the refresh-on-launch preference is off.
  */
 export async function startRefreshScheduler(): Promise<void> {
   const [interval, onLaunch, retentionDays] = await Promise.all([getRefreshInterval(), getRefreshOnLaunch(), getRetentionDays()]);
@@ -55,15 +54,11 @@ export async function startRefreshScheduler(): Promise<void> {
   }
 }
 
-/**
- * Replaces the period of the repeating refresh, without refreshing right away.
- * @param interval the new interval, `manual` to stop repeating
- */
 export function rescheduleRefresh(interval: RefreshInterval): void {
   armTimer(interval);
 }
 
-/** Disarms the timer. A cycle that is already in flight still finishes. */
+/** A cycle that is already in flight still finishes. */
 export function stopRefreshScheduler(): void {
   if (timer === undefined) {
     return;

@@ -8,7 +8,6 @@ export type FunctionNode =
 export interface NamedFunction {
   node: FunctionNode;
   qualifiedName: string;
-  /** Start of the function, or of its key when it is a method or property value. */
   start: TSESTree.Position;
   end: TSESTree.Position;
 }
@@ -169,7 +168,6 @@ const NAMERS: Partial<Record<AST_NODE_TYPES, Namer>> = {
   },
 };
 
-/** Finds the first ancestor above any wrapper expressions, and the node right below it. */
 function namingParent(node: TSESTree.Node, ancestors: TSESTree.Node[]) {
   let child = node;
   let index = ancestors.length - 1;
@@ -245,7 +243,6 @@ function isBefore(a: TSESTree.Position, b: TSESTree.Position): boolean {
   return a.line < b.line || (a.line === b.line && a.column < b.column);
 }
 
-/** Finds the innermost function that contains a position. `column` is 0-based, as in the AST. */
 export function findFunctionAt(functions: NamedFunction[], position: TSESTree.Position): NamedFunction | undefined {
   let best: NamedFunction | undefined;
   for (const candidate of functions) {

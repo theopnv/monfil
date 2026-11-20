@@ -27,10 +27,7 @@ function profileCandidate(actor: string): FeedCandidate {
   return { link: `https://bsky.app/profile/${actor}/rss` };
 }
 
-/**
- * The Bluesky profile feed a link or handle leads to.
- * @param lenient accept a bare custom-domain handle, for when the Bluesky chip is picked
- */
+/** The Bluesky profile feed a link or handle leads to. `lenient` accepts a bare custom-domain handle, for when the Bluesky chip is picked. */
 export function blueskyCandidates(raw: string, lenient: boolean): FeedCandidate[] | null {
   const trimmed = raw.trim();
   const handle = HANDLE_REGEX.exec(trimmed)?.[1];

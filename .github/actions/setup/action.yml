@@ -28,8 +28,7 @@ runs:
           package-lock.json
           doc/package-lock.json
 
-    # Resolved from package-lock.json rather than package.json so the cache key tracks the exact
-    # version npm ci will install, not just the semver range.
+    # Read from package-lock.json, so the cache key tracks the version npm ci installs.
     - name: Resolve pinned versions
       id: versions
       shell: bash
@@ -37,8 +36,7 @@ runs:
         echo "electron=$(node -p "require('./package-lock.json').packages['node_modules/electron'].version")" >> "$GITHUB_OUTPUT"
         echo "playwright=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
 
-    # @electron/get has no env var to redirect this; it always resolves to env-paths('electron').cache,
-    # which differs by OS. Listing all three candidate paths lets one cache step cover every runner.
+    # @electron/get caches under a per-OS path that cannot be redirected, so all three are listed.
     - name: Cache Electron download
       if: inputs.electron == 'true'
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9

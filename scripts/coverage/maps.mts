@@ -60,7 +60,6 @@ function restoreLocations(data: FileCoverageData): void {
   });
 }
 
-/** Re-keys a map by repository-relative paths and drops everything outside `src/`, so that maps from different checkouts compare. */
 export function rebase(map: CoverageMap, root: string): CoverageMap {
   const result = libCoverage.createCoverageMap({});
   for (const file of map.files()) {
@@ -96,7 +95,6 @@ export function fillMissing(map: CoverageMap, universe: CoverageMap): CoverageMa
   return result;
 }
 
-/** Merges maps by statement, function and branch location, so entries of different numbering add up. */
 export function mergeMaps(...maps: CoverageMap[]): CoverageMap {
   const result = libCoverage.createCoverageMap({});
   for (const map of maps) {
@@ -161,7 +159,6 @@ export function buildSuites(vitest: CoverageMap, e2e: CoverageMap): Snapshot['su
   return { vitest: summarize(vitest), e2e: summarize(e2eFull), merged: summarize(mergedMap), mergedMap };
 }
 
-/** Adds up one metric over the files. */
 export function total(files: FileSummary[], metric: 'lines' | 'statements' | 'functions' | 'branches'): Count {
   return files.reduce<Count>((sum, file) => [sum[0] + file[metric][0], sum[1] + file[metric][1]], [0, 0]);
 }

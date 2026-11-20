@@ -51,11 +51,9 @@ jobs:
       - if: steps.changes.outputs.code == 'true'
         run: npx vitest --run --project node eslint.config.test.ts
 
-      # Check that pack metadata matches its OPML sources.
       - if: steps.changes.outputs.code == 'true'
         run: npm run check:feedpacks
 
-      # Check that every translation matches the English text it was made from.
       - if: steps.changes.outputs.code == 'true'
         run: npm run i18n:check
 
@@ -68,7 +66,6 @@ jobs:
       - if: steps.changes.outputs.docs == 'true'
         run: npm --prefix doc run build
 
-      # Check that no translated docs page is missing or older than its English source.
       - if: steps.changes.outputs.docs == 'true'
         run: npm --prefix doc run check:translations
 

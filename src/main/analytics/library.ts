@@ -11,7 +11,6 @@ export interface LibraryState {
   feedKinds: string[];
 }
 
-/** Reads the library numbers that go into the summary. */
 export async function readLibraryState(): Promise<LibraryState> {
   await dbReady;
   const [feeds, workspaces, categories, kinds] = await Promise.all([

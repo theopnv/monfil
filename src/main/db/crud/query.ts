@@ -94,7 +94,6 @@ export async function countFeedMetadata(): Promise<number> {
  * Every feed placed in `workspaceId`, with its category and item counts, in one statement. No
  * items: use `queryRiverPage` for those. Scoping the join to one workspace is what keeps this one
  * row per feed even though a feed can hold a placement in several workspaces at once.
- * @param workspaceId the workspace to list feeds for
  */
 export async function queryFeedSummaries(workspaceId: number): Promise<FeedSummary[]> {
   await dbReady;
@@ -102,15 +101,15 @@ export async function queryFeedSummaries(workspaceId: number): Promise<FeedSumma
   const rows = await db.selectFrom('feedMetadata as f')
     .innerJoin('feedPlacement as p', (join) => join.onRef('p.feed_id', '=', 'f.id').on('p.workspace_id', '=', workspaceId))
     .innerJoin('feedCategory as c', 'c.id', 'p.category_id')
-    .leftJoin(
-      (eb) => eb.selectFrom('feedItem')
-        .select('feed_id')
-        .select((eb2) => eb2.fn.countAll<number>().as('itemCount'))
-        .select(() => sql<number>`count(*) filter (where read_at is null)`.as('unreadCount'))
-        .groupBy('feed_id')
-        .as('stats'),
-      (join) => join.onRef('stats.feed_id', '=', 'f.id'),
-    )
+    .select((eb) => eb.selectFrom('feedItem')
+      .select((eb2) => eb2.fn.countAll<number>().as('count'))
+      .whereRef('feedItem.feed_id', '=', 'f.id')
+      .as('itemCount'))
+    .select((eb) => eb.selectFrom('feedItem')
+      .select((eb2) => eb2.fn.countAll<number>().as('count'))
+      .whereRef('feedItem.feed_id', '=', 'f.id')
+      .where('feedItem.read_at', 'is', null)
+      .as('unreadCount'))
     .select((eb) => eb.selectFrom('feedPlacement as other')
       .select((eb2) => eb2.fn.countAll<number>().as('count'))
       .whereRef('other.feed_id', '=', 'f.id')
@@ -131,8 +130,6 @@ export async function queryFeedSummaries(workspaceId: number): Promise<FeedSumma
       'c.id as categoryId',
       'c.name as categoryName',
       'c.workspace_id as categoryWorkspaceId',
-      'stats.itemCount as itemCount',
-      'stats.unreadCount as unreadCount',
     ])
     .execute();
 
@@ -163,15 +160,13 @@ export async function queryWorkspaceSummaries(): Promise<WorkspaceSummary[]> {
   await dbReady;
 
   const rows = await db.selectFrom('workspace as w')
-    .leftJoin(
-      (eb) => eb.selectFrom('feedPlacement as p')
+    .select((eb) => eb.exists(
+      eb.selectFrom('feedPlacement as p')
         .innerJoin('feedItem as i', 'i.feed_id', 'p.feed_id')
-        .select('p.workspace_id')
-        .select(() => sql<number>`count(*) filter (where i.read_at is null)`.as('unreadCount'))
-        .groupBy('p.workspace_id')
-        .as('stats'),
-      (join) => join.onRef('stats.workspace_id', '=', 'w.id'),
-    )
+        .select(sql.lit(1).as('one'))
+        .whereRef('p.workspace_id', '=', 'w.id')
+        .where('i.read_at', 'is', null),
+    ).as('hasUnread'))
     .select([
       'w.id as id',
       'w.name as name',
@@ -181,7 +176,6 @@ export async function queryWorkspaceSummaries(): Promise<WorkspaceSummary[]> {
       'w.source_slug as source_slug',
       'w.source_version as source_version',
       'w.installed_at as installed_at',
-      'stats.unreadCount as unreadCount',
     ])
     .orderBy('w.position')
     .execute();
@@ -195,11 +189,10 @@ export async function queryWorkspaceSummaries(): Promise<WorkspaceSummary[]> {
     source_slug: row.source_slug,
     source_version: row.source_version,
     installed_at: row.installed_at,
-    hasUnread: (row.unreadCount ?? 0) > 0,
+    hasUnread: Boolean(row.hasUnread),
   }));
 }
 
-/** One workspace by id, or `undefined` if it does not exist. */
 export async function queryWorkspaceById(workspaceId: number): Promise<Workspace | undefined> {
   await dbReady;
   return db.selectFrom('workspace').selectAll().where('id', '=', workspaceId).executeTakeFirst();

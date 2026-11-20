@@ -10,9 +10,9 @@ import { falseSurvivors } from './report.mts';
 import { MUTATION_SUITES, splitTargets, SUITE_GLOBS, type MutationSuite } from './targets.mts';
 
 const USAGE = [
-  'Usage: npm run mutate -- [<path>...] [--all] [--suite unit|integration] [--base <ref>]',
+  'Usage: npm run mutate -- [<path>...] [--all] [--base <ref>]',
   'Without a path or --all, it mutates the source files that differ from the merge base with --base (default: main).',
-  'A path can be a file, a folder or a git pathspec. Reports go to .mutation/<suite>/.',
+  'A path can be a file, a folder or a git pathspec. Reports go to .mutation/unit/.',
 ].join('\n');
 
 const lines = (text: string) => text.split('\n').filter(Boolean);
@@ -53,15 +53,11 @@ async function main() {
     allowPositionals: true,
     options: {
       all: { type: 'boolean' },
-      suite: { type: 'string' },
       base: { type: 'string' },
     },
   });
-  if (values.suite !== undefined && !MUTATION_SUITES.includes(values.suite as MutationSuite)) {
-    throw new Error(`Unknown suite ${values.suite}.`);
-  }
   const selected = targets(values, positionals);
-  const suites = MUTATION_SUITES.filter((suite) => (values.suite ?? suite) === suite && selected[suite].length > 0);
+  const suites = MUTATION_SUITES.filter((suite) => selected[suite].length > 0);
   if (suites.length === 0) {
     process.stdout.write('No source file to mutate.\n');
     return;

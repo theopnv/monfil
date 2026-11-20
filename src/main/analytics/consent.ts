@@ -28,7 +28,6 @@ export interface PromptInput extends UsageAnalyticsPromptHistory {
 /**
  * Decides whether the consent card shows: after the user has a feed and has opened the app twice,
  * at most twice, and no more than once every 14 days.
- * @param input the consent, the library size, and the history of the card
  */
 export function shouldPromptForUsageAnalytics(input: PromptInput): boolean {
   if (input.consent !== 'unset' || input.feedCount < 1 || input.launchCount < MIN_LAUNCHES || input.promptCount >= MAX_PROMPTS) {
@@ -42,10 +41,6 @@ export async function loadUsageAnalyticsConsent(): Promise<void> {
   setCountingEnabled(await getUsageAnalyticsConsent() === 'granted');
 }
 
-/**
- * Reads the consent and whether the card shows now.
- * @param now the current time
- */
 export async function getUsageAnalyticsState(now = new Date()): Promise<UsageAnalyticsState> {
   const available = getAnalyticsEndpoint().name === 'ENABLED';
   const consent = await getUsageAnalyticsConsent();
@@ -58,11 +53,7 @@ export async function getUsageAnalyticsState(now = new Date()): Promise<UsageAna
   return { consent, shouldPrompt: shouldPromptForUsageAnalytics({ consent, feedCount, now, ...history }), available };
 }
 
-/**
- * Stores the user's choice. Withdrawing stops the counting at once and deletes every stored tally.
- * @param choice what the user picked
- * @param now the time of the choice
- */
+/** Stores the user's choice. Withdrawing stops the counting at once and deletes every stored tally. */
 export async function changeUsageAnalyticsConsent(choice: 'granted' | 'denied', now = new Date()): Promise<UsageAnalyticsState> {
   const wasGranted = isCountingEnabled();
   await setUsageAnalyticsConsent(choice, USAGE_ANALYTICS_NOTICE_VERSION, now);
@@ -75,10 +66,6 @@ export async function changeUsageAnalyticsConsent(choice: 'granted' | 'denied', 
   return getUsageAnalyticsState(now);
 }
 
-/**
- * Records that the user put the card off for later.
- * @param now the time the card was closed
- */
 export async function dismissUsageAnalyticsPrompt(now = new Date()): Promise<UsageAnalyticsState> {
   await recordUsageAnalyticsPromptDismissed(now);
   return getUsageAnalyticsState(now);

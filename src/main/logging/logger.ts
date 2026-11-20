@@ -68,11 +68,7 @@ type LogObserver = (event: LogEventName, data: LogEventMap[LogEventName], level:
 
 const observers = new Set<LogObserver>();
 
-/**
- * Calls `observer` for every record that is logged, so another module can react without the logger importing it.
- * @param observer receives the event, its data before redaction, and its level
- * @returns a function that removes the observer
- */
+/** Calls `observer` for every record that is logged, so another module can react without the logger importing it. */
 export function observeLogs(observer: LogObserver): () => void {
   observers.add(observer);
   return () => {

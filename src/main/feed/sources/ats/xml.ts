@@ -11,7 +11,6 @@ function escapeRegex(tag: string): string {
   return tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** The inner text of every `<tag>…</tag>` element in `xml`, raw. */
 export function blocks(xml: string, tag: string): string[] {
   const name = escapeRegex(tag);
   const pattern = new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`, 'g');
@@ -19,7 +18,6 @@ export function blocks(xml: string, tag: string): string[] {
   return [...xml.matchAll(pattern)].map((match) => match[1] ?? '');
 }
 
-/** Element text with CDATA unwrapped and entities decoded. Undefined when empty. */
 export function plain(raw: string): string | undefined {
   const cdata = /^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/.exec(raw);
   // Stryker disable next-line StringLiteral: the pattern always captures its group, so the fallback is never read
@@ -27,7 +25,6 @@ export function plain(raw: string): string | undefined {
   return text === '' ? undefined : text;
 }
 
-/** The text of the first `<tag>`. Undefined when absent or empty. */
 export function textOf(xml: string, tag: string): string | undefined {
   const [first] = blocks(xml, tag);
   return first === undefined ? undefined : plain(first);

@@ -37,9 +37,6 @@ function systemProps() {
 /**
  * Posts events to the analytics server in requests of at most 25 events. Each request gets a new random session id,
  * so no identifier ties one request to another.
- * @param endpoint where to post
- * @param events the events to post
- * @returns `ok` once every request got a 2xx answer, or the status of the first one that did not
  */
 export async function sendEvents(endpoint: Extract<AnalyticsEndpoint, { name: 'ENABLED' }>, events: readonly AnalyticsEvent[]): Promise<SendOutcome> {
   for (let start = 0; start < events.length; start += MAX_EVENTS_PER_REQUEST) {

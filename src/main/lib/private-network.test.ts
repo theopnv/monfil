@@ -53,6 +53,19 @@ describe('isPublicAddress', () => {
     '::ffff:127.0.0.1',
     '::ffff:10.0.0.1',
     '::ffff:c0a8:101',
+    '64:ff9b::7f00:1',
+    '64:ff9b::a9fe:a9fe',
+    '64:ff9b::808:808',
+    '64:ff9b:1::1',
+    '2002:7f00:1::1',
+    '2002:a9fe:a9fe::1',
+    '2002:808:808::1',
+    '::7f00:1',
+    '::a00:1',
+    '::808:808',
+    '::ffff:0:127.0.0.1',
+    '::ffff:0:7f00:1',
+    '::ffff:0:a9fe:a9fe',
   ])('%s is not public', (address) => {
     expect(isPublicAddress(address)).toBe(false);
   });
@@ -77,6 +90,9 @@ describe('isPublicAddress', () => {
     '2606:4700::1111',
     '2001:4860:4860::8888',
     '::ffff:8.8.8.8',
+    '2001:4860::1',
+    '2003::1',
+    '64:ff9a::1',
   ])('%s is public', (address) => {
     expect(isPublicAddress(address)).toBe(true);
   });

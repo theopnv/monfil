@@ -10,7 +10,6 @@ import { escapeText } from './text';
 import type { NewSourceItem, ParsedFeedContent, SourceAdapter, SourceFetchInput, SourceFetchResult } from './types';
 import { parseHttpUrl } from '../../../shared/url';
 
-/** A conference in a shape that does not depend on the dataset it came from. */
 export interface ConferenceEvent {
   name: string;
   /** UTC midnight of the first day, in ms. */
@@ -71,7 +70,6 @@ function siteUrl(raw: string): URL | null {
   return url && HOSTS.has(url.hostname.toLowerCase()) ? url : null;
 }
 
-/** The developers.events filters in a link that the feed cannot apply, such as `region` or `callForPapers`. */
 export function unsupportedLinkFilters(raw: string): string[] {
   const url = siteUrl(raw);
   if (!url) {
@@ -83,10 +81,6 @@ export function unsupportedLinkFilters(raw: string): string[] {
   });
 }
 
-/**
- * Reads the filter out of a developers.events link.
- * @returns null when the link is not on developers.events
- */
 export function parseConferenceLink(raw: string): ConferenceFilter | null {
   const url = siteUrl(raw);
   if (!url) {
@@ -107,10 +101,7 @@ export function buildConferenceLink(filter: ConferenceFilter): string {
   return params.length > 0 ? `${DATASET_URL}?${params.join('&')}` : DATASET_URL;
 }
 
-/**
- * Reads typed wizard text such as `devops, kubernetes in France, online`.
- * @returns null when the text names no topic and no place
- */
+/** Reads typed wizard text such as `devops, kubernetes in France, online`. */
 export function parseConferenceQuery(query: string): ConferenceFilter | null {
   const match = /^(.*?)(?:^|\s+)in\s+(.*)$/is.exec(query.trim());
   const topics = splitList(match ? match[1] : query);
@@ -370,10 +361,7 @@ function placeSuggestions(place: string, vocabulary: Vocabulary): string[] {
   return mostUsed([...vocabulary.places].filter(([known]) => isClose(key, known)).map(([, { name, count }]) => [name, count]));
 }
 
-/**
- * Explains the first topics or places that no event in the dataset uses.
- * @returns undefined when every term is known, even if no event matches them all now
- */
+/** Explains the first topics or places that no event in the dataset uses. */
 export function checkFilter(filter: ConferenceFilter, vocabulary: Vocabulary): FeedFetchError | undefined {
   const topics = filter.topics.filter((topic) => !vocabulary.topics.has(topic));
   if (topics.length > 0) {

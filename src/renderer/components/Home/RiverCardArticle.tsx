@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormatLocale } from "@/lib/i18n";
 import FeedAvatar from "@/components/common/FeedAvatar";
@@ -10,7 +11,7 @@ import RiverCardImage from "@/components/Home/RiverCardImage";
 import { CategoryChip, RiverCardShell, UnreadDot } from "@/components/Home/RiverCardShell";
 import { describeRiverCard, estimateReadTime, formatRelativeTime, type RiverCardProps } from "@/lib/river/utils";
 
-export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps) {
+function RiverCardArticle({ item, read, onOpen }: RiverCardProps) {
   const { t } = useTranslation('river');
   const locale = useFormatLocale();
   const time = formatRelativeTime(item.publishedAt, locale);
@@ -48,3 +49,5 @@ export default function RiverCardArticle({ item, read, onOpen }: RiverCardProps)
     </RiverCardShell>
   );
 }
+
+export default memo(RiverCardArticle);

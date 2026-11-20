@@ -10,7 +10,7 @@ import { notifyAction } from '@/lib/notifications';
 import { queryKeys } from '@/lib/queries';
 import type { AppUpdateState } from '../../shared/contracts';
 
-/** Offers a restart once the main process has downloaded an update. Mount once, under the IPC bridge. */
+/** Mount once, under the IPC bridge. */
 export function useUpdateNotification(): void {
   const { t } = useTranslation();
   const { data } = useQuery({

@@ -126,7 +126,6 @@ function bundledCatalogPath(): string {
 
 let catalog: ReturnType<typeof createCatalogService> | undefined;
 
-/** Loads the remote catalog only when the pack browser requests it. */
 export function getFeedpackCatalog(): Promise<Result<FeedpackCatalog, CatalogError>> {
   catalog ??= createCatalogService({
     fetch: fetchCatalogText,

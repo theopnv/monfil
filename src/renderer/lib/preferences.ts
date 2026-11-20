@@ -34,7 +34,6 @@ function loadBoolean(key: string, fallback: boolean): boolean {
   return typeof stored === 'boolean' ? stored : fallback;
 }
 
-/** Reads every preference from `localStorage`, falling back to its default when unset or invalid. */
 export function loadPreferences(): Preferences {
   return {
     density: loadEnum(STORAGE_KEYS.density, DENSITIES, 'Cards'),
@@ -45,7 +44,6 @@ export function loadPreferences(): Preferences {
   };
 }
 
-/** Persists a single preference to `localStorage`. */
 export function savePreference<K extends keyof Preferences>(key: K, value: Preferences[K]): void {
   writeLocalStorageJSON(STORAGE_KEYS[key], value);
 }

@@ -3,7 +3,6 @@ import type { Rule } from 'eslint';
 const DIRECTIVE = /^\s*Stryker\s+disable\b(.*)$/s;
 const NEXT_LINE = /^\s+next-line\s+([^:\s]+)\s*(?::(.*))?$/s;
 
-/** Checks one `Stryker disable` comment and gives the id of the message to report, or null. */
 export function strykerDisableProblem(text: string): 'nextLine' | 'all' | 'reason' | null {
   const directive = DIRECTIVE.exec(text);
   if (!directive) {
@@ -19,7 +18,6 @@ export function strykerDisableProblem(text: string): 'nextLine' | 'all' | 'reaso
   return (nextLine[2] ?? '').trim() === '' ? 'reason' : null;
 }
 
-/** Keeps each mutant suppression to one line, named mutators and a written reason. */
 export const strykerDisableRule: Rule.RuleModule = {
   meta: {
     type: 'suggestion',

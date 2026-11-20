@@ -13,7 +13,6 @@ SELECT ?1, ?2, value ->> 0, value ->> 1, value ->> 2, value ->> 3, value ->> 4,
   value ->> 5, value ->> 6, value ->> 7, value ->> 8, value ->> 9
 FROM json_each(?3)`;
 
-/** Replaces every row of the snapshot's sha. */
 export async function ingestComplexity(db: D1Database, snapshot: Snapshot): Promise<{ functions: number; folders: number; rowsWritten: number }> {
   const { sha, date } = snapshot;
   const functionRows = snapshot.functions.map((fn) =>

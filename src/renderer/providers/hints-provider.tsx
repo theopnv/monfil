@@ -10,7 +10,6 @@ import { feedsQuery, workspacesQuery } from '@/lib/queries';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
 
 interface HintsContextType {
-  /** The hint that may be open right now, if any. */
   openHint: HintId | undefined;
   setAnchor: (id: HintId, ready: boolean) => void;
   removeAnchor: (id: HintId) => void;
@@ -98,11 +97,7 @@ export const HintsProvider = ({ children }: PropsWithChildren) => {
   return <HintsContext.Provider value={value}>{children}</HintsContext.Provider>;
 };
 
-/**
- * Registers the calling component as the anchor of hint `id` while it is mounted.
- *
- * @return `isOpen` when the hint is the first unseen one and `ready`; `dismiss` marks it seen.
- */
+/** Registers the calling component as the anchor of hint `id` while it is mounted. */
 export function useHint(id: HintId, { ready }: { ready: boolean }): { isOpen: boolean; dismiss: () => void } {
   const { openHint, setAnchor, removeAnchor, dismiss } = useContext(HintsContext);
 

@@ -14,7 +14,6 @@ const EXAMPLES: Record<string, string> = {
 
 export const DEFAULT_HINT_EXAMPLE = EXAMPLES['analyst'] ?? '';
 
-/** The example query for the saved-search hint, chosen by the most common known role word in `titles`. */
 export function pickHintExample(titles: string[]): string {
   const counts = new Map<string, number>();
   for (const title of titles) {

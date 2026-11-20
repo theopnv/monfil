@@ -16,8 +16,11 @@ import { pressComposing } from '@/lib/test/press-composing';
 import { usePushEvents } from '@/lib/push-events';
 import { NotificationHost } from '@/lib/notifications';
 import River from './River';
+import { describeRiverCard } from '@/lib/river/utils';
 import { parseSearchQuery } from '../../../shared/search-query';
 import { HOME_WORKSPACE_ID, type FeedSummary, type RefreshSummary, type RiverPage, type RiverQuery, type RiverRow, type SavedQuery, type SavedSearch, type SetSavedItemInput, type WorkspaceSummary } from '../../../shared/contracts';
+
+vi.mock(import('@/lib/river/utils'), { spy: true });
 
 let nextFeedId = 1;
 let nextItemId = 1;
@@ -613,6 +616,29 @@ test('opening a link externally sends link:open, marks it read, and does not nav
     expect(invokeMock).toHaveBeenCalledWith('items:set-read', { itemIds: [row.id], read: true });
   });
   expect(onOpenItem).not.toHaveBeenCalled();
+});
+
+test('marking one item read draws only its card again', async () => {
+  // Arrange
+  localStorage.setItem('preferences-open-links-externally', JSON.stringify(true));
+  const feed = createFeed({ title: 'Feed X', link: 'https://x.example/feed' });
+  const rows = [createRow(feed, { title: 'First item' }), createRow(feed, { title: 'Second item' }), createRow(feed, { title: 'Third item' })];
+  allFeeds = [feed];
+  allRows = rows;
+  const { getByText } = await renderWithQueryClient(<Session><River onOpenItem={vi.fn()} /></Session>);
+  await expect.element(getByText('Third item', { exact: true })).toBeInTheDocument();
+  const drawn = () => vi.mocked(describeRiverCard).mock.calls.map(([item]) => item.id);
+  const others = rows.slice(1).map((other) => other.id);
+  const before = drawn().filter((id) => others.includes(id)).length;
+
+  // Act
+  await getByText('First item', { exact: true }).click();
+  await vi.waitFor(() => expect(invokeMock).toHaveBeenCalledWith('items:set-read', { itemIds: [rows[0]?.id], read: true }));
+  await vi.waitFor(() => expect(getByText('First item', { exact: true }).element().closest('[data-item-id]')?.className).toContain('opacity-50'));
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  // Assert
+  expect(drawn().filter((id) => others.includes(id)).length).toBe(before);
 });
 
 test('density reads from preferences', async () => {

@@ -13,6 +13,8 @@ const SIZES_REGEX = /\bsizes\s*=\s*["']?([^"'>]+)/i;
 const DARK_MEDIA_REGEX = /\bmedia\s*=\s*["'][^"']*prefers-color-scheme:\s*dark/i;
 const APPLE_TOUCH_ICON_SIZE = 180;
 const SCALABLE_ICON_SIZE = 512;
+// The icon is stored in the database and sent with every feed list, so an inline image has to stay small.
+export const MAX_DATA_ICON_LENGTH = 32_768;
 const FETCH_OPTIONS = { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true };
 
 interface IconLink {
@@ -43,6 +45,13 @@ function declaredSize(tag: string, rel: string, href: string): number {
   return rel.toLowerCase().includes('apple-touch-icon') ? APPLE_TOUCH_ICON_SIZE : 0;
 }
 
+function isAcceptedIconUrl(href: URL): boolean {
+  if (href.protocol === 'data:') {
+    return href.pathname.startsWith('image/') && href.href.length <= MAX_DATA_ICON_LENGTH;
+  }
+  return href.protocol === 'http:' || href.protocol === 'https:';
+}
+
 function toIconLink(tag: string, pageUrl: string): IconLink | undefined {
   const rel = attribute(tag, REL_REGEX);
   const raw = attribute(tag, HREF_REGEX);
@@ -56,8 +65,7 @@ function toIconLink(tag: string, pageUrl: string): IconLink | undefined {
   } catch {
     return undefined;
   }
-  const isImageData = href.protocol === 'data:' && href.pathname.startsWith('image/');
-  if (href.protocol !== 'http:' && href.protocol !== 'https:' && !isImageData) {
+  if (!isAcceptedIconUrl(href)) {
     return undefined;
   }
   // A dark-scheme variant is drawn for a dark page and can vanish on the app's light surfaces.
@@ -65,12 +73,7 @@ function toIconLink(tag: string, pageUrl: string): IconLink | undefined {
   return { href: href.href, score };
 }
 
-/**
- * Reads the icons a page declares with `<link rel="icon">` or `apple-touch-icon`, best first.
- * @param html the page markup
- * @param pageUrl the page address, which relative icon links resolve against
- * @returns absolute http(s) or `data:image` URLs, largest first and dark-scheme variants last
- */
+/** Reads the icons a page declares with `<link rel="icon">` or `apple-touch-icon`, best first. */
 export function extractIconLinks(html: string, pageUrl: string): string[] {
   // Stryker disable next-line ArrayDeclaration: a stand-in string has no rel or href, so it yields no icon
   const links = (html.match(LINK_TAG_REGEX) ?? []).flatMap((tag) => toIconLink(tag, pageUrl) ?? []);
@@ -78,7 +81,7 @@ export function extractIconLinks(html: string, pageUrl: string): string[] {
 }
 
 async function responds(url: string): Promise<boolean> {
-  const result = await fetchText(url, FETCH_OPTIONS);
+  const result = await fetchText(url, { ...FETCH_OPTIONS, headersOnly: true });
   return result.success;
 }
 
@@ -90,8 +93,6 @@ async function declaredIcon(siteUrl: URL): Promise<string | undefined> {
 /**
  * Finds the icon of the site behind a feed: the one its page declares, else `/favicon.ico`, else
  * DuckDuckGo's copy. Each fallback must answer 2xx, so a placeholder is never returned.
- * @param siteLink the site's home or section page, as the feed names it
- * @returns the icon URL, or undefined when the site has none
  */
 export async function resolveSiteIcon(siteLink: string): Promise<string | undefined> {
   const siteUrl = parseHttpUrl(siteLink);

@@ -13,7 +13,7 @@ import { logger } from '../logging/logger';
 import { titleBarOverlayForTheme } from '../app/window-chrome';
 import { incrementCounter } from '../analytics/counters';
 import { setPreferencesSnapshot } from '../analytics/preferences';
-import { isMenuTarget, isRendererUsageRecord, isRevealTarget, isUsagePreferences } from '../../shared/ipc-payloads';
+import { isLogLevel, isMenuTarget, isRendererUsageRecord, isRevealTarget, isUsagePreferences } from '../../shared/ipc-payloads';
 import { installUpdate } from '../updates/auto-updater';
 import { refreshFeeds } from '../feed/refresh';
 import { mainI18n } from '../lib/i18n';
@@ -52,7 +52,10 @@ export function listenToSetWindowTheme(event: IpcMainEvent, theme: OneWayRendere
 }
 
 export function listenToRendererLog(_event: IpcMainEvent, payload: OneWayRendererToMainChannelPayloads['log:write']) {
-  logger[payload.level](payload.event, payload.data, payload.error);
+  // A bad level would throw inside the listener and reach the fatal handler as an uncaught exception.
+  if (isLogLevel(payload?.level)) {
+    logger[payload.level](payload.event, payload.data, payload.error);
+  }
 }
 
 export function listenToUsageRecord(_event: IpcMainEvent, payload: OneWayRendererToMainChannelPayloads['usage:record']) {

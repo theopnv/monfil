@@ -37,7 +37,6 @@ export function parseJson(body: string): unknown {
   }
 }
 
-/** The values of a list that are present, joined as a location or similar label. */
 export function joinParts(parts: (string | undefined)[], separator = ', '): string | undefined {
   const present = [...new Set(parts.filter((part): part is string => part !== undefined))];
   return present.length > 0 ? present.join(separator) : undefined;

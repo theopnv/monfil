@@ -9,7 +9,6 @@ export function chunks<T>(items: T[], size: number = CHUNK_SIZE): T[][] {
   return result;
 }
 
-/** Adds up the rows that D1 reports as written for every statement of a batch. */
 export function rowsWritten(results: D1Result[]): number {
   return results.reduce((total, result) => total + (result.meta.rows_written ?? 0), 0);
 }

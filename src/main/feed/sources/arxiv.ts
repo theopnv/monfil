@@ -12,7 +12,6 @@ const FEED_REGEX = /^\/(?:rss|atom)\/[\w.+-]+\/?$/;
 // The feedsmith parse drops `arxiv:announce_type`, but arXiv repeats it at the head of every description.
 const REPLACEMENT_REGEX = /Announce Type:\s*replace/i;
 
-/** The arXiv category feed a listing link leads to. */
 export function arxivCandidates(raw: string): FeedCandidate[] | null {
   const url = toUrl(raw);
   const host = url?.hostname.toLowerCase();

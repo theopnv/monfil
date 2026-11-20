@@ -20,7 +20,6 @@ INSERT INTO coverage_tests (sha, date, suite, files, tests, passed, failed, skip
 SELECT ?1, ?2, value ->> 0, value ->> 1, value ->> 2, value ->> 3, value ->> 4, value ->> 5
 FROM json_each(?3)`;
 
-/** Replaces every row of the snapshot's sha. */
 export async function ingestCoverage(
   db: D1Database,
   snapshot: CoverageSnapshot,

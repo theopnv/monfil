@@ -12,6 +12,7 @@ import { getDetailedLogging } from './app/settings';
 import { allowPrivateHosts } from './lib/fetch';
 import { configureYouTubeEmbedReferrer, denyWebPermissions, hardenWebContents } from './app/window-security';
 import { startRefreshScheduler } from './feed/scheduler';
+import { ARTICLE_EXTRACTION_SERVICE_NAME } from './feed/extractArticleProtocol';
 
 const mockQuit = vi.fn();
 const mockRequestSingleInstanceLock = vi.fn(() => true);
@@ -331,7 +332,7 @@ describe('main', () => {
     // Assert
     expect(configureLogging).toHaveBeenNthCalledWith(1, logFilePath, false);
     expect(setLogFilePath).toHaveBeenCalledWith(logFilePath);
-    expect(installFatalHandlers).toHaveBeenCalledWith(logger, logFilePath, expect.any(Function));
+    expect(installFatalHandlers).toHaveBeenCalledWith(logger, logFilePath, expect.any(Function), [ARTICLE_EXTRACTION_SERVICE_NAME]);
   });
 
   test('turns on detailed logging once the database is open when the user enabled it', async () => {

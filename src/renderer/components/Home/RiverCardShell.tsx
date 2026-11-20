@@ -14,7 +14,6 @@ interface RiverCardShellProps extends RiverCardProps {
   children: ReactNode;
 }
 
-/** The element every river card layout shares: a button that opens the item, with a mouse and a keyboard. */
 export function RiverCardShell({ as: Tag, item, read, onOpen, label, className, children }: RiverCardShellProps) {
   return (
     <Tag
@@ -40,7 +39,6 @@ export function UnreadDot({ read }: { read: boolean }) {
   return <span aria-hidden className={cx('size-1.75 flex-none rounded-full', read ? 'bg-quaternary' : 'bg-brand-solid')} />;
 }
 
-/** The folder name of a card. `className` sets the padding, which differs per layout. */
 export function CategoryChip({ name, className }: { name: string; className: string }) {
   return <span className={cx('rounded-full bg-sage-200 text-xs font-semibold text-sage-800', className)}>{name}</span>;
 }

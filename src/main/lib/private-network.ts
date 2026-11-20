@@ -18,8 +18,14 @@ NON_PUBLIC_RANGES.addSubnet('192.168.0.0', 16, 'ipv4');
 NON_PUBLIC_RANGES.addSubnet('198.18.0.0', 15, 'ipv4');
 NON_PUBLIC_RANGES.addSubnet('224.0.0.0', 4, 'ipv4');
 NON_PUBLIC_RANGES.addSubnet('240.0.0.0', 4, 'ipv4');
-NON_PUBLIC_RANGES.addAddress('::', 'ipv6');
-NON_PUBLIC_RANGES.addAddress('::1', 'ipv6');
+// ::/96 covers the unspecified and loopback addresses and the deprecated IPv4-compatible form.
+NON_PUBLIC_RANGES.addSubnet('::', 96, 'ipv6');
+// IPv4-translated (SIIT) addresses embed an IPv4 address that BlockList does not unwrap, unlike the ::ffff:0:0/96 mapped form.
+NON_PUBLIC_RANGES.addSubnet('::ffff:0:0:0', 96, 'ipv6');
+// NAT64 and 6to4 turn an IPv6 address into a connection to the embedded IPv4 address, private ones included.
+NON_PUBLIC_RANGES.addSubnet('64:ff9b::', 96, 'ipv6');
+NON_PUBLIC_RANGES.addSubnet('64:ff9b:1::', 48, 'ipv6');
+NON_PUBLIC_RANGES.addSubnet('2002::', 16, 'ipv6');
 NON_PUBLIC_RANGES.addSubnet('fc00::', 7, 'ipv6');
 NON_PUBLIC_RANGES.addSubnet('fe80::', 10, 'ipv6');
 NON_PUBLIC_RANGES.addSubnet('ff00::', 8, 'ipv6');
@@ -27,9 +33,8 @@ NON_PUBLIC_RANGES.addSubnet('ff00::', 8, 'ipv6');
 export type HostClass = 'public' | 'private' | 'unresolvable';
 
 /**
- * Tells whether an IP address is routable on the public internet.
- * @param address an IPv4 or IPv6 literal without brackets; IPv4-mapped IPv6 forms are checked as IPv4
- * @returns false for loopback, link-local, private and reserved ranges, and for anything that is not an IP address
+ * Tells whether an IP address is routable on the public internet. Takes a literal without brackets; IPv4-mapped
+ * IPv6 forms are checked as IPv4, and anything that is not an IP address is not public.
  */
 export function isPublicAddress(address: string): boolean {
   const version = isIP(address);
@@ -40,10 +45,9 @@ export function isPublicAddress(address: string): boolean {
 }
 
 /**
- * Classifies a URL host by where its addresses point. A name that resolves to a mix of public and
- * private addresses counts as private, since the connection could land on either.
- * @param hostname a URL hostname: an IP literal (IPv6 may keep its brackets) or a DNS name
- * @returns 'unresolvable' when the name has no address or the lookup fails
+ * Classifies a URL host by where its addresses point. A name that resolves to a mix of public and private
+ * addresses counts as private, since the connection could land on either. An IPv6 literal may keep its brackets;
+ * 'unresolvable' means the name has no address or the lookup failed.
  */
 export async function classifyHost(hostname: string): Promise<HostClass> {
   const bare = hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname;

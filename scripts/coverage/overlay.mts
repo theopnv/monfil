@@ -15,7 +15,6 @@ export function forgeViteConfigs(forgeConfig: string): ViteConfigRef[] {
   }));
 }
 
-/** Names the file that keeps the original config: `vite.main.config.mts` becomes `vite.main.config.original.mts`. */
 export function originalName(file: string): string {
   return file.replace(/(\.[cm]?[jt]s)$/, '.original$1');
 }
@@ -25,7 +24,6 @@ function importPath(from: string, to: string): string {
   return relative.startsWith('.') ? relative : `./${relative}`;
 }
 
-/** Source of a config that adds the coverage plugins to the original one, whether that exports an object or a function. */
 export function wrapperSource(configFile: string, pluginsFile: string, target: CoverageTarget): string {
   return [
     "import { mergeConfig } from 'vite';",

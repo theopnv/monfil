@@ -41,7 +41,6 @@ function collectLeafFeeds(outlines: Opml.Outline<string>[] | undefined): ParsedO
  * database. A folder outline (no `xmlUrl`, holding other outlines) becomes a category; a leaf
  * outline sitting directly at the top level is grouped into one category named from the
  * document's own title.
- * @param xml the raw OPML document
  */
 export function parseOpmlDocument(xml: string): Result<ParsedOpml, ParseOpmlError> {
   let document: Opml.Document<string>;

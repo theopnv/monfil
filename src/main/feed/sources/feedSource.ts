@@ -33,11 +33,7 @@ const HTML_INSTEAD_OF_FEED = 'The site sent a web page instead of the feed. It m
 
 export type FetchedFeed = { parsed: ParsedFeedContent; body: string; validators: FetchValidators } | NotModified;
 
-/**
- * Fetches `link` and parses it as a feed.
- * @param validators replayed as conditional GET headers when present
- * @param blockPrivateHosts refuse loopback, link-local and private hosts, for links the user did not type
- */
+/** Fetches `link` and parses it as a feed. Set `blockPrivateHosts` for links the user did not type. */
 export async function fetchAndParse(link: string, validators: FetchValidators | undefined, parse: ContentParser, blockPrivateHosts = false): Promise<Result<FetchedFeed, FeedFetchError>> {
   try {
     const options = blockPrivateHosts ? { blockPrivateHosts } : {};
@@ -74,10 +70,7 @@ export async function fetchAndParse(link: string, validators: FetchValidators | 
 
 export type IconResolver = (candidate: FeedCandidate, body: string) => Promise<string | undefined>;
 
-/**
- * Fetches up to {@link MAX_CANDIDATES} candidates in parallel and keeps the ones that parse, in order.
- * @returns the first candidate's error when none of them parse
- */
+/** Fetches up to {@link MAX_CANDIDATES} candidates in parallel and keeps the ones that parse, in order. */
 export async function fetchCandidates(
   type: SourceType,
   candidates: FeedCandidate[],
@@ -114,9 +107,8 @@ export interface FeedSourceSpec {
   type: SourceType;
   fetchesFullArticle: boolean;
   /**
-   * The feeds raw wizard text leads to, or null when the text is not for this source.
-   * @param lenient true once the user (or host detection) has already picked this source, so
-   *   looser shapes such as a bare handle are accepted
+   * The feeds raw wizard text leads to, or null when the text is not for this source. `lenient` is true once the user
+   * (or host detection) has picked this source, so looser shapes such as a bare handle are accepted.
    */
   toCandidates(query: string, lenient: boolean): FeedCandidate[] | null;
   /** Shown when the user picks this source's chip for a link it cannot read. */

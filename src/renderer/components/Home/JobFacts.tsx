@@ -8,7 +8,6 @@ import type { JobDetails } from "../../../shared/contracts";
 
 const WORK_MODE_KEY = { remote: "job.remote", hybrid: "job.hybrid", "on-site": "job.onSite" } as const;
 
-/** Company, place, work mode and pay of a job, read from the item's `extra` JSON. */
 export default function JobFacts({ job, className }: { job: JobDetails; className?: string }) {
   const { t } = useTranslation('river');
   const place = [job.company, job.location].filter((part): part is string => part !== undefined).join(" · ");

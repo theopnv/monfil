@@ -17,12 +17,10 @@ export const LANGUAGES = [
 
 export type LanguageCode = (typeof LANGUAGES)[number]['code'];
 
-/** The stored language choice: follow the operating system, or force one language. */
 export type LanguageSetting = 'system' | LanguageCode;
 
 export const DEFAULT_LANGUAGE: LanguageCode = 'en';
 
-/** The command-line argument that carries the interface language from main to the preload script. */
 export const LANGUAGE_ARGUMENT = '--language=';
 
 export const LANGUAGE_CODES: readonly LanguageCode[] = LANGUAGES.map((language) => language.code);

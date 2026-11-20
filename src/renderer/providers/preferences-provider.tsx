@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { createContext, useCallback, useContext, useState, type PropsWithChildren } from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type PropsWithChildren } from "react";
 import { loadPreferences, savePreference, type Preferences } from "@/lib/preferences";
 
 interface PreferencesContextType {
@@ -30,8 +30,10 @@ export const PreferencesProvider = ({ children }: PropsWithChildren) => {
     setPreferences((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  const value = useMemo(() => ({ preferences, setPreference }), [preferences, setPreference]);
+
   return (
-    <PreferencesContext.Provider value={{ preferences, setPreference }}>
+    <PreferencesContext.Provider value={value}>
       {children}
     </PreferencesContext.Provider>
   );

@@ -45,11 +45,7 @@ function resolveKeyedEndpoint(key: string, host: string | undefined): AnalyticsE
   return regionHost ? { name: 'ENABLED', url: `${regionHost}${EVENTS_PATH}`, key } : { name: 'DISABLED', reason: 'INVALID_KEY' };
 }
 
-/**
- * Picks where usage events go. A paid plan uses the same key. A self-hosted server uses an `A-SH-` key and a host.
- * @param config the build-time key and host, plus the runtime environment
- * @returns the events URL and key, or the reason nothing is sent
- */
+/** Picks where usage events go. A paid plan uses the same key. A self-hosted server uses an `A-SH-` key and a host. */
 export function resolveAnalyticsEndpoint(config: AnalyticsConfig): AnalyticsEndpoint {
   if (config.isE2E) {
     return config.override
