@@ -24,7 +24,7 @@ Run commands from the repository root unless a command says otherwise.
 | Run renderer tests in Chromium | `npm run test:integration` |
 | Build and run Electron end-to-end tests | `npm run test:e2e` |
 | Run all test suites | `npm test` |
-| Run Vitest with coverage (report in `.vitest/`) | `npm run coverage:vitest` |
+| Run Vitest with coverage (report in `.vitest/coverage/`) | `npm run coverage:vitest` |
 | Run the end-to-end tests on an instrumented build | `COVERAGE=1 npm run test:e2e` |
 | Merge the Vitest and e2e coverage (`coverage/merged/`, `coverage/snapshot.json`) | `npm run coverage:merge` |
 | Mutation-test the files changed against `main` (report in `.mutation/`) | `npm run mutate` |

@@ -21,4 +21,9 @@ Keep third-party HTML behind the sanitization path before it reaches the reader.
 
 The [network helpers](https://github.com/theopnv/monfil/tree/main/src/main/lib) accept HTTP and HTTPS URLs and check redirects. [Window security](https://github.com/theopnv/monfil/blob/main/src/main/app/window-security.ts) keeps app windows on the app document, denies web permissions, and opens external links in the system browser.
 
+The private-network check has two known limits:
+
+- It resolves a name before the request, and Chromium resolves it again when it connects. A server that changes its answer between the two (DNS rebinding) can pass the check.
+- It applies to addresses that content chose: item links, image enrichment, article fetches, icons, and feed links found on a page. A link the user types is allowed to reach a local or LAN feed, so a redirect from such a link can reach a private address too.
+
 The renderer's Vite config supplies the Content Security Policy. Run the [window security tests](https://github.com/theopnv/monfil/blob/main/test/e2e/window-security.spec.ts) when you change URL handling or window behavior.

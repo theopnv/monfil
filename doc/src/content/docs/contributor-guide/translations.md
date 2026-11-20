@@ -2,7 +2,7 @@
 title: Translations
 description: Where the interface text lives, how a change keeps every language in step, and what the i18n check tests.
 sidebar:
-  order: 15
+  order: 16
 ---
 
 The interface text lives in JSON files under `src/shared/i18n/locales/<language>/`. English (`en`) is the source. Each file is one namespace, such as `river.json`. A key is written `namespace:path`, for example `river:readTime`.
