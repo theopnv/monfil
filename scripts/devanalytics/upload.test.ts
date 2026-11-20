@@ -16,6 +16,17 @@ describe('uploadTarget', () => {
     expect(result).toEqual({ url: 'https://worker.test', token: 't' });
   });
 
+  it.each([
+    ['unset', {}],
+    ['empty', { DEVANALYTICS_WORKER_URL: '' }],
+  ])('uses the public Worker when the URL is %s', (_label, urlEnv) => {
+    // Act
+    const result = uploadTarget({ ...urlEnv, DEVANALYTICS_INGEST_TOKEN: 't' });
+
+    // Assert
+    expect(result).toEqual({ url: 'https://monfil-devanalytics.tpenavaire.workers.dev', token: 't' });
+  });
+
   it('fails when the token is missing', () => {
     // Act
     const read = () => uploadTarget({ DEVANALYTICS_WORKER_URL: 'https://worker.test' });

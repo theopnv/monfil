@@ -21,7 +21,7 @@ Mutation testing runs on your machine. No CI job runs it, and no threshold fails
 | `npm run mutate:worklist -- [<path>]` | Writes `.mutation/worklist.md` from the last reports. |
 | `npm run mutate:upload -- [--version <name>]` | Sends the last reports to the Stryker dashboard. |
 
-The type check needs `src/renderer/routeTree.gen.ts`, so run `npx vite build --config src/renderer/vite.config.mts` once after a fresh clone.
+The type check needs `src/renderer/routeTree.gen.ts`. `npm run mutate` writes it first with `npm run routes:generate`, so a fresh clone needs no build.
 
 `npm run mutate` prints a score table, and writes an HTML and a JSON report to `.mutation/unit/` and `.mutation/integration/`. Open `mutation.html` in a browser to see each mutant in its source line.
 

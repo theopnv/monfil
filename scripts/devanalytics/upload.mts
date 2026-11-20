@@ -5,12 +5,15 @@ export interface UploadTarget {
   token: string;
 }
 
-/** Reads the Worker URL and ingest token from `DEVANALYTICS_WORKER_URL` and `DEVANALYTICS_INGEST_TOKEN`. */
+// The Worker is public, so its address is not a secret. DEVANALYTICS_WORKER_URL overrides it, for a local Worker.
+const DEFAULT_WORKER_URL = 'https://monfil-devanalytics.tpenavaire.workers.dev';
+
+/** Reads the ingest token from `DEVANALYTICS_INGEST_TOKEN`, and the Worker URL from `DEVANALYTICS_WORKER_URL` when it is set. */
 export function uploadTarget(env: NodeJS.ProcessEnv = process.env): UploadTarget {
-  const url = env['DEVANALYTICS_WORKER_URL'];
+  const url = env['DEVANALYTICS_WORKER_URL'] || DEFAULT_WORKER_URL;
   const token = env['DEVANALYTICS_INGEST_TOKEN'];
-  if (!url || !token) {
-    throw new Error('Set DEVANALYTICS_WORKER_URL and DEVANALYTICS_INGEST_TOKEN to upload a snapshot.');
+  if (!token) {
+    throw new Error('Set DEVANALYTICS_INGEST_TOKEN to upload a snapshot.');
   }
   return { url: url.replace(/\/+$/, ''), token };
 }

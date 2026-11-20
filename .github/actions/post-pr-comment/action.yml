@@ -1,0 +1,35 @@
+name: Post PR comment
+description: Posts a Markdown file as a comment on a pull request, or updates the comment that starts with the same marker.
+
+inputs:
+  number:
+    description: The PR number
+    required: true
+  marker:
+    description: The HTML comment that the body starts with. It identifies the comment to update.
+    required: true
+  body-file:
+    description: Path of the Markdown file to post
+    required: true
+  token:
+    description: A token that can write pull request comments.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ inputs.number }}
+        MARKER: ${{ inputs.marker }}
+        BODY_FILE: ${{ inputs.body-file }}
+      run: |
+        comment_id="$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
+          --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$MARKER\"))) | .id" | head -n 1)"
+        if [ -n "$comment_id" ]; then
+          gh api --method PATCH "repos/$REPO/issues/comments/$comment_id" -F "body=@$BODY_FILE" > /dev/null
+        else
+          gh api --method POST "repos/$REPO/issues/$PR_NUMBER/comments" -F "body=@$BODY_FILE" > /dev/null
+        fi

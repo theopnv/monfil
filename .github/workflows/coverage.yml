@@ -31,9 +31,6 @@ concurrency:
   group: coverage-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-env:
-  DEVANALYTICS_WORKER_URL: https://monfil-devanalytics.tpenavaire.workers.dev
-
 jobs:
   coverage:
     runs-on: ubuntu-latest
@@ -50,9 +47,6 @@ jobs:
           electron: 'true'
           electron-dependencies: 'true'
           chromium: 'true'
-
-      # Vitest transforms every renderer file for the report, and routeTree.gen.ts only exists after a build.
-      - run: npx vite build --config src/renderer/vite.config.mts
 
       - run: npm run coverage:vitest -- --reporter=json --outputFile.json=coverage/tests/vitest.json
 
@@ -116,22 +110,18 @@ jobs:
     needs: coverage
     runs-on: ubuntu-latest
     steps:
-      - name: Check ingest credential
-        env:
-          DEVANALYTICS_INGEST_TOKEN: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
-        run: |
-          if [ -z "$DEVANALYTICS_INGEST_TOKEN" ]; then
-            echo "::error::Set the DEVANALYTICS_INGEST_TOKEN secret to the Worker's INGEST_TOKEN."
-            exit 1
-          fi
-
       # The token never reaches the job that runs the tests. This job runs main's own scripts, which need no install.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           sparse-checkout: |
+            .github/actions/check-ingest-credential
             scripts/coverage
             scripts/devanalytics
           persist-credentials: false
+
+      - uses: ./.github/actions/check-ingest-credential
+        with:
+          token: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:

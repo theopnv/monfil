@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import { coveragePlugins } from '../../scripts/coverage/vite-plugins.mts';
+import { ROUTER_OPTIONS } from '../../scripts/router-options.mts';
 
 // Delivered as a <meta> tag: the packaged app loads index.html from file://, where there are no response headers.
 // Styles allow 'unsafe-inline' because Tailwind and React Aria set inline style attributes; fonts come from
@@ -48,12 +49,7 @@ function contentSecurityPolicy(): Plugin {
 // https://vitejs.dev/config
 export default defineConfig({
   plugins: [
-    tanstackRouter({
-      target: 'react',
-      autoCodeSplitting: true,
-      routesDirectory: './src/renderer/routes',
-      generatedRouteTree: './src/renderer/routeTree.gen.ts',
-    }),
+    tanstackRouter(ROUTER_OPTIONS),
     react(),
     tailwindcss(),
     contentSecurityPolicy(),

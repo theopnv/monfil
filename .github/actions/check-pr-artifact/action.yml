@@ -1,0 +1,49 @@
+name: Check PR artifact
+description: >
+  Reads the PR number from an artifact that a pull_request run produced, and checks that the PR is still at
+  the commit that run measured. The artifact is untrusted input, so nothing in it is used before this check.
+
+inputs:
+  directory:
+    description: Folder that holds the downloaded artifact, with a pr-number file.
+    required: true
+  head-sha:
+    description: The commit that the pull_request run measured.
+    required: true
+  token:
+    description: A token that can read pull requests.
+    required: true
+
+outputs:
+  number:
+    description: The PR number
+    value: ${{ steps.check.outputs.number }}
+  base:
+    description: The branch that the PR targets
+    value: ${{ steps.check.outputs.base }}
+
+runs:
+  using: composite
+  steps:
+    - id: check
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        REPO: ${{ github.repository }}
+        ARTIFACT_DIR: ${{ inputs.directory }}
+        RUN_HEAD_SHA: ${{ inputs.head-sha }}
+      run: |
+        pr_number="$(head -c 16 "$ARTIFACT_DIR/pr-number" | tr -d '[:space:]')"
+        if ! [[ "$pr_number" =~ ^[1-9][0-9]{0,9}$ ]]; then
+          echo "::error::The artifact has no valid PR number."
+          exit 1
+        fi
+        # workflow_run.pull_requests is empty for fork PRs, so ask the API which commit the PR is at.
+        pr="$(gh api "repos/$REPO/pulls/$pr_number")"
+        pr_head_sha="$(jq -r .head.sha <<< "$pr")"
+        if [ "$pr_head_sha" != "$RUN_HEAD_SHA" ]; then
+          echo "::error::PR #$pr_number is at $pr_head_sha, but the run measured $RUN_HEAD_SHA."
+          exit 1
+        fi
+        echo "number=$pr_number" >> "$GITHUB_OUTPUT"
+        echo "base=$(jq -r .base.ref <<< "$pr")" >> "$GITHUB_OUTPUT"

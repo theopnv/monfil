@@ -24,6 +24,9 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
         cache: npm
+        cache-dependency-path: |
+          package-lock.json
+          doc/package-lock.json
 
     # Resolved from package-lock.json rather than package.json so the cache key tracks the exact
     # version npm ci will install, not just the semver range.

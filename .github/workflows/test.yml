@@ -31,6 +31,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      - id: changes
+        uses: ./.github/actions/changes
 
       - uses: ./.github/actions/setup
 
@@ -41,27 +45,32 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: npx --no-install commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
 
-      # tsc needs routeTree.gen.ts, which the router plugin only writes as a build side effect.
-      - run: npx vite build --config src/renderer/vite.config.mts
+      - if: steps.changes.outputs.code == 'true'
+        run: npm run lint
 
-      - run: npm run lint
-
-      - run: npx vitest --run --project node eslint.config.test.ts
+      - if: steps.changes.outputs.code == 'true'
+        run: npx vitest --run --project node eslint.config.test.ts
 
       # Check that pack metadata matches its OPML sources.
-      - run: npm run check:feedpacks
+      - if: steps.changes.outputs.code == 'true'
+        run: npm run check:feedpacks
 
       # Check that every translation matches the English text it was made from.
-      - run: npm run i18n:check
+      - if: steps.changes.outputs.code == 'true'
+        run: npm run i18n:check
 
-      - run: npm run lint:docs
+      - if: steps.changes.outputs.docs == 'true'
+        run: npm run lint:docs
 
-      - run: npm ci --prefix doc
+      - if: steps.changes.outputs.docs == 'true'
+        run: npm ci --prefix doc
 
-      - run: npm --prefix doc run build
+      - if: steps.changes.outputs.docs == 'true'
+        run: npm --prefix doc run build
 
       # Check that no translated docs page is missing or older than its English source.
-      - run: npm --prefix doc run check:translations
+      - if: steps.changes.outputs.docs == 'true'
+        run: npm --prefix doc run check:translations
 
   os_matrix:
     runs-on: ubuntu-latest
@@ -98,12 +107,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
 
-      - uses: ./.github/actions/setup
+      - id: changes
+        uses: ./.github/actions/changes
+
+      - if: steps.changes.outputs.code == 'true'
+        uses: ./.github/actions/setup
         with:
           electron: 'true'
 
-      - run: npm run test:unit
+      - if: steps.changes.outputs.code == 'true'
+        run: npm run test:unit
         env:
           SKIP_LINT_RULE_TESTS: 'true'
 
@@ -113,15 +130,23 @@ jobs:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
 
-      - uses: ./.github/actions/setup
+      - id: changes
+        uses: ./.github/actions/changes
+
+      - if: steps.changes.outputs.code == 'true'
+        uses: ./.github/actions/setup
         with:
           chromium: 'true'
 
-      - run: npm run test:integration
+      - if: steps.changes.outputs.code == 'true'
+        run: npm run test:integration
 
   e2e:
-    needs: [lint, unit, integration, os_matrix]
+    needs: [lint, os_matrix]
     runs-on: ${{ matrix.os }}
     # The e2e step packages the app, and a release ships that package, so the release build takes its analytics key here.
     env:
@@ -135,8 +160,15 @@ jobs:
         os: ${{ fromJson(needs.os_matrix.outputs.os) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
 
-      - uses: ./.github/actions/setup
+      - id: changes
+        uses: ./.github/actions/changes
+
+      - if: steps.changes.outputs.code == 'true'
+        uses: ./.github/actions/setup
         with:
           electron: 'true'
           electron-dependencies: 'true'
@@ -148,10 +180,10 @@ jobs:
           certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
       # xvfb-run defaults to a 640x480 screen, and the maximized app window would follow it.
-      - if: runner.os == 'Linux'
+      - if: steps.changes.outputs.code == 'true' && runner.os == 'Linux'
         run: xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:e2e
 
-      - if: runner.os != 'Linux'
+      - if: steps.changes.outputs.code == 'true' && runner.os != 'Linux'
         run: npm run test:e2e
 
       - name: Archive app package
@@ -169,7 +201,7 @@ jobs:
           retention-days: 2
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.changes.outputs.code == 'true' }}
         with:
           name: test-result-${{ matrix.os }}
           path: test-results/
