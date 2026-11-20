@@ -1,0 +1,19 @@
+name: Check ingest credential
+description: Fails before any expensive step when the ingest token secret is not set.
+
+inputs:
+  token:
+    description: The DEVANALYTICS_INGEST_TOKEN secret.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        DEVANALYTICS_INGEST_TOKEN: ${{ inputs.token }}
+      run: |
+        if [ -z "$DEVANALYTICS_INGEST_TOKEN" ]; then
+          echo "::error::Set the DEVANALYTICS_INGEST_TOKEN secret to the Worker's INGEST_TOKEN."
+          exit 1
+        fi
