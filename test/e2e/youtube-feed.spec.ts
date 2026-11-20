@@ -37,6 +37,7 @@ async function subscribeYoutube(page: Page): Promise<void> {
       },
     ],
   } satisfies NewFeedInput);
+  await page.reload();
 }
 
 test('shows the channel avatar in the sidebar and the video description in the reader', async ({ launchApp }) => {

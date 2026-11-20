@@ -117,7 +117,10 @@ export const test = base.extend<Fixtures>({
           ...(options.env && { env: withEnv(options.env) }),
         });
         running.set(dir, app);
-        return { app, page: await app.firstWindow() };
+        const page = await app.firstWindow();
+        // A cold start on a CI runner can take longer than the 5 second budget of the first `expect`.
+        await page.locator('#root > *').first().waitFor();
+        return { app, page };
       });
     } finally {
       await Promise.all([...running.values()].map(closeQuietly));
@@ -142,9 +145,10 @@ export async function addFeed(page: Page, feed: { link: string; title?: string; 
   });
 }
 
-/** Adds the feed row and refreshes. The row is enough for a refresh to find the feed. */
+/** Adds the feed row, reloads so that the feed list shows it, and refreshes. The row is enough for a refresh to find the feed. */
 export async function subscribe(page: Page, url: string, type: SourceType = 'rss'): Promise<void> {
   await addFeed(page, { link: url, type });
+  await page.reload();
   await page.getByRole('button', { name: 'Refresh feeds' }).click();
 }
 
