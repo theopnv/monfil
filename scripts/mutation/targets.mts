@@ -5,7 +5,7 @@ export const MUTATION_SUITES: readonly MutationSuite[] = ['unit', 'integration']
 
 /** Every file that a full run mutates, for each suite. The exclusions match the coverage report. */
 export const SUITE_GLOBS: Record<MutationSuite, string[]> = {
-  unit: ['src/{main,preload,shared}/**/*.ts', '!src/**/*.{test,spec}.ts', '!src/**/*.d.ts'],
+  unit: ['src/{main,preload,shared}/**/*.ts', '!src/**/*.{test,spec}.ts', '!src/**/*.d.ts', '!src/main/test/**'],
   integration: [
     'src/renderer/**/*.{ts,tsx}',
     '!src/renderer/**/*.{test,spec}.{ts,tsx}',
@@ -16,7 +16,7 @@ export const SUITE_GLOBS: Record<MutationSuite, string[]> = {
 };
 
 const SOURCE = /^src\/(main|preload|shared|renderer)\/.+\.tsx?$/;
-const EXCLUDED = [/\.(test|spec)\.tsx?$/, /\.d\.ts$/, /^src\/renderer\/components\/untitled-ui\//, /^src\/renderer\/routeTree\.gen\.ts$/];
+const EXCLUDED = [/\.(test|spec)\.tsx?$/, /\.d\.ts$/, /^src\/main\/test\//, /^src\/renderer\/components\/untitled-ui\//, /^src\/renderer\/routeTree\.gen\.ts$/];
 
 /** Keeps the source files that a suite can mutate, and splits them by suite. Paths are relative to the repository root. */
 export function splitTargets(files: readonly string[]): Record<MutationSuite, string[]> {

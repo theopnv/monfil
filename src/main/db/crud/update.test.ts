@@ -2,55 +2,26 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
-import { HOME_WORKSPACE_ID, type NewFeedInput } from '../../../shared/contracts';
-import { db, initializeDatabase } from '../database';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
+import { db } from '../database';
 import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedFetchResult, setFeedItemsRead, setFeedsShowInWorkspace, updateWorkspace } from './update';
 import { addFeedToDatabase, createCategory, createWorkspace } from './insert';
+import { useTestDatabase } from '../../test/db';
+import { makeFeedInput, makeItem } from '../../test/fixtures';
 
-const feedA: NewFeedInput = {
-  link: 'https://a.example/feed',
-  title: 'Feed A',
-  items: [],
-  type: 'rss',
-  categoryName: 'tech',
-  workspaceId: HOME_WORKSPACE_ID,
-  showInWorkspace: true,
-};
-const feedB: NewFeedInput = {
-  link: 'https://b.example/feed',
-  title: 'Feed B',
-  items: [],
-  type: 'rss',
-  categoryName: 'tech',
-  workspaceId: HOME_WORKSPACE_ID,
-  showInWorkspace: true,
-};
-
-const feedWithItems: NewFeedInput = {
+const feedA = makeFeedInput();
+const feedB = makeFeedInput({ link: 'https://b.example/feed', title: 'Feed B' });
+const feedWithItems = makeFeedInput({
   link: 'https://c.example/feed',
   title: 'Feed C',
   items: [
-    { title: 'Item 1', link: 'https://c.example/1', guid: 'https://c.example/1', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined },
-    { title: 'Item 2', link: 'https://c.example/2', guid: 'https://c.example/2', pubDate: '2024-01-02', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined },
+    makeItem({ title: 'Item 1', link: 'https://c.example/1' }),
+    makeItem({ title: 'Item 2', link: 'https://c.example/2', pubDate: '2024-01-02' }),
   ],
-  type: 'rss',
-  categoryName: 'tech',
-  workspaceId: HOME_WORKSPACE_ID,
-  showInWorkspace: true,
-};
-
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
 });
 
-afterEach(async () => {
-  await db.deleteFrom('feedItem').execute();
-  await db.deleteFrom('feedPlacement').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
-  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
-});
+useTestDatabase();
 
 describe('setFeedsShowInWorkspace', () => {
   test('sets showInWorkspace to 0 then back to 1', async () => {

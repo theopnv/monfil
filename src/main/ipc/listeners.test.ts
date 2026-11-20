@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { beforeAll, describe, afterEach, test, expect, vi } from 'vitest';
+import { describe, afterEach, test, expect, vi } from 'vitest';
 import { listenToLinkOpen, listenToRevealDatabaseFile, listenToRevealLogFile, listenToShowCategoryContextMenu, listenToShowFeedContextMenu, listenToShowWorkspaceContextMenu } from './listeners';
-import { initializeDatabase } from '../db/database';
 import { BrowserWindow, Menu, shell } from 'electron';
 import { setLogFilePath } from '../app/main-state';
 import { refreshFeeds } from '../feed/refresh';
 import { broadcastToRenderers } from '../lib/sendToRenderer';
+import { useTestDatabase } from '../test/db';
 
 vi.mock(import('../feed/refresh'), () => ({ refreshFeeds: vi.fn() }));
 vi.mock(import('../lib/sendToRenderer'), async (importOriginal) => ({ ...(await importOriginal()), broadcastToRenderers: vi.fn() }));
@@ -56,9 +56,7 @@ describe('link:open IPC listener', () => {
 });
 
 describe('app:reveal-database-file IPC listener', () => {
-  beforeAll(async () => {
-    await initializeDatabase(':memory:');
-  });
+  useTestDatabase();
 
   afterEach(() => {
     mockedShowItemInFolder.mockReset();

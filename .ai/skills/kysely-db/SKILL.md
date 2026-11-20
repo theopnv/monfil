@@ -31,4 +31,4 @@ SQLite stores boolean values as integers. For example, `feedPlacement.showInWork
 
 ## Tests
 
-Database unit tests use the real Kysely connection. Initialize an in-memory database in `beforeAll` with `initializeDatabase(':memory:')`. In `afterEach`, delete dependent rows before their parents. The current insert and query tests remove article content and items, then placements, metadata, categories, and non-Home workspaces. Check those tests before adding a new table to setup or cleanup.
+Database unit tests use the real Kysely connection. Call `useTestDatabase()` from `src/main/test/db.ts` at the top of the test file. It opens an in-memory database once per file and, after each test, empties every table except the Home workspace. When you add a table, add its delete to `resetDatabase()` in that file, before the tables it depends on. `makeFeedInput()` and `makeItem()` in `src/main/test/fixtures.ts` build feed and item inputs.

@@ -86,7 +86,7 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: 'node_modules' },
-    exclude: { path: ['\\.test\\.tsx?$', '/__screenshots__/', '/__fixtures__/', '^src/main/graft/', '^src/renderer/lib/test/'] },
+    exclude: { path: ['\\.test\\.tsx?$', '/__screenshots__/', '/__fixtures__/', '^src/main/graft/', '^src/main/test/', '^src/renderer/lib/test/'] },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: 'src/renderer/tsconfig.json' },
     enhancedResolveOptions: {

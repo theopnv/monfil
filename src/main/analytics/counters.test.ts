@@ -2,23 +2,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import { db, initializeDatabase } from '../db/database';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { db } from '../db/database';
 import { logger } from '../logging/logger';
 import { deleteAll, deleteDays, incrementCounter, isCountingEnabled, listDays, readDay, setCountingEnabled, utcDay } from './counters';
+import { useTestDatabase } from '../test/db';
 
 vi.mock(import('../logging/logger'), () => ({ logger: { warn: vi.fn(), info: vi.fn(), error: vi.fn(), debug: vi.fn(), child: vi.fn() } }));
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
+useTestDatabase();
 
 beforeEach(() => {
   setCountingEnabled(true);
-});
-
-afterEach(async () => {
-  await db.deleteFrom('usage_counter').execute();
 });
 
 const day = new Date('2026-10-22T10:00:00Z');

@@ -11,6 +11,7 @@ export const INCLUDE = ['src/**/*.{ts,tsx}'];
 export const EXCLUDE = [
   'src/**/*.{test,spec}.{ts,tsx}',
   'src/**/*.d.ts',
+  'src/main/test/**',
   'src/renderer/components/untitled-ui/**',
   'src/renderer/routeTree.gen.ts',
 ];

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import { db, initializeDatabase } from '../db/database';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { db } from '../db/database';
 import { addFeedToDatabase } from '../db/crud/insert';
 import { getUsageAnalyticsConsent, recordAppLaunch } from '../app/settings';
 import { incrementCounter, isCountingEnabled, listDays, setCountingEnabled } from './counters';
@@ -11,6 +11,7 @@ import { changeUsageAnalyticsConsent, dismissUsageAnalyticsPrompt, getUsageAnaly
 import { getAnalyticsEndpoint } from './config';
 import { sendConsentGranted } from './scheduler';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
+import { useTestDatabase } from '../test/db';
 
 vi.mock(import('./config'), () => ({ getAnalyticsEndpoint: vi.fn() }));
 vi.mock(import('./scheduler'), () => ({ sendConsentGranted: vi.fn(), flushUsageAnalytics: vi.fn(), startUsageAnalytics: vi.fn(), stopUsageAnalytics: vi.fn(), summaryTimestamp: vi.fn() }));
@@ -44,9 +45,7 @@ describe('shouldPromptForUsageAnalytics', () => {
 });
 
 describe('usage analytics state', () => {
-  beforeAll(async () => {
-    await initializeDatabase(':memory:');
-  });
+  useTestDatabase();
 
   beforeEach(() => {
     vi.stubEnv('MONFIL_HINTS', undefined);
@@ -54,10 +53,7 @@ describe('usage analytics state', () => {
     setCountingEnabled(false);
   });
 
-  afterEach(async () => {
-    await db.deleteFrom('setting').execute();
-    await db.deleteFrom('usage_counter').execute();
-    await db.deleteFrom('feedMetadata').execute();
+  afterEach(() => {
     vi.unstubAllEnvs();
   });
 

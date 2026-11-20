@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { app } from 'electron';
-import { db, initializeDatabase } from '../db/database';
 import { mainI18n, setMainLanguage } from '../lib/i18n';
 import { logger } from '../logging/logger';
 import { changeLanguage, initializeLanguage, readLanguageState } from './language';
 import * as settings from './settings';
+import { useTestDatabase } from '../test/db';
 
 vi.mock(import('electron'), () => ({ app: { getPreferredSystemLanguages: vi.fn(() => ['en-US']) } as unknown as typeof app }));
 vi.mock(import('../logging/logger'), () => ({ logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn(), child: vi.fn() }, setDetailedLogging: vi.fn() }));
@@ -18,16 +18,13 @@ function systemLanguages(...tags: string[]) {
   vi.mocked(app.getPreferredSystemLanguages).mockReturnValue(tags);
 }
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
+useTestDatabase();
 
 beforeEach(() => {
   systemLanguages('en-US');
 });
 
 afterEach(async () => {
-  await db.deleteFrom('setting').execute();
   await setMainLanguage('en');
 });
 

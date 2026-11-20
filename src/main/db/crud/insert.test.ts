@@ -2,27 +2,18 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
-import { HOME_WORKSPACE_ID, type NewFeedInput } from '../../../shared/contracts';
-import { db, initializeDatabase } from '../database';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
+import { db } from '../database';
 import type { FeedItem } from '../types';
 import { addFeedItemsToDatabase, addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent, syncFeedItemsToDatabase } from './insert';
+import { useTestDatabase } from '../../test/db';
+import { makeFeedInput } from '../../test/fixtures';
 
-const feedA: NewFeedInput = { link: 'https://a.example/feed', title: 'Feed A', type: 'rss', items: [], categoryName: 'tech', workspaceId: HOME_WORKSPACE_ID, showInWorkspace: true };
-const feedB: NewFeedInput = { link: 'https://b.example/feed', title: 'Feed B', type: 'rss', items: [], categoryName: 'tech', workspaceId: HOME_WORKSPACE_ID, showInWorkspace: true };
+const feedA = makeFeedInput();
+const feedB = makeFeedInput({ link: 'https://b.example/feed', title: 'Feed B' });
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
-
-afterEach(async () => {
-  await db.deleteFrom('articleContent').execute();
-  await db.deleteFrom('feedItem').execute();
-  await db.deleteFrom('feedPlacement').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
-  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
-});
+useTestDatabase();
 
 describe('addFeedToDatabase', () => {
   test('inserts the category, metadata and items in one call', async () => {

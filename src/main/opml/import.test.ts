@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import { db, initializeDatabase } from '../db/database';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { db } from '../db/database';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
 import { rssSource } from '../feed/sources/rss';
 import type { ParsedSource } from '../../shared/contracts';
 import { importOpml, startOpmlImport } from './import';
+import { useTestDatabase } from '../test/db';
 
 vi.mock(import('../feed/sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: false, matches: vi.fn(), discover: vi.fn(), fetch: vi.fn(), parse: vi.fn() } }));
 vi.mock(import('../lib/fetch'), () => ({
@@ -26,21 +27,14 @@ function parsed(link: string): ParsedSource {
   return { type: 'rss', link, title: 'Fetched title', description: '', items: [], icon: undefined };
 }
 
-beforeAll(async () => {
-  await initializeDatabase(':memory:');
-});
+useTestDatabase();
 
 beforeEach(() => {
   mockedFetchFeed.mockImplementation((input) => Promise.resolve({ success: true, data: { parsed: parsed(input.link), validators: { etag: undefined, last_modified: undefined } } }));
 });
 
-afterEach(async () => {
+afterEach(() => {
   mockedFetchFeed.mockReset();
-  await db.deleteFrom('feedItem').execute();
-  await db.deleteFrom('feedPlacement').execute();
-  await db.deleteFrom('feedMetadata').execute();
-  await db.deleteFrom('feedCategory').execute();
-  await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
 });
 
 describe('importOpml', () => {
