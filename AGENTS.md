@@ -43,6 +43,7 @@ In VS Code, the `Main + renderer` compound launch configuration debugs both Elec
 ## Code boundaries
 
 - `forge.config.ts` defines the Electron build. The main, preload, and renderer processes have separate Vite and TypeScript configs.
+- `dependencies` in `package.json` holds only the packages that the main bundle cannot bundle. They are the `external` list in `src/main/vite.config.mts`, and a test keeps the two lists equal. Every other package is a `devDependency`, because Vite bundles it and packaging copies only `dependencies` into the installers.
 - Define cross-process payloads in `src/shared/channels.ts` and shared data types in `src/shared/contracts.ts`. Keep IPC calls aligned with those contracts; do not add local payload types at call sites.
 - Keep network, filesystem, and database access in the main process. Use the preload bridge for renderer requests. Treat feed content and external URLs as untrusted input; preserve the existing fetch, window security, and HTML sanitization boundaries.
 - Database queries live in `src/main/db/`. Add schema changes as a new numbered migration and register it in `src/main/db/migrations/index.ts`. Use `.ai/skills/kysely-db/SKILL.md` for database edits.
