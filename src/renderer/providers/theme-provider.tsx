@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { ipc } from '@/lib/ipc-client';
 
 type Theme = "light" | "dark" | "system";
@@ -71,5 +71,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme]);
 
-  return <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>{children}</ThemeContext.Provider>;
+  const value = useMemo(() => ({ theme, resolvedTheme, setTheme }), [theme, resolvedTheme]);
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

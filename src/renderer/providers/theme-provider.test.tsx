@@ -58,6 +58,19 @@ afterEach(() => {
 });
 
 describe('ThemeProvider', () => {
+  test('keeps the same context value while its own state is unchanged', async () => {
+    // Arrange
+    stubSystemTheme(false);
+    const { result, rerender } = await renderTheme();
+    const before = result.current;
+
+    // Act
+    await rerender();
+
+    // Assert
+    expect(result.current).toBe(before);
+  });
+
   test('follows a light system theme when nothing is stored', async () => {
     // Arrange
     stubSystemTheme(false);
