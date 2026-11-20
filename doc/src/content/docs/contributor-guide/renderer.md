@@ -13,7 +13,7 @@ The [renderer](https://github.com/theopnv/monfil/tree/main/src/renderer) is a Re
 
 ## Choose where state belongs
 
-Use the preload bridge for work owned by main. The [channel contracts](https://github.com/theopnv/monfil/blob/main/src/shared/channels.ts) define its names and payloads. TanStack Query holds data such as river pages and the feedpack catalog. [Providers](https://github.com/theopnv/monfil/tree/main/src/renderer/providers) share UI state such as the active workspace, reading preferences, and search text. Check for an existing owner before you add another copy.
+Use the preload bridge for work owned by main. The [invoke schema](https://github.com/theopnv/monfil/blob/main/src/shared/ipc-schema.ts) and the [channel contracts](https://github.com/theopnv/monfil/blob/main/src/shared/channels.ts) define its names and payloads. TanStack Query holds data such as river pages and the feedpack catalog. [Providers](https://github.com/theopnv/monfil/tree/main/src/renderer/providers) share UI state such as the active workspace, reading preferences, and search text. Check for an existing owner before you add another copy.
 
 :::note[Events have no replay]
 An IPC push can arrive before a listener attaches. Load initial data with `invoke`, then use pushes to update a mounted view. The [feed provider](https://github.com/theopnv/monfil/blob/main/src/renderer/providers/feeds-provider.tsx) shows this pattern.

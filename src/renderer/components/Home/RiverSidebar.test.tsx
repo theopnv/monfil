@@ -15,7 +15,8 @@ import type { CreateCategoryError } from '../../../shared/contracts';
 import type { UpdateCategoryError } from '../../../shared/contracts';
 import { HOME_WORKSPACE_ID, type FeedCategory, type FeedSummary, type WorkspaceSummary } from '../../../shared/contracts';
 import type { Result } from '../../../shared/result';
-import type { MenuAction, TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannelsInvokeArgs } from '../../../shared/channels';
+import type { MenuAction } from '../../../shared/channels';
+import type { ArgOf, InvokeChannel, ResultOf } from '../../../shared/ipc-schema';
 
 const feedA: FeedSummary = {
   id: 1,
@@ -106,41 +107,41 @@ function stubElectron(overrides: {
   // way the real main process would.
   let currentCategories = overrides.categories ?? categoriesFrom(overrides.feeds ?? []);
 
-  invokeMock = vi.fn(<C extends keyof TwoWayRendererMainChannelsInvokeArgs>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<TwoWayRendererMainChannelPayloads[C]> => {
+  invokeMock = vi.fn(<C extends InvokeChannel>(channel: C, arg: ArgOf<C>): Promise<ResultOf<C>> => {
     switch (channel) {
       case 'feeds:list':
-        return Promise.resolve(overrides.feeds ?? []) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(overrides.feeds ?? []) as Promise<ResultOf<C>>;
       case 'feeds:list-categories':
-        return Promise.resolve(currentCategories) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(currentCategories) as Promise<ResultOf<C>>;
       case 'feeds:delete-feed':
-        return Promise.resolve(overrides.deleteFeed ?? { success: true, data: undefined }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(overrides.deleteFeed ?? { success: true, data: undefined }) as Promise<ResultOf<C>>;
       case 'feeds:create-category': {
         const result = overrides.createCategory ?? { success: true, data: { id: 99, name: (arg as { name: string }).name, workspace_id: HOME_WORKSPACE_ID } };
         if (result.success) {
           currentCategories = [...currentCategories, result.data];
         }
-        return Promise.resolve(result) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(result) as Promise<ResultOf<C>>;
       }
       case 'feeds:rename-category': {
         const result = overrides.renameCategory ?? { success: true, data: { id: 1, name: 'Renamed', workspace_id: HOME_WORKSPACE_ID } };
         if (result.success) {
           currentCategories = currentCategories.map((category) => (category.id === result.data.id ? result.data : category));
         }
-        return Promise.resolve(result) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(result) as Promise<ResultOf<C>>;
       }
       case 'feeds:delete-category': {
         const result = overrides.deleteCategory ?? { success: true, data: undefined };
         if (result.success) {
           currentCategories = currentCategories.filter((category) => category.id !== (arg as { categoryId: number }).categoryId);
         }
-        return Promise.resolve(result) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(result) as Promise<ResultOf<C>>;
       }
       case 'workspaces:list':
-        return Promise.resolve([homeWorkspace]) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve([homeWorkspace]) as Promise<ResultOf<C>>;
       case 'feeds:move-feeds-to-category':
-        return Promise.resolve(overrides.moveFeedsToCategory ?? { success: true, data: undefined }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(overrides.moveFeedsToCategory ?? { success: true, data: undefined }) as Promise<ResultOf<C>>;
       default:
-        return Promise.resolve(undefined) as unknown as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(undefined) as unknown as Promise<ResultOf<C>>;
     }
   });
 

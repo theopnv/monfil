@@ -138,6 +138,10 @@ export type MoveFeedError = DeleteFeedError;
 export type UpdateWorkspaceError =
   | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
   | { name: 'WORKSPACE_NOT_FOUND'; message: string; params?: ErrorParams };
+export type DismissSearchHintError =
+  | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
+  | { name: 'WORKSPACE_NOT_FOUND'; message: string; params?: ErrorParams };
+export type BackupError = { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string; params?: ErrorParams };
 export type UpdateItemError =
   | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
   | { name: 'ITEM_NOT_FOUND'; message: string; params?: ErrorParams };

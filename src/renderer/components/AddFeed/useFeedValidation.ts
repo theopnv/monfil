@@ -60,7 +60,7 @@ export function useFeedValidation(query: string, type?: SourceType): FeedValidat
     let cancelled = false;
     setState((prev) => ({ ...prev, status: 'loading' }));
 
-    ipc.invoke('feeds:validate-feed-url', { query: validationQuery, ...(type !== undefined ? { type } : {}) })
+    ipc.invoke('feeds:discover', { query: validationQuery, ...(type !== undefined ? { type } : {}) })
       .then((result) => {
         if (cancelled) {
           return;

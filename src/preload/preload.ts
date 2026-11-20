@@ -5,15 +5,13 @@
 import { contextBridge, ipcRenderer } from "electron/renderer";
 import type { IpcRendererEvent } from "electron";
 import type {
-  ElectronHandler,
   OneWayMainToRendererChannelPayloads,
   OneWayMainToRendererChannels,
   OneWayRendererToMainChannelPayloads,
   OneWayRendererToMainChannels,
-  IpcInvokeResponse,
-  TwoWayRendererMainChannels,
-  TwoWayRendererMainChannelsInvokeArgs,
 } from "../shared/channels";
+import type { ElectronHandler } from "../shared/electron-handler";
+import type { ArgOf, InvokeChannel, IpcInvokeResponse } from "../shared/ipc-schema";
 import { HINTS_ARGUMENT } from "../shared/contracts";
 import { SYSTEM_LOCALE_ARGUMENT } from "../shared/i18n/format-locale";
 import { isLanguageCode, LANGUAGE_ARGUMENT } from "../shared/i18n/languages";
@@ -42,7 +40,7 @@ const electronHandler: ElectronHandler = {
         ipcRenderer.removeListener(channel, subscription);
       };
     },
-    invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<IpcInvokeResponse<C>> {
+    invoke<C extends InvokeChannel>(channel: C, arg: ArgOf<C>): Promise<IpcInvokeResponse<C>> {
       return ipcRenderer.invoke(channel, arg);
     }
   },

@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { dialog, ipcMain, type IpcMainInvokeEvent } from 'electron';
-import type { TwoWayRendererMainChannelPayloads, TwoWayRendererMainChannels, TwoWayRendererMainChannelsInvokeArgs } from '../../shared/channels';
+import { ipcSchema, type ArgOf, type InvokeChannel, type ResultOf } from '../../shared/ipc-schema';
 import type { FeedCategory, FeedpackCatalog, FeedSummary, NewFeedInput, ParsedSource, SavedSearch, WorkspaceSummary } from '../../shared/contracts';
 import * as handlers from './handlers';
 import * as insert from '../db/crud/insert';
@@ -21,6 +21,7 @@ import { exportWorkspaceOpml } from '../opml/export';
 import { getFeedpackCatalog } from '../feedpacks/catalog';
 import { installFeedpack, previewFeedpack } from '../feedpacks/install';
 import { changeUsageAnalyticsConsent, dismissUsageAnalyticsPrompt, getUsageAnalyticsState } from '../analytics/consent';
+import { getUpdateState } from '../updates/auto-updater';
 import { previewSummary } from '../analytics/report';
 import { getAppInfo } from '../app/app-info';
 import { changeLanguage, readLanguageState } from '../app/language';
@@ -70,7 +71,7 @@ vi.mock(import('../app/language'), () => ({ changeLanguage: vi.fn(), readLanguag
 vi.mock(import('../analytics/counters'), () => ({ incrementCounter: vi.fn() }));
 vi.mock(import('../analytics/consent'), () => ({ changeUsageAnalyticsConsent: vi.fn(), dismissUsageAnalyticsPrompt: vi.fn(), getUsageAnalyticsState: vi.fn() }));
 vi.mock(import('../analytics/report'), () => ({ previewSummary: vi.fn() }));
-vi.mock(import('../updates/auto-updater'), () => ({ getUpdateState: () => ({ name: 'NONE' as const }) }));
+vi.mock(import('../updates/auto-updater'), () => ({ getUpdateState: vi.fn() }));
 
 const category: FeedCategory = { id: 3, name: 'Tech', workspace_id: 1 };
 const feed: FeedSummary = {
@@ -98,60 +99,64 @@ const summary = { day: '2026-10-23', articles_opened: 1 };
 const languageState = { setting: 'system' as const, language: 'en' as const, systemLanguage: 'en' as const };
 const preview = { pack: { slug: 'tech', title: 'Tech', description: '', tags: [], curator: '', sourceCount: 1, updatedAt: '', opml: 'tech.opml' }, sources: { title: 'Tech', categories: [] } };
 
-type Fixture<C extends TwoWayRendererMainChannels> = {
-  arg: TwoWayRendererMainChannelsInvokeArgs[C];
-  response: TwoWayRendererMainChannelPayloads[C];
-  handler: (...args: never[]) => unknown;
+type Fixture<C extends InvokeChannel> = {
+  arg: ArgOf<C>;
+  response: ResultOf<C>;
+  /** The function the route hands the request to, and what it gets. */
+  delegate: () => unknown;
+  calledWith: unknown[];
 };
 
-const fixtures: { [C in TwoWayRendererMainChannels]: Fixture<C> } = {
-  'feeds:validate-feed-url': { arg: { query: feed.link, type: 'rss' }, response: { success: true, data: [source] }, handler: handlers.handleFeedsValidateFeedUrl },
-  'feeds:list-categories': { arg: { workspaceId: 1 }, response: [category], handler: handlers.handleFeedsListCategories },
-  'feeds:list': { arg: { workspaceId: 1 }, response: [feed], handler: handlers.handleFeedsList },
-  'items:query': { arg: { workspaceId: 1, limit: 50, feedIds: [2], ids: [4], cursor: { publishedAt: 0, id: 4 }, unreadOnly: false, search: '' }, response: { rows: [], nextCursor: { publishedAt: 0, id: 4 } }, handler: handlers.handleItemsQuery },
-  'saved:query': { arg: { workspaceId: 1, limit: 50, cursor: { savedAt: 1, publishedAt: 0, id: 4 } }, response: { rows: [] }, handler: handlers.handleSavedQuery },
-  'items:set-saved': { arg: { workspaceId: 1, itemId: 4, saved: true }, response: done, handler: handlers.handleItemsSetSaved },
-  'feeds:refresh': { arg: undefined, response: { perFeed: [{ feedId: 2, inserted: 0, updated: 1 }], removed: 0 }, handler: handlers.handleFeedsRefresh },
-  'feeds:submit-add-feed': { arg: newFeed, response: { success: true, data: feed }, handler: handlers.handleFeedsSubmitAddFeed },
-  'feeds:delete-feed': { arg: { feedId: 2, workspaceId: 1 }, response: done, handler: handlers.handleFeedsDeleteFeed },
-  'feeds:set-show-in-workspace': { arg: { feedIds: [2], showInWorkspace: false, workspaceId: 1 }, response: done, handler: handlers.handleFeedsSetShowInWorkspace },
-  'feeds:create-category': { arg: { name: 'Tech', workspaceId: 1 }, response: { success: true, data: category }, handler: handlers.handleFeedsCreateCategory },
-  'feeds:rename-category': { arg: { categoryId: 3, name: 'Tech', workspaceId: 1 }, response: { success: true, data: category }, handler: handlers.handleFeedsRenameCategory },
-  'feeds:delete-category': { arg: { categoryId: 3, reassignTo: 5, workspaceId: 1 }, response: done, handler: handlers.handleFeedsDeleteCategory },
-  'feeds:move-feeds-to-category': { arg: { feedIds: [2], categoryId: 3, workspaceId: 1 }, response: done, handler: handlers.handleFeedsMoveFeedsToCategory },
-  'feeds:move-to-workspace': { arg: { feedId: 2, fromWorkspaceId: 1, toWorkspaceId: 6, categoryName: 'Tech' }, response: done, handler: handlers.handleFeedsMoveToWorkspace },
-  'workspaces:list': { arg: undefined, response: [workspace], handler: handlers.handleWorkspacesList },
-  'workspaces:create': { arg: { name: 'Home', icon: 'Home01', color: 'blue' }, response: { success: true, data: workspace }, handler: handlers.handleWorkspacesCreate },
-  'workspaces:update': { arg: { workspaceId: 1, name: 'Home' }, response: { success: true, data: workspace }, handler: handlers.handleWorkspacesUpdate },
-  'workspaces:delete': { arg: { workspaceId: 6 }, response: done, handler: handlers.handleWorkspacesDelete },
-  'workspaces:reorder': { arg: { orderedIds: [1, 6] }, response: done, handler: handlers.handleWorkspacesReorder },
-  'items:set-read': { arg: { itemIds: [4], read: true }, response: done, handler: handlers.handleItemsSetRead },
-  'items:get-content': { arg: 4, response: { description: '', article: undefined }, handler: handlers.handleItemsGetContent },
-  'app:back-up-database': { arg: undefined, response: { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } }, handler: handlers.handleAppBackUpDatabase },
-  'app:get-info': { arg: undefined, response: { version: '1', feedCount: 1, itemCount: 0, databaseSizeBytes: 0 }, handler: handlers.handleAppGetInfo },
-  'app:get-startup-health': { arg: undefined, response: { name: 'OK' }, handler: handlers.handleAppGetStartupHealth },
-  'app:get-update-state': { arg: undefined, response: { name: 'NONE' }, handler: handlers.handleAppGetUpdateState },
-  'settings:get': { arg: { key: 'language' }, response: languageState, handler: handlers.handleSettingsGet },
-  'settings:set': { arg: { key: 'language', value: 'fr' }, response: { setting: 'fr', language: 'fr', systemLanguage: 'en' }, handler: handlers.handleSettingsSet },
-  'settings:dismiss-usage-analytics-prompt': { arg: undefined, response: usageState, handler: handlers.handleSettingsDismissUsageAnalyticsPrompt },
-  'analytics:preview': { arg: undefined, response: summary, handler: handlers.handleAnalyticsPreview },
-  'opml:import': { arg: { target: { kind: 'new-workspace', name: 'Tech', icon: 'Home01', color: 'blue', sourceSlug: 'tech', sourceVersion: '1' } }, response: imported, handler: handlers.handleOpmlImport },
-  'opml:export': { arg: { workspaceId: 1 }, response: done, handler: handlers.handleOpmlExport },
-  'feedpacks:list': { arg: undefined, response: { success: true, data: catalog }, handler: handlers.handleFeedpacksList },
-  'feedpacks:preview': { arg: { slug: 'tech' }, response: { success: true, data: preview }, handler: handlers.handleFeedpacksPreview },
-  'feedpacks:install': { arg: { slug: 'tech', target: { kind: 'merge-workspace', workspaceId: 1 } }, response: imported, handler: handlers.handleFeedpacksInstall },
-  'searches:list': { arg: { workspaceId: 1 }, response: { searches: [], hintExample: undefined }, handler: handlers.handleSearchesList },
-  'searches:create': { arg: { workspaceId: 1, name: 'Engineers', query: 'title:engineer' }, response: { success: true, data: savedSearch }, handler: handlers.handleSearchesCreate },
-  'searches:update': { arg: { searchId: 4, name: 'Engineers' }, response: { success: true, data: savedSearch }, handler: handlers.handleSearchesUpdate },
-  'searches:delete': { arg: { searchId: 4 }, response: done, handler: handlers.handleSearchesDelete },
-  'searches:dismiss-hint': { arg: { workspaceId: 1 }, response: done, handler: handlers.handleSearchesDismissHint },
-};
-
-const channels = Object.keys(fixtures) as TwoWayRendererMainChannels[];
+const discover = vi.fn();
 const event = {} as IpcMainInvokeEvent;
+
+const fixtures: { [C in InvokeChannel]: Fixture<C> } = {
+  'feeds:discover': { arg: { query: feed.link, type: 'rss' }, response: { success: true, data: [source] }, delegate: () => discover, calledWith: [feed.link] },
+  'feeds:list-categories': { arg: { workspaceId: 1 }, response: [category], delegate: () => query.queryFeedCategory, calledWith: [{ workspace_id: 1 }] },
+  'feeds:list': { arg: { workspaceId: 1 }, response: [feed], delegate: () => query.queryFeedSummaries, calledWith: [1] },
+  'items:query': { arg: { workspaceId: 1, limit: 50, feedIds: [2], ids: [4], cursor: { publishedAt: 0, id: 4 }, unreadOnly: false, search: '' }, response: { rows: [], nextCursor: { publishedAt: 0, id: 4 } }, delegate: () => query.queryRiverPage, calledWith: [{ workspaceId: 1, limit: 50, feedIds: [2], ids: [4], cursor: { publishedAt: 0, id: 4 }, unreadOnly: false, search: '' }] },
+  'saved:query': { arg: { workspaceId: 1, limit: 50, cursor: { savedAt: 1, publishedAt: 0, id: 4 } }, response: { rows: [] }, delegate: () => saved.querySavedPage, calledWith: [{ workspaceId: 1, limit: 50, cursor: { savedAt: 1, publishedAt: 0, id: 4 } }] },
+  'items:set-saved': { arg: { workspaceId: 1, itemId: 4, saved: true }, response: done, delegate: () => saved.setItemSaved, calledWith: [{ workspaceId: 1, itemId: 4, saved: true }] },
+  'feeds:refresh': { arg: undefined, response: { perFeed: [{ feedId: 2, inserted: 0, updated: 1 }], removed: 0 }, delegate: () => refreshAllFeeds, calledWith: [] },
+  'feeds:submit-add-feed': { arg: newFeed, response: { success: true, data: feed }, delegate: () => handlers.handleFeedsSubmitAddFeed, calledWith: [newFeed, event] },
+  'feeds:delete-feed': { arg: { feedId: 2, workspaceId: 1 }, response: done, delegate: () => remove.deleteFeedFromDatabase, calledWith: [2, 1] },
+  'feeds:set-show-in-workspace': { arg: { feedIds: [2], showInWorkspace: false, workspaceId: 1 }, response: done, delegate: () => update.setFeedsShowInWorkspace, calledWith: [[2], false, 1] },
+  'feeds:create-category': { arg: { name: 'Tech', workspaceId: 1 }, response: { success: true, data: category }, delegate: () => insert.createCategory, calledWith: ['Tech', 1] },
+  'feeds:rename-category': { arg: { categoryId: 3, name: 'Tech', workspaceId: 1 }, response: { success: true, data: category }, delegate: () => update.renameCategory, calledWith: [3, 'Tech', 1] },
+  'feeds:delete-category': { arg: { categoryId: 3, reassignTo: 5, workspaceId: 1 }, response: done, delegate: () => remove.deleteCategory, calledWith: [3, 1, 5] },
+  'feeds:move-feeds-to-category': { arg: { feedIds: [2], categoryId: 3, workspaceId: 1 }, response: done, delegate: () => update.moveFeedsToCategory, calledWith: [[2], 3, 1] },
+  'feeds:move-to-workspace': { arg: { feedId: 2, fromWorkspaceId: 1, toWorkspaceId: 6, categoryName: 'Tech' }, response: done, delegate: () => update.moveFeedToWorkspace, calledWith: [2, 1, 6, 'Tech'] },
+  'workspaces:list': { arg: undefined, response: [workspace], delegate: () => query.queryWorkspaceSummaries, calledWith: [] },
+  'workspaces:create': { arg: { name: 'Home', icon: 'Home01', color: 'blue' }, response: { success: true, data: workspace }, delegate: () => insert.createWorkspace, calledWith: ['Home', 'Home01', 'blue'] },
+  'workspaces:update': { arg: { workspaceId: 1, name: 'Home' }, response: { success: true, data: workspace }, delegate: () => update.updateWorkspace, calledWith: [1, { name: 'Home' }] },
+  'workspaces:delete': { arg: { workspaceId: 6 }, response: done, delegate: () => remove.deleteWorkspace, calledWith: [6] },
+  'workspaces:reorder': { arg: { orderedIds: [1, 6] }, response: done, delegate: () => update.reorderWorkspaces, calledWith: [[1, 6]] },
+  'items:set-read': { arg: { itemIds: [4], read: true }, response: done, delegate: () => update.setFeedItemsRead, calledWith: [[4], true] },
+  'items:get-content': { arg: 4, response: { description: '', article: undefined }, delegate: () => handlers.handleItemsGetContent, calledWith: [4] },
+  'app:back-up-database': { arg: undefined, response: { success: false, error: { name: 'CANCELLED', message: 'Backup cancelled.' } }, delegate: () => handlers.handleAppBackUpDatabase, calledWith: [] },
+  'app:get-info': { arg: undefined, response: { version: '1', feedCount: 1, itemCount: 0, databaseSizeBytes: 0 }, delegate: () => getAppInfo, calledWith: [] },
+  'app:get-startup-health': { arg: undefined, response: { name: 'OK' }, delegate: () => handlers.handleAppGetStartupHealth, calledWith: [] },
+  'app:get-update-state': { arg: undefined, response: { name: 'NONE' }, delegate: () => getUpdateState, calledWith: [] },
+  'settings:get': { arg: { key: 'language' }, response: languageState, delegate: () => handlers.handleSettingsGet, calledWith: [{ key: 'language' }] },
+  'settings:set': { arg: { key: 'language', value: 'fr' }, response: { setting: 'fr', language: 'fr', systemLanguage: 'en' }, delegate: () => handlers.handleSettingsSet, calledWith: [{ key: 'language', value: 'fr' }] },
+  'settings:dismiss-usage-analytics-prompt': { arg: undefined, response: usageState, delegate: () => dismissUsageAnalyticsPrompt, calledWith: [] },
+  'analytics:preview': { arg: undefined, response: summary, delegate: () => previewSummary, calledWith: [] },
+  'opml:import': { arg: { target: { kind: 'new-workspace', name: 'Tech', icon: 'Home01', color: 'blue', sourceSlug: 'tech', sourceVersion: '1' } }, response: imported, delegate: () => openAndImportOpml, calledWith: [{ kind: 'new-workspace', name: 'Tech', icon: 'Home01', color: 'blue', sourceSlug: 'tech', sourceVersion: '1' }] },
+  'opml:export': { arg: { workspaceId: 1 }, response: done, delegate: () => exportWorkspaceOpml, calledWith: [1] },
+  'feedpacks:list': { arg: undefined, response: { success: true, data: catalog }, delegate: () => getFeedpackCatalog, calledWith: [] },
+  'feedpacks:preview': { arg: { slug: 'tech' }, response: { success: true, data: preview }, delegate: () => previewFeedpack, calledWith: ['tech'] },
+  'feedpacks:install': { arg: { slug: 'tech', target: { kind: 'merge-workspace', workspaceId: 1 } }, response: imported, delegate: () => installFeedpack, calledWith: ['tech', { kind: 'merge-workspace', workspaceId: 1 }] },
+  'searches:list': { arg: { workspaceId: 1 }, response: { searches: [], hintExample: undefined }, delegate: () => searches.listSavedSearches, calledWith: [1] },
+  'searches:create': { arg: { workspaceId: 1, name: 'Engineers', query: 'title:engineer' }, response: { success: true, data: savedSearch }, delegate: () => searches.createSavedSearch, calledWith: [1, 'Engineers', 'title:engineer'] },
+  'searches:update': { arg: { searchId: 4, name: 'Engineers' }, response: { success: true, data: savedSearch }, delegate: () => searches.updateSavedSearch, calledWith: [4, { name: 'Engineers' }] },
+  'searches:delete': { arg: { searchId: 4 }, response: done, delegate: () => searches.deleteSavedSearch, calledWith: [4] },
+  'searches:dismiss-hint': { arg: { workspaceId: 1 }, response: done, delegate: () => searches.dismissSearchHint, calledWith: [1] },
+};
+
+const channels = Object.keys(ipcSchema) as InvokeChannel[];
 const invalidPayload = { success: false, error: { name: 'INVALID_PAYLOAD', message: 'Invalid request payload.' } };
 
-function registered(channel: TwoWayRendererMainChannels) {
+function registered(channel: InvokeChannel) {
   const registration = vi.mocked(ipcMain.handle).mock.calls.find(([name]) => name === channel);
   if (!registration) {
     throw new Error(`Missing handler for ${channel}`);
@@ -186,7 +191,9 @@ beforeEach(() => {
   vi.mocked(settings.getRefreshOnLaunch).mockResolvedValue(false);
   vi.mocked(settings.getWorkspaceRailExpanded).mockResolvedValue(false);
   vi.mocked(settings.getDetailedLogging).mockResolvedValue(false);
-  vi.mocked(resolveSource).mockReturnValue({ discover: vi.fn().mockResolvedValue({ success: true, data: [source] }) } as unknown as ReturnType<typeof resolveSource>);
+  discover.mockResolvedValue({ success: true, data: [source] });
+  vi.mocked(resolveSource).mockReturnValue({ discover } as unknown as ReturnType<typeof resolveSource>);
+  vi.mocked(getUpdateState).mockReturnValue({ name: 'NONE' });
   vi.mocked(refreshAllFeeds).mockResolvedValue(fixtures['feeds:refresh'].response);
   vi.mocked(openAndImportOpml).mockResolvedValue(imported);
   vi.mocked(exportWorkspaceOpml).mockResolvedValue(done);
@@ -222,7 +229,7 @@ describe('invoke channel contract', () => {
     const response: unknown = await registered(channel)(event, arg);
 
     // Assert
-    expect(fixture.handler).toHaveBeenCalledExactlyOnceWith(event, arg);
+    expect(fixture.delegate()).toHaveBeenCalledExactlyOnceWith(...fixture.calledWith);
     expect(response).toEqual(fixture.response);
     expect(structuredClone(response)).toEqual(response);
     expect(arg).toEqual(fixture.arg);
@@ -234,7 +241,7 @@ describe('invoke channel contract', () => {
 
     // Assert
     expect(response).toEqual(invalidPayload);
-    expect(fixtures[channel].handler).not.toHaveBeenCalled();
+    expect(fixtures[channel].delegate()).not.toHaveBeenCalled();
     expect(structuredClone(response)).toEqual(response);
   });
 

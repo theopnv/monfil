@@ -4,7 +4,7 @@
 
 import { db, dbReady } from '../database';
 import { countUnreadRiverItems } from './query';
-import type { SavedSearch, SavedSearchError, SavedSearchList, UpdateWorkspaceError } from '../../../shared/contracts';
+import type { SavedSearch, SavedSearchError, SavedSearchList, DismissSearchHintError } from '../../../shared/contracts';
 import { pickHintExample } from '../../../shared/search-hint';
 import type { Result } from '../../../shared/result';
 
@@ -139,7 +139,7 @@ export async function deleteSavedSearch(searchId: number): Promise<Result<void, 
   }
 }
 
-export async function dismissSearchHint(workspaceId: number, now = new Date()): Promise<Result<void, UpdateWorkspaceError>> {
+export async function dismissSearchHint(workspaceId: number, now = new Date()): Promise<Result<void, DismissSearchHintError>> {
   await dbReady;
   try {
     const result = await db.updateTable('workspace').set({ search_hint_dismissed_at: now.toISOString() }).where('id', '=', workspaceId).executeTakeFirst();

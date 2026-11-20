@@ -111,11 +111,6 @@
       "count": 2
     }
   },
-  "src/renderer/lib/ipc-client.ts": {
-    "@sonarjs/cyclomatic-complexity": {
-      "count": 1
-    }
-  },
   "src/renderer/lib/queries.ts": {
     "@sonarjs/cognitive-complexity": {
       "count": 1

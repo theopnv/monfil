@@ -10,7 +10,7 @@ import { pressComposing } from '@/lib/test/press-composing';
 import type { Result } from '../../../shared/result';
 import type { AddFeedError } from '../../../shared/contracts';
 import { HOME_WORKSPACE_ID, type FeedCategory, type FeedFetchError, type FeedSummary, type ParsedSource, type RiverPage, type RiverQuery } from '../../../shared/contracts';
-import type { TwoWayRendererMainChannelsInvokeArgs, TwoWayRendererMainChannelPayloads } from '../../../shared/channels';
+import type { ArgOf, InvokeChannel, ResultOf } from '../../../shared/ipc-schema';
 
 const categories: FeedCategory[] = [{ id: 1, name: 'Tech', workspace_id: HOME_WORKSPACE_ID }];
 
@@ -61,23 +61,23 @@ function stubElectron(overrides: {
   validateFeedUrl?: Result<ParsedSource[], FeedFetchError>;
   submitAddFeed?: Result<FeedSummary, AddFeedError>;
 } = {}) {
-  invokeMock = vi.fn(<C extends keyof TwoWayRendererMainChannelsInvokeArgs>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<TwoWayRendererMainChannelPayloads[C]> => {
+  invokeMock = vi.fn(<C extends InvokeChannel>(channel: C, arg: ArgOf<C>): Promise<ResultOf<C>> => {
     switch (channel) {
       case 'feeds:list-categories':
-        return Promise.resolve(categories) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(categories) as Promise<ResultOf<C>>;
       case 'feeds:list':
-        return Promise.resolve([] as FeedSummary[]) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve([] as FeedSummary[]) as Promise<ResultOf<C>>;
       case 'items:query': {
         const query = arg as RiverQuery;
         const rows = query.feedIds?.includes(insertedFeed.id) ? [insertedRow] : [];
-        return Promise.resolve({ rows }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve({ rows }) as Promise<ResultOf<C>>;
       }
-      case 'feeds:validate-feed-url':
-        return Promise.resolve(overrides.validateFeedUrl ?? { success: true, data: [parsedFeed] }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+      case 'feeds:discover':
+        return Promise.resolve(overrides.validateFeedUrl ?? { success: true, data: [parsedFeed] }) as Promise<ResultOf<C>>;
       case 'feeds:submit-add-feed':
-        return Promise.resolve(overrides.submitAddFeed ?? { success: true, data: insertedFeed }) as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(overrides.submitAddFeed ?? { success: true, data: insertedFeed }) as Promise<ResultOf<C>>;
       default:
-        return Promise.resolve(undefined) as unknown as Promise<TwoWayRendererMainChannelPayloads[C]>;
+        return Promise.resolve(undefined) as unknown as Promise<ResultOf<C>>;
     }
   });
 
@@ -107,15 +107,15 @@ describe('AddFeedModal', () => {
     await new Promise((resolve) => setTimeout(resolve, 600));
 
     // Assert
-    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:validate-feed-url')).toHaveLength(0);
+    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:discover')).toHaveLength(0);
 
     // Act
     await input.fill('https://youtube.com/@x');
     await expect.element(getByText('Feed found', { exact: true })).toBeInTheDocument();
 
     // Assert
-    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:validate-feed-url')).toEqual([
-      ['feeds:validate-feed-url', { query: 'https://youtube.com/@x', type: undefined }],
+    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:discover')).toEqual([
+      ['feeds:discover', { query: 'https://youtube.com/@x', type: undefined }],
     ]);
   });
 
@@ -153,7 +153,7 @@ describe('AddFeedModal', () => {
     await new Promise((resolve) => setTimeout(resolve, 600));
 
     // Assert
-    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:validate-feed-url')).toHaveLength(0);
+    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:discover')).toHaveLength(0);
   });
 
   test('Enter and Escape that belong to an IME composition leave the new category field alone', async () => {
@@ -189,7 +189,7 @@ describe('AddFeedModal', () => {
     await new Promise((resolve) => setTimeout(resolve, 600));
 
     // Assert
-    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:validate-feed-url')).toHaveLength(0);
+    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:discover')).toHaveLength(0);
 
     // Act
     await userEvent.keyboard(`{${key}}`);
@@ -197,8 +197,8 @@ describe('AddFeedModal', () => {
     await new Promise((resolve) => setTimeout(resolve, 600));
 
     // Assert
-    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:validate-feed-url')).toEqual([
-      ['feeds:validate-feed-url', { query: 'Underscore_', type: 'youtube' }],
+    expect(invokeMock.mock.calls.filter(([channel]) => channel === 'feeds:discover')).toEqual([
+      ['feeds:discover', { query: 'Underscore_', type: 'youtube' }],
     ]);
   });
 
@@ -216,7 +216,7 @@ describe('AddFeedModal', () => {
 
     // Assert
     await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledWith('feeds:validate-feed-url', { query: 'example.com/feed', type: 'rss' });
+      expect(invokeMock).toHaveBeenCalledWith('feeds:discover', { query: 'example.com/feed', type: 'rss' });
     }, { timeout: 2000 });
   });
 

@@ -3,59 +3,16 @@
 // See LICENSE in the repository root for full terms.
 
 import type {
-  AddFeedError,
-  AppInfo,
   AppUpdateState,
-  CatalogError,
-  CreateCategoryError,
-  CreateWorkspaceError,
-  DailySummaryProps,
-  DeleteCategoryError,
-  DeleteFeedError,
-  DeleteWorkspaceError,
-  ExportOpmlError,
-  FeedCategory,
-  FeedFetchError,
-  FeedpackCatalog,
-  FeedpackError,
-  FeedpackInstallTarget,
-  FeedpackPreview,
-  FeedSummary,
-  ImportOpmlError,
-  ImportOpmlTarget,
-  ImportSummary,
-  InstallFeedpackError,
-  ItemBody,
   LanguageState,
-  MoveFeedError,
-  NewFeedInput,
-  ParsedSource,
   RefreshInterval,
   RendererUsageCounter,
   RefreshSummary,
   RetentionDays,
-  RiverPage,
-  RiverQuery,
-  SavedQuery,
-  SavedSearch,
-  SavedSearchError,
-  SavedSearchList,
-  SetSavedItemInput,
-  UpdateSavedItemError,
-  SourceType,
-  StartupHealth,
-  UpdateCategoryError,
-  UpdateFeedError,
-  UpdateItemError,
-  UpdateWorkspaceError,
   UsageAnalyticsState,
   UsagePreferences,
-  Workspace,
-  WorkspaceSummary,
 } from './contracts';
-import type { ErrorParams } from './errors';
-import type { LanguageCode, LanguageSetting } from './i18n/languages';
-import type { IpcFailure, Result } from './result';
+import type { LanguageSetting } from './i18n/languages';
 import type { LogEventMap, LogEventName, LogLevel } from './logging';
 
 export type SettingTypes = {
@@ -103,111 +60,3 @@ export type OneWayMainToRendererChannelPayloads = {
 };
 
 export type OneWayMainToRendererChannels = keyof OneWayMainToRendererChannelPayloads;
-
-export type TwoWayRendererMainChannelPayloads = {
-  'feeds:validate-feed-url': Result<ParsedSource[], FeedFetchError>;
-  'feeds:list-categories': FeedCategory[];
-  'feeds:list': FeedSummary[];
-  'items:query': RiverPage;
-  'saved:query': RiverPage;
-  'items:set-saved': Result<void, UpdateSavedItemError>;
-  'feeds:refresh': RefreshSummary;
-  'feeds:submit-add-feed': Result<FeedSummary, AddFeedError>;
-  'feeds:delete-feed': Result<void, DeleteFeedError>;
-  'feeds:set-show-in-workspace': Result<void, UpdateFeedError>;
-  'feeds:create-category': Result<FeedCategory, CreateCategoryError>;
-  'feeds:rename-category': Result<FeedCategory, UpdateCategoryError>;
-  'feeds:delete-category': Result<void, DeleteCategoryError>;
-  'feeds:move-feeds-to-category': Result<void, UpdateCategoryError>;
-  'feeds:move-to-workspace': Result<void, MoveFeedError>;
-  'workspaces:list': WorkspaceSummary[];
-  'workspaces:create': Result<Workspace, CreateWorkspaceError>;
-  'workspaces:update': Result<Workspace, UpdateWorkspaceError>;
-  'workspaces:delete': Result<void, DeleteWorkspaceError>;
-  'workspaces:reorder': Result<void, UpdateWorkspaceError>;
-  'items:set-read': Result<void, UpdateItemError>;
-  'items:get-content': ItemBody;
-  'app:back-up-database': Result<void, { name: 'CANCELLED' | 'BACKUP_FAILED'; message: string; params?: ErrorParams }>;
-  'app:get-info': AppInfo;
-  'app:get-startup-health': StartupHealth;
-  'app:get-update-state': AppUpdateState;
-  'settings:get': SettingState;
-  'settings:set': SettingState;
-  'settings:dismiss-usage-analytics-prompt': UsageAnalyticsState;
-  'analytics:preview': DailySummaryProps;
-  'opml:import': Result<ImportSummary, ImportOpmlError>;
-  'opml:export': Result<void, ExportOpmlError>;
-  'feedpacks:list': Result<FeedpackCatalog, CatalogError>;
-  'feedpacks:preview': Result<FeedpackPreview, FeedpackError>;
-  'feedpacks:install': Result<ImportSummary, InstallFeedpackError>;
-  'searches:list': SavedSearchList;
-  'searches:create': Result<SavedSearch, SavedSearchError>;
-  'searches:update': Result<SavedSearch, SavedSearchError>;
-  'searches:delete': Result<void, SavedSearchError>;
-  'searches:dismiss-hint': Result<void, UpdateWorkspaceError>;
-};
-
-export type TwoWayRendererMainChannels = keyof TwoWayRendererMainChannelPayloads;
-
-export type IpcInvokeResponse<C extends TwoWayRendererMainChannels> = TwoWayRendererMainChannelPayloads[C] | IpcFailure;
-
-export type TwoWayRendererMainChannelsInvokeArgs = {
-  'feeds:validate-feed-url': { query: string; type?: SourceType };
-  'feeds:list-categories': { workspaceId: number };
-  'feeds:list': { workspaceId: number };
-  'items:query': RiverQuery;
-  'saved:query': SavedQuery;
-  'items:set-saved': SetSavedItemInput;
-  'feeds:refresh': undefined;
-  'feeds:submit-add-feed': NewFeedInput;
-  'feeds:delete-feed': { feedId: number; workspaceId: number };
-  'feeds:set-show-in-workspace': { feedIds: number[]; showInWorkspace: boolean; workspaceId: number };
-  'feeds:create-category': { name: string; workspaceId: number };
-  'feeds:rename-category': { categoryId: number; name: string; workspaceId: number };
-  'feeds:delete-category': { categoryId: number; reassignTo?: number | undefined; workspaceId: number };
-  'feeds:move-feeds-to-category': { feedIds: number[]; categoryId: number; workspaceId: number };
-  'feeds:move-to-workspace': { feedId: number; fromWorkspaceId: number; toWorkspaceId: number; categoryName: string };
-  'workspaces:list': undefined;
-  'workspaces:create': { name: string; icon: string; color: string };
-  'workspaces:update': { workspaceId: number; name?: string; icon?: string; color?: string };
-  'workspaces:delete': { workspaceId: number };
-  'workspaces:reorder': { orderedIds: number[] };
-  'items:set-read': { itemIds: number[]; read: boolean };
-  'items:get-content': number;
-  'app:back-up-database': undefined;
-  'app:get-info': undefined;
-  'app:get-startup-health': undefined;
-  'app:get-update-state': undefined;
-  'settings:get': SettingGetArg;
-  'settings:set': SettingSetArg;
-  'settings:dismiss-usage-analytics-prompt': undefined;
-  'analytics:preview': undefined;
-  'opml:import': { target: ImportOpmlTarget };
-  'opml:export': { workspaceId: number };
-  'feedpacks:list': undefined;
-  'feedpacks:preview': { slug: string };
-  'feedpacks:install': { slug: string; target: FeedpackInstallTarget };
-  'searches:list': { workspaceId: number };
-  'searches:create': { workspaceId: number; name: string; query: string };
-  'searches:update': { searchId: number; name?: string; query?: string };
-  'searches:delete': { searchId: number };
-  'searches:dismiss-hint': { workspaceId: number };
-};
-
-export type ChannelPayloads = OneWayRendererToMainChannelPayloads
-  & OneWayMainToRendererChannelPayloads
-  & TwoWayRendererMainChannelPayloads;
-
-export interface ElectronHandler {
-  /** The operating system locale, read at startup. Absent when the window did not get one. */
-  systemLocale?: string;
-  /** The interface language that main resolved when it made the window. Absent when the window did not get one. */
-  language?: LanguageCode;
-  /** Whether the first-run hints may show. Main decides, and the window gets the answer at startup. */
-  hintsEnabled?: boolean;
-  ipcRenderer: {
-    sendMessage<C extends OneWayRendererToMainChannels>(channel: C, payload: OneWayRendererToMainChannelPayloads[C]): void;
-    on<C extends OneWayMainToRendererChannels>(channel: C, func: (payload: OneWayMainToRendererChannelPayloads[C]) => void): () => void;
-    invoke<C extends TwoWayRendererMainChannels>(channel: C, arg: TwoWayRendererMainChannelsInvokeArgs[C]): Promise<IpcInvokeResponse<C>>;
-  };
-}

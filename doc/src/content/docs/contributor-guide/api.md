@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-The [channel contracts](https://github.com/theopnv/monfil/blob/main/src/shared/channels.ts) define calls and their argument and return types. [Shared data types](https://github.com/theopnv/monfil/blob/main/src/shared/contracts.ts) describe the payloads. The renderer calls main through `window.electron.ipcRenderer`.
+The [invoke schema](https://github.com/theopnv/monfil/blob/main/src/shared/ipc-schema.ts) holds one entry per `invoke` channel: the guard that checks its argument, and its result type. The [channel contracts](https://github.com/theopnv/monfil/blob/main/src/shared/channels.ts) define the one-way channels. [Shared data types](https://github.com/theopnv/monfil/blob/main/src/shared/contracts.ts) describe the payloads. The renderer calls main through `window.electron.ipcRenderer`.
 
 ## Read the channel list
 
@@ -39,7 +39,7 @@ Load initial state, such as the feed list, with `invoke`. Use `on` for later upd
 
 | Channel | Call | Purpose |
 | --- | --- | --- |
-| `feeds:validate-feed-url` | `invoke` | Resolve and fetch a feed entered by the user. |
+| `feeds:discover` | `invoke` | Resolve and fetch a feed entered by the user. |
 | `feeds:list-categories` | `invoke` | Get categories in a workspace. |
 | `feeds:list` | `invoke` | Get feeds in a workspace. |
 | `feeds:refresh` | `invoke` | Refresh feeds now. |
@@ -111,4 +111,4 @@ Expected failures use the shared [`Result` type](https://github.com/theopnv/monf
 
 ## Add or change a channel
 
-Define the arguments and result in the channel contracts. Keep shared data shapes in the shared contracts. Main registers calls and listeners in its [IPC folder](https://github.com/theopnv/monfil/tree/main/src/main/ipc). For an event to the renderer, use the typed send helpers and attach a listener with cleanup. Add a test at the boundary where behavior changes.
+For an `invoke` channel, add one entry to the invoke schema and one entry to the [route table](https://github.com/theopnv/monfil/blob/main/src/main/ipc/routes.ts). A missing route does not compile. For a one-way channel, define the payload in the channel contracts and register a listener in the [IPC folder](https://github.com/theopnv/monfil/tree/main/src/main/ipc). Keep shared data shapes in the shared contracts. For an event to the renderer, use the typed send helpers and attach a listener with cleanup. Add a test at the boundary where behavior changes.
