@@ -10,9 +10,7 @@ import type { FeedSummary } from "../../../shared/contracts";
 export interface RiverFilterStripProps {
   feeds: FeedSummary[];
   showOnlyLinks: ReadonlySet<string>;
-  /** Clears the focus of the active workspace. */
   onClearFocus: () => void;
-  /** Shows the given hidden feeds in the active workspace again. */
   onShowHidden: (feedIds: number[]) => void;
 }
 

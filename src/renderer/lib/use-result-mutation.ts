@@ -10,7 +10,6 @@ import { invalidateAll } from '@/lib/queries';
 import type { ArgOf, InvokeChannel, ResultOf } from '../../shared/ipc-schema';
 import type { Result } from '../../shared/result';
 
-/** The invoke channels that answer with a `Result`. */
 type ResultChannel = { [C in InvokeChannel]: ResultOf<C> extends Result<unknown, unknown> ? C : never }[InvokeChannel];
 
 type Variables<C extends ResultChannel, W extends boolean> = W extends true ? Omit<ArgOf<C>, 'workspaceId'> : ArgOf<C>;
@@ -18,7 +17,6 @@ type Variables<C extends ResultChannel, W extends boolean> = W extends true ? Om
 interface Options<W extends boolean> {
   /** The queries a successful call makes stale. A failed `Result` invalidates nothing. */
   invalidate: readonly (readonly unknown[])[];
-  /** Adds the active workspace to the request, so the caller does not repeat it. */
   withWorkspace?: W;
 }
 

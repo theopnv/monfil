@@ -13,7 +13,6 @@ import type { CodedError } from '../../../shared/errors';
 import type { Result } from '../../../shared/result';
 import { dialogFooterClass, dialogHeaderClass, dialogTitleClass } from './dialog-classes';
 
-/** The loading state and the error of a destructive action, and the close handler that forgets the error. */
 export function useConfirmAction<E extends CodedError>(onOpenChange: (open: boolean) => void) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<E | null>(null);
@@ -25,7 +24,6 @@ export function useConfirmAction<E extends CodedError>(onOpenChange: (open: bool
     onOpenChange(open);
   }
 
-  /** Runs `action`, and calls `onSuccess` when it succeeds, or shows its error when it does not. */
   async function run(action: () => Promise<Result<unknown, E>>, onSuccess: () => void) {
     setIsLoading(true);
     setError(null);
@@ -44,11 +42,9 @@ export function useConfirmAction<E extends CodedError>(onOpenChange: (open: bool
 interface ConfirmDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The width class of the modal. */
   widthClass: string;
   title: ReactNode;
   description?: ReactNode;
-  /** Content between the header and the error. */
   children?: ReactNode;
   error: CodedError | null;
   confirmLabel: ReactNode;

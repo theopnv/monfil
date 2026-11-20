@@ -15,7 +15,6 @@ export function ok(data?: unknown): Success<unknown> {
   return { success: true, data };
 }
 
-/** A failed `Result`. `params` fills the placeholders of the translated message, and is left out when absent. */
 export function fail<N extends string>(name: N, message: string, params?: ErrorParams): Failure<{ name: N; message: string; params?: ErrorParams }> {
   return { success: false, error: { name, message, ...(params ? { params } : {}) } };
 }

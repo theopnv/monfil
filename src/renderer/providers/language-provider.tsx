@@ -7,7 +7,6 @@ import { I18nProvider } from 'react-aria-components';
 import { applyDocumentLanguage, setRendererLanguage, useActiveLanguage } from '@/lib/i18n';
 import { ipc } from '@/lib/ipc-client';
 
-/** Keeps `<html lang dir>` and react-aria's date, number, and collation rules on the language that i18next has. */
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const language = useActiveLanguage();
 

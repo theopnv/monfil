@@ -9,10 +9,7 @@ import { usePreferences } from '@/providers/preferences-provider';
 import { useTheme } from '@/providers/theme-provider';
 import { useActiveWorkspaceId } from '@/providers/workspace-provider';
 
-/**
- * Reports the display settings and workspace switches to the main process for the optional usage stats.
- * Mount it once, high in the tree.
- */
+/** Mount once, high in the tree. */
 export function useUsageReporting(): void {
   const { preferences } = usePreferences();
   const { theme } = useTheme();

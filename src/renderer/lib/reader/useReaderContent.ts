@@ -8,7 +8,6 @@ import type { ItemBody, RiverRow, SourceType } from '../../../shared/contracts';
 import { deriveStandfirst, renderPlainTextDescription } from './reader';
 
 interface ReaderContentStrategy {
-  /** Turns the item's raw description into displayable HTML, shown while there is no fetched article. */
   renderDescription: (rawDescription: string) => string;
   // Also stands in for "this source fetches a full article": both happen to coincide for every
   // source type today, and only the main-only registry otherwise knows the latter.
@@ -77,7 +76,6 @@ type BodyState =
 /**
  * Resolves what the reader should show for the current item's body: the raw description and,
  * for sources the registry marks as fetching full articles, the extracted article, in one call.
- * @param item the item to show, or `undefined` while it has not resolved yet
  */
 export function useReaderContent(item: RiverRow | undefined, refreshVersion = 0): ReaderContent {
   const [body, setBody] = useState<BodyState>({ state: 'loading' });

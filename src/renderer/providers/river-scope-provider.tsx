@@ -131,7 +131,6 @@ export function useRiverScope(feeds: FeedSummary[], saved = false): RiverScopeRe
   return { scope, visibleFeedIdsSet, showOnlyLinks, setShowOnlyLinks, debouncedSearch };
 }
 
-/** The saved search whose pill is selected in the active workspace, if any. */
 export function useActiveSearchId(): [number | undefined, (searchId: number | undefined) => void] {
   const { getActiveSearchId, setActiveSearchId } = useRiverScopeState();
   const workspaceId = useActiveWorkspaceId();

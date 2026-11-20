@@ -50,15 +50,9 @@ export function usePushEvents(): void {
 
   useEffect(() => {
     const unsubscribers = [
-      // Record which feeds gained items, never the rows themselves: content must not move under a
-      // user who is mid-scroll. The Refresh pill (`useHasPendingRefresh`) is how the user opts into
-      // loading them. Edits and removals alone do not raise it, since they add no card at the top.
-      //
-      // Only raise it when a river is already rendered to protect. At launch, the very first
-      // `items:query` fetch can still be in flight when this push lands; that fetch has nothing
-      // loaded yet to disturb, so it just shows whatever is current once it resolves. Raising the
-      // pill anyway would leave it stuck on screen after that fetch already caught up on its own,
-      // since the click has nothing left to do.
+      // Record which feeds gained items, never the rows: content must not move under a mid-scroll user, who
+      // opts in through the Refresh pill. Raise it only when a river is already rendered: at launch the first
+      // `items:query` can still be in flight, and a pill raised then would stay stuck once that fetch has caught up.
       ipc.on('feeds:refreshed', (summary) => {
         const feedIdsWithNewItems = summary.perFeed.filter((feed) => feed.inserted > 0).map((feed) => feed.feedId);
         const hasRenderedRiver = queryClient.getQueriesData<InfiniteData<RiverPage>>({ queryKey: queryKeys.riverAll })
@@ -100,10 +94,7 @@ export function usePushEvents(): void {
   }, [queryClient]);
 }
 
-/**
- * Whether a background refresh stored new items in any of the given feeds since the river last loaded them.
- * @param feedIds the feeds the current river shows
- */
+/** Whether a background refresh stored new items in any of the given feeds since the river last loaded them. */
 export function useHasPendingRefresh(feedIds: ReadonlySet<number>): boolean {
   const { data } = useQuery<number[]>({
     queryKey: uiKeys.pendingRefreshFeedIds,

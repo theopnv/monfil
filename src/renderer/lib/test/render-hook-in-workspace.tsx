@@ -12,7 +12,6 @@ import { ActiveWorkspaceIdProvider, useActiveWorkspaceId } from '../../providers
 interface RenderedHook<T> {
   result: { current: T };
   queryClient: QueryClient;
-  /** Navigates to `/workspace/<id>` and resolves once the hook has rendered with that workspace. */
   goToWorkspace: (workspaceId: number) => Promise<void>;
 }
 

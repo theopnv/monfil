@@ -113,8 +113,6 @@ function toSidebarItems(folders: Folder[]): SidebarItem[] {
 /**
  * The folder a drop on `key` belongs to. A feed row answers with its own folder, so the whole
  * category area accepts a drop, not just its header.
- *
- * @return the category id, or null when the key is not part of a folder.
  */
 function dropCategoryId(items: SidebarItem[], key: string): number | null {
   if (key.startsWith(FOLDER_KEY_PREFIX)) {

@@ -17,7 +17,6 @@ export interface SavedSearches {
 
 const NONE: SavedSearches = { searches: [], hintExample: undefined };
 
-/** The saved searches of the active workspace, in pill order. */
 export const useSavedSearches = (): SavedSearches => {
   const workspaceId = useActiveWorkspaceId();
   const { data } = useQuery(savedSearchesQuery(workspaceId));

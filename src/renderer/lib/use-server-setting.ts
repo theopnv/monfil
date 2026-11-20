@@ -9,11 +9,9 @@ import type { SettingKey, SettingTypes } from '../../shared/channels';
 interface Options<K extends SettingKey> {
   /** Shows the chosen value at once, and replaces it with the state main returns. Only for a setting whose value is its own state. */
   optimistic?: boolean;
-  /** Runs with the state main returns after a save. */
   onSaved?: (state: SettingTypes[K]['state']) => unknown;
 }
 
-/** One setting that main stores: `undefined` until it loads, then its state, and a function that saves a new value. */
 export function useServerSetting<K extends SettingKey>(key: K, { optimistic = false, onSaved }: Options<K> = {}): [SettingTypes[K]['state'] | undefined, (value: SettingTypes[K]['value']) => void] {
   const [state, setState] = useState<SettingTypes[K]['state']>();
 

@@ -12,7 +12,6 @@ export function recordUsage(counter: RendererUsageCounter): void {
   ipc.send('usage:record', { counter });
 }
 
-/** The consent state and the calls that change it. */
 export function useUsageAnalytics() {
   const queryClient = useQueryClient();
   const { data } = useQuery(usageAnalyticsQuery());

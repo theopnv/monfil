@@ -13,7 +13,6 @@ import type { SavedSearchSummary } from "../../../shared/contracts";
 export interface SearchPillsProps {
   searches: SavedSearchSummary[];
   activeId: number | undefined;
-  /** The example to offer in the hint pill, or undefined when the hint must not show. */
   hintExample: string | undefined;
   onToggle: (search: SavedSearchSummary) => void;
   onDelete: (search: SavedSearchSummary) => void;
@@ -146,7 +145,6 @@ function HintPill({ example, onUse, onDismiss }: { example: string; onUse: () =>
   );
 }
 
-/** The row of saved searches above the river, with the onboarding hint when no search exists yet. */
 export default function SearchPills({ searches, activeId, hintExample, onToggle, onDelete, onRename, onUseExample, onDismissHint }: SearchPillsProps) {
   const { t } = useTranslation('river');
   if (searches.length === 0 && hintExample === undefined) {
