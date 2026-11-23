@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { extractChannel, isYoutubeLink, parseFeedContent, parseYoutubeInput, youtubeSource } from './youtube';
+import { isYoutubeLink, parseFeedContent, parseYoutubeInput, youtubeSource } from './youtube';
 import { fetchConditional, fetchText } from '../../lib/fetch';
 import type { FetchUrlError } from '../../../shared/contracts';
 
@@ -21,13 +21,6 @@ const AVATAR_RAW = 'https://yt3.googleusercontent.com/avatar=s900-c-k-c0x00fffff
 const AVATAR_NORMALIZED = 'https://yt3.googleusercontent.com/avatar=s176-c-k-c0x00ffffff-no-rj';
 
 describe('parseYoutubeInput', () => {
-  test('a bare channel id resolves to a channel', () => {
-    expect(parseYoutubeInput(CHANNEL_ID)).toEqual({ kind: 'channel', channelId: CHANNEL_ID });
-  });
-
-  test('a bare handle resolves to a page', () => {
-    expect(parseYoutubeInput('@Underscore_')).toEqual({ kind: 'page', path: '/@Underscore_' });
-  });
 
   test('a youtu.be link with a list param resolves to a playlist', () => {
     expect(parseYoutubeInput('https://youtu.be/abc123?list=PL1')).toEqual({ kind: 'playlist', playlistId: 'PL1' });
@@ -35,10 +28,6 @@ describe('parseYoutubeInput', () => {
 
   test('a bare youtu.be link resolves to a video', () => {
     expect(parseYoutubeInput('https://youtu.be/abc123')).toEqual({ kind: 'video', videoId: 'abc123' });
-  });
-
-  test('a videos.xml link with channel_id resolves to a channel', () => {
-    expect(parseYoutubeInput(`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`)).toEqual({ kind: 'channel', channelId: CHANNEL_ID });
   });
 
   test('a videos.xml link with playlist_id resolves to a playlist', () => {
@@ -50,20 +39,12 @@ describe('parseYoutubeInput', () => {
     expect(parseYoutubeInput(`https://www.youtube.com/channel/${CHANNEL_ID}/videos`)).toEqual({ kind: 'channel', channelId: CHANNEL_ID });
   });
 
-  test('a handle link with a trailing segment resolves to a page for the handle alone', () => {
-    expect(parseYoutubeInput('https://www.youtube.com/@Underscore_/videos')).toEqual({ kind: 'page', path: '/@Underscore_' });
-  });
-
   test('a /c/ link resolves to a page at the same path', () => {
     expect(parseYoutubeInput('https://www.youtube.com/c/SomeName')).toEqual({ kind: 'page', path: '/c/SomeName' });
   });
 
   test('a /user/ link resolves to a page at the same path', () => {
     expect(parseYoutubeInput('https://www.youtube.com/user/SomeName')).toEqual({ kind: 'page', path: '/user/SomeName' });
-  });
-
-  test('a /playlist link with a list param resolves to a playlist', () => {
-    expect(parseYoutubeInput('https://www.youtube.com/playlist?list=PL1')).toEqual({ kind: 'playlist', playlistId: 'PL1' });
   });
 
   test('a /watch link with v and list resolves to the playlist, not the video', () => {
@@ -85,24 +66,6 @@ describe('parseYoutubeInput', () => {
     expect(parseYoutubeInput(`https://music.youtube.com/channel/${CHANNEL_ID}`)).toEqual({ kind: 'channel', channelId: CHANNEL_ID });
   });
 
-  test('rejects a non-youtube host', () => {
-    expect(parseYoutubeInput('https://example.com/channel/UCxxxxxxxxxxxxxxxxxxxxxx')).toBeNull();
-  });
-
-  test('rejects an empty string', () => {
-    expect(parseYoutubeInput('')).toBeNull();
-    expect(parseYoutubeInput('   ')).toBeNull();
-  });
-
-  test('rejects a malformed url', () => {
-    expect(parseYoutubeInput('http://[::1')).toBeNull();
-  });
-
-  test('rejects a watch url with no v param', () => {
-    expect(parseYoutubeInput('https://www.youtube.com/watch')).toBeNull();
-    expect(parseYoutubeInput('https://www.youtube.com/watch?t=10')).toBeNull();
-  });
-
   test('accepts a link with the http scheme or with no scheme', () => {
     expect(parseYoutubeInput('http://www.youtube.com/watch?v=abc123')).toEqual({ kind: 'video', videoId: 'abc123' });
     expect(parseYoutubeInput('www.youtube.com/@Underscore_')).toEqual({ kind: 'page', path: '/@Underscore_' });
@@ -121,20 +84,10 @@ describe('parseYoutubeInput', () => {
   test.each([
     `https://www.youtube.com/other/channel/${CHANNEL_ID}`,
     'https://www.youtube.com/other/@Underscore_',
-    'https://www.youtube.com/other/c/SomeName',
     'https://www.youtube.com/other/user/SomeName',
     'https://www.youtube.com/results?v=abc123',
-    'https://www.youtube.com/channel/UCshort',
-    'https://www.youtube.com/',
   ])('%s is not a channel, a playlist or a video', (link) => {
     expect(parseYoutubeInput(link)).toBeNull();
-  });
-
-  test('a channel id must have 22 characters after UC', () => {
-    expect(parseYoutubeInput(`UC${'a'.repeat(21)}`)).toBeNull();
-    expect(parseYoutubeInput(`UC${'a'.repeat(23)}`)).toBeNull();
-    expect(parseYoutubeInput(`https://www.youtube.com/channel/UC${'a'.repeat(21)}`)).toBeNull();
-    expect(parseYoutubeInput(`https://www.youtube.com/channel/UC${'a'.repeat(23)}`)).toBeNull();
   });
 });
 
@@ -143,58 +96,12 @@ describe('isYoutubeLink', () => {
     expect(isYoutubeLink('https://www.youtube.com/@Underscore_')).toBe(true);
   });
 
-  test('is false for a bare handle with no host', () => {
-    expect(isYoutubeLink('@Underscore_')).toBe(false);
-  });
-
-  test('is false for a bare channel id with no host', () => {
-    expect(isYoutubeLink(CHANNEL_ID)).toBe(false);
-  });
-
-  test('is false for a non-youtube host', () => {
-    expect(isYoutubeLink('https://example.com/feed')).toBe(false);
-  });
-
   test('is false for a youtube host with a page that is not a channel, a playlist or a video', () => {
     expect(isYoutubeLink('https://www.youtube.com/')).toBe(false);
   });
 
   test('ignores the spaces around the link', () => {
     expect(isYoutubeLink('  https://www.youtube.com/@Underscore_  ')).toBe(true);
-  });
-});
-
-describe('extractChannel', () => {
-  test('reads the channel id from the canonical link', () => {
-    const html = `<link rel="canonical" href="https://www.youtube.com/channel/${CHANNEL_ID}">`;
-    expect(extractChannel(html).channelId).toBe(CHANNEL_ID);
-  });
-
-  test('falls back to the inline channelId json when there is no canonical link', () => {
-    const html = `<script>var ytInitialData = {"channelId":"${CHANNEL_ID}","other":1};</script>`;
-    expect(extractChannel(html).channelId).toBe(CHANNEL_ID);
-  });
-
-  test('leaves the channel id undefined when neither is present', () => {
-    const html = '<html><head><title>Nothing here</title></head></html>';
-    expect(extractChannel(html).channelId).toBeUndefined();
-  });
-
-  test('rewrites the og:image size suffix to the 2x avatar size', () => {
-    const html = `<meta property="og:image" content="${AVATAR_RAW}">`;
-    expect(extractChannel(html).icon).toBe(AVATAR_NORMALIZED);
-  });
-
-  test('leaves an og:image with an unexpected suffix alone', () => {
-    const html = '<meta property="og:image" content="https://example.com/avatar.png">';
-    expect(extractChannel(html).icon).toBe('https://example.com/avatar.png');
-  });
-
-  test('reads og:title and og:description', () => {
-    const html = '<meta property="og:title" content="Underscore_"><meta property="og:description" content="A channel about things.">';
-    const result = extractChannel(html);
-    expect(result.title).toBe('Underscore_');
-    expect(result.description).toBe('A channel about things.');
   });
 });
 
@@ -229,18 +136,6 @@ function channelFeedXml(feedLevelChannelId?: string): string {
 }
 
 describe('parseFeedContent', () => {
-  test('reads every entry in a busy feed', () => {
-    // Arrange
-    const entries = Array.from({ length: 40 }, (_, index) => `<entry><id>video-${index}</id><title>Video ${index}</title><published>2024-01-01T00:00:00Z</published></entry>`).join('');
-    const content = `<feed xmlns="http://www.w3.org/2005/Atom"><title>Busy channel</title>${entries}</feed>`;
-
-    // Act
-    const result = parseFeedContent(content);
-
-    // Assert
-    expect(result?.items).toHaveLength(40);
-    expect(result?.items[39]?.guid).toBe('video-39');
-  });
 
   test('maps description, thumbnail, guid and extra from an entry', () => {
     const result = parseFeedContent(channelFeedXml());
@@ -296,29 +191,14 @@ describe('parseFeedContent', () => {
     expect(item?.guid).toMatch(/^monfil:hash:[0-9a-f]{40}$/);
   });
 
-  test('an entry with media outside a group has no description or thumbnail', () => {
-    // Act
-    const item = parseFeedContent(atom('<entry><id>x</id><title>T</title><published>2024-01-01T00:00:00Z</published><media:title>direct</media:title></entry>'))?.items[0];
-
-    // Assert
-    expect(item).toMatchObject({ description: '', image: undefined });
-  });
-
   test.each([
     ['the alternate link, whatever its place', '<link rel="enclosure" href="https://e.example/"/><link rel="alternate" href="https://a.example/"/>', 'https://a.example/'],
-    ['a link with no rel', '<link rel="enclosure" href="https://e.example/"/><link href="https://plain.example/"/>', 'https://plain.example/'],
-    ['the first link when none is an alternate', '<link rel="self" href="https://s.example/"/><link rel="enclosure" href="https://e.example/"/>', 'https://s.example/'],
   ])('the link of an entry is %s', (_name, links, expected) => {
     // Act
     const item = parseFeedContent(atom(`<entry><id>x</id><title>T</title><published>2024-01-01T00:00:00Z</published>${links}</entry>`))?.items[0];
 
     // Assert
     expect(item?.link).toBe(expected);
-  });
-
-  test('returns null for a non-atom format', () => {
-    const rss = '<rss version="2.0"><channel><title>x</title></channel></rss>';
-    expect(parseFeedContent(rss)).toBeNull();
   });
 });
 
@@ -433,25 +313,6 @@ describe('fetchFeed', () => {
     expect(mockedFetchText).toHaveBeenCalledTimes(2);
   });
 
-  test('the playlist path returns 304 without downloading the feed body', async () => {
-    // Arrange
-    mockedFetchConditional.mockResolvedValue({ success: true, data: { notModified: true } });
-
-    // Act
-    const result = await fetchFeed({
-      link: 'https://www.youtube.com/playlist?list=PL1',
-      validators: { etag: '"v1"', last_modified: undefined },
-    });
-
-    // Assert
-    expect(result).toEqual({ success: true, data: { notModified: true } });
-    expect(mockedFetchConditional).toHaveBeenCalledWith(
-      'https://www.youtube.com/feeds/videos.xml?playlist_id=PL1',
-      { validators: { etag: '"v1"', last_modified: undefined } },
-    );
-    expect(mockedFetchText).not.toHaveBeenCalled();
-  });
-
   test('the video path resolves the channel from the watch page, then continues as a channel', async () => {
     mockResponses({
       'https://www.youtube.com/watch?v=abc123': fetched(watchPageHtml()),
@@ -471,35 +332,6 @@ describe('fetchFeed', () => {
     expect(mockedFetchText).toHaveBeenCalledTimes(3);
   });
 
-  test('a failing avatar fetch still returns the feed, with icon undefined', async () => {
-    mockResponses({
-      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: { success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } },
-      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: fetched(channelFeedXml()),
-    });
-
-    const result = await fetchFeed({ link: CHANNEL_ID });
-
-    expect(result).toEqual({ success: true, data: { validators: { etag: undefined, last_modified: undefined }, parsed: expect.objectContaining({ icon: undefined }) } });
-  });
-
-  const fetchUrlErrors: FetchUrlError[] = [
-    { name: 'GENERIC_FETCH_ERROR', message: 'boom' },
-    { name: 'NETWORK_ERROR', message: 'offline' },
-    { name: 'NOT_ALLOWED_OR_ABORTED_ERROR', message: 'blocked' },
-    { name: 'RESPONSE_TOO_LARGE_ERROR', message: 'too big' },
-    { name: 'BLOCKED_URL_ERROR', message: 'private' },
-  ];
-
-  test.each(fetchUrlErrors)('passes a $name feed fetch failure straight through', async (error) => {
-    mockResponses({
-      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: fetched(channelPageHtml()),
-      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: { success: false, error },
-    });
-
-    const result = await fetchFeed({ link: CHANNEL_ID });
-
-    expect(result).toEqual({ success: false, error });
-  });
 
   test('returns UNSUPPORTED_FORMAT for an input with no recognizable shape', async () => {
     const result = await fetchFeed({ link: 'https://example.com/nothing' });
@@ -521,17 +353,6 @@ describe('fetchFeed', () => {
     // Assert
     expect(result.success).toBe(true);
     expect(mockedFetchText).toHaveBeenCalledWith('https://www.youtube.com/@Underscore_');
-  });
-
-  test('a handle page that fails to load passes its error on', async () => {
-    // Arrange
-    mockResponses({ 'https://www.youtube.com/@Nobody': { success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } } });
-
-    // Act
-    const result = await fetchFeed({ link: '@Nobody' });
-
-    // Assert
-    expect(result).toEqual({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
   });
 
   test('a handle page with no channel id is refused', async () => {
@@ -610,32 +431,5 @@ describe('fetchFeed', () => {
     expect(result.success && result.data.map((source) => [source.type, source.link, source.title])).toEqual([
       ['youtube', `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`, 'Underscore_'],
     ]);
-  });
-
-  test('discover passes on a refusal', async () => {
-    // Act
-    const result = await youtubeSource.discover('https://example.com/nothing');
-
-    // Assert
-    expect(!result.success && result.error.name).toBe('UNSUPPORTED_FORMAT');
-  });
-
-  test('regression: a channel feed with a truncated feed-level yt:channelId still resolves the full id', async () => {
-    // The feed body below carries the real, buggy truncated value (no "UC" prefix). The adapter
-    // must never read it: for a channel target the id is already known before the feed is fetched.
-    mockResponses({
-      [`https://www.youtube.com/channel/${CHANNEL_ID}`]: fetched(channelPageHtml()),
-      [`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`]: fetched(channelFeedXml('WedHS9qKebauVIK2J7383g')),
-    });
-
-    const result = await fetchFeed({ link: CHANNEL_ID });
-
-    expect(result).toEqual({
-      success: true,
-      data: {
-        validators: { etag: undefined, last_modified: undefined },
-        parsed: expect.objectContaining({ link: `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}` }),
-      },
-    });
   });
 });

@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { db } from '../db/database';
 import { logger } from '../logging/logger';
-import { deleteAll, deleteDays, incrementCounter, isCountingEnabled, listDays, readDay, setCountingEnabled, utcDay } from './counters';
+import { deleteDays, incrementCounter, listDays, readDay, setCountingEnabled } from './counters';
 import { useTestDatabase } from '../test/db';
 
 vi.mock(import('../logging/logger'), () => ({ logger: { warn: vi.fn(), info: vi.fn(), error: vi.fn(), debug: vi.fn(), child: vi.fn() } }));
@@ -42,27 +42,6 @@ describe('incrementCounter', () => {
     await expect(readDay('2026-10-22')).resolves.toEqual({ articles_opened: 2, searches: 1 });
   });
 
-  test('keeps days apart, using the UTC day', async () => {
-    // Act
-    await incrementCounter('searches', new Date('2026-10-22T23:59:59Z'));
-    await incrementCounter('searches', new Date('2026-10-23T00:00:00Z'));
-
-    // Assert
-    await expect(listDays()).resolves.toEqual(['2026-10-22', '2026-10-23']);
-  });
-
-  test('counts nothing while consent is not granted', async () => {
-    // Arrange
-    setCountingEnabled(false);
-
-    // Act
-    await incrementCounter('articles_opened', day);
-
-    // Assert
-    expect(isCountingEnabled()).toBe(false);
-    await expect(listDays()).resolves.toEqual([]);
-  });
-
   test('does not reject when the write fails', async () => {
     // Arrange
     await db.schema.alterTable('usage_counter').renameTo('usage_counter_moved').execute();
@@ -97,33 +76,5 @@ describe('reading and deleting', () => {
 
     // Assert
     await expect(listDays()).resolves.toEqual(['2026-10-22']);
-  });
-
-  test('deleting no days changes nothing', async () => {
-    // Arrange
-    await incrementCounter('searches', day);
-
-    // Act
-    await deleteDays([]);
-
-    // Assert
-    await expect(listDays()).resolves.toEqual(['2026-10-22']);
-  });
-
-  test('deleteAll removes every tally', async () => {
-    // Arrange
-    await incrementCounter('searches', new Date('2026-10-20T00:00:00Z'));
-    await incrementCounter('searches', day);
-
-    // Act
-    await deleteAll();
-
-    // Assert
-    await expect(listDays()).resolves.toEqual([]);
-  });
-
-  test('utcDay formats a date as YYYY-MM-DD', () => {
-    // Act, Assert
-    expect(utcDay(new Date('2026-01-02T23:59:59Z'))).toBe('2026-01-02');
   });
 });

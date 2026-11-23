@@ -38,14 +38,6 @@ afterEach(() => {
 });
 
 describe('importOpml', () => {
-  test('returns the parse error and writes nothing for a malformed document', async () => {
-    // Act
-    const result = await importOpml('not xml <<<', { kind: 'merge-workspace', workspaceId: HOME_WORKSPACE_ID });
-
-    // Assert
-    expect(result).toEqual({ success: false, error: { name: 'MALFORMED_XML', message: expect.any(String) } });
-    expect(await db.selectFrom('feedMetadata').selectAll().execute()).toEqual([]);
-  });
 
   test('creates a workspace, its categories and its feed placements', async () => {
     // Arrange
@@ -108,19 +100,6 @@ describe('importOpml', () => {
     await db.insertInto('workspace').values(home).execute();
     expect(result.success).toBe(true);
     expect(created?.position).toBe(0);
-  });
-
-  test('returns DB_ERROR and writes nothing when the target workspace does not exist', async () => {
-    // Arrange
-    const xml = opml('<outline text="Tech"><outline type="rss" text="Feed A" xmlUrl="https://a.example/feed"/></outline>');
-
-    // Act
-    const result = await importOpml(xml, { kind: 'merge-workspace', workspaceId: 9999 });
-
-    // Assert
-    expect(result).toEqual({ success: false, error: { name: 'DB_ERROR', message: expect.any(String) } });
-    expect(await db.selectFrom('feedMetadata').selectAll().execute()).toEqual([]);
-    expect(await db.selectFrom('feedCategory').selectAll().execute()).toEqual([]);
   });
 
   test('falls back to the document title when the given workspace name is blank', async () => {

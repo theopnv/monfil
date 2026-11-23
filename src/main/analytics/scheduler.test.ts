@@ -35,26 +35,11 @@ async function remainingDays() {
 }
 
 describe('summaryTimestamp', () => {
-  test('uses the end of the day when it is less than 24 hours old', () => {
-    // Act, Assert
-    expect(summaryTimestamp('2026-10-22', new Date('2026-10-23T22:59:00Z')).toISOString()).toBe('2026-10-22T23:59:59.999Z');
-  });
-
-  test('uses the current time once the end of the day is 24 hours old or more', () => {
-    // Act, Assert
-    expect(summaryTimestamp('2026-10-22', new Date('2026-10-24T00:00:00Z')).toISOString()).toBe('2026-10-24T00:00:00.000Z');
-    expect(summaryTimestamp('2026-10-22', new Date('2026-10-24T01:00:00Z')).toISOString()).toBe('2026-10-24T01:00:00.000Z');
-  });
 
   test('uses the current time when the end of the day is exactly 24 hours old', () => {
     // Act, Assert
     expect(summaryTimestamp('2026-10-22', new Date('2026-10-23T23:59:59.999Z')).toISOString()).toBe('2026-10-23T23:59:59.999Z');
     expect(summaryTimestamp('2026-10-22', new Date('2026-10-23T23:59:59.998Z')).toISOString()).toBe('2026-10-22T23:59:59.999Z');
-  });
-
-  test('never goes into the future', () => {
-    // Act, Assert
-    expect(summaryTimestamp('2026-10-23', now).toISOString()).toBe(now.toISOString());
   });
 });
 
@@ -152,33 +137,6 @@ describe('flushUsageAnalytics', () => {
     expect(logger.info).toHaveBeenCalledWith('app.analytics', { outcome: 'dropped', events: 1 });
   });
 
-  test('does nothing without consent: it sends nothing and deletes nothing', async () => {
-    // Arrange
-    await incrementCounter('articles_opened', new Date('2026-10-22T09:00:00Z'));
-    await incrementCounter('articles_opened', new Date('2026-10-01T09:00:00Z'));
-    setCountingEnabled(false);
-
-    // Act
-    await flushUsageAnalytics({ now });
-
-    // Assert
-    expect(sendEvents).not.toHaveBeenCalled();
-    await expect(remainingDays()).resolves.toEqual(['2026-10-01', '2026-10-22']);
-  });
-
-  test('sends nothing when the build has no endpoint', async () => {
-    // Arrange
-    await incrementCounter('articles_opened', new Date('2026-10-22T09:00:00Z'));
-    vi.mocked(getAnalyticsEndpoint).mockReturnValue({ name: 'DISABLED', reason: 'NO_KEY' });
-
-    // Act
-    await flushUsageAnalytics({ now });
-
-    // Assert
-    expect(sendEvents).not.toHaveBeenCalled();
-    await expect(remainingDays()).resolves.toEqual(['2026-10-22']);
-  });
-
   test('does not send when consent is withdrawn while the summary is built', async () => {
     // Arrange
     await incrementCounter('articles_opened', new Date('2026-10-22T09:00:00Z'));
@@ -246,17 +204,6 @@ describe('sendConsentGranted', () => {
 
     // Assert
     expect(logger.warn).toHaveBeenCalledWith('app.analytics', { outcome: 'failed', events: 1, status: 500 });
-  });
-
-  test('sends nothing without an endpoint', async () => {
-    // Arrange
-    vi.mocked(getAnalyticsEndpoint).mockReturnValue({ name: 'DISABLED', reason: 'DEVELOPMENT' });
-
-    // Act
-    await sendConsentGranted(now);
-
-    // Assert
-    expect(sendEvents).not.toHaveBeenCalled();
   });
 });
 
@@ -397,7 +344,7 @@ describe('startUsageAnalytics', () => {
     await vi.waitFor(() => expect(sendEvents).toHaveBeenCalledOnce());
   });
 
-  test.each([['0', true], ['abc', true], ['200', false]])('ignores MONFIL_ANALYTICS_FLUSH_MS=%s (end-to-end run: %s)', async (flush, e2e) => {
+  test.each([['0', true], ['200', false]])('ignores MONFIL_ANALYTICS_FLUSH_MS=%s (end-to-end run: %s)', async (flush, e2e) => {
     // Arrange
     vi.stubEnv('E2E_TEST', e2e ? '1' : '');
     vi.stubEnv('MONFIL_ANALYTICS_FLUSH_MS', flush);

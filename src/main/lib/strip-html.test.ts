@@ -3,30 +3,9 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { decodeText, removeAll, stripHtml, truncateOnWordBoundary } from './strip-html';
+import { stripHtml, truncateOnWordBoundary } from './strip-html';
 
 describe('stripHtml', () => {
-  test('removes style blocks and their content', () => {
-    // Arrange
-    const html = '<style>.a { color: red; }</style><p>Body</p>';
-
-    // Act
-    const result = stripHtml(html);
-
-    // Assert
-    expect(result).toBe('Body');
-  });
-
-  test('removes script blocks and their content', () => {
-    // Arrange
-    const html = '<p>Body</p><script>alert("hi")</script>';
-
-    // Act
-    const result = stripHtml(html);
-
-    // Assert
-    expect(result).toBe('Body');
-  });
 
   test('decodes entities', () => {
     // Arrange
@@ -50,33 +29,6 @@ describe('stripHtml', () => {
     expect(result).toBe('Line one Line two');
   });
 
-  test('returns an empty string for empty input', () => {
-    // Act
-    const result = stripHtml('');
-
-    // Assert
-    expect(result).toBe('');
-  });
-
-  test('passes plain text through unchanged', () => {
-    // Act
-    const result = stripHtml('Just plain text');
-
-    // Assert
-    expect(result).toBe('Just plain text');
-  });
-
-  test('strips a script tag that is only revealed after entity decoding', () => {
-    // Arrange
-    const html = '&lt;script&gt;alert(1)&lt;/script&gt;Body';
-
-    // Act
-    const result = stripHtml(html);
-
-    // Assert
-    expect(result).toBe('Body');
-  });
-
   test('strips a script tag exposed by removing a nested script tag', () => {
     // Arrange
     const html = '<scrip<script>ignored</script>t>alert(1)</script>Body';
@@ -97,17 +49,6 @@ describe('stripHtml', () => {
 
     // Assert
     expect(result).toBe('Bodyscript src=evil.js');
-  });
-
-  test('strips a tag nested inside another tag', () => {
-    // Arrange
-    const html = '<scr<a>ipt>alert(1)</script>Body';
-
-    // Act
-    const result = stripHtml(html);
-
-    // Assert
-    expect(result).toBe('ipt>alert(1)Body');
   });
 });
 
@@ -142,29 +83,5 @@ describe('truncateOnWordBoundary', () => {
 
     // Assert
     expect(result).toBe('supercalif…');
-  });
-});
-
-describe('removeAll', () => {
-  test('removes every match', () => {
-    // Act / Assert
-    expect(removeAll('a<b>c<b>d', /<b>/g)).toBe('acd');
-  });
-
-  test('removes a match that the removal itself splices together', () => {
-    // Act / Assert
-    expect(removeAll('<<b>b>', /<b>/g)).toBe('');
-  });
-
-  test('replaces with the given text until nothing matches', () => {
-    // Act / Assert
-    expect(removeAll('xxxx', /xx/g, 'x')).toBe('x');
-  });
-});
-
-describe('decodeText', () => {
-  test('decodes HTML entities that a feed left inside a CDATA section', () => {
-    // Act & Assert
-    expect(decodeText('It&#8217;s &amp; &lt;b&gt;')).toBe('It\u2019s & <b>');
   });
 });

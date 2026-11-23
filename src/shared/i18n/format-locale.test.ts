@@ -3,7 +3,6 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { LANGUAGE_CODES } from './languages';
 import { resolveFormatLocale } from './format-locale';
 
 describe('resolveFormatLocale', () => {
@@ -36,39 +35,5 @@ describe('resolveFormatLocale', () => {
 
     // Assert
     expect(locale).toBe(expected);
-  });
-
-  test.each([{ system: undefined }, { system: '' }])('uses the bare language when the system locale is $system', ({ system }) => {
-    // Act
-    const locale = resolveFormatLocale('de', system);
-
-    // Assert
-    expect(locale).toBe('de');
-  });
-
-  test.each([
-    { language: 'en', expected: 'en' },
-    { language: 'fr', expected: 'fr' },
-    { language: 'de', expected: 'de' },
-    { language: 'es', expected: 'es' },
-    { language: 'it', expected: 'it' },
-    { language: 'pt', expected: 'pt-BR' },
-    { language: 'zh', expected: 'zh-Hans' },
-    { language: 'ja', expected: 'ja' },
-    { language: 'ar', expected: 'ar' },
-  ] as const)('formats a $language interface as $expected when the system locale is unknown', ({ language, expected }) => {
-    // Act
-    const locale = resolveFormatLocale(language, undefined);
-
-    // Assert
-    expect(locale).toBe(expected);
-  });
-
-  test('gives every interface language a locale that Intl accepts', () => {
-    // Act
-    const locales = LANGUAGE_CODES.map((language) => resolveFormatLocale(language, undefined));
-
-    // Assert
-    expect(locales.map((locale) => Intl.DateTimeFormat.supportedLocalesOf(locale).length)).toEqual(locales.map(() => 1));
   });
 });

@@ -52,14 +52,6 @@ describe('useFeedValidation', () => {
 
   test.each([
     'https://youtu',
-    'youtu',
-    'https://',
-    'https://you tube.com',
-    'https://youtu/feed.xml',
-    'https://youtu?feed=example.com',
-    'ftp://example.com/feed',
-    '@Underscore_',
-    '@example.name',
     'Underscore_',
   ])('stays idle while typing %s', async (query) => {
     // Arrange

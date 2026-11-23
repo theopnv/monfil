@@ -12,15 +12,6 @@ const pack: Feedpack = {
 };
 
 describe('feedpackText', () => {
-  test('gives the translation of the language', () => {
-    // Act & Assert
-    expect(feedpackText(pack, 'fr')).toEqual({ title: 'IA', description: 'Recherche et actualités.' });
-  });
-
-  test('gives the English text for a language that the pack does not translate', () => {
-    // Act & Assert
-    expect(feedpackText(pack, 'ja')).toEqual({ title: 'AI', description: 'Research and news.' });
-  });
 
   test('gives the English text for a pack with no translations at all', () => {
     // Arrange

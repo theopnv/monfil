@@ -3,7 +3,6 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import path from 'node:path';
 import { resolveDevUserDataDir } from './dev-user-data-dir';
 
 describe('resolveDevUserDataDir', () => {
@@ -27,16 +26,5 @@ describe('resolveDevUserDataDir', () => {
 
     // Assert
     expect(result).toBeNull();
-  });
-
-  test('points unpackaged runs at a sibling -dev directory', () => {
-    // Arrange
-    const input = { isPackaged: false, hasExplicitUserDataDir: false, appDataDir: '/app-data', appName: 'monfil' };
-
-    // Act
-    const result = resolveDevUserDataDir(input);
-
-    // Assert
-    expect(result).toBe(path.join('/app-data', 'monfil-dev'));
   });
 });

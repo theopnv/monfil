@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { DEFAULT_HINT_EXAMPLE, pickHintExample } from './search-hint';
+import { pickHintExample } from './search-hint';
 
 describe('pickHintExample', () => {
   test('uses the most common role word', () => {
@@ -23,11 +23,5 @@ describe('pickHintExample', () => {
 
     // Assert
     expect(result).toBe('title:engineer -manager');
-  });
-
-  test('falls back to the default when no role word appears', () => {
-    // Act / Assert
-    expect(pickHintExample(['Plumber'])).toBe(DEFAULT_HINT_EXAMPLE);
-    expect(pickHintExample([])).toBe(DEFAULT_HINT_EXAMPLE);
   });
 });

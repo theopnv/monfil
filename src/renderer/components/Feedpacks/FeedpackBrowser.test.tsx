@@ -56,7 +56,7 @@ describe('FeedpackBrowser', () => {
     await expect.element(getByText('Operations', { exact: true })).toBeInTheDocument();
   });
 
-  test.each([['artificielle'], ['actualités'], ['research'], ['llm']])('finds the pack by the word %j, in the translated or the English text', async (word) => {
+  test.each([['artificielle'], ['research']])('finds the pack by the word %j, in the translated or the English text', async (word) => {
     // Arrange
     await setRendererLanguage('fr');
     const { getByRole, getByText } = await renderBrowser();

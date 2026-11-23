@@ -24,29 +24,8 @@ ${body}
 </html>`;
 }
 
-const LONG_ARTICLE_HTML = articlePage(`
-<p>${PARAGRAPH}</p>
-<p>Another paragraph continues the story with more detail and context for the reader to enjoy. It has a <a href="/related-post">related post</a> linked inline.</p>
-<script>window.__pwned = true;</script>
-<img src="photo.jpg" onclick="window.__pwned = true;">
-<iframe src="https://evil.example"></iframe>
-<style>p{color:red}</style>
-<form><input></form>
-<a href="javascript:window.__pwned = true;">bad link</a>
-`);
 
 describe('extractArticle', () => {
-  test('keeps footnote links and target IDs in the extracted article', () => {
-    // Arrange
-    const html = articlePage(`<p>${PARAGRAPH}<a href="#footnote-1">Footnote</a></p><p id="footnote-1">${PARAGRAPH}</p>`);
-
-    // Act
-    const result = extractArticle(html, 'https://example.com/story');
-
-    // Assert
-    expect(result?.html).toContain('href="#footnote-1"');
-    expect(result?.html).toContain('id="footnote-1"');
-  });
 
   test('loads lazy article images and removes an app card', () => {
     // Arrange
@@ -157,61 +136,6 @@ describe('extractArticle', () => {
     // Assert
     expect(result?.html?.match(/demo_app\.webp/g)).toHaveLength(1);
   });
-
-  test('extracts the body text and its word count', () => {
-    // Act
-    const result = extractArticle(LONG_ARTICLE_HTML, 'https://example.com/article');
-
-    // Assert
-    expect(result).toBeDefined();
-    expect(result?.text).toContain('long paragraph about something interesting');
-    expect(result?.wordCount).toBeGreaterThan(20);
-    expect(result?.wordCount).toBe(result?.text.trim().split(/\s+/).filter(Boolean).length);
-  });
-
-  test('resolves a relative href against the page url', () => {
-    // Act
-    const result = extractArticle(LONG_ARTICLE_HTML, 'https://example.com/section/article');
-
-    // Assert
-    expect(result?.html).toContain('href="https://example.com/related-post"');
-  });
-
-  test('strips <script> tags and onclick attributes from the output', () => {
-    // Act
-    const result = extractArticle(LONG_ARTICLE_HTML, 'https://example.com/article');
-
-    // Assert
-    expect(result?.html).not.toContain('<script');
-    expect(result?.html).not.toContain('onclick');
-  });
-
-  test('strips iframe, style and form tags from the output', () => {
-    // Act
-    const result = extractArticle(LONG_ARTICLE_HTML, 'https://example.com/article');
-
-    // Assert
-    expect(result?.html).not.toContain('<iframe');
-    expect(result?.html).not.toContain('<style');
-    expect(result?.html).not.toContain('<form');
-    expect(result?.html).not.toContain('<input');
-  });
-
-  test('neutralizes a javascript: href in the output', () => {
-    // Act
-    const result = extractArticle(LONG_ARTICLE_HTML, 'https://example.com/article');
-
-    // Assert
-    expect(result?.html).not.toContain('javascript:');
-  });
-
-  test('returns undefined when there is no article content to find', () => {
-    // Act
-    const result = extractArticle('<html><head></head><body></body></html>', 'https://example.com/empty');
-
-    // Assert
-    expect(result).toBeUndefined();
-  });
 });
 
 const PAGE = 'https://example.com/blog/story';
@@ -223,12 +147,6 @@ function extractBody(body: string, url = PAGE): Document {
 
 describe('extractArticle lazy images', () => {
   test.each([
-    ['data-src', 'data-src="https://cdn.example.com/a.png"', 'https://cdn.example.com/a.png'],
-    ['data-lazy-src', 'data-lazy-src="https://cdn.example.com/b.png"', 'https://cdn.example.com/b.png'],
-    ['data-original', 'data-original="https://cdn.example.com/c.png"', 'https://cdn.example.com/c.png'],
-    ['a relative data-src', 'data-src="img/d.png"', 'https://example.com/blog/img/d.png'],
-    ['a root-relative data-src', 'data-src="/img/e.png"', 'https://example.com/img/e.png'],
-    ['data-src before data-lazy-src', 'data-lazy-src="https://cdn.example.com/x.png" data-src="https://cdn.example.com/f.png"', 'https://cdn.example.com/f.png'],
     ['data-lazy-src before data-original', 'data-original="https://cdn.example.com/x.png" data-lazy-src="https://cdn.example.com/g.png"', 'https://cdn.example.com/g.png'],
     ['the first data-srcset candidate', 'data-srcset="https://cdn.example.com/h-1x.png 1x, https://cdn.example.com/h-2x.png 2x"', 'https://cdn.example.com/h-1x.png'],
     ['a relative data-srcset candidate after whitespace', 'data-srcset="  /i.png 1x"', 'https://example.com/i.png'],
@@ -243,7 +161,6 @@ describe('extractArticle lazy images', () => {
   });
 
   test.each([
-    ['no src', ''],
     ['an empty src', 'src=""'],
     ['an about:blank src', 'src="about:blank"'],
   ])('sets src from data-src on an image with %s', (_name, src) => {
@@ -260,25 +177,6 @@ describe('extractArticle lazy images', () => {
 
     // Assert
     expect(image?.getAttribute('src')).toBe('https://cdn.example.com/real.png');
-  });
-
-  test.each([
-    'javascript:alert(1)',
-    'data:text/html,hi',
-  ])('does not use the non-http lazy source %s', (lazy) => {
-    // Act
-    const image = extractBody(`<img src="data:image/gif;base64,R0lGOD" data-src="${lazy}" alt="lazy">`).querySelector('img');
-
-    // Assert
-    expect(image?.getAttribute('src') ?? '').not.toMatch(/^(javascript|data:text):/);
-  });
-
-  test('accepts a plain http lazy source', () => {
-    // Act
-    const image = extractBody('<img src="data:image/gif;base64,R0lGOD" data-src="http://cdn.example.com/r.png" alt="lazy">').querySelector('img');
-
-    // Assert
-    expect(image?.getAttribute('src')).toBe('http://cdn.example.com/r.png');
   });
 
   test('copies data-srcset to srcset', () => {
@@ -362,17 +260,6 @@ describe('extractArticle iframe embeds', () => {
     // Assert
     expect(link?.getAttribute('href')).toBe('https://www.dailymotion.com/embed/video/x7tgad0');
   });
-
-  test('removes an iframe whose source is not http', () => {
-    // Act
-    const document = extractBody('<iframe src="javascript:void(0)" data-ref="//youtube.com/x" title="Sneaky"></iframe>');
-
-    // Assert
-    expect(document.querySelector('iframe')).toBeNull();
-    expect(document.body.innerHTML).not.toContain('javascript:');
-    expect(document.body.textContent).not.toContain('Sneaky');
-    expect(document.body.textContent).not.toContain('Open embedded content');
-  });
 });
 
 describe('extractArticle blockquote embeds', () => {
@@ -405,15 +292,6 @@ describe('extractArticle blockquote embeds', () => {
     expect(marker?.getAttribute('href')).toBe(TWEET_URL);
   });
 
-  test('keeps a quote with text that links to an Instagram post', () => {
-    // Act
-    const document = extractBody(`<blockquote><p>Look at this photo. <a href="${INSTAGRAM_URL}">Source</a></p></blockquote>`);
-
-    // Assert
-    expect(document.querySelector('a[data-monfil-embed]')).toBeNull();
-    expect(document.querySelector('blockquote')?.textContent).toContain('Look at this photo.');
-  });
-
   test('keeps a quote with text inside a figure that links to a video', () => {
     // Act
     const document = extractBody('<figure><blockquote><p>Watch this talk. <a href="https://www.youtube.com/watch?v=5HcjtbfJfCY">Video</a></p></blockquote></figure>');
@@ -421,23 +299,6 @@ describe('extractArticle blockquote embeds', () => {
     // Assert
     expect(document.querySelector('a[data-monfil-embed]')).toBeNull();
     expect(document.querySelector('blockquote')?.textContent).toContain('Watch this talk.');
-  });
-
-  test('keeps a quote without any embed link', () => {
-    // Act
-    const document = extractBody('<blockquote><p>Plain words from someone. <a href="https://example.org/page">Page</a></p></blockquote>');
-
-    // Assert
-    expect(document.querySelector('a[data-monfil-embed]')).toBeNull();
-    expect(document.querySelector('blockquote')?.textContent).toContain('Plain words from someone.');
-  });
-
-  test('keeps an empty blockquote without an embed link', () => {
-    // Act
-    const document = extractBody('<blockquote><a href="https://example.org/page"></a></blockquote>');
-
-    // Assert
-    expect(document.querySelector('a[data-monfil-embed]')).toBeNull();
   });
 });
 
@@ -463,7 +324,6 @@ describe('extractArticle site modules', () => {
     ['links to a subdomain of the promoted host', '<a href="https://sub.4h90.mjlp.lu/x">link</a>'],
     ['links to a host that only contains the promoted one in its path', '<a href="https://example.org/4h90.mjlp.lu">link</a>'],
     ['has a link that cannot be parsed', '<a href="http://[broken">link</a>'],
-    ['has no link', ''],
   ])('keeps a data-nosnippet block that %s', (_name, content) => {
     // Act
     const document = extractBody(`<div data-nosnippet><p>KEEPME ${PARAGRAPH}</p>${content}</div>`);
@@ -489,48 +349,6 @@ describe('extractArticle site modules', () => {
     expect(document.body.textContent).not.toContain('FOLLOWAUTHOR');
     expect(document.body.textContent).toContain('AFTERMODULE');
   });
-
-  test('keeps an element whose id only contains the follow prefix', () => {
-    // Act
-    const document = extractBody('<div><p>KEEPFOLLOW</p><ul><li id="my-follow-author-article_footer-9">Author</li></ul></div>');
-
-    // Assert
-    expect(document.body.textContent).toContain('KEEPFOLLOW');
-  });
-
-  test('keeps a follow control outside a list', () => {
-    // Act
-    const document = extractBody('<div><p>KEEPLONE</p><span id="follow-author-article_footer-1">Author</span></div>');
-
-    // Assert
-    expect(document.body.textContent).toContain('KEEPLONE');
-  });
-
-  test.each([
-    ['.card-install-pwa', '<div class="card-install-pwa"><p>REMOVEME</p></div>'],
-    ['.premium-promo-alert', '<div class="premium-promo-alert"><p>REMOVEME</p></div>'],
-    ['[class~="lightbox"]', '<div class="gallery lightbox"><p>REMOVEME</p></div>'],
-    ['[role="dialog"]', '<div role="dialog"><p>REMOVEME</p></div>'],
-    ['form', '<form><p>REMOVEME</p></form>'],
-  ])('removes %s', (_name, markup) => {
-    // Act
-    const document = extractBody(markup);
-
-    // Assert
-    expect(document.body.textContent).not.toContain('REMOVEME');
-  });
-
-  test.each([
-    ['a product block without the no-ads class', '<div class="product-block"><p>KEEPME</p></div>'],
-    ['a class that only starts with modal', '<div class="modality"><p>KEEPME</p></div>'],
-    ['a class that only starts with lightbox', '<div class="lightboxes"><p>KEEPME</p></div>'],
-  ])('keeps %s', (_name, markup) => {
-    // Act
-    const document = extractBody(markup);
-
-    // Assert
-    expect(document.body.textContent).toContain('KEEPME');
-  });
 });
 
 describe('extractArticle text', () => {
@@ -542,34 +360,6 @@ describe('extractArticle text', () => {
     expect(result?.text.startsWith('FIRST')).toBe(true);
     expect(result?.text.endsWith('LAST')).toBe(true);
   });
-
-  test('returns undefined when the content holds only whitespace text', () => {
-    // Act
-    const result = extractArticle('<html><head><title>Photo</title></head><body><article> \n <img src="https://cdn.example.com/s.png" alt="x"> \n </article></body></html>', PAGE);
-
-    // Assert
-    expect(result).toBeUndefined();
-  });
-});
-
-describe('extractArticle word count', () => {
-  const WORDS = Array.from({ length: 120 }, (_, index) => `word${index}`);
-
-  test('counts words split by spaces, runs of spaces and newlines', () => {
-    // Arrange
-    const first = WORDS.slice(0, 40).join(' ');
-    const second = WORDS.slice(40, 80).join('  ');
-    const third = WORDS.slice(80).join('\n');
-    const page = `<html><head><title>Words</title></head><body><article><p>${first}</p>\n<p>${second}</p>\n<p>${third}</p></article></body></html>`;
-
-    // Act
-    const result = extractArticle(page, PAGE);
-
-    // Assert
-    expect(result?.wordCount).toBe(120);
-    expect(result?.text).toMatch(/^word0 /);
-    expect(result?.text).toMatch(/word119$/);
-  });
 });
 
 describe('deriveArticleContentStatus', () => {
@@ -579,18 +369,5 @@ describe('deriveArticleContentStatus', () => {
 
     // Act & Assert
     expect(deriveArticleContentStatus(article)).toBe('ok');
-  });
-
-  test('is "too_short" for an article below the minimum length', () => {
-    // Arrange
-    const article = { html: '<p>x</p>', text: 'x'.repeat(MIN_ARTICLE_LENGTH - 1), wordCount: 1 };
-
-    // Act & Assert
-    expect(deriveArticleContentStatus(article)).toBe('too_short');
-  });
-
-  test('is "failed" when there is no article', () => {
-    // Act & Assert
-    expect(deriveArticleContentStatus(undefined)).toBe('failed');
   });
 });

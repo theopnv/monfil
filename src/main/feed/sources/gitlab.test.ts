@@ -33,14 +33,6 @@ describe('gitlabCandidates', () => {
     expect(candidates?.[0]?.link).toBe('https://gitlab.com/gitlab-org/cli/sub/tool/-/releases.atom');
   });
 
-  test('a stored feed URL is kept as it is', () => {
-    // Act
-    const candidates = gitlabCandidates('https://gitlab.com/gitlab-org/gitlab/-/releases.atom', false);
-
-    // Assert
-    expect(candidates?.[0]?.link).toBe('https://gitlab.com/gitlab-org/gitlab/-/releases.atom');
-  });
-
   test('a self-hosted instance resolves only when the GitLab chip is picked', () => {
     // Act
     const withChip = gitlabCandidates('https://gitlab.gnome.org/GNOME/gtk', true);

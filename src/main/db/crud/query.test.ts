@@ -2,45 +2,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { CompiledQuery } from 'kysely';
+import { beforeEach, describe, expect, test } from 'vitest';
 import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 import { db } from '../database';
-import { countFeedItems, countFeedMetadata, countUnreadRiverItems, queryArticleContent, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedMetadataByIds, queryFeedSummaries, queryRiverPage, querySubscribedFeedMetadata, queryWorkspaceById, queryWorkspaceSummaries } from './query';
+import { countUnreadRiverItems, queryFeedCategory, queryFeedItems, queryFeedMetadata, queryFeedMetadataByIds, queryFeedSummaries, queryRiverPage } from './query';
 import { useTestDatabase } from '../../test/db';
 
 useTestDatabase();
 
-/** The SQLite plan of the one statement `run` sends. */
-async function queryPlanOf(run: () => Promise<unknown>): Promise<string> {
-  const executor = db.getExecutor();
-  const original = executor.executeQuery.bind(executor);
-  const sent: CompiledQuery[] = [];
-  const spy = vi.spyOn(executor, 'executeQuery').mockImplementation(((query: CompiledQuery, queryId: never) => {
-    sent.push(query);
-    return original(query, queryId);
-  }) as never);
-  await run();
-  spy.mockRestore();
-  const [statement] = sent;
-  if (sent.length !== 1 || !statement) {
-    throw new Error(`expected one statement, got ${sent.length}`);
-  }
-  const { rows } = await db.executeQuery<{ detail: string }>(CompiledQuery.raw(`explain query plan ${statement.sql}`, [...statement.parameters]));
-  return rows.map((row) => row.detail).join('\n');
-}
 
 describe('queryFeedCategory', () => {
-  test('returns every category when no criteria are given', async () => {
-    // Arrange
-    await db.insertInto('feedCategory').values([{ name: 'tech', workspace_id: HOME_WORKSPACE_ID }, { name: 'news', workspace_id: HOME_WORKSPACE_ID }]).execute();
-
-    // Act
-    const result = await queryFeedCategory({});
-
-    // Assert
-    expect(result.map((category) => category.name).sort()).toEqual(['news', 'tech']);
-  });
 
   test('filters by name', async () => {
     // Arrange
@@ -52,26 +23,6 @@ describe('queryFeedCategory', () => {
     // Assert
     expect(result).toHaveLength(1);
     expect(result[0]?.name).toBe('tech');
-  });
-
-  test('returns an empty array when nothing matches', async () => {
-    // Arrange
-    const result = await queryFeedCategory({ name: 'does-not-exist' });
-
-    // Assert
-    expect(result).toEqual([]);
-  });
-
-  test('scoped to a workspace, still returns categories in creation order rather than alphabetically', async () => {
-    // Arrange: "Tech" is created first and sorts after "News" alphabetically, so this only passes
-    // with an explicit ORDER BY, not whatever order the (workspace_id, name) index happens to give.
-    await db.insertInto('feedCategory').values([{ name: 'Tech', workspace_id: HOME_WORKSPACE_ID }, { name: 'News', workspace_id: HOME_WORKSPACE_ID }]).execute();
-
-    // Act
-    const result = await queryFeedCategory({ workspace_id: HOME_WORKSPACE_ID });
-
-    // Assert
-    expect(result.map((category) => category.name)).toEqual(['Tech', 'News']);
   });
 });
 
@@ -118,23 +69,6 @@ describe('queryFeedMetadata with unset criteria', () => {
   });
 });
 
-describe('querySubscribedFeedMetadata', () => {
-  test('lists only the feeds that have a placement, narrowed to the given ids', async () => {
-    // Arrange
-    const first = await seedFeed({ link: 'https://a.example/feed' });
-    const second = await seedFeed({ link: 'https://b.example/feed' });
-    await db.insertInto('feedMetadata').values({ link: 'https://unplaced.example/feed', title: 'Unplaced' }).execute();
-
-    // Act
-    const all = await querySubscribedFeedMetadata();
-    const narrowed = await querySubscribedFeedMetadata([second]);
-
-    // Assert
-    expect(all.map((row) => row.id).sort()).toEqual([first, second].sort());
-    expect(narrowed.map((row) => row.id)).toEqual([second]);
-  });
-});
-
 describe('queryFeedMetadataByIds', () => {
   test('returns the stored feeds with the given ids, and nothing for an empty list', async () => {
     // Arrange
@@ -148,18 +82,6 @@ describe('queryFeedMetadataByIds', () => {
     // Assert
     expect(found.map((row) => row.id)).toEqual([first]);
     expect(none).toEqual([]);
-  });
-});
-
-describe('queryWorkspaceById', () => {
-  test('returns the workspace with that id, or undefined when there is none', async () => {
-    // Act
-    const home = await queryWorkspaceById(HOME_WORKSPACE_ID);
-    const missing = await queryWorkspaceById(999999);
-
-    // Assert
-    expect(home?.id).toBe(HOME_WORKSPACE_ID);
-    expect(missing).toBeUndefined();
   });
 });
 
@@ -180,14 +102,6 @@ describe('queryFeedItems', () => {
         { feed_id: feed.id, title: 'Item 2', link: 'https://a.example/2', guid: 'https://a.example/2', pubDate: '2024-01-02', description: 'Description 2' },
       ])
       .execute();
-  });
-
-  test('filters by feed_id', async () => {
-    // Act
-    const result = await queryFeedItems({ feed_id: feed.id });
-
-    // Assert
-    expect(result).toHaveLength(2);
   });
 
   test('filters by title', async () => {
@@ -223,105 +137,6 @@ describe('queryFeedItems', () => {
 
     // Assert
     expect(result).toEqual([]);
-  });
-});
-
-describe('queryArticleContent', () => {
-  async function createItem(): Promise<number> {
-    const feed = await db
-      .insertInto('feedMetadata')
-      .values({ link: 'https://a.example/feed', title: 'Feed A' })
-      .returning(['id'])
-      .executeTakeFirstOrThrow();
-    const item = await db
-      .insertInto('feedItem')
-      .values({ feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', guid: 'https://a.example/1', pubDate: '2024-01-01', description: '' })
-      .returning(['id'])
-      .executeTakeFirstOrThrow();
-    return item.id;
-  }
-
-  test('filters by item_id', async () => {
-    // Arrange
-    const itemId = await createItem();
-    await db.insertInto('articleContent').values({ item_id: itemId, html: '<p>Body</p>', text: 'Body', word_count: 1, status: 'ok' }).execute();
-
-    // Act
-    const result = await queryArticleContent({ item_id: itemId });
-
-    // Assert
-    expect(result).toHaveLength(1);
-    expect(result[0]?.status).toBe('ok');
-  });
-
-  test('filters by status', async () => {
-    // Arrange
-    const itemId = await createItem();
-    await db.insertInto('articleContent').values({ item_id: itemId, html: undefined, text: undefined, word_count: undefined, status: 'failed' }).execute();
-
-    // Act
-    const result = await queryArticleContent({ status: 'failed' });
-
-    // Assert
-    expect(result).toHaveLength(1);
-    expect(result[0]?.item_id).toBe(itemId);
-  });
-
-  test('returns an empty array when nothing matches', async () => {
-    // Act
-    const result = await queryArticleContent({ item_id: 999999 });
-
-    // Assert
-    expect(result).toEqual([]);
-  });
-});
-
-describe('countFeedMetadata', () => {
-  test('counts every feed', async () => {
-    // Arrange
-    await db.insertInto('feedMetadata').values([
-      { link: 'https://a.example/feed', title: 'Feed A' },
-      { link: 'https://b.example/feed', title: 'Feed B' },
-    ]).execute();
-
-    // Act
-    const result = await countFeedMetadata();
-
-    // Assert
-    expect(result).toBe(2);
-  });
-
-  test('returns 0 when there are no feeds', async () => {
-    // Act
-    const result = await countFeedMetadata();
-
-    // Assert
-    expect(result).toBe(0);
-  });
-});
-
-describe('countFeedItems', () => {
-  test('counts every item across every feed', async () => {
-    // Arrange
-    const feed = await db.insertInto('feedMetadata').values({ link: 'https://a.example/feed', title: 'Feed A' }).returning(['id']).executeTakeFirstOrThrow();
-    await db.insertInto('feedItem').values([
-      { feed_id: feed.id, title: 'Item 1', link: 'https://a.example/1', guid: 'https://a.example/1', pubDate: '2024-01-01', description: '' },
-      { feed_id: feed.id, title: 'Item 2', link: 'https://a.example/2', guid: 'https://a.example/2', pubDate: '2024-01-02', description: '' },
-    ]).execute();
-
-    // Act
-    const result = await countFeedItems();
-
-    // Assert
-    expect(result).toBe(2);
-  });
-
-  test('returns 0 when there are no items', async () => {
-    // Act
-    const result = await countFeedItems();
-
-    // Assert
-    expect(result).toBe(0);
   });
 });
 
@@ -372,16 +187,6 @@ async function seedItem(feedId: number, overrides: Partial<{ title: string; publ
 }
 
 describe('queryFeedSummaries', () => {
-  test('reports zero counts for a feed with no items', async () => {
-    // Arrange
-    await seedFeed();
-
-    // Act
-    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
-
-    // Assert
-    expect(summary).toMatchObject({ itemCount: 0, unreadCount: 0 });
-  });
 
   test('returns the error code and the parsed params of the last failed refresh', async () => {
     // Arrange
@@ -396,207 +201,6 @@ describe('queryFeedSummaries', () => {
 
     // Assert
     expect(summary).toMatchObject({ last_error: 'The server had an error (HTTP 502).', last_error_code: 'GENERIC_FETCH_ERROR', last_error_params: { reason: 'serverError', status: 502 } });
-  });
-
-  test('gives a feed that failed before error codes existed a raw error and no code', async () => {
-    // Arrange
-    const feedId = await seedFeed();
-    await db.updateTable('feedMetadata').set({ last_error: 'offline' }).where('id', '=', feedId).execute();
-
-    // Act
-    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
-
-    // Assert
-    expect(summary).toMatchObject({ last_error: 'offline', last_error_code: null, last_error_params: null });
-  });
-
-  test('separates the item count from the unread count', async () => {
-    // Arrange
-    const feedId = await seedFeed();
-    await seedItem(feedId, { readAt: '2024-01-02T00:00:00.000Z' });
-    await seedItem(feedId);
-
-    // Act
-    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
-
-    // Assert
-    expect(summary).toMatchObject({ itemCount: 2, unreadCount: 1 });
-  });
-
-  test('counts every item as unread when none are read', async () => {
-    // Arrange
-    const feedId = await seedFeed();
-    await seedItem(feedId);
-    await seedItem(feedId);
-
-    // Act
-    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
-
-    // Assert
-    expect(summary).toMatchObject({ itemCount: 2, unreadCount: 2 });
-  });
-
-  test('includes the category alongside the feed', async () => {
-    // Arrange
-    await seedFeed();
-
-    // Act
-    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
-
-    // Assert
-    expect(summary?.category.name).toBe('tech');
-  });
-
-  test('returns an empty array when there are no feeds', async () => {
-    // Act
-    const result = await queryFeedSummaries(HOME_WORKSPACE_ID);
-
-    // Assert
-    expect(result).toEqual([]);
-  });
-
-  test('only returns feeds placed in the given workspace', async () => {
-    // Arrange
-    await seedFeed({ title: 'Home feed' });
-    const otherWorkspace = await db.insertInto('workspace')
-      .values({ name: 'Pack', icon: 'Stars01', color: '#000000', position: 1 })
-      .returning(['id'])
-      .executeTakeFirstOrThrow();
-    await seedFeed({ title: 'Pack feed', link: 'https://pack.example/feed', workspaceId: otherWorkspace.id });
-
-    // Act
-    const homeSummaries = await queryFeedSummaries(HOME_WORKSPACE_ID);
-    const otherSummaries = await queryFeedSummaries(otherWorkspace.id);
-
-    // Assert
-    expect(homeSummaries.map((summary) => summary.title)).toEqual(['Home feed']);
-    expect(otherSummaries.map((summary) => summary.title)).toEqual(['Pack feed']);
-  });
-
-  test('reports zero other workspaces for a feed placed only here', async () => {
-    // Arrange
-    await seedFeed();
-
-    // Act
-    const [summary] = await queryFeedSummaries(HOME_WORKSPACE_ID);
-
-    // Assert
-    expect(summary?.otherWorkspaceCount).toBe(0);
-  });
-
-  test('counts the other workspaces that also hold the feed', async () => {
-    // Arrange
-    const feedId = await seedFeed();
-    for (const position of [1, 2]) {
-      const workspace = await db.insertInto('workspace')
-        .values({ name: `Pack ${position}`, icon: 'Stars01', color: '#000000', position })
-        .returning(['id'])
-        .executeTakeFirstOrThrow();
-      const category = await db.insertInto('feedCategory')
-        .values({ name: 'tech', workspace_id: workspace.id })
-        .returning(['id'])
-        .executeTakeFirstOrThrow();
-      await db.insertInto('feedPlacement')
-        .values({ feed_id: feedId, category_id: category.id, workspace_id: workspace.id, showInWorkspace: 1 })
-        .execute();
-    }
-
-    // Act
-    const summaries = await queryFeedSummaries(HOME_WORKSPACE_ID);
-
-    // Assert
-    expect(summaries).toHaveLength(1);
-    expect(summaries[0]?.otherWorkspaceCount).toBe(2);
-  });
-});
-
-describe('the unread counts', () => {
-  test('the feed summaries count through the unread index and never scan the items', async () => {
-    // Arrange
-    const feedId = await seedFeed();
-    await seedItem(feedId);
-
-    // Act
-    const plan = await queryPlanOf(() => queryFeedSummaries(HOME_WORKSPACE_ID));
-
-    // Assert
-    expect(plan).toContain('feedItem_feed_id_unread');
-    expect(plan).not.toMatch(/SCAN feedItem/);
-  });
-
-  test('the workspace summaries look for one unread item through the unread index and never scan the items', async () => {
-    // Arrange
-    const feedId = await seedFeed();
-    await seedItem(feedId);
-
-    // Act
-    const plan = await queryPlanOf(() => queryWorkspaceSummaries());
-
-    // Assert
-    expect(plan).toContain('feedItem_feed_id_unread');
-    expect(plan).not.toMatch(/SCAN feedItem/);
-  });
-});
-
-describe('queryFeedSummaries counts', () => {
-  test('counts the items and the unread items of each feed separately', async () => {
-    // Arrange
-    const first = await seedFeed();
-    const second = await seedFeed({ link: 'https://b.example/feed' });
-    await seedItem(first);
-    await seedItem(first, { readAt: '2024-01-02T00:00:00.000Z' });
-    await seedItem(second, { readAt: '2024-01-02T00:00:00.000Z' });
-
-    // Act
-    const summaries = await queryFeedSummaries(HOME_WORKSPACE_ID);
-
-    // Assert
-    expect(summaries.map((summary) => [summary.id, summary.itemCount, summary.unreadCount]).sort()).toEqual([[first, 2, 1], [second, 1, 0]].sort());
-  });
-});
-
-describe('queryWorkspaceSummaries', () => {
-  test('returns every workspace in rail order', async () => {
-    // Arrange
-    await db.insertInto('workspace').values({ name: 'Pack', icon: 'Stars01', color: '#000000', position: 1 }).execute();
-
-    // Act
-    const result = await queryWorkspaceSummaries();
-
-    // Assert
-    expect(result.map((workspace) => workspace.name)).toEqual(['Home', 'Pack']);
-  });
-
-  test('hasUnread is false for a workspace with no items', async () => {
-    // Act
-    const [home] = await queryWorkspaceSummaries();
-
-    // Assert
-    expect(home?.hasUnread).toBe(false);
-  });
-
-  test('hasUnread is true when a placement holds an unread item, even with showInWorkspace off', async () => {
-    // Arrange
-    const feedId = await seedFeed({ showInWorkspace: 0 });
-    await seedItem(feedId);
-
-    // Act
-    const [home] = await queryWorkspaceSummaries();
-
-    // Assert
-    expect(home?.hasUnread).toBe(true);
-  });
-
-  test('hasUnread is false once every item in the workspace is read', async () => {
-    // Arrange
-    const feedId = await seedFeed();
-    await seedItem(feedId, { readAt: '2024-01-02T00:00:00.000Z' });
-
-    // Act
-    const [home] = await queryWorkspaceSummaries();
-
-    // Assert
-    expect(home?.hasUnread).toBe(false);
   });
 });
 

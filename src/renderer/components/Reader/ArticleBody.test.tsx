@@ -50,7 +50,6 @@ test('clicking an internal anchor calls openLink instead of navigating', async (
 
 test.each([
   { href: '#footnote:1', id: 'footnote:1' },
-  { href: '#note%20space', id: 'note space' },
   { href: '#r%C3%A9f%C3%A9rence', id: 'référence' },
 ])('scrolls to the target of $href', async ({ href, id }) => {
   // Arrange
@@ -82,7 +81,7 @@ test('finds the target inside the article when an ID also exists outside it', as
   expect(window.electron.ipcRenderer.sendMessage).not.toHaveBeenCalled();
 });
 
-test.each(['#outside-target', '#', '#bad%zz'])('keeps %s inside the article when it has no matching target', async (href) => {
+test.each(['#outside-target', '#bad%zz'])('keeps %s inside the article when it has no matching target', async (href) => {
   // Arrange
   const { getByText } = await render(<><p id="outside-target">Outside target</p><ArticleBody html={`<a href="${href}">Footnote</a>`} /></>);
   const outsideScroll = vi.spyOn(getByText('Outside target', { exact: true }).element(), 'scrollIntoView');

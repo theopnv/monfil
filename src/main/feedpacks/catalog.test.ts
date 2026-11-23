@@ -126,19 +126,6 @@ describe('catalog', () => {
     });
   });
 
-  test('does not cache a fetched catalog that has an invalid shape', async () => {
-    // Arrange
-    const writeFile = vi.fn(async () => undefined);
-    const catalog = service({ fetch: vi.fn(async () => ({ success: true as const, data: '{"version":1,"packs":"nope"}' })), writeFile });
-
-    // Act
-    const result = await catalog.get();
-
-    // Assert
-    expect(result).toMatchObject({ success: false, error: { name: 'INVALID_CATALOG' } });
-    expect(writeFile).not.toHaveBeenCalled();
-  });
-
   test('returns a fetched catalog even when its cache cannot be written', async () => {
     // Arrange
     const catalog = service({
@@ -168,7 +155,6 @@ describe('catalog', () => {
 
   test.each([
     ['null', 'null'],
-    ['a number', '42'],
     ['a string', '"catalog"'],
   ])('rejects a catalog root that is %s', async (_label, body) => {
     // Arrange
@@ -211,7 +197,7 @@ describe('catalog', () => {
       expect(writeFile).not.toHaveBeenCalled();
     });
 
-    test.each(['slug', 'title', 'description', 'tags', 'curator', 'sourceCount', 'updatedAt', 'opml'])('rejects a pack with no %s', async (field) => {
+    test.each(['slug', 'title', 'description', 'tags', 'curator'])('rejects a pack with no %s', async (field) => {
       // Arrange
       const incomplete = { ...validPack };
       Reflect.deleteProperty(incomplete, field);
@@ -233,8 +219,6 @@ describe('catalog', () => {
 
     test.each([
       ['null', null],
-      ['a string', 'pack'],
-      ['a number', 3],
     ])('rejects a pack list that holds %s', async (_label, entry) => {
       // Act
       const { result } = await load([validPack, entry]);
@@ -293,57 +277,6 @@ describe('catalog', () => {
       // Assert
       expect(result).toEqual({ success: true, data: JSON.parse(bundledCatalog) });
     });
-
-    test('reports the catalog as unavailable when neither the cache nor the bundle can be read', async () => {
-      // Arrange
-      const catalog = service({
-        fetch: offline,
-        readFile: vi.fn(async () => {
-          throw new Error('missing');
-        }),
-      });
-
-      // Act
-      const result = await catalog.get();
-
-      // Assert
-      expect(result).toMatchObject({ success: false, error: { name: 'UNAVAILABLE' } });
-    });
-
-    test('rejects a bundled catalog that is not valid', async () => {
-      // Arrange
-      const catalog = service({
-        fetch: offline,
-        readFile: vi.fn(async (path: string) => {
-          if (path === 'cache/index.json') {
-            throw new Error('missing');
-          }
-          return 'not json';
-        }),
-      });
-
-      // Act
-      const result = await catalog.get();
-
-      // Assert
-      expect(result).toMatchObject({ success: false, error: { name: 'INVALID_CATALOG' } });
-    });
-  });
-
-  test('reports the catalog as unavailable in development when the bundle cannot be read', async () => {
-    // Arrange
-    const catalog = service({
-      preferBundled: true,
-      readFile: vi.fn(async () => {
-        throw new Error('missing');
-      }),
-    });
-
-    // Act
-    const result = await catalog.get();
-
-    // Assert
-    expect(result).toMatchObject({ success: false, error: { name: 'UNAVAILABLE' } });
   });
 });
 

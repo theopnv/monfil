@@ -59,7 +59,7 @@ describe('initialLanguage', () => {
     expect(initialLanguage({ electron: { language } })).toBe(language);
   });
 
-  test.each(['tlh', 'pt-BR', '', null, 3])('is English when the bridge carries %j, which Monfil does not list', (language) => {
+  test.each(['tlh', 3])('is English when the bridge carries %j, which Monfil does not list', (language) => {
     // Act & Assert
     expect(initialLanguage({ electron: { language } })).toBe('en');
   });

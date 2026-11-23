@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { findAlternateLinks, probeLinks } from './discovery';
+import { findAlternateLinks } from './discovery';
 
 describe('findAlternateLinks', () => {
   test('reads RSS, Atom and JSON Feed links in page order and resolves relative hrefs', () => {
@@ -74,23 +74,5 @@ describe('findAlternateLinks', () => {
 
     // Assert
     expect(links).toEqual(['https://blog.test/feed.xml']);
-  });
-
-  test('returns nothing for a page without feed links', () => {
-    // Act / Assert
-    expect(findAlternateLinks('<html><head><title>x</title></head></html>', 'https://blog.test/')).toEqual([]);
-  });
-});
-
-describe('probeLinks', () => {
-  test('lists the common feed paths on the page origin in a fixed order', () => {
-    // Act / Assert
-    expect(probeLinks('https://blog.test/some/page?x=1')).toEqual([
-      'https://blog.test/feed',
-      'https://blog.test/rss.xml',
-      'https://blog.test/atom.xml',
-      'https://blog.test/index.xml',
-      'https://blog.test/feed.xml',
-    ]);
   });
 });

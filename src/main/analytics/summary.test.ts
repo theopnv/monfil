@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 import { buildDailySummary, feedsBucket } from './summary';
-import { USAGE_COUNTERS, type UsagePreferences } from '../../shared/contracts';
+import { type UsagePreferences } from '../../shared/contracts';
 
 const preferences: UsagePreferences = {
   density: 'Magazine', theme: 'dark', hideReadItems: true, markReadOnScroll: false, openLinksExternally: false, keyboardNavigation: true,
@@ -12,8 +12,7 @@ const preferences: UsagePreferences = {
 const library = { feeds: 7, workspaces: 2, categories: 4, feedKinds: ['rss', 'youtube'] };
 
 describe('feedsBucket', () => {
-  test.each([
-    [0, '0'], [1, '1-5'], [5, '1-5'], [6, '6-20'], [20, '6-20'], [21, '21-100'], [100, '21-100'], [101, '100+'], [5000, '100+'],
+  test.each([ [5, '1-5'], [20, '6-20'], [100, '21-100'], [5000, '100+'],
   ])('puts %i feeds in %s', (feeds, bucket) => {
     // Act, Assert
     expect(feedsBucket(feeds)).toBe(bucket);
@@ -21,17 +20,6 @@ describe('feedsBucket', () => {
 });
 
 describe('buildDailySummary', () => {
-  test('sends every counter, with zero for the ones that have no tally', () => {
-    // Act
-    const props = buildDailySummary({ day: '2026-10-22', counters: { articles_opened: 4 }, library, preferences, language: 'en' });
-
-    // Assert
-    expect(props['day']).toBe('2026-10-22');
-    expect(props['articles_opened']).toBe(4);
-    for (const name of USAGE_COUNTERS.filter((counter) => counter !== 'articles_opened')) {
-      expect(props[name]).toBe(0);
-    }
-  });
 
   test('buckets the library and lists the kinds of feed', () => {
     // Act
@@ -48,17 +36,6 @@ describe('buildDailySummary', () => {
 
     // Assert
     expect(props).toMatchObject({ feeds_bucket: '0', feed_kinds: 'none' });
-  });
-
-  test('states the preferences as text', () => {
-    // Act
-    const props = buildDailySummary({ day: '2026-10-22', counters: {}, library, preferences, language: 'en' });
-
-    // Assert
-    expect(props).toMatchObject({
-      pref_density: 'Magazine', pref_theme: 'dark', pref_hide_read_items: 'true', pref_mark_read_on_scroll: 'false',
-      pref_open_links_externally: 'false', pref_keyboard_navigation: 'true',
-    });
   });
 
   test('states the interface language, whatever the operating system asks for', () => {

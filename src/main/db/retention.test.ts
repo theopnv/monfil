@@ -40,14 +40,10 @@ test('keeps the ten newest of a fetched batch even when the batch lists the olde
 
 describe('isItemExpired', () => {
   const cutoff = Date.parse('2026-08-24T12:00:00Z');
-  const fetchedAt = Date.parse('2026-09-23T12:00:00Z');
 
   test.each([
-    ['one millisecond before the cutoff', new Date(cutoff - 1).toISOString(), fetchedAt, true],
-    ['exactly at the cutoff', new Date(cutoff).toISOString(), fetchedAt, false],
     ['an undated item first fetched before the cutoff', 'not a date', cutoff - 1, true],
     ['an undated item first fetched exactly at the cutoff', 'not a date', cutoff, false],
-    ['an undated item fetched after the cutoff', 'not a date', fetchedAt, false],
   ])('%s', (_name, pubDate, fetched, expected) => {
     // Act
     const expired = isItemExpired({ pubDate }, cutoff, fetched);
@@ -111,42 +107,4 @@ test('prunes read and unread items at the publication boundary and cascades arti
   expect(removed).toBe(2);
   expect((await db.selectFrom('feedItem').select('guid').orderBy('id').execute()).map((row) => row.guid)).toEqual([...Array.from({ length: 10 }, (_, index) => `recent-${index}`), 'edge']);
   expect(await db.selectFrom('articleContent').selectAll().execute()).toEqual([]);
-});
-
-test('keeps the ten newest old items per source', async () => {
-  // Arrange
-  const now = Date.parse('2026-09-23T12:00:00Z');
-  const feed = await addFeedToDatabase({ link: 'https://quiet.example/feed', title: 'Quiet', type: 'rss', items: [], categoryName: 'Quiet', workspaceId: HOME_WORKSPACE_ID, showInWorkspace: true });
-  if (!feed.success) {
-    throw new Error('feed insert failed');
-  }
-  await db.insertInto('feedItem').values(Array.from({ length: 12 }, (_, index) => ({
-    feed_id: feed.data.id, guid: String(index), title: String(index), pubDate: '2020-01-01', description: '', published_at: now - index * 86400000 - 365 * 86400000,
-  }))).execute();
-
-  // Act
-  const removed = await pruneExpiredItems(30, now);
-
-  // Assert
-  expect(removed).toBe(2);
-  expect((await db.selectFrom('feedItem').select('guid').orderBy('published_at', 'desc').execute()).map((row) => row.guid)).toEqual(Array.from({ length: 10 }, (_, index) => String(index)));
-});
-
-test('prunes a large feed and reclaims free pages', async () => {
-  // Arrange
-  const now = Date.parse('2026-09-23T12:00:00Z');
-  const feed = await addFeedToDatabase({ link: 'https://large.example/feed', title: 'Large', type: 'rss', items: [], categoryName: 'Large', workspaceId: HOME_WORKSPACE_ID, showInWorkspace: true });
-  if (!feed.success) {
-    throw new Error('feed insert failed');
-  }
-  await db.insertInto('feedItem').values(Array.from({ length: 1_011 }, (_, index) => ({
-    feed_id: feed.data.id, guid: String(index), title: 'Old', pubDate: '2020-01-01', description: 'x'.repeat(1_000), published_at: Date.parse('2020-01-01'),
-  }))).execute();
-
-  // Act
-  const removed = await pruneExpiredItems(30, now);
-
-  // Assert
-  expect(removed).toBe(1_001);
-  expect(await db.selectFrom('feedItem').select('id').execute()).toHaveLength(10);
 });

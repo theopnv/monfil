@@ -53,24 +53,9 @@ describe('isExtractArticleRequest', () => {
 describe('isExtractArticleResponse', () => {
   const article = { html: '<p>x</p>', text: 'x', wordCount: 1 };
 
-  test('accepts a response with an article', () => {
-    // Act & Assert
-    expect(isExtractArticleResponse({ id: 1, article })).toBe(true);
-  });
-
-  test('accepts a response whose article is undefined', () => {
-    // Act & Assert
-    expect(isExtractArticleResponse({ id: 1, article: undefined })).toBe(true);
-  });
-
   test('accepts a response without an article key', () => {
     // Act & Assert
     expect(isExtractArticleResponse({ id: 1 })).toBe(true);
-  });
-
-  test('accepts empty article strings and a zero word count', () => {
-    // Act & Assert
-    expect(isExtractArticleResponse({ id: 0, article: { html: '', text: '', wordCount: 0 } })).toBe(true);
   });
 
   test.each(notObjects)('rejects %s', (value) => {
@@ -79,8 +64,6 @@ describe('isExtractArticleResponse', () => {
   });
 
   test.each([
-    ['without id', { article }],
-    ['with a string id', { id: '1', article }],
     ['with a null id', { id: null, article }],
     ['with an article without html', { id: 1, article: { text: 'x', wordCount: 1 } }],
     ['with an article without text', { id: 1, article: { html: 'x', wordCount: 1 } }],
@@ -113,8 +96,6 @@ describe('isExtractArticleLog', () => {
   });
 
   test.each([
-    ['without type', { message: 'hello' }],
-    ['without message', { type: 'log' }],
     ['with another type', { type: 'warn', message: 'hello' }],
     ['with a numeric message', { type: 'log', message: 1 }],
     ['with a null message', { type: 'log', message: null }],

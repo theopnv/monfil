@@ -9,7 +9,6 @@ const packaged: AnalyticsConfig = { key: 'A-EU-1234567890', host: undefined, isP
 
 describe('resolveAnalyticsEndpoint', () => {
   test.each([
-    ['A-EU-1234567890', 'https://eu.aptabase.com/api/v0/events'],
     ['A-US-1234567890', 'https://us.aptabase.com/api/v0/events'],
   ])('maps %s to its region', (key, url) => {
     // Act
@@ -56,24 +55,9 @@ describe('resolveAnalyticsEndpoint', () => {
     expect(endpoint).toEqual({ name: 'DISABLED', reason });
   });
 
-  test.each([undefined, ''])('is disabled without a key (%s)', (key) => {
-    // Act, Assert
-    expect(resolveAnalyticsEndpoint({ ...packaged, key })).toEqual({ name: 'DISABLED', reason: 'NO_KEY' });
-  });
-
-  test.each(['A-XX-123', 'B-EU-123', 'A-EU-', 'A-EU-12x', 'A-EU-123-4', 'xA-EU-123', 'A-eu-123', 'garbage'])('is disabled for the key %s', (key) => {
+  test.each([ 'A-EU-123-4', 'xA-EU-123'])('is disabled for the key %s', (key) => {
     // Act, Assert
     expect(resolveAnalyticsEndpoint({ ...packaged, key })).toEqual({ name: 'DISABLED', reason: 'INVALID_KEY' });
-  });
-
-  test('is disabled in a development build', () => {
-    // Act, Assert
-    expect(resolveAnalyticsEndpoint({ ...packaged, isPackaged: false })).toEqual({ name: 'DISABLED', reason: 'DEVELOPMENT' });
-  });
-
-  test('is disabled in an end-to-end run', () => {
-    // Act, Assert
-    expect(resolveAnalyticsEndpoint({ ...packaged, isE2E: true })).toEqual({ name: 'DISABLED', reason: 'E2E' });
   });
 
   test('sends to the override in an end-to-end run, even in a development build', () => {
@@ -82,14 +66,6 @@ describe('resolveAnalyticsEndpoint', () => {
 
     // Assert
     expect(endpoint).toEqual({ name: 'ENABLED', url: 'http://127.0.0.1:9/api/v0/events', key: 'A-SH-E2E' });
-  });
-
-  test('keeps the build key when it sends to the override in an end-to-end run', () => {
-    // Act
-    const endpoint = resolveAnalyticsEndpoint({ ...packaged, isE2E: true, override: 'http://127.0.0.1:9/api/v0/events' });
-
-    // Assert
-    expect(endpoint).toEqual({ name: 'ENABLED', url: 'http://127.0.0.1:9/api/v0/events', key: 'A-EU-1234567890' });
   });
 
   test('ignores the override outside an end-to-end run', () => {

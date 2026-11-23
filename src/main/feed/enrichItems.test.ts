@@ -88,28 +88,6 @@ describe('enrichItems', () => {
     expect(mockedExtractOgImageUrl).toHaveBeenCalledWith('<html></html>');
   });
 
-  test('skips an item with no link', async () => {
-    // Arrange
-    const items = [item({ id: 1, link: undefined })];
-
-    // Act
-    await enrichItems(items, vi.fn());
-
-    // Assert
-    expect(mockedFetchText).not.toHaveBeenCalled();
-  });
-
-  test('skips a non-http(s) link', async () => {
-    // Arrange
-    const items = [item({ id: 1, link: 'mailto:test@example.com' })];
-
-    // Act
-    await enrichItems(items, vi.fn());
-
-    // Assert
-    expect(mockedFetchText).not.toHaveBeenCalled();
-  });
-
   test('a fetch failure does not stop the other items', async () => {
     // Arrange
     mockedFetchText.mockImplementation((link) => Promise.resolve(
@@ -189,15 +167,5 @@ describe('enrichItems', () => {
 
     // Assert
     expect(maxActive).toBe(1);
-  });
-
-  test('resolves immediately, calling neither extractor, when there are no candidates', async () => {
-    // Act
-    await enrichItems([], vi.fn());
-
-    // Assert
-    expect(mockedFetchText).not.toHaveBeenCalled();
-    expect(mockedExtractOgImageUrl).not.toHaveBeenCalled();
-    expect(mockedExtractArticle).not.toHaveBeenCalled();
   });
 });

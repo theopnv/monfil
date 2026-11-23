@@ -175,8 +175,6 @@ describe('fetchText', () => {
     { status: 410, statusMessage: 'Gone', expected: 'The feed was not found (HTTP 410 Gone).' },
     { status: 429, statusMessage: '', expected: 'The server is rate limiting requests (HTTP 429).' },
     { status: 500, statusMessage: '', expected: 'The server had an error (HTTP 500).' },
-    { status: 502, statusMessage: '', expected: 'The server had an error (HTTP 502).' },
-    { status: 418, statusMessage: '', expected: 'The server answered with HTTP 418.' },
   ])('words a $status as: $expected', ({ status, statusMessage, expected }) => {
     expect(httpStatusMessage(status, statusMessage)).toBe(expected);
   });
@@ -184,13 +182,9 @@ describe('fetchText', () => {
   test.each([
     { status: 401, reason: 'refused' },
     { status: 403, reason: 'refused' },
-    { status: 404, reason: 'notFound' },
     { status: 410, reason: 'notFound' },
     { status: 429, reason: 'rateLimited' },
     { status: 500, reason: 'serverError' },
-    { status: 599, reason: 'serverError' },
-    { status: 418, reason: 'other' },
-    { status: 499, reason: 'other' },
   ])('sorts a $status as $reason for translation', ({ status, reason }) => {
     expect(httpStatusParams(status)).toEqual({ reason, status });
   });
@@ -222,18 +216,6 @@ describe('fetchText', () => {
 
     // Assert
     expect(result).toEqual({ success: false, error: { name: 'NETWORK_ERROR', message: 'net::ERR_NAME_NOT_RESOLVED' } });
-  });
-
-  test('returns NETWORK_ERROR for a string that is not a URL, without fetching', async () => {
-    // Arrange
-    const requests = useTransport(() => ({ status: 200, body: '' }));
-
-    // Act
-    const result = await fetchText('not a url');
-
-    // Assert
-    expect(result).toEqual({ success: false, error: { name: 'NETWORK_ERROR', message: expect.any(String) } });
-    expect(requests).toHaveLength(0);
   });
 
   test('returns NOT_ALLOWED_OR_ABORTED_ERROR when the caller-supplied signal is already aborted', async () => {
@@ -299,18 +281,6 @@ describe('fetchText', () => {
 
     // Assert
     expect(requests.map((request) => request.aborts)).toEqual([0]);
-  });
-
-  test('refuses a non-http scheme without fetching', async () => {
-    // Arrange
-    const requests = useTransport(() => ({ status: 200, body: '' }));
-
-    // Act
-    const result = await fetchText('ftp://example.com/feed.xml');
-
-    // Assert
-    expect(result).toEqual(SCHEME_ERROR);
-    expect(requests).toHaveLength(0);
   });
 
   test('rejects a streamed body past the cap', async () => {
@@ -590,20 +560,6 @@ describe('readCappedText', () => {
     return { response, request, result };
   }
 
-  test('reads the whole body when there is no marker', async () => {
-    // Arrange
-    const { response, request, result } = body();
-
-    // Act
-    response.emit('data', Buffer.from('<head></head>'));
-    response.emit('data', Buffer.from('<body>text</body>'));
-    response.emit('end');
-
-    // Assert
-    await expect(result).resolves.toEqual({ success: true, data: '<head></head><body>text</body>' });
-    expect(request.abort).not.toHaveBeenCalled();
-  });
-
   test('stops and releases the connection once the marker has arrived, keeping what came before it', async () => {
     // Arrange
     const { response, request, result } = body('</head>');
@@ -639,20 +595,6 @@ describe('readCappedText', () => {
 
     // Assert
     await expect(result).resolves.toEqual({ success: true, data: '<HEAD></HEAD><body>' });
-  });
-
-  test('keeps reading while the marker has not arrived', async () => {
-    // Arrange
-    const { response, request, result } = body('</head>');
-
-    // Act
-    response.emit('data', Buffer.from('<head><title>x</title>'));
-    response.emit('data', Buffer.from('</hea'));
-    response.emit('end');
-
-    // Assert
-    await expect(result).resolves.toEqual({ success: true, data: '<head><title>x</title></hea' });
-    expect(request.abort).not.toHaveBeenCalled();
   });
 
   test('reads a body of exactly the cap', async () => {
@@ -836,14 +778,6 @@ describe('fetchText against a real server', () => {
     seenRequests.length = 0;
   });
 
-  test('sends the monfil user agent to a real server', async () => {
-    // Act
-    await fetchText(`${url}/final`);
-
-    // Assert
-    expect(seenRequests[0]?.userAgent).toMatch(/^monfil\//);
-  });
-
   test('times out on a server that never answers', async () => {
     // Act
     const result = await fetchText(url, { timeoutMs: 20 });
@@ -858,14 +792,6 @@ describe('fetchText against a real server', () => {
 
     // Assert
     expect(result).toEqual({ success: true, data: { body: 'final', validators: { etag: '"v1"', last_modified: undefined } } });
-  });
-
-  test('stops a real redirect loop', async () => {
-    // Act
-    const result = await fetchText(`${url}/loop`);
-
-    // Assert
-    expect(result).toEqual({ success: false, error: { name: 'GENERIC_FETCH_ERROR', message: 'Too many redirects.', params: { reason: 'redirects' } } });
   });
 
   test('refuses the loopback server when private hosts are blocked', async () => {

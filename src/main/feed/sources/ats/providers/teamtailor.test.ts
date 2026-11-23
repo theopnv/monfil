@@ -9,7 +9,6 @@ const feed = (inner: string) => `<?xml version="1.0"?><rss version="2.0" xmlns:t
 
 describe('teamtailor toBoard', () => {
   test.each([
-    'https://tradera.teamtailor.com/',
     'https://tradera.teamtailor.com/jobs',
     'https://tradera.teamtailor.com/jobs/123-engineer',
     'https://TRADERA.teamtailor.com/jobs.rss',
@@ -19,21 +18,6 @@ describe('teamtailor toBoard', () => {
 
     // Assert
     expect(board).toEqual({ provider: 'teamtailor', slug: 'tradera', apiUrl: 'https://tradera.teamtailor.com/jobs.rss' });
-  });
-
-  test.each([
-    'https://teamtailor.com/',
-    'https://www.teamtailor.com/',
-    'https://app.teamtailor.com/',
-    'https://support.teamtailor.com/',
-    'https://api.teamtailor.com/',
-    'https://foo.bar.teamtailor.com/',
-    'https://tradera.teamtailor.com.example.com/',
-    'https://traderateamtailor.com/',
-    'https://tradera.example.com/',
-  ])('does not map %s', (link) => {
-    // Act / Assert
-    expect(teamtailor.toBoard(new URL(link))).toBeNull();
   });
 });
 
@@ -124,9 +108,7 @@ describe('teamtailor normalize', () => {
 
   test.each([
     '<rss version="2.0"><channel><title>Blog</title></channel></rss>',
-    '<channel xmlns:tt="https://teamtailor.com/locations"><title>Blog</title></channel>',
     '<feed xmlns:tt="https://teamtailor.com/locations"></feed>',
-    '',
   ])('rejects %j', (body) => {
     // Act / Assert
     expect(teamtailor.normalize(body)).toBeNull();

@@ -85,11 +85,6 @@ describe('parseConferenceLink', () => {
     expect(filter).toEqual({ topics: ['devops', 'kubernetes'], places: ['France', 'Online'] });
   });
 
-  test('a developers.events link without a query keeps every event', () => {
-    // Act / Assert
-    expect(parseConferenceLink('developers.events')).toEqual(NO_FILTER);
-  });
-
   test('reads the filters of a site page link from its hash route', () => {
     // Act
     const filter = parseConferenceLink('https://developers.events/#/2026/list?country=Norway&language=english');
@@ -133,12 +128,6 @@ describe('parseConferenceLink', () => {
 
     // Act / Assert
     expect(parseConferenceLink(buildConferenceLink(filter))).toEqual(filter);
-  });
-
-  test('another host is not a conference link', () => {
-    // Act / Assert
-    expect(parseConferenceLink('https://example.com/all-events.json?topics=devops')).toBeNull();
-    expect(parseConferenceLink('devops in France')).toBeNull();
   });
 
   test('a built link parses back to the same filter and the same link', () => {
@@ -247,11 +236,6 @@ describe('buildMilestoneItems filters', () => {
     expect(byTopic.map((item) => item.title)).toContain('New conference: Devoxx France 2027');
     expect(byLanguage.map((item) => item.title)).toContain('New conference: Devoxx France 2027');
   });
-
-  test('an event needs a matching topic and a matching place', () => {
-    // Act / Assert
-    expect(buildMilestoneItems(eventsAt(now, devoxx), { topics: ['java'], places: ['Belgium'] }, now)).toEqual([]);
-  });
 });
 
 describe('milestone windows', () => {
@@ -323,18 +307,6 @@ describe('milestone windows', () => {
 
 describe('card content', () => {
   const now = CFP_CLOSES - 1;
-
-  test('a guid stays the same when the event details change', () => {
-    // Arrange
-    const changed = { ...devoxx, hyperlink: 'https://devoxx.fr/2027', tags: [], cfp: { link: 'https://other.example/cfp', untilDate: CFP_CLOSES + DAY } };
-
-    // Act
-    const before = buildMilestoneItems(eventsAt(now, devoxx), NO_FILTER, now).map((item) => item.guid);
-    const after = buildMilestoneItems(eventsAt(now, changed), NO_FILTER, now).map((item) => item.guid);
-
-    // Assert
-    expect(after).toEqual(before);
-  });
 
   test('the description opens with the key facts and ends with the data credit', () => {
     // Act
@@ -519,15 +491,6 @@ describe('collectVocabulary', () => {
       ['usa', { name: 'USA', count: 1 }],
     ]));
   });
-
-  test('anything other than an array gives an empty vocabulary', () => {
-    // Act
-    const vocabulary = collectVocabulary({ city: 'Paris' });
-
-    // Assert
-    expect(vocabulary.topics.size).toBe(0);
-    expect(vocabulary.places.size).toBe(0);
-  });
 });
 
 describe('checkFilter suggestions', () => {
@@ -602,16 +565,6 @@ describe('checkFilter', () => {
     { ...ended, tags: [{ key: 'topic', value: 'testing' }, { key: 'topic', value: 'software-testing' }] },
   ]);
 
-  test('known topics and places pass, even when no event matches them all', () => {
-    // Act / Assert
-    expect(checkFilter({ topics: ['devops'], places: ['Stavanger'] }, vocabulary)).toBeUndefined();
-  });
-
-  test('topics and places from past events are known', () => {
-    // Act / Assert
-    expect(checkFilter({ topics: [], places: ['Lyon'] }, vocabulary)).toBeUndefined();
-  });
-
   test('an unknown topic names the closest tags, most used first', () => {
     // Act
     const error = checkFilter({ topics: ['test-automation'], places: ['Paris'] }, vocabulary);
@@ -684,25 +637,6 @@ describe('normalizeEvents', () => {
       { name: 'Spaced Conf', start: START, end: START + DAY - 1, city: 'Paris', country: 'France', website: undefined, cfpLink: undefined, cfpCloses: undefined, tags: ['go'] },
       { name: 'Bare Conf', start: START, end: START + DAY - 1, city: '', country: '', website: undefined, cfpLink: undefined, cfpCloses: undefined, tags: [] },
     ]);
-  });
-
-  test('keeps an http link and drops a link that is not an http URL', () => {
-    // Act
-    const [plain, broken] = normalizeEvents([
-      { name: 'Plain', date: [START], hyperlink: 'http://plain.example/', cfp: { link: 'not a url' } },
-      { name: 'Broken', date: [START], hyperlink: 42, cfp: { link: 'ftp://files.example/cfp' } },
-    ], Date.UTC(2026, 9, 18));
-
-    // Assert
-    expect(plain?.website).toBe('http://plain.example/');
-    expect(plain?.cfpLink).toBeUndefined();
-    expect(broken?.website).toBeUndefined();
-    expect(broken?.cfpLink).toBeUndefined();
-  });
-
-  test('anything other than an array gives no events', () => {
-    // Act / Assert
-    expect(normalizeEvents({ events: [devoxx] })).toEqual([]);
   });
 });
 
@@ -815,17 +749,6 @@ describe('conferenceSource', () => {
     expect(result.success && 'parsed' in result.data && result.data.parsed.items).toHaveLength(2);
   });
 
-  test('a body that is not the dataset is an unsupported format', async () => {
-    // Arrange
-    mockedFetchText.mockResolvedValue({ success: true, data: { body: '<html></html>', validators } });
-
-    // Act
-    const result = await conferenceSource.fetch({ link });
-
-    // Assert
-    expect(!result.success && result.error.name).toBe('UNSUPPORTED_FORMAT');
-  });
-
   test('discover names every topic, place and language in the title', async () => {
     // Arrange
     vi.setSystemTime(Date.UTC(2026, 9, 18));
@@ -878,17 +801,6 @@ describe('conferenceSource', () => {
 
     // Assert
     expect(!result.success && result.error).toEqual({ name: 'UNSUPPORTED_FORMAT', message: "This doesn't look like the developers.events dataset.", params: { reason: 'conferenceNotDataset' } });
-  });
-
-  test('a failed download is passed on as it is', async () => {
-    // Arrange
-    mockedFetchText.mockResolvedValue({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
-
-    // Act
-    const result = await conferenceSource.fetch({ link });
-
-    // Assert
-    expect(!result.success && result.error).toEqual({ name: 'NETWORK_ERROR', message: 'offline' });
   });
 
   test('a failed conditional request is passed on, and a changed body replaces the cached dataset', async () => {

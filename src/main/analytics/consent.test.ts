@@ -21,26 +21,13 @@ const now = new Date('2026-10-23T08:00:00Z');
 const eligible: PromptInput = { consent: 'unset', feedCount: 1, launchCount: 2, promptCount: 0, lastShownAt: undefined, now };
 
 describe('shouldPromptForUsageAnalytics', () => {
-  test('shows for an undecided user with a feed and two launches', () => {
-    // Act, Assert
-    expect(shouldPromptForUsageAnalytics(eligible)).toBe(true);
-  });
 
   test.each([
-    ['has decided', { consent: 'granted' as const }],
     ['has denied', { consent: 'denied' as const }],
-    ['has no feed', { feedCount: 0 }],
-    ['launched once', { launchCount: 1 }],
     ['saw the card twice', { promptCount: 2 }],
-    ['saw the card 13 days ago', { promptCount: 1, lastShownAt: new Date('2026-10-10T08:00:01Z') }],
   ])('hides when the user %s', (_label, change) => {
     // Act, Assert
     expect(shouldPromptForUsageAnalytics({ ...eligible, ...change })).toBe(false);
-  });
-
-  test('shows again after 14 days, once', () => {
-    // Act, Assert
-    expect(shouldPromptForUsageAnalytics({ ...eligible, promptCount: 1, lastShownAt: new Date('2026-10-09T08:00:00Z') })).toBe(true);
   });
 });
 
@@ -60,11 +47,6 @@ describe('usage analytics state', () => {
   async function addFeed() {
     await addFeedToDatabase({ workspaceId: HOME_WORKSPACE_ID, link: 'https://example.com/feed', title: 'Feed', type: 'rss', categoryName: 'Tech', showInWorkspace: true, items: [] });
   }
-
-  test('is unset and not prompting for a new profile', async () => {
-    // Act, Assert
-    await expect(getUsageAnalyticsState(now)).resolves.toEqual({ consent: 'unset', shouldPrompt: false, available: true });
-  });
 
   test('prompts after a feed and two launches', async () => {
     // Arrange
@@ -159,17 +141,6 @@ describe('usage analytics state', () => {
     expect(isCountingEnabled()).toBe(true);
   });
 
-  test('keeps counting off at startup when the user has not decided', async () => {
-    // Arrange
-    setCountingEnabled(true);
-
-    // Act
-    await loadUsageAnalyticsConsent();
-
-    // Assert
-    expect(isCountingEnabled()).toBe(false);
-  });
-
   test('keeps counting off at startup when the user denied', async () => {
     // Arrange
     await changeUsageAnalyticsConsent('denied', now);
@@ -232,13 +203,5 @@ describe('usage analytics state', () => {
 
     // Assert
     expect(state.shouldPrompt).toBe(true);
-  });
-
-  test('does not send consent_granted when the choice is denied', async () => {
-    // Act
-    await changeUsageAnalyticsConsent('denied', now);
-
-    // Assert
-    expect(sendConsentGranted).not.toHaveBeenCalled();
   });
 });

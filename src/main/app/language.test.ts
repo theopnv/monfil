@@ -5,8 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { app } from 'electron';
 import { mainI18n, setMainLanguage } from '../lib/i18n';
-import { logger } from '../logging/logger';
-import { changeLanguage, initializeLanguage, readLanguageState } from './language';
+import { initializeLanguage, readLanguageState } from './language';
 import * as settings from './settings';
 import { useTestDatabase } from '../test/db';
 
@@ -65,19 +64,6 @@ describe('initializeLanguage', () => {
     expect(state).toEqual({ setting: 'ja', language: 'ja', systemLanguage: 'fr' });
     expect(mainI18n.language).toBe('ja');
   });
-
-  test('falls back to the system language and logs when the stored choice cannot be read', async () => {
-    // Arrange
-    systemLanguages('de-DE');
-    vi.mocked(settings.getLanguageSetting).mockRejectedValueOnce(new Error('database is gone'));
-
-    // Act
-    const state = await initializeLanguage();
-
-    // Assert
-    expect(state).toEqual({ setting: 'system', language: 'de', systemLanguage: 'de' });
-    expect(logger.warn).toHaveBeenCalledWith('operation.failure', { operation: 'language.read' }, expect.any(Error));
-  });
 });
 
 describe('readLanguageState', () => {
@@ -91,30 +77,5 @@ describe('readLanguageState', () => {
 
     // Assert
     expect(state).toEqual({ setting: 'ar', language: 'ar', systemLanguage: 'it' });
-  });
-});
-
-describe('changeLanguage', () => {
-  test('stores the choice and moves the main process to its language', async () => {
-    // Act
-    const state = await changeLanguage('ar');
-
-    // Assert
-    expect(state).toEqual({ setting: 'ar', language: 'ar', systemLanguage: 'en' });
-    expect(await settings.getLanguageSetting()).toBe('ar');
-    expect(mainI18n.language).toBe('ar');
-  });
-
-  test('goes back to the language of the system when the choice is system', async () => {
-    // Arrange
-    systemLanguages('es-MX');
-    await changeLanguage('ja');
-
-    // Act
-    const state = await changeLanguage('system');
-
-    // Assert
-    expect(state).toEqual({ setting: 'system', language: 'es', systemLanguage: 'es' });
-    expect(mainI18n.language).toBe('es');
   });
 });

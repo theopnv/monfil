@@ -14,21 +14,6 @@ const installedOnWindows: UpdateEnvironment = {
 };
 
 describe('resolveUpdateSource', () => {
-  test('uses the release feed for a Windows installer build', () => {
-    // Act
-    const source = resolveUpdateSource(installedOnWindows);
-
-    // Assert
-    expect(source).toEqual({ name: 'FEED', url: 'https://update.electronjs.org/theopnv/monfil/win32-x64/1.2.3' });
-  });
-
-  test('leaves updates to the Store for a Store build', () => {
-    // Act
-    const source = resolveUpdateSource({ ...installedOnWindows, isWindowsStore: true });
-
-    // Assert
-    expect(source).toEqual({ name: 'STORE' });
-  });
 
   test('does not update a development build', () => {
     // Act

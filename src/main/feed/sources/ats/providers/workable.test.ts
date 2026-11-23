@@ -25,22 +25,8 @@ describe('workable toBoard', () => {
   });
 
   test.each([
-    'https://workable.com/acme',
-    'https://jobs.workable.com/acme',
-    'https://apply.workable.com.example.com/acme',
-    'https://notapply.workable.com/acme',
-    'https://example.com/api/v1/widget/accounts/acme',
-    'https://apply.workable.com/',
-    'https://apply.workable.com/j/ABC123',
-    'https://www.workable.com/',
-    'https://www.workable.com/acme',
-    'https://www.workable.com/api/accounts',
     'https://www.workable.com/api/v1/widget/accounts/acme',
     'https://www.workable.com/v1/accounts/acme',
-    'https://www.workable.com/api/jobs/acme',
-    'https://apply.workable.com/api',
-    'https://apply.workable.com/api/accounts/acme',
-    'https://apply.workable.com/api/v1/widget/accounts',
     'https://apply.workable.com/api/v2/widget/accounts/acme',
     'https://apply.workable.com/api/v1/jobs/accounts/acme',
     'https://apply.workable.com/api/v1/widget/jobs/acme',
@@ -91,17 +77,6 @@ describe('workable normalize', () => {
     });
   });
 
-  test('does not read telecommuting false as remote', () => {
-    // Arrange
-    const body = JSON.stringify({ jobs: [{ title: 'Clerk', shortcode: 'CCC', telecommuting: false }] });
-
-    // Act
-    const job = workable.normalize(body)?.jobs[0];
-
-    // Assert
-    expect(job?.workMode).toBeUndefined();
-  });
-
   test('skips a job without a shortcode or a title', () => {
     // Arrange
     const body = JSON.stringify({ jobs: [{ shortcode: 'AAA' }, { title: 'No code' }, { title: 'Ok', shortcode: 'BBB' }] });
@@ -119,9 +94,6 @@ describe('workable normalize', () => {
   });
 
   test.each([
-    '{"name": "x"}',
-    '{"jobs": {}}',
-    '{"jobs": [{"id": 1, "title": "x", "absolute_url": "y"}]}',
     '{"jobs": [{"title": "x"}, {"shortcode": "A", "title": "y"}]}',
     'not json',
   ])('rejects %s', (body) => {

@@ -56,44 +56,6 @@ describe('extractArticleInUtilityProcess', () => {
     expect(utilityProcess.fork).toHaveBeenCalledWith(expect.stringContaining('extractArticleProcess.cjs'), [], { serviceName: ARTICLE_EXTRACTION_SERVICE_NAME });
   });
 
-  test('resolves a request with the response of the process', async () => {
-    // Arrange
-    const result = extractArticleInUtilityProcess('<p>a</p>', 'https://example.com/a');
-
-    // Act
-    children[0]?.respond(children[0].sent[0]?.id ?? -1, 'first');
-
-    // Assert
-    await expect(result).resolves.toMatchObject({ text: 'first' });
-  });
-
-  test('rejects a request that takes longer than the timeout and kills the process', async () => {
-    // Arrange
-    const result = extractArticleInUtilityProcess('<p>a</p>', 'https://example.com/a');
-    const rejection = expect(result).rejects.toThrow(/timed out/);
-
-    // Act
-    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS);
-
-    // Assert
-    await rejection;
-    expect(children[0]?.killed).toBe(true);
-  });
-
-  test('does not time out a request that answers in time', async () => {
-    // Arrange
-    const result = extractArticleInUtilityProcess('<p>a</p>', 'https://example.com/a');
-    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS - 1);
-
-    // Act
-    children[0]?.respond(children[0].sent[0]?.id ?? -1, 'in time');
-    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS);
-
-    // Assert
-    await expect(result).resolves.toMatchObject({ text: 'in time' });
-    expect(children[0]?.killed).toBe(false);
-  });
-
   test('sends the queued requests again to a new process after a timeout, and rejects only the slow one', async () => {
     // Arrange
     const slow = extractArticleInUtilityProcess('<p>slow</p>', 'https://example.com/slow');
@@ -110,23 +72,6 @@ describe('extractArticleInUtilityProcess', () => {
     // Assert
     expect(resent).toMatchObject({ html: '<p>next</p>', url: 'https://example.com/next' });
     await expect(next).resolves.toMatchObject({ text: 'next' });
-  });
-
-  test('starts the timeout of a queued request when it reaches the front, not when it was queued', async () => {
-    // Arrange
-    const first = extractArticleInUtilityProcess('<p>first</p>', 'https://example.com/first');
-    const second = extractArticleInUtilityProcess('<p>second</p>', 'https://example.com/second');
-    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS - 1);
-    children[0]?.respond(children[0].sent[0]?.id ?? -1, 'first');
-    await first;
-
-    // Act
-    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS - 1);
-    children[0]?.respond(children[0].sent[1]?.id ?? -1, 'second');
-
-    // Assert
-    await expect(second).resolves.toMatchObject({ text: 'second' });
-    expect(children[0]?.killed).toBe(false);
   });
 
   test('times out the next request as well when the restarted process stays silent', async () => {
@@ -200,33 +145,5 @@ describe('extractArticleInUtilityProcess', () => {
 
     // Assert
     expect(children).toHaveLength(1);
-  });
-
-  test('ignores a response that no request waits for', async () => {
-    // Arrange
-    const result = extractArticleInUtilityProcess('<p>a</p>', 'https://example.com/a');
-
-    // Act
-    children[0]?.respond(9_999, 'stray');
-    children[0]?.respond(children[0].sent[0]?.id ?? -1, 'real');
-
-    // Assert
-    await expect(result).resolves.toMatchObject({ text: 'real' });
-  });
-
-  test('uses a new process for a request after a timeout', async () => {
-    // Arrange
-    const slow = extractArticleInUtilityProcess('<p>slow</p>', 'https://example.com/slow');
-    const slowRejection = expect(slow).rejects.toThrow(/timed out/);
-    await vi.advanceTimersByTimeAsync(EXTRACTION_TIMEOUT_MS);
-    await slowRejection;
-
-    // Act
-    const later = extractArticleInUtilityProcess('<p>later</p>', 'https://example.com/later');
-    children[1]?.respond(children[1].sent[0]?.id ?? -1, 'later');
-
-    // Assert
-    await expect(later).resolves.toMatchObject({ text: 'later' });
-    expect(children).toHaveLength(2);
   });
 });

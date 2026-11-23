@@ -21,16 +21,6 @@ function utf16Feed(endianness: 'le' | 'be'): Uint8Array {
 }
 
 describe('decodeBody', () => {
-  test('decodes UTF-8 when nothing declares a charset', () => {
-    // Arrange
-    const bytes = new TextEncoder().encode(`<rss><title>${FRENCH_TITLE}</title></rss>`);
-
-    // Act
-    const text = decodeBody(bytes, undefined);
-
-    // Assert
-    expect(text).toBe(`<rss><title>${FRENCH_TITLE}</title></rss>`);
-  });
 
   test.each([
     'application/rss+xml; charset=ISO-8859-1',

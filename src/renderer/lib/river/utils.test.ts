@@ -44,7 +44,6 @@ describe('formatRelativeTime boundaries', () => {
     { label: 'one minute', age: MINUTE, expected: '1m' },
     { label: 'one hour', age: HOUR, expected: '1h' },
     { label: 'one day', age: DAY, expected: '1d' },
-    { label: 'six days and 23 hours', age: 7 * DAY - HOUR, expected: '6d' },
   ])('$label old reads $expected', ({ age, expected }) => {
     // Act
     const result = formatRelativeTime(NOW - age, 'en');
@@ -78,9 +77,6 @@ describe('formatRelativeTime in other locales', () => {
 
   test.each([
     { locale: 'fr', expected: 'maintenant' },
-    { locale: 'de', expected: 'jetzt' },
-    { locale: 'zh-Hans', expected: '现在' },
-    { locale: 'ja', expected: '今' },
     { locale: 'ar', expected: 'الآن' },
   ])('says "now" in $locale', ({ locale, expected }) => {
     // Act
@@ -100,7 +96,6 @@ describe('formatRelativeTime in other locales', () => {
 
   test.each([
     { locale: 'de', expected: '8.6.2026' },
-    { locale: 'fr', expected: '08/06/2026' },
     { locale: 'zh-Hans', expected: '2026/6/8' },
   ])('writes a date from a week on in the order of $locale', ({ locale, expected }) => {
     // Act

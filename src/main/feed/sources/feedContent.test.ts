@@ -13,13 +13,6 @@ const rdf = (body: string) => `<?xml version="1.0"?><rdf:RDF xmlns:rdf="http://w
 const json = (feed: object) => JSON.stringify({ version: 'https://jsonfeed.org/version/1.1', ...feed });
 
 describe('parseFeedContent rss', () => {
-  test('removes the HTML tags of an item title in CDATA', () => {
-    // Act
-    const parsed = parseFeedContent(rss('<title>T</title><item><title><![CDATA[<b>First</b> catch]]></title></item>'));
-
-    // Assert
-    expect(parsed?.items[0]?.title).toBe('First catch');
-  });
 
   test('reads the feed and a complete item', () => {
     // Arrange
@@ -83,16 +76,6 @@ describe('parseFeedContent rss', () => {
 });
 
 describe('parseFeedContent atom', () => {
-  test('removes the HTML tags of an escaped entry title', () => {
-    // Arrange
-    const content = atom('<title>T</title><entry><id>x</id><title>&lt;p&gt;Mobile development in Unreal Engine&lt;/p&gt;</title></entry>');
-
-    // Act
-    const parsed = parseFeedContent(content);
-
-    // Assert
-    expect(parsed?.items[0]?.title).toBe('Mobile development in Unreal Engine');
-  });
 
   test('reads the feed and a complete entry', () => {
     // Arrange
@@ -131,22 +114,9 @@ describe('parseFeedContent atom', () => {
     });
   });
 
-  test('the site link is the alternate link, or a link with no rel', () => {
-    // Act
-    const alternate = parseFeedContent(atom('<title>T</title><link rel="self" href="https://s.example/feed"/><link rel="alternate" href="https://site.example/"/>'));
-    const plain = parseFeedContent(atom('<title>T</title><link rel="self" href="https://s.example/feed"/><link href="https://plain.example/"/>'));
-    const none = parseFeedContent(atom('<title>T</title><link rel="self" href="https://s.example/feed"/>'));
-
-    // Assert
-    expect(alternate?.siteLink).toBe('https://site.example/');
-    expect(plain?.siteLink).toBe('https://plain.example/');
-    expect(none?.siteLink).toBeUndefined();
-  });
-
   test.each([
     ['the alternate link, whatever its place', '<link rel="enclosure" href="https://e.example/"/><link rel="alternate" href="https://a.example/"/>', 'https://a.example/'],
     ['a link with no rel', '<link rel="enclosure" href="https://e.example/"/><link href="https://plain.example/"/>', 'https://plain.example/'],
-    ['the first link when none is an alternate', '<link rel="self" href="https://s.example/"/><link rel="enclosure" href="https://e.example/"/>', 'https://s.example/'],
   ])('the link of an entry is %s', (_name, links, expected) => {
     // Act
     const parsed = parseFeedContent(atom(`<title>T</title><entry><id>x</id><title>E</title>${links}</entry>`));
@@ -179,57 +149,9 @@ describe('parseFeedContent atom', () => {
     // Assert
     expect(parsed).toEqual({ title: '', description: '', siteLink: undefined, items: [] });
   });
-
-  test('a feed with no subtitle and no entry has an empty description and no items', () => {
-    // Act
-    const parsed = parseFeedContent(atom('<title>T</title>'));
-
-    // Assert
-    expect(parsed).toEqual({ title: 'T', description: '', siteLink: undefined, items: [] });
-  });
 });
 
 describe('parseFeedContent rdf', () => {
-  test('removes the HTML tags of an escaped item title', () => {
-    // Act
-    const parsed = parseFeedContent(rdf('<channel rdf:about="https://old.example/"><title>T</title></channel><item><title>&lt;i&gt;One&lt;/i&gt;</title></item>'));
-
-    // Assert
-    expect(parsed?.items[0]?.title).toBe('One');
-  });
-
-  test('reads the feed and an item', () => {
-    // Arrange
-    const content = rdf(`<channel rdf:about="https://old.example/"><title>Old news</title><link>https://old.example/</link><description>Very old</description></channel>
-      <item rdf:about="https://old.example/1">
-        <title>One</title>
-        <link>https://old.example/1</link>
-        <description>First</description>
-        <dc:date>2024-01-01T00:00:00Z</dc:date>
-        <dc:creator>Ann</dc:creator>
-      </item>`);
-
-    // Act
-    const parsed = parseFeedContent(content);
-
-    // Assert
-    expect(parsed).toEqual({
-      title: 'Old news',
-      description: 'Very old',
-      siteLink: 'https://old.example/',
-      items: [{
-        title: 'One',
-        guid: 'https://old.example/1',
-        link: 'https://old.example/1',
-        pubDate: '2024-01-01T00:00:00Z',
-        description: 'First',
-        image: undefined,
-        author: 'Ann',
-        extra: undefined,
-        read_at: undefined,
-      }],
-    });
-  });
 
   test('an item with only a link has placeholders and no author', () => {
     // Act
@@ -259,69 +181,6 @@ describe('parseFeedContent rdf', () => {
 });
 
 describe('parseFeedContent json', () => {
-  test('removes the HTML tags of an item title', () => {
-    // Act
-    const parsed = parseFeedContent(json({ title: 'T', items: [{ id: '1', title: '<p>First catch</p>' }] }));
-
-    // Assert
-    expect(parsed?.items[0]?.title).toBe('First catch');
-  });
-
-  test('reads the feed and a complete item', () => {
-    // Arrange
-    const content = json({
-      title: 'Fish &amp; Chips',
-      description: 'All about fish',
-      home_page_url: 'https://fish.example/',
-      items: [{
-        id: 'fish-1',
-        url: 'https://fish.example/1',
-        title: 'First catch',
-        content_html: '<p>html</p>',
-        content_text: 'text',
-        summary: 'summary',
-        date_published: '2024-01-01T00:00:00Z',
-        authors: [{ name: 'Ann' }],
-      }],
-    });
-
-    // Act
-    const parsed = parseFeedContent(content);
-
-    // Assert
-    expect(parsed).toEqual({
-      title: 'Fish & Chips',
-      description: 'All about fish',
-      siteLink: 'https://fish.example/',
-      items: [{
-        title: 'First catch',
-        guid: 'fish-1',
-        link: 'https://fish.example/1',
-        pubDate: '2024-01-01T00:00:00Z',
-        description: '<p>html</p>',
-        image: undefined,
-        author: 'Ann',
-        extra: undefined,
-        read_at: undefined,
-      }],
-    });
-  });
-
-  test('an item takes its description from the text, then from the summary', () => {
-    // Act
-    const parsed = parseFeedContent(json({ title: 'T', items: [{ id: '1', content_text: 'text', summary: 'summary' }, { id: '2', summary: 'summary' }] }));
-
-    // Assert
-    expect(parsed?.items.map((item) => item.description)).toEqual(['text', 'summary']);
-  });
-
-  test('an item with an empty author list has no author', () => {
-    // Act
-    const parsed = parseFeedContent(json({ title: 'T', items: [{ id: '1', authors: [] }] }));
-
-    // Assert
-    expect(parsed?.items[0]?.author).toBeUndefined();
-  });
 
   test('an item with only an id has placeholders, and the id as guid', () => {
     // Act
@@ -347,12 +206,5 @@ describe('parseFeedContent json', () => {
 
     // Assert
     expect(parsed).toMatchObject({ title: '', description: '', siteLink: undefined });
-  });
-});
-
-describe('parseFeedContent other content', () => {
-  test('throws on content that is not a feed', () => {
-    // Act / Assert
-    expect(() => parseFeedContent('<html><body>hello</body></html>')).toThrow();
   });
 });

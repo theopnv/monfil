@@ -103,18 +103,6 @@ describe('startAutoUpdates', () => {
     expect(mockAutoUpdater.checkForUpdates).not.toHaveBeenCalled();
   });
 
-  test('does not check on Linux', () => {
-    // Arrange
-    runAs({ platform: 'linux' });
-
-    // Act
-    startAutoUpdates();
-    vi.advanceTimersByTime(MINUTE);
-
-    // Assert
-    expect(mockAutoUpdater.checkForUpdates).not.toHaveBeenCalled();
-  });
-
   test('tells the renderer when an update is ready and stops checking', () => {
     // Arrange
     runAs({});

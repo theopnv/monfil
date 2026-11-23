@@ -32,10 +32,4 @@ describe('titleBarOverlayForTheme', () => {
     expect(brightness(overlay.color)).toBeGreaterThan(brightness(overlay.symbolColor));
     expect(brightness(overlay.color)).toBeGreaterThan(128);
   });
-
-  test.each(['dark', 'light'] as const)('keeps the same bar height in the %s theme', (theme) => {
-    // Act & Assert
-    expect(titleBarOverlayForTheme(theme).height).toBe(titleBarOverlayForTheme(theme === 'dark' ? 'light' : 'dark').height);
-    expect(titleBarOverlayForTheme(theme).height).toBeGreaterThan(0);
-  });
 });

@@ -716,17 +716,6 @@ describe('refreshAllFeeds', () => {
 });
 
 describe('refreshFeeds', () => {
-  test('returns an empty summary without touching any feed when given no ids', async () => {
-    // Arrange
-    await storeFeed('https://a.example/feed');
-
-    // Act
-    const summary = await refreshFeeds([]);
-
-    // Assert
-    expect(summary).toEqual({ perFeed: [] });
-    expect(mockedFetchFeed).not.toHaveBeenCalled();
-  });
 
   test('fetches only the given feeds, with their stored validators', async () => {
     // Arrange

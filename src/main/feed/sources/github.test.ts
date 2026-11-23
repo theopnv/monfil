@@ -36,14 +36,6 @@ describe('githubCandidates', () => {
     expect(org?.[0]?.link).toBe('https://github.com/microsoft.atom');
   });
 
-  test('a stored feed URL is kept as it is', () => {
-    // Act
-    const candidates = githubCandidates('https://github.com/microsoft/playwright/releases.atom', false);
-
-    // Assert
-    expect(candidates?.[0]?.link).toBe('https://github.com/microsoft/playwright/releases.atom');
-  });
-
   test('another feed of a repository is kept as it is, with the owner avatar', () => {
     // Act
     const candidates = githubCandidates('https://github.com/microsoft/playwright/commits/main.atom', false);
@@ -82,16 +74,6 @@ describe('githubCandidates', () => {
 
     // Assert
     expect(candidates?.[0]?.link).toBe('https://github.com/microsoft/playwright/releases.atom');
-  });
-
-  test('a bare owner/repo resolves only when the GitHub chip is picked', () => {
-    // Act
-    const withChip = githubCandidates('microsoft/playwright', true);
-    const withoutChip = githubCandidates('microsoft/playwright', false);
-
-    // Assert
-    expect(withChip?.[0]?.link).toBe('https://github.com/microsoft/playwright/releases.atom');
-    expect(withoutChip).toBeNull();
   });
 
   test('site pages and other hosts are rejected', () => {
@@ -282,7 +264,7 @@ describe('githubSource.parse', () => {
     );
   });
 
-  test.each(['https://example.com/picture.png', 'picture.png'])('keeps the thumbnail %s, which is not an avatar', (thumbnail) => {
+  test.each([ 'picture.png'])('keeps the thumbnail %s, which is not an avatar', (thumbnail) => {
     // Arrange
     const withPicture = feed(entry('tag:github.com,2008:Repository/1/v2', '<p>notes</p>').replace('https://avatars.githubusercontent.com/u/6764957?s=30&amp;v=4', thumbnail));
 

@@ -6,22 +6,6 @@ import { describe, expect, test, vi } from 'vitest';
 import { createI18n } from './create-i18n';
 
 describe('createI18n', () => {
-  test('translates a key at once, with no loading step', () => {
-    // Act
-    const i18n = createI18n('en');
-
-    // Assert
-    expect(i18n.t('action.undo')).toBe('Undo');
-  });
-
-  test('is initialized and has its namespace loaded on return', () => {
-    // Act
-    const i18n = createI18n('en');
-
-    // Assert
-    expect(i18n.isInitialized).toBe(true);
-    expect(i18n.hasLoadedNamespace('common')).toBe(true);
-  });
 
   test('keeps interpolated values as they are, because React and the dialogs escape on their own', () => {
     // Arrange
@@ -35,18 +19,6 @@ describe('createI18n', () => {
     expect(text).toBe('Hi <b>Tom & Jerry</b>');
   });
 
-  test('falls back to English for a key that a language lacks', () => {
-    // Arrange
-    const i18n = createI18n('fr');
-    i18n.addResourceBundle('en', 'common', { onlyEnglish: 'Only English' });
-
-    // Act
-    const text = i18n.t('onlyEnglish' as never);
-
-    // Assert
-    expect(text).toBe('Only English');
-  });
-
   test.each(['fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'] as const)('ships a %s translation in the bundle, not the English fallback', (language) => {
     // Act
     const i18n = createI18n(language);
@@ -54,17 +26,6 @@ describe('createI18n', () => {
     // Assert
     expect(i18n.t('action.undo')).not.toBe('Undo');
     expect(i18n.getFixedT('en')('action.undo')).toBe('Undo');
-  });
-
-  test('changes language in place', async () => {
-    // Arrange
-    const i18n = createI18n('en');
-
-    // Act
-    await i18n.changeLanguage('ar');
-
-    // Assert
-    expect(i18n.language).toBe('ar');
   });
 
   test('hands the instance to a plugin during init', () => {

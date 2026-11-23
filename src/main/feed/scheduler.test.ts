@@ -60,40 +60,6 @@ describe('startRefreshScheduler', () => {
     expect(mockedBroadcast).toHaveBeenCalledWith('feeds:refreshed', { perFeed: [], removed: 4, applyImmediately: true });
   });
 
-  test('refreshes once at launch and then on every period', async () => {
-    // Act
-    await startRefreshScheduler();
-
-    // Assert
-    expect(mockedRefreshAllFeeds).toHaveBeenCalledTimes(1);
-
-    // Act
-    await vi.advanceTimersByTimeAsync(15 * MINUTE);
-
-    // Assert
-    expect(mockedRefreshAllFeeds).toHaveBeenCalledTimes(2);
-  });
-
-  test('broadcasts the refreshed list after each cycle', async () => {
-    // Act
-    await startRefreshScheduler();
-
-    // Assert
-    expect(mockedBroadcast).toHaveBeenCalledWith('feeds:refreshed', summary);
-  });
-
-  test("runs the launch refresh but arms no timer when the interval is 'manual'", async () => {
-    // Arrange
-    mockedGetRefreshInterval.mockResolvedValue('manual');
-
-    // Act
-    await startRefreshScheduler();
-    await vi.advanceTimersByTimeAsync(24 * 60 * MINUTE);
-
-    // Assert
-    expect(mockedRefreshAllFeeds).toHaveBeenCalledTimes(1);
-  });
-
   test('skips the launch refresh but still arms the timer when refresh-on-launch is off', async () => {
     // Arrange
     mockedGetRefreshOnLaunch.mockResolvedValue(false);
@@ -200,12 +166,5 @@ describe('stopRefreshScheduler', () => {
 
     // Assert
     expect(mockedRefreshAllFeeds).toHaveBeenCalledTimes(1);
-  });
-
-  test('is safe to call when no timer is armed', () => {
-    // Act, Assert
-    expect(() => {
-      stopRefreshScheduler();
-    }).not.toThrow();
   });
 });

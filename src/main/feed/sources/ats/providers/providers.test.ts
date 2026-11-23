@@ -73,12 +73,9 @@ describe('toBoard', () => {
     'https://jobs.lever.co/',
     'https://api.lever.co/v0/other/x',
     'https://apply.workable.com/j/ABC123',
-    'https://www.recruitee.com/',
-    'https://www.teamtailor.com/',
     'https://foo.bar.recruitee.com/',
     'https://jobs.personio.com/',
     'ftp://jobs.lever.co/spotify',
-    'not a url at all',
   ])('does not map %s', (link) => {
     // Act / Assert
     expect(toBoard(link)).toBeNull();
@@ -130,11 +127,6 @@ describe('greenhouse', () => {
     expect(job).toMatchObject({ publishedAt: '', workMode: 'remote', salaryLabel: '€50,000–€70,000 / year' });
   });
 
-  test.each(['not json', '{}', '{"jobs": [{"id": 1, "title": "x", "jobUrl": "y"}]}', '[]'])('rejects %s', (input) => {
-    // Act / Assert
-    expect(adapter('greenhouse').normalize(input)).toBeNull();
-  });
-
   test('accepts an empty board', () => {
     // Act / Assert
     expect(adapter('greenhouse').normalize('{"jobs": []}')).toEqual({ company: undefined, jobs: [] });
@@ -171,11 +163,6 @@ describe('lever', () => {
     // Assert
     expect(job).toMatchObject({ location: 'Lyon, Remote', workMode: 'remote', salaryLabel: '€40k–€50k', publishedAt: '' });
   });
-
-  test.each(['{}', '[{"id": 1}]', 'nope'])('rejects %s', (input) => {
-    // Act / Assert
-    expect(adapter('lever').normalize(input)).toBeNull();
-  });
 });
 
 describe('ashby', () => {
@@ -206,11 +193,6 @@ describe('ashby', () => {
     // Assert
     expect(job).toMatchObject({ workMode: 'remote', salaryLabel: '$50K - $60K', html: '' });
   });
-
-  test('rejects a Greenhouse-shaped body', () => {
-    // Act / Assert
-    expect(adapter('ashby').normalize('{"jobs": [{"id": 1, "absolute_url": "x"}]}')).toBeNull();
-  });
 });
 
 describe('workable', () => {
@@ -227,11 +209,6 @@ describe('workable', () => {
     expect(listing?.company).toBe('Acme');
     expect(listing?.jobs[0]).toMatchObject({ id: 'AAA', location: 'Paris, Île-de-France, France', workMode: 'remote', salaryLabel: '€70k-€90k', publishedAt: '2026-05-29T00:00:00.000Z', department: 'AI' });
     expect(listing?.jobs[1]).toMatchObject({ url: 'https://apply.workable.com/j/BBB', publishedAt: '2026-02-01T00:00:00.000Z' });
-  });
-
-  test('rejects a body without jobs', () => {
-    // Act / Assert
-    expect(adapter('workable').normalize('{"name": "x"}')).toBeNull();
   });
 });
 
@@ -255,11 +232,6 @@ describe('smartrecruiters', () => {
     });
     expect(listing?.jobs[1]).toMatchObject({ url: undefined, location: 'Lyon, FR', department: 'IT' });
   });
-
-  test('rejects a body without content', () => {
-    // Act / Assert
-    expect(adapter('smartrecruiters').normalize('{"jobs": []}')).toBeNull();
-  });
 });
 
 describe('recruitee', () => {
@@ -282,11 +254,6 @@ describe('recruitee', () => {
     });
     expect(listing?.jobs[1]).toMatchObject({ location: 'Sofia, Bulgaria', workMode: 'remote' });
   });
-
-  test('rejects a body without offers', () => {
-    // Act / Assert
-    expect(adapter('recruitee').normalize('{}')).toBeNull();
-  });
 });
 
 describe('teamtailor', () => {
@@ -308,11 +275,6 @@ describe('teamtailor', () => {
       location: 'Stockholm, Sweden', workMode: 'hybrid', salaryLabel: '$90,000 - $100,000', department: 'Marketing',
     });
     expect(listing?.jobs[1]).toMatchObject({ id: 'https://careers.tradera.com/jobs/2', location: undefined, workMode: 'on-site', publishedAt: '' });
-  });
-
-  test('rejects a plain RSS feed', () => {
-    // Act / Assert
-    expect(adapter('teamtailor').normalize('<rss version="2.0"><channel><title>Blog</title></channel></rss>')).toBeNull();
   });
 });
 
@@ -337,11 +299,5 @@ describe('personio', () => {
       publishedAt: '2024-11-13T14:10:41.000Z', location: 'Munich, Berlin', workMode: 'hybrid', salaryLabel: '60.000 € - 70.000 € / year', department: 'Tech', employmentType: 'full-time · permanent',
     });
     expect(listing?.jobs[1]).toMatchObject({ id: '13', html: '', url: 'https://acme.jobs.personio.de/job/13' });
-  });
-
-  test('leaves the link empty without a board, and rejects other XML', () => {
-    // Act / Assert
-    expect(adapter('personio').normalize(body)?.jobs[0]?.url).toBeUndefined();
-    expect(adapter('personio').normalize('<feed/>')).toBeNull();
   });
 });

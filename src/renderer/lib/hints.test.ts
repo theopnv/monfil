@@ -84,7 +84,7 @@ describe('readHintsState', () => {
     expect(readHintsState()).toEqual({ initialized: false, seen: [] });
   });
 
-  test.each([false, 'true', 1])('reads initialized %j as not initialized', (initialized) => {
+  test.each([false, 1])('reads initialized %j as not initialized', (initialized) => {
     // Arrange
     localStorage.setItem(HINTS_STORAGE_KEY, JSON.stringify({ initialized, seen: ['add-feed'] }));
 

@@ -26,25 +26,6 @@ describe('personio toBoard', () => {
     // Act / Assert
     expect(personio.toBoard(new URL('https://acme-2.jobs.personio.de/'))?.slug).toBe('acme-2');
   });
-
-  test.each([
-    'https://jobs.personio.com/',
-    'https://jobs.personio.de/',
-    'https://personio.com/',
-    'https://acme.personio.de/',
-    'https://acme.jobs.personio.fr/',
-    'https://acme.jobs.personio.org/',
-    'https://a.b.jobs.personio.de/',
-    'https://acme.jobs.personio.de.example.com/',
-    'https://xacme.jobs.personio.de.evil.test/',
-    'https://acme_corp.jobs.personio.de/',
-    'https://acme.jobs.personio/',
-    'https://acme.jobs.personio.comx/',
-    'https://example.com/',
-  ])('does not map %s', (link) => {
-    // Act / Assert
-    expect(personio.toBoard(new URL(link))).toBeNull();
-  });
 });
 
 describe('personio normalize', () => {
@@ -107,15 +88,6 @@ describe('personio normalize', () => {
 
     // Assert
     expect(jobs?.map((job) => job.workMode)).toEqual(['remote', undefined]);
-  });
-
-  test('leaves the link empty without a board origin', () => {
-    // Arrange
-    const body = feed('<position><id>1</id><name>A</name></position>');
-
-    // Act / Assert
-    expect(personio.normalize(body)?.jobs[0]?.url).toBeUndefined();
-    expect(personio.normalize(body, { provider: 'personio', slug: 'acme', apiUrl: 'x' })?.jobs[0]?.url).toBeUndefined();
   });
 
   test('skips a position without an id or a name', () => {

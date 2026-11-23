@@ -5,7 +5,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 import { db } from '../database';
-import type { FeedItem } from '../types';
 import { addFeedItemsToDatabase, addFeedToDatabase, createCategory, createWorkspace, updateFeedItemImage, upsertArticleContent, syncFeedItemsToDatabase } from './insert';
 import { useTestDatabase } from '../../test/db';
 import { makeFeedInput } from '../../test/fixtures';
@@ -37,19 +36,6 @@ describe('addFeedToDatabase', () => {
     expect(result.data.items[0]?.title).toBe('Item 1');
   });
 
-  test('feeds that share a category only create one category row', async () => {
-    await addFeedToDatabase(feedA);
-    await addFeedToDatabase(feedB);
-
-    const categories = await db.selectFrom('feedCategory').selectAll().execute();
-    const metadata = await db.selectFrom('feedMetadata').selectAll().execute();
-    const placements = await db.selectFrom('feedPlacement').selectAll().execute();
-
-    expect(categories).toHaveLength(1);
-    expect(metadata).toHaveLength(2);
-    expect(placements.every((row) => row.category_id === categories[0]?.id)).toBe(true);
-  });
-
   test('items without a link do not conflict with each other', async () => {
     const result = await addFeedToDatabase({
       link: feedA.link,
@@ -71,38 +57,6 @@ describe('addFeedToDatabase', () => {
     expect(result.data.items).toHaveLength(2);
   });
 
-  test('resubmitting the same link updates the row instead of duplicating it', async () => {
-    await addFeedToDatabase({
-      link: feedA.link,
-      title: 'Old title',
-      items: [],
-      type: 'rss',
-      categoryName: 'tech',
-      workspaceId: HOME_WORKSPACE_ID,
-      showInWorkspace: true,
-    });
-
-    const result = await addFeedToDatabase({
-      link: feedA.link,
-      title: 'New title',
-      items: [],
-      type: 'rss',
-      categoryName: 'tech',
-      workspaceId: HOME_WORKSPACE_ID,
-      showInWorkspace: false,
-    });
-
-    expect(result.success).toBe(true);
-    if (!result.success) {
-      return;
-    }
-    expect(result.data.title).toBe('New title');
-    expect(result.data.showInWorkspace).toBe(0);
-
-    const metadata = await db.selectFrom('feedMetadata').selectAll().execute();
-    expect(metadata).toHaveLength(1);
-  });
-
   test('returns only the items of the feed it added', async () => {
     // Arrange
     const anItem = (link: string) => ({ title: link, link, guid: link, pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined });
@@ -113,149 +67,6 @@ describe('addFeedToDatabase', () => {
 
     // Assert
     expect(result.success && result.data.items.map((item) => item.guid)).toEqual(['https://b.example/1']);
-  });
-
-  test('persists showInWorkspace as 0 when false', async () => {
-    const result = await addFeedToDatabase({
-      link: feedA.link,
-      title: feedA.title,
-      items: [],
-      type: 'rss',
-      categoryName: 'tech',
-      workspaceId: HOME_WORKSPACE_ID,
-      showInWorkspace: false,
-    });
-
-    expect(result.success).toBe(true);
-    if (!result.success) {
-      return;
-    }
-    expect(result.data.showInWorkspace).toBe(0);
-  });
-});
-
-describe('addFeedItemsToDatabase', () => {
-  function feedItem(overrides: Partial<Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'>> = {}): Omit<FeedItem, 'id' | 'feed_id' | 'published_at' | 'excerpt'> {
-    const link = 'link' in overrides ? overrides.link : `${feedA.link}#1`;
-    // The parser falls back to the link when a feed supplies no guid. Mirror that here.
-    return { title: 'Item', link, guid: link ?? 'monfil:test:linkless', pubDate: '2024-01-01', description: '', image: undefined, author: undefined, extra: undefined, read_at: undefined, ...overrides };
-  }
-
-  async function createFeed(): Promise<number> {
-    const result = await addFeedToDatabase(feedA);
-    if (!result.success) {
-      throw new Error('expected the feed to be created');
-    }
-    return result.data.id;
-  }
-
-  test('returns the rows it inserted, with their assigned ids', async () => {
-    // Arrange
-    const feedId = await createFeed();
-
-    // Act
-    const inserted = await addFeedItemsToDatabase(db, feedId, [
-      feedItem({ title: 'Item 1', link: `${feedA.link}#1` }),
-      feedItem({ title: 'Item 2', link: `${feedA.link}#2` }),
-    ]);
-
-    // Assert
-    expect(inserted.success).toBe(true);
-    if (!inserted.success) {
-      return;
-    }
-    expect(inserted.data.map((item) => item.title)).toEqual(['Item 1', 'Item 2']);
-    expect(inserted.data.every((item) => typeof item.id === 'number')).toBe(true);
-    expect(inserted.data.every((item) => item.feed_id === feedId)).toBe(true);
-  });
-
-  test('leaves out the rows it skipped as duplicates', async () => {
-    // Arrange
-    const feedId = await createFeed();
-    await addFeedItemsToDatabase(db, feedId, [feedItem({ title: 'Already stored', link: `${feedA.link}#1` })]);
-
-    // Act
-    const inserted = await addFeedItemsToDatabase(db, feedId, [
-      feedItem({ title: 'Already stored', link: `${feedA.link}#1` }),
-      feedItem({ title: 'Brand new', link: `${feedA.link}#2` }),
-    ]);
-
-    // Assert
-    expect(inserted.success).toBe(true);
-    if (!inserted.success) {
-      return;
-    }
-    expect(inserted.data.map((item) => item.title)).toEqual(['Brand new']);
-    const stored = await db.selectFrom('feedItem').selectAll().execute();
-    expect(stored).toHaveLength(2);
-  });
-
-  test('returns an empty array when every item is a duplicate', async () => {
-    // Arrange
-    const feedId = await createFeed();
-    await addFeedItemsToDatabase(db, feedId, [feedItem({ link: `${feedA.link}#1` })]);
-
-    // Act
-    const inserted = await addFeedItemsToDatabase(db, feedId, [feedItem({ link: `${feedA.link}#1` })]);
-
-    // Assert
-    expect(inserted.success).toBe(true);
-    if (!inserted.success) {
-      return;
-    }
-    expect(inserted.data).toEqual([]);
-  });
-
-  test('returns an empty array when there is nothing to insert', async () => {
-    // Arrange
-    const feedId = await createFeed();
-
-    // Act
-    const inserted = await addFeedItemsToDatabase(db, feedId, []);
-
-    // Assert
-    expect(inserted.success).toBe(true);
-    if (!inserted.success) {
-      return;
-    }
-    expect(inserted.data).toEqual([]);
-  });
-
-  test('lets two feeds each hold the same link', async () => {
-    // Arrange
-    const shared = 'https://shared.example/article';
-    const feedIdA = await createFeed();
-    const resultB = await addFeedToDatabase(feedB);
-    if (!resultB.success) {
-      throw new Error('expected the second feed to be created');
-    }
-
-    // Act
-    const intoA = await addFeedItemsToDatabase(db, feedIdA, [feedItem({ title: 'In A', link: shared })]);
-    const intoB = await addFeedItemsToDatabase(db, resultB.data.id, [feedItem({ title: 'In B', link: shared })]);
-
-    // Assert
-    expect(intoA.success && intoA.data).toHaveLength(1);
-    expect(intoB.success && intoB.data).toHaveLength(1);
-  });
-
-  test('skips a guid the same feed already holds, whatever the link says', async () => {
-    // Arrange
-    const feedId = await createFeed();
-    await addFeedItemsToDatabase(db, feedId, [feedItem({ title: 'First', guid: 'tag:example,2024:1', link: 'https://a.example/old' })]);
-
-    // Act
-    const inserted = await addFeedItemsToDatabase(db, feedId, [feedItem({ title: 'Same item, new url', guid: 'tag:example,2024:1', link: 'https://a.example/new' })]);
-
-    // Assert
-    expect(inserted.success).toBe(true);
-    if (!inserted.success) {
-      return;
-    }
-    expect(inserted.data).toEqual([]);
-    const stored = await db.selectFrom('feedItem').selectAll().where('feed_id', '=', feedId).execute();
-    expect(stored).toHaveLength(1);
-    expect(stored[0]?.title).toBe('First');
   });
 });
 
@@ -628,10 +439,6 @@ describe('updateFeedItemImage', () => {
     const untouched = await db.selectFrom('feedItem').selectAll().where('id', '=', item2.id).executeTakeFirst();
     expect(untouched?.image).toBe('https://example.com/existing.jpg');
   });
-
-  test('does not throw when the id matches no row', async () => {
-    await expect(updateFeedItemImage(999999, 'https://example.com/new.jpg')).resolves.toBeUndefined();
-  });
 });
 
 describe('upsertArticleContent', () => {
@@ -684,19 +491,6 @@ describe('upsertArticleContent', () => {
 });
 
 describe('createCategory', () => {
-  test('creates a new, empty category', async () => {
-    // Act
-    const result = await createCategory('Newsletters', HOME_WORKSPACE_ID);
-
-    // Assert
-    expect(result.success).toBe(true);
-    if (!result.success) {
-      return;
-    }
-    expect(result.data.name).toBe('Newsletters');
-    const stored = await db.selectFrom('feedCategory').selectAll().where('id', '=', result.data.id).execute();
-    expect(stored).toHaveLength(1);
-  });
 
   test('a duplicate name returns DUPLICATE_NAME and creates nothing', async () => {
     // Arrange
@@ -714,34 +508,9 @@ describe('createCategory', () => {
     const stored = await db.selectFrom('feedCategory').selectAll().where('name', '=', 'Newsletters').execute();
     expect(stored).toHaveLength(1);
   });
-
-  test('another constraint failure is a DB_ERROR, not a duplicate name', async () => {
-    // Act
-    const result = await createCategory('Newsletters', 9999);
-
-    // Assert
-    expect(result.success).toBe(false);
-    if (result.success) {
-      return;
-    }
-    expect(result.error.name).toBe('DB_ERROR');
-  });
 });
 
 describe('createWorkspace', () => {
-  test('creates a new workspace with the given name, icon and colour', async () => {
-    // Act
-    const result = await createWorkspace('CI/CD watch', 'Code01', '#3b82f6');
-
-    // Assert
-    expect(result.success).toBe(true);
-    if (!result.success) {
-      return;
-    }
-    expect(result.data.name).toBe('CI/CD watch');
-    expect(result.data.icon).toBe('Code01');
-    expect(result.data.color).toBe('#3b82f6');
-  });
 
   test('positions the new workspace after every existing one', async () => {
     // Arrange

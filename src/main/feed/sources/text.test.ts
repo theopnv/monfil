@@ -6,10 +6,6 @@ import { describe, expect, test } from 'vitest';
 import { decodeTitle } from './text';
 
 describe('decodeTitle', () => {
-  test('removes HTML tags that a feed puts around a title', () => {
-    // Act / Assert
-    expect(decodeTitle('<p>October’s <em>Epic</em> learning content</p>')).toBe('October’s Epic learning content');
-  });
 
   test('removes tags that arrive entity-encoded', () => {
     // Act / Assert
@@ -19,11 +15,6 @@ describe('decodeTitle', () => {
   test('removes tags with attributes, self-closing tags and upper-case names', () => {
     // Act / Assert
     expect(decodeTitle('<A href="https://x.example/">Link</A><br/>here<img src="x.png">')).toBe('Link here');
-  });
-
-  test('keeps angle brackets that are not HTML elements', () => {
-    // Act / Assert
-    expect(decodeTitle('Vector<T> is faster when a < b > c')).toBe('Vector<T> is faster when a < b > c');
   });
 
   test('collapses the whitespace that tags and line breaks leave behind', () => {

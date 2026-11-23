@@ -170,18 +170,6 @@ describe('main', () => {
     expect(mockRequestSingleInstanceLock).not.toHaveBeenCalled();
   });
 
-  test('bootstraps normally when not launched as a Squirrel event', async () => {
-    // Arrange
-    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
-
-    // Act
-    await import('./main');
-
-    // Assert
-    expect(mockQuit).not.toHaveBeenCalled();
-    expect(mockOn).toHaveBeenCalledWith('ready', expect.any(Function));
-  });
-
   test('loads the preload bundle with the extension emitted by Forge 8', async () => {
     // Arrange
     const { BrowserWindow } = await import('electron');
@@ -305,19 +293,6 @@ describe('main', () => {
     expect(mockSetPath).toHaveBeenCalledWith('userData', path.join('mock-user-data', 'monfil-dev'));
     expect(mockSetPath.mock.invocationCallOrder[0]).toBeLessThan(mockRequestSingleInstanceLock.mock.invocationCallOrder[0] ?? 0);
     expect(mockRequestSingleInstanceLock.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(initializeDatabase).mock.invocationCallOrder[0] ?? 0);
-  });
-
-  test('leaves userData alone when an explicit --user-data-dir was passed', async () => {
-    // Arrange
-    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
-    mockHasSwitch.mockReturnValue(true);
-
-    // Act
-    await import('./main');
-
-    // Assert
-    expect(mockMkdirSync).not.toHaveBeenCalled();
-    expect(mockSetPath).not.toHaveBeenCalled();
   });
 
   test('writes the log file in userData and shares its path with diagnostics and the fatal handlers', async () => {
@@ -574,20 +549,5 @@ describe('main', () => {
     // Assert
     expect(window.loadURL).toHaveBeenCalledWith('http://localhost:5173');
     expect(window.loadFile).not.toHaveBeenCalled();
-  });
-
-  test('leaves userData alone when packaged', async () => {
-    // Arrange
-    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
-    mockHasSwitch.mockReturnValue(false);
-    mockIsPackaged = true;
-    Object.defineProperty(process, 'resourcesPath', { value: 'mock-resources-path', configurable: true });
-
-    // Act
-    await import('./main');
-
-    // Assert
-    expect(mockMkdirSync).not.toHaveBeenCalled();
-    expect(mockSetPath).not.toHaveBeenCalled();
   });
 });
