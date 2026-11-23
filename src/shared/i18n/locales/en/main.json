@@ -20,7 +20,8 @@
     "message": "Monfil encountered a system error. Incident {{incident}}.",
     "restart": "Restart",
     "showLog": "Show log file",
-    "quit": "Quit"
+    "quit": "Quit",
+    "attachLog": "Send the log file with the error report"
   },
   "dialog": {
     "sqliteFilter": "SQLite database"

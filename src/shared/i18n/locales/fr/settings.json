@@ -83,9 +83,9 @@
     "importOpml": "Importer un OPML"
   },
   "privacy": {
-    "share": "Partager des statistiques d'utilisation anonymes",
-    "unavailable": "Cette version de Monfil ne collecte pas de statistiques d'utilisation.",
-    "shareHint": "Envoie un décompte quotidien des fonctions que vous utilisez. Aucun texte de flux, d'article ou de recherche ne quitte votre appareil. Désactivez l'option à tout moment pour arrêter l'envoi et supprimer les décomptes conservés sur cet appareil.",
+    "share": "Partager des statistiques d'utilisation anonymes et des rapports d'erreur",
+    "unavailable": "Cette version de Monfil ne collecte ni statistiques d'utilisation ni rapports d'erreur.",
+    "shareHint": "Envoie un décompte quotidien des fonctions que vous utilisez, et un rapport quand Monfil rencontre une erreur. Aucun texte de flux, d'article ou de recherche ne quitte votre appareil. Désactivez l'option à tout moment pour arrêter l'envoi et supprimer les décomptes conservés sur cet appareil.",
     "preview": "Voir ce qui est envoyé",
     "notice": "Avis de confidentialité"
   },
@@ -95,17 +95,20 @@
     "showLog": "Afficher le fichier journal"
   },
   "analyticsCard": {
-    "label": "Statistiques d'utilisation anonymes",
+    "label": "Statistiques d'utilisation et rapports d'erreur",
     "later": "Me demander plus tard",
     "title": "Aidez à améliorer Monfil",
-    "body": "Partagez des statistiques d'utilisation anonymes : un décompte quotidien des fonctions que vous utilisez. Aucun texte de flux, d'article ou de recherche ne quitte votre appareil. Vous pouvez modifier ce choix à tout moment dans les paramètres.",
-    "share": "Partager les statistiques",
+    "body": "Partagez des statistiques d'utilisation anonymes (un décompte quotidien des fonctions que vous utilisez) et des rapports d'erreur (les détails techniques d'une panne). Aucun texte de flux, d'article ou de recherche ne quitte votre appareil. Vous pouvez modifier ce choix à tout moment dans les paramètres.",
+    "share": "Partager statistiques et rapports",
     "decline": "Non merci"
   },
   "analyticsPreview": {
     "title": "Ce qui est envoyé",
     "body": "Monfil envoie un résumé de ce type pour chaque jour où vous l'utilisez. Il contient des décomptes et des réglages. Il ne contient ni flux, ni article, ni texte de recherche, ni nom.",
     "preview": "Aperçu des statistiques d'utilisation",
+    "errorTitle": "Exemple de rapport d'erreur",
+    "errorBody": "Quand Monfil rencontre une erreur, il envoie un rapport comme celui-ci. Cet exemple est créé sur cet appareil à partir d'une erreur fictive. Les chemins de fichiers, les liens et les adresses e-mail sont supprimés.",
+    "errorPreview": "Aperçu d'un exemple de rapport d'erreur",
     "loading": "Chargement…"
   }
 }

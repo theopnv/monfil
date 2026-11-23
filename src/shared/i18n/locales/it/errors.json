@@ -13,6 +13,23 @@
     "restart": "Riavvia l'app",
     "showLog": "Mostra file di log"
   },
+  "report": {
+    "add": "Aggiungi dettagli",
+    "consentNote": "Hai accettato di condividere le segnalazioni di errore. Monfil rimuove i percorsi dei file e i link prima di inviare qualsiasi cosa.",
+    "comment": "Cosa stavi facendo? (facoltativo)",
+    "attachLog": "Allega il file di log",
+    "showPreview": "Anteprima del file di log",
+    "hidePreview": "Nascondi l'anteprima",
+    "previewLabel": "Anteprima del file di log",
+    "previewEmpty": "Il file di log è vuoto.",
+    "previewTruncated": "Viene allegato solo l'ultimo MB del file di log.",
+    "loading": "Caricamento…",
+    "send": "Invia",
+    "sending": "Invio…",
+    "cancel": "Annulla",
+    "sent": "Grazie. I dettagli sono stati inviati.",
+    "failed": "Impossibile inviare i dettagli. Riprova più tardi."
+  },
   "details": "Dettagli: {{message}}",
   "category": {
     "notFound": "La cartella non esiste più.",

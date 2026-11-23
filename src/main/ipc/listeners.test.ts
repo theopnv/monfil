@@ -3,7 +3,8 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, afterEach, test, expect, vi } from 'vitest';
-import { listenToLinkOpen, listenToRendererLog, listenToReveal, listenToShowMenu } from './listeners';
+import { listenToLinkOpen, listenToRendererLog, listenToReveal, listenToShowMenu, listenToStartupComplete } from './listeners';
+import { recordStartupComplete } from '../analytics/startup';
 import { BrowserWindow, Menu, shell } from 'electron';
 import { setLogFilePath } from '../app/main-state';
 import { logger } from '../logging/logger';
@@ -18,6 +19,7 @@ vi.mock(import('../db/database'), async (importOriginal) => new Proxy(await impo
   get: (target, key) => (key === 'dbStatus' ? database.status : Reflect.get(target, key)),
 }));
 vi.mock(import('../feed/refresh'), () => ({ refreshFeeds: vi.fn() }));
+vi.mock(import('../analytics/startup'), () => ({ recordStartupComplete: vi.fn() }));
 vi.mock(import('../lib/sendToRenderer'), async (importOriginal) => ({ ...(await importOriginal()), broadcastToRenderers: vi.fn() }));
 
 vi.mock(import('electron'), () => ({
@@ -146,6 +148,17 @@ describe('log:write IPC listener', () => {
     expect(write).toHaveBeenCalledExactlyOnceWith('renderer.failure', { message: 'Something happened' }, 'boom');
   });
 
+  test('cuts an error text that is longer than 8000 characters', () => {
+    // Arrange
+    const write = vi.spyOn(logger, 'error').mockImplementation(() => undefined);
+
+    // Act
+    listenToRendererLog(event, { level: 'error', event: 'renderer.failure', data: { message: 'x' }, error: 'a'.repeat(9000) });
+
+    // Assert
+    expect(write).toHaveBeenCalledExactlyOnceWith('renderer.failure', { message: 'x' }, 'a'.repeat(8000));
+  });
+
   test.each(['', 'fatal', 'child', 'write', 'constructor', 'toString', undefined, null, 3])('drops a record with the level %j instead of throwing', (level) => {
     // Arrange
     const writers = (['debug', 'info', 'warn', 'error', 'child'] as const).map((method) => vi.spyOn(logger, method).mockImplementation(() => undefined as never));
@@ -168,6 +181,16 @@ describe('log:write IPC listener', () => {
     // Assert
     expect(act).not.toThrow();
     expect(write).not.toHaveBeenCalled();
+  });
+});
+
+describe('usage:startup-complete IPC listener', () => {
+  test('counts the startup as complete', () => {
+    // Act
+    listenToStartupComplete();
+
+    // Assert
+    expect(recordStartupComplete).toHaveBeenCalledOnce();
   });
 });
 

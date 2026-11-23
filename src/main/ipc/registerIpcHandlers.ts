@@ -19,6 +19,14 @@ function failedSetting(channel: string, arg: unknown): string | undefined {
   return channel.startsWith('settings:') && typeof arg === 'object' && arg !== null && 'key' in arg && typeof arg.key === 'string' ? arg.key : undefined;
 }
 
+function runAfter<C extends InvokeChannel>(channel: C, route: Route<C>, arg: ArgOf<C>, response: ResultOf<C>): void {
+  try {
+    route.after?.(arg, response);
+  } catch (error) {
+    logger.warn('operation.failure', { operation: `after-${channel}` }, error);
+  }
+}
+
 async function dispatch<C extends InvokeChannel>(channel: C, event: IpcMainInvokeEvent, arg: unknown): Promise<IpcInvokeResponse<C>> {
   try {
     if (!(ipcSchema[channel] as Rpc<ArgOf<C>, ResultOf<C>>).guard(arg)) {
@@ -31,6 +39,7 @@ async function dispatch<C extends InvokeChannel>(channel: C, event: IpcMainInvok
     if (counter && !isFailure(response)) {
       void incrementCounter(counter);
     }
+    runAfter(channel, route, arg, response);
     return response;
   } catch (error) {
     const incidentId = createIncidentId();

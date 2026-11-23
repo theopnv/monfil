@@ -33,6 +33,7 @@ test('builds the fatal dialog text with the incident id and three buttons', () =
     title: 'Monfil could not continue',
     message: 'Monfil encountered a system error. Incident ab12cd34.',
     buttons: ['Restart', 'Show log file', 'Quit'],
+    attachLog: 'Send the log file with the error report',
   });
 });
 

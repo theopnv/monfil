@@ -20,7 +20,8 @@
     "message": "واجه Monfil خطأ في النظام. المعرّف {{incident}}.",
     "restart": "إعادة التشغيل",
     "showLog": "عرض ملف السجل",
-    "quit": "إنهاء"
+    "quit": "إنهاء",
+    "attachLog": "إرسال ملف السجل مع تقرير الخطأ"
   },
   "dialog": {
     "sqliteFilter": "قاعدة بيانات SQLite"

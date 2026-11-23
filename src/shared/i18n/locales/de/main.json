@@ -20,7 +20,8 @@
     "message": "Monfil hat einen Systemfehler festgestellt. Vorfall {{incident}}.",
     "restart": "Neu starten",
     "showLog": "Protokolldatei anzeigen",
-    "quit": "Beenden"
+    "quit": "Beenden",
+    "attachLog": "Protokolldatei mit dem Fehlerbericht senden"
   },
   "dialog": {
     "sqliteFilter": "SQLite-Datenbank"

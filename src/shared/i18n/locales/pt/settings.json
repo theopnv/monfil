@@ -83,9 +83,9 @@
     "importOpml": "Importar OPML"
   },
   "privacy": {
-    "share": "Compartilhar estatísticas anônimas de uso",
-    "unavailable": "Esta versão do Monfil não coleta estatísticas de uso.",
-    "shareHint": "Envia uma contagem diária dos recursos usados. Nenhum texto de feed, artigo ou busca sai do seu dispositivo. Desative a qualquer momento para parar o envio e excluir as contagens guardadas neste dispositivo.",
+    "share": "Compartilhar estatísticas anônimas de uso e relatórios de erro",
+    "unavailable": "Esta versão do Monfil não coleta estatísticas de uso nem relatórios de erro.",
+    "shareHint": "Envia uma contagem diária dos recursos usados e um relatório quando o Monfil falha. Nenhum texto de feed, artigo ou busca sai do seu dispositivo. Desative a qualquer momento para parar o envio e excluir as contagens guardadas neste dispositivo.",
     "preview": "Ver o que é enviado",
     "notice": "Aviso de privacidade"
   },
@@ -95,17 +95,20 @@
     "showLog": "Mostrar arquivo de log"
   },
   "analyticsCard": {
-    "label": "Estatísticas anônimas de uso",
+    "label": "Estatísticas de uso e relatórios de erro",
     "later": "Perguntar mais tarde",
     "title": "Ajude a melhorar o Monfil",
-    "body": "Compartilhe estatísticas anônimas de uso: uma contagem diária dos recursos usados. Nenhum texto de feed, artigo ou busca sai do seu dispositivo. Isso pode ser alterado em Configurações a qualquer momento.",
-    "share": "Compartilhar estatísticas de uso",
+    "body": "Compartilhe estatísticas anônimas de uso (uma contagem diária dos recursos usados) e relatórios de erro (os detalhes técnicos de uma falha). Nenhum texto de feed, artigo ou busca sai do seu dispositivo. Isso pode ser alterado em Configurações a qualquer momento.",
+    "share": "Compartilhar estatísticas e relatórios",
     "decline": "Não, obrigado"
   },
   "analyticsPreview": {
     "title": "O que é enviado",
     "body": "O Monfil envia um resumo como este para cada dia em que é usado. Ele contém contagens e configurações. Não contém texto de feed, artigo, busca nem nome.",
     "preview": "Prévia das estatísticas de uso",
+    "errorTitle": "Exemplo de relatório de erro",
+    "errorBody": "Quando o Monfil falha, ele envia um relatório como este. Este exemplo é criado neste dispositivo a partir de uma falha inventada. Caminhos de arquivos, links e endereços de e-mail são removidos.",
+    "errorPreview": "Prévia de um exemplo de relatório de erro",
     "loading": "Carregando…"
   }
 }

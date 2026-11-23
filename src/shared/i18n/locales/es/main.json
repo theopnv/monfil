@@ -20,7 +20,8 @@
     "message": "Monfil encontró un error del sistema. Incidente {{incident}}.",
     "restart": "Reiniciar",
     "showLog": "Mostrar archivo de registro",
-    "quit": "Salir"
+    "quit": "Salir",
+    "attachLog": "Enviar el archivo de registro con el informe de error"
   },
   "dialog": {
     "sqliteFilter": "Base de datos SQLite"

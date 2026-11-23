@@ -54,6 +54,10 @@ import type {
   SavedCursor,
   SourceItem,
   DismissSearchHintError,
+  ErrorReportError,
+  ErrorReportLogPreview,
+  ErrorReportSample,
+  ErrorReportState,
 } from './contracts';
 import { REFRESH_INTERVALS, RETENTION_OPTIONS, SOURCE_TYPES } from './contracts';
 import type { IpcFailure, Result } from './result';
@@ -176,6 +180,10 @@ export const ipcSchema = {
   'settings:set': returns<SettingState>()(isSettingSet),
   'settings:dismiss-usage-analytics-prompt': returns<UsageAnalyticsState>()(isUndefined),
   'analytics:preview': returns<DailySummaryProps>()(isUndefined),
+  'report:preview-sample': returns<ErrorReportSample>()(isUndefined),
+  'report:get-state': returns<ErrorReportState>()(isUndefined),
+  'report:preview-log': returns<ErrorReportLogPreview>()(isUndefined),
+  'report:submit': returns<Result<void, ErrorReportError>>()(object({ incidentId: optional(isString), comment: isString, attachLog: isBoolean })),
   'opml:import': returns<Result<ImportSummary, ImportOpmlError>>()(object({ target: isImportTarget })),
   'opml:export': returns<Result<void, ExportOpmlError>>()(isWorkspace),
   'feedpacks:list': returns<Result<FeedpackCatalog, CatalogError>>()(isUndefined),

@@ -20,7 +20,8 @@
     "message": "O Monfil encontrou um erro do sistema. Incidente {{incident}}.",
     "restart": "Reiniciar",
     "showLog": "Mostrar arquivo de log",
-    "quit": "Sair"
+    "quit": "Sair",
+    "attachLog": "Enviar o arquivo de log com o relatório de erro"
   },
   "dialog": {
     "sqliteFilter": "Banco de dados SQLite"

@@ -13,6 +13,23 @@
     "restart": "App neu starten",
     "showLog": "Protokolldatei anzeigen"
   },
+  "report": {
+    "add": "Details hinzufügen",
+    "consentNote": "Sie haben dem Teilen von Fehlerberichten zugestimmt. Monfil entfernt Dateipfade und Links, bevor es etwas sendet.",
+    "comment": "Was haben Sie gerade getan? (optional)",
+    "attachLog": "Protokolldatei anhängen",
+    "showPreview": "Vorschau der Protokolldatei",
+    "hidePreview": "Vorschau ausblenden",
+    "previewLabel": "Vorschau der Protokolldatei",
+    "previewEmpty": "Die Protokolldatei ist leer.",
+    "previewTruncated": "Es wird nur das letzte MB der Protokolldatei angehängt.",
+    "loading": "Wird geladen…",
+    "send": "Senden",
+    "sending": "Wird gesendet…",
+    "cancel": "Abbrechen",
+    "sent": "Danke. Ihre Angaben wurden gesendet.",
+    "failed": "Die Angaben konnten nicht gesendet werden. Versuchen Sie es später erneut."
+  },
   "details": "Details: {{message}}",
   "category": {
     "notFound": "Dieser Ordner existiert nicht mehr.",

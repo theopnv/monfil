@@ -13,6 +13,7 @@ import { logger } from '../logging/logger';
 import { titleBarOverlayForTheme } from '../app/window-chrome';
 import { incrementCounter } from '../analytics/counters';
 import { setPreferencesSnapshot } from '../analytics/preferences';
+import { recordStartupComplete } from '../analytics/startup';
 import { isLogLevel, isMenuTarget, isRendererUsageRecord, isRevealTarget, isUsagePreferences } from '../../shared/ipc-payloads';
 import { installUpdate } from '../updates/auto-updater';
 import { refreshFeeds } from '../feed/refresh';
@@ -51,10 +52,12 @@ export function listenToSetWindowTheme(event: IpcMainEvent, theme: OneWayRendere
   BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay(titleBarOverlayForTheme(theme));
 }
 
+const MAX_RENDERER_ERROR_LENGTH = 8000;
+
 export function listenToRendererLog(_event: IpcMainEvent, payload: OneWayRendererToMainChannelPayloads['log:write']) {
   // A bad level would throw inside the listener and reach the fatal handler as an uncaught exception.
   if (isLogLevel(payload?.level)) {
-    logger[payload.level](payload.event, payload.data, payload.error);
+    logger[payload.level](payload.event, payload.data, typeof payload.error === 'string' ? payload.error.slice(0, MAX_RENDERER_ERROR_LENGTH) : payload.error);
   }
 }
 
@@ -62,6 +65,10 @@ export function listenToUsageRecord(_event: IpcMainEvent, payload: OneWayRendere
   if (isRendererUsageRecord(payload)) {
     void incrementCounter(payload.counter);
   }
+}
+
+export function listenToStartupComplete() {
+  recordStartupComplete();
 }
 
 export function listenToUsagePreferences(_event: IpcMainEvent, payload: OneWayRendererToMainChannelPayloads['usage:preferences']) {

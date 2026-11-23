@@ -13,6 +13,23 @@
     "restart": "Restart app",
     "showLog": "Show log file"
   },
+  "report": {
+    "add": "Add details",
+    "consentNote": "You agreed to share error reports. Monfil removes file paths and links before it sends anything.",
+    "comment": "What were you doing? (optional)",
+    "attachLog": "Attach the log file",
+    "showPreview": "Preview the log file",
+    "hidePreview": "Hide the preview",
+    "previewLabel": "Log file preview",
+    "previewEmpty": "The log file is empty.",
+    "previewTruncated": "Only the last 1 MB of the log file is attached.",
+    "loading": "Loading…",
+    "send": "Send",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "sent": "Thank you. Your details were sent.",
+    "failed": "The details could not be sent. Try again later."
+  },
   "details": "Details: {{message}}",
   "category": {
     "notFound": "That folder no longer exists.",

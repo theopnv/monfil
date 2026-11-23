@@ -5,6 +5,7 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/untitled-ui/base/buttons/button';
 import { ipc } from '@/lib/ipc-client';
+import { ErrorReportForm } from './ErrorReportForm';
 
 interface ErrorRecoveryProps {
   error: unknown;
@@ -12,6 +13,8 @@ interface ErrorRecoveryProps {
   onRestart?: () => void;
   onShowLog?: () => void;
   variant?: 'root' | 'route' | 'section';
+  /** The incident ID of a failure that the renderer logged itself, so the error has none. */
+  incidentId?: string;
 }
 
 function incidentFrom(error: unknown): string | undefined {
@@ -20,10 +23,21 @@ function incidentFrom(error: unknown): string | undefined {
     : undefined;
 }
 
-export function ErrorRecovery({ error, onRetry, onRestart, onShowLog, variant = 'section' }: ErrorRecoveryProps) {
+function RecoveryActions({ root, onRetry, onRestart, onShowLog }: Pick<ErrorRecoveryProps, 'onRetry' | 'onRestart' | 'onShowLog'> & { root: boolean }) {
+  const { t } = useTranslation('errors');
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button color="primary" onPress={() => void onRetry()}>{t('recovery.tryAgain')}</Button>
+      {(root || onRestart) && <Button color="secondary" onPress={onRestart ?? (() => ipc.send('app:restart', undefined))}>{t('recovery.restart')}</Button>}
+      {(root || onShowLog) && <Button color="secondary" onPress={onShowLog ?? (() => ipc.send('app:reveal', 'log'))}>{t('recovery.showLog')}</Button>}
+    </div>
+  );
+}
+
+export function ErrorRecovery({ error, onRetry, onRestart, onShowLog, variant = 'section', incidentId: ownIncidentId }: ErrorRecoveryProps) {
   const { t } = useTranslation('errors');
   const root = variant === 'root';
-  const incidentId = incidentFrom(error);
+  const incidentId = ownIncidentId?.slice(0, 8) ?? incidentFrom(error);
   return (
     <section className={root ? 'flex h-screen w-screen items-center justify-center bg-primary p-8' : 'flex min-h-64 items-center justify-center p-8'}>
       <div className="flex max-w-lg flex-col items-start gap-4 rounded-xl border border-secondary bg-primary p-6 shadow-lg">
@@ -33,11 +47,8 @@ export function ErrorRecovery({ error, onRetry, onRestart, onShowLog, variant = 
         <p className="text-sm text-tertiary">
           {t('recovery.hint', { incident: incidentId ?? t('recovery.unknownIncident') })}
         </p>
-        <div className="flex flex-wrap gap-2">
-          <Button color="primary" onPress={() => void onRetry()}>{t('recovery.tryAgain')}</Button>
-          {(root || onRestart) && <Button color="secondary" onPress={onRestart ?? (() => ipc.send('app:restart', undefined))}>{t('recovery.restart')}</Button>}
-          {(root || onShowLog) && <Button color="secondary" onPress={onShowLog ?? (() => ipc.send('app:reveal', 'log'))}>{t('recovery.showLog')}</Button>}
-        </div>
+        <RecoveryActions root={root} onRetry={onRetry} {...(onRestart ? { onRestart } : {})} {...(onShowLog ? { onShowLog } : {})} />
+        <ErrorReportForm incidentId={incidentId} />
       </div>
     </section>
   );

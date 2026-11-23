@@ -14,7 +14,13 @@ interface FatalApp {
 }
 
 interface FatalDialog {
-  showMessageBox(options: Electron.MessageBoxOptions): Promise<{ response: number }>;
+  showMessageBox(options: Electron.MessageBoxOptions): Promise<{ response: number; checkboxChecked?: boolean }>;
+}
+
+/** Sends the log with the error report of an incident. Main passes it in, so the logging folder does not import the observability folder. */
+export interface FatalReports {
+  enabled(): boolean;
+  attachLog(incidentId: string): Promise<void>;
 }
 
 interface FatalShell {
@@ -25,6 +31,7 @@ export interface FatalDialogText {
   title: string;
   message: string;
   buttons: [restart: string, showLog: string, quit: string];
+  attachLog: string;
 }
 
 interface FatalDependencies {
@@ -32,6 +39,7 @@ interface FatalDependencies {
   dialog: FatalDialog;
   shell: FatalShell;
   text: (incident: string) => FatalDialogText;
+  reports?: FatalReports;
 }
 
 const electronDependencies = { app, dialog, shell };
@@ -51,7 +59,9 @@ export function createFatalHandler(log: Logger, logFilePath: string, dependencie
         showingDialog = false;
         return;
       }
-      const text = dependencies.text(shortIncidentId(incidentId));
+      const shortId = shortIncidentId(incidentId);
+      const text = dependencies.text(shortId);
+      const canReport = dependencies.reports?.enabled() === true;
       const result = await dependencies.dialog.showMessageBox({
         type: 'error',
         title: text.title,
@@ -59,7 +69,11 @@ export function createFatalHandler(log: Logger, logFilePath: string, dependencie
         buttons: text.buttons,
         defaultId: 0,
         cancelId: 2,
+        ...(canReport ? { checkboxLabel: text.attachLog, checkboxChecked: false } : {}),
       });
+      if (canReport && result.checkboxChecked) {
+        await dependencies.reports?.attachLog(shortId).catch(() => undefined);
+      }
       if (result.response === 0) {
         dependencies.app.relaunch();
         dependencies.app.exit(0);
@@ -88,8 +102,8 @@ function isExpectedExit(details: ProcessGoneDetails, quitting: boolean, stoppabl
     || (details.type === 'Utility' && details.name !== undefined && stoppableServices.includes(details.name));
 }
 
-export function installFatalHandlers(log: Logger, logFilePath: string, text: FatalDependencies['text'], stoppableServices: readonly string[]): void {
-  const handle = createFatalHandler(log, logFilePath, { ...electronDependencies, text });
+export function installFatalHandlers(log: Logger, logFilePath: string, text: FatalDependencies['text'], stoppableServices: readonly string[], reports?: FatalReports): void {
+  const handle = createFatalHandler(log, logFilePath, { ...electronDependencies, text, ...(reports ? { reports } : {}) });
 
   process.on('uncaughtException', (error) => void handle('uncaughtException', error));
   process.on('unhandledRejection', (error) => void handle('unhandledRejection', error));

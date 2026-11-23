@@ -10,8 +10,9 @@ import { deleteDays, isCountingEnabled, listDays, readDay, setCountingEnabled, u
 import { readLibraryState } from './library';
 import { getPreferencesSnapshot } from './preferences';
 import { startHealthCounters } from './health';
+import { startStartupHealth } from './startup';
 import { buildDailySummary } from './summary';
-import { getUsageAnalyticsConsent, recordAppLaunch } from '../app/settings';
+import { getUsageAnalyticsConsent } from '../app/settings';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const INITIAL_DELAY_MS = 60_000;
@@ -21,6 +22,7 @@ const MAX_AGE_DAYS = 7;
 let initialTimer: NodeJS.Timeout | undefined;
 let intervalTimer: NodeJS.Timeout | undefined;
 let stopHealthCounters: (() => void) | undefined;
+let stopStartupHealth: (() => void) | undefined;
 let flushing = false;
 
 /**
@@ -110,8 +112,8 @@ function fastFlushMs(): number | undefined {
 
 export async function startUsageAnalytics(): Promise<void> {
   setCountingEnabled(await getUsageAnalyticsConsent() === 'granted');
-  await recordAppLaunch();
   stopHealthCounters = startHealthCounters();
+  stopStartupHealth = startStartupHealth();
   const fast = fastFlushMs();
   const run = () => {
     void flushUsageAnalytics({ includeToday: fast !== undefined });
@@ -131,4 +133,6 @@ export function stopUsageAnalytics(): void {
   intervalTimer = undefined;
   stopHealthCounters?.();
   stopHealthCounters = undefined;
+  stopStartupHealth?.();
+  stopStartupHealth = undefined;
 }

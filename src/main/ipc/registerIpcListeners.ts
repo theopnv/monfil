@@ -5,7 +5,7 @@
 import { ipcMain } from "electron";
 import type { IpcMainEvent } from "electron";
 import type { OneWayRendererToMainChannelPayloads, OneWayRendererToMainChannels } from "../../shared/channels";
-import { listenToInstallUpdate, listenToLinkOpen, listenToRendererLog, listenToReveal, listenToRestart, listenToSetWindowTheme, listenToShowMenu, listenToUsagePreferences, listenToUsageRecord } from "./listeners";
+import { listenToInstallUpdate, listenToLinkOpen, listenToRendererLog, listenToReveal, listenToRestart, listenToSetWindowTheme, listenToShowMenu, listenToStartupComplete, listenToUsagePreferences, listenToUsageRecord } from "./listeners";
 
 type Listener<C extends OneWayRendererToMainChannels> = (
   event: IpcMainEvent,
@@ -22,6 +22,7 @@ const listeners: { [C in OneWayRendererToMainChannels]: Listener<C> } = {
   "log:write": listenToRendererLog,
   "usage:record": listenToUsageRecord,
   "usage:preferences": listenToUsagePreferences,
+  "usage:startup-complete": listenToStartupComplete,
 };
 
 export function registerIpcListeners() {

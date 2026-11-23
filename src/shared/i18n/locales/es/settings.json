@@ -83,9 +83,9 @@
     "importOpml": "Importar OPML"
   },
   "privacy": {
-    "share": "Compartir estadísticas de uso anónimas",
-    "unavailable": "Esta versión de Monfil no recopila estadísticas de uso.",
-    "shareHint": "Envía un recuento diario de las funciones que se usan. Ningún texto de fuentes, artículos ni búsquedas sale del dispositivo. Desactivar en cualquier momento para dejar de enviar y eliminar los recuentos guardados en este dispositivo.",
+    "share": "Compartir estadísticas de uso anónimas e informes de errores",
+    "unavailable": "Esta versión de Monfil no recopila estadísticas de uso ni informes de errores.",
+    "shareHint": "Envía un recuento diario de las funciones que se usan y un informe cuando Monfil falla. Ningún texto de fuentes, artículos ni búsquedas sale del dispositivo. Desactivar en cualquier momento para dejar de enviar y eliminar los recuentos guardados en este dispositivo.",
     "preview": "Ver qué se envía",
     "notice": "Aviso de privacidad"
   },
@@ -95,17 +95,20 @@
     "showLog": "Mostrar archivo de registro"
   },
   "analyticsCard": {
-    "label": "Estadísticas de uso anónimas",
+    "label": "Estadísticas de uso e informes de errores",
     "later": "Preguntar más tarde",
     "title": "Ayuda a mejorar Monfil",
-    "body": "Comparte estadísticas de uso anónimas: un recuento diario de las funciones que se usan. Ningún texto de fuentes, artículos ni búsquedas sale del dispositivo. Se puede cambiar en Configuración en cualquier momento.",
-    "share": "Compartir estadísticas de uso",
+    "body": "Comparte estadísticas de uso anónimas (un recuento diario de las funciones que se usan) e informes de errores (los detalles técnicos de un fallo). Ningún texto de fuentes, artículos ni búsquedas sale del dispositivo. Se puede cambiar en Configuración en cualquier momento.",
+    "share": "Compartir estadísticas e informes",
     "decline": "No, gracias"
   },
   "analyticsPreview": {
     "title": "Qué se envía",
     "body": "Monfil envía un resumen como este cada día que se usa. Contiene recuentos y configuración. No contiene texto de fuentes, artículos, búsquedas ni nombres.",
     "preview": "Vista previa de estadísticas de uso",
+    "errorTitle": "Ejemplo de informe de error",
+    "errorBody": "Cuando Monfil falla, envía un informe como este. Este ejemplo se crea en este dispositivo a partir de un fallo inventado. Se eliminan las rutas de archivos, los enlaces y las direcciones de correo.",
+    "errorPreview": "Vista previa de un ejemplo de informe de error",
     "loading": "Cargando…"
   }
 }

@@ -11,11 +11,11 @@ import type { LogEventMap, LogEventName } from '../../shared/logging';
 vi.mock(import('../logging/logger'), () => ({ observeLogs: vi.fn() }));
 vi.mock(import('./counters'), () => ({ incrementCounter: vi.fn() }));
 
-let emit: (event: LogEventName, data: LogEventMap[LogEventName]) => void;
+let emit: (event: LogEventName, data: LogEventMap[LogEventName], error?: unknown) => void;
 
 beforeEach(() => {
   vi.mocked(observeLogs).mockImplementation((observer) => {
-    emit = (event, data) => observer(event, data, 'error');
+    emit = (event, data, error) => observer(event, data, 'error', error);
     return () => undefined;
   });
   startHealthCounters();
@@ -33,6 +33,14 @@ describe('health counters', () => {
 
     // Assert
     expect(incrementCounter).toHaveBeenCalledExactlyOnceWith(counter);
+  });
+
+  test('a failed refresh counts its error bucket too', () => {
+    // Act
+    emit('feed.refresh', { outcome: 'failed', errorCode: 'GENERIC_FETCH_ERROR' }, { name: 'GENERIC_FETCH_ERROR', message: 'HTTP 503', params: { status: 503 } });
+
+    // Assert
+    expect(vi.mocked(incrementCounter).mock.calls.map(([name]) => name)).toEqual(['refresh_failures', 'refresh_error_http_5xx']);
   });
 
   test.each([

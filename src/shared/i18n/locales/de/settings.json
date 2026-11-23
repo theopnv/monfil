@@ -82,9 +82,9 @@
     "importOpml": "OPML importieren"
   },
   "privacy": {
-    "share": "Anonyme Nutzungsstatistiken teilen",
-    "unavailable": "Diese Version von Monfil erfasst keine Nutzungsstatistiken.",
-    "shareHint": "Senden Sie täglich eine Zählung der genutzten Funktionen. Kein Text aus Feeds, Artikeln oder Suchen verlässt Ihr Gerät. Sie können das jederzeit ausschalten, um das Senden zu beenden und die auf diesem Gerät gespeicherten Zählungen zu löschen.",
+    "share": "Anonyme Nutzungsstatistiken und Fehlerberichte teilen",
+    "unavailable": "Diese Version von Monfil erfasst weder Nutzungsstatistiken noch Fehlerberichte.",
+    "shareHint": "Senden Sie täglich eine Zählung der genutzten Funktionen und einen Bericht, wenn bei Monfil ein Fehler auftritt. Kein Text aus Feeds, Artikeln oder Suchen verlässt Ihr Gerät. Sie können das jederzeit ausschalten, um das Senden zu beenden und die auf diesem Gerät gespeicherten Zählungen zu löschen.",
     "preview": "Gesendete Daten ansehen",
     "notice": "Datenschutzhinweis"
   },
@@ -94,17 +94,20 @@
     "showLog": "Protokolldatei anzeigen"
   },
   "analyticsCard": {
-    "label": "Anonyme Nutzungsstatistiken",
+    "label": "Nutzungsstatistiken und Fehlerberichte",
     "later": "Später fragen",
     "title": "Helfen Sie, Monfil zu verbessern",
-    "body": "Teilen Sie anonyme Nutzungsstatistiken: täglich eine Zählung der genutzten Funktionen. Kein Text aus Feeds, Artikeln oder Suchen verlässt Ihr Gerät. Sie können dies jederzeit in den Einstellungen ändern.",
-    "share": "Nutzungsstatistiken teilen",
+    "body": "Teilen Sie anonyme Nutzungsstatistiken (täglich eine Zählung der genutzten Funktionen) und Fehlerberichte (die technischen Details eines Fehlers). Kein Text aus Feeds, Artikeln oder Suchen verlässt Ihr Gerät. Sie können dies jederzeit in den Einstellungen ändern.",
+    "share": "Statistiken und Berichte teilen",
     "decline": "Nein danke"
   },
   "analyticsPreview": {
     "title": "Was gesendet wird",
     "body": "Monfil sendet an jedem Tag der Nutzung eine Zusammenfassung wie diese. Sie enthält Zählungen und Einstellungen. Sie enthält keinen Text aus Feeds oder Artikeln, keine Suchbegriffe und keinen Namen.",
     "preview": "Vorschau der Nutzungsstatistiken",
+    "errorTitle": "Beispiel eines Fehlerberichts",
+    "errorBody": "Wenn bei Monfil ein Fehler auftritt, sendet es einen Bericht wie diesen. Dieses Beispiel entsteht auf diesem Gerät aus einem erfundenen Fehler. Dateipfade, Links und E-Mail-Adressen werden entfernt.",
+    "errorPreview": "Vorschau eines Beispiel-Fehlerberichts",
     "loading": "Wird geladen…"
   }
 }

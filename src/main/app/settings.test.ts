@@ -10,7 +10,7 @@ import {
   setDetailedLogging, setRefreshInterval, setRefreshOnLaunch, setRetentionDays, toRefreshInterval, toRefreshOnLaunch, toRetentionDays,
   DEFAULT_WORKSPACE_RAIL_EXPANDED, getWorkspaceRailExpanded, setWorkspaceRailExpanded,
   DEFAULT_LANGUAGE_SETTING, getLanguageSetting, setLanguageSetting, toLanguageSetting,
-  getUsageAnalyticsConsent, getUsageAnalyticsPromptHistory, recordAppLaunch, recordUsageAnalyticsPromptDismissed, setUsageAnalyticsConsent, toUsageAnalyticsConsent,
+  getErrorReportCaps, getUsageAnalyticsConsent, getUsageAnalyticsPromptHistory, recordUsageAnalyticsPromptShown, setErrorReportCaps, setUsageAnalyticsConsent, toUsageAnalyticsConsent,
 } from './settings';
 
 useTestDatabase();
@@ -340,29 +340,38 @@ describe('usage analytics settings', () => {
     ]);
   });
 
-  test('counts launches and dismissals of the card', async () => {
+  test('remembers when the card was last shown', async () => {
     // Arrange
-    expect(await getUsageAnalyticsPromptHistory()).toEqual({ launchCount: 0, promptCount: 0, lastShownAt: undefined });
+    expect(await getUsageAnalyticsPromptHistory()).toEqual({ lastShownAt: undefined });
 
     // Act
-    await recordAppLaunch();
-    await recordAppLaunch();
-    await recordUsageAnalyticsPromptDismissed(new Date('2026-10-02T00:00:00Z'));
+    await recordUsageAnalyticsPromptShown(new Date('2026-10-01T00:00:00Z'));
+    await recordUsageAnalyticsPromptShown(new Date('2026-10-02T00:00:00Z'));
 
     // Assert
-    expect(await getUsageAnalyticsPromptHistory()).toEqual({ launchCount: 2, promptCount: 1, lastShownAt: new Date('2026-10-02T00:00:00Z') });
+    expect(await getUsageAnalyticsPromptHistory()).toEqual({ lastShownAt: new Date('2026-10-02T00:00:00Z') });
   });
 
-  test('ignores damaged history values', async () => {
+  test('ignores a damaged date', async () => {
     // Arrange
-    await db.insertInto('setting').values([
-      { key: 'usageAnalyticsLaunchCount', value: '-3' },
-      { key: 'usageAnalyticsPromptCount', value: 'many' },
-      { key: 'usageAnalyticsPromptLastShownAt', value: 'yesterday' },
-    ]).execute();
+    await db.insertInto('setting').values({ key: 'usageAnalyticsPromptLastShownAt', value: 'yesterday' }).execute();
 
     // Act, Assert
-    expect(await getUsageAnalyticsPromptHistory()).toEqual({ launchCount: 0, promptCount: 0, lastShownAt: undefined });
+    expect(await getUsageAnalyticsPromptHistory()).toEqual({ lastShownAt: undefined });
+  });
+});
+
+describe('error report caps setting', () => {
+  test('is empty by default and keeps the text that was stored last', async () => {
+    // Arrange
+    expect(await getErrorReportCaps()).toBeUndefined();
+
+    // Act
+    await setErrorReportCaps('{"day":"2026-11-23"}');
+    await setErrorReportCaps('{"day":"2026-11-24"}');
+
+    // Assert
+    expect(await getErrorReportCaps()).toBe('{"day":"2026-11-24"}');
   });
 });
 

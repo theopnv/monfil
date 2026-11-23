@@ -28,6 +28,8 @@ import { getDetailedLogging } from './app/settings';
 import { titleBarOverlayForTheme } from './app/window-chrome';
 import { startAutoUpdates, stopAutoUpdates } from './updates/auto-updater';
 import { startUsageAnalytics, stopUsageAnalytics } from './analytics/scheduler';
+import { startObservability } from './observability/sentry';
+import { getErrorReportState, submitErrorReport } from './observability/report';
 
 // app.quit() only schedules an exit, so without this return the rest of the module (and its app.on(...) wiring)
 // would still run during Squirrel's install/uninstall/update invocations.
@@ -57,7 +59,12 @@ function bootstrap() {
   const logFilePath = path.join(app.getPath('userData'), 'monfil.log');
   setLogFilePath(logFilePath);
   configureLogging(logFilePath, false);
-  installFatalHandlers(logger, logFilePath, fatalDialogText, [ARTICLE_EXTRACTION_SERVICE_NAME]);
+  installFatalHandlers(logger, logFilePath, fatalDialogText, [ARTICLE_EXTRACTION_SERVICE_NAME], {
+    enabled: () => getErrorReportState().enabled,
+    attachLog: async (incidentId) => {
+      await submitErrorReport({ incidentId, comment: '', attachLog: true });
+    },
+  });
 
   initializeDatabase(path.join(app.getPath('userData'), DB_FILE_NAME))
     .then(async () => configureLogging(logFilePath, await getDetailedLogging()))
@@ -136,6 +143,10 @@ function bootstrap() {
     registerIpcHandlers();
     // The window reads the language at creation, so the stored choice must be in before it opens.
     await initializeLanguage();
+    // Crash reporting only covers the processes that start after it, so it starts before the window.
+    await startObservability().catch((error: unknown) => {
+      logger.warn('app.lifecycle', { action: 'error-reports-failed' }, error);
+    });
     createWindow();
     startRefreshScheduler().catch((error: unknown) => {
       logger.error('feed.refresh', { outcome: 'failed' }, error);

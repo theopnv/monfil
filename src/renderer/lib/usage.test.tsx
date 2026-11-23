@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
-import { recordUsage, useUsageAnalytics } from './usage';
+import { recordUsage, reportStartupComplete, resetStartupReportForTest, useUsageAnalytics } from './usage';
 import type { UsageAnalyticsState } from '../../shared/contracts';
 
 const initial: UsageAnalyticsState = { consent: 'unset', shouldPrompt: true, available: true };
@@ -40,6 +40,21 @@ describe('recordUsage', () => {
 
     // Assert
     expect(sendMock).toHaveBeenCalledWith('usage:record', { counter: 'searches' });
+  });
+});
+
+describe('reportStartupComplete', () => {
+  beforeEach(() => {
+    resetStartupReportForTest();
+  });
+
+  test('tells the main process once, however often it is called', () => {
+    // Act
+    reportStartupComplete();
+    reportStartupComplete();
+
+    // Assert
+    expect(sendMock).toHaveBeenCalledExactlyOnceWith('usage:startup-complete', undefined);
   });
 });
 
@@ -87,7 +102,7 @@ describe('useUsageAnalytics', () => {
     await page.getByRole('button', { name }).click();
 
     // Assert
-    await expect.poll(() => sendMock).toHaveBeenCalledWith('log:write', expect.objectContaining({ level: 'error', event: 'renderer.failure', error: 'write failed' }));
+    await expect.poll(() => sendMock).toHaveBeenCalledWith('log:write', expect.objectContaining({ level: 'error', event: 'renderer.failure', error: expect.stringContaining('write failed') }));
     await expect.element(page.getByTestId('consent')).toHaveTextContent('unset');
   });
 });
