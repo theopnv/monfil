@@ -3,7 +3,7 @@ title: Privacy notice
 description: How the Monfil website and desktop app handle data.
 ---
 
-Last updated: 23 October 2026.
+Last updated: 23 November 2026.
 
 ## Documentation website
 
@@ -33,14 +33,18 @@ The Monfil website maintainer is responsible for this website. For privacy quest
 
 Monfil is a desktop feed reader. It has no account and no Monfil server. It stores your feeds, saved articles, and read state on your device. Some display settings use local storage. You can find and back up the database in Settings.
 
-### Anonymous usage stats (optional)
+### Anonymous usage stats and error reports (optional)
 
-Monfil can send anonymous usage stats. They are off until you agree. After you have added a feed and opened the app twice, Monfil shows a card with two equal buttons, **Share usage stats** and **No thanks**. Closing the card asks again later, at most once more after 14 days. You can change your choice at any time in **Settings > Privacy**. **See what is sent** shows the summary that Monfil would send today.
+Monfil can send anonymous usage stats and error reports. One setting controls both. Both are off until you agree. The first time you open Monfil, it shows a card with two equal buttons, **Share stats and reports** and **No thanks**. If you decline or close the card, Monfil asks again after 30 days, and then every 30 days until you agree. You can change your choice at any time in **Settings > Privacy**. **See what is sent** shows the summary that Monfil would send today and a sample error report.
+
+#### Usage stats
 
 If you agree, Monfil counts on your device what you do. Once a day it sends one `daily_summary` event for each day you used the app. When you agree, it also sends one `consent_granted` event with no data. The `daily_summary` event holds:
 
 - Counts for the day: articles opened, full-text extractions, feeds added, feeds removed, manual refreshes, items saved, feedpacks installed, OPML files imported, OPML files exported, backups made, workspaces created, workspaces switched, searches, and embeds loaded.
-- Counts of failures for the day: feed refresh failures, article extraction failures, internal request failures, and interface failures. These are numbers only. They carry no error text.
+- Counts of failures for the day: feed refresh failures, article extraction failures, internal request failures, and interface failures. Feed refresh failures are also counted by cause: timeout, HTTP 4xx, HTTP 5xx, TLS, DNS, parse, or too large. These are numbers only. They carry no error text.
+- How the app started: whether it started, and in which time range it showed the first articles (under 1 second, 1 to 3 seconds, 3 to 10 seconds, or over 10 seconds).
+- How adding a feed went: the number of attempts and successes, and the number of failures by cause: no feed found, network, parse, or not supported.
 - The state of your library: a size range for your feeds (`0`, `1-5`, `6-20`, `21-100`, or `100+`), the number of workspaces, the number of folders, and the types of feed you use, such as `rss+youtube`.
 - Your display settings: density, theme, the language of the Monfil interface, whether read items are hidden, whether items are marked read on scroll, whether links open in your browser, and whether keyboard navigation is on.
 - The day it covers, the Monfil version, your operating system and its version, your language setting, and the version of the web engine in Monfil.
@@ -51,7 +55,27 @@ The event never holds a feed name, a link, article text, search text, or a name 
 
 Aptabase derives an anonymous user ID on its server as a hash of your IP address and user agent with a salt. Aptabase states that the salt is different for each app and is discarded every 24 hours. The ID changes every day, so the maintainer cannot follow one person from one day to the next. Aptabase states that it keeps analytics data for up to 5 years. See the [Aptabase privacy policy](https://aptabase.com/legal/privacy) for details.
 
-The legal basis is your consent. Your choice is stored on your device with its date and the version of this notice. To withdraw, turn off **Share anonymous usage stats** in Settings. Monfil then stops counting, stops sending, and deletes the counts it kept on your device. Events already received cannot be linked back to you. To ask about your data, email [hello@monfil.app](mailto:hello@monfil.app). A build of Monfil that has no analytics key, such as a build you compile yourself, sends nothing.
+#### Error reports
+
+If you agree, Monfil sends a report when something fails, such as an error in the app, a failed update, a database recovery, or a crash. A report holds:
+
+- The error type, the error message, and the stack trace, which lists places in the Monfil code.
+- A short incident ID, which is the same ID that the error screen shows, and the part of the app that failed, for example the name of an internal request.
+- A short trail of the last Monfil events before the failure. It holds event names and fixed choices, such as `outcome: failed`. It never holds a feed name, a link, or an ID of a feed or an article.
+- The Monfil version, whether the build comes from GitHub or from a store, your operating system and its version, your processor type, and the versions of the web engine and of Node.js in Monfil.
+- Session data that tells how many sessions end without a crash: when the session started, how long it lasted, and whether it ended well.
+
+Before Monfil sends a report, it removes file paths from the error text (your home folder becomes `~`), links, and email addresses. It sends only the fields in the list above and drops the rest. A report holds no feed name, link, article text, search text, user name, or IP address that Monfil adds. **See what is sent** shows a sample report that Monfil builds on your device from a made-up failure.
+
+If Monfil crashes at a low level, it also sends a crash dump. A crash dump is a snapshot of the memory of the process that crashed. Memory can hold pieces of what the app was showing, such as an article title. Monfil cannot remove them.
+
+After a failure, you can add details to the report. The comment is optional, and you write it. The log file is attached only if you tick **Attach the log file**, and you can preview it before you send it. The log file holds the event records of Monfil, with feed names, full links, article text, credentials, and file paths removed. It can still show the host names of sites and error codes. Monfil attaches the last megabyte of it. A native error window, which has no text field, offers only the log file.
+
+[Sentry](https://sentry.io) receives the reports. Functional Software, Inc., a company based in the United States, runs Sentry. It acts as the processor for the Monfil maintainer under its [data processing agreement](https://sentry.io/legal/dpa/). Monfil uses the EU region (`de.sentry.io`), where Sentry stores the data in Germany. Sentry receives your IP address with each request, and the Monfil project is set not to store it. Sentry keeps error reports for 30 days. The maintainer receives an email when a new problem appears.
+
+#### Your choice
+
+The legal basis is your consent. Your choice is stored on your device with its date and the version of this notice. To withdraw, turn off **Share anonymous usage stats and error reports** in Settings. Monfil then stops counting, stops sending, and deletes the counts, the reports that wait to be sent, and the crash dumps that it kept on your device. Reports already received cannot be linked back to you, unless you send the incident ID of a report to the maintainer. To ask about your data, email [hello@monfil.app](mailto:hello@monfil.app). A build of Monfil that has no analytics key and no error report address, such as a build you compile yourself, sends nothing.
 
 ### Requests to other sites
 
