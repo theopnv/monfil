@@ -168,6 +168,10 @@ jobs:
     env:
       MONFIL_APTABASE_KEY: ${{ inputs.upload_package && vars.MONFIL_APTABASE_KEY || '' }}
       MONFIL_APTABASE_HOST: ${{ inputs.upload_package && vars.MONFIL_APTABASE_HOST || '' }}
+      # The DSN only names the project that takes error reports. The upload token stays on the two steps that package the app.
+      MONFIL_SENTRY_DSN: ${{ inputs.upload_package && vars.MONFIL_SENTRY_DSN || '' }}
+      SENTRY_ORG: ${{ inputs.upload_package && vars.SENTRY_ORG || '' }}
+      SENTRY_PROJECT: ${{ inputs.upload_package && vars.SENTRY_PROJECT || '' }}
       # Packaging signs the release app, so only a release run on macOS gets the Apple identity.
       APPLE_SIGNING_IDENTITY: ${{ inputs.upload_package && startsWith(matrix.os, 'macos') && vars.APPLE_SIGNING_IDENTITY || '' }}
     strategy:
@@ -200,11 +204,14 @@ jobs:
         run: xvfb-run -a -s "-screen 0 1920x1080x24" npm run test:e2e -- --reporter=dot,json
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: test-reports/e2e.json
+          # Packaging uploads the source maps, and removes them from the package.
+          SENTRY_AUTH_TOKEN: ${{ inputs.upload_package && secrets.SENTRY_AUTH_TOKEN || '' }}
 
       - if: steps.changes.outputs.code == 'true' && runner.os != 'Linux'
         run: npm run test:e2e -- --reporter=dot,json
         env:
           PLAYWRIGHT_JSON_OUTPUT_FILE: test-reports/e2e.json
+          SENTRY_AUTH_TOKEN: ${{ inputs.upload_package && secrets.SENTRY_AUTH_TOKEN || '' }}
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: ${{ !cancelled() && steps.changes.outputs.code == 'true' }}

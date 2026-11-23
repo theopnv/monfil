@@ -1,4 +1,4 @@
 {
   "extends": "../../tsconfig.node.json",
-  "include": ["**/*.ts", "../shared/**/*.ts", "vite.config.mts"]
+  "include": ["**/*.ts", "../shared/**/*.ts", "vite.config.mts", "../../scripts/sentry/vite-plugin.mts", "../../package.json"]
 }
