@@ -3,8 +3,9 @@
 // See LICENSE in the repository root for full terms.
 
 import { useTranslation } from 'react-i18next';
-import { LinkExternal01 } from "@untitledui/icons";
+import { LinkExternal01, Mail01 } from "@untitledui/icons";
 import { Button } from "@/components/untitled-ui/base/buttons/button";
+import { ipc } from "@/lib/ipc-client";
 import { openLink } from "@/lib/river/utils";
 import SettingsSection from "@/components/Settings/SettingsSection";
 import MonfilLogo from "@/components/common/MonfilLogo";
@@ -38,6 +39,9 @@ export default function AboutSection({ version }: AboutSectionProps) {
             {t(`about.link.${key}`)}
           </Button>
         ))}
+        <Button color="link-color" size="sm" iconTrailing={Mail01} onPress={() => ipc.send('app:send-feedback', undefined)}>
+          {t('about.link.sendFeedback')}
+        </Button>
       </div>
     </SettingsSection>
   );
