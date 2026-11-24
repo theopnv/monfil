@@ -160,6 +160,21 @@ describe('startObservability', () => {
     expect(getScrubber()).toBeDefined();
   });
 
+  test('tells the routing when the app is quitting', async () => {
+    // Arrange
+    const { markShuttingDown } = await import('../app/shutdown-state');
+    await startObservability();
+    const options = vi.mocked(routing.startErrorRouting).mock.calls.at(-1)?.[0];
+
+    // Act
+    const before = options?.isShuttingDown();
+    markShuttingDown();
+
+    // Assert
+    expect(before).toBe(false);
+    expect(options?.isShuttingDown()).toBe(true);
+  });
+
   test('scrubs events and breadcrumbs before they leave', async () => {
     // Act
     await startObservability();

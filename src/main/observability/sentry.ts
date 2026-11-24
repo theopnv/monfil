@@ -8,6 +8,7 @@ import { rm } from 'node:fs/promises';
 import { app } from 'electron';
 import type * as SentryApi from '@sentry/electron/main';
 import { getUsageAnalyticsConsent } from '../app/settings';
+import { isShuttingDown } from '../app/shutdown-state';
 import { isStartingUp } from '../app/startup-state';
 import { logger } from '../logging/logger';
 import { createCaps } from './caps';
@@ -143,7 +144,7 @@ async function initialize(): Promise<void> {
     initializeSdk(Sentry, endpoint.dsn);
     initialized = true;
   }
-  stopRouting = startErrorRouting({ sink: createSink(Sentry), caps, isStartingUp });
+  stopRouting = startErrorRouting({ sink: createSink(Sentry), caps, isStartingUp, isShuttingDown });
   logger.info('app.lifecycle', { action: 'error-reports-on' });
 }
 

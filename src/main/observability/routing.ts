@@ -145,6 +145,8 @@ export interface RoutingOptions {
   sink: ReportSink;
   caps: Caps;
   isStartingUp: () => boolean;
+  /** Once the app quits, the database closes under the work that still runs, so only a failure that ends the process is worth a report. */
+  isShuttingDown: () => boolean;
 }
 
 const pendingCaptures = new Set<Promise<void>>();
@@ -155,9 +157,9 @@ export async function capturesSettled(): Promise<void> {
 }
 
 /** Sends the failures of the app to the error tracker, and keeps a trail of the other log records that come before them. */
-export function startErrorRouting({ sink, caps, isStartingUp }: RoutingOptions): () => void {
+export function startErrorRouting({ sink, caps, isStartingUp, isShuttingDown }: RoutingOptions): () => void {
   return observeLogs((event, data, level, rawError) => {
-    const routed = routeEvent(event, data, rawError);
+    const routed = isShuttingDown() && event !== 'system.failure' ? undefined : routeEvent(event, data, rawError);
     if (!routed) {
       if (level !== 'debug') {
         sink.breadcrumb({ event, level, data: breadcrumbData(event, data) });

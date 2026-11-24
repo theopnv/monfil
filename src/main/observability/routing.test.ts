@@ -18,11 +18,13 @@ let emit: Emit;
 let stop: () => void;
 let sink: ReportSink & { captured: ErrorReport[]; crumbs: Parameters<ReportSink['breadcrumb']>[0][] };
 let startingUp: boolean;
+let shuttingDown: boolean;
 let accept: (fingerprint: string) => Promise<boolean>;
 let unsubscribe: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   startingUp = false;
+  shuttingDown = false;
   accept = () => Promise.resolve(true);
   const captured: ErrorReport[] = [];
   const crumbs: Parameters<ReportSink['breadcrumb']>[0][] = [];
@@ -40,7 +42,7 @@ beforeEach(() => {
     emit = (event, data, level = 'error', error) => observer(event, data, level, error);
     return unsubscribe as () => void;
   });
-  stop = startErrorRouting({ sink, caps: { accept: (fingerprint) => accept(fingerprint) }, isStartingUp: () => startingUp });
+  stop = startErrorRouting({ sink, caps: { accept: (fingerprint) => accept(fingerprint) }, isStartingUp: () => startingUp, isShuttingDown: () => shuttingDown });
 });
 
 afterEach(() => {
@@ -50,6 +52,38 @@ afterEach(() => {
 async function settle(): Promise<void> {
   await new Promise((resolve) => setImmediate(resolve));
 }
+
+describe('failures while the app is quitting', () => {
+  test.each([
+    ['ipc.failure', { channel: 'workspaces:list', incidentId: INCIDENT }],
+    ['renderer.failure', { message: 'Error loading feeds:' }],
+    ['feed.refresh', { outcome: 'failed', errorCode: 'UNKNOWN_ERROR' }],
+    ['database.recovery', { outcome: 'failed', incidentId: INCIDENT }],
+  ] as const)('keeps %s as a breadcrumb', async (event, data) => {
+    // Arrange
+    shuttingDown = true;
+
+    // Act
+    emit(event, data, 'error', new Error('driver has already been destroyed'));
+    await settle();
+
+    // Assert
+    expect(sink.captured).toEqual([]);
+    expect(sink.crumbs.map((crumb) => crumb.event)).toEqual([event]);
+  });
+
+  test('still sends a failure that ends the process', async () => {
+    // Arrange
+    shuttingDown = true;
+
+    // Act
+    emit('system.failure', { source: 'uncaughtException', incidentId: INCIDENT }, 'error', new Error('boom'));
+    await settle();
+
+    // Assert
+    expect(sink.captured).toHaveLength(1);
+  });
+});
 
 describe('failures that go to the error tracker', () => {
   test.each([
