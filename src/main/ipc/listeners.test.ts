@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, afterEach, test, expect, vi } from 'vitest';
-import { listenToLinkOpen, listenToRendererLog, listenToReveal, listenToShowMenu, listenToStartupComplete } from './listeners';
+import { FEEDBACK_MAILTO_URL, listenToLinkOpen, listenToRendererLog, listenToReveal, listenToSendFeedback, listenToShowMenu, listenToStartupComplete } from './listeners';
 import { recordStartupComplete } from '../analytics/startup';
 import { BrowserWindow, Menu, shell } from 'electron';
 import { setLogFilePath } from '../app/main-state';
@@ -61,6 +61,21 @@ describe('link:open IPC listener', () => {
 
     // Assert
     expect(mockedOpenExternal).not.toHaveBeenCalled();
+  });
+});
+
+describe('app:send-feedback IPC listener', () => {
+  afterEach(() => {
+    mockedOpenExternal.mockReset();
+  });
+
+  test('opens the OS mailer with a new message to hello@monfil.app', () => {
+    // Act
+    listenToSendFeedback();
+
+    // Assert
+    expect(mockedOpenExternal).toHaveBeenCalledWith(FEEDBACK_MAILTO_URL);
+    expect(FEEDBACK_MAILTO_URL).toMatch(/^mailto:hello@monfil\.app\?/);
   });
 });
 

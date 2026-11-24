@@ -95,6 +95,17 @@ test('about section lists the website, docs, changelog, issue and donation links
   await expect.element(getByRole('button', { name: 'Buy me a coffee' })).toBeInTheDocument();
 });
 
+test('send feedback asks the main process to open the mailer', async () => {
+  // Arrange
+  const { getByRole } = await renderSettings();
+
+  // Act
+  await getByRole('button', { name: 'Send feedback' }).click();
+
+  // Assert
+  expect(window.electron.ipcRenderer.sendMessage).toHaveBeenCalledWith('app:send-feedback', undefined);
+});
+
 test('choosing a theme persists it to localStorage', async () => {
   // Arrange
   const { getByRole } = await renderSettings();

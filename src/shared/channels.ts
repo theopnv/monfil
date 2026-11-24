@@ -42,6 +42,7 @@ export type OneWayRendererToMainChannelPayloads = {
   'menu:show': MenuTarget;
   'app:reveal': RevealTarget;
   'app:restart': undefined;
+  'app:send-feedback': undefined;
   'app:install-update': undefined;
   'app:set-window-theme': 'light' | 'dark';
   'log:write': { level: LogLevel; event: LogEventName; data: LogEventMap[LogEventName]; error?: string };

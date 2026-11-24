@@ -40,6 +40,13 @@ export function listenToRestart() {
   app.exit(0);
 }
 
+export const FEEDBACK_MAILTO_URL = 'mailto:hello@monfil.app?subject=Monfil%20feedback';
+
+// A fixed URL in the main process: the renderer cannot choose the mailto target, and `link:open` stays http(s)-only.
+export function listenToSendFeedback() {
+  void shell.openExternal(FEEDBACK_MAILTO_URL);
+}
+
 export function listenToInstallUpdate() {
   installUpdate();
 }
