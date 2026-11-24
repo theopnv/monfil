@@ -31,6 +31,13 @@ const macSigning = APPLE_SIGNING_IDENTITY
   ? { osxSign: { identity: APPLE_SIGNING_IDENTITY, continueOnError: false }, ...notarization }
   : {};
 
+const debIconSizes = [16, 24, 32, 48, 64, 128, 256, 512];
+
+const debIcons = {
+  scalable: 'assets/icons/icon.svg',
+  ...Object.fromEntries(debIconSizes.map((size) => [`${size}x${size}`, `assets/icons/linux/${size}.png`])),
+};
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
@@ -87,7 +94,25 @@ const config: ForgeConfig = {
     new MakerZIP({}, ['darwin']),
     new MakerDMG({ name: `monfil-macos-${process.arch}`, title: 'Monfil', icon: 'assets/icons/icon.icns' }),
     new MakerRpm({ options: { icon: 'assets/icons/icon.png' } }),
-    new MakerDeb({ options: { icon: 'assets/icons/icon.png' } }),
+    new MakerDeb({
+      options: {
+        productName: 'Monfil',
+        genericName: 'Feed Reader',
+        description: 'RSS feed reader and more.',
+        productDescription: [
+          'Monfil keeps track of what matters to you across RSS, Atom, JSON Feed, YouTube,',
+          'Substack, Mastodon, Bluesky, GitHub, Hacker News, arXiv and more.',
+          '',
+          'Start from curated feed packs, organise feeds into workspaces, and read',
+          'articles in a clean reader. Your feeds and articles stay on your computer.',
+        ].join('\n'),
+        section: 'news',
+        categories: ['Network'],
+        homepage: 'https://monfil.app',
+        // The installer accepts a size-to-path map for hicolor icons, but the maker types allow only a string.
+        icon: debIcons as unknown as string,
+      },
+    }),
   ],
   plugins: [
     new VitePlugin({
