@@ -62,7 +62,8 @@ function bootstrap() {
   installFatalHandlers(logger, logFilePath, fatalDialogText, [ARTICLE_EXTRACTION_SERVICE_NAME], {
     enabled: () => getErrorReportState().enabled,
     attachLog: async (incidentId) => {
-      await submitErrorReport({ incidentId, comment: '', attachLog: true });
+      const result = await submitErrorReport({ incidentId, comment: '', attachLog: true });
+      logger.info('app.lifecycle', { action: result.success ? 'report-log-sent' : `report-log-refused-${result.error.name}` });
     },
   });
 

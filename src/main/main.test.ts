@@ -360,6 +360,22 @@ describe('main', () => {
     expect(enabled).toBe(true);
     expect(reports?.enabled()).toBe(false);
     expect(submitErrorReport).toHaveBeenCalledWith({ incidentId: 'abcd1234', comment: '', attachLog: true });
+    expect(logger.info).toHaveBeenCalledWith('app.lifecycle', { action: 'report-log-sent' });
+  });
+
+  test('logs why the log file was not sent', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    const { submitErrorReport } = await import('./observability/report');
+    vi.mocked(submitErrorReport).mockResolvedValueOnce({ success: false, error: { name: 'NO_EVENT', message: 'none' } });
+    await import('./main');
+    const reports = vi.mocked(installFatalHandlers).mock.calls[0]?.[4];
+
+    // Act
+    await reports?.attachLog('abcd1234');
+
+    // Assert
+    expect(logger.info).toHaveBeenCalledWith('app.lifecycle', { action: 'report-log-refused-NO_EVENT' });
   });
 
   test('turns on detailed logging once the database is open when the user enabled it', async () => {
