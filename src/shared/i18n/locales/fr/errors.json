@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "Un nom doit comporter de 1 à {{max}} caractères.",
     "INVALID_INPUT_query": "Une recherche doit comporter de 1 à {{max}} caractères.",
     "INVALID_INPUT": "Cette valeur n'est pas valide.",
-    "HOME_NOT_DELETABLE": "Le workspace Accueil ne peut pas être supprimé.",
+    "LAST_WORKSPACE_NOT_DELETABLE": "Le dernier workspace ne peut pas être supprimé.",
     "GENERIC_FETCH_ERROR": "Le serveur a répondu par une erreur.",
     "GENERIC_FETCH_ERROR_refused": "Le serveur a refusé l'accès (HTTP {{status}}). Il bloque peut-être les lecteurs automatisés, ou votre réseau ou votre VPN.",
     "GENERIC_FETCH_ERROR_notFound": "Le flux est introuvable (HTTP {{status}}).",

@@ -54,7 +54,7 @@
     "title": "Importer un OPML",
     "choose": "Choisissez un fichier dans le sélecteur qui s'ouvre ensuite.",
     "newWorkspace": "Nouveau workspace",
-    "mergeHome": "Fusionner dans Accueil",
+    "mergeInto": "Fusionner dans {{name}}",
     "name": "Nom",
     "namePlaceholder": "Laisser vide pour utiliser le titre du fichier"
   },

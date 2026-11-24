@@ -189,7 +189,13 @@ describe('HintsProvider on a fresh profile', () => {
 
   test('a failed first-run check logs a warning and keeps the hints closed', async () => {
     // Arrange
-    invokeMock.mockImplementation((channel: string) => (channel === 'feeds:list' ? Promise.reject(new Error('offline')) : Promise.resolve([])));
+    invokeMock.mockImplementation((channel: string) => {
+      switch (channel) {
+        case 'workspaces:list': return Promise.resolve([home]);
+        case 'feeds:list': return Promise.reject(new Error('offline'));
+        default: return Promise.resolve([]);
+      }
+    });
 
     // Act
     const { getByLabelText } = await renderWithQueryClient(<HintsProvider><AllProbes /></HintsProvider>);

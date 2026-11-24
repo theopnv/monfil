@@ -4,7 +4,6 @@
 
 import { app, BrowserWindow, Menu, shell, type IpcMainEvent, type MenuItemConstructorOptions } from "electron";
 import type { MenuAction, MenuKind, OneWayRendererToMainChannelPayloads } from "../../shared/channels";
-import { HOME_WORKSPACE_ID } from "../../shared/contracts";
 import { dbFilePath, dbStatus } from "../db/database";
 import { broadcastToRenderers, sendToRenderer } from "../lib/sendToRenderer";
 import { openExternalLink } from "../app/window-security";
@@ -96,8 +95,7 @@ const menuTemplates: { [K in MenuKind]: MenuTemplate } = {
   workspace: (event, id) => [
     { label: mainI18n.t("main:menu.workspace.edit"), click: sendAction(event, { kind: 'workspace', action: 'edit', id }) },
     { label: mainI18n.t("main:menu.workspace.export"), click: sendAction(event, { kind: 'workspace', action: 'export', id }) },
-    // Home is the one workspace every install always has; it cannot be deleted.
-    ...(id === HOME_WORKSPACE_ID ? [] : [{ label: mainI18n.t("main:menu.workspace.delete"), click: sendAction(event, { kind: 'workspace', action: 'delete', id }) }]),
+    { label: mainI18n.t("main:menu.workspace.delete"), click: sendAction(event, { kind: 'workspace', action: 'delete', id }) },
   ],
 };
 

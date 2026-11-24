@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "O nome precisa ter de 1 a {{max}} caracteres.",
     "INVALID_INPUT_query": "A busca precisa ter de 1 a {{max}} caracteres.",
     "INVALID_INPUT": "Este valor não é válido.",
-    "HOME_NOT_DELETABLE": "O workspace Início não pode ser excluído.",
+    "LAST_WORKSPACE_NOT_DELETABLE": "O último workspace não pode ser excluído.",
     "GENERIC_FETCH_ERROR": "O servidor respondeu com um erro.",
     "GENERIC_FETCH_ERROR_refused": "O servidor recusou o acesso (HTTP {{status}}). Ele pode bloquear leitores automáticos, ou a sua rede ou VPN.",
     "GENERIC_FETCH_ERROR_notFound": "O feed não foi encontrado (HTTP {{status}}).",

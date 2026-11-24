@@ -5,6 +5,7 @@
 import { redirect } from '@tanstack/react-router';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
 import { isPositiveSafeInteger } from '../../shared/guards';
+import { ipc } from '@/lib/ipc-client';
 
 export function parseRouteId(value: string | undefined): number | undefined {
   // Stryker disable next-line ConditionalExpression: an empty string reads as 0, which isPositiveSafeInteger refuses as well
@@ -18,9 +19,14 @@ export function parseRouteId(value: string | undefined): number | undefined {
 export function parseWorkspaceParams<T extends { workspaceId: string; itemId?: string }>(params: T): T {
   if (parseRouteId(params.workspaceId) === undefined || (params.itemId !== undefined && parseRouteId(params.itemId) === undefined)) {
     // Stryker disable next-line BooleanLiteral: the router replaces the history entry for any redirect, so the option changes nothing
-    throw redirect({ to: '/workspace/$workspaceId', params: { workspaceId: String(HOME_WORKSPACE_ID) }, replace: true });
+    throw redirect({ to: '/', replace: true });
   }
   return params;
+}
+
+export async function redirectToFirstWorkspace(): Promise<never> {
+  const [first] = await ipc.invoke('workspaces:list');
+  throw redirect({ to: '/workspace/$workspaceId', params: { workspaceId: String(first?.id ?? HOME_WORKSPACE_ID) } });
 }
 
 export function parseCollectionSearch(search: Record<string, unknown>): { view?: 'saved' } {

@@ -6,7 +6,7 @@ import { afterEach, beforeAll } from 'vitest';
 import { HOME_WORKSPACE_ID } from '../../shared/contracts';
 import { db, initializeDatabase } from '../db/database';
 
-/** Empties every table, and keeps the Home workspace that every migrated database has. */
+/** Empties every table, and leaves only the Home workspace that every migrated database starts with. */
 export async function resetDatabase(): Promise<void> {
   await db.deleteFrom('articleContent').execute();
   await db.deleteFrom('savedItem').execute();
@@ -19,6 +19,10 @@ export async function resetDatabase(): Promise<void> {
   await db.deleteFrom('setting').execute();
   await db.deleteFrom('usage_counter').execute();
   await db.deleteFrom('workspace').where('id', '!=', HOME_WORKSPACE_ID).execute();
+  await db.insertInto('workspace')
+    .values({ id: HOME_WORKSPACE_ID, name: 'Home', icon: 'Home02', color: '#d67f48', position: 0 })
+    .onConflict((conflict) => conflict.doNothing())
+    .execute();
   await db.updateTable('workspace').set({ search_hint_dismissed_at: null }).execute();
 }
 

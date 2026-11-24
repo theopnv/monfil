@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "Un nombre necesita entre 1 y {{max}} caracteres.",
     "INVALID_INPUT_query": "Una búsqueda necesita entre 1 y {{max}} caracteres.",
     "INVALID_INPUT": "Ese valor no es válido.",
-    "HOME_NOT_DELETABLE": "El workspace Inicio no se puede eliminar.",
+    "LAST_WORKSPACE_NOT_DELETABLE": "El último workspace no se puede eliminar.",
     "GENERIC_FETCH_ERROR": "El servidor respondió con un error.",
     "GENERIC_FETCH_ERROR_refused": "El servidor rechazó el acceso (HTTP {{status}}). Puede bloquear a los lectores automáticos, o la red o la VPN.",
     "GENERIC_FETCH_ERROR_notFound": "No se encontró la fuente (HTTP {{status}}).",

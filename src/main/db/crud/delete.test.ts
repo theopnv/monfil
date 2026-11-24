@@ -318,7 +318,23 @@ describe('deleteCategory', () => {
 });
 
 describe('deleteWorkspace', () => {
-  test('refuses to delete Home', async () => {
+  test('deletes Home like any other workspace when another one remains', async () => {
+    // Arrange
+    const other = await createWorkspace('Other', 'Code01', '#3b82f6');
+    if (!other.success) {
+      throw new Error('expected the workspace to be created');
+    }
+
+    // Act
+    const result = await deleteWorkspace(HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(result.success).toBe(true);
+    const workspaces = await db.selectFrom('workspace').select('id').execute();
+    expect(workspaces).toEqual([{ id: other.data.id }]);
+  });
+
+  test('refuses to delete the last remaining workspace, whichever it is', async () => {
     // Act
     const result = await deleteWorkspace(HOME_WORKSPACE_ID);
 
@@ -327,12 +343,15 @@ describe('deleteWorkspace', () => {
     if (result.success) {
       return;
     }
-    expect(result.error.name).toBe('HOME_NOT_DELETABLE');
+    expect(result.error.name).toBe('LAST_WORKSPACE_NOT_DELETABLE');
     const home = await db.selectFrom('workspace').selectAll().where('id', '=', HOME_WORKSPACE_ID).executeTakeFirst();
     expect(home).toBeDefined();
   });
 
   test('an unknown id returns WORKSPACE_NOT_FOUND', async () => {
+    // Arrange
+    await createWorkspace('Other', 'Code01', '#3b82f6');
+
     // Act
     const result = await deleteWorkspace(999999);
 

@@ -52,7 +52,7 @@
     "title": "导入 OPML",
     "choose": "在随后打开的选择器中选择文件。",
     "newWorkspace": "新建Workspace",
-    "mergeHome": "合并到首页",
+    "mergeInto": "合并到 {{name}}",
     "name": "名称",
     "namePlaceholder": "留空则使用文件的标题"
   },

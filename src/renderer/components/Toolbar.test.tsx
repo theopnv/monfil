@@ -7,6 +7,7 @@ import { createRootRoute, createRoute, createRouter, createMemoryHistory, Outlet
 import { beforeEach, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
+import { redirectToFirstWorkspace } from '@/lib/route-params';
 import { RouteProvider } from '@/providers/route-provider';
 import { ActiveWorkspaceIdProvider } from '@/providers/workspace-provider';
 import { useFeeds } from '@/providers/feeds-provider';
@@ -178,10 +179,11 @@ function renderApp(initialPath: string) {
       </RouteProvider>
     ),
   });
+  const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', beforeLoad: redirectToFirstWorkspace });
   const workspaceRoute = createRoute({ getParentRoute: () => rootRoute, path: '/workspace/$workspaceId', component: FeedsList });
   const readerRoute = createRoute({ getParentRoute: () => rootRoute, path: '/workspace/$workspaceId/reader/$itemId', component: () => <p>Reader</p> });
   const router = createRouter({
-    routeTree: rootRoute.addChildren([workspaceRoute, readerRoute]),
+    routeTree: rootRoute.addChildren([indexRoute, workspaceRoute, readerRoute]),
     history: createMemoryHistory({ initialEntries: [initialPath] }),
   });
 
@@ -769,7 +771,7 @@ test('exporting from the delete dialog invokes opml:export and leaves the dialog
   await expect.element(getByRole('heading', { name: 'Delete workspace' })).toBeInTheDocument();
 });
 
-test('confirming delete on the active workspace removes it and navigates to Home', async () => {
+test('confirming delete on the active workspace removes it and navigates to the first remaining one', async () => {
   // Arrange
   workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
   feedsByWorkspace = { 1: [createFeed({ id: 1, title: 'Home feed', workspaceId: 1 })] };
@@ -783,6 +785,22 @@ test('confirming delete on the active workspace removes it and navigates to Home
   expect(invokeMock).toHaveBeenCalledWith('workspaces:delete', { workspaceId: 2 });
   await expect.element(getByRole('link', { name: 'CI/CD watch' })).not.toBeInTheDocument();
   await expect.element(getByText('Home feed', { exact: true })).toBeInTheDocument();
+});
+
+test('confirming delete on the active Home workspace removes it like any other', async () => {
+  // Arrange
+  workspaces = [createWorkspace({ id: 1, name: 'Home' }), createWorkspace({ id: 2, name: 'CI/CD watch' })];
+  feedsByWorkspace = { 2: [createFeed({ id: 2, title: 'CI feed', workspaceId: 2 })] };
+  const { getByRole, getByText } = await renderApp('/workspace/1');
+  menuActionHandler?.({ kind: 'workspace', action: 'delete', id: 1 });
+
+  // Act
+  await getByRole('button', { name: 'Delete workspace' }).click();
+
+  // Assert
+  expect(invokeMock).toHaveBeenCalledWith('workspaces:delete', { workspaceId: 1 });
+  await expect.element(getByRole('link', { name: 'Home' })).not.toBeInTheDocument();
+  await expect.element(getByText('CI feed', { exact: true })).toBeInTheDocument();
 });
 
 test('a failed delete keeps the dialog open and shows the error', async () => {

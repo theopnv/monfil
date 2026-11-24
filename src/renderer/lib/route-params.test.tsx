@@ -8,7 +8,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { ActiveWorkspaceIdProvider, useActiveWorkspaceId } from '@/providers/workspace-provider';
 import { ipc } from '@/lib/ipc-client';
-import { parseCollectionSearch } from './route-params';
+import { parseCollectionSearch, redirectToFirstWorkspace } from './route-params';
 import { Route as WorkspaceRoute } from '../routes/workspace.$workspaceId';
 import { Route as ReaderRoute } from '../routes/workspace.$workspaceId_.reader.$itemId';
 
@@ -47,6 +47,7 @@ function createTestRouter(path: string) {
   const root = createRootRoute({
     component: () => <ActiveWorkspaceIdProvider><Outlet /></ActiveWorkspaceIdProvider>,
   });
+  const index = createRoute({ getParentRoute: () => root, path: '/', beforeLoad: redirectToFirstWorkspace });
   const workspace = createRoute({
     getParentRoute: () => root,
     path: '/workspace/$workspaceId',
@@ -60,12 +61,12 @@ function createTestRouter(path: string) {
     component: ReaderScreen,
   });
   return createRouter({
-    routeTree: root.addChildren([workspace, reader]),
+    routeTree: root.addChildren([index, workspace, reader]),
     history: createMemoryHistory({ initialEntries: [path] }),
   });
 }
 
-test.each(['NaN', 'Infinity', '0', '-1', '1.5', '9007199254740992', '1e2', '0x10', '%20', '1%0A'])('redirects invalid workspace ID %s to Home', async (id) => {
+test.each(['NaN', 'Infinity', '0', '-1', '1.5', '9007199254740992', '1e2', '0x10', '%20', '1%0A'])('redirects invalid workspace ID %s to the first workspace, Home by default', async (id) => {
   // Arrange
   const router = createTestRouter(`/workspace/${id}`);
 
@@ -77,7 +78,7 @@ test.each(['NaN', 'Infinity', '0', '-1', '1.5', '9007199254740992', '1e2', '0x10
   expect(router.state.location.pathname).toBe('/workspace/1');
   expect(router.history.length).toBe(1);
   expect(invoke).toHaveBeenCalledWith('feeds:list', { workspaceId: 1 });
-  expect(invoke.mock.calls.every(([, arg]) => arg.workspaceId === 1)).toBe(true);
+  expect(invoke.mock.calls.filter(([channel]) => channel !== 'workspaces:list').every(([, arg]) => arg.workspaceId === 1)).toBe(true);
 });
 
 test.each(['/workspace/NaN/reader/4', '/workspace/2/reader/0', '/workspace/2/reader/1.5', '/workspace/2/reader/9007199254740992'])('redirects invalid Reader URL %s before item queries', async (path) => {
@@ -90,7 +91,7 @@ test.each(['/workspace/NaN/reader/4', '/workspace/2/reader/0', '/workspace/2/rea
   // Assert
   await expect.element(screen.getByText('Home workspace 1')).toBeInTheDocument();
   expect(router.state.location.pathname).toBe('/workspace/1');
-  expect(invoke.mock.calls.every(([channel]) => channel === 'feeds:list')).toBe(true);
+  expect(invoke.mock.calls.every(([channel]) => channel === 'feeds:list' || channel === 'workspaces:list')).toBe(true);
 });
 
 test('keeps valid workspace and item parameters as strings', async () => {
@@ -144,4 +145,34 @@ test('the workspace provider uses Home off a workspace route', async () => {
   // Assert
   await expect.element(screen.getByText('Home workspace 1')).toBeInTheDocument();
   expect(invoke).toHaveBeenCalledWith('feeds:list', { workspaceId: 1 });
+});
+
+test('redirects an invalid workspace ID to the first workspace when Home is gone', async () => {
+  // Arrange
+  invoke.mockImplementation((channel: string) => Promise.resolve(channel === 'workspaces:list' ? [{ id: 5, name: 'Reading' }] : []));
+  const router = createTestRouter('/workspace/NaN');
+
+  // Act
+  const screen = await render(<RouterProvider router={router} />);
+
+  // Assert
+  await expect.element(screen.getByText('Home workspace 5')).toBeInTheDocument();
+  expect(router.state.location.pathname).toBe('/workspace/5');
+  expect(router.history.length).toBe(1);
+});
+
+test('the workspace provider keeps the last workspace off a workspace route', async () => {
+  // Arrange
+  const root = createRootRoute({ component: () => <ActiveWorkspaceIdProvider><Outlet /></ActiveWorkspaceIdProvider> });
+  const workspace = createRoute({ getParentRoute: () => root, path: '/workspace/$workspaceId', component: HomeProbe });
+  const settings = createRoute({ getParentRoute: () => root, path: '/settings', component: HomeProbe });
+  const router = createRouter({ routeTree: root.addChildren([workspace, settings]), history: createMemoryHistory({ initialEntries: ['/workspace/5'] }) });
+  const screen = await render(<RouterProvider router={router} />);
+  await expect.element(screen.getByText('Home workspace 5')).toBeInTheDocument();
+
+  // Act
+  await router.navigate({ to: '/settings' });
+
+  // Assert
+  await expect.element(screen.getByText('Home workspace 5')).toBeInTheDocument();
 });

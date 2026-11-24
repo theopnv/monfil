@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "名称需要 1 到 {{max}} 个字符。",
     "INVALID_INPUT_query": "搜索内容需要 1 到 {{max}} 个字符。",
     "INVALID_INPUT": "该值无效。",
-    "HOME_NOT_DELETABLE": "无法删除“首页”Workspace。",
+    "LAST_WORKSPACE_NOT_DELETABLE": "无法删除最后一个 Workspace。",
     "GENERIC_FETCH_ERROR": "服务器返回了错误。",
     "GENERIC_FETCH_ERROR_refused": "服务器拒绝访问（HTTP {{status}}）。它可能会阻止自动阅读器，也可能是你的网络或 VPN 造成的。",
     "GENERIC_FETCH_ERROR_notFound": "未找到该订阅源（HTTP {{status}}）。",

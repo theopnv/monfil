@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "يجب أن يتراوح طول الاسم بين حرف واحد و{{max}} حرفًا.",
     "INVALID_INPUT_query": "يجب أن يتراوح طول البحث بين حرف واحد و{{max}} حرفًا.",
     "INVALID_INPUT": "هذه القيمة غير صالحة.",
-    "HOME_NOT_DELETABLE": "لا يمكن حذف ووركسبيس الصفحة الرئيسية.",
+    "LAST_WORKSPACE_NOT_DELETABLE": "لا يمكن حذف آخر ووركسبيس.",
     "GENERIC_FETCH_ERROR": "ردّ الخادم برسالة خطأ.",
     "GENERIC_FETCH_ERROR_refused": "رفض الخادم الوصول (HTTP {{status}}). قد يحظر القارئات الآلية، أو قد تحجبه شبكتك أو VPN.",
     "GENERIC_FETCH_ERROR_notFound": "لم يُعثر على الموجز (HTTP {{status}}).",
