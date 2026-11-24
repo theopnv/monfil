@@ -105,3 +105,23 @@ test('the privacy notice link opens in the browser', async () => {
   // Assert
   expect(sendMessage).toHaveBeenCalledWith('link:open', 'https://monfil.app/docs/user-guide/privacy/');
 });
+
+test('logs a failure to load a preview and keeps the other preview', async () => {
+  // Arrange
+  invoke.mockImplementation((channel: string) => {
+    switch (channel) {
+      case 'settings:get': return Promise.resolve(state);
+      case 'analytics:preview': return Promise.resolve({ day: '2026-10-23', searches: 2 });
+      case 'report:preview-sample': return Promise.reject(new Error('no sample'));
+      default: return Promise.resolve(undefined);
+    }
+  });
+  const { getByRole, getByLabelText } = await renderWithQueryClient(<UsageAnalyticsCard />);
+
+  // Act
+  await getByRole('button', { name: 'See what is sent' }).click();
+
+  // Assert
+  await vi.waitFor(() => expect(sendMessage).toHaveBeenCalledWith('log:write', expect.objectContaining({ level: 'error', event: 'renderer.failure', data: { message: 'Could not load the error report preview' } })));
+  await vi.waitFor(() => expect(getByLabelText('Usage stats preview').element().textContent).toContain('"searches": 2'));
+});
