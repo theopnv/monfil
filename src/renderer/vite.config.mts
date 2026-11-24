@@ -4,6 +4,10 @@ import tailwindcss from '@tailwindcss/vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import { coveragePlugins } from '../../scripts/coverage/vite-plugins.mts';
 import { ROUTER_OPTIONS } from '../../scripts/router-options.mts';
+import { sentryBuild } from '../../scripts/sentry/vite-plugin.mts';
+import manifest from '../../package.json' with { type: 'json' };
+
+const sentry = sentryBuild(manifest.version);
 
 // Delivered as a <meta> tag: the packaged app loads index.html from file://, where there are no response headers.
 // Styles allow 'unsafe-inline' because Tailwind and React Aria set inline style attributes; fonts come from
@@ -54,7 +58,9 @@ export default defineConfig({
     tailwindcss(),
     contentSecurityPolicy(),
     ...coveragePlugins('renderer'),
+    ...sentry.plugins,
   ],
+  build: { sourcemap: sentry.sourcemap },
   resolve: {
     tsconfigPaths: true,
   },

@@ -9,6 +9,9 @@ import { getAppInfo } from '../app/app-info';
 import { getUpdateState } from '../updates/auto-updater';
 import { dismissUsageAnalyticsPrompt } from '../analytics/consent';
 import { previewSummary } from '../analytics/report';
+import { recordFeedAdded, recordFeedDiscovery } from '../analytics/onboarding';
+import { getErrorReportState, previewReportLog, submitErrorReport } from '../observability/report';
+import { sampleErrorEvent } from '../observability/sample';
 import { createCategory, createWorkspace } from '../db/crud/insert';
 import { deleteCategory, deleteFeedFromDatabase, deleteWorkspace } from '../db/crud/delete';
 import { moveFeedsToCategory, moveFeedToWorkspace, renameCategory, reorderWorkspaces, setFeedsShowInWorkspace, setFeedItemsRead, updateWorkspace } from '../db/crud/update';
@@ -27,18 +30,20 @@ export interface Route<C extends InvokeChannel> {
   run: (arg: ArgOf<C>, event: IpcMainInvokeEvent) => ResultOf<C> | Promise<ResultOf<C>>;
   /** Counted after a request that did not fail. A function may decline to count. */
   counter?: UsageCounter | ((arg: ArgOf<C>) => UsageCounter | undefined);
+  /** Runs after every request that did not throw, a failed Result included. A failure here is logged and does not change the answer. */
+  after?: (arg: ArgOf<C>, response: ResultOf<C>) => void;
 }
 
 /** One entry per invoke channel: a channel without an entry does not compile. */
 export const routes = {
-  'feeds:discover': { run: ({ query, type }) => resolveSource(query, type).discover(query) },
+  'feeds:discover': { run: ({ query, type }) => resolveSource(query, type).discover(query), after: (_arg, response) => recordFeedDiscovery(response) },
   'feeds:list-categories': { run: ({ workspaceId }) => queryFeedCategory({ workspace_id: workspaceId }) },
   'feeds:list': { run: ({ workspaceId }) => queryFeedSummaries(workspaceId) },
   'items:query': { run: (arg) => queryRiverPage(arg) },
   'saved:query': { run: (arg) => querySavedPage(arg) },
   'items:set-saved': { run: (arg) => setItemSaved(arg), counter: (arg) => (arg.saved ? 'items_saved' : undefined) },
   'feeds:refresh': { run: () => refreshAllFeeds(), counter: 'manual_refreshes' },
-  'feeds:submit-add-feed': { run: (arg, event) => handleFeedsSubmitAddFeed(arg, event), counter: 'feeds_added' },
+  'feeds:submit-add-feed': { run: (arg, event) => handleFeedsSubmitAddFeed(arg, event), counter: 'feeds_added', after: (_arg, response) => recordFeedAdded(response) },
   'feeds:delete-feed': { run: ({ feedId, workspaceId }) => deleteFeedFromDatabase(feedId, workspaceId), counter: 'feeds_removed' },
   'feeds:set-show-in-workspace': { run: ({ feedIds, showInWorkspace, workspaceId }) => setFeedsShowInWorkspace(feedIds, showInWorkspace, workspaceId) },
   'feeds:create-category': { run: ({ name, workspaceId }) => createCategory(name, workspaceId) },
@@ -67,6 +72,10 @@ export const routes = {
   'settings:set': { run: (arg) => handleSettingsSet(arg) },
   'settings:dismiss-usage-analytics-prompt': { run: () => dismissUsageAnalyticsPrompt() },
   'analytics:preview': { run: () => previewSummary() },
+  'report:preview-sample': { run: () => sampleErrorEvent() },
+  'report:get-state': { run: () => getErrorReportState() },
+  'report:preview-log': { run: () => previewReportLog() },
+  'report:submit': { run: (arg) => submitErrorReport(arg) },
   'opml:import': { run: ({ target }) => openAndImportOpml(target), counter: 'opml_imported' },
   'opml:export': { run: ({ workspaceId }) => exportWorkspaceOpml(workspaceId), counter: 'opml_exported' },
   'feedpacks:list': { run: () => getFeedpackCatalog() },

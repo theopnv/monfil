@@ -13,6 +13,23 @@
     "restart": "Reiniciar la aplicación",
     "showLog": "Mostrar archivo de registro"
   },
+  "report": {
+    "add": "Añadir detalles",
+    "consentNote": "Aceptaste compartir informes de errores. Monfil elimina las rutas de archivos y los enlaces antes de enviar nada.",
+    "comment": "¿Qué estabas haciendo? (opcional)",
+    "attachLog": "Adjuntar el archivo de registro",
+    "showPreview": "Vista previa del archivo de registro",
+    "hidePreview": "Ocultar la vista previa",
+    "previewLabel": "Vista previa del archivo de registro",
+    "previewEmpty": "El archivo de registro está vacío.",
+    "previewTruncated": "Solo se adjunta el último MB del archivo de registro.",
+    "loading": "Cargando…",
+    "send": "Enviar",
+    "sending": "Enviando…",
+    "cancel": "Cancelar",
+    "sent": "Gracias. Se enviaron los detalles.",
+    "failed": "No se pudieron enviar los detalles. Inténtalo de nuevo más tarde."
+  },
   "details": "Detalles: {{message}}",
   "category": {
     "notFound": "Esa carpeta ya no existe.",

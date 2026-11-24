@@ -82,9 +82,9 @@
     "importOpml": "Import OPML"
   },
   "privacy": {
-    "share": "Share anonymous usage stats",
-    "unavailable": "This build of Monfil does not collect usage stats.",
-    "shareHint": "Send one daily count of the features you use. No feed, article, or search text leaves your device. Turn it off at any time to stop sending and delete the counts kept on this device.",
+    "share": "Share anonymous usage stats and error reports",
+    "unavailable": "This build of Monfil does not collect usage stats or error reports.",
+    "shareHint": "Send one daily count of the features you use, and a report when Monfil fails. No feed, article, or search text leaves your device. Turn it off at any time to stop sending and delete the counts kept on this device.",
     "preview": "See what is sent",
     "notice": "Privacy notice"
   },
@@ -94,17 +94,20 @@
     "showLog": "Show log file"
   },
   "analyticsCard": {
-    "label": "Anonymous usage stats",
+    "label": "Usage stats and error reports",
     "later": "Ask me later",
     "title": "Help improve Monfil",
-    "body": "Share anonymous usage stats: one daily count of the features you use. No feed, article, or search text leaves your device. You can change this in Settings at any time.",
-    "share": "Share usage stats",
+    "body": "Share anonymous usage stats (one daily count of the features you use) and error reports (the technical details of a failure). No feed, article, or search text leaves your device. You can change this in Settings at any time.",
+    "share": "Share stats and reports",
     "decline": "No thanks"
   },
   "analyticsPreview": {
     "title": "What is sent",
     "body": "Monfil sends one summary like this for each day you use it. It holds counts and settings. It holds no feed, article, search text, or name.",
     "preview": "Usage stats preview",
+    "errorTitle": "Sample error report",
+    "errorBody": "When Monfil fails, it sends a report like this one. This sample is built on this device from a made-up failure. File paths, links, and email addresses are removed.",
+    "errorPreview": "Sample error report preview",
     "loading": "Loading…"
   }
 }

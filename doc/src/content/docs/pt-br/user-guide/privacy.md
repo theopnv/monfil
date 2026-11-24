@@ -7,7 +7,7 @@ description: Como o site e o app de desktop do Monfil tratam os dados.
 Esta tradução é um rascunho feito por máquina. Em caso de diferença, a [versão em inglês](../../../user-guide/privacy/) é a referência.
 :::
 
-Última atualização: 23 de outubro de 2026.
+Última atualização: 23 de novembro de 2026.
 
 ## Site da documentação
 
@@ -37,14 +37,18 @@ O mantenedor do site do Monfil responde por este site. Para perguntas ou pedidos
 
 O Monfil é um leitor de feeds para desktop. Ele não tem conta e não tem servidor do Monfil. Ele guarda os seus feeds, os artigos salvos e o estado de leitura no seu dispositivo. Algumas configurações de exibição usam armazenamento local. Você pode encontrar e fazer backup do banco de dados em Configurações.
 
-### Estatísticas anônimas de uso (opcional)
+### Estatísticas anônimas de uso e relatórios de erro (opcional)
 
-O Monfil pode enviar estatísticas anônimas de uso. Elas ficam desativadas até você concordar. Depois que você adicionar um feed e abrir o app duas vezes, o Monfil mostra um card com dois botões de mesmo tamanho, **Compartilhar estatísticas de uso** e **Não, obrigado**. Se você fechar o card, o Monfil pergunta de novo depois, no máximo mais uma vez, após 14 dias. Você pode mudar a sua escolha a qualquer momento em **Configurações > Privacidade**. **Ver o que é enviado** mostra o resumo que o Monfil enviaria hoje.
+O Monfil pode enviar estatísticas anônimas de uso e relatórios de erro. Uma única configuração controla os dois. Os dois ficam desativados até você aceitar. Na primeira vez que você abre o Monfil, ele mostra um cartão com dois botões iguais, **Compartilhar estatísticas e relatórios** e **Não, obrigado**. Se você recusar ou fechar o cartão, o Monfil pergunta de novo depois de 30 dias e, em seguida, a cada 30 dias até você aceitar. Você pode mudar sua escolha a qualquer momento em **Configurações > Privacidade**. **Ver o que é enviado** mostra o resumo que o Monfil enviaria hoje e um exemplo de relatório de erro.
+
+#### Estatísticas de uso
 
 Se você concordar, o Monfil conta, no seu dispositivo, o que você faz. Uma vez por dia, ele envia um evento `daily_summary` para cada dia em que você usou o app. Quando você concorda, ele também envia um evento `consent_granted` sem dados. O evento `daily_summary` contém:
 
 - Contagens do dia: artigos abertos, extrações de texto completo, feeds adicionados, feeds removidos, atualizações manuais, itens salvos, feedpacks instalados, arquivos OPML importados, arquivos OPML exportados, backups feitos, workspaces criados, trocas de workspace, buscas e embeds carregados.
-- Contagens de falhas do dia: falhas na atualização de feeds, falhas na extração de artigos, falhas em requisições internas e falhas da interface. São apenas números. Não contêm texto de erro.
+- Contagens de falhas do dia: falhas na atualização de feeds, falhas na extração de artigos, falhas em requisições internas e falhas da interface. São apenas números. Não contêm texto de erro.  As falhas de atualização de feeds também são contadas por causa: tempo esgotado, HTTP 4xx, HTTP 5xx, TLS, DNS, análise ou tamanho excessivo.
+- Como o app iniciou: se iniciou e em qual faixa de tempo mostrou os primeiros artigos (menos de 1 segundo, de 1 a 3 segundos, de 3 a 10 segundos ou mais de 10 segundos).
+- Como foi a adição de um feed: o número de tentativas e de sucessos, e o número de falhas por causa: nenhum feed encontrado, rede, análise ou formato não compatível.
 - O estado da sua biblioteca: uma faixa de tamanho para os seus feeds (`0`, `1-5`, `6-20`, `21-100` ou `100+`), o número de workspaces, o número de pastas e os tipos de feed que você usa, como `rss+youtube`.
 - As suas configurações de exibição: densidade, tema, idioma da interface do Monfil, se os itens lidos ficam ocultos, se os itens são marcados como lidos ao rolar, se os links abrem no navegador e se a navegação pelo teclado está ativa.
 - O dia que o evento cobre, a versão do Monfil, o seu sistema operacional e a versão dele, a sua configuração de idioma e a versão do mecanismo web do Monfil.
@@ -55,7 +59,27 @@ O evento nunca contém nome de feed, link, texto de artigo, texto de busca nem u
 
 O Aptabase deriva, no servidor dele, um ID de usuário anônimo como um hash do seu endereço IP e do user agent, com um salt. O Aptabase afirma que o salt é diferente para cada app e é descartado a cada 24 horas. O ID muda todos os dias, então o mantenedor não consegue acompanhar uma mesma pessoa de um dia para o outro. O Aptabase afirma que guarda dados de análise por até 5 anos. Veja a [política de privacidade do Aptabase](https://aptabase.com/legal/privacy) para detalhes.
 
-A base legal é o seu consentimento. A sua escolha fica armazenada no seu dispositivo, com a data e a versão deste aviso. Para retirar o consentimento, desative **Compartilhar estatísticas anônimas de uso** em Configurações. Depois disso, o Monfil para de contar, para de enviar e exclui as contagens que guardou no seu dispositivo. Eventos já recebidos não podem ser ligados a você. Para perguntar sobre os seus dados, envie um e-mail para [hello@monfil.app](mailto:hello@monfil.app). Uma versão do Monfil sem chave de analytics, como uma versão que você mesmo compila, não envia nada.
+#### Relatórios de erro
+
+Se você aceitar, o Monfil envia um relatório quando algo falha, como um erro no app, uma atualização que falhou, uma recuperação do banco de dados ou uma falha fatal. Um relatório contém:
+
+- O tipo de erro, a mensagem de erro e o rastreamento de pilha, que lista pontos do código do Monfil.
+- Um ID curto do incidente, o mesmo que a tela de erro mostra, e a parte do app que falhou, por exemplo o nome de uma requisição interna.
+- Um breve rastro dos últimos eventos do Monfil antes da falha. Ele contém nomes de eventos e valores fixos, como `outcome: failed`. Nunca contém o nome de um feed, um link nem o ID de um feed ou de um artigo.
+- A versão do Monfil, se a versão vem do GitHub ou de uma loja, seu sistema operacional e a versão dele, o tipo de processador e as versões do mecanismo web e do Node.js no Monfil.
+- Dados de sessão que mostram quantas sessões terminam sem falha fatal: quando a sessão começou, quanto durou e se terminou bem.
+
+Antes de enviar um relatório, o Monfil remove do texto do erro os caminhos de arquivos (sua pasta pessoal vira `~`), os links e os endereços de e-mail. Ele envia apenas os campos da lista acima e descarta o resto. Um relatório não contém nome de feed, link, texto de artigo, texto de busca, nome de usuário nem endereço IP que o Monfil adicione. **Ver o que é enviado** mostra um relatório de exemplo que o Monfil cria no seu dispositivo a partir de uma falha inventada.
+
+Se o Monfil falhar em baixo nível, ele também envia um despejo de falha. Um despejo de falha é um instantâneo da memória do processo que falhou. A memória pode conter partes do que o app mostrava, como o título de um artigo. O Monfil não consegue removê-las.
+
+Depois de uma falha, você pode adicionar detalhes ao relatório. O comentário é opcional, e você mesmo o escreve. O arquivo de log só é anexado se você marcar **Anexar o arquivo de log**, e você pode ver uma prévia antes de enviar. O arquivo de log contém os registros de eventos do Monfil, sem nomes de feeds, links completos, texto de artigos, credenciais e caminhos de arquivos. Ele ainda pode mostrar nomes de host de sites e códigos de erro. O Monfil anexa o último megabyte. A janela de erro nativa, que não tem campo de texto, oferece apenas o arquivo de log.
+
+O [Sentry](https://sentry.io) recebe os relatórios. A Functional Software, Inc., uma empresa sediada nos Estados Unidos, opera o Sentry. Ela atua como operadora do mantenedor do Monfil conforme seu [acordo de processamento de dados](https://sentry.io/legal/dpa/). O Monfil usa a região da UE (`de.sentry.io`), onde o Sentry armazena os dados na Alemanha. O Sentry recebe seu endereço IP a cada requisição, e o projeto do Monfil está configurado para não guardá-lo. O Sentry mantém os relatórios de erro por 30 dias. O mantenedor recebe um e-mail quando aparece um problema novo.
+
+#### Sua escolha
+
+A base legal é o seu consentimento. Sua escolha fica guardada no seu dispositivo com a data e a versão deste aviso. Para retirá-la, desative **Compartilhar estatísticas anônimas de uso e relatórios de erro** em Configurações. O Monfil então para de contar e de enviar, e exclui as contagens, os relatórios que aguardam envio e os despejos de falha que guardava no seu dispositivo. Os relatórios já recebidos não podem ser ligados a você, a menos que você envie ao mantenedor o ID do incidente de um relatório. Para perguntas sobre seus dados, escreva para [hello@monfil.app](mailto:hello@monfil.app). Uma versão do Monfil sem chave de análise e sem endereço de relatórios de erro, como uma que você mesmo compila, não envia nada.
 
 ### Requisições a outros sites
 

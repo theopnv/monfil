@@ -107,16 +107,8 @@ export const getUsageAnalyticsConsent = usageAnalyticsConsent.read;
 
 const USAGE_ANALYTICS_CONSENT_AT_KEY = 'usageAnalyticsConsentAt';
 const USAGE_ANALYTICS_NOTICE_VERSION_KEY = 'usageAnalyticsNoticeVersion';
-const USAGE_ANALYTICS_PROMPT_COUNT_KEY = 'usageAnalyticsPromptCount';
 const USAGE_ANALYTICS_PROMPT_LAST_SHOWN_KEY = 'usageAnalyticsPromptLastShownAt';
-const USAGE_ANALYTICS_LAUNCH_COUNT_KEY = 'usageAnalyticsLaunchCount';
-
-async function readCount(key: string): Promise<number> {
-  const [row] = await querySettings({ key });
-  const count = Number(row?.value);
-  // Stryker disable next-line EqualityOperator: for a count of 0 both operators return 0, and a stored "-0" still behaves as 0 in every comparison and sum
-  return Number.isSafeInteger(count) && count > 0 ? count : 0;
-}
+const ERROR_REPORT_CAPS_KEY = 'errorReportCaps';
 
 export async function setUsageAnalyticsConsent(value: UsageAnalyticsConsent, noticeVersion: string, now: Date): Promise<void> {
   await usageAnalyticsConsent.write(value);
@@ -125,26 +117,26 @@ export async function setUsageAnalyticsConsent(value: UsageAnalyticsConsent, not
 }
 
 export interface UsageAnalyticsPromptHistory {
-  launchCount: number;
-  promptCount: number;
   lastShownAt: Date | undefined;
 }
 
 export async function getUsageAnalyticsPromptHistory(): Promise<UsageAnalyticsPromptHistory> {
-  const [launchCount, promptCount, [lastShown]] = await Promise.all([
-    readCount(USAGE_ANALYTICS_LAUNCH_COUNT_KEY),
-    readCount(USAGE_ANALYTICS_PROMPT_COUNT_KEY),
-    querySettings({ key: USAGE_ANALYTICS_PROMPT_LAST_SHOWN_KEY }),
-  ]);
+  const [lastShown] = await querySettings({ key: USAGE_ANALYTICS_PROMPT_LAST_SHOWN_KEY });
   const lastShownAt = lastShown ? new Date(lastShown.value) : undefined;
-  return { launchCount, promptCount, lastShownAt: lastShownAt && !Number.isNaN(lastShownAt.getTime()) ? lastShownAt : undefined };
+  return { lastShownAt: lastShownAt && !Number.isNaN(lastShownAt.getTime()) ? lastShownAt : undefined };
 }
 
-export async function recordAppLaunch(): Promise<void> {
-  await writeSetting(USAGE_ANALYTICS_LAUNCH_COUNT_KEY, String(await readCount(USAGE_ANALYTICS_LAUNCH_COUNT_KEY) + 1));
-}
-
-export async function recordUsageAnalyticsPromptDismissed(now: Date): Promise<void> {
-  await writeSetting(USAGE_ANALYTICS_PROMPT_COUNT_KEY, String(await readCount(USAGE_ANALYTICS_PROMPT_COUNT_KEY) + 1));
+/** Marks the moment the user last answered or closed the consent card. The next card waits 30 days from it. */
+export async function recordUsageAnalyticsPromptShown(now: Date): Promise<void> {
   await writeSetting(USAGE_ANALYTICS_PROMPT_LAST_SHOWN_KEY, now.toISOString());
+}
+
+/** The day tallies that keep the error reports under their daily caps, as the JSON text that the caps module wrote. */
+export async function getErrorReportCaps(): Promise<string | undefined> {
+  const [row] = await querySettings({ key: ERROR_REPORT_CAPS_KEY });
+  return row?.value;
+}
+
+export async function setErrorReportCaps(value: string): Promise<void> {
+  await writeSetting(ERROR_REPORT_CAPS_KEY, value);
 }

@@ -13,6 +13,23 @@
     "restart": "重启应用",
     "showLog": "显示日志文件"
   },
+  "report": {
+    "add": "添加详情",
+    "consentNote": "你已同意分享错误报告。Monfil 会先删除文件路径和链接，再发送任何内容。",
+    "comment": "你当时在做什么？（可选）",
+    "attachLog": "附上日志文件",
+    "showPreview": "预览日志文件",
+    "hidePreview": "隐藏预览",
+    "previewLabel": "日志文件预览",
+    "previewEmpty": "日志文件为空。",
+    "previewTruncated": "只会附上日志文件的最后 1 MB。",
+    "loading": "正在加载…",
+    "send": "发送",
+    "sending": "正在发送…",
+    "cancel": "取消",
+    "sent": "谢谢。你的详情已发送。",
+    "failed": "无法发送详情。请稍后再试。"
+  },
   "details": "详情：{{message}}",
   "category": {
     "notFound": "该文件夹已不存在。",

@@ -47,6 +47,7 @@ export type OneWayRendererToMainChannelPayloads = {
   'log:write': { level: LogLevel; event: LogEventName; data: LogEventMap[LogEventName]; error?: string };
   'usage:record': { counter: RendererUsageCounter };
   'usage:preferences': UsagePreferences;
+  'usage:startup-complete': undefined;
 };
 
 export type OneWayRendererToMainChannels = keyof OneWayRendererToMainChannelPayloads;

@@ -8,7 +8,7 @@ import { incrementCounter, setCountingEnabled } from './counters';
 import { setPreferencesSnapshot } from './preferences';
 import { flushUsageAnalytics, sendConsentGranted, startUsageAnalytics, stopUsageAnalytics, summaryTimestamp } from './scheduler';
 import { isCountingEnabled } from './counters';
-import { getUsageAnalyticsPromptHistory, setUsageAnalyticsConsent } from '../app/settings';
+import { setUsageAnalyticsConsent } from '../app/settings';
 import { observeLogs } from '../logging/logger';
 import { getAnalyticsEndpoint } from './config';
 import { sendEvents } from './client';
@@ -276,7 +276,7 @@ describe('startUsageAnalytics', () => {
     vi.unstubAllEnvs();
   });
 
-  test('turns counting on for a stored grant and counts the launch', async () => {
+  test('turns counting on for a stored grant', async () => {
     // Arrange
     await setUsageAnalyticsConsent('granted', 'v1', now);
 
@@ -285,7 +285,6 @@ describe('startUsageAnalytics', () => {
 
     // Assert
     expect(isCountingEnabled()).toBe(true);
-    expect((await getUsageAnalyticsPromptHistory()).launchCount).toBe(1);
   });
 
   test('leaves counting off without a grant', async () => {
@@ -345,7 +344,8 @@ describe('startUsageAnalytics', () => {
 
     // Assert
     expect(sendEvents).not.toHaveBeenCalled();
-    expect(stopObserving).toHaveBeenCalledOnce();
+    // The health counters and the startup watcher each observe the logs.
+    expect(stopObserving).toHaveBeenCalledTimes(2);
   });
 
   test('stops the hourly sending after stopUsageAnalytics', async () => {

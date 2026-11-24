@@ -7,7 +7,7 @@ description: Wie die Monfil-Website und die Desktop-App mit Daten umgehen.
 Diese Übersetzung ist ein maschineller Entwurf. Bei Abweichungen gilt der [englische Text](../../../user-guide/privacy/) als Referenz.
 :::
 
-Zuletzt aktualisiert: 23. Oktober 2026.
+Zuletzt aktualisiert: 23. November 2026.
 
 ## Dokumentationswebsite
 
@@ -37,14 +37,18 @@ Der Betreuer der Monfil-Website ist für diese Website verantwortlich. Bei Daten
 
 Monfil ist ein Feed-Reader für den Desktop. Er hat kein Konto und keinen Monfil-Server. Monfil speichert Ihre Feeds, gespeicherten Artikel und den Lesestatus auf Ihrem Gerät. Einige Anzeigeeinstellungen nutzen lokalen Speicher. Die Datenbank finden und sichern Sie unter Einstellungen.
 
-### Anonyme Nutzungsstatistiken (optional)
+### Anonyme Nutzungsstatistiken und Fehlerberichte (optional)
 
-Monfil kann anonyme Nutzungsstatistiken senden. Sie sind ausgeschaltet, bis Sie zustimmen. Nachdem Sie einen Feed hinzugefügt und die App zweimal geöffnet haben, zeigt Monfil eine Karte mit zwei gleich großen Schaltflächen: **Nutzungsstatistiken teilen** und **Nein danke**. Wenn Sie die Karte schließen, fragt Monfil später erneut, höchstens noch einmal nach 14 Tagen. Ihre Wahl können Sie jederzeit unter **Einstellungen > Datenschutz** ändern. Mit **Gesendete Daten ansehen** sehen Sie die Zusammenfassung, die Monfil heute senden würde.
+Monfil kann anonyme Nutzungsstatistiken und Fehlerberichte senden. Eine Einstellung steuert beides. Beides ist aus, bis Sie zustimmen. Beim ersten Öffnen von Monfil erscheint eine Karte mit zwei gleichwertigen Schaltflächen, **Statistiken und Berichte teilen** und **Nein danke**. Wenn Sie ablehnen oder die Karte schließen, fragt Monfil nach 30 Tagen erneut und danach alle 30 Tage, bis Sie zustimmen. Sie können Ihre Wahl jederzeit unter **Einstellungen > Datenschutz** ändern. **Gesendete Daten ansehen** zeigt die Zusammenfassung, die Monfil heute senden würde, und einen Beispiel-Fehlerbericht.
+
+#### Nutzungsstatistiken
 
 Wenn Sie zustimmen, zählt Monfil auf Ihrem Gerät, was Sie tun. Einmal am Tag sendet es für jeden Tag, an dem Sie die App genutzt haben, ein Ereignis `daily_summary`. Wenn Sie zustimmen, sendet es außerdem ein Ereignis `consent_granted` ohne Daten. Das Ereignis `daily_summary` enthält:
 
 - Zählungen für den Tag: geöffnete Artikel, Extraktionen des Volltexts, hinzugefügte Feeds, entfernte Feeds, manuelle Aktualisierungen, gespeicherte Einträge, installierte Feedpacks, importierte OPML-Dateien, exportierte OPML-Dateien, erstellte Sicherungen, angelegte Workspaces, gewechselte Workspaces, Suchen und geladene Einbettungen.
-- Zählungen der Fehler des Tages: Fehler beim Aktualisieren von Feeds, Fehler bei der Extraktion von Artikeln, Fehler bei internen Anfragen und Fehler der Oberfläche. Dies sind nur Zahlen. Sie enthalten keinen Fehlertext.
+- Zählungen der Fehler des Tages: Fehler beim Aktualisieren von Feeds, Fehler bei der Extraktion von Artikeln, Fehler bei internen Anfragen und Fehler der Oberfläche. Dies sind nur Zahlen. Sie enthalten keinen Fehlertext.  Fehlgeschlagene Feed-Aktualisierungen werden zusätzlich nach Ursache gezählt: Zeitüberschreitung, HTTP 4xx, HTTP 5xx, TLS, DNS, Analyse oder zu groß.
+- Wie die App gestartet ist: ob sie gestartet ist und in welchem Zeitbereich sie die ersten Artikel gezeigt hat (unter 1 Sekunde, 1 bis 3 Sekunden, 3 bis 10 Sekunden oder über 10 Sekunden).
+- Wie das Hinzufügen eines Feeds verlief: die Zahl der Versuche und Erfolge und die Zahl der Fehlschläge nach Ursache: kein Feed gefunden, Netzwerk, Analyse oder nicht unterstützt.
 - Den Stand Ihrer Bibliothek: einen Größenbereich für Ihre Feeds (`0`, `1-5`, `6-20`, `21-100` oder `100+`), die Anzahl der Workspaces, die Anzahl der Ordner und die Arten von Feeds, die Sie nutzen, etwa `rss+youtube`.
 - Ihre Anzeigeeinstellungen: Dichte, Design, die Sprache der Monfil-Oberfläche, ob gelesene Einträge ausgeblendet sind, ob Einträge beim Scrollen als gelesen markiert werden, ob Links im Browser geöffnet werden und ob die Tastaturnavigation aktiv ist.
 - Den Tag, den das Ereignis betrifft, die Version von Monfil, Ihr Betriebssystem und dessen Version, Ihre Spracheinstellung und die Version der Web-Engine in Monfil.
@@ -55,7 +59,27 @@ Das Ereignis enthält nie einen Feednamen, einen Link, Artikeltext, Suchtext ode
 
 Aptabase leitet auf seinem Server eine anonyme Nutzer-ID ab. Sie ist ein Hash aus Ihrer IP-Adresse und Ihrem User-Agent mit einem Salt. Aptabase erklärt, dass der Salt für jede App verschieden ist und alle 24 Stunden verworfen wird. Die ID ändert sich jeden Tag, daher kann der Betreuer eine Person nicht von einem Tag zum nächsten verfolgen. Aptabase erklärt, dass es Analysedaten bis zu 5 Jahre speichert. Details finden Sie in der [Datenschutzerklärung von Aptabase](https://aptabase.com/legal/privacy).
 
-Rechtsgrundlage ist Ihre Einwilligung. Ihre Wahl wird auf Ihrem Gerät gespeichert, zusammen mit ihrem Datum und der Version dieses Hinweises. Zum Widerruf schalten Sie **Anonyme Nutzungsstatistiken teilen** in den Einstellungen aus. Monfil zählt dann nicht mehr, sendet nichts mehr und löscht die Zählungen, die es auf Ihrem Gerät gespeichert hat. Bereits empfangene Ereignisse lassen sich nicht mehr Ihnen zuordnen. Um Fragen zu Ihren Daten zu stellen, schreiben Sie an [hello@monfil.app](mailto:hello@monfil.app). Eine Version von Monfil ohne Analyse-Schlüssel, etwa eine Version, die Sie selbst kompilieren, sendet nichts.
+#### Fehlerberichte
+
+Wenn Sie zustimmen, sendet Monfil einen Bericht, wenn etwas fehlschlägt, zum Beispiel ein Fehler in der App, ein fehlgeschlagenes Update, eine Datenbankwiederherstellung oder ein Absturz. Ein Bericht enthält:
+
+- Den Fehlertyp, die Fehlermeldung und den Stacktrace, der Stellen im Monfil-Code auflistet.
+- Eine kurze Vorfall-ID, die dieselbe ist wie auf dem Fehlerbildschirm, und den Teil der App, der fehlgeschlagen ist, zum Beispiel den Namen einer internen Anfrage.
+- Eine kurze Spur der letzten Monfil-Ereignisse vor dem Fehler. Sie enthält Ereignisnamen und feste Werte wie `outcome: failed`. Sie enthält nie einen Feed-Namen, einen Link oder die ID eines Feeds oder Artikels.
+- Die Monfil-Version, ob der Build von GitHub oder aus einem Store stammt, Ihr Betriebssystem und dessen Version, Ihren Prozessortyp und die Versionen der Web-Engine und von Node.js in Monfil.
+- Sitzungsdaten, die zeigen, wie viele Sitzungen ohne Absturz enden: wann die Sitzung begann, wie lange sie dauerte und ob sie gut endete.
+
+Bevor Monfil einen Bericht sendet, entfernt es aus dem Fehlertext Dateipfade (Ihr Home-Ordner wird zu `~`), Links und E-Mail-Adressen. Es sendet nur die Felder der obigen Liste und verwirft den Rest. Ein Bericht enthält keinen Feed-Namen, keinen Link, keinen Artikeltext, keinen Suchtext, keinen Benutzernamen und keine IP-Adresse, die Monfil hinzufügt. **Gesendete Daten ansehen** zeigt einen Beispielbericht, den Monfil auf Ihrem Gerät aus einem erfundenen Fehler erstellt.
+
+Wenn Monfil auf niedriger Ebene abstürzt, sendet es auch einen Absturz-Dump. Das ist ein Abbild des Speichers des abgestürzten Prozesses. Der Speicher kann Teile dessen enthalten, was die App zeigte, etwa einen Artikeltitel. Monfil kann sie nicht entfernen.
+
+Nach einem Fehler können Sie dem Bericht Details hinzufügen. Der Kommentar ist optional, und Sie schreiben ihn selbst. Die Protokolldatei wird nur angehängt, wenn Sie **Protokolldatei anhängen** ankreuzen, und Sie können sie vor dem Senden ansehen. Die Protokolldatei enthält die Ereignisprotokolle von Monfil, ohne Feed-Namen, vollständige Links, Artikeltext, Zugangsdaten und Dateipfade. Sie kann weiterhin Hostnamen von Websites und Fehlercodes zeigen. Monfil hängt das letzte Megabyte an. Das native Fehlerfenster hat kein Textfeld und bietet nur die Protokolldatei an.
+
+[Sentry](https://sentry.io) empfängt die Berichte. Functional Software, Inc., ein Unternehmen mit Sitz in den USA, betreibt Sentry. Es handelt als Auftragsverarbeiter des Monfil-Maintainers im Rahmen seiner [Auftragsverarbeitungsvereinbarung](https://sentry.io/legal/dpa/). Monfil nutzt die EU-Region (`de.sentry.io`), in der Sentry die Daten in Deutschland speichert. Sentry erhält bei jeder Anfrage Ihre IP-Adresse, und das Monfil-Projekt ist so eingestellt, dass sie nicht gespeichert wird. Sentry bewahrt Fehlerberichte 30 Tage auf. Der Maintainer erhält eine E-Mail, wenn ein neues Problem auftritt.
+
+#### Ihre Wahl
+
+Rechtsgrundlage ist Ihre Einwilligung. Ihre Wahl wird mit Datum und der Version dieses Hinweises auf Ihrem Gerät gespeichert. Zum Widerruf schalten Sie in den Einstellungen **Anonyme Nutzungsstatistiken und Fehlerberichte teilen** aus. Monfil hört dann auf zu zählen und zu senden und löscht die Zählungen, die Berichte, die noch auf das Senden warten, und die Absturz-Dumps auf Ihrem Gerät. Bereits empfangene Berichte lassen sich nicht auf Sie zurückführen, es sei denn, Sie schicken dem Maintainer die Vorfall-ID eines Berichts. Bei Fragen zu Ihren Daten schreiben Sie an [hello@monfil.app](mailto:hello@monfil.app). Ein Monfil-Build ohne Analyse-Schlüssel und ohne Adresse für Fehlerberichte, etwa ein selbst kompilierter Build, sendet nichts.
 
 ### Anfragen an andere Websites
 

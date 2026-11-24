@@ -108,6 +108,16 @@ vi.mock(import('./logging/logger'), () => ({
   },
 }));
 
+vi.mock(import('./observability/sentry'), () => ({
+  startObservability: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock(import('./observability/report'), () => ({
+  getErrorReportState: vi.fn(() => ({ enabled: true })),
+  flushReports: vi.fn().mockResolvedValue(undefined),
+  submitErrorReport: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+}));
+
 vi.mock(import('./logging/fatal'), () => ({
   installFatalHandlers: vi.fn(),
 }));
@@ -332,7 +342,55 @@ describe('main', () => {
     // Assert
     expect(configureLogging).toHaveBeenNthCalledWith(1, logFilePath, false);
     expect(setLogFilePath).toHaveBeenCalledWith(logFilePath);
-    expect(installFatalHandlers).toHaveBeenCalledWith(logger, logFilePath, expect.any(Function), [ARTICLE_EXTRACTION_SERVICE_NAME]);
+    expect(installFatalHandlers).toHaveBeenCalledWith(logger, logFilePath, expect.any(Function), [ARTICLE_EXTRACTION_SERVICE_NAME], expect.any(Object));
+  });
+
+  test('lets the fatal dialog offer the log only while error reports run, and sends it as a report on the incident', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    const { getErrorReportState, submitErrorReport } = await import('./observability/report');
+    await import('./main');
+    const reports = vi.mocked(installFatalHandlers).mock.calls[0]?.[4];
+
+    // Act
+    const enabled = reports?.enabled();
+    await reports?.attachLog('abcd1234');
+    vi.mocked(getErrorReportState).mockReturnValueOnce({ enabled: false });
+
+    // Assert
+    expect(enabled).toBe(true);
+    expect(reports?.enabled()).toBe(false);
+    expect(submitErrorReport).toHaveBeenCalledWith({ incidentId: 'abcd1234', comment: '', attachLog: true });
+    expect(logger.info).toHaveBeenCalledWith('app.lifecycle', { action: 'report-log-sent' });
+  });
+
+  test('lets the fatal dialog send the failure before it opens', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    const { flushReports } = await import('./observability/report');
+    await import('./main');
+    const reports = vi.mocked(installFatalHandlers).mock.calls[0]?.[4];
+
+    // Act
+    await reports?.flush();
+
+    // Assert
+    expect(flushReports).toHaveBeenCalledOnce();
+  });
+
+  test('logs why the log file was not sent', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    const { submitErrorReport } = await import('./observability/report');
+    vi.mocked(submitErrorReport).mockResolvedValueOnce({ success: false, error: { name: 'NO_EVENT', message: 'none' } });
+    await import('./main');
+    const reports = vi.mocked(installFatalHandlers).mock.calls[0]?.[4];
+
+    // Act
+    await reports?.attachLog('abcd1234');
+
+    // Assert
+    expect(logger.info).toHaveBeenCalledWith('app.lifecycle', { action: 'report-log-refused-NO_EVENT' });
   });
 
   test('turns on detailed logging once the database is open when the user enabled it', async () => {
@@ -475,6 +533,32 @@ describe('main', () => {
       webPreferences: expect.objectContaining({ additionalArguments: ['--system-locale=fr-CA', '--language=ar', '--hints-enabled=true'] }),
     }));
     expect(vi.mocked(initializeLanguage).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(BrowserWindow).mock.invocationCallOrder[0] ?? 0);
+  });
+
+  test('starts the error reports before it opens the window, so crash reporting covers the renderer', async () => {
+    // Arrange
+    const { BrowserWindow } = await import('electron');
+    const { startObservability } = await import('./observability/sentry');
+
+    // Act
+    await launchAndGetWindow();
+
+    // Assert
+    expect(vi.mocked(startObservability).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(BrowserWindow).mock.invocationCallOrder[0] ?? 0);
+  });
+
+  test('opens the window even when the error reports fail to start', async () => {
+    // Arrange
+    const { BrowserWindow } = await import('electron');
+    const { startObservability } = await import('./observability/sentry');
+    vi.mocked(startObservability).mockRejectedValueOnce(new Error('sdk failed'));
+
+    // Act
+    await launchAndGetWindow();
+
+    // Assert
+    expect(BrowserWindow).toHaveBeenCalledOnce();
+    expect(logger.warn).toHaveBeenCalledWith('app.lifecycle', { action: 'error-reports-failed' }, expect.any(Error));
   });
 
   test('keeps the renderer isolated from Node and hardens its web contents', async () => {

@@ -13,6 +13,23 @@
     "restart": "アプリを再起動",
     "showLog": "ログファイルを表示"
   },
+  "report": {
+    "add": "詳細を追加",
+    "consentNote": "エラーレポートの送信に同意しています。Monfilは、ファイルのパスとリンクを削除してから送信します。",
+    "comment": "何をしていましたか？（任意）",
+    "attachLog": "ログファイルを添付",
+    "showPreview": "ログファイルをプレビュー",
+    "hidePreview": "プレビューを隠す",
+    "previewLabel": "ログファイルのプレビュー",
+    "previewEmpty": "ログファイルは空です。",
+    "previewTruncated": "ログファイルの末尾1 MBだけが添付されます。",
+    "loading": "読み込んでいます…",
+    "send": "送信",
+    "sending": "送信しています…",
+    "cancel": "キャンセル",
+    "sent": "ありがとうございます。詳細を送信しました。",
+    "failed": "詳細を送信できませんでした。しばらくしてからもう一度お試しください。"
+  },
   "details": "詳細: {{message}}",
   "category": {
     "notFound": "そのフォルダは存在しません。",

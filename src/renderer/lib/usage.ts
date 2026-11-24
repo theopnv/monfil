@@ -12,6 +12,21 @@ export function recordUsage(counter: RendererUsageCounter): void {
   ipc.send('usage:record', { counter });
 }
 
+let startupReported = false;
+
+/** Tells the main process that the first river of this run rendered. It counts the startup as a success and times it. */
+export function reportStartupComplete(): void {
+  if (startupReported) {
+    return;
+  }
+  startupReported = true;
+  ipc.send('usage:startup-complete', undefined);
+}
+
+export function resetStartupReportForTest(): void {
+  startupReported = false;
+}
+
 export function useUsageAnalytics() {
   const queryClient = useQueryClient();
   const { data } = useQuery(usageAnalyticsQuery());

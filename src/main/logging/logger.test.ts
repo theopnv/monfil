@@ -329,7 +329,7 @@ describe('log records', () => {
 
     // Assert
     expect(lastRecord('warn')['data']).toEqual({ message: 'failed at [redacted-path]' });
-    expect(observer).toHaveBeenCalledExactlyOnceWith('renderer.failure', data, 'warn');
+    expect(observer).toHaveBeenCalledExactlyOnceWith('renderer.failure', data, 'warn', undefined);
   });
 });
 
@@ -345,7 +345,21 @@ describe('log observers', () => {
     logger.warn('app.lifecycle', { action: 'two' });
 
     // Assert
-    expect(observer).toHaveBeenCalledExactlyOnceWith('app.lifecycle', { action: 'one' }, 'warn');
+    expect(observer).toHaveBeenCalledExactlyOnceWith('app.lifecycle', { action: 'one' }, 'warn', undefined);
+  });
+
+  test('hands the raw error to the observer', () => {
+    // Arrange
+    const observer = vi.fn();
+    const stop = observeLogs(observer);
+    const error = new Error('failed at /Users/person/file.db');
+
+    // Act
+    logger.error('system.failure', { source: 'test', incidentId: 'abc' }, error);
+    stop();
+
+    // Assert
+    expect(observer).toHaveBeenCalledExactlyOnceWith('system.failure', { source: 'test', incidentId: 'abc' }, 'error', error);
   });
 
   test('cannot break logging by throwing', () => {

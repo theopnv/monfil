@@ -13,6 +13,23 @@
     "restart": "Reiniciar o app",
     "showLog": "Mostrar arquivo de log"
   },
+  "report": {
+    "add": "Adicionar detalhes",
+    "consentNote": "Você aceitou compartilhar relatórios de erro. O Monfil remove caminhos de arquivos e links antes de enviar qualquer coisa.",
+    "comment": "O que você estava fazendo? (opcional)",
+    "attachLog": "Anexar o arquivo de log",
+    "showPreview": "Prévia do arquivo de log",
+    "hidePreview": "Ocultar a prévia",
+    "previewLabel": "Prévia do arquivo de log",
+    "previewEmpty": "O arquivo de log está vazio.",
+    "previewTruncated": "Só o último MB do arquivo de log é anexado.",
+    "loading": "Carregando…",
+    "send": "Enviar",
+    "sending": "Enviando…",
+    "cancel": "Cancelar",
+    "sent": "Obrigado. Seus detalhes foram enviados.",
+    "failed": "Não foi possível enviar os detalhes. Tente novamente mais tarde."
+  },
   "details": "Detalhes: {{message}}",
   "category": {
     "notFound": "Esta pasta não existe mais.",

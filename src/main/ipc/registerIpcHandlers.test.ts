@@ -23,6 +23,8 @@ import { installFeedpack, previewFeedpack } from '../feedpacks/install';
 import { changeUsageAnalyticsConsent, dismissUsageAnalyticsPrompt, getUsageAnalyticsState } from '../analytics/consent';
 import { getUpdateState } from '../updates/auto-updater';
 import { previewSummary } from '../analytics/report';
+import { getErrorReportState, previewReportLog, submitErrorReport } from '../observability/report';
+import { sampleErrorEvent } from '../observability/sample';
 import { getAppInfo } from '../app/app-info';
 import { changeLanguage, readLanguageState } from '../app/language';
 import { logger } from '../logging/logger';
@@ -71,6 +73,8 @@ vi.mock(import('../app/language'), () => ({ changeLanguage: vi.fn(), readLanguag
 vi.mock(import('../analytics/counters'), () => ({ incrementCounter: vi.fn() }));
 vi.mock(import('../analytics/consent'), () => ({ changeUsageAnalyticsConsent: vi.fn(), dismissUsageAnalyticsPrompt: vi.fn(), getUsageAnalyticsState: vi.fn() }));
 vi.mock(import('../analytics/report'), () => ({ previewSummary: vi.fn() }));
+vi.mock(import('../observability/report'), () => ({ getErrorReportState: vi.fn(), previewReportLog: vi.fn(), submitErrorReport: vi.fn() }));
+vi.mock(import('../observability/sample'), () => ({ sampleErrorEvent: vi.fn() }));
 vi.mock(import('../updates/auto-updater'), () => ({ getUpdateState: vi.fn() }));
 
 const category: FeedCategory = { id: 3, name: 'Tech', workspace_id: 1 };
@@ -96,6 +100,9 @@ const imported = { success: true as const, data: { workspaceId: 1, imported: 1, 
 const catalog: FeedpackCatalog = { version: 1, packs: [] };
 const usageState = { consent: 'granted' as const, shouldPrompt: false, available: true };
 const summary = { day: '2026-10-23', articles_opened: 1 };
+const reportSample = { release: 'monfil@1.0.0' };
+const reportLog = { text: 'line\n', truncated: false };
+const reportInput = { incidentId: 'abcd1234', comment: 'It broke.', attachLog: true };
 const languageState = { setting: 'system' as const, language: 'en' as const, systemLanguage: 'en' as const };
 const preview = { pack: { slug: 'tech', title: 'Tech', description: '', tags: [], curator: '', sourceCount: 1, updatedAt: '', opml: 'tech.opml' }, sources: { title: 'Tech', categories: [] } };
 
@@ -141,6 +148,10 @@ const fixtures: { [C in InvokeChannel]: Fixture<C> } = {
   'settings:set': { arg: { key: 'language', value: 'fr' }, response: { setting: 'fr', language: 'fr', systemLanguage: 'en' }, delegate: () => handlers.handleSettingsSet, calledWith: [{ key: 'language', value: 'fr' }] },
   'settings:dismiss-usage-analytics-prompt': { arg: undefined, response: usageState, delegate: () => dismissUsageAnalyticsPrompt, calledWith: [] },
   'analytics:preview': { arg: undefined, response: summary, delegate: () => previewSummary, calledWith: [] },
+  'report:preview-sample': { arg: undefined, response: reportSample, delegate: () => sampleErrorEvent, calledWith: [] },
+  'report:get-state': { arg: undefined, response: { enabled: true }, delegate: () => getErrorReportState, calledWith: [] },
+  'report:preview-log': { arg: undefined, response: reportLog, delegate: () => previewReportLog, calledWith: [] },
+  'report:submit': { arg: reportInput, response: done, delegate: () => submitErrorReport, calledWith: [reportInput] },
   'opml:import': { arg: { target: { kind: 'new-workspace', name: 'Tech', icon: 'Home01', color: 'blue', sourceSlug: 'tech', sourceVersion: '1' } }, response: imported, delegate: () => openAndImportOpml, calledWith: [{ kind: 'new-workspace', name: 'Tech', icon: 'Home01', color: 'blue', sourceSlug: 'tech', sourceVersion: '1' }] },
   'opml:export': { arg: { workspaceId: 1 }, response: done, delegate: () => exportWorkspaceOpml, calledWith: [1] },
   'feedpacks:list': { arg: undefined, response: { success: true, data: catalog }, delegate: () => getFeedpackCatalog, calledWith: [] },
@@ -204,6 +215,10 @@ beforeEach(() => {
   vi.mocked(changeUsageAnalyticsConsent).mockResolvedValue(usageState);
   vi.mocked(dismissUsageAnalyticsPrompt).mockResolvedValue(usageState);
   vi.mocked(previewSummary).mockResolvedValue(summary);
+  vi.mocked(sampleErrorEvent).mockReturnValue(reportSample);
+  vi.mocked(getErrorReportState).mockReturnValue({ enabled: true });
+  vi.mocked(previewReportLog).mockResolvedValue(reportLog);
+  vi.mocked(submitErrorReport).mockResolvedValue(done);
   vi.mocked(getAppInfo).mockResolvedValue(fixtures['app:get-info'].response);
   vi.mocked(readLanguageState).mockResolvedValue(languageState);
   vi.mocked(changeLanguage).mockResolvedValue(fixtures['settings:set'].response as typeof languageState);
@@ -293,6 +308,43 @@ describe('invoke channel contract', () => {
   });
 });
 
+describe('after hooks', () => {
+  test('counts the first step of adding a feed, and a feed that was stored', async () => {
+    // Act
+    await registered('feeds:discover')(event, fixtures['feeds:discover'].arg);
+    await registered('feeds:submit-add-feed')(event, newFeed);
+
+    // Assert
+    expect(vi.mocked(incrementCounter).mock.calls.map(([name]) => name)).toEqual(['feed_add_attempted', 'feeds_added', 'feed_add_succeeded']);
+  });
+
+  test('counts an address that holds no feed', async () => {
+    // Arrange
+    discover.mockResolvedValueOnce({ success: true, data: [] });
+
+    // Act
+    await registered('feeds:discover')(event, fixtures['feeds:discover'].arg);
+
+    // Assert
+    expect(vi.mocked(incrementCounter).mock.calls.map(([name]) => name)).toEqual(['feed_add_attempted', 'feed_add_failed_discovery_none']);
+  });
+
+  test('keeps the answer when a hook throws, and logs the failure', async () => {
+    // Arrange
+    vi.mocked(incrementCounter).mockImplementationOnce(() => {
+      throw new Error('counter broke');
+    });
+
+    // Act
+    const response: unknown = await registered('feeds:discover')(event, fixtures['feeds:discover'].arg);
+
+    // Assert
+    expect(response).toEqual(fixtures['feeds:discover'].response);
+    expect(logger.warn).toHaveBeenCalledWith('operation.failure', { operation: 'after-feeds:discover' }, expect.any(Error));
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+});
+
 describe('settings channels', () => {
   test.each([
     ['refreshInterval', 60, settings.getRefreshInterval, settings.setRefreshInterval],
@@ -360,7 +412,6 @@ describe('settings channels', () => {
 describe('usage counters', () => {
   test.each([
     ['items:get-content', 'articles_opened'],
-    ['feeds:submit-add-feed', 'feeds_added'],
     ['feeds:delete-feed', 'feeds_removed'],
     ['feeds:refresh', 'manual_refreshes'],
     ['items:set-saved', 'items_saved'],

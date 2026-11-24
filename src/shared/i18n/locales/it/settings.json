@@ -83,9 +83,9 @@
     "importOpml": "Importa OPML"
   },
   "privacy": {
-    "share": "Condividi statistiche anonime sull'uso",
-    "unavailable": "Questa versione di Monfil non raccoglie statistiche sull'uso.",
-    "shareHint": "Invia un conteggio giornaliero delle funzioni che usi. Nessun testo di feed, articolo o ricerca lascia il tuo dispositivo. Puoi disattivarlo in qualsiasi momento per smettere di inviare e per eliminare i conteggi conservati su questo dispositivo.",
+    "share": "Condividi statistiche anonime sull'uso e segnalazioni di errore",
+    "unavailable": "Questa versione di Monfil non raccoglie statistiche sull'uso né segnalazioni di errore.",
+    "shareHint": "Invia un conteggio giornaliero delle funzioni che usi e una segnalazione quando Monfil ha un errore. Nessun testo di feed, articolo o ricerca lascia il tuo dispositivo. Puoi disattivarlo in qualsiasi momento per smettere di inviare e per eliminare i conteggi conservati su questo dispositivo.",
     "preview": "Vedi cosa viene inviato",
     "notice": "Informativa sulla privacy"
   },
@@ -95,17 +95,20 @@
     "showLog": "Mostra file di log"
   },
   "analyticsCard": {
-    "label": "Statistiche anonime sull'uso",
+    "label": "Statistiche sull'uso e segnalazioni di errore",
     "later": "Chiedimelo più tardi",
     "title": "Aiuta a migliorare Monfil",
-    "body": "Condividi statistiche anonime sull'uso: un conteggio giornaliero delle funzioni che usi. Nessun testo di feed, articolo o ricerca lascia il tuo dispositivo. Puoi cambiarlo in Impostazioni in qualsiasi momento.",
-    "share": "Condividi statistiche",
+    "body": "Condividi statistiche anonime sull'uso (un conteggio giornaliero delle funzioni che usi) e segnalazioni di errore (i dettagli tecnici di un guasto). Nessun testo di feed, articolo o ricerca lascia il tuo dispositivo. Puoi cambiarlo in Impostazioni in qualsiasi momento.",
+    "share": "Condividi statistiche e segnalazioni",
     "decline": "No, grazie"
   },
   "analyticsPreview": {
     "title": "Cosa viene inviato",
     "body": "Monfil invia un riepilogo come questo per ogni giorno in cui lo usi. Contiene conteggi e impostazioni. Non contiene testo di feed, articoli, ricerche o nomi.",
     "preview": "Anteprima delle statistiche sull'uso",
+    "errorTitle": "Esempio di segnalazione di errore",
+    "errorBody": "Quando Monfil ha un errore, invia una segnalazione come questa. Questo esempio è creato su questo dispositivo da un errore inventato. Percorsi di file, link e indirizzi email vengono rimossi.",
+    "errorPreview": "Anteprima di un esempio di segnalazione di errore",
     "loading": "Caricamento…"
   }
 }

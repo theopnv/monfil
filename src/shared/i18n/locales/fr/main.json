@@ -20,7 +20,8 @@
     "message": "Monfil a rencontré une erreur système. Incident {{incident}}.",
     "restart": "Redémarrer",
     "showLog": "Afficher le fichier journal",
-    "quit": "Quitter"
+    "quit": "Quitter",
+    "attachLog": "Envoyer le fichier journal avec le rapport d'erreur"
   },
   "dialog": {
     "sqliteFilter": "Base de données SQLite"

@@ -13,7 +13,7 @@ vi.mock(import('electron'), () => ({
   shell: { showItemInFolder: vi.fn() } as unknown as Electron.Shell,
 }));
 
-function dependencies(response: number) {
+function dependencies(response: number, checkboxChecked = false) {
   return {
     app: {
       isReady: vi.fn(() => true),
@@ -22,7 +22,7 @@ function dependencies(response: number) {
       quit: vi.fn(),
     },
     dialog: {
-      showMessageBox: vi.fn(async () => ({ response })),
+      showMessageBox: vi.fn(async (_options: Electron.MessageBoxOptions) => ({ response, checkboxChecked })),
     },
     shell: {
       showItemInFolder: vi.fn(),
@@ -31,6 +31,7 @@ function dependencies(response: number) {
       title: 'Monfil could not continue',
       message: `Monfil encountered a system error. Incident ${incident}.`,
       buttons: ['Restart', 'Show log file', 'Quit'] as [string, string, string],
+      attachLog: 'Send the log file with the error report',
     }),
   };
 }
@@ -48,6 +49,126 @@ function logger(): Logger {
 describe('fatal recovery handler', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe('error reports', () => {
+    function reports(enabled: boolean) {
+      return { enabled: vi.fn(() => enabled), flush: vi.fn(() => Promise.resolve()), attachLog: vi.fn(() => Promise.resolve()) };
+    }
+
+    test('offers to send the log when error reports are on, and sends it before the app restarts', async () => {
+      // Arrange
+      const deps = { ...dependencies(0, true), reports: reports(true) };
+      const order: string[] = [];
+      deps.reports.attachLog.mockImplementation(async () => {
+        order.push('attach');
+      });
+      deps.app.relaunch.mockImplementation(() => order.push('relaunch'));
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(deps.dialog.showMessageBox).toHaveBeenCalledWith(expect.objectContaining({ checkboxLabel: 'Send the log file with the error report', checkboxChecked: false }));
+      expect(deps.reports.attachLog).toHaveBeenCalledWith(expect.stringMatching(/^[0-9a-f]{8}$/));
+      expect(order).toEqual(['attach', 'relaunch']);
+    });
+
+    test('sends the failure before the dialog opens, because a native dialog stops the network work', async () => {
+      // Arrange
+      const deps = { ...dependencies(0, false), reports: reports(true) };
+      const order: string[] = [];
+      deps.reports.flush.mockImplementation(async () => {
+        order.push('flush');
+      });
+      deps.dialog.showMessageBox.mockImplementation(async () => {
+        order.push('dialog');
+        return { response: 0, checkboxChecked: false };
+      });
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(order).toEqual(['flush', 'dialog']);
+    });
+
+    test('still shows the dialog when sending the failure fails', async () => {
+      // Arrange
+      const deps = { ...dependencies(0, false), reports: reports(true) };
+      deps.reports.flush.mockRejectedValue(new Error('offline'));
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(deps.dialog.showMessageBox).toHaveBeenCalledOnce();
+    });
+
+    test('sends nothing before the dialog when error reports are off', async () => {
+      // Arrange
+      const deps = { ...dependencies(2, false), reports: reports(false) };
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(deps.reports.flush).not.toHaveBeenCalled();
+    });
+
+    test('sends nothing when the box stays unticked', async () => {
+      // Arrange
+      const deps = { ...dependencies(0, false), reports: reports(true) };
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(deps.reports.attachLog).not.toHaveBeenCalled();
+    });
+
+    test('shows no box and sends nothing when error reports are off, even if the dialog says it was ticked', async () => {
+      // Arrange
+      const deps = { ...dependencies(0, true), reports: reports(false) };
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(deps.dialog.showMessageBox.mock.calls[0]?.[0]).not.toHaveProperty('checkboxLabel');
+      expect(deps.reports.attachLog).not.toHaveBeenCalled();
+    });
+
+    test('still restarts when sending the log fails', async () => {
+      // Arrange
+      const deps = { ...dependencies(0, true), reports: reports(true) };
+      deps.reports.attachLog.mockRejectedValue(new Error('offline'));
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(deps.app.relaunch).toHaveBeenCalledOnce();
+    });
+
+    test('shows no box when no report path exists', async () => {
+      // Arrange
+      const deps = dependencies(2, true);
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(deps.dialog.showMessageBox.mock.calls[0]?.[0]).not.toHaveProperty('checkboxLabel');
+    });
   });
 
   test('logs an incident and restarts the app', async () => {
@@ -108,7 +229,7 @@ describe('fatal recovery handler', () => {
   test('deduplicates concurrent fatal dialogs', async () => {
     // Arrange
     const deps = dependencies(1);
-    let resolveDialog: ((value: { response: number }) => void) | undefined;
+    let resolveDialog: ((value: { response: number; checkboxChecked: boolean }) => void) | undefined;
     deps.dialog.showMessageBox.mockImplementation(() => new Promise((resolve) => {
       resolveDialog = resolve;
     }));
@@ -117,7 +238,7 @@ describe('fatal recovery handler', () => {
     // Act
     const first = handle('uncaughtException', new Error('first'));
     const second = handle('unhandledRejection', new Error('second'));
-    resolveDialog?.({ response: 1 });
+    resolveDialog?.({ response: 1, checkboxChecked: false });
     await Promise.all([first, second]);
 
     // Assert
@@ -217,7 +338,7 @@ describe('fatal recovery handler', () => {
   test('ignores a second error while the first dialog is open, and logs only the first', async () => {
     // Arrange
     const deps = dependencies(1);
-    let resolveDialog: ((value: { response: number }) => void) | undefined;
+    let resolveDialog: ((value: { response: number; checkboxChecked: boolean }) => void) | undefined;
     deps.dialog.showMessageBox.mockImplementation(() => new Promise((resolve) => {
       resolveDialog = resolve;
     }));
@@ -227,7 +348,7 @@ describe('fatal recovery handler', () => {
     // Act
     const first = handle('uncaughtException', new Error('first'));
     await handle('unhandledRejection', new Error('second'));
-    resolveDialog?.({ response: 2 });
+    resolveDialog?.({ response: 2, checkboxChecked: false });
     await first;
 
     // Assert
@@ -267,7 +388,7 @@ describe('installed process listeners', () => {
     vi.mocked(app.isReady).mockReturnValue(true);
     vi.mocked(dialog.showMessageBox).mockResolvedValue({ response: 2, checkboxChecked: false });
     const log = logger();
-    installFatalHandlers(log, 'mock-user-data/monfil.log', () => ({ title: 'Title', message: 'Message', buttons: ['Restart', 'Show log file', 'Quit'] }), [STOPPABLE_SERVICE]);
+    installFatalHandlers(log, 'mock-user-data/monfil.log', () => ({ title: 'Title', message: 'Message', buttons: ['Restart', 'Show log file', 'Quit'], attachLog: 'Attach' }), [STOPPABLE_SERVICE]);
     return Object.assign(listeners, { log });
   }
 

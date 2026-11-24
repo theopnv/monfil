@@ -13,6 +13,23 @@
     "restart": "Redémarrer l'application",
     "showLog": "Afficher le fichier journal"
   },
+  "report": {
+    "add": "Ajouter des détails",
+    "consentNote": "Vous avez accepté de partager des rapports d'erreur. Monfil supprime les chemins de fichiers et les liens avant tout envoi.",
+    "comment": "Que faisiez-vous ? (facultatif)",
+    "attachLog": "Joindre le fichier journal",
+    "showPreview": "Aperçu du fichier journal",
+    "hidePreview": "Masquer l'aperçu",
+    "previewLabel": "Aperçu du fichier journal",
+    "previewEmpty": "Le fichier journal est vide.",
+    "previewTruncated": "Seul le dernier Mo du fichier journal est joint.",
+    "loading": "Chargement…",
+    "send": "Envoyer",
+    "sending": "Envoi…",
+    "cancel": "Annuler",
+    "sent": "Merci. Vos détails ont été envoyés.",
+    "failed": "Les détails n'ont pas pu être envoyés. Réessayez plus tard."
+  },
   "details": "Détails : {{message}}",
   "category": {
     "notFound": "Ce dossier n'existe plus.",

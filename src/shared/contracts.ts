@@ -353,7 +353,7 @@ export type FeedpackInstallTarget =
   | { kind: 'merge-workspace'; workspaceId: number };
 
 /** Matches the "Last updated" date of the privacy notice in `doc/src/content/docs/user-guide/privacy.md`. */
-export const USAGE_ANALYTICS_NOTICE_VERSION = '2026-10-23';
+export const USAGE_ANALYTICS_NOTICE_VERSION = '2026-11-23';
 
 export const USAGE_ANALYTICS_NOTICE_URL = 'https://monfil.app/docs/user-guide/privacy/';
 
@@ -366,6 +366,11 @@ const MAIN_USAGE_COUNTERS = [
   'articles_opened', 'fulltext_extracted', 'feeds_added', 'feeds_removed', 'manual_refreshes', 'items_saved',
   'feedpacks_installed', 'opml_imported', 'opml_exported', 'backups_made', 'workspaces_created',
   'refresh_failures', 'extraction_failures', 'ipc_failures', 'renderer_failures',
+  'refresh_error_timeout', 'refresh_error_http_4xx', 'refresh_error_http_5xx', 'refresh_error_tls',
+  'refresh_error_dns', 'refresh_error_parse', 'refresh_error_too_large',
+  'startup_ok', 'startup_failed', 'startup_time_lt_1s', 'startup_time_1_3s', 'startup_time_3_10s', 'startup_time_gt_10s',
+  'feed_add_attempted', 'feed_add_succeeded',
+  'feed_add_failed_discovery_none', 'feed_add_failed_network', 'feed_add_failed_parse', 'feed_add_failed_unsupported',
 ] as const;
 
 export const USAGE_COUNTERS = [...MAIN_USAGE_COUNTERS, ...RENDERER_USAGE_COUNTERS] as const;
@@ -374,9 +379,38 @@ export type UsageCounter = typeof USAGE_COUNTERS[number];
 export interface UsageAnalyticsState {
   consent: UsageAnalyticsConsent;
   shouldPrompt: boolean;
-  /** False in a build that has no analytics endpoint, where the choice would change nothing. */
+  /** False in a build that has no usage stats endpoint and no error report endpoint, where the choice would change nothing. */
   available: boolean;
 }
+
+/** What the renderer needs to offer an error report. `enabled` is true only while error reports are on. */
+export interface ErrorReportState {
+  enabled: boolean;
+}
+
+export interface ErrorReportLogPreview {
+  text: string;
+  /** True when the log is longer than the part that is attached. */
+  truncated: boolean;
+}
+
+/** An example of the error report that Monfil sends. It is built on this device from a made-up failure. */
+export type ErrorReportSample = Record<string, unknown>;
+
+export interface ErrorReportInput {
+  /** The short incident ID that the error screen shows. Without it the report links to the latest event. */
+  incidentId?: string | undefined;
+  comment: string;
+  attachLog: boolean;
+}
+
+export type ErrorReportError =
+  | { name: 'REPORTS_OFF'; message: string; params?: ErrorParams }
+  | { name: 'NO_EVENT'; message: string; params?: ErrorParams };
+
+export const ERROR_REPORT_COMMENT_MAX_LENGTH = 1000;
+/** The part of the log that is attached to a report, counted from the end. */
+export const ERROR_REPORT_LOG_MAX_BYTES = 1024 * 1024;
 
 /** The display settings the renderer keeps in `localStorage`, reported so the daily summary can include them. */
 export interface UsagePreferences {

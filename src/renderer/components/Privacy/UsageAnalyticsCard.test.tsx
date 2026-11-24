@@ -19,6 +19,7 @@ beforeEach(() => {
       case 'settings:set': return Promise.resolve({ consent: (arg as { value: string }).value, shouldPrompt: false, available: true });
       case 'settings:dismiss-usage-analytics-prompt': return Promise.resolve({ ...state, shouldPrompt: false });
       case 'analytics:preview': return Promise.resolve({ day: '2026-10-23', searches: 2 });
+      case 'report:preview-sample': return Promise.resolve({ release: 'monfil@1.2.3' });
       default: return Promise.resolve(undefined);
     }
   });
@@ -31,7 +32,7 @@ test('shows two equal buttons when the card should prompt', async () => {
   const { getByRole } = await renderWithQueryClient(<UsageAnalyticsCard />);
 
   // Assert
-  const share = getByRole('button', { name: 'Share usage stats' });
+  const share = getByRole('button', { name: 'Share stats and reports' });
   const decline = getByRole('button', { name: 'No thanks' });
   await expect.element(share).toBeInTheDocument();
   expect(share.element().className).toBe(decline.element().className);
@@ -47,12 +48,12 @@ test('renders nothing when it should not prompt', async () => {
   expect(container.querySelector('section')).toBeNull();
 });
 
-test('"Share usage stats" stores the grant and hides the card', async () => {
+test('"Share stats and reports" stores the grant and hides the card', async () => {
   // Arrange
   const { getByRole } = await renderWithQueryClient(<UsageAnalyticsCard />);
 
   // Act
-  await getByRole('button', { name: 'Share usage stats' }).click();
+  await getByRole('button', { name: 'Share stats and reports' }).click();
 
   // Assert
   expect(invoke).toHaveBeenCalledWith('settings:set', { key: 'usageAnalytics', value: 'granted' });
@@ -91,6 +92,7 @@ test('"See what is sent" opens the preview', async () => {
 
   // Assert
   await vi.waitFor(() => expect(getByLabelText('Usage stats preview').element().textContent).toContain('"searches": 2'));
+  await vi.waitFor(() => expect(getByLabelText('Sample error report preview').element().textContent).toContain('"release": "monfil@1.2.3"'));
 });
 
 test('the privacy notice link opens in the browser', async () => {
@@ -102,4 +104,24 @@ test('the privacy notice link opens in the browser', async () => {
 
   // Assert
   expect(sendMessage).toHaveBeenCalledWith('link:open', 'https://monfil.app/docs/user-guide/privacy/');
+});
+
+test('logs a failure to load a preview and keeps the other preview', async () => {
+  // Arrange
+  invoke.mockImplementation((channel: string) => {
+    switch (channel) {
+      case 'settings:get': return Promise.resolve(state);
+      case 'analytics:preview': return Promise.resolve({ day: '2026-10-23', searches: 2 });
+      case 'report:preview-sample': return Promise.reject(new Error('no sample'));
+      default: return Promise.resolve(undefined);
+    }
+  });
+  const { getByRole, getByLabelText } = await renderWithQueryClient(<UsageAnalyticsCard />);
+
+  // Act
+  await getByRole('button', { name: 'See what is sent' }).click();
+
+  // Assert
+  await vi.waitFor(() => expect(sendMessage).toHaveBeenCalledWith('log:write', expect.objectContaining({ level: 'error', event: 'renderer.failure', data: { message: 'Could not load the error report preview' } })));
+  await vi.waitFor(() => expect(getByLabelText('Usage stats preview').element().textContent).toContain('"searches": 2'));
 });

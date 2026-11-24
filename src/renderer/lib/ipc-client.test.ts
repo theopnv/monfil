@@ -75,12 +75,52 @@ describe('rendererLogger', () => {
     expect(Object.keys(sendMessage().mock.calls[0]?.[1] as object)).not.toContain('error');
   });
 
-  test('sends the message of an Error', () => {
+  test('sends the stack of an Error, which starts with its name and message', () => {
+    // Arrange
+    const error = new Error('disk full');
+    error.stack = 'Error: disk full\n    at save (index.js:1:2)';
+
     // Act
-    rendererLogger.error('renderer.failure', { message: 'Could not save' }, new Error('disk full'));
+    rendererLogger.error('renderer.failure', { message: 'Could not save' }, error);
 
     // Assert
-    expect(sendMessage()).toHaveBeenCalledWith('log:write', { level: 'error', event: 'renderer.failure', data: { message: 'Could not save' }, error: 'disk full' });
+    expect(sendMessage()).toHaveBeenCalledWith('log:write', { level: 'error', event: 'renderer.failure', data: { message: 'Could not save' }, error: 'Error: disk full\n    at save (index.js:1:2)' });
+  });
+
+  test('sends the message of an Error whose stack does not hold it', () => {
+    // Arrange
+    const error = new Error('disk full');
+    error.stack = 'at save (index.js:1:2)';
+
+    // Act
+    rendererLogger.error('renderer.failure', { message: 'Could not save' }, error);
+
+    // Assert
+    expect(sendMessage()).toHaveBeenCalledWith('log:write', expect.objectContaining({ error: 'disk full' }));
+  });
+
+  test('sends the message of an Error that has no stack', () => {
+    // Arrange
+    const error = new Error('disk full');
+    delete error.stack;
+
+    // Act
+    rendererLogger.error('renderer.failure', { message: 'Could not save' }, error);
+
+    // Assert
+    expect(sendMessage()).toHaveBeenCalledWith('log:write', expect.objectContaining({ error: 'disk full' }));
+  });
+
+  test('cuts a stack that is longer than 4000 characters', () => {
+    // Arrange
+    const error = new Error('long');
+    error.stack = `Error: long\n${'    at frame (index.js:1:2)\n'.repeat(500)}`;
+
+    // Act
+    rendererLogger.error('renderer.failure', { message: 'Could not save' }, error);
+
+    // Assert
+    expect((sendMessage().mock.calls[0]?.[1] as { error: string }).error).toHaveLength(4000);
   });
 
   test('sends the text of a value that is not an Error', () => {
@@ -89,6 +129,14 @@ describe('rendererLogger', () => {
 
     // Assert
     expect(sendMessage()).toHaveBeenCalledWith('log:write', { level: 'warn', event: 'renderer.failure', data: { message: 'Could not save' }, error: 'plain text' });
+  });
+
+  test('cuts a text that is longer than 4000 characters', () => {
+    // Act
+    rendererLogger.warn('renderer.failure', { message: 'Could not save' }, 'x'.repeat(5000));
+
+    // Assert
+    expect((sendMessage().mock.calls[0]?.[1] as { error: string }).error).toHaveLength(4000);
   });
 });
 

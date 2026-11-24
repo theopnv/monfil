@@ -20,7 +20,8 @@
     "message": "Monfilでシステムエラーが発生しました。インシデント {{incident}}。",
     "restart": "再起動",
     "showLog": "ログファイルを表示",
-    "quit": "終了"
+    "quit": "終了",
+    "attachLog": "ログファイルをエラーレポートと一緒に送信"
   },
   "dialog": {
     "sqliteFilter": "SQLiteデータベース"

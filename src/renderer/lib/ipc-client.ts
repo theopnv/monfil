@@ -46,12 +46,22 @@ export const ipc = {
   },
 };
 
+const MAX_ERROR_TEXT_LENGTH = 4000;
+
+/** The stack of an error, which starts with its name and message, so the main process can group the failure by where it happened. */
+function errorText(error: unknown): string {
+  if (error instanceof Error) {
+    return (error.stack?.includes(error.message) ? error.stack : error.message).slice(0, MAX_ERROR_TEXT_LENGTH);
+  }
+  return String(error).slice(0, MAX_ERROR_TEXT_LENGTH);
+}
+
 function write<E extends LogEventName>(level: LogLevel, event: E, data: LogEventMap[E], error?: unknown): void {
   ipc.send('log:write', {
     level,
     event,
     data,
-    ...(error === undefined ? {} : { error: error instanceof Error ? error.message : String(error) }),
+    ...(error === undefined ? {} : { error: errorText(error) }),
   });
 }
 

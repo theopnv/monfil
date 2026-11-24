@@ -35,5 +35,6 @@ export function fatalDialogText(incident: string): FatalDialogText {
     title: mainI18n.t('main:fatal.title'),
     message: mainI18n.t('main:fatal.message', { incident }),
     buttons: [mainI18n.t('main:fatal.restart'), mainI18n.t('main:fatal.showLog'), mainI18n.t('main:fatal.quit')],
+    attachLog: mainI18n.t('main:fatal.attachLog'),
   };
 }

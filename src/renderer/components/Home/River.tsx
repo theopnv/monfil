@@ -13,7 +13,7 @@ import RiverSidebar from "@/components/Home/RiverSidebar";
 import ImportOpmlDialog from "@/components/Workspace/ImportOpmlDialog";
 import FeedpackInstallDialog from '@/components/Feedpacks/FeedpackInstallDialog';
 import { announce } from "@/lib/announcer";
-import { recordUsage } from "@/lib/usage";
+import { recordUsage, reportStartupComplete } from "@/lib/usage";
 import { useFeedpackRefreshing } from '@/lib/push-events';
 import { type FeedVisibility } from "@/lib/river/feed-visibility";
 import { openLink } from "@/lib/river/utils";
@@ -59,6 +59,12 @@ export default function River({ onOpenItem, savedView = false, onShowFeed }: Riv
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, isError, refetch } = useRiver(scope, !awaitingFeeds);
   const visibleItems = useMemo(() => (data?.pages.flatMap((page) => page.rows) ?? []).filter((item) => !savedView || item.savedAt != null), [data, savedView]);
+
+  useEffect(() => {
+    if (!isPending && !awaitingFeeds && !isError) {
+      reportStartupComplete();
+    }
+  }, [isPending, awaitingFeeds, isError]);
 
   const loadMore = useCallback(() => {
     void fetchNextPage();
