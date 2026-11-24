@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { observeLogs } from '../logging/logger';
 import type { LogEventMap, LogEventName, LogLevel } from '../../shared/logging';
 import { forgetReportedEvents, findReportedEvent } from './incidents';
-import { breadcrumbData, startErrorRouting, toError, type ErrorReport, type ReportSink } from './routing';
+import { breadcrumbData, capturesSettled, startErrorRouting, toError, type ErrorReport, type ReportSink } from './routing';
 
 vi.mock(import('../logging/logger'), () => ({ observeLogs: vi.fn() }));
 
@@ -208,6 +208,51 @@ describe('failures that go to the error tracker', () => {
 
     // Assert
     expect(unsubscribe).toHaveBeenCalledOnce();
+  });
+});
+
+describe('capturesSettled', () => {
+  test('waits until a failure that is being counted by the caps has reached the tracker', async () => {
+    // Arrange
+    let release: (accepted: boolean) => void = () => undefined;
+    accept = () => new Promise<boolean>((resolve) => {
+      release = resolve;
+    });
+    emit('ipc.failure', { channel: 'feeds:list', incidentId: INCIDENT }, 'error', new Error('x'));
+    let settled = false;
+    const waiting = capturesSettled().then(() => {
+      settled = true;
+    });
+    await settle();
+
+    // Act, Assert
+    expect(settled).toBe(false);
+    expect(sink.captured).toEqual([]);
+    release(true);
+    await waiting;
+    expect(settled).toBe(true);
+    expect(sink.captured).toHaveLength(1);
+  });
+
+  test('settles at once when nothing is pending, and after a refusal', async () => {
+    // Arrange
+    accept = () => Promise.resolve(false);
+    emit('ipc.failure', { channel: 'feeds:list', incidentId: INCIDENT }, 'error', new Error('x'));
+
+    // Act, Assert
+    await expect(capturesSettled()).resolves.toBeUndefined();
+    await expect(capturesSettled()).resolves.toBeUndefined();
+  });
+
+  test('does not reject when the tracker throws', async () => {
+    // Arrange
+    sink.capture = () => {
+      throw new Error('sdk failed');
+    };
+    emit('ipc.failure', { channel: 'feeds:list', incidentId: INCIDENT }, 'error', new Error('x'));
+
+    // Act, Assert
+    await expect(capturesSettled()).resolves.toBeUndefined();
   });
 });
 

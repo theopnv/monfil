@@ -6,11 +6,25 @@ import { logFilePath } from '../app/main-state';
 import { ERROR_REPORT_COMMENT_MAX_LENGTH, ERROR_REPORT_LOG_MAX_BYTES, type ErrorReportError, type ErrorReportInput, type ErrorReportLogPreview, type ErrorReportState } from '../../shared/contracts';
 import { fail, ok, type Result } from '../../shared/result';
 import { findReportedEvent } from './incidents';
+import { capturesSettled } from './routing';
 import { readLogTail } from './log-tail';
 import { getScrubber, getSdk, isObservabilityActive } from './sentry';
 
 const NO_COMMENT = '(no comment)';
 const FLUSH_TIMEOUT_MS = 3000;
+
+/**
+ * Sends what was logged so far. The fatal dialog calls it before it opens, because a native dialog stops the
+ * main process from doing the network work that a report needs until the user closes it.
+ */
+export async function flushReports(): Promise<void> {
+  const Sentry = getSdk();
+  if (!Sentry) {
+    return;
+  }
+  await capturesSettled();
+  await Sentry.flush(FLUSH_TIMEOUT_MS);
+}
 
 export function getErrorReportState(): ErrorReportState {
   return { enabled: isObservabilityActive() };

@@ -8,11 +8,13 @@ import { ERROR_REPORT_COMMENT_MAX_LENGTH, ERROR_REPORT_LOG_MAX_BYTES } from '../
 import { forgetReportedEvents, rememberReportedEvent } from './incidents';
 import { readLogTail } from './log-tail';
 import { createScrubber } from './scrub';
-import { getErrorReportState, previewReportLog, submitErrorReport } from './report';
+import { flushReports, getErrorReportState, previewReportLog, submitErrorReport } from './report';
 import { getScrubber, getSdk, isObservabilityActive } from './sentry';
+import { capturesSettled } from './routing';
 
 vi.mock(import('@sentry/electron/main'), () => ({ captureFeedback: vi.fn(), flush: vi.fn(() => Promise.resolve(true)) }) as never);
 vi.mock(import('./sentry'), () => ({ getScrubber: vi.fn(), getSdk: vi.fn(), isObservabilityActive: vi.fn() }));
+vi.mock(import('./routing'), () => ({ capturesSettled: vi.fn(() => Promise.resolve()) }));
 vi.mock(import('./log-tail'), () => ({ readLogTail: vi.fn() }));
 vi.mock(import('../app/main-state'), () => ({ logFilePath: '/logs/monfil.log' }));
 
@@ -28,6 +30,39 @@ beforeEach(() => {
 
 afterEach(() => {
   forgetReportedEvents();
+});
+
+describe('flushReports', () => {
+  test('waits for the captures that are pending, then flushes the SDK', async () => {
+    // Arrange
+    const order: string[] = [];
+    vi.mocked(capturesSettled).mockImplementation(async () => {
+      order.push('settled');
+    });
+    vi.mocked(Sentry.flush).mockImplementation(async () => {
+      order.push('flush');
+      return true;
+    });
+
+    // Act
+    await flushReports();
+
+    // Assert
+    expect(order).toEqual(['settled', 'flush']);
+    expect(Sentry.flush).toHaveBeenCalledWith(3000);
+  });
+
+  test('does nothing while error reports are off', async () => {
+    // Arrange
+    vi.mocked(getSdk).mockReturnValue(undefined);
+
+    // Act
+    await flushReports();
+
+    // Assert
+    expect(capturesSettled).not.toHaveBeenCalled();
+    expect(Sentry.flush).not.toHaveBeenCalled();
+  });
 });
 
 describe('getErrorReportState', () => {

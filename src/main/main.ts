@@ -29,7 +29,7 @@ import { titleBarOverlayForTheme } from './app/window-chrome';
 import { startAutoUpdates, stopAutoUpdates } from './updates/auto-updater';
 import { startUsageAnalytics, stopUsageAnalytics } from './analytics/scheduler';
 import { startObservability } from './observability/sentry';
-import { getErrorReportState, submitErrorReport } from './observability/report';
+import { flushReports, getErrorReportState, submitErrorReport } from './observability/report';
 
 // app.quit() only schedules an exit, so without this return the rest of the module (and its app.on(...) wiring)
 // would still run during Squirrel's install/uninstall/update invocations.
@@ -61,6 +61,7 @@ function bootstrap() {
   configureLogging(logFilePath, false);
   installFatalHandlers(logger, logFilePath, fatalDialogText, [ARTICLE_EXTRACTION_SERVICE_NAME], {
     enabled: () => getErrorReportState().enabled,
+    flush: flushReports,
     attachLog: async (incidentId) => {
       const result = await submitErrorReport({ incidentId, comment: '', attachLog: true });
       logger.info('app.lifecycle', { action: result.success ? 'report-log-sent' : `report-log-refused-${result.error.name}` });

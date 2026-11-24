@@ -53,7 +53,7 @@ describe('fatal recovery handler', () => {
 
   describe('error reports', () => {
     function reports(enabled: boolean) {
-      return { enabled: vi.fn(() => enabled), attachLog: vi.fn(() => Promise.resolve()) };
+      return { enabled: vi.fn(() => enabled), flush: vi.fn(() => Promise.resolve()), attachLog: vi.fn(() => Promise.resolve()) };
     }
 
     test('offers to send the log when error reports are on, and sends it before the app restarts', async () => {
@@ -73,6 +73,51 @@ describe('fatal recovery handler', () => {
       expect(deps.dialog.showMessageBox).toHaveBeenCalledWith(expect.objectContaining({ checkboxLabel: 'Send the log file with the error report', checkboxChecked: false }));
       expect(deps.reports.attachLog).toHaveBeenCalledWith(expect.stringMatching(/^[0-9a-f]{8}$/));
       expect(order).toEqual(['attach', 'relaunch']);
+    });
+
+    test('sends the failure before the dialog opens, because a native dialog stops the network work', async () => {
+      // Arrange
+      const deps = { ...dependencies(0, false), reports: reports(true) };
+      const order: string[] = [];
+      deps.reports.flush.mockImplementation(async () => {
+        order.push('flush');
+      });
+      deps.dialog.showMessageBox.mockImplementation(async () => {
+        order.push('dialog');
+        return { response: 0, checkboxChecked: false };
+      });
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(order).toEqual(['flush', 'dialog']);
+    });
+
+    test('still shows the dialog when sending the failure fails', async () => {
+      // Arrange
+      const deps = { ...dependencies(0, false), reports: reports(true) };
+      deps.reports.flush.mockRejectedValue(new Error('offline'));
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(deps.dialog.showMessageBox).toHaveBeenCalledOnce();
+    });
+
+    test('sends nothing before the dialog when error reports are off', async () => {
+      // Arrange
+      const deps = { ...dependencies(2, false), reports: reports(false) };
+      const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+      // Act
+      await handle('uncaughtException', new Error('broken'));
+
+      // Assert
+      expect(deps.reports.flush).not.toHaveBeenCalled();
     });
 
     test('sends nothing when the box stays unticked', async () => {

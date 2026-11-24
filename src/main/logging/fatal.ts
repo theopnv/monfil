@@ -20,6 +20,8 @@ interface FatalDialog {
 /** Sends the log with the error report of an incident. Main passes it in, so the logging folder does not import the observability folder. */
 export interface FatalReports {
   enabled(): boolean;
+  /** Sends the failure that was just logged. It runs before the dialog, which stops network work while it is open. */
+  flush(): Promise<void>;
   attachLog(incidentId: string): Promise<void>;
 }
 
@@ -62,6 +64,9 @@ export function createFatalHandler(log: Logger, logFilePath: string, dependencie
       const shortId = shortIncidentId(incidentId);
       const text = dependencies.text(shortId);
       const canReport = dependencies.reports?.enabled() === true;
+      if (canReport) {
+        await dependencies.reports?.flush().catch(() => undefined);
+      }
       const result = await dependencies.dialog.showMessageBox({
         type: 'error',
         title: text.title,

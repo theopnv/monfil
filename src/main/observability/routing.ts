@@ -147,6 +147,13 @@ export interface RoutingOptions {
   isStartingUp: () => boolean;
 }
 
+const pendingCaptures = new Set<Promise<void>>();
+
+/** Resolves once every failure that was logged so far has reached the tracker's queue or was refused by the caps. */
+export async function capturesSettled(): Promise<void> {
+  await Promise.all([...pendingCaptures]);
+}
+
 /** Sends the failures of the app to the error tracker, and keeps a trail of the other log records that come before them. */
 export function startErrorRouting({ sink, caps, isStartingUp }: RoutingOptions): () => void {
   return observeLogs((event, data, level, rawError) => {
@@ -159,7 +166,7 @@ export function startErrorRouting({ sink, caps, isStartingUp }: RoutingOptions):
     }
     const error = toError(rawError);
     const fingerprint = [event, routed.discriminator, error?.name ?? '', topFrame(error)].join('|');
-    void caps.accept(fingerprint).then((accepted) => {
+    const capture = caps.accept(fingerprint).then((accepted) => {
       if (!accepted) {
         return;
       }
@@ -175,6 +182,9 @@ export function startErrorRouting({ sink, caps, isStartingUp }: RoutingOptions):
       if (eventId) {
         rememberReportedEvent(routed.tags['incidentId'], eventId);
       }
+    }).catch(() => undefined).finally(() => {
+      pendingCaptures.delete(capture);
     });
+    pendingCaptures.add(capture);
   });
 }

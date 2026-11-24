@@ -114,6 +114,7 @@ vi.mock(import('./observability/sentry'), () => ({
 
 vi.mock(import('./observability/report'), () => ({
   getErrorReportState: vi.fn(() => ({ enabled: true })),
+  flushReports: vi.fn().mockResolvedValue(undefined),
   submitErrorReport: vi.fn().mockResolvedValue({ success: true, data: undefined }),
 }));
 
@@ -361,6 +362,20 @@ describe('main', () => {
     expect(reports?.enabled()).toBe(false);
     expect(submitErrorReport).toHaveBeenCalledWith({ incidentId: 'abcd1234', comment: '', attachLog: true });
     expect(logger.info).toHaveBeenCalledWith('app.lifecycle', { action: 'report-log-sent' });
+  });
+
+  test('lets the fatal dialog send the failure before it opens', async () => {
+    // Arrange
+    vi.doMock('electron-squirrel-startup', () => ({ default: false }));
+    const { flushReports } = await import('./observability/report');
+    await import('./main');
+    const reports = vi.mocked(installFatalHandlers).mock.calls[0]?.[4];
+
+    // Act
+    await reports?.flush();
+
+    // Assert
+    expect(flushReports).toHaveBeenCalledOnce();
   });
 
   test('logs why the log file was not sent', async () => {
