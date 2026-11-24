@@ -46,7 +46,7 @@ Fai clic destro sulla sua icona nella barra a sinistra e seleziona **Modifica wo
 
 ### Elimina un workspace
 
-Fai clic destro sulla sua icona e seleziona **Elimina workspace**. La finestra di conferma offre **Esporta come OPML** se vuoi salvare il suo elenco di feed. Seleziona **Elimina workspace** per rimuovere il workspace e le sue cartelle. Monfil rimuove anche i feed che compaiono solo in quel workspace. I feed presenti in altri workspace restano lì. **Home** resta disponibile e non ha un comando di eliminazione.
+Fai clic destro sulla sua icona e seleziona **Elimina workspace**. La finestra di conferma offre **Esporta come OPML** se vuoi salvare il suo elenco di feed. Seleziona **Elimina workspace** per rimuovere il workspace e le sue cartelle. Monfil rimuove anche i feed che compaiono solo in quel workspace. I feed presenti in altri workspace restano lì. Puoi eliminare qualsiasi workspace, anche **Home**. Monfil conserva l'ultimo workspace rimasto e mostra un errore se provi a eliminarlo.
 
 ![Icone dei workspace nella barra a sinistra, accanto a una cartella e ai suoi feed.](../../../../assets/user-guide/workspaces-and-folders.png)
 
@@ -62,11 +62,11 @@ Puoi [inviare un feedpack](../submit-a-feedpack/) quando hai una raccolta di fon
 
 ## Importa o esporta un elenco di feed
 
-OPML è un formato di file per spostare elenchi di feed tra lettori. Per importarne uno, apri **Impostazioni**, vai su **I tuoi dati** e seleziona **Importa OPML**. Scegli **Nuovo workspace** oppure **Unisci a Home**, poi seleziona **Importa** e scegli il file. In un workspace vuoto, **Importa OPML** aggiunge i feed a quel workspace.
+OPML è un formato di file per spostare elenchi di feed tra lettori. Per importarne uno, apri **Impostazioni**, vai su **I tuoi dati** e seleziona **Importa OPML**. Scegli **Nuovo workspace** oppure **Unisci a** seguito dal nome del primo workspace nella barra, poi seleziona **Importa** e scegli il file. In un workspace vuoto, **Importa OPML** aggiunge i feed a quel workspace.
 
 Per salvare un workspace come file OPML, fai clic destro sulla sua icona nella barra a sinistra e seleziona **Esporta come OPML**. Scegli dove salvare il file. Puoi usarlo in seguito come copia dell'elenco di feed di quel workspace.
 
-![La finestra Importa OPML con le scelte Nuovo workspace e Unisci a Home.](../../../../assets/user-guide/import-opml.png)
+![La finestra Importa OPML con le scelte Nuovo workspace e Unisci a.](../../../../assets/user-guide/import-opml.png)
 
 ## Leggi e trova gli articoli
 

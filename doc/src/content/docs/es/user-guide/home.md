@@ -46,7 +46,7 @@ Haz clic derecho sobre su icono en la barra izquierda y selecciona **Editar work
 
 ### Eliminar un workspace
 
-Haz clic derecho sobre su icono y selecciona **Eliminar workspace**. La ventana de confirmación ofrece **Exportar como OPML** si quieres guardar su lista de fuentes. Selecciona **Eliminar workspace** para quitar el workspace y sus carpetas. Monfil también quita las fuentes que aparecen solo en ese workspace. Las fuentes de otros workspaces se quedan donde están. **Inicio** siempre está disponible y no tiene un comando para eliminarlo.
+Haz clic derecho sobre su icono y selecciona **Eliminar workspace**. La ventana de confirmación ofrece **Exportar como OPML** si quieres guardar su lista de fuentes. Selecciona **Eliminar workspace** para quitar el workspace y sus carpetas. Monfil también quita las fuentes que aparecen solo en ese workspace. Las fuentes de otros workspaces se quedan donde están. Puedes eliminar cualquier workspace, incluido **Inicio**. Monfil conserva el último workspace que queda y muestra un error si intentas eliminarlo.
 
 ![Iconos de workspace en la barra izquierda, junto a una carpeta y sus fuentes.](../../../../assets/user-guide/workspaces-and-folders.png)
 
@@ -62,11 +62,11 @@ Puedes [enviar un feedpack](../submit-a-feedpack/) cuando tengas una colección 
 
 ## Importar o exportar una lista de fuentes
 
-OPML es un formato de archivo para mover listas de fuentes entre lectores. Para importar uno, abre **Configuración**, ve a **Datos** y selecciona **Importar OPML**. Elige **Nuevo workspace** o **Combinar con Inicio**, luego selecciona **Importar** y elige el archivo. En un workspace vacío, **Importar OPML** añade las fuentes a ese workspace.
+OPML es un formato de archivo para mover listas de fuentes entre lectores. Para importar uno, abre **Configuración**, ve a **Datos** y selecciona **Importar OPML**. Elige **Nuevo workspace** o **Combinar con** seguido del nombre del primer workspace de la barra, luego selecciona **Importar** y elige el archivo. En un workspace vacío, **Importar OPML** añade las fuentes a ese workspace.
 
 Para guardar un workspace como archivo OPML, haz clic derecho sobre su icono en la barra izquierda y selecciona **Exportar como OPML**. Elige dónde guardar el archivo. Puedes usarlo después como copia de la lista de fuentes de ese workspace.
 
-![La ventana Importar OPML con las opciones Nuevo workspace y Combinar con Inicio.](../../../../assets/user-guide/import-opml.png)
+![La ventana Importar OPML con las opciones Nuevo workspace y Combinar con.](../../../../assets/user-guide/import-opml.png)
 
 ## Leer y buscar artículos
 

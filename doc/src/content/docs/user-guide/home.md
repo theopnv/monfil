@@ -46,7 +46,7 @@ Right-click its icon in the left rail and select **Edit workspace**. Change its 
 
 ### Delete a workspace
 
-Right-click its icon and select **Delete workspace**. The confirmation window offers **Export as OPML** if you want to save its feed list. Select **Delete workspace** to remove the workspace and its folders. Monfil also removes feeds that appear only in that workspace. Feeds in other workspaces stay there. Any workspace can be deleted, including **Home**. Monfil keeps the last remaining workspace, so it has no delete command to run on it.
+Right-click its icon and select **Delete workspace**. The confirmation window offers **Export as OPML** if you want to save its feed list. Select **Delete workspace** to remove the workspace and its folders. Monfil also removes feeds that appear only in that workspace. Feeds in other workspaces stay there. You can delete any workspace, including **Home**. Monfil keeps the last remaining workspace and shows an error if you try to delete it.
 
 ![Workspace icons in the left rail beside a folder and its feeds.](../../../assets/user-guide/workspaces-and-folders.png)
 
@@ -62,7 +62,7 @@ You can [submit a feedpack](../submit-a-feedpack/) when you have a source collec
 
 ## Import or export a list of feeds
 
-OPML is a file format for moving feed lists between readers. To import one, open **Settings**, go to **Your data**, and select **Import OPML**. Choose **New workspace** or **Merge into** the first workspace in the rail, then select **Import** and pick the file. In an empty workspace, **Import OPML** adds the feeds to that workspace.
+OPML is a file format for moving feed lists between readers. To import one, open **Settings**, go to **Your data**, and select **Import OPML**. Choose **New workspace** or **Merge into** followed by the name of the first workspace in the rail, then select **Import** and pick the file. In an empty workspace, **Import OPML** adds the feeds to that workspace.
 
 To save a workspace as an OPML file, right-click its icon in the left rail and select **Export as OPML**. Choose where to save the file. You can use it later as a copy of that workspace's feed list.
 
