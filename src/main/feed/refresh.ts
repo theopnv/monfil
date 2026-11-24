@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { db, dbReady } from '../db/database';
+import { isShuttingDown } from '../app/shutdown-state';
 import { logger } from '../logging/logger';
 import { syncFeedItemsToDatabase, updateFeedItemImage } from '../db/crud/insert';
 import { querySubscribedFeedMetadata } from '../db/crud/query';
@@ -42,7 +43,7 @@ function claimIconLookup(feed: FeedMetadataRow): boolean {
 
 async function fillMissingIcon({ feed, siteLink }: IconLookup): Promise<boolean> {
   const icon = await resolveSiteIcon(siteLink ?? feed.link);
-  if (!icon) {
+  if (!icon || isShuttingDown()) {
     return false;
   }
   const stored = await setFeedIconIfMissing(feed.id, icon);
@@ -64,14 +65,19 @@ async function fillMissingIcons(lookups: readonly IconLookup[]): Promise<void> {
   }
 }
 
+/** False once the app is quitting, because the database may close at any moment, and false for a feed that was removed. */
+async function isStillSubscribed(feedId: number): Promise<boolean> {
+  return !isShuttingDown() && (await querySubscribedFeedMetadata([feedId])).length > 0;
+}
+
 async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: boolean): Promise<{ items: FeedItem[]; updated: number; failure?: CodedError; iconLookup?: IconLookup }> {
-  if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
+  if (!await isStillSubscribed(feed.id)) {
     return { items: [], updated: 0 };
   }
   // A 304 carries no site link, so a feed still owed its icon lookup is fetched in full once.
   const conditional = !force && !needsIconLookup(feed);
   const result = await sourceFor(feed.type).fetch({ link: feed.link, ...(conditional ? { validators: { etag: feed.etag ?? undefined, last_modified: feed.last_modified ?? undefined } } : {}) });
-  if ((await querySubscribedFeedMetadata([feed.id])).length === 0) {
+  if (!await isStillSubscribed(feed.id)) {
     return { items: [], updated: 0 };
   }
   if (!result.success) {
@@ -127,6 +133,9 @@ async function refreshFeedList(feedList: FeedMetadataRow[], retentionDays: Reten
   const cutoff = retentionCutoff(retentionDays);
 
   await runWithConcurrency(feedList, FEED_FETCH_CONCURRENCY, async (feed) => {
+    if (isShuttingDown()) {
+      return;
+    }
     const result = await refreshOneFeed(feed, cutoff, force);
     insertedByFeedId.set(feed.id, result.items);
     updatedByFeedId.set(feed.id, result.updated);
@@ -138,7 +147,7 @@ async function refreshFeedList(feedList: FeedMetadataRow[], retentionDays: Reten
     }
   });
 
-  const removed = await pruneExpiredItems(retentionDays);
+  const removed = isShuttingDown() ? 0 : await pruneExpiredItems(retentionDays);
 
   const typeByFeedId = new Map(feedList.map((feed) => [feed.id, feed.type]));
 
@@ -195,6 +204,9 @@ async function enrichRefreshedItems(insertedByFeedId: ReadonlyMap<number, FeedIt
     await enrichItems(
       candidates,
       (item, image) => {
+        if (isShuttingDown()) {
+          return;
+        }
         void updateFeedItemImage(item.id, image);
         broadcastToRenderers('feeds:item-image-fetched', { feedId: item.feed_id, itemId: item.id, image });
       },
