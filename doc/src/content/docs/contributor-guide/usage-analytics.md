@@ -39,16 +39,3 @@ Bugs go to [Sentry](https://sentry.io), and outcomes that publishers and network
 - `report.ts` serves the report form in the error screens. It sends an optional comment and an optional log file (the last megabyte, scrubbed) as Sentry feedback on the event of the incident. The native fatal dialog offers the log file only, because it has no text field.
 
 The build reads `MONFIL_SENTRY_DSN`. Without it, in a development build, and in an end-to-end run, nothing is sent. An end-to-end spec can point the app at a local stub with `MONFIL_SENTRY_ENDPOINT`, a full DSN such as `http://key@127.0.0.1:1234/1`. It works only when `E2E_TEST` is `1`. `test/e2e/error-report.spec.ts` shows how.
-
-### Release setup
-
-Set these in the repository settings on GitHub.
-
-| Name | Kind | Use |
-| --- | --- | --- |
-| `MONFIL_SENTRY_DSN` | Variable | The DSN of the Sentry project. It is not a secret. |
-| `SENTRY_ORG` | Variable | The slug of the Sentry organization. |
-| `SENTRY_PROJECT` | Variable | The slug of the Sentry project. |
-| `SENTRY_AUTH_TOKEN` | Secret | An organization token that may upload source maps. |
-
-A release run packages the app with these values. `scripts/sentry/vite-plugin.mts` then writes hidden source maps, uploads them as the release `monfil@<version>`, and deletes the `.map` files, so no installer carries them. A build without the token, such as a pull request, writes no source maps. A failed upload fails the packaging job.
