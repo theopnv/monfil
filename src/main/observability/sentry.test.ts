@@ -24,7 +24,7 @@ const sdk = vi.hoisted(() => {
     hooks,
     client,
     init: vi.fn(),
-    getDefaultIntegrations: vi.fn(() => ['SentryMinidump', 'ElectronBreadcrumbs', 'ElectronNet', 'ChildProcess', 'OnUncaughtException', 'PreloadInjection', 'Screenshots', 'AdditionalContext', 'MainProcessSession', 'Console', 'NodeContext', 'NormalizePaths'].map((name) => ({ name }))),
+    getDefaultIntegrations: vi.fn(() => ['SentryMinidump', 'ElectronBreadcrumbs', 'ElectronNet', 'ChildProcess', 'OnUncaughtException', 'PreloadInjection', 'Screenshots', 'AdditionalContext', 'MainProcessSession', 'Console', 'Context', 'NormalizePaths'].map((name) => ({ name }))),
     addBreadcrumb: vi.fn(),
     captureException: vi.fn(() => 'event-exception'),
     captureMessage: vi.fn(() => 'event-message'),
@@ -154,7 +154,7 @@ describe('startObservability', () => {
       dataCollection: { userInfo: false, cookies: false, httpHeaders: false, httpBodies: [], urlQueryParams: false },
     });
     expect(options).not.toHaveProperty('integrations');
-    expect((options['defaultIntegrations'] as { name: string }[]).map((integration) => integration.name)).toEqual(['SentryMinidump', 'MainProcessSession', 'NodeContext', 'NormalizePaths']);
+    expect((options['defaultIntegrations'] as { name: string }[]).map((integration) => integration.name)).toEqual(['SentryMinidump', 'MainProcessSession', 'Context', 'NormalizePaths']);
     expect(routing.startErrorRouting).toHaveBeenCalledOnce();
     expect(isObservabilityActive()).toBe(true);
     expect(getScrubber()).toBeDefined();

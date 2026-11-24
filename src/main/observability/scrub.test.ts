@@ -217,7 +217,7 @@ describe('allowlist contents', () => {
     electron: ['name', 'version'],
     feedback: ['message', 'associated_event_id'],
   };
-  const breadcrumbFields = ['action', 'outcome', 'errorCode', 'channel', 'source', 'operation', 'requestedSurface', 'errorName'];
+  const breadcrumbFields = ['action', 'outcome', 'errorCode', 'channel', 'source', 'operation', 'requestedSurface', 'errorName', 'status', 'reason'];
 
   test.each(tags)('keeps the tag %s', (tag) => {
     // Act

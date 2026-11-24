@@ -12,7 +12,7 @@ export const ALLOWED_TAGS: ReadonlySet<string> = new Set([
   'reason', 'event.process', 'event.origin', 'event.environment', 'process', 'handled', 'mechanism',
 ]);
 
-const ALLOWED_BREADCRUMB_DATA: ReadonlySet<string> = new Set(['action', 'outcome', 'errorCode', 'channel', 'source', 'operation', 'requestedSurface', 'errorName']);
+const ALLOWED_BREADCRUMB_DATA: ReadonlySet<string> = new Set(['action', 'outcome', 'errorCode', 'channel', 'source', 'operation', 'requestedSurface', 'errorName', 'status', 'reason']);
 
 const ALLOWED_CONTEXT_FIELDS: Readonly<Record<string, readonly string[]>> = {
   os: ['name', 'version', 'kernel_version'],

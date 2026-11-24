@@ -87,10 +87,24 @@ describe('rendererLogger', () => {
     expect(sendMessage()).toHaveBeenCalledWith('log:write', { level: 'error', event: 'renderer.failure', data: { message: 'Could not save' }, error: 'Error: disk full\n    at save (index.js:1:2)' });
   });
 
-  test('sends the message of an Error whose stack does not hold it', () => {
+  test('puts the name and message in front of the frames of an Error whose stack does not hold them', () => {
+    // Arrange
+    const error = Object.assign(new Error(), { name: 'UNEXPECTED_ERROR', message: 'The operation could not be completed. Incident 5afa079c.' });
+    error.stack = 'Error\n    at invoke (index.js:1:2)\n    at load (index.js:3:4)';
+
+    // Act
+    rendererLogger.error('renderer.failure', { message: 'Could not load' }, error);
+
+    // Assert
+    expect(sendMessage()).toHaveBeenCalledWith('log:write', expect.objectContaining({
+      error: 'UNEXPECTED_ERROR: The operation could not be completed. Incident 5afa079c.\n    at invoke (index.js:1:2)\n    at load (index.js:3:4)',
+    }));
+  });
+
+  test('sends the message of an Error whose stack has no frame and does not hold it', () => {
     // Arrange
     const error = new Error('disk full');
-    error.stack = 'at save (index.js:1:2)';
+    error.stack = 'Error';
 
     // Act
     rendererLogger.error('renderer.failure', { message: 'Could not save' }, error);

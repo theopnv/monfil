@@ -4,6 +4,7 @@
 
 import { db, dbReady } from '../db/database';
 import { isShuttingDown } from '../app/shutdown-state';
+import { failureDetail } from './failure-detail';
 import { logger } from '../logging/logger';
 import { syncFeedItemsToDatabase, updateFeedItemImage } from '../db/crud/insert';
 import { querySubscribedFeedMetadata } from '../db/crud/query';
@@ -81,7 +82,7 @@ async function refreshOneFeed(feed: FeedMetadataRow, cutoff: number, force: bool
     return { items: [], updated: 0 };
   }
   if (!result.success) {
-    logger.warn('feed.refresh', { outcome: 'failed', feedId: feed.id, errorCode: result.error.name }, result.error);
+    logger.warn('feed.refresh', { outcome: 'failed', feedId: feed.id, errorCode: result.error.name, ...failureDetail(result.error) }, result.error);
     const updated = await setFeedFetchResult(feed.id, {
       last_error: result.error.message,
       last_error_code: result.error.name,

@@ -20,7 +20,7 @@ import { createScrubber, LOG_BREADCRUMB_CATEGORY, type Scrubber } from './scrub'
 
 /** The integrations that stay. The rest add breadcrumbs, screenshots, host details, or a crash dialog that the app does not want. */
 const KEPT_INTEGRATIONS: ReadonlySet<string> = new Set([
-  'SentryMinidump', 'MainProcessSession', 'EventFilters', 'FunctionToString', 'LinkedErrors', 'ElectronContext', 'NodeContext', 'NormalizePaths',
+  'SentryMinidump', 'MainProcessSession', 'EventFilters', 'FunctionToString', 'LinkedErrors', 'ElectronContext', 'Context', 'NormalizePaths',
 ]);
 
 const CRASH_DUMP_FOLDERS = ['pending', 'new', 'completed', 'attachments'] as const;

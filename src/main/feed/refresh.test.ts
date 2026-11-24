@@ -538,6 +538,20 @@ describe('refreshAllFeeds', () => {
     expect(JSON.parse(stored.last_error_params ?? 'null')).toEqual(params);
   });
 
+  test('logs the HTTP status and reason of a failed fetch, and never its host', async () => {
+    // Arrange
+    await storeFeed('https://private.example/feed');
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
+    const error = { name: 'UNKNOWN_ERROR' as const, message: 'Could not resolve private.example.', params: { reason: 'unresolvable', host: 'private.example', status: 523 } };
+    mockedFetchFeed.mockResolvedValue({ success: false, error });
+
+    // Act
+    await refreshAllFeeds();
+
+    // Assert
+    expect(warn).toHaveBeenCalledWith('feed.refresh', { outcome: 'failed', feedId: expect.any(Number), errorCode: 'UNKNOWN_ERROR', status: 523, reason: 'unresolvable' }, error);
+  });
+
   test('records the failure on the feed row, then clears it once the fetch works again', async () => {
     // Arrange
     const link = 'https://a.example/feed';
