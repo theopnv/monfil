@@ -35,8 +35,8 @@ export default function UsageAnalyticsPreview({ isOpen, onOpenChange }: UsageAna
 
   return (
     <ModalOverlay isOpen={isOpen} onOpenChange={onOpenChange} isDismissable>
-      <Modal className="w-full max-w-[520px]">
-        <Dialog>
+      <Modal className="flex w-full max-w-[520px] flex-col py-3">
+        <Dialog className="min-h-0 flex-1">
           <div className={dialogHeaderClass}>
             <Heading slot="title" className={dialogTitleClass}>{t('settings:analyticsPreview.title')}</Heading>
             <p className="text-sm text-tertiary">
