@@ -7,7 +7,6 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { activeHint, HINT_ORDER, readHintsState, writeHintsState, type HintId } from '@/lib/hints';
 import { rendererLogger } from '@/lib/ipc-client';
 import { feedsQuery, workspacesQuery } from '@/lib/queries';
-import { HOME_WORKSPACE_ID } from '../../shared/contracts';
 
 interface HintsContextType {
   openHint: HintId | undefined;
@@ -26,11 +25,9 @@ type Phase = 'checking' | 'ready';
  * teach them what they know, so every hint is marked seen. A fresh profile starts at the first hint.
  */
 async function resolveSeen(queryClient: ReturnType<typeof useQueryClient>): Promise<HintId[]> {
-  const [feeds, workspaces] = await Promise.all([
-    queryClient.fetchQuery(feedsQuery(HOME_WORKSPACE_ID)),
-    queryClient.fetchQuery(workspacesQuery()),
-  ]);
-  return feeds.length > 0 || workspaces.length > 1 ? [...HINT_ORDER] : [];
+  const workspaces = await queryClient.fetchQuery(workspacesQuery());
+  const feedLists = await Promise.all(workspaces.map(({ id }) => queryClient.fetchQuery(feedsQuery(id))));
+  return feedLists.some((feeds) => feeds.length > 0) || workspaces.length > 1 ? [...HINT_ORDER] : [];
 }
 
 export const HintsProvider = ({ children }: PropsWithChildren) => {

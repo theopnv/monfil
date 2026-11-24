@@ -46,7 +46,7 @@ Workspace 会围绕一个主题（例如工作或爱好）将订阅源和文件�
 
 ### 删除 Workspace
 
-右键单击其图标，然后选择 **删除Workspace**。如果你想保存其订阅源列表，确认窗口会提供 **导出为 OPML**。选择 **删除Workspace**，即可删除该 Workspace 及其文件夹。Monfil 还会删除只出现在该 Workspace 中的订阅源。其他 Workspace 中的订阅源会保留。**首页** 始终可用，且没有删除命令。
+右键单击其图标，然后选择 **删除Workspace**。如果你想保存其订阅源列表，确认窗口会提供 **导出为 OPML**。选择 **删除Workspace**，即可删除该 Workspace 及其文件夹。Monfil 还会删除只出现在该 Workspace 中的订阅源。其他 Workspace 中的订阅源会保留。你可以删除任何 Workspace，包括 **首页**。Monfil 会保留最后一个 Workspace，如果你尝试删除它，会显示错误。
 
 ![左侧栏中的 Workspace 图标，旁边是一个文件夹及其订阅源。](../../../../assets/user-guide/workspaces-and-folders.png)
 
@@ -62,11 +62,11 @@ Feedpack 是围绕一个主题的一组精选来源。选择订阅源栏顶部�
 
 ## 导入或导出订阅源列表
 
-OPML 是一种在阅读器之间迁移订阅源列表的文件格式。要导入，请打开 **设置**，进入 **你的数据**，然后选择 **导入 OPML**。选择 **新建Workspace** 或 **合并到首页**，然后选择 **导入**，并选择文件。在空的 Workspace 中，**导入 OPML** 会将订阅源添加到该 Workspace。
+OPML 是一种在阅读器之间迁移订阅源列表的文件格式。要导入，请打开 **设置**，进入 **你的数据**，然后选择 **导入 OPML**。选择 **新建Workspace** 或 **合并到** 加上栏中第一个 Workspace 的名称，然后选择 **导入**，并选择文件。在空的 Workspace 中，**导入 OPML** 会将订阅源添加到该 Workspace。
 
 要将 Workspace 保存为 OPML 文件，请右键单击左侧栏中的图标，然后选择 **导出为 OPML**。选择保存文件的位置。之后你可以将它用作该 Workspace 订阅源列表的副本。
 
-![导入 OPML 窗口，显示新建Workspace 和合并到首页两个选项。](../../../../assets/user-guide/import-opml.png)
+![导入 OPML 窗口，显示新建Workspace 和合并到两个选项。](../../../../assets/user-guide/import-opml.png)
 
 ## 阅读和查找文章
 

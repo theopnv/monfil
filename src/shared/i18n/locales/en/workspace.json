@@ -53,7 +53,7 @@
     "title": "Import OPML",
     "choose": "Choose a file from the picker that opens next.",
     "newWorkspace": "New workspace",
-    "mergeHome": "Merge into Home",
+    "mergeInto": "Merge into {{name}}",
     "name": "Name",
     "namePlaceholder": "Leave blank to use the file's title"
   },

@@ -53,7 +53,7 @@
     "title": "OPML importieren",
     "choose": "Wählen Sie im nächsten Fenster eine Datei aus.",
     "newWorkspace": "Neuer Workspace",
-    "mergeHome": "In Start zusammenführen",
+    "mergeInto": "In {{name}} zusammenführen",
     "name": "Name",
     "namePlaceholder": "Leer lassen, um den Titel der Datei zu verwenden"
   },

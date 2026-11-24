@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 // See LICENSE in the repository root for full terms.
 
-import { type PropsWithChildren } from "react";
+import { useState, type PropsWithChildren } from "react";
 import { ipc } from '@/lib/ipc-client';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
@@ -18,12 +18,17 @@ export { useActiveWorkspaceId };
 /**
  * Mounted once at the root, above the router outlet: reads `workspaceId` off the URL
  * (`/workspace/$workspaceId`) and republishes it as plain context, so every consumer of
- * `useActiveWorkspaceId` stays decoupled from the router itself and Home is the default off a
- * route that carries no `workspaceId` param at all (e.g. `/settings`).
+ * `useActiveWorkspaceId` stays decoupled from the router itself. A route that carries no
+ * `workspaceId` param at all (e.g. `/settings`) keeps the last workspace seen.
  */
 export const ActiveWorkspaceIdProvider = ({ children }: PropsWithChildren) => {
   const params = useParams({ strict: false });
-  const activeWorkspaceId = parseRouteId(params.workspaceId) ?? HOME_WORKSPACE_ID;
+  const routeWorkspaceId = parseRouteId(params.workspaceId);
+  const [lastWorkspaceId, setLastWorkspaceId] = useState(routeWorkspaceId ?? HOME_WORKSPACE_ID);
+  if (routeWorkspaceId !== undefined && routeWorkspaceId !== lastWorkspaceId) {
+    setLastWorkspaceId(routeWorkspaceId);
+  }
+  const activeWorkspaceId = routeWorkspaceId ?? lastWorkspaceId;
 
   return (
     <ActiveWorkspaceIdContext.Provider value={activeWorkspaceId}>

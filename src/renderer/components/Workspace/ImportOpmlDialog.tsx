@@ -11,27 +11,47 @@ import { Dialog, Modal, ModalOverlay } from "@/components/untitled-ui/applicatio
 import { Button } from "@/components/untitled-ui/base/buttons/button";
 import { WORKSPACE_COLORS, WORKSPACE_ICONS } from "@/lib/workspace-icons";
 import { useImportOpml } from "@/providers/opml-provider";
-import { HOME_WORKSPACE_ID } from "../../../shared/contracts";
-import type { ImportOpmlError, ImportSummary } from "../../../shared/contracts";
+import { useWorkspaces } from "@/providers/workspace-provider";
+import type { ImportOpmlError, ImportOpmlTarget, ImportSummary } from "../../../shared/contracts";
 import { dialogHeaderClass, dialogTitleClass, dialogFooterClass } from '@/components/common/dialog-classes';
 
 export interface ImportOpmlDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   /**
-   * Omitted: the dialog offers "new workspace" vs "merge into Home", as from Settings. Given: the
+   * Omitted: the dialog offers "new workspace" vs "merge into the first workspace", as from Settings. Given: the
    * dialog skips that choice and imports straight into this workspace, as from an empty
    * workspace's own "Import OPML" button.
    */
   workspace?: { id: number; name: string };
 }
 
-type Target = 'new-workspace' | 'merge-home';
+type Target = 'new-workspace' | 'merge-first';
+
+function MergeOption({ workspace, checked, onSelect }: { workspace: { name: string } | undefined; checked: boolean; onSelect: () => void }) {
+  const { t } = useTranslation('workspace');
+  if (!workspace) {
+    return null;
+  }
+  return (
+    <label className="flex items-center gap-2 text-sm text-secondary">
+      <input type="radio" name="opml-target" checked={checked} onChange={onSelect} />
+      {t('importOpml.mergeInto', { name: workspace.name })}
+    </label>
+  );
+}
+
+function importTarget(merge: { id: number } | undefined, name: string): ImportOpmlTarget {
+  return merge
+    ? { kind: 'merge-workspace', workspaceId: merge.id }
+    : { kind: 'new-workspace', name: name.trim(), icon: WORKSPACE_ICONS[0], color: WORKSPACE_COLORS[0] };
+}
 
 export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: ImportOpmlDialogProps) {
   const { t } = useTranslation(['workspace', 'common']);
   const { t: tErrors } = useTranslation('errors');
   const importOpml = useImportOpml();
+  const [firstWorkspace] = useWorkspaces();
   const [target, setTarget] = useState<Target>('new-workspace');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -57,13 +77,7 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
     setIsLoading(true);
     setError(null);
 
-    const result = await importOpml(
-      workspace
-        ? { kind: 'merge-workspace', workspaceId: workspace.id }
-        : target === 'new-workspace'
-          ? { kind: 'new-workspace', name: name.trim(), icon: WORKSPACE_ICONS[0], color: WORKSPACE_COLORS[0] }
-          : { kind: 'merge-workspace', workspaceId: HOME_WORKSPACE_ID },
-    );
+    const result = await importOpml(importTarget(workspace ?? (target === 'merge-first' ? firstWorkspace : undefined), name));
 
     setIsLoading(false);
     if (result.success) {
@@ -123,10 +137,7 @@ export default function ImportOpmlDialog({ isOpen, onOpenChange, workspace }: Im
                       <input type="radio" name="opml-target" checked={target === 'new-workspace'} onChange={() => setTarget('new-workspace')} />
                       {t('workspace:importOpml.newWorkspace')}
                     </label>
-                    <label className="flex items-center gap-2 text-sm text-secondary">
-                      <input type="radio" name="opml-target" checked={target === 'merge-home'} onChange={() => setTarget('merge-home')} />
-                      {t('workspace:importOpml.mergeHome')}
-                    </label>
+                    <MergeOption workspace={firstWorkspace} checked={target === 'merge-first'} onSelect={() => setTarget('merge-first')} />
                   </div>
 
                   {target === 'new-workspace' && (

@@ -134,7 +134,7 @@ export type DeleteCategoryError =
 export type DeleteWorkspaceError =
   | { name: 'DB_ERROR'; message: string; params?: ErrorParams }
   | { name: 'WORKSPACE_NOT_FOUND'; message: string; params?: ErrorParams }
-  | { name: 'HOME_NOT_DELETABLE'; message: string; params?: ErrorParams };
+  | { name: 'LAST_WORKSPACE_NOT_DELETABLE'; message: string; params?: ErrorParams };
 export type UpdateFeedError = DeleteFeedError;
 export type MoveFeedError = DeleteFeedError;
 export type UpdateWorkspaceError =

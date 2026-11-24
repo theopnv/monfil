@@ -5,7 +5,7 @@
 import type { Kysely } from 'kysely';
 import { db } from '../database';
 import type { Database } from '../types';
-import { HOME_WORKSPACE_ID, type DeleteCategoryError, type DeleteFeedError, type DeleteWorkspaceError } from '../../../shared/contracts';
+import type { DeleteCategoryError, DeleteFeedError, DeleteWorkspaceError } from '../../../shared/contracts';
 import { fail, ok, type Result } from '../../../shared/result';
 import { dbTry } from '../db-try';
 
@@ -97,15 +97,16 @@ export async function deleteCategory(categoryId: number, workspaceId: number, re
 
 /**
  * Deletes a workspace with its saved items, categories, and placements. Feeds retained by another
- * workspace's placements or saved items survive. Home can never be deleted.
+ * workspace's placements or saved items survive. The last remaining workspace is kept.
  */
 export async function deleteWorkspace(workspaceId: number): Promise<Result<void, DeleteWorkspaceError>> {
-  if (workspaceId === HOME_WORKSPACE_ID) {
-    return fail('HOME_NOT_DELETABLE', 'The Home workspace cannot be deleted.');
-  }
-
   return dbTry(async () => {
     const result = await db.transaction().execute(async (trx) => {
+      const others = await trx.selectFrom('workspace').select('id').where('id', '!=', workspaceId).executeTakeFirst();
+      if (!others) {
+        return 'last' as const;
+      }
+
       await trx.deleteFrom('savedItem').where('workspace_id', '=', workspaceId).execute();
       await trx.deleteFrom('feedPlacement').where('workspace_id', '=', workspaceId).execute();
       await trx.deleteFrom('feedCategory').where('workspace_id', '=', workspaceId).execute();
@@ -114,6 +115,9 @@ export async function deleteWorkspace(workspaceId: number): Promise<Result<void,
       return trx.deleteFrom('workspace').where('id', '=', workspaceId).executeTakeFirst();
     });
 
+    if (result === 'last') {
+      return fail('LAST_WORKSPACE_NOT_DELETABLE', 'The last workspace cannot be deleted.');
+    }
     if (result.numDeletedRows === 0n) {
       return fail('WORKSPACE_NOT_FOUND', `No workspace found with id ${workspaceId}`);
     }

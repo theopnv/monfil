@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "Ein Name braucht 1 bis {{max}} Zeichen.",
     "INVALID_INPUT_query": "Eine Suche braucht 1 bis {{max}} Zeichen.",
     "INVALID_INPUT": "Dieser Wert ist nicht gültig.",
-    "HOME_NOT_DELETABLE": "Der Workspace Start kann nicht gelöscht werden.",
+    "LAST_WORKSPACE_NOT_DELETABLE": "Der letzte Workspace kann nicht gelöscht werden.",
     "GENERIC_FETCH_ERROR": "Der Server hat mit einem Fehler geantwortet.",
     "GENERIC_FETCH_ERROR_refused": "Der Server hat den Zugriff verweigert (HTTP {{status}}). Er blockiert möglicherweise automatische Leser oder Ihr Netzwerk bzw. VPN.",
     "GENERIC_FETCH_ERROR_notFound": "Der Feed wurde nicht gefunden (HTTP {{status}}).",

@@ -389,7 +389,7 @@ describe('menu:show IPC listener for a workspace', () => {
     mockedFromWebContents.mockReset();
   });
 
-  test('Home gets "Edit workspace" and "Export as OPML" but no "Delete workspace"', () => {
+  test('Home gets "Delete workspace" like every other workspace', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);
@@ -399,12 +399,13 @@ describe('menu:show IPC listener for a workspace', () => {
 
     // Assert
     const template = mockedBuildFromTemplate.mock.calls[0]?.[0];
-    expect(template).toHaveLength(2);
+    expect(template).toHaveLength(3);
     expect(template?.[0]?.label).toBe('Edit workspace');
     expect(template?.[1]?.label).toBe('Export as OPML');
+    expect(template?.[2]?.label).toBe('Delete workspace');
   });
 
-  test('a non-Home workspace also gets "Delete workspace"', () => {
+  test('a non-Home workspace gets "Delete workspace" too', () => {
     // Arrange
     mockedBuildFromTemplate.mockReturnValue({ popup: vi.fn() } as unknown as Electron.Menu);
     mockedFromWebContents.mockReturnValue(fakeWindow);

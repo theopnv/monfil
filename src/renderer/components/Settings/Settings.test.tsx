@@ -11,7 +11,6 @@ import { renderWithQueryClient } from '@/lib/test/render-with-query-client';
 import { usePushEvents } from '@/lib/push-events';
 import Settings from './Settings';
 import type { AppInfo, RefreshSummary } from '../../../shared/contracts';
-import { HOME_WORKSPACE_ID } from '../../../shared/contracts';
 
 const appInfo: AppInfo = { version: '1.2.3', feedCount: 2, itemCount: 42, databaseSizeBytes: 2048 };
 
@@ -40,6 +39,7 @@ beforeEach(() => {
   invokeImpl = (channel) => {
     switch (channel) {
       case 'app:get-info': return Promise.resolve(appInfo);
+      case 'workspaces:list': return Promise.resolve([{ id: 7, name: 'Reading', icon: 'Book01', color: '#3b82f6', position: 0, source_slug: undefined, source_version: undefined, installed_at: undefined, hasUnread: false }]);
       case 'settings:get:refreshInterval': return Promise.resolve(30);
       case 'settings:get:refreshOnLaunch': return Promise.resolve(true);
       case 'settings:set:refreshInterval': return Promise.resolve(60);
@@ -275,18 +275,18 @@ test.each<RefreshSummary>([
   expect(feedsRefreshedHandlers.size).toBe(1);
 });
 
-test('importing OPML merged into Home invokes opml:import with that target', async () => {
+test('importing OPML merged into the first workspace invokes opml:import with that target', async () => {
   // Arrange
   const { getByRole } = await renderSettings();
 
   // Act
   await getByRole('button', { name: 'Import OPML' }).click();
-  await getByRole('radio', { name: 'Merge into Home' }).click();
+  await getByRole('radio', { name: 'Merge into Reading' }).click();
   await getByRole('button', { name: 'Import', exact: true }).click();
 
   // Assert
   await expect.element(getByRole('heading', { name: 'Import complete' })).toBeInTheDocument();
-  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('opml:import', { target: { kind: 'merge-workspace', workspaceId: HOME_WORKSPACE_ID } });
+  expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('opml:import', { target: { kind: 'merge-workspace', workspaceId: 7 } });
 });
 
 test('turning on "Share anonymous usage stats" stores the choice', async () => {

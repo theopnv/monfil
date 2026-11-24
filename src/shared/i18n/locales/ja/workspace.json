@@ -52,7 +52,7 @@
     "title": "OPMLをインポート",
     "choose": "次に開くファイル選択画面でファイルを選んでください。",
     "newWorkspace": "新しいワークスペース",
-    "mergeHome": "ホームに統合",
+    "mergeInto": "{{name}} に統合",
     "name": "名前",
     "namePlaceholder": "空欄の場合はファイルのタイトルを使用します"
   },

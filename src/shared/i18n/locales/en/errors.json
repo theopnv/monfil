@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "A name needs 1 to {{max}} characters.",
     "INVALID_INPUT_query": "A search needs 1 to {{max}} characters.",
     "INVALID_INPUT": "That value is not valid.",
-    "HOME_NOT_DELETABLE": "The Home workspace cannot be deleted.",
+    "LAST_WORKSPACE_NOT_DELETABLE": "The last workspace cannot be deleted.",
     "GENERIC_FETCH_ERROR": "The server answered with an error.",
     "GENERIC_FETCH_ERROR_refused": "The server refused access (HTTP {{status}}). It may block automated readers, or your network or VPN.",
     "GENERIC_FETCH_ERROR_notFound": "The feed was not found (HTTP {{status}}).",

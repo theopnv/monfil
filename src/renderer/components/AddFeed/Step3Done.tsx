@@ -8,7 +8,8 @@ import { useMemo } from "react";
 import { Check } from "@untitledui/icons";
 import { formatRelativeTime } from "@/lib/river/utils";
 import { useRiver } from "@/providers/feeds-provider";
-import { HOME_WORKSPACE_ID, type FeedSummary } from "../../../shared/contracts";
+import { useActiveWorkspaceId } from "@/providers/workspace-provider";
+import type { FeedSummary } from "../../../shared/contracts";
 
 export interface Step3DoneProps {
   feed: FeedSummary;
@@ -19,7 +20,8 @@ const PREVIEW_COUNT = 5;
 export default function Step3Done({ feed }: Step3DoneProps) {
   const { t } = useTranslation('addFeed');
   const locale = useFormatLocale();
-  const scope = useMemo(() => ({ workspaceId: HOME_WORKSPACE_ID, feedIds: [feed.id] }), [feed.id]);
+  const workspaceId = useActiveWorkspaceId();
+  const scope = useMemo(() => ({ workspaceId, feedIds: [feed.id] }), [workspaceId, feed.id]);
   const { data } = useRiver(scope);
   const items = useMemo(() => (data?.pages.flatMap((page) => page.rows) ?? []).slice(0, PREVIEW_COUNT), [data]);
 

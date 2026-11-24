@@ -33,7 +33,7 @@ import { workspaceIconComponent } from "@/lib/workspace-icons";
 import { useHint } from "@/providers/hints-provider";
 import { useExportOpml } from "@/providers/opml-provider";
 import { useActiveWorkspaceId, useMoveFeedToWorkspace, useReorderWorkspaces, useWorkspaceRailExpanded, useWorkspaces } from "@/providers/workspace-provider";
-import { HOME_WORKSPACE_ID, type WorkspaceSummary } from "../../shared/contracts";
+import type { WorkspaceSummary } from "../../shared/contracts";
 
 const activeNavClasses = "rounded-xl bg-brand-secondary *:data-icon:text-fg-brand-secondary hover:bg-brand-secondary hover:*:data-icon:text-fg-brand-secondary";
 
@@ -299,7 +299,7 @@ export default function Toolbar() {
 
   function handleWorkspaceDeleted(workspaceId: number) {
     if (activeWorkspaceId === workspaceId) {
-      void navigate({ to: '/workspace/$workspaceId', params: { workspaceId: String(HOME_WORKSPACE_ID) } });
+      void navigate({ to: '/' });
     }
   }
 

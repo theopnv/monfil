@@ -46,7 +46,7 @@ Faites un clic droit sur son icône dans la barre de gauche et sélectionnez **M
 
 ### Supprimer un workspace
 
-Faites un clic droit sur son icône et sélectionnez **Supprimer le workspace**. La fenêtre de confirmation propose **Exporter au format OPML** si vous voulez enregistrer sa liste de flux. Sélectionnez **Supprimer le workspace** pour retirer le workspace et ses dossiers. Monfil supprime aussi les flux qui n'apparaissent que dans ce workspace. Les flux présents dans d'autres workspaces y restent. **Accueil** reste disponible et n'a pas de commande de suppression.
+Faites un clic droit sur son icône et sélectionnez **Supprimer le workspace**. La fenêtre de confirmation propose **Exporter au format OPML** si vous voulez enregistrer sa liste de flux. Sélectionnez **Supprimer le workspace** pour retirer le workspace et ses dossiers. Monfil supprime aussi les flux qui n'apparaissent que dans ce workspace. Les flux présents dans d'autres workspaces y restent. Vous pouvez supprimer n'importe quel workspace, y compris **Accueil**. Monfil conserve le dernier workspace restant et affiche une erreur si vous essayez de le supprimer.
 
 ![Icônes de workspace dans la barre de gauche, à côté d'un dossier et de ses flux.](../../../../assets/user-guide/workspaces-and-folders.png)
 
@@ -62,11 +62,11 @@ Vous pouvez [soumettre un feedpack](../submit-a-feedpack/) quand vous avez une c
 
 ## Importer ou exporter une liste de flux
 
-OPML est un format de fichier pour transférer des listes de flux entre lecteurs. Pour en importer un, ouvrez **Paramètres**, allez dans **Vos données**, et sélectionnez **Importer un OPML**. Choisissez **Nouveau workspace** ou **Fusionner dans Accueil**, puis sélectionnez **Importer** et choisissez le fichier. Dans un workspace vide, **Importer un OPML** ajoute les flux à ce workspace.
+OPML est un format de fichier pour transférer des listes de flux entre lecteurs. Pour en importer un, ouvrez **Paramètres**, allez dans **Vos données**, et sélectionnez **Importer un OPML**. Choisissez **Nouveau workspace** ou **Fusionner dans** suivi du nom du premier workspace de la barre, puis sélectionnez **Importer** et choisissez le fichier. Dans un workspace vide, **Importer un OPML** ajoute les flux à ce workspace.
 
 Pour enregistrer un workspace dans un fichier OPML, faites un clic droit sur son icône dans la barre de gauche et sélectionnez **Exporter au format OPML**. Choisissez où enregistrer le fichier. Vous pouvez l'utiliser plus tard comme copie de la liste de flux de ce workspace.
 
-![La fenêtre Importer un OPML avec les choix Nouveau workspace et Fusionner dans Accueil.](../../../../assets/user-guide/import-opml.png)
+![La fenêtre Importer un OPML avec les choix Nouveau workspace et Fusionner dans.](../../../../assets/user-guide/import-opml.png)
 
 ## Lire et trouver des articles
 

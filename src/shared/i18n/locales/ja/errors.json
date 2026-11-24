@@ -41,7 +41,7 @@
     "INVALID_INPUT_name": "名前は1〜{{max}}文字で入力してください。",
     "INVALID_INPUT_query": "検索語は1〜{{max}}文字で入力してください。",
     "INVALID_INPUT": "その値は有効ではありません。",
-    "HOME_NOT_DELETABLE": "ホームのワークスペースは削除できません。",
+    "LAST_WORKSPACE_NOT_DELETABLE": "最後のワークスペースは削除できません。",
     "GENERIC_FETCH_ERROR": "サーバーがエラーを返しました。",
     "GENERIC_FETCH_ERROR_refused": "サーバーがアクセスを拒否しました（HTTP {{status}}）。自動読み取りツールをブロックしているか、お使いのネットワークやVPNが原因かもしれません。",
     "GENERIC_FETCH_ERROR_notFound": "フィードが見つかりませんでした（HTTP {{status}}）。",
