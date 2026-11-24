@@ -231,6 +231,8 @@ function raceAbort<T>(promise: Promise<T>, signal: AbortSignal, abort?: () => vo
       reject(error);
     };
     if (signal.aborted) {
+      // The transport promise rejects on its own when its signal is already aborted, and nothing else listens to it.
+      promise.catch(() => undefined);
       onAbort();
       return;
     }
