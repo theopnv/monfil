@@ -36,7 +36,7 @@ describe('sampleErrorEvent', () => {
     });
     expect(sample['event_id']).toBe('00000000000000000000000000000000');
     expect(sample.exception.values[0]).toMatchObject({ type: 'Error', mechanism: { type: 'monfil.log', handled: true } });
-    expect(sample.exception.values[0]?.value).toBe('Could not open <userData>/monfil.db or [url] for [email]');
+    expect(sample.exception.values[0]?.value).toBe(`Could not open <userData>${path.sep}monfil.db or [url] for [email]`);
     expect(sample.exception.values[0]?.stacktrace.frames[0]).toEqual({ filename: 'app:///.vite/build/main.cjs', function: 'dispatch', lineno: 120, colno: 14, in_app: true });
     expect(sample).not.toHaveProperty('user');
     expect(sample).not.toHaveProperty('request');
