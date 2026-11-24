@@ -217,7 +217,7 @@ describe('allowlist contents', () => {
     electron: ['name', 'version'],
     feedback: ['message', 'associated_event_id'],
   };
-  const breadcrumbFields = ['action', 'outcome', 'errorCode', 'channel', 'source', 'operation', 'requestedSurface', 'errorName'];
+  const breadcrumbFields = ['action', 'outcome', 'errorCode', 'channel', 'source', 'operation', 'requestedSurface', 'errorName', 'status', 'reason'];
 
   test.each(tags)('keeps the tag %s', (tag) => {
     // Act
@@ -408,6 +408,35 @@ describe('what the event keeps', () => {
     // Assert
     expect(none).not.toHaveProperty('breadcrumbs');
     expect(empty.breadcrumbs).toEqual([]);
+  });
+
+  test('collapses a chain of one repeated error and groups a closed database', () => {
+    // Arrange
+    const destroyed = { type: 'Error', value: 'driver has already been destroyed', stacktrace: { frames: [{ function: 'querySettings', lineno: 4 }] } };
+    const values = [...Array.from({ length: 50 }, () => destroyed), { type: 'AggregateError', value: 'Multiple workers failed' }];
+
+    // Act
+    const scrubbed = mac.event<Event>({ exception: { values } });
+
+    // Assert
+    expect(scrubbed.exception?.values).toEqual([destroyed, { type: 'AggregateError', value: 'Multiple workers failed' }]);
+    expect(scrubbed.fingerprint).toEqual(['database', 'driver-destroyed']);
+  });
+
+  test('keeps a fingerprint that the event already has', () => {
+    // Act
+    const scrubbed = mac.event<Event>({ fingerprint: ['ipc.failure', 'feeds:list'], exception: { values: [{ type: 'Error', value: 'driver has already been destroyed' }] } });
+
+    // Assert
+    expect(scrubbed.fingerprint).toEqual(['ipc.failure', 'feeds:list']);
+  });
+
+  test('sets no fingerprint for an exception of another kind', () => {
+    // Act
+    const scrubbed = mac.event({ exception: { values: [{ type: 'Error', value: 'boom' }] } });
+
+    // Assert
+    expect(scrubbed).not.toHaveProperty('fingerprint');
   });
 
   test('keeps an exception with only a type and drops one field at a time', () => {

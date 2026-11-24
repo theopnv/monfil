@@ -53,6 +53,13 @@ function incident(incidentId: string | undefined): string | undefined {
   return incidentId ? shortIncidentId(incidentId) : undefined;
 }
 
+const INCIDENT_IN_TEXT = /\bIncident ([0-9a-f]{8})\b/;
+
+/** A renderer that logs an error main refused has no ID of its own, but the text of that error ends with the one main made. */
+function rendererIncident(incidentId: string | undefined, rawError: unknown): string | undefined {
+  return incident(incidentId) ?? (typeof rawError === 'string' ? INCIDENT_IN_TEXT.exec(rawError)?.[1] : undefined);
+}
+
 const PROCESS_EXIT_REASONS: ReadonlySet<string> = new Set([
   'abnormal-exit', 'killed', 'crashed', 'oom', 'launch-failed', 'integrity-failure', 'memory-eviction',
 ]);
@@ -69,7 +76,7 @@ const routers: { [E in LogEventName]?: Router<E> } = {
   'system.failure': ({ source, incidentId }, rawError) => (
     { tags: defined({ source, incidentId: incident(incidentId), reason: exitReason(rawError) }), level: 'error', handled: false, discriminator: source }
   ),
-  'renderer.failure': ({ message, incidentId }) => ({ tags: defined({ incidentId: incident(incidentId) }), level: 'error', discriminator: message }),
+  'renderer.failure': ({ message, incidentId }, rawError) => ({ tags: defined({ incidentId: rendererIncident(incidentId, rawError) }), level: 'error', discriminator: message }),
   'ipc.failure': ({ channel, incidentId }) => ({ tags: defined({ channel, incidentId: incident(incidentId) }), level: 'error', discriminator: channel }),
   'database.recovery': ({ outcome, incidentId }) => (
     { tags: defined({ outcome, incidentId: incident(incidentId) }), level: outcome === 'failed' ? 'error' : 'warning', discriminator: outcome }
@@ -87,6 +94,10 @@ function routeEvent(event: LogEventName, data: LogEventMap[LogEventName], rawErr
   return (routers[event] as Router<LogEventName> | undefined)?.(data, rawError);
 }
 
+function feedBreadcrumb({ outcome, errorCode, status, reason }: LogEventMap['feed.refresh']): Record<string, string> {
+  return defined({ outcome, errorCode, status: status === undefined ? undefined : String(status), reason });
+}
+
 /** The enum-like fields of a log record. It leaves out every ID, message and link. */
 export function breadcrumbData(event: LogEventName, data: LogEventMap[LogEventName]): Record<string, string> {
   switch (event) {
@@ -94,7 +105,7 @@ export function breadcrumbData(event: LogEventName, data: LogEventMap[LogEventNa
     case 'app.update': return { outcome: (data as LogEventMap['app.update']).outcome };
     case 'app.analytics': return { outcome: (data as LogEventMap['app.analytics']).outcome };
     case 'database.recovery': return { outcome: (data as LogEventMap['database.recovery']).outcome };
-    case 'feed.refresh': return defined({ outcome: (data as LogEventMap['feed.refresh']).outcome, errorCode: (data as LogEventMap['feed.refresh']).errorCode });
+    case 'feed.refresh': return feedBreadcrumb(data as LogEventMap['feed.refresh']);
     case 'ipc.failure': return { channel: (data as LogEventMap['ipc.failure']).channel };
     case 'system.failure': return { source: (data as LogEventMap['system.failure']).source };
     case 'operation.failure': return { operation: (data as LogEventMap['operation.failure']).operation };
@@ -145,6 +156,8 @@ export interface RoutingOptions {
   sink: ReportSink;
   caps: Caps;
   isStartingUp: () => boolean;
+  /** Once the app quits, the database closes under the work that still runs, so only a failure that ends the process is worth a report. */
+  isShuttingDown: () => boolean;
 }
 
 const pendingCaptures = new Set<Promise<void>>();
@@ -155,9 +168,9 @@ export async function capturesSettled(): Promise<void> {
 }
 
 /** Sends the failures of the app to the error tracker, and keeps a trail of the other log records that come before them. */
-export function startErrorRouting({ sink, caps, isStartingUp }: RoutingOptions): () => void {
+export function startErrorRouting({ sink, caps, isStartingUp, isShuttingDown }: RoutingOptions): () => void {
   return observeLogs((event, data, level, rawError) => {
-    const routed = routeEvent(event, data, rawError);
+    const routed = isShuttingDown() && event !== 'system.failure' ? undefined : routeEvent(event, data, rawError);
     if (!routed) {
       if (level !== 'debug') {
         sink.breadcrumb({ event, level, data: breadcrumbData(event, data) });

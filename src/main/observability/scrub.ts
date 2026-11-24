@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import type { Breadcrumb, Event, Exception, StackFrame } from '@sentry/electron/main';
+import { collapseExceptions, fingerprintOf } from './grouping';
 
 export const LOG_BREADCRUMB_CATEGORY = 'monfil.log';
 
@@ -11,7 +12,7 @@ export const ALLOWED_TAGS: ReadonlySet<string> = new Set([
   'reason', 'event.process', 'event.origin', 'event.environment', 'process', 'handled', 'mechanism',
 ]);
 
-const ALLOWED_BREADCRUMB_DATA: ReadonlySet<string> = new Set(['action', 'outcome', 'errorCode', 'channel', 'source', 'operation', 'requestedSurface', 'errorName']);
+const ALLOWED_BREADCRUMB_DATA: ReadonlySet<string> = new Set(['action', 'outcome', 'errorCode', 'channel', 'source', 'operation', 'requestedSurface', 'errorName', 'status', 'reason']);
 
 const ALLOWED_CONTEXT_FIELDS: Readonly<Record<string, readonly string[]>> = {
   os: ['name', 'version', 'kernel_version'],
@@ -135,6 +136,12 @@ export function createScrubber({ homeDir, userDataDir }: ScrubPaths): Scrubber {
     return kept;
   }
 
+  function scrubExceptions(values: Exception[], fingerprint: Event['fingerprint']): Pick<Event, 'exception' | 'fingerprint'> {
+    const scrubbed = values.map(scrubException);
+    const grouping = fingerprint ? undefined : fingerprintOf(scrubbed);
+    return { exception: { values: collapseExceptions(scrubbed) }, ...(grouping ? { fingerprint: grouping } : {}) };
+  }
+
   function scrubContexts(contexts: Event['contexts']): NonNullable<Event['contexts']> {
     const kept: NonNullable<Event['contexts']> = {};
     for (const [name, fields] of Object.entries(ALLOWED_CONTEXT_FIELDS)) {
@@ -187,7 +194,7 @@ export function createScrubber({ homeDir, userDataDir }: ScrubPaths): Scrubber {
     }
     kept.contexts = scrubContexts(event.contexts);
     if (event.exception?.values) {
-      kept.exception = { values: event.exception.values.map(scrubException) };
+      Object.assign(kept, scrubExceptions(event.exception.values, kept.fingerprint));
     }
     const debugMeta = scrubDebugMeta(event.debug_meta);
     if (debugMeta) {

@@ -9,7 +9,7 @@ export interface LogEventMap {
   'app.update': { outcome: 'ready' | 'failed' };
   'app.analytics': { outcome: 'sent' | 'failed' | 'dropped'; events: number; status?: number };
   'database.recovery': { outcome: 'reset' | 'failed'; incidentId?: string };
-  'feed.refresh': { outcome: 'failed'; feedId?: number; errorCode?: string };
+  'feed.refresh': { outcome: 'failed'; feedId?: number; errorCode?: string; status?: number; reason?: string };
   'ipc.failure': { channel: string; incidentId: string; setting?: string };
   'renderer.failure': { message: string; incidentId?: string };
   'system.failure': { source: string; incidentId: string };

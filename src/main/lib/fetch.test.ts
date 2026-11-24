@@ -288,6 +288,32 @@ describe('fetchText', () => {
     expect(result).toEqual({ success: false, error: { name: 'NOT_ALLOWED_OR_ABORTED_ERROR', message: 'Request was aborted or not allowed' } });
   });
 
+  test('leaves no rejection unhandled when the caller aborts while the host is being checked', async () => {
+    // Arrange
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => unhandled.push(reason);
+    process.on('unhandledRejection', onUnhandled);
+    const controller = new AbortController();
+    mockedLookup.mockImplementation(async () => {
+      controller.abort();
+      return [{ address: '93.184.216.34', family: 4 }];
+    });
+    setRequestTransport((_target, _headers, signal) => (
+      signal.aborted
+        ? Promise.reject(Object.assign(new Error('Request was aborted or not allowed'), { name: 'AbortError' }))
+        : new Promise<never>(() => undefined)
+    ));
+
+    // Act
+    const result = await fetchText('https://example.com', { signal: controller.signal, blockPrivateHosts: true });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    process.off('unhandledRejection', onUnhandled);
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'NOT_ALLOWED_OR_ABORTED_ERROR', message: 'Request was aborted or not allowed' } });
+    expect(unhandled).toEqual([]);
+  });
+
   test('leaves a finished response alone when the caller aborts later', async () => {
     // Arrange
     const requests = useTransport(() => ({ status: 200, body: 'ok' }));

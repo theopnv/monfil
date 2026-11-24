@@ -9,6 +9,7 @@ import { pruneExpiredItems } from '../db/retention';
 import { refreshAllFeeds } from './refresh';
 import { rescheduleRefresh, startRefreshScheduler, stopRefreshScheduler } from './scheduler';
 import type { RefreshSummary } from '../../shared/contracts';
+import { markShuttingDown, resetShutdownState } from '../app/shutdown-state';
 
 vi.mock(import('./refresh'), () => ({ refreshAllFeeds: vi.fn() }));
 vi.mock(import('../app/settings'), () => ({ getRefreshInterval: vi.fn(), getRefreshOnLaunch: vi.fn(), getRetentionDays: vi.fn() }));
@@ -36,6 +37,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  resetShutdownState();
   stopRefreshScheduler();
   vi.useRealTimers();
   mockedRefreshAllFeeds.mockReset();
@@ -140,6 +142,19 @@ describe('startRefreshScheduler', () => {
       finish();
     });
     await vi.advanceTimersByTimeAsync(0);
+  });
+
+  test('starts no cycle once the app is quitting', async () => {
+    // Arrange
+    mockedGetRefreshOnLaunch.mockResolvedValue(false);
+    await startRefreshScheduler();
+    markShuttingDown();
+
+    // Act
+    await vi.advanceTimersByTimeAsync(15 * MINUTE);
+
+    // Assert
+    expect(mockedRefreshAllFeeds).not.toHaveBeenCalled();
   });
 
   test('keeps the timer running after a cycle fails', async () => {

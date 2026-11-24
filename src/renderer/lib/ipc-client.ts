@@ -51,9 +51,15 @@ const MAX_ERROR_TEXT_LENGTH = 4000;
 /** The stack of an error, which starts with its name and message, so the main process can group the failure by where it happened. */
 function errorText(error: unknown): string {
   if (error instanceof Error) {
-    return (error.stack?.includes(error.message) ? error.stack : error.message).slice(0, MAX_ERROR_TEXT_LENGTH);
+    return (error.stack?.includes(error.message) ? error.stack : withFrames(error)).slice(0, MAX_ERROR_TEXT_LENGTH);
   }
   return String(error).slice(0, MAX_ERROR_TEXT_LENGTH);
+}
+
+/** An error that got its message after it was built has a stack that starts without it, so the header is rebuilt in front of the frames. */
+function withFrames(error: Error): string {
+  const frames = error.stack?.split('\n').filter((line) => line.trimStart().startsWith('at ')) ?? [];
+  return frames.length > 0 ? [`${error.name}: ${error.message}`, ...frames].join('\n') : error.message;
 }
 
 function write<E extends LogEventName>(level: LogLevel, event: E, data: LogEventMap[E], error?: unknown): void {

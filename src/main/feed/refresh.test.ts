@@ -17,6 +17,7 @@ import type { FeedItem } from '../db/types';
 import { ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 import { resolveSiteIcon } from './sources/siteIcon';
 import { useTestDatabase } from '../test/db';
+import { markShuttingDown, resetShutdownState } from '../app/shutdown-state';
 
 vi.mock(import('./sources/rss'), () => ({ rssSource: { type: 'rss' as const, fetchesFullArticle: true, matches: vi.fn(), discover: vi.fn(), fetch: vi.fn(), parse: vi.fn() } }));
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
@@ -78,6 +79,7 @@ beforeEach(() => {
 afterEach(async () => {
   // Image enrichment outlives refreshAllFeeds on purpose; let it finish before the next test starts.
   await new Promise((resolve) => setImmediate(resolve));
+  resetShutdownState();
   vi.restoreAllMocks();
   mockedFetchFeed.mockReset();
   mockedFetchText.mockReset();
@@ -237,6 +239,48 @@ describe('refreshAllFeeds', () => {
     // Assert
     expect(await db.selectFrom('feedItem').select('id').execute()).toEqual([{ id: saved.id }]);
     expect(summary.failedFeeds).toBeUndefined();
+  });
+
+  test('stores nothing from a response that arrives once the app is quitting', async () => {
+    // Arrange
+    const link = 'https://quit.example/feed';
+    await storeFeed(link);
+    let finish: ((value: Awaited<ReturnType<typeof rssSource.fetch>>) => void) | undefined;
+    mockedFetchFeed.mockImplementation(() => new Promise((resolve) => {
+      finish = resolve;
+    }));
+    const refreshing = refreshAllFeeds();
+    await expect.poll(() => mockedFetchFeed.mock.calls.length).toBe(1);
+
+    // Act
+    markShuttingDown();
+    if (!finish) {
+      throw new Error('Expected a pending feed fetch.');
+    }
+    finish({ success: true, data: fetched(link, [item({ guid: 'late', title: 'Late item' })]) });
+    const summary = await refreshing;
+
+    // Assert
+    expect(await storedTitles()).toEqual([]);
+    expect(summary.failedFeeds).toBeUndefined();
+  });
+
+  test('fetches no further feed once the app is quitting', async () => {
+    // Arrange
+    const links = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map((name) => `https://${name}.example/feed`);
+    for (const link of links) {
+      await storeFeed(link);
+    }
+    mockedFetchFeed.mockImplementation(async (input) => {
+      markShuttingDown();
+      return { success: true, data: fetched(input.link, []) };
+    });
+
+    // Act
+    await refreshAllFeeds();
+
+    // Assert
+    expect(mockedFetchFeed.mock.calls.length).toBeLessThan(links.length);
   });
 
   test('does not fetch a feed that was removed while an earlier feed was being fetched', async () => {
@@ -492,6 +536,20 @@ describe('refreshAllFeeds', () => {
     expect(summary.failedFeeds).toEqual([{ feedId, title: `Feed at ${link}`, message: 'The server had an error (HTTP 502).', code: 'GENERIC_FETCH_ERROR', params }]);
     expect(stored.last_error_code).toBe('GENERIC_FETCH_ERROR');
     expect(JSON.parse(stored.last_error_params ?? 'null')).toEqual(params);
+  });
+
+  test('logs the HTTP status and reason of a failed fetch, and never its host', async () => {
+    // Arrange
+    await storeFeed('https://private.example/feed');
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
+    const error = { name: 'UNKNOWN_ERROR' as const, message: 'Could not resolve private.example.', params: { reason: 'unresolvable', host: 'private.example', status: 523 } };
+    mockedFetchFeed.mockResolvedValue({ success: false, error });
+
+    // Act
+    await refreshAllFeeds();
+
+    // Assert
+    expect(warn).toHaveBeenCalledWith('feed.refresh', { outcome: 'failed', feedId: expect.any(Number), errorCode: 'UNKNOWN_ERROR', status: 523, reason: 'unresolvable' }, error);
   });
 
   test('records the failure on the feed row, then clears it once the fetch works again', async () => {

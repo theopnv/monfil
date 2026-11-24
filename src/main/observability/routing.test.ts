@@ -18,11 +18,13 @@ let emit: Emit;
 let stop: () => void;
 let sink: ReportSink & { captured: ErrorReport[]; crumbs: Parameters<ReportSink['breadcrumb']>[0][] };
 let startingUp: boolean;
+let shuttingDown: boolean;
 let accept: (fingerprint: string) => Promise<boolean>;
 let unsubscribe: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   startingUp = false;
+  shuttingDown = false;
   accept = () => Promise.resolve(true);
   const captured: ErrorReport[] = [];
   const crumbs: Parameters<ReportSink['breadcrumb']>[0][] = [];
@@ -40,7 +42,7 @@ beforeEach(() => {
     emit = (event, data, level = 'error', error) => observer(event, data, level, error);
     return unsubscribe as () => void;
   });
-  stop = startErrorRouting({ sink, caps: { accept: (fingerprint) => accept(fingerprint) }, isStartingUp: () => startingUp });
+  stop = startErrorRouting({ sink, caps: { accept: (fingerprint) => accept(fingerprint) }, isStartingUp: () => startingUp, isShuttingDown: () => shuttingDown });
 });
 
 afterEach(() => {
@@ -50,6 +52,91 @@ afterEach(() => {
 async function settle(): Promise<void> {
   await new Promise((resolve) => setImmediate(resolve));
 }
+
+describe('the incident of a renderer failure', () => {
+  const IPC_FAILURE_TEXT = 'UNEXPECTED_ERROR: The operation could not be completed. Incident 5afa079c.\n    at invoke (index.js:1:2)';
+
+  test('is read from the text of an error that main refused, so it links to the report main sent', async () => {
+    // Act
+    emit('renderer.failure', { message: 'Error loading feeds:' }, 'error', IPC_FAILURE_TEXT);
+    await settle();
+
+    // Assert
+    expect(sink.captured[0]?.tags).toEqual({ logEvent: 'renderer.failure', incidentId: '5afa079c' });
+  });
+
+  test('is the one the renderer gave, when it gave one', async () => {
+    // Act
+    emit('renderer.failure', { message: 'Root render failed', incidentId: INCIDENT }, 'error', IPC_FAILURE_TEXT);
+    await settle();
+
+    // Assert
+    expect(sink.captured[0]?.tags).toEqual({ logEvent: 'renderer.failure', incidentId: '0a1b2c3d' });
+  });
+
+  test.each([
+    ['text without an incident', 'TypeError: x is undefined'],
+    ['an incident that is not eight hex digits', 'Error: Incident 5afa07.'],
+    ['an error that is not text', new Error('Incident 5afa079c.')],
+  ])('is left out for %s', async (_label, error) => {
+    // Act
+    emit('renderer.failure', { message: 'Error loading feeds:' }, 'error', error);
+    await settle();
+
+    // Assert
+    expect(sink.captured[0]?.tags).toEqual({ logEvent: 'renderer.failure' });
+  });
+});
+
+describe('the breadcrumb of a feed failure', () => {
+  test('carries the HTTP status and the reason, and nothing that names the feed', () => {
+    // Act
+    emit('feed.refresh', { outcome: 'failed', feedId: 7, errorCode: 'GENERIC_FETCH_ERROR', status: 403, reason: 'refused' }, 'warn');
+
+    // Assert
+    expect(sink.crumbs).toEqual([{ event: 'feed.refresh', level: 'warn', data: { outcome: 'failed', errorCode: 'GENERIC_FETCH_ERROR', status: '403', reason: 'refused' } }]);
+  });
+
+  test('has no status or reason when the failure had none', () => {
+    // Act
+    emit('feed.refresh', { outcome: 'failed', feedId: 7, errorCode: 'NETWORK_ERROR' }, 'warn');
+
+    // Assert
+    expect(sink.crumbs[0]?.data).toEqual({ outcome: 'failed', errorCode: 'NETWORK_ERROR' });
+  });
+});
+
+describe('failures while the app is quitting', () => {
+  test.each([
+    ['ipc.failure', { channel: 'workspaces:list', incidentId: INCIDENT }],
+    ['renderer.failure', { message: 'Error loading feeds:' }],
+    ['feed.refresh', { outcome: 'failed', errorCode: 'UNKNOWN_ERROR' }],
+    ['database.recovery', { outcome: 'failed', incidentId: INCIDENT }],
+  ] as const)('keeps %s as a breadcrumb', async (event, data) => {
+    // Arrange
+    shuttingDown = true;
+
+    // Act
+    emit(event, data, 'error', new Error('driver has already been destroyed'));
+    await settle();
+
+    // Assert
+    expect(sink.captured).toEqual([]);
+    expect(sink.crumbs.map((crumb) => crumb.event)).toEqual([event]);
+  });
+
+  test('still sends a failure that ends the process', async () => {
+    // Arrange
+    shuttingDown = true;
+
+    // Act
+    emit('system.failure', { source: 'uncaughtException', incidentId: INCIDENT }, 'error', new Error('boom'));
+    await settle();
+
+    // Assert
+    expect(sink.captured).toHaveLength(1);
+  });
+});
 
 describe('failures that go to the error tracker', () => {
   test.each([

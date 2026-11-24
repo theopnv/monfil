@@ -24,6 +24,7 @@ import { HINTS_ARGUMENT } from '../shared/contracts';
 import { SYSTEM_LOCALE_ARGUMENT } from '../shared/i18n/format-locale';
 import { LANGUAGE_ARGUMENT } from '../shared/i18n/languages';
 import { setLogFilePath } from './app/main-state';
+import { markShuttingDown } from './app/shutdown-state';
 import { getDetailedLogging } from './app/settings';
 import { titleBarOverlayForTheme } from './app/window-chrome';
 import { startAutoUpdates, stopAutoUpdates } from './updates/auto-updater';
@@ -190,6 +191,7 @@ function bootstrap() {
   });
 
   app.on('before-quit', () => {
+    markShuttingDown();
     stopRefreshScheduler();
     stopAutoUpdates();
     stopUsageAnalytics();

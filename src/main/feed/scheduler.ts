@@ -3,6 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import type { RefreshInterval } from '../../shared/contracts';
+import { isShuttingDown } from '../app/shutdown-state';
 import { logger } from '../logging/logger';
 import { getRefreshInterval, getRefreshOnLaunch, getRetentionDays } from '../app/settings';
 import { pruneExpiredItems } from '../db/retention';
@@ -16,7 +17,7 @@ let running = false;
 
 async function runCycle(): Promise<void> {
   // A feed that answers slowly must not let cycles stack up behind it.
-  if (running) {
+  if (running || isShuttingDown()) {
     return;
   }
   running = true;
