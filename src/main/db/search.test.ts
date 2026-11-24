@@ -24,6 +24,14 @@ describe('has_word', () => {
     expect(matches('Faster CI for everyone', 'ci')).toBe(1);
   });
 
+  test('does not match inside a longer word', () => {
+    // Arrange
+    const matches = hasWord();
+
+    // Act / Assert
+    expect(matches('producing results', 'ci')).toBe(0);
+  });
+
   test('reads a regular expression character in the word as plain text', () => {
     // Arrange
     const matches = hasWord();
@@ -33,7 +41,7 @@ describe('has_word', () => {
     expect(matches('abc', 'a.c')).toBe(0);
   });
 
-  test.each([ ['text', undefined]])('answers 0 for the non-text arguments %j and %j', (text, word) => {
+  test.each([[null, 'ci'], ['text', null], [3, 'ci'], ['text', undefined]])('answers 0 for the non-text arguments %j and %j', (text, word) => {
     // Arrange
     const matches = hasWord();
 

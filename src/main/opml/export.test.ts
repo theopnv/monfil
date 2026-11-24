@@ -51,6 +51,14 @@ afterAll(async () => {
 });
 
 describe('exportWorkspaceOpml', () => {
+  test('fails without asking where to save when the workspace does not exist', async () => {
+    // Act
+    const result = await exportWorkspaceOpml(9999);
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'WORKSPACE_NOT_FOUND', message: expect.any(String) } });
+    expect(dialog.showSaveDialog).not.toHaveBeenCalled();
+  });
 
   test('fails without asking where to save when the workspace has no feeds', async () => {
     // Arrange
@@ -130,6 +138,7 @@ describe('exportWorkspaceOpml', () => {
   });
 
   test.each([
+    ['the dialog is cancelled', { canceled: true, filePath: path.join('unused', 'cancelled.opml') }],
     ['the dialog returns no path', { canceled: false, filePath: '' }],
   ])('returns CANCELLED and writes no file when %s', async (_label, answer) => {
     // Arrange
@@ -145,5 +154,18 @@ describe('exportWorkspaceOpml', () => {
     expect(result).toEqual({ success: false, error: { name: 'CANCELLED', message: expect.any(String) } });
     expect(writeFile).not.toHaveBeenCalled();
     writeFile.mockRestore();
+  });
+
+  test('returns FS_ERROR with the system message when the file cannot be written', async () => {
+    // Arrange
+    const workspaceId = await addWorkspace('Releases');
+    await addFeed(workspaceId, 'Tech', 'Blog', 'https://blog.example/feed');
+    saveTo(path.join(exportDirectory, 'missing-directory', 'out.opml'));
+
+    // Act
+    const result = await exportWorkspaceOpml(workspaceId);
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'FS_ERROR', message: expect.stringContaining('ENOENT') } });
   });
 });

@@ -32,6 +32,11 @@ describe('toUrl', () => {
     // Assert
     expect(url?.href).toBe('https://example.com/a');
   });
+
+  test('gives null for text that is not a link', () => {
+    // Act / Assert
+    expect(toUrl('not a link')).toBeNull();
+  });
 });
 
 describe('fetchAndParse', () => {
@@ -108,6 +113,44 @@ describe('createFeedSource fetch', () => {
         parsed: { type: 'github', link: 'https://site.example/releases.atom', title: 'Releases', description: 'All releases', items: [], icon: undefined, siteLink: 'https://site.example/' },
       },
     });
+  });
+
+  test('passes on a failed download', async () => {
+    // Arrange
+    mockedFetchText.mockResolvedValue({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
+
+    // Act
+    const result = await source.fetch({ link: 'https://site.example/releases.atom' });
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
+  });
+
+  test('passes on a 304 answer to a conditional request', async () => {
+    // Arrange
+    const validators = { etag: '"v1"', last_modified: undefined };
+    mockedFetchConditional.mockResolvedValue({ success: true, data: { notModified: true } });
+
+    // Act
+    const result = await source.fetch({ link: 'https://site.example/releases.atom', validators });
+
+    // Assert
+    expect(mockedFetchConditional).toHaveBeenCalledWith('https://site.example/releases.atom', { validators });
+    expect(result).toEqual({ success: true, data: { notModified: true } });
+  });
+});
+
+describe('createFeedSource discover', () => {
+  test('refuses text that the source cannot read, with its own message and without a request', async () => {
+    // Arrange
+    const source = createFeedSource({ type: 'github', fetchesFullArticle: false, toCandidates: () => null, mismatchMessage: 'Not for this source.', mismatchReason: 'mismatchGithub' });
+
+    // Act
+    const result = await source.discover('anything');
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'UNSUPPORTED_FORMAT', message: 'Not for this source.', params: { reason: 'mismatchGithub' } } });
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 });
 

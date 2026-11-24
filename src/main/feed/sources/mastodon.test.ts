@@ -6,6 +6,10 @@ import { describe, expect, test } from 'vitest';
 import { isMastodonHandle, mastodonCandidates, mastodonSource } from './mastodon';
 
 describe('mastodonCandidates', () => {
+  test('a full handle maps to the profile feed on its instance', () => {
+    // Act / Assert
+    expect(mastodonCandidates('@Mastodon@mastodon.social', false)).toEqual([{ link: 'https://mastodon.social/@Mastodon.rss' }]);
+  });
 
   test('a profile or tag URL on any host maps to its feed only with the chip', () => {
     // Act / Assert
@@ -18,9 +22,25 @@ describe('mastodonCandidates', () => {
     // Act / Assert
     expect(mastodonCandidates('nova@hachyderm.io', true)?.[0]?.link).toBe('https://hachyderm.io/@nova.rss');
   });
+
+  test('a stored feed URL is kept as it is', () => {
+    // Act / Assert
+    expect(mastodonCandidates('https://hachyderm.io/@nova.rss', true)?.[0]?.link).toBe('https://hachyderm.io/@nova.rss');
+  });
+
+  test('a page that is not a profile or tag is rejected', () => {
+    // Act / Assert
+    expect(mastodonCandidates('https://hachyderm.io/about', true)).toBeNull();
+  });
 });
 
 describe('isMastodonHandle', () => {
+  test('detects only the @user@host form', () => {
+    // Act / Assert
+    expect(isMastodonHandle('@nova@hachyderm.io')).toBe(true);
+    expect(isMastodonHandle('@jay.bsky.team')).toBe(false);
+    expect(isMastodonHandle('https://hachyderm.io/@nova')).toBe(false);
+  });
 
   test('ignores the spaces around the handle', () => {
     // Act / Assert

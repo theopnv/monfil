@@ -21,6 +21,9 @@ function corruptionError(): Error {
   return Object.assign(new Error('file is not a database'), { code: 'SQLITE_CORRUPT' });
 }
 
+function ioError(): Error {
+  return Object.assign(new Error('disk I/O error'), { code: 'SQLITE_IOERR_SHORT_READ' });
+}
 
 describe('withCorruptionRecovery', () => {
   let dir: string;
@@ -34,6 +37,30 @@ describe('withCorruptionRecovery', () => {
   afterEach(async () => {
     mockedRenameSync.mockClear();
     await rmTestDir(dir);
+  });
+
+  test('runs attempt once and resolves when it succeeds', async () => {
+    // Arrange
+    const attempt = vi.fn().mockResolvedValue(undefined);
+    const close = vi.fn();
+
+    // Act
+    await withCorruptionRecovery(filePath, attempt, close);
+
+    // Assert
+    expect(attempt).toHaveBeenCalledTimes(1);
+    expect(close).not.toHaveBeenCalled();
+  });
+
+  test('re-throws an error that is not corruption-shaped, without retrying', async () => {
+    // Arrange
+    const error = new Error('some other failure');
+    const attempt = vi.fn().mockRejectedValue(error);
+
+    // Act
+    // Assert
+    await expect(withCorruptionRecovery(filePath, attempt, vi.fn())).rejects.toBe(error);
+    expect(attempt).toHaveBeenCalledTimes(1);
   });
 
   test('skips recovery for :memory:, even on a corruption-shaped error', async () => {
@@ -70,7 +97,7 @@ describe('withCorruptionRecovery', () => {
     await expect(readFile(`${result}-wal`, 'utf-8')).resolves.toBe('garbage wal');
   });
 
-  test.each([ 'SQLITE_CORRUPT_VTAB', 'SQLITE_NOTADB'])('treats %s as corruption and retries', async (code) => {
+  test.each(['SQLITE_CORRUPT_INDEX', 'SQLITE_CORRUPT_VTAB', 'SQLITE_NOTADB'])('treats %s as corruption and retries', async (code) => {
     // Arrange
     await writeFile(filePath, 'garbage');
     const attempt = vi.fn().mockRejectedValueOnce(Object.assign(new Error('bad file'), { code })).mockResolvedValueOnce(undefined);
@@ -81,6 +108,19 @@ describe('withCorruptionRecovery', () => {
     // Assert
     expect(attempt).toHaveBeenCalledTimes(2);
     expect(result).toEqual(expect.any(String));
+  });
+
+  test('rethrows an I/O error without quarantining, since it does not mean the data is gone', async () => {
+    // Arrange
+    await writeFile(filePath, 'a real-enough db file');
+    const error = ioError();
+    const attempt = vi.fn().mockRejectedValue(error);
+
+    // Act
+    // Assert
+    await expect(withCorruptionRecovery(filePath, attempt, vi.fn())).rejects.toBe(error);
+    expect(attempt).toHaveBeenCalledTimes(1);
+    expect(existsSync(filePath)).toBe(true);
   });
 
   test('rethrows the original corruption error, not a rename failure, when quarantining itself fails', async () => {
@@ -96,6 +136,28 @@ describe('withCorruptionRecovery', () => {
     // Assert
     await expect(withCorruptionRecovery(filePath, attempt, vi.fn())).rejects.toBe(error);
     expect(attempt).toHaveBeenCalledTimes(1);
+  });
+
+  test('still retries when close itself throws, since a connection that never opened has nothing to release', async () => {
+    // Arrange
+    const attempt = vi.fn().mockRejectedValueOnce(corruptionError()).mockResolvedValueOnce(undefined);
+    const close = vi.fn().mockRejectedValue(new Error('nothing to close'));
+
+    // Act
+    // Assert
+    await expect(withCorruptionRecovery(filePath, attempt, close)).resolves.toEqual(expect.any(String));
+    expect(attempt).toHaveBeenCalledTimes(2);
+  });
+
+  test('propagates a second failure instead of retrying forever', async () => {
+    // Arrange
+    const secondError = corruptionError();
+    const attempt = vi.fn().mockRejectedValueOnce(corruptionError()).mockRejectedValueOnce(secondError);
+
+    // Act
+    // Assert
+    await expect(withCorruptionRecovery(filePath, attempt, vi.fn())).rejects.toBe(secondError);
+    expect(attempt).toHaveBeenCalledTimes(2);
   });
 
   test('removes leftover WAL/SHM/journal files before the first attempt when the main file is missing', async () => {
@@ -128,5 +190,18 @@ describe('withCorruptionRecovery', () => {
 
     // Assert
     expect(attempt).toHaveBeenCalledTimes(1);
+  });
+
+  test('leaves sidecar files alone when the main database file is present', async () => {
+    // Arrange
+    await writeFile(filePath, 'a real-enough db file');
+    await writeFile(`${filePath}-wal`, 'in-progress wal');
+    const attempt = vi.fn().mockResolvedValue(undefined);
+
+    // Act
+    await withCorruptionRecovery(filePath, attempt, vi.fn());
+
+    // Assert
+    expect(existsSync(`${filePath}-wal`)).toBe(true);
   });
 });

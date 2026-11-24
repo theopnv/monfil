@@ -7,7 +7,7 @@ import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import SQLite from 'better-sqlite3';
-import { backUpBeforeMigration } from './backup';
+import { backUpBeforeMigration, createBackup } from './backup';
 import { backUpDatabase, closeDatabase, db, initializeDatabase } from './database';
 
 const dirs: string[] = [];
@@ -57,6 +57,25 @@ test('prunes only the oldest migration copy of this database and names copies so
   expect(readdirSync(dir).sort()).toEqual([...bystanders, 'monfil.db', ...paths.slice(1).map((copy) => path.basename(copy))].sort());
   expect(paths.every((copy) => /^monfil\.db\.migration-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.\d{3}Z-\d+\.db$/.test(path.basename(copy)))).toBe(true);
   expect([...paths].sort()).toEqual(paths);
+  source.close();
+});
+
+test('manual copy opens and backup errors reach the caller', () => {
+  // Arrange
+  const dir = mkdtempSync(path.join(tmpdir(), 'monfil-backup-'));
+  dirs.push(dir);
+  const source = new SQLite(path.join(dir, 'source.db'));
+  source.exec('CREATE TABLE item (value INTEGER); INSERT INTO item VALUES (42)');
+
+  // Act
+  const destination = path.join(dir, 'copy.db');
+  createBackup(source, destination);
+  const copy = new SQLite(destination, { readonly: true });
+
+  // Assert
+  expect(copy.prepare('SELECT value FROM item').get()).toEqual({ value: 42 });
+  expect(() => createBackup(source, destination)).toThrow();
+  copy.close();
   source.close();
 });
 

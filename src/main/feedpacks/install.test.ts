@@ -9,6 +9,7 @@ import { broadcastToRenderers } from '../lib/sendToRenderer';
 import { startOpmlImport } from '../opml/import';
 import { feedpackOpmlUrl, getFeedpackCatalog, readBundledFeedpack, usesBundledFeedpacks } from './catalog';
 import { installFeedpack, previewFeedpack } from './install';
+import { setMainLanguage } from '../lib/i18n';
 
 vi.mock(import('../lib/fetch'), () => ({ fetchText: vi.fn() }));
 vi.mock(import('../lib/sendToRenderer'), () => ({ broadcastToRenderers: vi.fn() }));
@@ -53,6 +54,26 @@ describe('previewFeedpack', () => {
       data: { pack, sources: { categories: [{ name: 'Engineering' }] } },
     });
     expect(fetchText).not.toHaveBeenCalled();
+  });
+
+  test('imports into the selected workspace without creating another', async () => {
+    // Arrange
+    vi.mocked(getFeedpackCatalog).mockResolvedValue({ success: true, data: { version: 1, packs: [pack] } });
+    vi.mocked(usesBundledFeedpacks).mockReturnValue(true);
+    vi.mocked(readBundledFeedpack).mockResolvedValue('<?xml version="1.0"?><opml><head><title>DevSecOps Watch</title></head><body><outline text="Engineering"><outline text="Source" xmlUrl="https://example.com/feed"/></outline></body></opml>');
+    vi.mocked(startOpmlImport).mockResolvedValue({
+      success: true,
+      data: {
+        summary: { workspaceId: 2, imported: 1, skipped: [], failed: [] },
+        completion: Promise.resolve({ workspaceId: 2, imported: 1, skipped: [], failed: [] }),
+      },
+    });
+
+    // Act
+    await installFeedpack(pack.slug, { kind: 'merge-workspace', workspaceId: 2 });
+
+    // Assert
+    expect(startOpmlImport).toHaveBeenCalledWith(expect.any(String), { kind: 'merge-workspace', workspaceId: 2 });
   });
 
   test('owns the feedpack completion event', async () => {
@@ -111,6 +132,18 @@ describe('loading a feedpack', () => {
     // Assert
     expect(result).toMatchObject({ success: true, data: { pack: second } });
     expect(readBundledFeedpack).toHaveBeenCalledWith(second);
+  });
+
+  test('passes on a catalog error', async () => {
+    // Arrange
+    const error = { name: 'UNAVAILABLE' as const, message: 'The bundled feedpack catalog is unavailable.' };
+    vi.mocked(getFeedpackCatalog).mockResolvedValue({ success: false, error });
+
+    // Act
+    const result = await previewFeedpack(pack.slug);
+
+    // Assert
+    expect(result).toEqual({ success: false, error });
   });
 
   test('reports FETCH_ERROR when the local file cannot be read in development', async () => {
@@ -197,6 +230,8 @@ describe('installFeedpack', () => {
   }
 
   test.each([
+    ['a blank name', '', 'DevSecOps Watch'],
+    ['a name of spaces', '   ', 'DevSecOps Watch'],
     ['a name with spaces around it', '  My pack  ', 'My pack'],
   ])('creates the workspace from %s', async (_label, name, expectedName) => {
     // Arrange
@@ -217,7 +252,41 @@ describe('installFeedpack', () => {
     });
   });
 
+  test('names a new workspace after the title in the interface language when the name is blank', async () => {
+    // Arrange
+    await setMainLanguage('fr');
+    vi.mocked(getFeedpackCatalog).mockResolvedValue({ success: true, data: { version: 1, packs: [{ ...pack, i18n: { fr: { title: 'Veille DevSecOps', description: 'Sources de test.' } } }] } });
+    vi.mocked(usesBundledFeedpacks).mockReturnValue(true);
+    vi.mocked(readBundledFeedpack).mockResolvedValue(feedXml);
+    vi.mocked(startOpmlImport).mockResolvedValue({ success: true, data: { summary, completion: Promise.resolve(summary) } });
+
+    try {
+      // Act
+      await installFeedpack(pack.slug, { kind: 'new-workspace', name: '', icon: 'Code01', color: '#d67f48' });
+
+      // Assert
+      expect(startOpmlImport).toHaveBeenCalledWith(feedXml, expect.objectContaining({ name: 'Veille DevSecOps' }));
+    } finally {
+      await setMainLanguage('en');
+    }
+  });
+
+  test('passes on a failed import and announces nothing', async () => {
+    // Arrange
+    const error = { name: 'DB_ERROR' as const, message: 'disk full' };
+    startWith(Promise.resolve(summary));
+    vi.mocked(startOpmlImport).mockResolvedValue({ success: false, error });
+
+    // Act
+    const result = await installFeedpack(pack.slug, { kind: 'merge-workspace', workspaceId: 2 });
+
+    // Assert
+    expect(result).toEqual({ success: false, error });
+    expect(broadcastToRenderers).not.toHaveBeenCalled();
+  });
+
   test.each([
+    ['the error message', new Error('refresh crashed'), 'refresh crashed'],
     ['a default message for a value that is not an error', 'boom', 'Could not refresh the imported feeds.'],
   ])('announces the pack as failed with %s when the refresh rejects', async (_label, rejection, message) => {
     // Arrange

@@ -8,7 +8,7 @@ import { useTestDatabase } from '../test/db';
 import {
   DEFAULT_DETAILED_LOGGING, DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_ON_LAUNCH, DEFAULT_RETENTION_DAYS, getDetailedLogging, getRefreshInterval, getRefreshOnLaunch, getRetentionDays,
   setDetailedLogging, setRefreshInterval, setRefreshOnLaunch, setRetentionDays, toRefreshInterval, toRefreshOnLaunch, toRetentionDays,
-  getWorkspaceRailExpanded, setWorkspaceRailExpanded,
+  DEFAULT_WORKSPACE_RAIL_EXPANDED, getWorkspaceRailExpanded, setWorkspaceRailExpanded,
   DEFAULT_LANGUAGE_SETTING, getLanguageSetting, setLanguageSetting, toLanguageSetting,
   getUsageAnalyticsConsent, getUsageAnalyticsPromptHistory, recordAppLaunch, recordUsageAnalyticsPromptDismissed, setUsageAnalyticsConsent, toUsageAnalyticsConsent,
 } from './settings';
@@ -16,13 +16,15 @@ import {
 useTestDatabase();
 
 describe('toRefreshInterval', () => {
-  test.each([ ['manual', 'manual'], ['15', 15], ['360', 360],
+  test.each([
+    [15, 15], [30, 30], [60, 60], [360, 360], ['manual', 'manual'], ['15', 15], ['360', 360],
   ])('keeps the supported value %j as %j', (value, expected) => {
     // Act & Assert
     expect(toRefreshInterval(value)).toBe(expected);
   });
 
-  test.each([ [[60]],
+  test.each([
+    [7], ['7'], ['soon'], [''], [null], [undefined], [true], [[60]], [{}], [['manual']],
   ])('gives the default for the value %j that is not a supported interval', (value) => {
     // Act & Assert
     expect(toRefreshInterval(value)).toBe(DEFAULT_REFRESH_INTERVAL);
@@ -36,6 +38,47 @@ describe('getRefreshInterval', () => {
 
     // Act & Assert
     expect(await getRefreshInterval()).toBe(15);
+  });
+
+  test('falls back to the default when nothing is stored', async () => {
+    // Act
+    const interval = await getRefreshInterval();
+
+    // Assert
+    expect(interval).toBe(DEFAULT_REFRESH_INTERVAL);
+  });
+
+  test('falls back to the default when the stored value is not a supported one', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'refreshIntervalMinutes', value: 'every other tuesday' }).execute();
+
+    // Act
+    const interval = await getRefreshInterval();
+
+    // Assert
+    expect(interval).toBe(DEFAULT_REFRESH_INTERVAL);
+  });
+
+  test('falls back to the default when the stored value is empty', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'refreshIntervalMinutes', value: '' }).execute();
+
+    // Act
+    const interval = await getRefreshInterval();
+
+    // Assert
+    expect(interval).toBe(DEFAULT_REFRESH_INTERVAL);
+  });
+
+  test('falls back to the default when the stored number is not one of the choices', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'refreshIntervalMinutes', value: '7' }).execute();
+
+    // Act
+    const interval = await getRefreshInterval();
+
+    // Assert
+    expect(interval).toBe(DEFAULT_REFRESH_INTERVAL);
   });
 
   test('ignores the other settings rows', async () => {
@@ -80,13 +123,15 @@ describe('setRefreshInterval', () => {
 });
 
 describe('toRefreshOnLaunch', () => {
-  test.each([ ['false', false], [false, false],
+  test.each([
+    ['true', true], [true, true], ['false', false], [false, false],
   ])('reads %j as %j', (value, expected) => {
     // Act & Assert
     expect(toRefreshOnLaunch(value)).toBe(expected);
   });
 
-  test.each([ [''],
+  test.each([
+    ['yes'], [''], [1], [0], [null], [undefined], ['TRUE'],
   ])('gives the default for the value %j that is not a boolean', (value) => {
     // Act & Assert
     expect(toRefreshOnLaunch(value)).toBe(DEFAULT_REFRESH_ON_LAUNCH);
@@ -109,6 +154,25 @@ describe('getRefreshOnLaunch', () => {
     // Act & Assert
     expect(await getRefreshOnLaunch()).toBe(DEFAULT_REFRESH_ON_LAUNCH);
   });
+
+  test('falls back to the default when nothing is stored', async () => {
+    // Act
+    const value = await getRefreshOnLaunch();
+
+    // Assert
+    expect(value).toBe(DEFAULT_REFRESH_ON_LAUNCH);
+  });
+
+  test('falls back to the default when the stored value is garbage', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'refreshOnLaunch', value: 'not-a-boolean' }).execute();
+
+    // Act
+    const value = await getRefreshOnLaunch();
+
+    // Assert
+    expect(value).toBe(DEFAULT_REFRESH_ON_LAUNCH);
+  });
 });
 
 describe('setRefreshOnLaunch', () => {
@@ -118,6 +182,14 @@ describe('setRefreshOnLaunch', () => {
 
     // Assert
     expect(await getRefreshOnLaunch()).toBe(false);
+  });
+
+  test('stores true and reads it back', async () => {
+    // Act
+    await setRefreshOnLaunch(true);
+
+    // Assert
+    expect(await getRefreshOnLaunch()).toBe(true);
   });
 
   test('overwrites the previous choice instead of adding a row', async () => {
@@ -133,8 +205,15 @@ describe('setRefreshOnLaunch', () => {
 });
 
 describe('toRetentionDays', () => {
+  test.each([
+    [15, 15], [30, 30], [60, 60], [90, 90], [180, 180], ['15', 15], ['180', 180],
+  ])('keeps the supported value %j as %j', (value, expected) => {
+    // Act & Assert
+    expect(toRetentionDays(value)).toBe(expected);
+  });
 
-  test.each([ [[90]],
+  test.each([
+    [7], ['7'], ['forever'], [''], [null], [undefined], [[90]], [{}], [true],
   ])('gives the default for the value %j that is not a supported number of days', (value) => {
     // Act & Assert
     expect(toRetentionDays(value)).toBe(DEFAULT_RETENTION_DAYS);
@@ -142,6 +221,10 @@ describe('toRetentionDays', () => {
 });
 
 describe('getRetentionDays', () => {
+  test('falls back to the default when nothing is stored', async () => {
+    // Act & Assert
+    expect(await getRetentionDays()).toBe(DEFAULT_RETENTION_DAYS);
+  });
 
   test('reads the stored number of days and ignores the other settings rows', async () => {
     // Arrange
@@ -149,6 +232,14 @@ describe('getRetentionDays', () => {
 
     // Act & Assert
     expect(await getRetentionDays()).toBe(90);
+  });
+
+  test('falls back to the default when the stored value is not a supported one', async () => {
+    // Arrange
+    await db.insertInto('setting').values({ key: 'retentionDays', value: '45' }).execute();
+
+    // Act & Assert
+    expect(await getRetentionDays()).toBe(DEFAULT_RETENTION_DAYS);
   });
 });
 
@@ -162,11 +253,23 @@ describe('setRetentionDays', () => {
     expect(await getRetentionDays()).toBe(60);
     expect(await db.selectFrom('setting').selectAll().execute()).toEqual([{ key: 'retentionDays', value: '60' }]);
   });
+
+  test('stores the default for an unsupported number of days', async () => {
+    // Act
+    await setRetentionDays(7 as never);
+
+    // Assert
+    expect(await db.selectFrom('setting').selectAll().execute()).toEqual([{ key: 'retentionDays', value: String(DEFAULT_RETENTION_DAYS) }]);
+  });
 });
 
 describe('getDetailedLogging', () => {
+  test('is off when nothing is stored', async () => {
+    // Act & Assert
+    expect(await getDetailedLogging()).toBe(DEFAULT_DETAILED_LOGGING);
+  });
 
-  test.each([['true', true]])('reads the stored text %j as %j', async (stored, expected) => {
+  test.each([['true', true], ['false', false]])('reads the stored text %j as %j', async (stored, expected) => {
     // Arrange
     await db.insertInto('setting').values({ key: 'detailedLogging', value: stored }).execute();
 
@@ -182,7 +285,7 @@ describe('getDetailedLogging', () => {
     expect(await getDetailedLogging()).toBe(DEFAULT_DETAILED_LOGGING);
   });
 
-  test.each([ ''])('stays off for the stored text %j, which is not a boolean', async (stored) => {
+  test.each(['yes', '', 'TRUE', '1'])('stays off for the stored text %j, which is not a boolean', async (stored) => {
     // Arrange
     await db.insertInto('setting').values({ key: 'detailedLogging', value: stored }).execute();
 
@@ -264,6 +367,10 @@ describe('usage analytics settings', () => {
 });
 
 describe('getWorkspaceRailExpanded', () => {
+  test('is collapsed when nothing is stored', async () => {
+    // Act & Assert
+    expect(await getWorkspaceRailExpanded()).toBe(DEFAULT_WORKSPACE_RAIL_EXPANDED);
+  });
 
   test.each([['true', true], ['false', false]])('reads the stored text %j as %j', async (stored, expected) => {
     // Arrange
@@ -281,7 +388,7 @@ describe('getWorkspaceRailExpanded', () => {
     expect(await getWorkspaceRailExpanded()).toBe(false);
   });
 
-  test.each([ ''])('stays collapsed for the stored text %j, which is not a boolean', async (stored) => {
+  test.each(['yes', '', 'TRUE', '1'])('stays collapsed for the stored text %j, which is not a boolean', async (stored) => {
     // Arrange
     await db.insertInto('setting').values({ key: 'workspaceRailExpanded', value: stored }).execute();
 
@@ -310,7 +417,7 @@ describe('setWorkspaceRailExpanded', () => {
 });
 
 describe('toLanguageSetting', () => {
-  test.each([ 'en', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'])('keeps the supported choice %j', (value) => {
+  test.each(['system', 'en', 'fr', 'de', 'es', 'it', 'pt', 'zh', 'ja', 'ar'])('keeps the supported choice %j', (value) => {
     // Act & Assert
     expect(toLanguageSetting(value)).toBe(value);
   });
@@ -318,6 +425,11 @@ describe('toLanguageSetting', () => {
   test.each([['pt-BR'], ['zh-Hans'], ['EN'], [''], [null], [undefined], [1], [['fr']]])('gives the default for the value %j that is not a choice', (value) => {
     // Act & Assert
     expect(toLanguageSetting(value)).toBe(DEFAULT_LANGUAGE_SETTING);
+  });
+
+  test('follows the system by default', () => {
+    // Act & Assert
+    expect(DEFAULT_LANGUAGE_SETTING).toBe('system');
   });
 });
 

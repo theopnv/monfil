@@ -18,6 +18,7 @@ describe('salaryFromText', () => {
     ['NOK 700 000 - 900 000 per year', 'NOK 700 000 - 900 000 / year'],
     ['Between 3 500 € and 4 200 € par mois', '3 500 € and 4 200 € / month'],
     ['$45 - $60 per hour', '$45 - $60 / hour'],
+    ['Paid $35/hr', '$35 / hour'],
     ['USD 120,000 - 150,000', 'USD 120,000 - 150,000'],
     ['$1,200,000 – $1,500,000 per year', '$1,200,000 – $1,500,000 / year'],
     ['€60.000 - €75.000 per year', '€60.000 - €75.000 / year'],
@@ -40,8 +41,17 @@ describe('salaryFromText', () => {
   });
 
   test.each([
+    'We raised $100M - $200M in funding',
+    'Team of 10 - 20 people',
+    'Experience: 3 - 5 years',
+    'Founded between 2010 and 2015',
+    'No pay information here',
     '$90,000 - $50,000 per year',
+    '$900 - $950 per year',
     '$500 - $900',
+    '€400 - €450 per month',
+    '$7 - $9 hourly',
+    '',
   ])('finds nothing in %j', (text) => {
     // Act / Assert
     expect(salaryFromText(text)).toBeUndefined();
@@ -83,6 +93,17 @@ describe('salaryFromRange', () => {
       setMainSystemLocale('');
     });
 
+    test('groups digits and places the symbol by the language', async () => {
+      // Arrange
+      await setMainLanguage('fr');
+
+      // Act
+      const label = salaryFromRange(45000, 55000, 'EUR', undefined);
+
+      // Assert
+      expect(label).toBe('45\u202f000\u00a0€–55\u202f000\u00a0€');
+    });
+
     test('follows the regional system locale of the same language', async () => {
       // Arrange
       setMainSystemLocale('de-CH');
@@ -94,6 +115,17 @@ describe('salaryFromRange', () => {
       // Assert
       expect(mainFormatLocale()).toBe('de-CH');
       expect(label).toBe("$\u00a080'000");
+    });
+
+    test('shows the code of a currency without a shared symbol', async () => {
+      // Arrange
+      await setMainLanguage('de');
+
+      // Act
+      const label = salaryFromRange(700000, 900000, 'NOK', undefined);
+
+      // Assert
+      expect(label).toBe('700.000\u00a0NOK–900.000\u00a0NOK');
     });
   });
 

@@ -26,7 +26,7 @@ describe('renderer usage listeners', () => {
     expect(incrementCounter).toHaveBeenCalledExactlyOnceWith('searches');
   });
 
-  test.each([ { counter: 'searches', extra: 1 }])('ignores %j', (payload) => {
+  test.each([{ counter: 'articles_opened' }, { counter: 'searches', extra: 1 }, null, 'searches'])('ignores %j', (payload) => {
     // Act
     listenToUsageRecord(event, payload as never);
 

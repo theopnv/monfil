@@ -9,6 +9,9 @@ const postings = (slug: string, query = 'limit=100') => `https://api.smartrecrui
 
 describe('smartrecruiters toBoard', () => {
   test.each([
+    'https://jobs.smartrecruiters.com/BoschGroup',
+    'https://jobs.smartrecruiters.com/BoschGroup/7440-consultant',
+    'https://careers.smartrecruiters.com/BoschGroup',
     'https://JOBS.smartrecruiters.com/BoschGroup',
     'https://api.smartrecruiters.com/v1/companies/BoschGroup/postings',
     'https://api.smartrecruiters.com/v1/companies/BoschGroup',
@@ -21,8 +24,21 @@ describe('smartrecruiters toBoard', () => {
   });
 
   test.each([
+    'https://smartrecruiters.com/BoschGroup',
+    'https://www.smartrecruiters.com/BoschGroup',
+    'https://jobs.smartrecruiters.com.example.com/BoschGroup',
+    'https://notjobs.smartrecruiters.com/BoschGroup',
+    'https://example.com/v1/companies/BoschGroup/postings',
+    'https://jobs.smartrecruiters.com/',
+    'https://careers.smartrecruiters.com/',
+    'https://api.smartrecruiters.com/',
+    'https://api.smartrecruiters.com/BoschGroup',
+    'https://api.smartrecruiters.com/v1/companies',
+    'https://api.smartrecruiters.com/v1/companies/',
     'https://api.smartrecruiters.com/v2/companies/BoschGroup/postings',
     'https://api.smartrecruiters.com/v1/jobs/BoschGroup/postings',
+    'https://api.smartrecruiters.com/companies/BoschGroup/postings',
+    'https://api.smartrecruiters.com/x/v1/companies/BoschGroup',
   ])('does not map %s', (link) => {
     // Act / Assert
     expect(smartrecruiters.toBoard(new URL(link))).toBeNull();
@@ -142,7 +158,11 @@ describe('smartrecruiters normalize', () => {
   });
 
   test.each([
+    '{"jobs": []}',
+    '{"content": {}}',
+    '{"content": [{"id": "1", "name": "x"}]}',
     '{"content": [{"id": "1", "name": "x"}, {"uuid": "a"}]}',
+    'not json',
   ])('rejects %s', (body) => {
     // Act / Assert
     expect(smartrecruiters.normalize(body)).toBeNull();

@@ -53,6 +53,32 @@ describe('deleteFeedFromDatabase', () => {
     expect(items).toHaveLength(1);
   });
 
+  test('a feed with zero items still deletes', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase({ ...feedA, items: [] });
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+
+    // Act
+    const result = await deleteFeedFromDatabase(inserted.data.id, HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(result.success).toBe(true);
+  });
+
+  test('an unknown id returns FEED_NOT_FOUND and writes nothing', async () => {
+    // Act
+    const result = await deleteFeedFromDatabase(999999, HOME_WORKSPACE_ID);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('FEED_NOT_FOUND');
+  });
+
   test('a failed removal does not collect other feeds that have no placement', async () => {
     // Arrange
     await db.insertInto('feedMetadata').values({ link: 'https://unplaced.example/feed', title: 'Unplaced', type: 'rss' }).execute();
@@ -83,6 +109,21 @@ describe('deleteFeedFromDatabase', () => {
     // Assert
     const content = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).execute();
     expect(content).toEqual([]);
+  });
+
+  test('the category row survives', async () => {
+    // Arrange
+    const inserted = await addFeedToDatabase(feedA);
+    if (!inserted.success) {
+      throw new Error('expected the feed to be created');
+    }
+
+    // Act
+    await deleteFeedFromDatabase(inserted.data.id, HOME_WORKSPACE_ID);
+
+    // Assert
+    const categories = await db.selectFrom('feedCategory').selectAll().where('id', '=', inserted.data.category.id).execute();
+    expect(categories).toHaveLength(1);
   });
 
   test('removing a feed placed in two workspaces only drops the given workspace\'s placement', async () => {
@@ -188,6 +229,39 @@ describe('deleteCategory', () => {
     expect(placements).toEqual([]);
     const metadata = await db.selectFrom('feedMetadata').selectAll().where('id', '=', inserted.data.id).execute();
     expect(metadata).toEqual([]);
+  });
+
+  test('an empty category still deletes', async () => {
+    // Arrange
+    const empty = await createCategory('Empty', HOME_WORKSPACE_ID);
+    const destination = await createCategory('Destination', HOME_WORKSPACE_ID);
+    if (!empty.success || !destination.success) {
+      throw new Error('expected both categories to be created');
+    }
+
+    // Act
+    const result = await deleteCategory(empty.data.id, HOME_WORKSPACE_ID, destination.data.id);
+
+    // Assert
+    expect(result.success).toBe(true);
+  });
+
+  test('an unknown id returns CATEGORY_NOT_FOUND and writes nothing', async () => {
+    // Arrange
+    const destination = await createCategory('Destination', HOME_WORKSPACE_ID);
+    if (!destination.success) {
+      throw new Error('expected the category to be created');
+    }
+
+    // Act
+    const result = await deleteCategory(999999, HOME_WORKSPACE_ID, destination.data.id);
+
+    // Assert
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.name).toBe('CATEGORY_NOT_FOUND');
   });
 
   test('a category owned by another workspace returns CATEGORY_NOT_FOUND and survives', async () => {

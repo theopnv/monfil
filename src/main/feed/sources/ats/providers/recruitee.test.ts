@@ -17,6 +17,22 @@ describe('recruitee toBoard', () => {
     // Assert
     expect(board).toEqual({ provider: 'recruitee', slug: 'bunq', apiUrl: 'https://bunq.recruitee.com/api/offers/' });
   });
+
+  test.each([
+    'https://recruitee.com/',
+    'https://www.recruitee.com/',
+    'https://api.recruitee.com/',
+    'https://app.recruitee.com/',
+    'https://support.recruitee.com/',
+    'https://status.recruitee.com/',
+    'https://foo.bar.recruitee.com/',
+    'https://bunq.recruitee.com.example.com/',
+    'https://bunqrecruitee.com/',
+    'https://bunq.example.com/',
+  ])('does not map %s', (link) => {
+    // Act / Assert
+    expect(recruitee.toBoard(new URL(link))).toBeNull();
+  });
 });
 
 describe('recruitee normalize', () => {
@@ -108,5 +124,10 @@ describe('recruitee normalize', () => {
   test('accepts an empty board', () => {
     // Act / Assert
     expect(recruitee.normalize('{"offers": []}')).toEqual({ company: undefined, jobs: [] });
+  });
+
+  test.each(['{}', '{"offers": {}}', '{"jobs": []}', 'not json'])('rejects %s', (body) => {
+    // Act / Assert
+    expect(recruitee.normalize(body)).toBeNull();
   });
 });

@@ -6,6 +6,10 @@ import { describe, expect, test } from 'vitest';
 import { blocks, plain, textOf } from './xml';
 
 describe('blocks', () => {
+  test('lists the raw inner text of each element, in order', () => {
+    // Act / Assert
+    expect(blocks('<r><i>a</i><i id="2">b\nc</i><o>x</o></r>', 'i')).toEqual(['a', 'b\nc']);
+  });
 
   test('matches a tag name literally, so a pattern character does not act as a pattern', () => {
     // Act / Assert
@@ -13,10 +17,29 @@ describe('blocks', () => {
     expect(blocks('<a+b>1</a+b><aab>2</aab>', 'a+b')).toEqual(['1']);
     expect(blocks('<a$b>1</a$b>', 'a$b')).toEqual(['1']);
   });
+
+  test('does not read a longer tag name that starts with the same letters', () => {
+    // Act / Assert
+    expect(blocks('<item2>x</item2><items>y</items>', 'item')).toEqual([]);
+  });
+
+  test('returns nothing without the tag', () => {
+    // Act / Assert
+    expect(blocks('<r></r>', 'i')).toEqual([]);
+    expect(blocks('', 'i')).toEqual([]);
+  });
+
+  test('keeps an empty element as an empty string', () => {
+    // Act / Assert
+    expect(blocks('<i></i>', 'i')).toEqual(['']);
+  });
 });
 
 describe('plain', () => {
   test.each([
+    ['text', 'text'],
+    ['  padded \n', 'padded'],
+    ['a &amp; b &lt;c&gt; &quot;d&quot; &#169;', 'a & b <c> "d" ©'],
     ['<![CDATA[<p>Hi &amp; bye</p>]]>', '<p>Hi &amp; bye</p>'],
     ['  \n<![CDATA[ spaced ]]>\n  ', 'spaced'],
   ])('reads %j as %j', (raw, expected) => {
@@ -24,12 +47,12 @@ describe('plain', () => {
     expect(plain(raw)).toBe(expected);
   });
 
-  test.each(['see <![CDATA[x]]>', '<![CDATA[x]]> tail'])('does not unwrap %j, which is more than a CDATA section', (raw) => {
+  test.each(['see <![CDATA[x]]>', '<![CDATA[x]]> tail', 'x <![CDATA[y]]> z'])('does not unwrap %j, which is more than a CDATA section', (raw) => {
     // Act / Assert
     expect(plain(raw)).toBe(raw);
   });
 
-  test.each([ '<![CDATA[]]>', '<![CDATA[   ]]>', ' <![CDATA[]]> '])('reads %j as undefined', (raw) => {
+  test.each(['', '   ', '\n\t', '<![CDATA[]]>', '<![CDATA[   ]]>', ' <![CDATA[]]> '])('reads %j as undefined', (raw) => {
     // Act / Assert
     expect(plain(raw)).toBeUndefined();
   });

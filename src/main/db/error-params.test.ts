@@ -15,6 +15,10 @@ describe('parseErrorParams', () => {
   });
 
   test.each([
+    { name: 'null', stored: null },
+    { name: 'undefined', stored: undefined },
+    { name: 'an empty string', stored: '' },
+    { name: 'text that is not JSON', stored: '{oops' },
     { name: 'a JSON array', stored: '["a"]' },
     { name: 'a JSON string', stored: '"a"' },
     { name: 'JSON null', stored: 'null' },

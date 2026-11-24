@@ -79,6 +79,51 @@ describe('fatal recovery handler', () => {
     expect(deps.shell.showItemInFolder).toHaveBeenCalledWith('mock-user-data/monfil.log');
   });
 
+  test('quits after the user selects Quit', async () => {
+    // Arrange
+    const deps = dependencies(2);
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('child-process-gone', { reason: 'crashed' });
+
+    // Assert
+    expect(deps.app.quit).toHaveBeenCalledOnce();
+  });
+
+  test('does not show a dialog before Electron is ready', async () => {
+    // Arrange
+    const deps = dependencies(0);
+    deps.app.isReady.mockReturnValue(false);
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('render-process-gone', new Error('early'));
+
+    // Assert
+    expect(deps.dialog.showMessageBox).not.toHaveBeenCalled();
+    expect(deps.app.relaunch).not.toHaveBeenCalled();
+  });
+
+  test('deduplicates concurrent fatal dialogs', async () => {
+    // Arrange
+    const deps = dependencies(1);
+    let resolveDialog: ((value: { response: number }) => void) | undefined;
+    deps.dialog.showMessageBox.mockImplementation(() => new Promise((resolve) => {
+      resolveDialog = resolve;
+    }));
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    const first = handle('uncaughtException', new Error('first'));
+    const second = handle('unhandledRejection', new Error('second'));
+    resolveDialog?.({ response: 1 });
+    await Promise.all([first, second]);
+
+    // Assert
+    expect(deps.dialog.showMessageBox).toHaveBeenCalledOnce();
+  });
+
   test('offers Restart, Show log file and Quit, with Restart as default and Quit as the escape', async () => {
     // Arrange
     const deps = dependencies(2);
@@ -98,6 +143,61 @@ describe('fatal recovery handler', () => {
       defaultId: 0,
       cancelId: 2,
     });
+  });
+
+  test('restarting does not quit or reveal the log file', async () => {
+    // Arrange
+    const deps = dependencies(0);
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('uncaughtException', new Error('broken'));
+
+    // Assert
+    expect(deps.app.quit).not.toHaveBeenCalled();
+    expect(deps.shell.showItemInFolder).not.toHaveBeenCalled();
+  });
+
+  test('revealing the log file does not restart or quit', async () => {
+    // Arrange
+    const deps = dependencies(1);
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('uncaughtException', new Error('broken'));
+
+    // Assert
+    expect(deps.app.relaunch).not.toHaveBeenCalled();
+    expect(deps.app.exit).not.toHaveBeenCalled();
+    expect(deps.app.quit).not.toHaveBeenCalled();
+  });
+
+  test('quitting does not restart or reveal the log file', async () => {
+    // Arrange
+    const deps = dependencies(2);
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('uncaughtException', new Error('broken'));
+
+    // Assert
+    expect(deps.app.relaunch).not.toHaveBeenCalled();
+    expect(deps.app.exit).not.toHaveBeenCalled();
+    expect(deps.shell.showItemInFolder).not.toHaveBeenCalled();
+  });
+
+  test('logs the failure before Electron is ready', async () => {
+    // Arrange
+    const deps = dependencies(0);
+    deps.app.isReady.mockReturnValue(false);
+    const log = logger();
+    const handle = createFatalHandler(log, 'mock-user-data/monfil.log', deps);
+
+    // Act
+    await handle('uncaughtException', new Error('early'));
+
+    // Assert
+    expect(log.error).toHaveBeenCalledOnce();
   });
 
   test('shows a dialog for a later error after one that came before Electron was ready', async () => {
@@ -133,6 +233,19 @@ describe('fatal recovery handler', () => {
     // Assert
     expect(log.error).toHaveBeenCalledOnce();
     expect(deps.app.quit).toHaveBeenCalledOnce();
+  });
+
+  test('does not reject when recovery actions fail', async () => {
+    // Arrange
+    const deps = dependencies(1);
+    deps.shell.showItemInFolder.mockRejectedValue(new Error('shell unavailable'));
+    const handle = createFatalHandler(logger(), 'mock-user-data/monfil.log', deps);
+
+    // Act
+    const result = handle('uncaughtException', new Error('broken'));
+
+    // Assert
+    await expect(result).resolves.toBeUndefined();
   });
 });
 
@@ -208,7 +321,7 @@ describe('installed process listeners', () => {
     await vi.waitFor(() => expect(dialog.showMessageBox).toHaveBeenCalledOnce());
   });
 
-  test.each(['render-process-gone'])('ignores a %s event while the app quits', async (event) => {
+  test.each(['render-process-gone', 'child-process-gone'])('ignores a %s event while the app quits', async (event) => {
     // Arrange
     const listeners = install();
     listeners.get('before-quit')?.();

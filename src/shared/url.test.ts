@@ -3,7 +3,7 @@
 // See LICENSE in the repository root for full terms.
 
 import { describe, expect, test } from 'vitest';
-import { parseHttpUrl, withScheme } from './url';
+import { hasHttpScheme, parseHttpUrl, withScheme } from './url';
 
 describe('parseHttpUrl', () => {
   test.each(['http://example.com/a', 'https://example.com/a?x=1#y'])('parses %s', (value) => {
@@ -16,7 +16,7 @@ describe('parseHttpUrl', () => {
     expect(parseHttpUrl('../feed.xml', 'https://example.com/blog/post')?.href).toBe('https://example.com/feed.xml');
   });
 
-  test.each(['javascript:alert(1)', 'ftp://example.com/a', 'data:text/plain,hi', 'file:///etc/passwd', 'mailto:a@example.com'])('rejects %j without a base', (value) => {
+  test.each(['javascript:alert(1)', 'ftp://example.com/a', 'data:text/plain,hi', 'file:///etc/passwd', 'mailto:a@example.com', 'not a url', '', '/relative'])('rejects %j without a base', (value) => {
     // Act & Assert
     expect(parseHttpUrl(value)).toBeUndefined();
   });
@@ -24,6 +24,18 @@ describe('parseHttpUrl', () => {
   test('rejects a link whose scheme the base cannot change', () => {
     // Act & Assert
     expect(parseHttpUrl('javascript:alert(1)', 'https://example.com')).toBeUndefined();
+  });
+});
+
+describe('hasHttpScheme', () => {
+  test.each(['http://a.example', 'https://a.example', 'HTTPS://a.example'])('accepts %s', (value) => {
+    // Act & Assert
+    expect(hasHttpScheme(value)).toBe(true);
+  });
+
+  test.each(['a.example', 'ftp://a.example', 'xhttp://a.example', ' https://a.example', 'a.example/?next=https://b.example'])('rejects %j', (value) => {
+    // Act & Assert
+    expect(hasHttpScheme(value)).toBe(false);
   });
 });
 

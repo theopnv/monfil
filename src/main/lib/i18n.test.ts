@@ -3,11 +3,25 @@
 // See LICENSE in the repository root for full terms.
 
 import { afterEach, expect, test } from 'vitest';
-import { fatalDialogText, mainFormatLocale, setMainLanguage, setMainSystemLocale } from './i18n';
+import { fatalDialogText, mainFormatLocale, mainI18n, setMainLanguage, setMainSystemLocale } from './i18n';
 
 afterEach(async () => {
   await setMainLanguage('en');
   setMainSystemLocale('');
+});
+
+test('translates in English by default', () => {
+  // Assert
+  expect(mainI18n.language).toBe('en');
+  expect(mainI18n.t('action.undo')).toBe('Undo');
+});
+
+test('uses the new language for the next call after a switch', async () => {
+  // Act
+  await setMainLanguage('fr');
+
+  // Assert
+  expect(mainI18n.language).toBe('fr');
 });
 
 test('builds the fatal dialog text with the incident id and three buttons', () => {
@@ -20,6 +34,14 @@ test('builds the fatal dialog text with the incident id and three buttons', () =
     message: 'Monfil encountered a system error. Incident ab12cd34.',
     buttons: ['Restart', 'Show log file', 'Quit'],
   });
+});
+
+test('formats in the bare interface language before the system locale is known', async () => {
+  // Act
+  await setMainLanguage('de');
+
+  // Assert
+  expect(mainFormatLocale()).toBe('de');
 });
 
 test('keeps the system locale when it speaks the interface language', async () => {

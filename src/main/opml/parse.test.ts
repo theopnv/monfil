@@ -209,4 +209,43 @@ describe('parseOpmlDocument', () => {
       data: { title: 'Imported', categories: [{ name: 'Imported', feeds: [{ title: 'Blog', xmlUrl: 'https://example.com/blog.xml', type: 'rss' }] }] },
     });
   });
+
+  test('names a feed from its title, then its text, then its URL', () => {
+    // Arrange
+    const xml = opml(`
+      <outline type="rss" title="Title wins" text="Text" xmlUrl="https://example.com/a.xml"/>
+      <outline type="rss" text="Text wins" xmlUrl="https://example.com/b.xml"/>
+      <outline type="rss" xmlUrl="https://example.com/c.xml"/>
+    `);
+
+    // Act
+    const result = parseOpmlDocument(xml);
+
+    // Assert
+    expect(result.success && result.data.categories[0]?.feeds.map((feed) => feed.title)).toEqual(['Title wins', 'Text wins', 'https://example.com/c.xml']);
+  });
+
+  test('fails with NO_FEEDS when the body is empty', () => {
+    // Act
+    const result = parseOpmlDocument(opml(''));
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'NO_FEEDS', message: expect.any(String) } });
+  });
+
+  test('fails with MALFORMED_XML on unparsable input', () => {
+    // Act
+    const result = parseOpmlDocument('not xml at all <<<');
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'MALFORMED_XML', message: expect.any(String) } });
+  });
+
+  test('fails with NO_FEEDS when the document has no feeds', () => {
+    // Act
+    const result = parseOpmlDocument(opml('<outline text="Empty folder"></outline>'));
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'NO_FEEDS', message: expect.any(String) } });
+  });
 });

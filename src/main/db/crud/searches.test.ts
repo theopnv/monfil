@@ -94,6 +94,18 @@ describe('saved search CRUD', () => {
     expect(first.success).toBe(true);
     expect(second).toMatchObject({ error: { name: 'SEARCH_NOT_FOUND' } });
   });
+
+  test('cascades on workspace delete', async () => {
+    // Arrange
+    const other = await db.insertInto('workspace').values({ name: 'Jobs', icon: 'Stars01', color: '#000000', position: 1 }).returning('id').executeTakeFirstOrThrow();
+    await createSavedSearch(other.id, 'Engineers', 'engineer');
+
+    // Act
+    await db.deleteFrom('workspace').where('id', '=', other.id).execute();
+
+    // Assert
+    expect(await db.selectFrom('savedSearch').selectAll().execute()).toEqual([]);
+  });
 });
 
 describe('search hint', () => {

@@ -6,8 +6,23 @@ import { describe, expect, test } from 'vitest';
 import { countWords } from './word-count';
 
 describe('countWords', () => {
+  test.each([
+    { name: 'an empty text', text: '', expected: 0 },
+    { name: 'only whitespace', text: ' \n\t ', expected: 0 },
+    { name: 'one word', text: 'hello', expected: 1 },
+    { name: 'words split by spaces and newlines', text: '  one two\nthree\t four  ', expected: 4 },
+    { name: 'accented words', text: 'élève à Paris', expected: 3 },
+    { name: 'Arabic words', text: 'مرحبا بالعالم اليوم', expected: 3 },
+  ])('counts $name', ({ text, expected }) => {
+    // Act
+    const count = countWords(text);
+
+    // Assert
+    expect(count).toBe(expected);
+  });
 
   test.each([
+    { name: 'Chinese', text: '今天天气很好我们去公园散步', expected: 7 },
     { name: 'Japanese with kana', text: '今日はいい天気ですね', expected: 5 },
     { name: 'Katakana', text: 'コンピュータ', expected: 3 },
     { name: 'one Chinese character', text: '好', expected: 1 },

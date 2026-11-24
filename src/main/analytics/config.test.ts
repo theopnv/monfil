@@ -13,6 +13,10 @@ afterEach(() => {
 });
 
 describe('getAnalyticsEndpoint', () => {
+  test('is disabled for a packaged build without a key', () => {
+    // Act, Assert
+    expect(getAnalyticsEndpoint()).toEqual({ name: 'DISABLED', reason: 'NO_KEY' });
+  });
 
   test('is disabled for a build that is not packaged', () => {
     // Arrange

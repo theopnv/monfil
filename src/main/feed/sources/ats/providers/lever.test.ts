@@ -23,8 +23,22 @@ describe('lever toBoard', () => {
   });
 
   test.each([
+    'https://lever.co/spotify',
+    'https://www.lever.co/spotify',
+    'https://jobs.lever.co.example.com/spotify',
+    'https://notjobs.lever.co/spotify',
+    'https://jobs.us.lever.co/spotify',
+    'https://example.com/v0/postings/spotify',
+    'https://jobs.lever.co/',
+    'https://jobs.eu.lever.co/',
+    'https://api.lever.co/',
+    'https://api.lever.co/spotify',
+    'https://api.lever.co/v0',
+    'https://api.lever.co/v0/postings',
+    'https://api.lever.co/v0/postings/',
     'https://api.lever.co/v1/postings/spotify',
     'https://api.lever.co/v0/other/spotify',
+    'https://api.lever.co/postings/spotify',
     'https://api.eu.lever.co/v1/postings/spotify',
   ])('does not map %s', (link) => {
     // Act / Assert
@@ -123,7 +137,7 @@ describe('lever normalize', () => {
     expect(lever.normalize('[]')).toEqual({ company: undefined, jobs: [] });
   });
 
-  test.each([ '[{"id": 1}]'])('rejects %s', (body) => {
+  test.each(['{}', '[{"id": 1}]', '{"jobs": []}', 'nope'])('rejects %s', (body) => {
     // Act / Assert
     expect(lever.normalize(body)).toBeNull();
   });

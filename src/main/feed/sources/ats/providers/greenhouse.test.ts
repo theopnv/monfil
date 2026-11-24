@@ -13,8 +13,11 @@ describe('greenhouse toBoard', () => {
     'https://boards.greenhouse.io/datadog/jobs/123',
     'https://job-boards.greenhouse.io/datadog',
     'https://BOARDS.greenhouse.io/datadog',
+    'https://boards.greenhouse.io/embed/job_board?for=datadog',
+    'https://boards.greenhouse.io/other?for=datadog',
     'https://boards-api.greenhouse.io/v1/boards/datadog/jobs',
     'https://boards-api.greenhouse.io/v1/boards/datadog',
+    'https://boards-api.greenhouse.io/anything?for=datadog',
   ])('maps %s to the datadog board', (link) => {
     // Act
     const board = greenhouse.toBoard(new URL(link));
@@ -24,8 +27,23 @@ describe('greenhouse toBoard', () => {
   });
 
   test.each([
+    'https://greenhouse.io/datadog',
+    'https://www.greenhouse.io/datadog',
+    'https://boards.greenhouse.io.example.com/datadog',
+    'https://notboards.greenhouse.io/datadog',
+    'https://example.com/datadog',
+    'https://example.com/?for=datadog',
+    'https://boards.greenhouse.io/',
+    'https://boards.greenhouse.io/embed',
+    'https://boards.greenhouse.io/embed/job_board',
+    'https://boards-api.greenhouse.io/',
+    'https://boards-api.greenhouse.io/datadog',
+    'https://boards-api.greenhouse.io/v1',
+    'https://boards-api.greenhouse.io/v1/boards',
+    'https://boards-api.greenhouse.io/v1/boards/',
     'https://boards-api.greenhouse.io/v2/boards/datadog/jobs',
     'https://boards-api.greenhouse.io/v1/jobs/datadog',
+    'https://boards-api.greenhouse.io/boards/datadog',
   ])('does not map %s', (link) => {
     // Act / Assert
     expect(greenhouse.toBoard(new URL(link))).toBeNull();
@@ -132,7 +150,7 @@ describe('greenhouse normalize', () => {
     expect(greenhouse.normalize('{"jobs": []}')).toEqual({ company: undefined, jobs: [] });
   });
 
-  test.each(['not json', '{"jobs": [{"id": 1, "title": "x", "jobUrl": "y"}]}'])('rejects %s', (body) => {
+  test.each(['not json', '{}', '[]', '{"jobs": {}}', '{"jobs": [{"id": 1, "title": "x", "jobUrl": "y"}]}'])('rejects %s', (body) => {
     // Act / Assert
     expect(greenhouse.normalize(body)).toBeNull();
   });

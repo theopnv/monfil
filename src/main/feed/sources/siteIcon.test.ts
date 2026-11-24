@@ -135,6 +135,11 @@ describe('extractIconLinks', () => {
     expect(links).toEqual(['http://plain.example/i.png']);
   });
 
+  test('a page with no link tag has no icon', () => {
+    // Act / Assert
+    expect(extractIconLinks('<p>nothing</p>', 'https://site.example/')).toEqual([]);
+  });
+
   test('drops links that are not web or data images', () => {
     // Arrange
     const html = '<link rel="icon" href="javascript:alert(1)"><link rel="icon" href="data:image/png;base64,AAAA">';
@@ -172,6 +177,8 @@ describe('extractIconLinks', () => {
 
   test.each([
     'data:text/html;base64,AAAA',
+    'javascript:image/png',
+    'ftp://files.example/icon.png',
   ])('drops the icon link %s', (href) => {
     // Act
     const links = extractIconLinks(`<link rel="icon" href="${href}">`, 'https://site.example/');
@@ -204,6 +211,28 @@ describe('resolveSiteIcon', () => {
     expect(icon).toBe('https://site.example/favicon.ico');
   });
 
+  test('falls back to the icon service only when it has the site', async () => {
+    // Arrange
+    serve({ 'https://icons.duckduckgo.com/ip3/site.example.ico': ok('') });
+
+    // Act
+    const icon = await resolveSiteIcon('https://site.example/');
+
+    // Assert
+    expect(icon).toBe('https://icons.duckduckgo.com/ip3/site.example.ico');
+  });
+
+  test('returns nothing when no source has an icon, so the placeholder is never stored', async () => {
+    // Arrange
+    serve({});
+
+    // Act
+    const icon = await resolveSiteIcon('https://moderne.example/blog');
+
+    // Assert
+    expect(icon).toBeUndefined();
+  });
+
   test('reads the page of a site that uses http', async () => {
     // Arrange
     serve({ 'http://old.example/': ok('<link rel="icon" href="/i.png">') });
@@ -213,6 +242,18 @@ describe('resolveSiteIcon', () => {
 
     // Assert
     expect(icon).toBe('http://old.example/i.png');
+  });
+
+  test.each(['ftp://site.example/', 'javascript:alert(1)', 'not a url'])('makes no request for the site link %s', async (siteLink) => {
+    // Arrange
+    serve({});
+
+    // Act
+    const icon = await resolveSiteIcon(siteLink);
+
+    // Assert
+    expect(icon).toBeUndefined();
+    expect(mockedFetchText).not.toHaveBeenCalled();
   });
 
   test('asks the fallback icons for their headers only, and reads the page in full', async () => {
@@ -228,5 +269,16 @@ describe('resolveSiteIcon', () => {
       ['https://site.example/favicon.ico', true],
       ['https://icons.duckduckgo.com/ip3/site.example.ico', true],
     ]);
+  });
+
+  test('refuses private hosts for every request', async () => {
+    // Arrange
+    serve({});
+
+    // Act
+    await resolveSiteIcon('https://site.example/');
+
+    // Assert
+    expect(mockedFetchText.mock.calls.every(([, options]) => options?.blockPrivateHosts === true)).toBe(true);
   });
 });

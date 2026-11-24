@@ -10,6 +10,11 @@ const phrase = (text: string, field: 'title' | 'any' = 'any') => ({ text, phrase
 const all = (...terms: ReturnType<typeof word>[]): SearchClause[] => terms.map((term) => ({ alternatives: [term], negated: false }));
 
 describe('parseSearchQuery', () => {
+  test('returns no clause for an empty or blank query', () => {
+    // Act / Assert
+    expect(parseSearchQuery('')).toEqual([]);
+    expect(parseSearchQuery('   ')).toEqual([]);
+  });
 
   test('splits words into AND clauses and lowercases them', () => {
     // Act

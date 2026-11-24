@@ -44,6 +44,11 @@ describe('toItem', () => {
 });
 
 describe('atsSource', () => {
+  test('does not fetch full articles, since job pages are single-page apps', () => {
+    // Act / Assert
+    expect(atsSource.fetchesFullArticle).toBe(false);
+    expect(atsSource.type).toBe('ats');
+  });
 
   test('matches board links only, without the network', () => {
     // Act / Assert
@@ -152,8 +157,13 @@ describe('atsSource', () => {
     ['https://careers.acme.com/jobs/1', 'https://careers.acme.com'],
     ['https://notlever.co/acme/1', 'https://notlever.co'],
     ['https://lever.co.example.com/acme/1', 'https://lever.co.example.com'],
+    ['https://jobs.lever.co/acme/1', undefined],
+    ['https://jobs.eu.lever.co/acme/1', undefined],
     ['https://lever.co/acme/1', undefined],
+    ['https://boards.greenhouse.io/acme/jobs/1', undefined],
+    ['https://acme.jobs.personio.de/job/1', undefined],
     ['https://jobs.smartrecruiters.com/Acme/1', undefined],
+    [undefined, undefined],
   ])('reads the company site from the job link %s as %s', (hostedUrl, siteLink) => {
     // Arrange
     const body = JSON.stringify([{ id: 'j1', text: 'Dev', hostedUrl }]);
@@ -187,6 +197,33 @@ describe('atsSource', () => {
 
     // Assert
     expect(mockedFetchText).toHaveBeenCalledWith('http://acme.test/careers', { blockPrivateHosts: true });
+  });
+
+  test('matches a board link over plain http', () => {
+    // Act / Assert
+    expect(isAtsLink('http://jobs.lever.co/acme')).toBe(true);
+  });
+
+  test('reports an unreadable board body as unsupported', async () => {
+    // Arrange
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: '<html>login</html>', validators } });
+
+    // Act
+    const result = await atsSource.discover('https://jobs.lever.co/acme');
+
+    // Assert
+    expect(result).toMatchObject({ success: false, error: { name: 'UNSUPPORTED_FORMAT' } });
+  });
+
+  test('passes a fetch error through', async () => {
+    // Arrange
+    mockedFetchText.mockResolvedValue({ success: false, error: { name: 'RESPONSE_TOO_LARGE_ERROR', message: 'too big' } });
+
+    // Act
+    const result = await atsSource.discover('https://jobs.lever.co/acme');
+
+    // Assert
+    expect(result).toEqual({ success: false, error: { name: 'RESPONSE_TOO_LARGE_ERROR', message: 'too big' } });
   });
 
   test('refreshes a stored board with conditional GET and keeps the stored link', async () => {

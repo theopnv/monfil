@@ -15,7 +15,7 @@ describe('paginate', () => {
     expect(last).toBe(2);
   });
 
-  test.each([[[1, 2], 2]])('returns every row and no last row for %j with a limit of %i', (rows, limit) => {
+  test.each([[[1, 2], 2], [[1], 2], [[], 2]])('returns every row and no last row for %j with a limit of %i', (rows, limit) => {
     // Act
     const { page, last } = paginate(rows, limit);
 
