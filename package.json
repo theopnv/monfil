@@ -118,7 +118,7 @@
     "react-aria-components": "^1.22.1",
     "react-dom": "^19.3.1",
     "react-i18next": "^18.0.3",
-    "semantic-release": "^25.0.9",
+    "semantic-release": "^26.0.1",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.1",
     "tailwindcss": "^4.3.3",
