@@ -141,7 +141,8 @@ export interface UndatedItemTable {
 
 
 // It is interesting to store 'too_short' articles, because they are often paywalls or cookie walls, and the feed item description will then provide more value.
-export type ArticleContentStatus = 'ok' | 'failed' | 'too_short';
+// 'fetch_failed' is transient and retried after a delay; 'failed' (extraction) and 'too_short' are permanent.
+export type ArticleContentStatus = 'ok' | 'failed' | 'too_short' | 'fetch_failed';
 
 export interface ArticleContentTable {
   item_id: number;
@@ -149,6 +150,7 @@ export interface ArticleContentTable {
   text: string | undefined;
   word_count: number | undefined;
   status: ArticleContentStatus;
+  attempted_at: Generated<number>;
 }
 
 export type ArticleContent = Selectable<ArticleContentTable>;

@@ -229,6 +229,7 @@ export async function upsertArticleContent(content: NewArticleContent): Promise<
         text: eb.ref('excluded.text'),
         word_count: eb.ref('excluded.word_count'),
         status: eb.ref('excluded.status'),
+        attempted_at: eb.ref('excluded.attempted_at'),
       })))
       .execute();
   } catch (error) {

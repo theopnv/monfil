@@ -46,7 +46,7 @@ describe('initializeDatabase', () => {
     expect(columnsOf('feedItem')).toEqual(['author', 'description', 'excerpt', 'extra', 'feed_id', 'guid', 'id', 'image', 'link', 'pubDate', 'published_at', 'read_at', 'title']);
     expect(columnsOf('undatedItem')).toEqual(['feed_id', 'first_fetched_at', 'guid']);
     expect(columnsOf('setting')).toEqual(['key', 'value']);
-    expect(columnsOf('articleContent')).toEqual(['html', 'item_id', 'status', 'text', 'word_count']);
+    expect(columnsOf('articleContent')).toEqual(['attempted_at', 'html', 'item_id', 'status', 'text', 'word_count']);
     expect(columnsOf('usage_counter')).toEqual(['day', 'name', 'value']);
   });
 
@@ -101,7 +101,7 @@ describe('reopening an already-migrated file', () => {
     await closeDatabase();
     const old = new SQLite(filePath);
     old.pragma('journal_mode = WAL');
-    old.exec("DROP INDEX feedItem_feed_id_unread; DELETE FROM kysely_migration WHERE name = '0012_unread_feed_index'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
+    old.exec("ALTER TABLE articleContent DROP COLUMN attempted_at; DELETE FROM kysely_migration WHERE name = '0013_article_content_attempted_at'; INSERT INTO setting (key, value) VALUES ('wal-row', 'present')");
 
     // Act
     await initializeDatabase(filePath);
@@ -111,7 +111,7 @@ describe('reopening an already-migrated file', () => {
     // Assert
     expect(backups).toHaveLength(1);
     expect(backup.prepare("SELECT value FROM setting WHERE key = 'wal-row'").get()).toEqual({ value: 'present' });
-    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0012_unread_feed_index'").get()).toBeUndefined();
+    expect(backup.prepare("SELECT name FROM kysely_migration WHERE name = '0013_article_content_attempted_at'").get()).toBeUndefined();
     backup.close();
     old.close();
   });
@@ -220,7 +220,7 @@ describe('failing to open a file database', () => {
   test('rejects, reports FAILED, and releases the file when a pending migration cannot apply', async () => {
     // Arrange
     const old = new SQLite(filePath);
-    old.exec("DELETE FROM kysely_migration WHERE name IN ('0011_feed_error_code', '0012_unread_feed_index')");
+    old.exec("DELETE FROM kysely_migration WHERE name IN ('0011_feed_error_code', '0012_unread_feed_index', '0013_article_content_attempted_at')");
     old.close();
 
     // Act
