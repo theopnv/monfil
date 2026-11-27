@@ -10,7 +10,7 @@ Monfil limits how complex a function in `src/` can get. ESLint enforces the limi
 ```text
 npm run lint ──> fails above the limits
 PR ──> complexity.yml ──> complexity-comment.yml ──> sticky comment
-main ──> complexity-ingest.yml ──> Worker /complexity/ingest ──> D1 <── Worker /complexity/query <── Grafana
+main ──> complexity-ingest.yml ──> devanalytics Action ──> Worker ──> D1 <── Grafana
 ```
 
 ## Stay below the limits
@@ -105,29 +105,27 @@ The script in `scripts/complexity/` runs the two rules with their limits at 0, w
 
 ## Store the history
 
-A Cloudflare Worker in `infra/devanalytics-worker/` stores snapshots in a D1 database. The same Worker also stores [code coverage](../coverage/), under `/coverage/…` routes. It has its own `package.json`, tests, and [README](https://github.com/theopnv/monfil/tree/main/infra/devanalytics-worker) with the deploy steps. The root ESLint and Vitest configs skip the folder, and Electron Forge does not package it.
-
-| Endpoint | Token | What it does |
-| --- | --- | --- |
-| `POST /complexity/ingest` | `INGEST_TOKEN` | Replaces every row of the snapshot's sha in one transaction |
-| `POST /complexity/query` | `QUERY_TOKEN` | Runs one `SELECT` or `WITH` statement on the complexity tables and returns at most 10,000 rows |
+[Devanalytics](https://github.com/theopnv/devanalytics) stores the snapshots. Its GitHub Action measures the checkout in CI and sends one JSON snapshot to a Cloudflare Worker, which keeps it in a D1 database. The same Worker also stores [code coverage](../coverage/) and [CI health](../ci-health/). Its `complexity` metric measures with the same two rules and the same limits as the scripts in `scripts/complexity/`.
 
 The database has two tables:
 
 - `complexity_functions` has one row for each function in each commit.
-- `complexity_folder_summary` has one row for each folder, commit, and test flag, with the function count, sums, maximums, and counts above the limits. `src` includes `src/main`, which includes `src/main/feed`. Filter a query on one folder, or on the direct children of one folder. Never add up all the rows.
+- `complexity_folder_summary` has one row for each folder, commit, and test flag, with the function count, sums, maximums, and counts above the limits. The root `.` holds every file, `src` includes `src/main`, which includes `src/main/feed`. Filter a query on one folder, or on the direct children of one folder. Never add up all the rows.
 
 Dates are stored in UTC. Use `complexity_folder_summary` for anything over time: one commit reads one row, and the same trend on `complexity_functions` reads every function.
 
 ### Ingest
 
-- `complexity-ingest.yml` measures each push to `main` that changes `src/` or `scripts/complexity/`, and sends it to `/complexity/ingest`. It is its own workflow, so a failed upload never blocks tests or releases.
-- `complexity-backfill.yml` runs by hand from the Actions tab. It measures each `v*` tag in a worktree with the current script and uploads it. Leave the input empty for every tag, or list tags separated by spaces.
+`complexity-ingest.yml` measures each push to `main` that changes `src/`, and sends the snapshot to the Worker. It is its own workflow, so a failed upload never blocks tests or releases. It needs the repository variable `DEVANALYTICS_URL` (the address of the Worker) and the repository secret `DEVANALYTICS_INGEST_TOKEN` (the `INGEST_TOKEN` of the Worker). A test keeps the limits of the workflow equal to the limits in `scripts/complexity/limits.mts`.
+
+To load old commits, run the backfill command of Devanalytics from a clone of it. It measures each commit in a temporary worktree and stays inside the daily write limit of D1:
+
+```bash
+npm run backfill -- --metric complexity --repo ../monfil --tags
+```
 
 Run the backfill again after a change to the rules, the limits, or the naming. Otherwise old rows and new rows were measured differently, and the trend shows a step that comes from the tool.
 
-Both workflows need the repository secret `DEVANALYTICS_INGEST_TOKEN`, with the same value as the Worker's `INGEST_TOKEN`.
-
 ## Run the dashboard
 
-The dashboard is in Grafana Cloud and reads the Worker's `/complexity/query` endpoint through the Infinity plugin. The data source settings, the `folder` variable, and the panel queries are in the [Worker README](https://github.com/theopnv/monfil/tree/main/infra/devanalytics-worker#grafana-dashboards). Keep a fixed time range on the dashboard, because Grafana's cache key includes it.
+The dashboard is in Grafana Cloud and reads the Worker's `/v1/complexity/query` endpoint through the Infinity plugin. Import `metrics/complexity/dashboard.json` of Devanalytics, and follow its [Grafana guide](https://github.com/theopnv/devanalytics/blob/main/docs/setup-grafana.md) for the data source and the `folder` variable. Keep a fixed time range on the dashboard, because Grafana's cache key includes it.

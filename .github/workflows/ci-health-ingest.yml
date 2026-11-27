@@ -1,8 +1,8 @@
 name: CI health ingest
 
-# Stores the timings and test results of each finished Test and Publish run in D1.
+# Stores the timings and test results of each finished Test and Publish run.
 # It runs from the default branch with the ingest secret. The report artifacts come from the run's own code, so all of them
-# are untrusted input: this workflow only parses them as JSON and never runs anything from them.
+# are untrusted input: the Action only parses them as data and never runs anything from them.
 on:
   workflow_run:
     workflows: [Test, Publish]
@@ -10,54 +10,56 @@ on:
 
 permissions: {}
 
-env:
-  DEVANALYTICS_WORKER_URL: https://monfil-devanalytics.tpenavaire.workers.dev
-
 concurrency:
   group: ci-health-ingest-${{ github.event.workflow_run.id }}-${{ github.event.workflow_run.run_attempt }}
   cancel-in-progress: false
 
 jobs:
-  ingest:
+  ci:
     runs-on: ubuntu-latest
     permissions:
-      # Reading the jobs of another run and downloading its artifacts need actions: read.
+      # Reading the jobs and the logs of another run needs actions: read.
       actions: read
-      contents: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: theopnv/devanalytics/action@v0.0.1
         with:
-          ref: ${{ github.event.repository.default_branch }}
-          sparse-checkout: |
-            .github/actions
-            scripts/ci
-            scripts/devanalytics
-          persist-credentials: false
-
-      - uses: ./.github/actions/check-ingest-credential
-        with:
+          metric: ci
+          worker-url: ${{ vars.DEVANALYTICS_URL }}
           token: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
+          github-token: ${{ github.token }}
 
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: '24'
-
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
       # A run that skipped its tests uploaded no report, and the run is still worth recording for its timings.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         continue-on-error: true
         with:
           pattern: ci-report-${{ github.event.workflow_run.run_attempt }}-*
-          path: ${{ runner.temp }}/reports
+          path: reports
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
 
-      - name: Collect the run
+      # The tests metric names the runner after the folder, so the folder drops the prefix and keeps the suite and the system.
+      - name: Name each folder after its suite and runner
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
-          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
-        run: node scripts/ci/collect.mts --run-id "$RUN_ID" --attempt "$RUN_ATTEMPT" --reports "$RUNNER_TEMP/reports" --out "$RUNNER_TEMP/snapshot.json"
+          PREFIX: reports/ci-report-${{ github.event.workflow_run.run_attempt }}-
+        run: |
+          mkdir -p reports
+          shopt -s nullglob
+          for dir in "$PREFIX"*; do
+            mv "$dir" "reports/${dir#"$PREFIX"}"
+          done
 
-      - env:
-          DEVANALYTICS_INGEST_TOKEN: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
-        run: node scripts/devanalytics/ingest-cli.mts /ci/ingest "$RUNNER_TEMP/snapshot.json"
+      - uses: theopnv/devanalytics/action@v0.0.1
+        with:
+          metric: tests
+          worker-url: ${{ vars.DEVANALYTICS_URL }}
+          token: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
+          working-directory: reports
+          reports: |
+            unit=unit.json
+            integration=integration.json
+            e2e=e2e.json

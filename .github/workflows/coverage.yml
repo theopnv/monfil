@@ -94,8 +94,10 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          mkdir -p "$RUNNER_TEMP/coverage-data"
+          mkdir -p "$RUNNER_TEMP/coverage-data/tests"
           cp coverage/snapshot.json "$RUNNER_TEMP/coverage-data/snapshot.json"
+          cp -r coverage/istanbul "$RUNNER_TEMP/coverage-data/istanbul"
+          cp coverage/tests/vitest.json coverage/tests/e2e.json "$RUNNER_TEMP/coverage-data/tests/"
           if [ -n "$PR_NUMBER" ]; then
             echo "$PR_NUMBER" > "$RUNNER_TEMP/coverage-data/pr-number"
           fi
@@ -112,27 +114,26 @@ jobs:
     needs: coverage
     runs-on: ubuntu-latest
     steps:
-      # The token never reaches the job that runs the tests. This job runs main's own scripts, which need no install.
+      # The token never reaches the job that runs the tests. The Action reads the commit from this checkout.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          sparse-checkout: |
-            .github/actions/check-ingest-credential
-            scripts/devanalytics
+          sparse-checkout: .github/workflows
           persist-credentials: false
-
-      - uses: ./.github/actions/check-ingest-credential
-        with:
-          token: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: '24'
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: coverage-data
-          path: ${{ runner.temp }}/coverage-data
+          path: coverage-data
 
-      - env:
-          DEVANALYTICS_INGEST_TOKEN: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
-        run: node scripts/devanalytics/ingest-cli.mts /coverage/ingest "$RUNNER_TEMP/coverage-data/snapshot.json"
+      - uses: theopnv/devanalytics/action@v0.0.1
+        with:
+          metric: coverage
+          worker-url: ${{ vars.DEVANALYTICS_URL }}
+          token: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
+          working-directory: coverage-data
+          reports: |
+            vitest=istanbul/vitest.json
+            e2e=istanbul/e2e.json
+          test-results: |
+            vitest=tests/vitest.json
+            e2e=tests/e2e.json

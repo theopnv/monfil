@@ -7,8 +7,7 @@ on:
     # Release commits change only package.json, so they add no new snapshot.
     paths:
       - 'src/**'
-      - 'scripts/complexity/**'
-      - 'scripts/devanalytics/**'
+      - '.github/workflows/complexity-ingest.yml'
 
 permissions:
   contents: read
@@ -25,14 +24,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/check-ingest-credential
+      - uses: theopnv/devanalytics/action@v0.0.1
         with:
+          metric: complexity
+          worker-url: ${{ vars.DEVANALYTICS_URL }}
           token: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
-
-      - uses: ./.github/actions/setup
-
-      - run: npm run complexity -- --out "$RUNNER_TEMP/snapshot.json"
-
-      - env:
-          DEVANALYTICS_INGEST_TOKEN: ${{ secrets.DEVANALYTICS_INGEST_TOKEN }}
-        run: npm run complexity:ingest -- "$RUNNER_TEMP/snapshot.json"
+          include: |
+            src/**/*.{ts,tsx}
+          test-pattern: |
+            **/*.test.{ts,tsx}
+          cognitive-limit: 15
+          cyclomatic-limit: 10

@@ -27,11 +27,9 @@ The [shared contracts](https://github.com/theopnv/monfil/tree/main/src/shared) d
 | [Shared](https://github.com/theopnv/monfil/tree/main/src/shared) | Data contracts, channels, results, and errors |
 | [Feedpacks](https://github.com/theopnv/monfil/tree/main/feedpacks) | Curated OPML and catalog metadata |
 | [Documentation](https://github.com/theopnv/monfil/tree/main/doc) | Astro Starlight site |
-| [Coverage scripts](https://github.com/theopnv/monfil/tree/main/scripts/coverage) | Instrumentation for the e2e build, the merge, the pull request report, and the tag backfill described in [Code coverage](../coverage/) |
-| [Complexity scripts](https://github.com/theopnv/monfil/tree/main/scripts/complexity) | Function metrics, the pull request report, and the uploads described in [Code complexity](../complexity/) |
-| [Devanalytics scripts](https://github.com/theopnv/monfil/tree/main/scripts/devanalytics) | Code that the complexity and coverage scripts share: the upload, the ingest command, the backfill, the argument and JSON checks, and the Markdown code span |
-| [Devanalytics Worker](https://github.com/theopnv/monfil/tree/main/infra/devanalytics-worker) | Cloudflare Worker and D1 database that store the complexity, coverage and CI metrics |
-| [CI scripts](https://github.com/theopnv/monfil/tree/main/scripts/ci) | The collector that reads a finished run from the GitHub API, the Vitest reporter that marks flaky tests, and the report parsers described in [CI health](../ci-health/) |
+| [Coverage scripts](https://github.com/theopnv/monfil/tree/main/scripts/coverage) | Instrumentation for the e2e build, the merge, and the pull request report described in [Code coverage](../coverage/) |
+| [Complexity scripts](https://github.com/theopnv/monfil/tree/main/scripts/complexity) | Function metrics and the pull request report described in [Code complexity](../complexity/) |
+| [Devanalytics scripts](https://github.com/theopnv/monfil/tree/main/scripts/devanalytics) | Code that the complexity, coverage and mutation scripts share: the argument and JSON checks, the git helpers, the Markdown code span, and the Vitest reporter for [CI health](../ci-health/) |
 
 In main, start with [feed work](https://github.com/theopnv/monfil/tree/main/src/main/feed), [database work](https://github.com/theopnv/monfil/tree/main/src/main/db), [OPML](https://github.com/theopnv/monfil/tree/main/src/main/opml), [feedpacks](https://github.com/theopnv/monfil/tree/main/src/main/feedpacks), [logging](https://github.com/theopnv/monfil/tree/main/src/main/logging), or [IPC](https://github.com/theopnv/monfil/tree/main/src/main/ipc). In the renderer, [routes](https://github.com/theopnv/monfil/tree/main/src/renderer/routes) choose views; providers and query hooks hold UI state.
 
