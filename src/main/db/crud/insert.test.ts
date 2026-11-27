@@ -664,7 +664,7 @@ describe('upsertArticleContent', () => {
 
     // Assert
     const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirst();
-    expect(stored).toEqual({ item_id: itemId, html: '<p>Body</p>', text: 'Body', word_count: 1, status: 'ok' });
+    expect(stored).toEqual({ item_id: itemId, html: '<p>Body</p>', text: 'Body', word_count: 1, status: 'ok', attempted_at: 0 });
   });
 
   test('a second upsert replaces the row instead of duplicating it', async () => {

@@ -10,6 +10,7 @@ export const DB_FILE_NAME = 'monfil.db';
 export const FEED_FETCH_CONCURRENCY = 4;
 export const ENRICHMENT_CONCURRENCY = 5;
 export const ARTICLE_FETCH_TIMEOUT_MS = 5000;
+export const ARTICLE_FETCH_RETRY_MS = 6 * 60 * 60 * 1000;
 export const FETCH_TIMEOUT_MS = 15_000;
 export const MAX_FETCH_BYTES = 10 * 1024 * 1024;
 export const MAX_REDIRECTS = 10;

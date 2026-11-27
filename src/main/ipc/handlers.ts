@@ -27,6 +27,7 @@ import {
 import { changeLanguage, readLanguageState } from '../app/language';
 import { updateFeedItemImage, upsertArticleContent, addFeedToDatabase } from '../db/crud/insert';
 import { queryArticleContent, queryFeedItems, queryFeedMetadata } from '../db/crud/query';
+import type { ArticleContent } from '../db/types';
 import { backUpDatabase, dbReady, dbStatus } from '../db/database';
 import { pruneExpiredItems, retainedFetchedItems, retentionCutoff } from '../db/retention';
 import { enrichItems } from '../feed/enrichItems';
@@ -35,7 +36,7 @@ import { extractArticleInUtilityProcess } from '../feed/extractArticleUtility';
 import { refreshAllFeeds } from '../feed/refresh';
 import { rescheduleRefresh } from '../feed/scheduler';
 import { sourceFor } from '../feed/sources/registry';
-import { ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
+import { ARTICLE_FETCH_RETRY_MS, ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 import { fetchText } from '../lib/fetch';
 import { mainI18n } from '../lib/i18n';
 import { broadcastToRenderers, sendToRenderer } from '../lib/sendToRenderer';
@@ -66,7 +67,8 @@ export async function handleFeedsSubmitAddFeed(payload: ArgOf<'feeds:submit-add-
  * Resolves an item's raw description plus, for sources the registry marks as `fetchesFullArticle`,
  * its extracted full article, fetching and storing it on the first request. A `failed` or `too_short`
  * row on file is left out of the response without a retry, so a page that never works is not refetched
- * on every open.
+ * on every open. A `fetch_failed` row (offline, timeout, server error) is refetched once it is older
+ * than `ARTICLE_FETCH_RETRY_MS`.
  */
 export async function handleItemsGetContent(itemId: number): Promise<ItemBody> {
   const [item] = await queryFeedItems({ id: itemId });
@@ -80,7 +82,7 @@ export async function handleItemsGetContent(itemId: number): Promise<ItemBody> {
   }
 
   const [existing] = await queryArticleContent({ item_id: itemId });
-  if (existing) {
+  if (existing && !isRetryable(existing)) {
     return {
       description: item.description,
       article: existing.status === 'ok' && existing.html && existing.word_count
@@ -94,22 +96,30 @@ export async function handleItemsGetContent(itemId: number): Promise<ItemBody> {
   }
 
   const fetched = await fetchText(item.link, { timeoutMs: ARTICLE_FETCH_TIMEOUT_MS, blockPrivateHosts: true });
+  if (!fetched.success) {
+    const status = fetched.error.name === 'BLOCKED_URL_ERROR' ? 'failed' : 'fetch_failed';
+    await upsertArticleContent({ item_id: itemId, html: undefined, text: undefined, word_count: undefined, status, attempted_at: Date.now() });
+    return { description: item.description, article: undefined };
+  }
+
   let article;
-  if (fetched.success) {
-    try {
-      article = await extractArticleInUtilityProcess(fetched.data.body, item.link);
-    } catch (error) {
-      logger.error('operation.failure', { operation: 'extract-article', entityId: itemId }, error);
-    }
+  try {
+    article = await extractArticleInUtilityProcess(fetched.data.body, item.link);
+  } catch (error) {
+    logger.error('operation.failure', { operation: 'extract-article', entityId: itemId }, error);
   }
   const status = deriveArticleContentStatus(article);
-  await upsertArticleContent({ item_id: itemId, html: article?.html, text: article?.text, word_count: article?.wordCount, status });
+  await upsertArticleContent({ item_id: itemId, html: article?.html, text: article?.text, word_count: article?.wordCount, status, attempted_at: Date.now() });
   void incrementCounter('fulltext_extracted');
 
   return {
     description: item.description,
     article: status === 'ok' && article ? { html: article.html, wordCount: article.wordCount } : undefined,
   };
+}
+
+function isRetryable(row: ArticleContent): boolean {
+  return row.status === 'fetch_failed' && Date.now() - row.attempted_at >= ARTICLE_FETCH_RETRY_MS;
 }
 
 type SettingRoute<K extends SettingKey> = {

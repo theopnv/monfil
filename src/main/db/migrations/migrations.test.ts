@@ -527,6 +527,26 @@ describe('0012_unread_feed_index', () => {
   });
 });
 
+describe('0013_article_content_attempted_at', () => {
+  test('marks stored failures as retryable, and rolls back cleanly', async () => {
+    // Arrange
+    assertMigrated(await migrateTo('0012_unread_feed_index'));
+    const seeded = await seed();
+    await sql`UPDATE articleContent SET status = 'failed' WHERE item_id = ${seeded.itemId}`.execute(db);
+
+    // Act
+    assertMigrated(await migrateToLatest());
+    const migrated = await db.selectFrom('articleContent').select(['status', 'attempted_at']).executeTakeFirstOrThrow();
+    assertMigrated(await migrateTo('0012_unread_feed_index'));
+    const rolledBack = await sql<{ status: string }>`SELECT status FROM articleContent`.execute(db);
+
+    // Assert
+    expect(migrated).toEqual({ status: 'fetch_failed', attempted_at: 0 });
+    expect(rolledBack.rows).toEqual([{ status: 'failed' }]);
+    expect((await columnsByTable()).get('articleContent')).not.toContain('attempted_at');
+  });
+});
+
 describe('the migration list', () => {
   test('has unique names, already in the order Migrator will run them', () => {
     // Assert

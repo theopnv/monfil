@@ -15,6 +15,7 @@ import * as savedSearch from './0009_saved_search';
 import * as usageCounters from './0010_usage_counters';
 import * as feedErrorCode from './0011_feed_error_code';
 import * as unreadFeedIndex from './0012_unread_feed_index';
+import * as articleContentAttemptedAt from './0013_article_content_attempted_at';
 
 const migrations: Record<string, Migration> = {
   '0001_initial_schema': initialSchema,
@@ -29,6 +30,7 @@ const migrations: Record<string, Migration> = {
   '0010_usage_counters': usageCounters,
   '0011_feed_error_code': feedErrorCode,
   '0012_unread_feed_index': unreadFeedIndex,
+  '0013_article_content_attempted_at': articleContentAttemptedAt,
 };
 
 export const migrationProvider: MigrationProvider = {

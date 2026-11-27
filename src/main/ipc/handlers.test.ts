@@ -16,7 +16,7 @@ import { broadcastToRenderers, sendToRenderer } from '../lib/sendToRenderer';
 import {
   handleFeedsSubmitAddFeed, handleItemsGetContent, handleSettingsSet,
 } from './handlers';
-import { ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
+import { ARTICLE_FETCH_RETRY_MS, ARTICLE_FETCH_TIMEOUT_MS } from '../lib/constants';
 import type { IpcMainInvokeEvent } from 'electron';
 import { HOME_WORKSPACE_ID, type SourceType } from '../../shared/contracts';
 import { useTestDatabase } from '../test/db';
@@ -130,10 +130,11 @@ describe('handleItemsGetContent', () => {
     expect(stored.html).toContain('<p>');
   });
 
-  test('a fetch failure stores a "failed" row and leaves out the article', async () => {
+  test('a fetch failure stores a "fetch_failed" row with its attempt time and leaves out the article', async () => {
     // Arrange
     const itemId = await createItem('https://a.example/article');
     mockedFetchText.mockResolvedValue({ success: false, error: { name: 'NETWORK_ERROR', message: 'offline' } });
+    const before = Date.now();
 
     // Act
     const result = await handleItemsGetContent(itemId);
@@ -141,8 +142,51 @@ describe('handleItemsGetContent', () => {
     // Assert
     expect(result).toEqual({ description: '', article: undefined });
     const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
-    expect(stored.status).toBe('failed');
+    expect(stored.status).toBe('fetch_failed');
+    expect(stored.attempted_at).toBeGreaterThanOrEqual(before);
     expect(mockedExtractArticleInUtilityProcess).not.toHaveBeenCalled();
+  });
+
+  test('a blocked URL stores a permanent "failed" row', async () => {
+    // Arrange
+    const itemId = await createItem('http://192.168.0.1/article');
+    mockedFetchText.mockResolvedValue({ success: false, error: { name: 'BLOCKED_URL_ERROR', message: 'private', params: { reason: 'private' } } });
+
+    // Act
+    await handleItemsGetContent(itemId);
+
+    // Assert
+    const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
+    expect(stored.status).toBe('failed');
+  });
+
+  test('a "fetch_failed" row younger than the retry window is not fetched again', async () => {
+    // Arrange
+    const itemId = await createItem('https://a.example/article');
+    await upsertArticleContent({ item_id: itemId, html: undefined, text: undefined, word_count: undefined, status: 'fetch_failed', attempted_at: Date.now() - ARTICLE_FETCH_RETRY_MS + 60_000 });
+
+    // Act
+    const result = await handleItemsGetContent(itemId);
+
+    // Assert
+    expect(result).toEqual({ description: '', article: undefined });
+    expect(mockedFetchText).not.toHaveBeenCalled();
+  });
+
+  test('a "fetch_failed" row older than the retry window is fetched again and replaced by the article', async () => {
+    // Arrange
+    const itemId = await createItem('https://a.example/long-article');
+    await upsertArticleContent({ item_id: itemId, html: undefined, text: undefined, word_count: undefined, status: 'fetch_failed', attempted_at: Date.now() - ARTICLE_FETCH_RETRY_MS });
+    mockedFetchText.mockResolvedValue({ success: true, data: { body: ARTICLE_PAGE_HTML, validators: { etag: undefined, last_modified: undefined } } });
+    mockedExtractArticleInUtilityProcess.mockResolvedValue({ html: '<p>Full article</p>', text: PARAGRAPH, wordCount: 80 });
+
+    // Act
+    const result = await handleItemsGetContent(itemId);
+
+    // Assert
+    expect(result).toEqual({ description: '', article: { html: '<p>Full article</p>', wordCount: 80 } });
+    const stored = await db.selectFrom('articleContent').selectAll().where('item_id', '=', itemId).executeTakeFirstOrThrow();
+    expect(stored.status).toBe('ok');
   });
 
   test('an item with no link returns its description without fetching', async () => {
