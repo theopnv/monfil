@@ -26,7 +26,7 @@ Run commands from the repository root unless a command says otherwise.
 | Run all test suites | `npm test` |
 | Run Vitest with coverage (report in `.vitest/coverage/`) | `npm run coverage:vitest` |
 | Run the end-to-end tests on an instrumented build | `COVERAGE=1 npm run test:e2e` |
-| Merge the Vitest and e2e coverage (`coverage/merged/`, `coverage/snapshot.json`) | `npm run coverage:merge` |
+| Merge the Vitest and e2e coverage (`coverage/merged/`, `coverage/snapshot.json`, `coverage/istanbul/`) | `npm run coverage:merge` |
 | Mutation-test the files changed against `main` (report in `.mutation/`) | `npm run mutate` |
 | Package the app | `npm run package` |
 | Make platform installers | `npm run make` |

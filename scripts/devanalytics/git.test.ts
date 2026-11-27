@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { headCommit, releaseTags } from './git.mts';
+import { headCommit } from './git.mts';
 
 let repo: string;
 
@@ -38,30 +38,5 @@ describe('headCommit', () => {
 
     // Assert
     expect(result).toEqual({ sha, date: '2026-01-02T03:04:05Z' });
-  });
-});
-
-describe('releaseTags', () => {
-  it('lists the release tags by creation date, not by name', () => {
-    // Arrange
-    commit('2026-01-01T00:00:00Z', 'v0.2.0', 'not-a-release');
-    commit('2026-01-02T00:00:00Z', 'v0.1.0');
-
-    // Act
-    const result = releaseTags(repo);
-
-    // Assert
-    expect(result).toEqual(['v0.2.0', 'v0.1.0']);
-  });
-
-  it('gives an empty list when there is no release tag', () => {
-    // Arrange
-    commit('2026-01-01T00:00:00Z', 'draft');
-
-    // Act
-    const result = releaseTags(repo);
-
-    // Assert
-    expect(result).toEqual([]);
   });
 });

@@ -7,7 +7,7 @@ import libReport from 'istanbul-lib-report';
 import reports from 'istanbul-reports';
 import { runCli } from '../devanalytics/cli.mts';
 import { headCommit } from '../devanalytics/git.mts';
-import { buildSuites, loadE2eMap, loadVitestMap, mergeMaps, total, type Snapshot } from './maps.mts';
+import { buildSuites, fillMissing, loadE2eMap, loadVitestMap, mergeMaps, total, type Snapshot } from './maps.mts';
 import { loadTestSuites, type TestSuites } from './tests.mts';
 
 const USAGE = 'Usage: npm run coverage:merge -- [--root <checkout>] [--vitest <coverage-final.json> ...] [--e2e <dir>] [--out <dir>]'
@@ -65,6 +65,10 @@ async function main() {
     reports.create(name).execute(context);
   }
   await writeFile(path.join(out, 'snapshot.json'), `${JSON.stringify(snapshot)}\n`);
+  // The devanalytics Action reads these two reports and adds the suite `total` itself.
+  await mkdir(path.join(out, 'istanbul'), { recursive: true });
+  await writeFile(path.join(out, 'istanbul', 'vitest.json'), JSON.stringify(vitest));
+  await writeFile(path.join(out, 'istanbul', 'e2e.json'), JSON.stringify(fillMissing(e2e, vitest)));
   for (const [name, files] of Object.entries(suites)) {
     const [covered, lines] = total(files, 'lines');
     process.stderr.write(`${name}: ${files.length} files, lines ${covered}/${lines}\n`);

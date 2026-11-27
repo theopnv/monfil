@@ -10,7 +10,7 @@ on:
 permissions: {}
 
 env:
-  DEVANALYTICS_WORKER_URL: https://monfil-devanalytics.tpenavaire.workers.dev
+  DEVANALYTICS_WORKER_URL: ${{ vars.DEVANALYTICS_URL }}
 
 jobs:
   comment:
@@ -83,7 +83,7 @@ jobs:
             exit 0
           fi
           query() {
-            curl --silent --show-error --fail-with-body --max-time 60 -X POST "$DEVANALYTICS_WORKER_URL/coverage/query" \
+            curl --silent --show-error --fail-with-body --max-time 60 -X POST "$DEVANALYTICS_WORKER_URL/v1/coverage/query" \
               -H "Authorization: Bearer $QUERY_TOKEN" -H 'Content-Type: application/json' --data "$1"
           }
           rows_for() {
@@ -98,10 +98,16 @@ jobs:
             exit 0
           fi
           # The merge base has no row, so use the latest run on main before it.
-          earlier="$(query "$(jq -nc --arg date "$MERGE_BASE_DATE" '{sql: "SELECT sha FROM coverage_folder_summary WHERE folder = \u0027src\u0027 AND suite = \u0027merged\u0027 AND date < ?1 ORDER BY date DESC LIMIT 1", params: [$date]}')" | jq -r '.rows[0].sha // empty')" || earlier=''
+          earlier="$(query "$(jq -nc --arg date "$MERGE_BASE_DATE" '{sql: "SELECT sha FROM coverage_folder_summary WHERE folder = \u0027src\u0027 AND suite = \u0027total\u0027 AND date < ?1 ORDER BY date DESC LIMIT 1", params: [$date]}')" | jq -r '.rows[0].sha // empty')" || earlier=''
           if [[ "$earlier" =~ ^[0-9a-f]{40}$ ]]; then
             rows_for "$earlier" > "$RUNNER_TEMP/base-rows.json" || echo '{"rows":[]}' > "$RUNNER_TEMP/base-rows.json"
           fi
+
+      # The Worker names the union of the suites `total`, and the report script names it `merged`.
+      - name: Rename the total suite
+        run: |
+          jq '.rows |= map(if .suite == "total" then .suite = "merged" else . end)' "$RUNNER_TEMP/base-rows.json" > "$RUNNER_TEMP/base-rows-renamed.json"
+          mv "$RUNNER_TEMP/base-rows-renamed.json" "$RUNNER_TEMP/base-rows.json"
 
       - name: Get the changed files
         env:

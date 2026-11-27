@@ -117,10 +117,10 @@ jobs:
           electron: 'true'
 
       - if: steps.changes.outputs.code == 'true'
-        run: npm run test:unit -- --reporter=default --reporter=./scripts/ci/vitest-reporter.mts
+        run: npm run test:unit -- --reporter=default --reporter=./scripts/devanalytics/vitest-reporter.mjs
         env:
           SKIP_LINT_RULE_TESTS: 'true'
-          MONFIL_CI_REPORT: test-reports/unit.json
+          DEVANALYTICS_VITEST_REPORT: test-reports/unit.json
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: ${{ !cancelled() && steps.changes.outputs.code == 'true' }}
@@ -149,9 +149,9 @@ jobs:
           chromium: 'true'
 
       - if: steps.changes.outputs.code == 'true'
-        run: npm run test:integration -- --reporter=default --reporter=./scripts/ci/vitest-reporter.mts
+        run: npm run test:integration -- --reporter=default --reporter=./scripts/devanalytics/vitest-reporter.mjs
         env:
-          MONFIL_CI_REPORT: test-reports/integration.json
+          DEVANALYTICS_VITEST_REPORT: test-reports/integration.json
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: ${{ !cancelled() && steps.changes.outputs.code == 'true' }}
