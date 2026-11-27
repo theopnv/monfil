@@ -5,7 +5,7 @@ sidebar:
   order: 12
 ---
 
-Monfil limits how complex a function in `src/` can get. ESLint enforces the limits, each pull request gets a report, and a [public dashboard](https://lavendercauliflower2001.grafana.net/public-dashboards/9bfc15b30c3e45be9ac40bcb3419c01b) shows the trend on `main`.
+Monfil limits how complex a function in `src/` can get. ESLint enforces the limits, each pull request gets a report, and a [public dashboard](https://lavendercauliflower2001.grafana.net/public-dashboards/9f576515ea2549b8bf481752e7ad2a52) shows the trend on `main`.
 
 ```text
 npm run lint ──> fails above the limits
