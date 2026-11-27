@@ -9,13 +9,14 @@ The copy does not use the Worker. It does not count in the table `usage`, and D1
 - Deploy the Worker from the template and run `npm run migrate:remote` in your fork of the template (task P1).
 - Install `sqlite3`. macOS has it.
 - Do step 1 before you merge the change that removes `infra/devanalytics-worker/` (task P2). The export reads the database from its `wrangler.jsonc`.
-- Work in an empty folder outside both repositories. The commands below use `devanalytics` for the folder of your fork of the template, and `monfil` for the folder of this repository.
+- Open a terminal in the folder that holds both repositories. The commands below use `copy` for a new folder beside them, `devanalytics` for the folder of your fork of the template, and `monfil` for the folder of this repository.
 
 ## Steps
 
 1. Export the old database. This reads the database and changes nothing.
 
    ```
+   mkdir copy
    cd monfil/infra/devanalytics-worker
    npx wrangler d1 export monfil-complexity --remote --output ../../../copy/old.sql
    ```
