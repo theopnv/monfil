@@ -20,7 +20,14 @@ SELECT sha, date, CASE suite WHEN 'merged' THEN 'total' ELSE suite END, folder,
   functions_covered, functions_total, branches_covered, branches_total, file_count
 FROM old.coverage_folder_summary;
 
-INSERT INTO coverage_tests SELECT * FROM old.coverage_tests;
+-- The `vitest` suite of the template counts the tests of the Node and the browser project together, as the old `unit` and `integration` did.
+INSERT INTO coverage_tests
+SELECT sha, date, 'vitest', sum(files), sum(tests), sum(passed), sum(failed), sum(skipped)
+FROM old.coverage_tests
+WHERE suite IN ('unit', 'integration')
+GROUP BY sha, date;
+
+INSERT INTO coverage_tests SELECT * FROM old.coverage_tests WHERE suite = 'e2e';
 
 -- The template has no `full_matrix` and no `code_changed`, and `labels` is empty.
 INSERT INTO ci_runs (run_id, run_attempt, date, sha, workflow, event, branch, conclusion, wall_seconds, labels)

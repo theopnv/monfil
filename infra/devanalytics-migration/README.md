@@ -34,7 +34,7 @@ The copy does not use the Worker. It does not count in the table `usage`, and D1
    sqlite3 new.db < ../monfil/infra/devanalytics-migration/copy.sql
    ```
 
-   Compare the counts with the old database. The tables `tests_suites` and `tests_exceptions` come from `ci_test_suites` and `ci_test_exceptions`. `ci_runs`, `ci_jobs`, `ci_steps` and `ci_step_groups` must have the same counts as before.
+   Compare the counts with the old database. `coverage_tests` has fewer rows: the suites `unit` and `integration` become one suite `vitest`. The tables `tests_suites` and `tests_exceptions` come from `ci_test_suites` and `ci_test_exceptions`. `ci_runs`, `ci_jobs`, `ci_steps` and `ci_step_groups` must have the same counts as before.
 
 4. Write one SQL file for each table, in chunks.
 
