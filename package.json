@@ -1,7 +1,7 @@
 {
   "name": "monfil",
   "productName": "monfil",
-  "version": "0.19.0",
+  "version": "0.19.1",
   "description": "RSS feed reader and more.",
   "main": ".vite/build/main.cjs",
   "private": true,
